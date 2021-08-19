@@ -39,8 +39,8 @@ def fakedata(args):
 
     @dataclass
     class FakeData:
-        inputs: np.ndarray
-        target: np.ndarray
+        inputs: torch.Tensor
+        target: torch.Tensor
 
         def __getitem__(self, idx):
             return self.inputs[idx], self.target[idx]
