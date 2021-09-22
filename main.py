@@ -131,5 +131,6 @@ if __name__ == "__main__":
 
     # MLflow parameters
     mlflow_params_dict = {"dataset": args.dataset, "no of workers": args.num_workers, "train data shuffle": args.shuffle, "model": args.model, "learning rate": args.lr, "no of epochs": args.num_epochs, "batch size": args.batch_size}
+    log_params(mlflow_params_dict)
 
     main(args)
