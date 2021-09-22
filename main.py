@@ -9,6 +9,8 @@ from dataset import get_dataset, split_train_and_val
 from model import get_model
 from utils import AverageBinaryClassificationMetric
 
+from mlflow import log_params
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -126,4 +128,8 @@ def main(args):
 
 if __name__ == "__main__":
     args = prepare_args()
+
+    # MLflow parameters
+    mlflow_params_dict = {"dataset": args.dataset, "no of workers": args.num_workers, "train data shuffle": args.shuffle, "model": args.model, "learning rate": args.lr, "no of epochs": args.num_epochs, "batch size": args.batch_size}
+
     main(args)
