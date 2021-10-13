@@ -24,7 +24,7 @@ def main(args):
     print('postgresql://{args.user}:{args.password}@{args.host}:{args.port}/{args.database}')
     engine = sqlalchemy.create_engine(f'postgresql://{args.user}:{args.password}@{args.host}:{args.port}/{args.database}')
 
-    query = "select distinct
+    query = """select distinct
         i.patient_id_hashed as patient_id,
         i.genc_id,
         i.hospital_id,
@@ -38,13 +38,13 @@ def main(args):
         i.discharge_disposition::integer,
         i.institution_to,
         i.institution_to_type,
-	i.province_territory_issuing_health_card_number as insurance,
-     FROM ip_administrative i
-     ORDER BY patient_id, genc_id
-     LIMIT 10"
+	i.province_territory_issuing_health_card_number as insurance
+      FROM ip_administrative i
+      ORDER BY patient_id, genc_id
+      LIMIT 10"""
 
-     data=pd.read_sql(query ,con=engine)
-     print(data.head())
+    data=pd.read_sql(query ,con=engine)
+    print(data.head())
 
 if __name__=="__main__":
     import argparse
@@ -52,21 +52,21 @@ if __name__=="__main__":
     # read and write args
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--user", default='koshkinam', type=str, required=True, help='Postgres user')
+    parser.add_argument("--user", default='koshkinam', type=str, required=False, help='Postgres user')
     #parser.add_argument("--password", default=os.environ['PGPASSWORD'], type=str, required=True, help='Postgres password')
     parser.add_argument("--port", default=5432, type=int, help='Postgres port')
-    parser.add_argument("--host", default='db.gemini-hpc.ca', type=str, required=True, help='Postgres host')
-    parser.add_argument("--database", default='delirium_v3_0_0' , type=str, required=True, help='Postgres database')
+    parser.add_argument("--host", default='db.gemini-hpc.ca', type=str, required=False, help='Postgres host')
+    parser.add_argument("--database", default='delirium_v3_0_0' , type=str, required=False, help='Postgres database')
     parser.add_argument("--output", type=str, required=True, help='Where should we put the CSV results?')
 
     args = parser.parse_args()
 
-    args.commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('ascii')
+    #args.commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('ascii')
 
     print({k:v for k,v in vars(args).items()})
 
     password = getpass.getpass(prompt='Database password: ', stream=None) 
-    arg.password = password
+    args.password = password
     
     # save args to args_{date}.json
     t = time.localtime()
