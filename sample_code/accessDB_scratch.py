@@ -75,17 +75,17 @@ def extract(config):
     return data
 
 def binary_legth_of_stay(l):
-    return 1 if l >= 7 else 0
+    return 1 if l >= 7 else 0    
 
 def transform(data):
     # convert length of stay feature
     # 1 - more then 7 days, 0 - less
-    data["stay_length"].apply(binary_legth_of_stay)
+    data["stay_length"]=data["stay_length"].apply(binary_legth_of_stay)
     return data
 
-def save_to_disk(data, config, format=='csv'):
+def save_to_disk(data, config, format='csv'):
     if (format != 'csv'):
-        print("Unsupported format {%s}".format(format))
+        print("Unsupported format {}".format(format))
         exit
     t = time.localtime()
     date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
