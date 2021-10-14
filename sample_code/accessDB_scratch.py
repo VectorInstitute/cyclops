@@ -1,13 +1,18 @@
 import getpass
 import pandas as pd
 import numpy as np
-import pandas as pd
 import json
 import os
 import time
 import sqlalchemy 
 import pandas.io.sql as psql
 import argparse
+
+import plotly.offline as py #working offline
+import plotly.graph_objs as go
+
+from evidently.model_profile import Profile
+from evidently.profile_sections import DataDriftProfileSection
 
 def read_config():
     parser = argparse.ArgumentParser()
@@ -18,6 +23,8 @@ def read_config():
     parser.add_argument("--host", default='db.gemini-hpc.ca', type=str, required=False, help='Postgres host')
     parser.add_argument("--database", default='delirium_v3_0_0', type=str, required=False, help='Postgres database')
     parser.add_argument("--output", type=str, required=True, help='Where should we put the CSV results?')
+    
+    parser.add_argument('-w', action='store_true', help='Write extracted data to disk')
 
     args = parser.parse_args()
 
@@ -66,7 +73,7 @@ def extract(config):
 	i.province_territory_issuing_health_card_number as insurance
       FROM ip_administrative i
       ORDER BY patient_id, genc_id
-      LIMIT 10"""
+      LIMIT 10000"""
 
     data=pd.read_sql(query ,con=engine)
     print(data.head())
@@ -82,6 +89,38 @@ def transform(data):
     # 1 - more then 7 days, 0 - less
     data["stay_length"]=data["stay_length"].apply(binary_legth_of_stay)
     return data
+
+#evaluate data drift with Evidently Profile
+def eval_drift(reference, production, column_mapping):
+    column_mapping['drift_conf_level'] = 0.95
+    column_mapping['drift_features_share'] = 0.5
+    data_drift_profile = Profile(sections=[DataDriftProfileSection])
+    data_drift_profile.calculate(reference, production, column_mapping=column_mapping)
+    report = data_drift_profile.json()
+    json_report = json.loads(report)
+
+    print(json_report)
+
+    drifts = []
+    for feature in column_mapping['numerical_features'] + column_mapping['categorical_features']:
+        drifts.append((feature, json_report['data_drift']['data']['metrics'][feature]['p_value'])) 
+    return drifts
+
+def analyze(data, config):
+    column_mapping = {}
+    column_mapping['numerical_features'] = ['age']
+    column_mapping['categorical_features'] = ['sex', 'stay_length']
+    analysis_columns = ['age','sex','stay_length']
+    reference_year = 2015
+    evaluate_year = 2016
+    reference_data = data.loc[data['year']==reference_year, analysis_columns]
+    eval_data =  data.loc[data['year']==evaluate_year, analysis_columns]
+    reference_data = reference_data.dropna()
+    eval_data = eval_data.dropna()    
+    print(eval_data.shape[0], eval_data.head())
+    print(reference_data.shape[0], reference_data.head())
+    drifts = eval_drift (reference_data, eval_data, column_mapping)
+    return drifts   
 
 def save_to_disk(data, config, format='csv'):
     if (format != 'csv'):
@@ -99,5 +138,9 @@ if __name__=="__main__":
 
     data = extract(config)
     data = transform(data)
-    save_to_disk(data, config)
+    if config.w:
+        save_to_disk(data, config)
+
+    drifts = analyze(data, config)
+   
 
