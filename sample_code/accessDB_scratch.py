@@ -13,6 +13,9 @@ import plotly.graph_objs as go
 
 from evidently.model_profile import Profile
 from evidently.profile_sections import DataDriftProfileSection
+from evidently.dashboard import Dashboard
+from evidently.tabs import DataDriftTab
+
 
 def read_config():
     parser = argparse.ArgumentParser()
@@ -99,7 +102,7 @@ def eval_drift(reference, production, column_mapping, html=False):
     report = data_drift_profile.json()
     json_report = json.loads(report)
 
-    if html_dashboard:
+    if html:
         dashboard = Dashboard(tabs=[DataDriftTab])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
         dashboard.save("../data_drif_report.html")
