@@ -77,7 +77,6 @@ def extract(config):
 
     data=pd.read_sql(query ,con=engine)
     print(data.head())
-    print(data.columns.tolist())
 
     return data
 
@@ -88,6 +87,7 @@ def transform(data):
     # convert length of stay feature
     # 1 - more then 7 days, 0 - less
     data["stay_length"]=data["stay_length"].apply(binary_legth_of_stay)
+    print(data.columns.tolist())
     return data
 
 #evaluate data drift with Evidently Profile
@@ -110,15 +110,14 @@ def analyze(data, config):
     column_mapping = {}
     column_mapping['numerical_features'] = ['age']
     column_mapping['categorical_features'] = ['sex', 'stay_length']
-    analysis_columns = ['age','sex','stay_length']
-    reference_year = 2015
-    evaluate_year = 2016
+    analysis_columns = column_mapping['numerical_features'] + column_mapping['categorical_features']
+    reference_year = 2015 #TODO: change to use parameter
+    evaluate_year = 2016 #TODO 
     reference_data = data.loc[data['year']==reference_year, analysis_columns]
     eval_data =  data.loc[data['year']==evaluate_year, analysis_columns]
     reference_data = reference_data.dropna()
-    eval_data = eval_data.dropna()    
-    print(eval_data.shape[0], eval_data.head())
-    print(reference_data.shape[0], reference_data.head())
+    eval_data = eval_data.dropna()
+    print(eval_data.head())    
     drifts = eval_drift (reference_data, eval_data, column_mapping)
     return drifts   
 
