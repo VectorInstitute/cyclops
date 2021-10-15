@@ -91,7 +91,7 @@ def transform(data):
     return data
 
 #evaluate data drift with Evidently Profile
-def eval_drift(reference, production, column_mapping):
+def eval_drift(reference, production, column_mapping, html=False):
     column_mapping['drift_conf_level'] = 0.95
     column_mapping['drift_features_share'] = 0.5
     data_drift_profile = Profile(sections=[DataDriftProfileSection])
@@ -99,7 +99,10 @@ def eval_drift(reference, production, column_mapping):
     report = data_drift_profile.json()
     json_report = json.loads(report)
 
-    print(json_report)
+    if html_dashboard:
+        dashboard = Dashboard(tabs=[DataDriftTab])
+        dashboard.calculate(reference, production, column_mapping=column_mapping)
+        dashboard.save("../data_drif_report.html")
 
     drifts = []
     for feature in column_mapping['numerical_features'] + column_mapping['categorical_features']:
@@ -118,7 +121,7 @@ def analyze(data, config):
     reference_data = reference_data.dropna()
     eval_data = eval_data.dropna()
     print(eval_data.head())    
-    drifts = eval_drift (reference_data, eval_data, column_mapping)
+    drifts = eval_drift (reference_data, eval_data, column_mapping, html=True)
     return drifts   
 
 def save_to_disk(data, config, format='csv'):
