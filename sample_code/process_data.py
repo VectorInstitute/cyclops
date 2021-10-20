@@ -76,6 +76,7 @@ if __name__=="__main__":
 
     data = ex.extract(config)
     data = ex.transform(data)
+    data = ex.split(data)
     if config.w:
         save_data(data, config)
 

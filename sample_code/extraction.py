@@ -7,6 +7,7 @@ import time
 import sqlalchemy
 import pandas.io.sql as psql
 import config as conf
+import re
 
 # constants
 HOSPITAL_ID = {'THPM':0, 'SBK':1, 'UHNTG':2, 'SMH':3, 'UHNTW':4, 'THPC':5, 'PMH':6, 'MSH':7}
@@ -120,7 +121,7 @@ def insert_decimal(string, index=2):
     return string[:index] + '.' + string[index:]
 
 def get_category(code, trajectories=TRAJECTORIES):
-   """
+    """
     Usage:
     df['ICD10'].apply(get_category, args=(trajectories,))
     """
@@ -162,6 +163,46 @@ def transform_diagnosis(data):
     
     return data
 
+# add a column to signal training/val or test
+# TODO: test and val year splits should be a parameter
+def split (data):
+    #     Create the train and test folds: test set is 2015. All patients in 2015 will be not be used for training 
+    #     or validation. Validation year is 2014. All patients in the validation year will not be used for training.
+    
+    # set a new column for use_train_val
+    data['train'] = 1
+    data['test'] = 0
+    data['val'] = 0
+    data.loc[data['year'] == 2015, 'train'] = 0
+    data.loc[data['year'] == 2015, 'test'] = 1
+    data.loc[data['year'] == 2015, 'val'] = 0
+    data.loc[data['year'] == 2014, 'train'] = 0
+    data.loc[data['year'] == 2014,'test'] = 0
+    data.loc[data['year'] == 2014,'val'] = 1
+    # check for overlapping patients in test and train/val sets
+    if not(set(data.loc[data['year']==2015, 'patient_id'].values).isdisjoint(set(data.loc[data['year']!=2015, 'patient_id']))):
+        # remove patients
+        s=sum(data['train'].values)
+        patients = set(data.loc[data['year']==2015, 'patient_id']).intersection(set(data.loc[data['year']!=2015, 'patient_id']))
+        data.loc[(data['patient_id'].isin(list(patients)))&(data['year']<2015), 'train']=0
+        data.loc[(data['patient_id'].isin(list(patients))) & (data['year'] < 2015), 'val'] = 0
+        print('Removed {:d} entries from the training and validation sets because the patients appeared in the test set'.format(s-sum(data['train'].values)))    
+    
+    if not(set(data.loc[data['year']==2014, 'patient_id'].values).isdisjoint(set(data.loc[data['year']<2014, 'patient_id']))):
+        # remove patients
+        s=sum(data['train'].values)
+        patients = set(data.loc[data['year']==2014, 'patient_id']).intersection(set(data.loc[data['year']<2014, 'patient_id']))
+        data.loc[(data['patient_id'].isin(list(patients)))&(data['year']<2014), 'train']=0
+        print('Removed {:d} entries from the training set because the patients appeared in the validation set'.format(s-sum(data['train'].values)))
+
+    train_size = data.loc[data['train']==1].shape[0]
+    val_size = data.loc[data['val'] ==1].shape[0]
+    test_size = data.loc[data['test']==1].shape[0]
+   
+    print('Train set size = {train}, val set size = {val}, test set size = {test}'.format(train=train_size,  val=val_size, test=test_size))   
+    return data
+
+
 def transform(data):
     # convert length of stay feature
     # 1 - more then 7 days, 0 - less
@@ -170,3 +211,4 @@ def transform(data):
     data  = transform_diagnosis(data)
     print(data.columns.tolist())
     return data
+
