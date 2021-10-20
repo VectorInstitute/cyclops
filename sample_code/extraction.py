@@ -12,8 +12,34 @@ def extract(config):
     print('postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
     engine = sqlalchemy.create_engine(f'postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
 
-    # extract basic demographics and length of stay information from ip_administrative
     query = """select distinct
+        i.patient_id_hashed as patient_id,
+        i.genc_id,
+        i.hospital_id,
+        CASE when i.gender = 'F' THEN 1 ELSE 0 END AS sex,
+        i.age,
+        CASE when i.discharge_disposition = 7 THEN 1 ELSE 0 END AS mort_hosp,
+	    i.discharge_date_time, 
+	    i.admit_date_time,
+	    f.diagnosis_code as mr_diagnosis,
+	    DATE_PART('year', i.admit_date_time) as year, 
+        (extract(epoch from i.discharge_date_time)::FLOAT - extract(epoch from i.admit_date_time)::float)/(24*60*60) as los,
+        CASE when g.pal =1 THEN 1 ELSE 0 END AS palliative
+      FROM ip_administrative i,
+          LEFT OUTER JOIN (SELECT d.genc_id, d.diagnosis_code
+                  FROM diagnosis d
+                  WHERE d.diagnosis_type='M' AND d.is_er_diagnosis='FALSE') f
+                  ON i.genc_id=f.genc_id
+          LEFT OUTER JOIN (SELECT d.genc_id, 1 as pal
+                  FROM diagnosis d
+                  WHERE d.diagnosis_code = 'Z515') g
+                  ON i.genc_id=g.genc_id
+      ORDER BY patient_id, genc_id
+      LIMIT 10
+    """
+
+    # extract basic demographics and length of stay information from ip_administrative
+    query_full = """select distinct
         i.patient_id_hashed as patient_id,
         i.genc_id,
         i.hospital_id,
@@ -53,7 +79,7 @@ def extract(config):
                   FROM er_administrative e) e
                   ON i.genc_id=e.genc_id
       ORDER BY patient_id, genc_id
-      LIMIT 10000"""
+      LIMIT 10"""
 
     data=pd.read_sql(query ,con=engine)
     print(data.head())
