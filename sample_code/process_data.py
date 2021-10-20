@@ -37,7 +37,7 @@ def eval_drift(label, reference, production, column_mapping, html=False):
 def analyze(data, config):
     column_mapping = {}
     column_mapping['numerical_features'] = ['age']
-    column_mapping['categorical_features'] = ['sex', 'stay_length']
+    column_mapping['categorical_features'] = ['sex', 'los']
     analysis_columns = column_mapping['numerical_features'] + column_mapping['categorical_features']
     
     #prepare data - select only numeric and categorical features
