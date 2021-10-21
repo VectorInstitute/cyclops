@@ -32,14 +32,15 @@ def read_config(file = False):
     parser.add('--ref', default=[], type=int,  action='append', required=False, help='List of slices to take as reference data')
     parser.add('--eval', default=[], type = int, action='append', required = False, help = 'List of slices to evaluate on (default is all except reference data)')
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     # args.commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('ascii')
 
     print({k: v for k, v in vars(args).items()})
 
-    password = getpass.getpass(prompt='Database password: ', stream=None)
-    args.password = password
+    if args.input == None:
+        password = getpass.getpass(prompt='Database password: ', stream=None)
+        args.password = password
 
     return args
 

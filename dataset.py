@@ -27,7 +27,7 @@ class BaseData:
         return len(self.target)
 
     def dim(self):
-        return inputs.size(dim=1)
+        return self.inputs.size(dim=1)
 
 def get_dataset(name):
     return DATA_REGISTRY[name]
@@ -57,15 +57,17 @@ def fakedata(args):
     return split_train_and_val(dataset)
 
 @register
-def geminidata(args):
+def gemini(args):
     # get data pipeline configuration
     config = conf.read_config(args.gemini_config)
     data = pipeline(config)
     train, val, test = get_splits(config, data)
 
     def pandas_to_dataset(df, feature_cols, target_cols):
-        inputs = torch.tensor(df[feature_cols].values)
-        target = torch.tensor(df[target_cols].values)
+        inputs = torch.tensor(df[feature_cols].values, dtype=torch.float32)
+        target = torch.tensor(df[target_cols].values, dtype=torch.float32)
+        target = torch.flatten(target)
+        print(target.size())
         return BaseData(inputs, target)
 
     train_dset = pandas_to_dataset(train, config.features, config.target)

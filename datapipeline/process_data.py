@@ -4,9 +4,9 @@ import json
 import os
 import time
 
-import config as conf
-import extraction as ex
-import analysis
+import datapipeline.config as conf
+import datapipeline.extraction as ex
+import datapipeline.analysis as analysis
 
 def save_data(data, config, format='csv'):
     if (format != 'csv'):
@@ -20,12 +20,11 @@ def save_data(data, config, format='csv'):
 def get_splits (config, data):
     # drop columns not used in training
     all_columns = config.features + config.target
-    data = data[all_columns]
 
     #TODO: do I need to further clean any NaN values?
-    train = data.loc[data['train']==1]
-    test = data.loc[data['test'] == 1]
-    val = data.loc[data['val'] == 1]
+    train = data.loc[data['train']==1, all_columns]
+    test = data.loc[data['test'] == 1, all_columns]
+    val = data.loc[data['val'] == 1, all_columns]
 
     return train, val, test
 
