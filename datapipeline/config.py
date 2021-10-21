@@ -4,8 +4,12 @@ import time
 import os
 import json
 
-def read_config():
-    parser = configargparse.ArgumentParser()
+def read_config(file = False):
+    if not file:
+        parser = configargparse.ArgumentParser()
+    else:
+        parser = configargparse.ArgumentParser(default_config_files = [file])
+        
     parser.add('-c', '--config_file', is_config_file=True, help='config file path')
 
     # database connection parameters
@@ -18,6 +22,9 @@ def read_config():
 
     # data extraction parameters
     parser.add('-w', action='store_true', help='Write extracted data to disk')
+    parser.add('--input', type=str, default=None, required=False, help='Data file to read from instead of database')
+    parser.add('--features', default=[], type= str,  action='append', required=False, help='List of features for the model')
+    parser.add('--target', default=[], type = str, action='append', required = False, help = 'Column we are trying to predict')
 
     #data analysis parameters
     parser.add('-a', action='store_true', help='Perform analysis?')
