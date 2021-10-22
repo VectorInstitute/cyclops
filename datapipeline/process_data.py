@@ -20,11 +20,11 @@ def save_data(data, config, format='csv'):
 def get_splits (config, data):
     # drop columns not used in training
     all_columns = config.features + config.target
-
+   
     #TODO: do I need to further clean any NaN values?
-    train = data.loc[data['train']==1, all_columns]
-    test = data.loc[data['test'] == 1, all_columns]
-    val = data.loc[data['val'] == 1, all_columns]
+    train = data.loc[data['train']==1, all_columns].dropna()
+    test = data.loc[data['test'] == 1, all_columns].dropna()
+    val = data.loc[data['val'] == 1, all_columns].dropna()
 
     return train, val, test
 

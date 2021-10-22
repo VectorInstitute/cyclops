@@ -60,8 +60,8 @@ def validate(model, val_loader, loss_fn):
         target = target.to(device, non_blocking=True).to(data.dtype)
 
         output = model(data)
-
-        loss = loss_fn(output.squeeze(), target)
+        
+        loss = loss_fn(output.squeeze(dim=1), target)
 
         metric.add_step(loss, output, target)
 
