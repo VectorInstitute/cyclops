@@ -33,7 +33,7 @@ def prepare_args():
     parser.add_argument("--data_len", type=int, default=10000)
 
     # used by gemini data pipeline
-    parser.add_argument("--gemini_config", type=str, default="datapipeline/delirium.config")
+    parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")
 
     # training configs
     parser.add_argument('--lr', type=float, default=3e-4)
@@ -74,6 +74,17 @@ def validate(model, val_loader, loss_fn):
     # put this in a logger
     print(to_print)
 
+@torch.no_grad()
+def predict(model, loader):
+    output = []
+    for (data, target) in loader:
+        data = data.to(device, non_blocking=True)
+        target = target.to(device, non_blocking=True).to(data.dtype)
+
+        out = model(data)
+        output.append(out.squeze(dim=1))
+    return output
+
 
 def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
@@ -112,7 +123,7 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
 def main(args):
 
-    train_dataset, val_dataset = get_dataset(args.dataset)(args)
+    train_dataset, val_dataset, _ = get_dataset(args.dataset)(args)
 
     train_loader = to_loader(train_dataset, args, args.shuffle)
     val_loader = to_loader(val_dataset, args, shuffle=False)
