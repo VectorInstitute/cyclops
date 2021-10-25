@@ -1,8 +1,8 @@
 import argparse
+from torch.utils.data import DataLoader
 
 from dataset import get_dataset, split_train_and_val
 from model import get_model
-from main import predict
 import datapipeline.config as conf
 
 from evidently.dashboard import Dashboard
@@ -12,7 +12,9 @@ def prepare_args():
     parser = argparse.ArgumentParser(description="ML OPS Testing")
     # model configs
     parser.add_argument("--model", type=str, default="mlp")
-    parser.add_argument("--model_save_path", type=str, default="./model.pt")
+    parser.add_argument("--model_path", type=str, default="./model.pt")
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--num_workers", type=int, default=0)
 
     # data configs
     parser.add_argument("--dataset", type=str, default="gemini")
@@ -21,6 +23,24 @@ def prepare_args():
     args = parser.parse_args()
     return args
 
+
+def to_loader(dataset, args, shuffle=False):
+    return DataLoader(dataset,
+                      batch_size=args.batch_size,
+                      shuffle=shuffle,
+                      num_workers=args.num_workers,
+                      pin_memory=True)
+
+
+def predict(model, loader):
+    output = []
+    for (data, target) in loader:
+        data = data.to(device, non_blocking=True)
+        target = target.to(device, non_blocking=True).to(data.dtype)
+
+        out = model(data)
+        output.append(out.squeze(dim=1))
+    return output
 
 def evaluate():
     args = prepare_args()

@@ -74,17 +74,6 @@ def validate(model, val_loader, loss_fn):
     # put this in a logger
     print(to_print)
 
-@torch.no_grad()
-def predict(model, loader):
-    output = []
-    for (data, target) in loader:
-        data = data.to(device, non_blocking=True)
-        target = target.to(device, non_blocking=True).to(data.dtype)
-
-        out = model(data)
-        output.append(out.squeze(dim=1))
-    return output
-
 
 def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
