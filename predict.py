@@ -1,8 +1,11 @@
 import argparse
 import torch
+import pandas as pd
 from torch.utils.data import DataLoader
 
 from model import get_model
+from dataset import pandas_to_dataset
+from main import to_loader
 import datapipeline.config as conf
 
 from evidently.dashboard import Dashboard
@@ -21,7 +24,10 @@ def prepare_args():
 
     # data configs
     parser.add_argument("--input", type=str, "../test.csv")
-    parser.add_argument("--input", type=str, "../result.csv")
+    parser.add_argument("--output", type=str, "../result.csv")
+
+    # used by gemini data pipeline
+    parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")
 
     args = parser.parse_args()
     return args
@@ -36,33 +42,25 @@ def predict(model, loader):
         output.append(out.squeeze(dim=1))
     return output
 
-def evaluate():
-    args = prepare_args()
-    
-    val_loader = to_loader(val_dataset, args, shuffle=False)
-    test_loader = to_loader(test_dataset, args, shuffle=False)
-
-    # set data dimensions automatically based on dataset
-    args.data_dim = train_dataset.dim()
-
+def main(args):
+    # read model
     model = get_model(args.model)(args).to(device)
-    
-    # get prediction results for both val and test
-    reference['prediction'] = predict(model, val_loader)
-    production['prediction'] = predict(model, test_loader)
+    model.load_state_dict(torch.load(args.model_path))
+    model.eval()
 
-    column_mapping = {}
+    # read data
+    config = conf.read_config(args.dataset_config)
+    data = pd.read_csv(input)
+    dataset = pandas_to_dataset(data, config.feature_cols, config.target_cols)
+    loader = to_loader(dataset, args)
 
-    column_mapping['target'] = config.target
-    column_mapping['prediction'] = 'prediction'
-    column_mapping['numerical_features'] = config.numerical_features
-    column_mapping['categorical_features'] = config.categorical_features
+    result = predict(model, loader)
 
-    perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
-    perfomance_dashboard.calculate(reference, production, column_mapping=column_mapping)
-
-    perfomance_dashboard.save("../performance_report.html")  # TODO: filename should be a parameter
+    # save results csv
+    data['prediction'] = result
+    data.to_cvs(args.output)
 
 if __name__ == "__main__":
-    evaluate()
+    args = prepare_args()
+    main(args)
     
