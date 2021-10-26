@@ -21,6 +21,7 @@ def prepare_args():
     parser.add_argument("--model_path", type=str, default="./model.pt")
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--num_workers", type=int, default=0)
+    parser.add_argument("--threshold", type=float, default=0.5)
 
     # data configs
     parser.add_argument("--input", type=str, default = "../test.csv")
@@ -39,15 +40,15 @@ def predict(model, loader):
         target = target.to(device, non_blocking=True).to(data.dtype)
 
         out = model(data)
-        output.append(out.squeeze(dim=1))
+        output = output + out.squeeze(dim=1).tolist()
     return output
 
 def main(args):
     # read data
     config = conf.read_config(args.dataset_config)
-    data = pd.read_csv(input)
-    dataset = pandas_to_dataset(data, config.feature_cols, config.target_cols)
-    args.data_dim = train_dataset.dim()
+    data = pd.read_csv(args.input)
+    dataset = pandas_to_dataset(data, config.features, config.target)
+    args.data_dim = dataset.dim()
     loader = to_loader(dataset, args)
 
     # read model
@@ -59,7 +60,9 @@ def main(args):
 
     # save results csv
     data['prediction'] = result
-    data.to_cvs(args.output)
+    data.loc[data['prediction'] >= args.threshold,'prediction'] = 1
+    data.loc[data['prediction'] < args.threshold,'prediction'] = 0  
+    data.to_csv(args.output)
 
 if __name__ == "__main__":
     args = prepare_args()

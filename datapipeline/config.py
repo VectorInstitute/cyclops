@@ -29,8 +29,8 @@ def read_config(file = False):
     #data analysis parameters
     parser.add('-a', action='store_true', help='Perform analysis?')
     parser.add('--slice', default='year', type=str, required=False, help='What parameter to use to slice data for analysis?')
-    parser.add('--ref_slices', default=[], type=int,  action='append', required=False, help='List of slices to take as reference data')
-    parser.add('--eval_slices', default=[], type = int, action='append', required = False, help = 'List of slices to evaluate on (default is all except reference data)')
+    parser.add('--data_ref', default=[], type=int,  action='append', required=False, help='List of slices to take as reference data')
+    parser.add('--data_eval', default=[], type = int, action='append', required = False, help = 'List of slices to evaluate on (default is all except reference data)')
     parser.add('--numerical_features', default=[], type=str, action='append', required=False, help='List of numerical features (for analysis)')
     parser.add('--categorical_features', default=[], type=str, action='append', required=False, help='List of categorical features (for analysis)')
 
