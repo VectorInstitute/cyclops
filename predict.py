@@ -43,16 +43,17 @@ def predict(model, loader):
     return output
 
 def main(args):
-    # read model
-    model = get_model(args.model)(args).to(device)
-    model.load_state_dict(torch.load(args.model_path))
-    model.eval()
-
     # read data
     config = conf.read_config(args.dataset_config)
     data = pd.read_csv(input)
     dataset = pandas_to_dataset(data, config.feature_cols, config.target_cols)
+    args.data_dim = train_dataset.dim()
     loader = to_loader(dataset, args)
+
+    # read model
+    model = get_model(args.model)(args).to(device)
+    model.load_state_dict(torch.load(args.model_path))
+    model.eval()
 
     result = predict(model, loader)
 
