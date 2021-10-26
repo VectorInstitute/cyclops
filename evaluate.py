@@ -2,7 +2,6 @@ import argparse
 import torch
 from torch.utils.data import DataLoader
 
-from dataset import get_dataset, split_train_and_val
 from model import get_model
 import datapipeline.config as conf
 
@@ -21,20 +20,11 @@ def prepare_args():
     parser.add_argument("--num_workers", type=int, default=0)
 
     # data configs
-    parser.add_argument("--dataset", type=str, default="gemini")
-    parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")
+    parser.add_argument("--input", type=str, "../test.csv")
+    parser.add_argument("--input", type=str, "../result.csv")
 
     args = parser.parse_args()
     return args
-
-
-def to_loader(dataset, args, shuffle=False):
-    return DataLoader(dataset,
-                      batch_size=args.batch_size,
-                      shuffle=shuffle,
-                      num_workers=args.num_workers,
-                      pin_memory=True)
-
 
 def predict(model, loader):
     output = []
@@ -48,8 +38,7 @@ def predict(model, loader):
 
 def evaluate():
     args = prepare_args()
-    config = conf.read_config(args.dataset_config)
-    train_dataset, val_dataset, test_dataset = get_dataset(args.dataset)(args)
+    
     val_loader = to_loader(val_dataset, args, shuffle=False)
     test_loader = to_loader(test_dataset, args, shuffle=False)
 

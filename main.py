@@ -49,7 +49,6 @@ def to_loader(dataset, args, shuffle=False):
                       num_workers=args.num_workers,
                       pin_memory=True)
 
-
 @torch.no_grad()
 def validate(model, val_loader, loss_fn):
 
@@ -112,7 +111,7 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
 def main(args):
 
-    train_dataset, val_dataset, _ = get_dataset(args.dataset)(args)
+    train_dataset, val_dataset = get_dataset(args.dataset)(args)
 
     train_loader = to_loader(train_dataset, args, args.shuffle)
     val_loader = to_loader(val_dataset, args, shuffle=False)

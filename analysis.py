@@ -5,7 +5,9 @@ from evidently.profile_sections import DataDriftProfileSection
 from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab
 
-def analyze(data, config):
+import datapipeline.config as conf
+
+def analyze_dataset_drift(data, config):
     column_mapping = {}
     column_mapping['numerical_features'] = ['age']
     column_mapping['categorical_features'] = ['sex', 'los']
@@ -48,3 +50,31 @@ def eval_drift(label, reference, production, column_mapping, html=False):
     for feature in column_mapping['numerical_features'] + column_mapping['categorical_features']:
         drifts.append((feature, json_report['data_drift']['data']['metrics'][feature]['p_value'])) 
     return drifts
+
+def analyze_model_drift(reference, test, config):
+    column_mapping = {}
+
+    column_mapping['target'] = config.target
+    column_mapping['prediction'] = 'prediction'
+    column_mapping['numerical_features'] = config.numerical_features
+    column_mapping['categorical_features'] = config.categorical_features
+
+    perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
+    perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
+
+    perfomance_dashboard.save("../performance_report.html")  # TODO: filename should be a parameter
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")
+    parser.add_argument("--type", type=str, default="dataset")
+    args = parser.parse_args()
+
+    config = conf.read_config(args.dataset_config)
+    if args.type == "dataset":
+        data = pd.read_csv(config.input)
+        analyze_dataset_drift(data, config)
+    else:
+        reference = pd.read_csv(config.reference)
+        test = pd.read_csv(config.test)
+        analyze_model_drift(reference, test, config):
