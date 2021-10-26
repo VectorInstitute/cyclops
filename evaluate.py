@@ -1,4 +1,5 @@
 import argparse
+import torch
 from torch.utils.data import DataLoader
 
 from dataset import get_dataset, split_train_and_val
@@ -7,6 +8,9 @@ import datapipeline.config as conf
 
 from evidently.dashboard import Dashboard
 from evidently.tabs import ClassificationPerformanceTab
+
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def prepare_args():
     parser = argparse.ArgumentParser(description="ML OPS Testing")
@@ -39,7 +43,7 @@ def predict(model, loader):
         target = target.to(device, non_blocking=True).to(data.dtype)
 
         out = model(data)
-        output.append(out.squeze(dim=1))
+        output.append(out.squeeze(dim=1))
     return output
 
 def evaluate():
