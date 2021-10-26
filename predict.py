@@ -23,8 +23,8 @@ def prepare_args():
     parser.add_argument("--num_workers", type=int, default=0)
 
     # data configs
-    parser.add_argument("--input", type=str, "../test.csv")
-    parser.add_argument("--output", type=str, "../result.csv")
+    parser.add_argument("--input", type=str, default = "../test.csv")
+    parser.add_argument("--output", type=str, default = "../result.csv")
 
     # used by gemini data pipeline
     parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")

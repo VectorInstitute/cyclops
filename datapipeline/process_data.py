@@ -6,7 +6,6 @@ import time
 
 import datapipeline.config as conf
 import datapipeline.extraction as ex
-import datapipeline.analysis as analysis
 
 def save_data(data, config, format='csv'):
     if (format != 'csv'):
