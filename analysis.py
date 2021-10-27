@@ -8,33 +8,33 @@ from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
 
 import datapipeline.config as conf
 
+def get_report_filname(config):
+    t = time.localtime()
+    date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
+    filename = os.path.join(config.report_path, f'{config.type}_report_{date}.html')
+    return filename
+
 def analyze_dataset_drift(data, config):
     column_mapping = {}
-    column_mapping['numerical_features'] = ['age']
-    column_mapping['categorical_features'] = ['sex', 'los']
+    column_mapping['numerical_features'] = config.numerical_features
+    column_mapping['categorical_features'] = config.categorical_features
     analysis_columns = column_mapping['numerical_features'] + column_mapping['categorical_features']
 
     # prepare data - select only numeric and categorical features
-    # pick specific years to compare
-    reference_years = config.ref
-    years_to_evaluate = config.eval
-    reference_data = data.loc[data['year'].isin(reference_years), analysis_columns]
+    # pick specific slices to compare
+    ref_slices = config.data_ref
+    eval_slices = config.data_eval
+    reference_data = data.loc[data[config.slice].isin(ref_slices), analysis_columns]
     reference_data = reference_data.dropna()
 
-    # generate report for each slice
-    # TODO: add option to do analysis for all years except reference ones
-    drifts = []
-    for eval_year in years_to_evaluate:
-        eval_data = data.loc[data['year'] == eval_year, analysis_columns]
+    eval_data = data.loc[data[config.slice].isin(eval_slices), analysis_columns]
+    eval_data = eval_data.dropna()
+    drift = eval_drift(reference_data, eval_data, column_mapping, html=True)
 
-        eval_data = eval_data.dropna()
-
-        drifts.append(eval_drift(eval_year, reference_data, eval_data, column_mapping, html=False))
-
-    return drifts  
+    return drift  
 
 #evaluate data drift with Evidently Profile
-def eval_drift(label, reference, production, column_mapping, html=False):
+def eval_drift(reference, production, column_mapping, html=False):
     column_mapping['drift_conf_level'] = 0.95
     column_mapping['drift_features_share'] = 0.5
     data_drift_profile = Profile(sections=[DataDriftProfileSection])
@@ -45,25 +45,26 @@ def eval_drift(label, reference, production, column_mapping, html=False):
     if html:
         dashboard = Dashboard(tabs=[DataDriftTab])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
-        dashboard.save("../data_drif_report.html") #TODO: filename should be a parameter
+        dashboard.save(get_report_filname(config)) #TODO: filename should be a parameter
 
-    drifts = [('label', label)]
+    drifts = []
     for feature in column_mapping['numerical_features'] + column_mapping['categorical_features']:
         drifts.append((feature, json_report['data_drift']['data']['metrics'][feature]['p_value'])) 
     return drifts
 
+# compare performance of the model on two sets of data
 def analyze_model_drift(reference, test, config):
     column_mapping = {}
 
-    column_mapping['target'] = 'los' #config.target TODO:fix
-    column_mapping['prediction'] = 'prediction'
+    column_mapping['target'] = config.target 
+    column_mapping['prediction'] = config.prediction
     column_mapping['numerical_features'] = config.numerical_features
     column_mapping['categorical_features'] = config.categorical_features
 
     perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
     perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
 
-    perfomance_dashboard.save("../performance_report.html")  # TODO: filename should be a parameter
+    perfomance_dashboard.save(get_report_filname(config))
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

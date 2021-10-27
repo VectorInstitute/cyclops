@@ -24,7 +24,7 @@ def read_config(file = False):
     parser.add('-w', action='store_true', help='Write extracted data to disk')
     parser.add('--input', type=str, default=None, required=False, help='Data file to read from instead of database')
     parser.add('--features', default=[], type= str,  action='append', required=False, help='List of features for the model')
-    parser.add('--target', default=[], type = str, action='append', required = False, help = 'Column we are trying to predict')
+    parser.add('--target', default='target', type = str, required = False, help = 'Column we are trying to predict')
 
     #data analysis parameters
     parser.add('-a', action='store_true', help='Perform analysis?')
@@ -33,6 +33,8 @@ def read_config(file = False):
     parser.add('--data_eval', default=[], type = int, action='append', required = False, help = 'List of slices to evaluate on (default is all except reference data)')
     parser.add('--numerical_features', default=[], type=str, action='append', required=False, help='List of numerical features (for analysis)')
     parser.add('--categorical_features', default=[], type=str, action='append', required=False, help='List of categorical features (for analysis)')
+    parser.add('--report_path', default='../', type=str, required=False, help='Where to store html report?')
+    parser.add('--prediction', default='prediction', type=str, required=False, help='Name of the prediction column')
 
     # model performance parameters
     parser.add('--reference', type=str, required=False, help='Filename of features/prediction to use as reference')
