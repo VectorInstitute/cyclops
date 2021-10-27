@@ -1,5 +1,8 @@
 import pandas as pd
 import argparse
+import json
+import time
+import os
 
 from evidently.model_profile import Profile
 from evidently.profile_sections import DataDriftProfileSection
@@ -73,6 +76,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = conf.read_config(args.dataset_config)
+    config.type = args.type
     if args.type == "dataset":
         data = pd.read_csv(config.input)
         analyze_dataset_drift(data, config)
