@@ -3,15 +3,51 @@ import argparse
 import json
 import time
 import os
+import configargparse
 
 from evidently.model_profile import Profile
 from evidently.profile_sections import DataDriftProfileSection
 from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
 
-import datapipeline.config as conf
+def read_config(file = False):
+    if not file:
+        parser = configargparse.ArgumentParser()
+    else:
+        parser = configargparse.ArgumentParser(default_config_files=[file])
 
-def get_report_filname(config):
+    parser.add('-c', '--config_file', is_config_file=True,  default='gemini_analysis.conf', help='config file path')
+    parser.add_argument("--type", type=str, default="dataset", help='Type of report to generate')
+
+    # data-specific parameters
+    parser.add('--slice', default='year', type=str, required=False,
+           help='What column to use to slice data for analysis?')
+    parser.add('--data_ref', default=[], type=int, action='append', required=False,
+           help='List of slices to take as reference data')
+    parser.add('--data_eval', default=[], type=int, action='append', required=False,
+           help='List of slices to evaluate on')
+    parser.add('--numerical_features', default=[], type=str, action='append', required=False,
+           help='List of numerical features (for analysis)')
+    parser.add('--categorical_features', default=[], type=str, action='append', required=False,
+           help='List of categorical features (for analysis)')
+    parser.add('--report_path', default='../', type=str, required=False, help='Where to store html report?')
+
+    parser.add('--target', default='target', type=str, required=False,
+               help='Column we are trying to predict')
+    parser.add('-target_num', action='store_true', required=False,
+               help='Is target numerical (as opposed to categorical)')
+    parser.add('--prediction', default='prediction', type=str, required=False, help='Name of the prediction column')
+
+    # model performance parameters
+    parser.add('--reference', type=str, required=False, help='Filename of features/prediction to use as reference')
+    parser.add('--test', type=str, required=False,
+           help='Filename of features/prediction to use as test (for model drift evaluation)')
+
+    args, unknown = parser.parse_known_args()
+
+    return args
+
+def get_report_filename(config):
     t = time.localtime()
     date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
     filename = os.path.join(config.report_path, f'{config.type}_report_{date}.html')
@@ -48,7 +84,7 @@ def eval_drift(reference, production, column_mapping, html=False):
     if html:
         dashboard = Dashboard(tabs=[DataDriftTab])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
-        dashboard.save(get_report_filname(config)) #TODO: filename should be a parameter
+        dashboard.save(get_report_filename(config)) #TODO: filename should be a parameter
 
     drifts = []
     for feature in column_mapping['numerical_features'] + column_mapping['categorical_features']:
@@ -67,16 +103,10 @@ def analyze_model_drift(reference, test, config):
     perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
     perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
 
-    perfomance_dashboard.save(get_report_filname(config))
+    perfomance_dashboard.save(get_report_filename(config))
     
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")
-    parser.add_argument("--type", type=str, default="dataset")
-    args = parser.parse_args()
-
-    config = conf.read_config(args.dataset_config)
-    config.type = args.type
+    config = read_config()
     if args.type == "dataset":
         data = pd.read_csv(config.input)
         analyze_dataset_drift(data, config)
