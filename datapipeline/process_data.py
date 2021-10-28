@@ -4,8 +4,8 @@ import json
 import os
 import time
 
-import datapipeline.config as conf
-import datapipeline.extraction as ex
+import config as conf
+import extraction as ex
 
 def save_data(data, config, format='csv'):
     if (format != 'csv'):
@@ -44,11 +44,6 @@ def pipeline (config):
     # persist processed data
     if config.w:
         save_data(data, config)
-
-    # perform analysis as per config parameters
-    if config.a:
-        drifts = analysis.analyze(data, config)
-        print(drifts) #TODO: log to MLFlow
 
     return data
     
