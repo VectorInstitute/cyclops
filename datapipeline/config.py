@@ -22,6 +22,7 @@ def read_config(file = False):
 
     # data extraction parameters
     parser.add('-w', action='store_true', help='Write extracted data to disk')
+    parser.add('-r', action='store_true', help='Read from the database')
     parser.add('--input', type=str, default=None, required=False, help='Data file to read from instead of database')
     parser.add('--features', default=[], type= str,  action='append', required=False, help='List of features for the model')
     parser.add('--target', default=[], type = str, action='append', required = False, help = 'Column we are trying to predict')

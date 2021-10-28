@@ -28,7 +28,7 @@ def get_splits (config, data):
     return train, val, test
 
 def pipeline (config):
-    if not config.input is None:
+    if not config.r:
         # read data from file
         try:
             with open(config.input) as f:
