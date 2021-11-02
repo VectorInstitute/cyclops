@@ -4,8 +4,8 @@ import json
 import os
 import time
 
-import config as conf
-import extraction as ex
+import datapipeline.config as conf
+import datapipeline.extraction as ex
 
 def save_data(data, config, format='csv'):
     if (format != 'csv'):
