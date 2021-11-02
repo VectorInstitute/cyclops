@@ -1,0 +1,21 @@
+name: Delirium Project
+
+# This will be used when conda is available systemwide
+# conda_env: conda.yaml
+
+# Can have a docker_env instead of a conda_env, e.g.
+# docker_env:
+#    image:  delirium-docker
+
+entry_points:
+  main:
+    command: "python main.py "
+
+  #   parameters:
+  #     data_file: path
+  #     regularization: {type: float, default: 0.1}
+  #   command: "python train.py -r {regularization} {data_file}"
+  # validate:
+  #   parameters:
+  #     data_file: path
+  #   command: "python validate.py {data_file}"
