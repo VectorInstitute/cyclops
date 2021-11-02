@@ -6,7 +6,7 @@
 
 - To extract data from the database and save to csv:
 
-`python3 datapipeline/process_data.py --user <db-user-name> -r -w --output <output-path>`
+`python3 process_data.py --user <db-user-name> -r -w --output <output-path>`
 
 - To run dataset analysis, update gemini_analysis.conf configuration with preferred options. Run:
 
