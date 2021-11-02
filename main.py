@@ -32,6 +32,9 @@ def prepare_args():
     parser.add_argument("--data_dim", type=int, default=24)
     parser.add_argument("--data_len", type=int, default=10000)
 
+    # used by gemini data pipeline
+    parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")
+
     # training configs
     parser.add_argument('--lr', type=float, default=3e-4)
 
@@ -46,7 +49,6 @@ def to_loader(dataset, args, shuffle=False):
                       num_workers=args.num_workers,
                       pin_memory=True)
 
-
 @torch.no_grad()
 def validate(model, val_loader, loss_fn):
 
@@ -57,8 +59,8 @@ def validate(model, val_loader, loss_fn):
         target = target.to(device, non_blocking=True).to(data.dtype)
 
         output = model(data)
-
-        loss = loss_fn(output.squeeze(), target)
+        
+        loss = loss_fn(output.squeeze(dim=1), target)
 
         metric.add_step(loss, output, target)
 
@@ -109,11 +111,13 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
 def main(args):
 
-    dataset = get_dataset(args.dataset)(args)
-    train_dataset, val_dataset = split_train_and_val(dataset)
+    train_dataset, val_dataset = get_dataset(args.dataset)(args)
 
     train_loader = to_loader(train_dataset, args, args.shuffle)
     val_loader = to_loader(val_dataset, args, shuffle=False)
+
+    # set data dimensions automatically based on dataset
+    args.data_dim = train_dataset.dim()
 
     model = get_model(args.model)(args).to(device)
     loss_fn = nn.BCEWithLogitsLoss()
