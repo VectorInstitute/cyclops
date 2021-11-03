@@ -88,15 +88,16 @@ def eval_drift(reference, production, column_mapping, config, html=False):
     report = data_drift_profile.json()
     json_report = json.loads(report)
 
+    report_filename = get_report_filename(config)
     if html:
         dashboard = Dashboard(tabs=[DataDriftTab])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
-        dashboard.save(get_report_filename(config)) #TODO: filename should be a parameter
+        dashboard.save(report_filename) #TODO: filename should be a parameter
 
-    drifts = []
+    metrics = {'drifts':[], 'report_filename':report_filename}
     for feature in column_mapping['numerical_features'] + column_mapping['categorical_features']:
-        drifts.append((feature, json_report['data_drift']['data']['metrics'][feature]['p_value'])) 
-    return drifts
+        metrics['drifts'].append((feature, json_report['data_drift']['data']['metrics'][feature]['p_value'])) 
+    return metrics
 
 # compare performance of the model on two sets of data
 def analyze_model_drift(reference, test, config):
@@ -109,17 +110,19 @@ def analyze_model_drift(reference, test, config):
 
     perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
     perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
-
-    perfomance_dashboard.save(get_report_filename(config))
-    return [] #TODO
+    report_filename = get_report_filename(config)
+    perfomance_dashboard.save(report_filename)
+    
+    metrics = {'report_filename':report_filename} #TODO
+    return metrics
 
 def log_to_mlflow(config, metrics):
     exp_name = 'DatasetAnalysis' if config.type == 'dataset' else 'ModelComparison'
     exp = mlflow.get_experiment_by_name(exp_name)
-    exp.start_run()
-    mlflow.log_params(config)
-    mlflow.log_metrics(metrics)
-    exp.end_run()
+    with mlflow.start_run(experiment_id=exp.experiment_id): 
+        mlflow.log_dict(vars(config), 'config.json')
+        mlflow.log_artifact(metrics['report_filename'])
+        #TODO: log analysis metrics as well
 
 def main(config):
     if config.type == "dataset":
