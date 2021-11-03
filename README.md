@@ -4,7 +4,7 @@
 
 ` conda create --name <env> --file requirements.txt`
 
-- To extract data from the database and save to csv:
+- To extract data from the database and save to csv (or change parameters in the datapipeline/delirium.conf):
 
 `python3 process_data.py --user <db-user-name> -r -w --output <output-path>`
 
