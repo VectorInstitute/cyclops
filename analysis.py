@@ -10,6 +10,8 @@ from evidently.profile_sections import DataDriftProfileSection
 from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
 
+import mlflow
+
 def read_config(file = False):
     if not file:
         parser = configargparse.ArgumentParser()
@@ -109,15 +111,26 @@ def analyze_model_drift(reference, test, config):
     perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
 
     perfomance_dashboard.save(get_report_filename(config))
+    return [] #TODO
+
+def log_to_mlflow(config, metrics):
+    exp_name = 'DatasetAnalysis' if config.type == 'dataset' else 'ModelComparison'
+    exp = mlflow.get_experiment_by_name(exp_name)
+    exp.start_run()
+    mlflow.log_params(config)
+    mlflow.log_metrics(metrics)
+    exp.end_run()
 
 def main(config):
     if config.type == "dataset":
         data = pd.read_csv(config.input)
-        analyze_dataset_drift(data, config)
+        metrics  = analyze_dataset_drift(data, config)
     else:
         reference = pd.read_csv(config.reference)
         test = pd.read_csv(config.test)
-        analyze_model_drift(reference, test, config)
+        metrics = analyze_model_drift(reference, test, config)
+    # log results of analysis to mlflow
+    log_to_mlflow(config, metrics)
 
 if __name__ == "__main__":
     config = read_config()
