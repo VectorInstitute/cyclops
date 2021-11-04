@@ -94,9 +94,15 @@ def eval_drift(reference, production, column_mapping, config, html=False):
         dashboard.calculate(reference, production, column_mapping=column_mapping)
         dashboard.save(report_filename) #TODO: filename should be a parameter
 
-    metrics = {'drifts':[], 'report_filename':report_filename}
+    metrics = {'drifts':[], 'report_filename':report_filename, 'results':{}}
+    results = json_report['data_drift']['data']['metrics'] 
     for feature in column_mapping['numerical_features'] + column_mapping['categorical_features']:
-        metrics['drifts'].append((feature, json_report['data_drift']['data']['metrics'][feature]['p_value'])) 
+        metrics['drifts'].append((feature, results[feature]['p_value'])) 
+    metrics['timestamp'] = json_report['timestamp']
+    print(results.keys())
+    metrics['results']['n_features'] = results['n_features']
+    metrics['results']['dataset_drift'] = 1 if results['dataset_drift'] else 0
+    metrics['results']['n_drifted_features'] = results['n_drifted_features']
     return metrics
 
 # compare performance of the model on two sets of data
@@ -122,7 +128,8 @@ def log_to_mlflow(config, metrics):
     with mlflow.start_run(experiment_id=exp.experiment_id): 
         mlflow.log_dict(vars(config), 'config.json')
         mlflow.log_artifact(metrics['report_filename'])
-        #TODO: log analysis metrics as well
+        mlflow.log_metrics(metrics['results'])
+        mlflow.log_params({'timestamp':metrics['timestamp']})
 
 def main(config):
     if config.type == "dataset":
