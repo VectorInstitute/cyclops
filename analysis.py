@@ -114,12 +114,23 @@ def analyze_model_drift(reference, test, config):
     column_mapping['numerical_features'] = config.numerical_features
     column_mapping['categorical_features'] = config.categorical_features
 
+    perfomance__profile = Profile(sections=[ClassificationPerformanceProfileSection])
+    perfomance_profile.calculate(reference, test, column_mapping=column_mapping)
+    report = perfomance_profile.json()
+    json_report = json.loads(report)
+
     perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
     perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
     report_filename = get_report_filename(config)
     perfomance_dashboard.save(report_filename)
     
     metrics = {'report_filename':report_filename} #TODO
+    results = json_report['data_drift']['data']['metrics']
+    metrics['timestamp'] = json_report['timestamp']
+    print(results.keys())
+    #metrics['results']['n_features'] = results['n_features']
+    #metrics['results']['dataset_drift'] = 1 if results['dataset_drift'] else 0
+    #metrics['results']['n_drifted_features'] = results['n_drifted_features']
     return metrics
 
 def log_to_mlflow(config, metrics):
