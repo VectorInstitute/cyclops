@@ -39,7 +39,7 @@ def pipeline (config):
         # read data from database
         data = ex.extract(config)
         data = ex.transform(data)
-        data = ex.split(data)
+        data = ex.split(data, config)
 
     # persist processed data
     if config.w:

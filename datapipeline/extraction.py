@@ -40,34 +40,9 @@ def extract(config):
     print('postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
     engine = sqlalchemy.create_engine(f'postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
 
-    query = """select distinct
-        i.patient_id_hashed as patient_id,
-        i.genc_id,
-        i.hospital_id,
-        CASE when i.gender = 'F' THEN 1 ELSE 0 END AS sex,
-        i.age,
-        CASE when i.discharge_disposition = 7 THEN 1 ELSE 0 END AS mort_hosp,
-	    i.discharge_date_time, 
-	    i.admit_date_time,
-	    f.diagnosis_code as mr_diagnosis,
-	    DATE_PART('year', i.admit_date_time) as year, 
-        (extract(epoch from i.discharge_date_time)::FLOAT - extract(epoch from i.admit_date_time)::float)/(24*60*60) as los,
-        CASE when g.pal =1 THEN 1 ELSE 0 END AS palliative
-      FROM ip_administrative i
-          LEFT OUTER JOIN (SELECT d.genc_id, d.diagnosis_code
-                  FROM diagnosis d
-                  WHERE d.diagnosis_type='M' AND d.is_er_diagnosis='FALSE') f
-                  ON i.genc_id=f.genc_id
-          LEFT OUTER JOIN (SELECT d.genc_id, 1 as pal
-                  FROM diagnosis d
-                  WHERE d.diagnosis_code = 'Z515') g
-                  ON i.genc_id=g.genc_id
-      ORDER BY patient_id, genc_id
-      LIMIT 10
-    """
-
+    pop_size = '' if config.pop_size == 0 else f'limit {config.pop_size}'
     # extract basic demographics and length of stay information from ip_administrative
-    query_full = """select distinct
+    query_full = f"""select distinct
         i.patient_id_hashed as patient_id,
         i.genc_id,
         i.hospital_id,
@@ -107,9 +82,9 @@ def extract(config):
                   FROM er_administrative e) e
                   ON i.genc_id=e.genc_id
       ORDER BY patient_id, genc_id
-      LIMIT 10000"""
+      {pop_size}"""
 
-    data=pd.read_sql(query_full ,con=engine)
+    data=pd.read_sql(query_full,con=engine)
     print(data.head())
 
     return data
@@ -164,35 +139,44 @@ def transform_diagnosis(data):
     return data
 
 # add a column to signal training/val or test
-# TODO: test and val year splits should be a parameter
-def split (data):
-    #     Create the train and test folds: test set is 2015. All patients in 2015 will be not be used for training 
-    #     or validation. Validation year is 2014. All patients in the validation year will not be used for training.
-    
+def split (data, config):
+    #     Create the train and test folds: default test set is 2015. All patients in 2015 will be not be used for training 
+    #     or validation. Default validation year is 2014. All patients in the validation year will not be used for training.
+    #TODO: implement configurable train set - getting all except val/test in train set right now.
+
+    #
     # set a new column for use_train_val
     data['train'] = 1
     data['test'] = 0
     data['val'] = 0
-    data.loc[data['year'] == 2015, 'train'] = 0
-    data.loc[data['year'] == 2015, 'test'] = 1
-    data.loc[data['year'] == 2015, 'val'] = 0
-    data.loc[data['year'] == 2014, 'train'] = 0
-    data.loc[data['year'] == 2014,'test'] = 0
-    data.loc[data['year'] == 2014,'val'] = 1
+    if (config.split_column in ('year', 'hospital_id')):
+        test_const = int(config.test)
+        val_const = int (config.val)    
+    else:
+        test_const = config.test
+        val_const = config.val                
+    data.loc[data[config.split_column] == test_const, 'train'] = 0
+    data.loc[data[config.split_column] == test_const, 'test'] = 1
+    data.loc[data[config.split_column] == test_const, 'val'] = 0
+    data.loc[data[config.split_column] == val_const, 'train'] = 0
+    data.loc[data[config.split_column] == val_const, 'test'] = 0
+    data.loc[data[config.split_column] == val_const, 'val'] = 1
     # check for overlapping patients in test and train/val sets
-    if not(set(data.loc[data['year']==2015, 'patient_id'].values).isdisjoint(set(data.loc[data['year']!=2015, 'patient_id']))):
+    if not(set(data.loc[data[config.split_column]==test_const, 'patient_id'].values).isdisjoint(set(data.loc[data[config.split_column]!=test_const, 'patient_id']))):
         # remove patients
         s=sum(data['train'].values)
-        patients = set(data.loc[data['year']==2015, 'patient_id']).intersection(set(data.loc[data['year']!=2015, 'patient_id']))
-        data.loc[(data['patient_id'].isin(list(patients)))&(data['year']<2015), 'train']=0
-        data.loc[(data['patient_id'].isin(list(patients))) & (data['year'] < 2015), 'val'] = 0
+        patients = set(data.loc[data[config.split_column]==test_const, 'patient_id']).intersection(set(data.loc[data[config.split_column]!=test_const, 'patient_id']))
+        #print('size {:d}'.format(len(patients)))
+        #print(data.loc[data['patient_id'].isin(list(patients))&data['train']==1].shape[0])
+        data.loc[(data['patient_id'].isin(list(patients)))&(data[config.split_column]!=test_const), 'train']=0
+        data.loc[(data['patient_id'].isin(list(patients))) & (data[config.split_column]!=test_const), 'val'] = 0
         print('Removed {:d} entries from the training and validation sets because the patients appeared in the test set'.format(s-sum(data['train'].values)))    
     
-    if not(set(data.loc[data['year']==2014, 'patient_id'].values).isdisjoint(set(data.loc[data['year']<2014, 'patient_id']))):
+    if not(set(data.loc[data[config.split_column]==val_const, 'patient_id'].values).isdisjoint(set(data.loc[data[config.split_column]!=val_const, 'patient_id']))):
         # remove patients
         s=sum(data['train'].values)
-        patients = set(data.loc[data['year']==2014, 'patient_id']).intersection(set(data.loc[data['year']<2014, 'patient_id']))
-        data.loc[(data['patient_id'].isin(list(patients)))&(data['year']<2014), 'train']=0
+        patients = set(data.loc[data[config.split_column]==val_const, 'patient_id']).intersection(set(data.loc[data[config.split_column]<val_const, 'patient_id']))
+        data.loc[(data['patient_id'].isin(list(patients)))&(data[config.split_column]!=val_const), 'train']=0
         print('Removed {:d} entries from the training set because the patients appeared in the validation set'.format(s-sum(data['train'].values)))
 
     train_size = data.loc[data['train']==1].shape[0]

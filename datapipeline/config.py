@@ -26,6 +26,15 @@ def read_config(file = False):
     parser.add('--input', type=str, default=None, required=False, help='Data file to read from instead of database')
     parser.add('--features', default=[], type= str,  action='append', required=False, help='List of features for the model')
     parser.add('--target', default=[], type = str, action='append', required = False, help = 'Column we are trying to predict')
+    parser.add('--pop_size', type=int, default=10000, required=False, help='Total number of records to read from the database (0 - to read all)')
+
+    # train/test/val split parameters
+    parser.add('--split_column', default='year', type=str, required=False, help='Column we are use to split data into train, test, val')
+    parser.add('--test', default='2015', type=str, required=False, help='Test split values')
+    parser.add('--val', default='2014', type=str,  required=False, help='Val split values')
+    parser.add('--train', default=[], type=str, action='append', required=False, help='Train split values (if not set, all excdept test/val values)')
+
+
 
     args, unknown = parser.parse_known_args()
 

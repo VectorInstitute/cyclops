@@ -6,9 +6,11 @@ import os
 import configargparse
 
 from evidently.model_profile import Profile
-from evidently.profile_sections import DataDriftProfileSection
+from evidently.profile_sections import DataDriftProfileSection, ClassificationPerformanceProfileSection
 from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
+
+import mlflow
 
 def read_config(file = False):
     if not file:
@@ -86,15 +88,22 @@ def eval_drift(reference, production, column_mapping, config, html=False):
     report = data_drift_profile.json()
     json_report = json.loads(report)
 
+    report_filename = get_report_filename(config)
     if html:
         dashboard = Dashboard(tabs=[DataDriftTab])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
-        dashboard.save(get_report_filename(config)) #TODO: filename should be a parameter
+        dashboard.save(report_filename) #TODO: filename should be a parameter
 
-    drifts = []
+    metrics = {'drifts':[], 'report_filename':report_filename, 'results':{}}
+    results = json_report['data_drift']['data']['metrics'] 
     for feature in column_mapping['numerical_features'] + column_mapping['categorical_features']:
-        drifts.append((feature, json_report['data_drift']['data']['metrics'][feature]['p_value'])) 
-    return drifts
+        metrics['drifts'].append((feature, results[feature]['p_value'])) 
+    metrics['timestamp'] = json_report['timestamp']
+    print(results.keys())
+    metrics['results']['n_features'] = results['n_features']
+    metrics['results']['dataset_drift'] = 1 if results['dataset_drift'] else 0
+    metrics['results']['n_drifted_features'] = results['n_drifted_features']
+    return metrics
 
 # compare performance of the model on two sets of data
 def analyze_model_drift(reference, test, config):
@@ -105,19 +114,44 @@ def analyze_model_drift(reference, test, config):
     column_mapping['numerical_features'] = config.numerical_features
     column_mapping['categorical_features'] = config.categorical_features
 
+    perfomance_profile = Profile(sections=[ClassificationPerformanceProfileSection])
+    perfomance_profile.calculate(reference, test, column_mapping=column_mapping)
+    report = perfomance_profile.json()
+    json_report = json.loads(report)
+
     perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
     perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
+    report_filename = get_report_filename(config)
+    perfomance_dashboard.save(report_filename)
+    
+    metrics = {'results':{}, 'report_filename':report_filename}
+    results = json_report['classification_performance']['data']['metrics']
+    metrics['timestamp'] = json_report['timestamp']
+    metrics['results'] = {'ref_accuracy': results['reference']['accuracy'], 'ref_f1': results['reference']['f1'],
+        'ref_precision': results['reference']['precision'], 'ref_recall': results['reference']['recall'],
+        'test_accuracy': results['current']['accuracy'], 'test_f1':  results['current']['f1'],
+        'test_precision': results['current']['precision'], 'test_recall': results['current']['recall']}
+    return metrics
 
-    perfomance_dashboard.save(get_report_filename(config))
+def log_to_mlflow(config, metrics):
+    exp_name = 'DatasetAnalysis' if config.type == 'dataset' else 'ModelComparison'
+    exp = mlflow.get_experiment_by_name(exp_name)
+    with mlflow.start_run(experiment_id=exp.experiment_id): 
+        mlflow.log_dict(vars(config), 'config.json')
+        mlflow.log_artifact(metrics['report_filename'])
+        mlflow.log_metrics(metrics['results'])
+        mlflow.log_params({'timestamp':metrics['timestamp']})
 
 def main(config):
     if config.type == "dataset":
         data = pd.read_csv(config.input)
-        analyze_dataset_drift(data, config)
+        metrics  = analyze_dataset_drift(data, config)
     else:
         reference = pd.read_csv(config.reference)
         test = pd.read_csv(config.test)
-        analyze_model_drift(reference, test, config)
+        metrics = analyze_model_drift(reference, test, config)
+    # log results of analysis to mlflow
+    log_to_mlflow(config, metrics)
 
 if __name__ == "__main__":
     config = read_config()
