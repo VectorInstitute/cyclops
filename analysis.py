@@ -6,7 +6,7 @@ import os
 import configargparse
 
 from evidently.model_profile import Profile
-from evidently.profile_sections import DataDriftProfileSection
+from evidently.profile_sections import DataDriftProfileSection, ClassificationPerformanceProfileSection
 from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
 
@@ -114,7 +114,7 @@ def analyze_model_drift(reference, test, config):
     column_mapping['numerical_features'] = config.numerical_features
     column_mapping['categorical_features'] = config.categorical_features
 
-    perfomance__profile = Profile(sections=[ClassificationPerformanceProfileSection])
+    perfomance_profile = Profile(sections=[ClassificationPerformanceProfileSection])
     perfomance_profile.calculate(reference, test, column_mapping=column_mapping)
     report = perfomance_profile.json()
     json_report = json.loads(report)
@@ -124,13 +124,13 @@ def analyze_model_drift(reference, test, config):
     report_filename = get_report_filename(config)
     perfomance_dashboard.save(report_filename)
     
-    metrics = {'report_filename':report_filename} #TODO
-    results = json_report['data_drift']['data']['metrics']
+    metrics = {'results':{}, 'report_filename':report_filename}
+    results = json_report['classification_performance']['data']['metrics']
     metrics['timestamp'] = json_report['timestamp']
-    print(results.keys())
-    #metrics['results']['n_features'] = results['n_features']
-    #metrics['results']['dataset_drift'] = 1 if results['dataset_drift'] else 0
-    #metrics['results']['n_drifted_features'] = results['n_drifted_features']
+    metrics['results'] = {'ref_accuracy': results['reference']['accuracy'], 'ref_f1': results['reference']['f1'],
+        'ref_precision': results['reference']['precision'], 'ref_recall': results['reference']['recall'],
+        'test_accuracy': results['current']['accuracy'], 'test_f1':  results['current']['f1'],
+        'test_precision': results['current']['precision'], 'test_recall': results['current']['recall']}
     return metrics
 
 def log_to_mlflow(config, metrics):
