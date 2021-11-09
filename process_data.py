@@ -16,11 +16,19 @@ def save_data(data, config, format='csv'):
     file_name = os.path.join(config.output, f'admin_data_{date}.csv')
     data.to_csv(file_name)
 
+def prune_columns(config_columns, data):
+    columns = []
+
+    for c in config_columns:
+        if c in list(data.columns):
+           columns.append(c)
+   
+    return columns 
+
 def get_splits (config, data):
     # drop columns not used in training
-    all_columns = config.features + config.target
-   
-    #TODO: do I need to further clean any NaN values?
+    all_columns = prune_columns(config.features+config.target,data)
+ 
     train = data.loc[data['train']==1, all_columns].dropna()
     test = data.loc[data['test'] == 1, all_columns].dropna()
     val = data.loc[data['val'] == 1, all_columns].dropna()

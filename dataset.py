@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import random_split
 
 import datapipeline.config as conf
-from process_data import pipeline, get_splits
+from process_data import pipeline, get_splits, prune_columns
 
 from registry import register_with_dictionary
 
@@ -48,7 +48,8 @@ def split_train_and_val(dataset, percent_val=0.2, seed=42):
     return train_dset, val_dset
 
 def pandas_to_dataset(df, feature_cols, target_cols):
-    inputs = torch.tensor(df[feature_cols].values, dtype=torch.float32)
+    features = prune_columns(feature_cols, df)
+    inputs = torch.tensor(df[features].values, dtype=torch.float32)
     target = torch.tensor(df[target_cols].values, dtype=torch.float32)
     target = torch.flatten(target)
 
@@ -67,6 +68,7 @@ def gemini(args):
     # get data pipeline configuration
     config = conf.read_config(args.dataset_config)
     data = pipeline(config)
+    print(list(data.columns))
     train, val, _ = get_splits(config, data)
 
     train_dset = pandas_to_dataset(train, config.features, config.target)
