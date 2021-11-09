@@ -67,7 +67,7 @@ def fakedata(args):
 def gemini(args):
     # get data pipeline configuration
     config = conf.read_config(args.dataset_config)
-    data = pipeline(config)
+    data, _ = pipeline(config)
     print(list(data.columns))
     train, val, _ = get_splits(config, data)
 

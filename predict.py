@@ -1,4 +1,4 @@
-import argparse
+import configargparse
 import torch
 import pandas as pd
 import datetime
@@ -16,23 +16,29 @@ from mlflow import log_params
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def prepare_args():
-    parser = argparse.ArgumentParser(description="ML OPS Testing")
+def prepare_args(file = False):
+    if not file:
+        parser = configargparse.ArgumentParser()
+    else:
+        parser = configargparse.ArgumentParser(default_config_files=[file])
+
+    parser.add('-c', '--config_file', is_config_file=True, help='config file path')
+
     # model configs
-    parser.add_argument("--model", type=str, default="mlp")
-    parser.add_argument("--model_path", type=str, default="./model.pt")
-    parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--num_workers", type=int, default=0)
-    parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add("--model", type=str, default="mlp")
+    parser.add("--model_path", type=str, default="./model.pt")
+    parser.add("--batch_size", type=int, default=64)
+    parser.add("--num_workers", type=int, default=0)
+    parser.add("--threshold", type=float, default=0.5)
 
     # data configs
-    parser.add_argument("--input", type=str, default = "../test.csv")
-    parser.add_argument("--output", type=str, default = "../result.csv")
+    parser.add("--input", type=str, default = "../test.csv")
+    parser.add("--output", type=str, default = "../result.csv")
 
     # used by gemini data pipeline
-    parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")
+    parser.add("--dataset_config", type=str, default="datapipeline/delirium.config")
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     return args
 
 def predict(model, loader):

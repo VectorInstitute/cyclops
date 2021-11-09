@@ -16,7 +16,7 @@ def read_config(file = False):
 
     # database connection parameters
     parser.add("--user", default='koshkinam', type=str, required=False, help='Postgres user')
-    # parser.add_argument("--password", default=os.environ['PGPASSWORD'], type=str, required=True, help='Postgres password')
+    parser.add("--password", default=os.environ['PGPASSWORD'], type=str, required=False, help='Postgres password')
     parser.add("--port", default=5432, type=int, help='Postgres port')
     parser.add("--host", default='db.gemini-hpc.ca', type=str, required=False, help='Postgres host')
     parser.add("--database", default='delirium_v3_0_0', type=str, required=False, help='Postgres database')
@@ -47,7 +47,7 @@ def read_config(file = False):
 
     print({k: v for k, v in vars(args).items()})
 
-    if args.input == None:
+    if args.input == None and len(args.password) == 0:
         password = getpass.getpass(prompt='Database password: ', stream=None)
         args.password = password
     if len(args.filter_date_from) and len(args.filter_date_to):
