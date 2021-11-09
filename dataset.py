@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import random_split
 
 import datapipeline.config as conf
-from datapipeline.process_data import pipeline, get_splits
+from process_data import pipeline, get_splits
 
 from registry import register_with_dictionary
 

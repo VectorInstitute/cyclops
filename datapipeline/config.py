@@ -3,6 +3,8 @@ import configargparse
 import time
 import os
 import json
+import datetime
+   
 
 def read_config(file = False):
     if not file:
@@ -27,14 +29,17 @@ def read_config(file = False):
     parser.add('--features', default=[], type= str,  action='append', required=False, help='List of features for the model')
     parser.add('--target', default=[], type = str, action='append', required = False, help = 'Column we are trying to predict')
     parser.add('--pop_size', type=int, default=10000, required=False, help='Total number of records to read from the database (0 - to read all)')
+    parser.add('--filter_year', type=int, default= 0, required = False, help='Select only records from before specified year')
+
+    # specify 'from' and 'to' dates, only records with admit_date in this range will be selected
+    parser.add('--filter_date_from', type=str, default='', required = False, help='Format: yyyy-mm-dd. Select starting from this admit_date. Used in conjunction with --filter_date_to')
+    parser.add('--filter_date_to', type = str, default='', required = False, help='Format: yyyy-mm-dd. Select before this admit_date. Used in conjunction with --filter_date_from')
 
     # train/test/val split parameters
     parser.add('--split_column', default='year', type=str, required=False, help='Column we are use to split data into train, test, val')
     parser.add('--test', default='2015', type=str, required=False, help='Test split values')
     parser.add('--val', default='2014', type=str,  required=False, help='Val split values')
     parser.add('--train', default=[], type=str, action='append', required=False, help='Train split values (if not set, all excdept test/val values)')
-
-
 
     args, unknown = parser.parse_known_args()
 
@@ -45,7 +50,10 @@ def read_config(file = False):
     if args.input == None:
         password = getpass.getpass(prompt='Database password: ', stream=None)
         args.password = password
-
+    if len(args.filter_date_from) and len(args.filter_date_to):
+        args.filter_date_from = datetime.strptime(args.filter_date_from, '%Y%m%d')
+        args.filter_date_to = datetime.strptime(args.filter_date_to, '%Y%m%d')
+    
     return args
 
 def write_config(config):

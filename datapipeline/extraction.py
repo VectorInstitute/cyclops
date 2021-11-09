@@ -41,6 +41,9 @@ def extract(config):
     engine = sqlalchemy.create_engine(f'postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
 
     pop_size = '' if config.pop_size == 0 else f'limit {config.pop_size}'
+    filter = f"WHERE DATE_PART('year', i.admit_date_time) <= {int(config.filter_year)}" if config.filter_year else ''
+    filter = f"WHERE i.admit_date_time  > {double(config.filter_date_from)} AND i.admit_date_time <= {double(config.filter_date_to)}" if config.filter_date_from else filter
+
     # extract basic demographics and length of stay information from ip_administrative
     query_full = f"""select distinct
         i.patient_id_hashed as patient_id,
@@ -81,6 +84,7 @@ def extract(config):
                                 e.triage_level
                   FROM er_administrative e) e
                   ON i.genc_id=e.genc_id
+      {filter}
       ORDER BY patient_id, genc_id
       {pop_size}"""
 
