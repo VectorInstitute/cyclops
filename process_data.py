@@ -15,6 +15,7 @@ def save_data(data, config, format='csv'):
     date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
     file_name = os.path.join(config.output, f'admin_data_{date}.csv')
     data.to_csv(file_name)
+    return file_name
 
 def prune_columns(config_columns, data):
     columns = []
@@ -47,13 +48,15 @@ def pipeline (config):
         # read data from database
         data = ex.extract(config)
         data = ex.transform(data)
-        data = ex.split(data, config)
+        if len(config.split_column) > 0:
+            data = ex.split(data, config)
 
     # persist processed data
+    filepath = ''
     if config.w:
-        save_data(data, config)
+        filepath = save_data(data, config)
 
-    return data
+    return data, filepath
     
 if __name__=="__main__":
     config = conf.read_config()
