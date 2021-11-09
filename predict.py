@@ -10,6 +10,7 @@ from main import to_loader
 import datapipeline.config as conf
 from utils import AverageBinaryClassificationMetric
 
+import mlflow
 from mlflow import log_params
 
 
