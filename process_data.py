@@ -20,6 +20,8 @@ def save_data(data, config, format='csv'):
 def prune_columns(config_columns, data):
     columns = []
 
+    #print(config_columns, data.columns)
+
     for c in config_columns:
         if c in list(data.columns):
            columns.append(c)

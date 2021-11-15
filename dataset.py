@@ -52,7 +52,6 @@ def pandas_to_dataset(df, feature_cols, target_cols):
     inputs = torch.tensor(df[features].values, dtype=torch.float32)
     target = torch.tensor(df[target_cols].values, dtype=torch.float32)
     target = torch.flatten(target)
-
     return BaseData(inputs, target)
 
 @register
@@ -68,7 +67,6 @@ def gemini(args):
     # get data pipeline configuration
     config = conf.read_config(args.dataset_config)
     data, _ = pipeline(config)
-    print(list(data.columns))
     train, val, _ = get_splits(config, data)
 
     train_dset = pandas_to_dataset(train, config.features, config.target)

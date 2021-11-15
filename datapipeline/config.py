@@ -3,7 +3,7 @@ import configargparse
 import time
 import os
 import json
-import datetime
+from datetime import datetime
    
 
 def read_config(file = False):
@@ -47,9 +47,8 @@ def read_config(file = False):
 
     print({k: v for k, v in vars(args).items()})
 
-    if args.input == None and len(args.password) == 0:
-        password = getpass.getpass(prompt='Database password: ', stream=None)
-        args.password = password
+    if args.input == None and args.password == None:
+        args.password = getpass.getpass(prompt='Database password: ', stream=None)
     if len(args.filter_date_from) and len(args.filter_date_to):
         args.filter_date_from = datetime.strptime(args.filter_date_from, '%Y%m%d')
         args.filter_date_to = datetime.strptime(args.filter_date_to, '%Y%m%d')

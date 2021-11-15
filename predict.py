@@ -36,7 +36,7 @@ def prepare_args(file = False):
     parser.add("--output", type=str, default = "../result.csv")
 
     # used by gemini data pipeline
-    parser.add("--dataset_config", type=str, default="datapipeline/delirium.config")
+    parser.add("--dataset_config", type=str, default="datapipeline/delirium.conf")
 
     args, unknown = parser.parse_known_args()
     return args
@@ -49,8 +49,8 @@ def predict(model, loader):
         target = target.to(device, non_blocking=True).to(data.dtype)
 
         out = model(data)
+        metric.add_step(0, out, target)
         output = output + out.squeeze(dim=1).tolist()
-        metric.add_step(0, output, target)
 
     val_metric_dict = metric.compute_metrics()
     return output
@@ -65,6 +65,7 @@ def main(args):
         mlflow.log_params({'timestamp': datetime.datetime.now()})
         data = pd.read_csv(args.input)
         dataset = pandas_to_dataset(data, config.features, config.target)
+        
         args.data_dim = dataset.dim()
         loader = to_loader(dataset, args)
 

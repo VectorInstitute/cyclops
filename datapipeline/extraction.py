@@ -42,7 +42,7 @@ def extract(config):
 
     pop_size = '' if config.pop_size == 0 else f'limit {config.pop_size}'
     filter = f"WHERE DATE_PART('year', i.admit_date_time) <= {int(config.filter_year)}" if config.filter_year else ''
-    filter = f"WHERE i.admit_date_time  > {double(config.filter_date_from)} AND i.admit_date_time <= {double(config.filter_date_to)}" if config.filter_date_from else filter
+    filter = f"WHERE i.admit_date_time  > '{config.filter_date_from}' AND i.admit_date_time <= '{config.filter_date_to}'" if config.filter_date_from else filter
 
     # extract basic demographics and length of stay information from ip_administrative
     query_full = f"""select distinct
@@ -197,6 +197,5 @@ def transform(data):
     data["los"]=data["los"].apply(binary_legth_of_stay)
     data["hospital_id"] = data["hospital_id"].replace(HOSPITAL_ID)
     data  = transform_diagnosis(data)
-    print(data.columns.tolist())
     return data
 
