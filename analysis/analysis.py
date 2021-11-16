@@ -18,7 +18,7 @@ def read_config(file = False):
     else:
         parser = configargparse.ArgumentParser(default_config_files=[file])
 
-    parser.add('-c', '--config_file', is_config_file=True,  default='gemini_analysis.conf', help='config file path')
+    parser.add('-c', '--config_file', is_config_file=True,  default='../config/gemini_analysis.cfg', help='config file path')
     parser.add_argument("--type", type=str, default="dataset", help='Type of report to generate')
 
     # data-specific parameters

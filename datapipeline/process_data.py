@@ -60,9 +60,9 @@ def pipeline (config):
 
     return data, filepath
     
-if __name__=="__main__":
-    config = conf.read_config()
-    conf.write_config(config)
-    pipeline(config)
+#if __name__=="__main__":
+#    config = conf.read_config()
+#    conf.write_config(config)
+#    pipeline(config)
 
 

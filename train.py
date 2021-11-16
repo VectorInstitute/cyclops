@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from dataset import get_dataset, split_train_and_val
 from model import get_model
-from utils import AverageBinaryClassificationMetric
+from utils.utils import AverageBinaryClassificationMetric
 
 from mlflow import log_params
 
@@ -33,7 +33,7 @@ def prepare_args():
     parser.add_argument("--data_len", type=int, default=10000)
 
     # used by gemini data pipeline
-    parser.add_argument("--dataset_config", type=str, default="datapipeline/delirium.config")
+    parser.add_argument("--dataset_config", type=str, default="config/gemini_data.cfg")
 
     # training configs
     parser.add_argument('--lr', type=float, default=3e-4)

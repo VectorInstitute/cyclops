@@ -6,9 +6,9 @@ from torch.utils.data import DataLoader
 
 from model import get_model
 from dataset import pandas_to_dataset
-from main import to_loader
+from train import to_loader
 import datapipeline.config as conf
-from utils import AverageBinaryClassificationMetric
+from utils.utils import AverageBinaryClassificationMetric
 
 import mlflow
 from mlflow import log_params
@@ -36,7 +36,7 @@ def prepare_args(file = False):
     parser.add("--output", type=str, default = "../result.csv")
 
     # used by gemini data pipeline
-    parser.add("--dataset_config", type=str, default="datapipeline/delirium.conf")
+    parser.add("--dataset_config", type=str, default="config/gemini_data.cfg")
 
     args, unknown = parser.parse_known_args()
     return args
