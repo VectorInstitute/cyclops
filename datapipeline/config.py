@@ -20,7 +20,9 @@ def read_config(file = False):
     parser.add("--port", default=5432, type=int, help='Postgres port')
     parser.add("--host", default='db.gemini-hpc.ca', type=str, required=False, help='Postgres host')
     parser.add("--database", default='delirium_v3_0_0', type=str, required=False, help='Postgres database')
-    parser.add("--output", type=str, default='/mnt/nfs/project/delirium/data', help='Where should we put the CSV results?')
+    parser.add("--output_folder", type=str, default='/mnt/nfs/project/delirium/data', help='Which directory should we put the CSV results?')
+    parser.add("--output_full_path", type=str, help='Where should we put the CSV results? Full path option.')
+ 
 
     # data extraction parameters
     parser.add('-w', action='store_true', help='Write extracted data to disk')

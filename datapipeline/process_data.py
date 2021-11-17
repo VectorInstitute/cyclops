@@ -11,11 +11,15 @@ def save_data(data, config, format='csv'):
     if (format != 'csv'):
         print("Unsupported format {}".format(format))
         exit
-    t = time.localtime()
-    date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
-    file_name = os.path.join(config.output, f'admin_data_{date}.csv')
-    data.to_csv(file_name)
-    return file_name
+    if len(config.output_full_path) == 0:
+        t = time.localtime()
+        date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
+        name = f'admin_data_{date}.csv'
+        path = os.path.join(config.output_folder, name)
+    else: 
+        path = config.output_full_path
+    data.to_csv(path)
+    return path
 
 def prune_columns(config_columns, data):
     columns = []
