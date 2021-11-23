@@ -17,7 +17,6 @@
 To install prerequisites run:
 `conda create --name <env> --file requirements.txt`
 
-Environment Variables:
 Add the following two environment variables to your profile in order to run full pipeline: 
 ```
 export PGPASSWORD=<your-gemini-db-password>
