@@ -27,14 +27,16 @@ def prune_columns(config_columns, data):
     #print(config_columns, data.columns)
 
     for c in config_columns:
-        if c in list(data.columns):
-           columns.append(c)
+        if c not in list(data.columns):
+           data[c]=0
    
-    return columns 
+    return data
 
 def get_splits (config, data):
     # drop columns not used in training
-    all_columns = prune_columns(config.features+config.target,data)
+    all_columns =  config.features + config.target
+    data = prune_columns(all_columns, data)
+   
  
     train = data.loc[data['train']==1, all_columns].dropna()
     test = data.loc[data['test'] == 1, all_columns].dropna()

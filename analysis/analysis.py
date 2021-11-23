@@ -152,6 +152,8 @@ def log_to_mlflow(config, metrics):
         mlflow.log_params({'timestamp':metrics['timestamp']})
 
 def main(config):
+    print("----------------")
+    print(config.test)
     if config.type == "dataset":
         if len(config.slice) > 0:
             data = pd.read_csv(config.input)

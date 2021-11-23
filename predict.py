@@ -81,7 +81,7 @@ def main(args):
         data.loc[data['prediction'] >= args.threshold,'prediction'] = 1
         data.loc[data['prediction'] < args.threshold,'prediction'] = 0
         data.to_csv(args.output)
-        mlflow.log_artifact(args.output)
+        #mlflow.log_artifact(args.output)
 
 if __name__ == "__main__":
     args = prepare_args()
