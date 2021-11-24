@@ -6,7 +6,6 @@ import os
 import time
 import sqlalchemy
 import pandas.io.sql as psql
-import datapipeline.config as conf
 import re
 
 # constants

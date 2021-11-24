@@ -7,10 +7,9 @@ import numpy as np
 import torch
 from torch.utils.data import random_split
 
-import datapipeline.config as conf
-from datapipeline.process_data import pipeline, get_splits, prune_columns
+from tasks.datapipeline.process_data import pipeline, get_splits, prune_columns
 
-from registry import register_with_dictionary
+from tasks.registry import register_with_dictionary
 
 DATA_REGISTRY = {}
 register = partial(register_with_dictionary, DATA_REGISTRY)
@@ -64,13 +63,11 @@ def fakedata(args):
 
 @register
 def gemini(args):
-    # get data pipeline configuration
-    config = conf.read_config(args.dataset_config)
-    data, _ = pipeline(config)
-    train, val, _ = get_splits(config, data)
+    data, _ = pipeline(args)
+    train, val, _ = get_splits(args, data)
 
-    train_dset = pandas_to_dataset(train, config.features, config.target)
-    val_dset = pandas_to_dataset(val, config.features, config.target)
+    train_dset = pandas_to_dataset(train, args.features, args.target)
+    val_dset = pandas_to_dataset(val, args.features, args.target)
 
     # return train and split for now to be consistent with fake data
     # TODO: change later

@@ -1,9 +1,7 @@
 import pandas as pd
-import argparse
 import json
 import time
 import os
-import configargparse
 
 from evidently.model_profile import Profile
 from evidently.profile_sections import DataDriftProfileSection, ClassificationPerformanceProfileSection
@@ -11,47 +9,6 @@ from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
 
 import mlflow
-
-def read_config(file = False):
-    if not file:
-        parser = configargparse.ArgumentParser()
-    else:
-        parser = configargparse.ArgumentParser(default_config_files=[file])
-
-    parser.add('-c', '--config_file', is_config_file=True,  default='/mnt/nfs/home/koshkinam/vector-delirium/config/gemini_analysis.cfg', help='config file path')
-    parser.add_argument("--type", type=str, default="dataset", help='Type of report to generate')
-
-    # data-specific parameters
-    parser.add('--input', type=str, default=None, required=False, help='Data file to read from instead of database')
-    parser.add('--slice', default='year', type=str, required=False,
-           help='What column to use to slice data for analysis?')
-    parser.add('--data_ref', default=[], type=int, action='append', required=False,
-           help='List of slices to take as reference data')
-    parser.add('--data_eval', default=[], type=int, action='append', required=False,
-           help='List of slices to evaluate on')
-    parser.add('--numerical_features', default=[], type=str, action='append', required=False,
-           help='List of numerical features (for analysis)')
-    parser.add('--categorical_features', default=[], type=str, action='append', required=False,
-           help='List of categorical features (for analysis)')
-    parser.add('--report_path', default='../', type=str, required=False, help='Where to store html report?')
-    parser.add('--report_full_path', default = '', type=str, required=False, help="Full path for the report (filename is generated if not provided)")
-    parser.add('-html', action='store_true', help='Produce HTML report (otherwise save json report)')
-
-                                                       
-    parser.add('--target', default='target', type=str, required=False,
-               help='Column we are trying to predict')
-    parser.add('-target_num', action='store_true', required=False,
-               help='Is target numerical (as opposed to categorical)')
-    parser.add('--prediction', default='prediction', type=str, required=False, help='Name of the prediction column')
-
-    # model performance parameters
-    parser.add('--reference', type=str, required=False, help='Filename of features/prediction to use as reference')
-    parser.add('--test', type=str, required=False,
-           help='Filename of features/prediction to use as test (for model drift evaluation)')
-
-    args, unknown = parser.parse_known_args()
-
-    return args
 
 def get_report_filename(config):
     if len(config.report_full_path) == 0:
@@ -115,7 +72,7 @@ def analyze_model_drift(reference, test, config):
     column_mapping = {}
 
     column_mapping['target'] = config.target 
-    column_mapping['prediction'] = config.prediction
+    column_mapping['prediction'] = config.prediction_col
     column_mapping['numerical_features'] = config.numerical_features
     column_mapping['categorical_features'] = config.categorical_features
 
@@ -152,8 +109,6 @@ def log_to_mlflow(config, metrics):
         mlflow.log_params({'timestamp':metrics['timestamp']})
 
 def main(config):
-    print("----------------")
-    print(config.test)
     if config.type == "dataset":
         if len(config.slice) > 0:
             data = pd.read_csv(config.input)
@@ -172,6 +127,3 @@ def main(config):
     log_to_mlflow(config, metrics)
     return fn
 
-if __name__ == "__main__":
-    config = read_config()
-    main(config)

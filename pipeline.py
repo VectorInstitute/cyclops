@@ -1,24 +1,16 @@
 import luigi
 from luigi.util import inherits
-from datapipeline.process_data import pipeline
-import datapipeline.config as data_config
-import predict
-import analysis.analysis as analysis
+from tasks.datapipeline.process_data import pipeline
+import config.config as data_config
+import tasks.predict as predict
+import tasks.analysis as analysis
 import os
-
-#constants - TODO change to parameters later
-HOME = '/mnt/nfs/home/koshkinam/vector-delirium'
-ARTIFACT_FOLDER = '/mnt/nfs/home/koshkinam/executions/'
-MODEL_PATH = os.path.join(HOME,'model.pt')
-REFERENCE_DATA_PATH = '/mnt/nfs/home/koshkinam/reference.csv'
-DATASET_CONFIG_FILE = os.path.join(HOME, 'config/gemini_data.cfg')
-PREDICT_CONFIG_FILE = os.path.join(HOME, 'config/gemini_predict.cfg')
-ANALYSIS_CONFIG_FILE = os.path.join(HOME, 'config/gemini_analysis.cfg')
 
 class BaseGeminiTask(luigi.Task):
     date_from = luigi.DateParameter()
     date_to = luigi.DateParameter()
-    artifact_folder = luigi.Parameter(default=ARTIFACT_FOLDER)
+    artifact_folder = luigi.Parameter()
+    config_file = luigi.Parameter()
 
     def get_artifact_folder(self):
         folder = os.path.join(self.artifact_folder, self.date_to.strftime('%Y-%m-%d'))
@@ -31,8 +23,6 @@ class BaseGeminiTask(luigi.Task):
 
 @inherits(BaseGeminiTask)
 class DataExtraction(BaseGeminiTask):
-    config_file = luigi.Parameter(default=DATASET_CONFIG_FILE)
-
     def run(self):
         #read and parse default configuration
         config = data_config.read_config(self.config_file)
@@ -48,9 +38,7 @@ class DataExtraction(BaseGeminiTask):
 
 @inherits(BaseGeminiTask)
 class Prediction(BaseGeminiTask):
-    config_file = luigi.Parameter(default=PREDICT_CONFIG_FILE)
-
-    def requires(self):
+   def requires(self):
         return DataExtraction(self.date_from, self.date_to)
 
     def run(self):
@@ -65,8 +53,6 @@ class Prediction(BaseGeminiTask):
         return luigi.LocalTarget(os.path.join(self.get_artifact_folder(), 'results.csv'))
 
 class Analysis(BaseGeminiTask):
-    config_file = luigi.Parameter(default=ANALYSIS_CONFIG_FILE)
-
     def requires(self):
         return Prediction(self.date_from, self.date_to)
 
@@ -74,7 +60,6 @@ class Analysis(BaseGeminiTask):
         # run both reports and log main metrics
         # prepare config
         config = analysis.read_config(self.config_file)
-        config.reference = REFERENCE_DATA_PATH
         config.test = self.input().fn
         config.slice = ''
         config.report_full_path = self.output()[0].fn

@@ -1,46 +1,15 @@
-import argparse
-
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from dataset import get_dataset, split_train_and_val
-from model import get_model
-from utils.utils import AverageBinaryClassificationMetric
+from tasks.dataset import get_dataset, split_train_and_val
+from tasks.model import get_model
+from tasks.utils.utils import AverageBinaryClassificationMetric
 
 from mlflow import log_params
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
-def prepare_args():
-    parser = argparse.ArgumentParser(description="ML OPS Testing")
-
-    # model configs
-    parser.add_argument("--model", type=str, default="mlp")
-    parser.add_argument("--model_save_path", type=str, default="./model.pt")
-
-    # data configs
-    parser.add_argument("--dataset", type=str, default="fakedata")
-    parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--num_workers", type=int, default=0)
-    parser.add_argument("--num_epochs", type=int, default=100)
-    parser.add_argument("--shuffle", action="store_true")
-
-    # used mostly for fake data, can take it out
-    parser.add_argument("--data_dim", type=int, default=24)
-    parser.add_argument("--data_len", type=int, default=10000)
-
-    # used by gemini data pipeline
-    parser.add_argument("--dataset_config", type=str, default="config/gemini_data.cfg")
-
-    # training configs
-    parser.add_argument('--lr', type=float, default=3e-4)
-
-    args = parser.parse_args()
-    return args
-
 
 def to_loader(dataset, args, shuffle=False):
     return DataLoader(dataset,
@@ -110,6 +79,11 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
 
 def main(args):
+    # MLflow parameters
+    mlflow_params_dict = {"dataset": args.dataset, "no of workers": args.num_workers,
+                          "train data shuffle": args.shuffle, "model": args.model, "learning rate": args.lr,
+                          "no of epochs": args.num_epochs, "batch size": args.batch_size}
+    log_params(mlflow_params_dict)
 
     train_dataset, val_dataset = get_dataset(args.dataset)(args)
 
@@ -125,16 +99,7 @@ def main(args):
 
     train(model, optimizer, train_loader, loss_fn, num_epochs=args.num_epochs)
 
-    torch.save(model.state_dict(), args.model_save_path)
+    torch.save(model.state_dict(), args.model_path)
 
     validate(model, val_loader, loss_fn)
 
-
-if __name__ == "__main__":
-    args = prepare_args()
-
-    # MLflow parameters
-    mlflow_params_dict = {"dataset": args.dataset, "no of workers": args.num_workers, "train data shuffle": args.shuffle, "model": args.model, "learning rate": args.lr, "no of epochs": args.num_epochs, "batch size": args.batch_size}
-    log_params(mlflow_params_dict)
-
-    main(args)

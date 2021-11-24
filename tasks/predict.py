@@ -4,42 +4,18 @@ import pandas as pd
 import datetime
 from torch.utils.data import DataLoader
 
-from model import get_model
-from dataset import pandas_to_dataset
-from train import to_loader
-import datapipeline.config as conf
-from utils.utils import AverageBinaryClassificationMetric
+from tasks.model import get_model
+from tasks.dataset import pandas_to_dataset
+from tasks.train import to_loader
+import tasks.datapipeline.config as conf
+from tasks.utils.utils import AverageBinaryClassificationMetric
 
 import mlflow
 from mlflow import log_params
 
+import config.config as config
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-def prepare_args(file = False):
-    if not file:
-        parser = configargparse.ArgumentParser()
-    else:
-        parser = configargparse.ArgumentParser(default_config_files=[file])
-
-    parser.add('-c', '--config_file', is_config_file=True, help='config file path')
-
-    # model configs
-    parser.add("--model", type=str, default="mlp")
-    parser.add("--model_path", type=str, default="./model.pt")
-    parser.add("--batch_size", type=int, default=64)
-    parser.add("--num_workers", type=int, default=0)
-    parser.add("--threshold", type=float, default=0.5)
-
-    # data configs
-    parser.add("--input", type=str, default = "../test.csv")
-    parser.add("--output", type=str, default = "../result.csv")
-
-    # used by gemini data pipeline
-    parser.add("--dataset_config", type=str, default="config/gemini_data.cfg")
-
-    args, unknown = parser.parse_known_args()
-    return args
 
 def predict(model, loader):
     output = []
@@ -80,10 +56,7 @@ def main(args):
         data['prediction'] = result
         data.loc[data['prediction'] >= args.threshold,'prediction'] = 1
         data.loc[data['prediction'] < args.threshold,'prediction'] = 0
-        data.to_csv(args.output)
+        data.to_csv(args.result_output)
         #mlflow.log_artifact(args.output)
 
-if __name__ == "__main__":
-    args = prepare_args()
-    main(args)
     

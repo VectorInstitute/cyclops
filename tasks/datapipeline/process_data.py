@@ -4,8 +4,7 @@ import json
 import os
 import time
 
-import datapipeline.config as conf
-import datapipeline.extraction as ex
+import tasks.datapipeline.extraction as ex
 
 def save_data(data, config, format='csv'):
     if (format != 'csv'):
@@ -65,10 +64,5 @@ def pipeline (config):
         filepath = save_data(data, config)
 
     return data, filepath
-    
-#if __name__=="__main__":
-#    config = conf.read_config()
-#    conf.write_config(config)
-#    pipeline(config)
 
 
