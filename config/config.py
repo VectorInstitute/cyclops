@@ -11,7 +11,7 @@ def read_config(file = False):
         parser = configargparse.ArgumentParser(default_config_files = ['config/gemini.cfg'])
     else:
         parser = configargparse.ArgumentParser(default_config_files = [file])
-        
+      
     parser.add('-c', '--config_file', is_config_file=True, help='config file path')
 
     ######################### Operation #######################################################
@@ -106,7 +106,7 @@ def read_config(file = False):
                help='Filename of features/prediction to use as test (for model drift evaluation)')
 
     
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     # args.commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('ascii')
 
