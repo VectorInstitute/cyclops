@@ -33,7 +33,8 @@ def prune_columns(config_columns, data):
 
 def get_splits (config, data):
     # drop columns not used in training
-    all_columns =  config.features + config.target
+    target_list = config.target if isinstance(config.target, list) else [config.target]
+    all_columns =  config.features + target_list
     data = prune_columns(all_columns, data)
    
  

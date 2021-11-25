@@ -9,11 +9,11 @@ if __name__ == "__main__":
     args = config.read_config()
     if args.extract:
         extract(args)
-    else if args.train:
+    elif args.train:
         train.main(args)
-    else if args.predict:
+    elif args.predict:
         predict.main(args)
-    else if args.analyze:
+    elif args.analyze:
         analysis.main(args)
     else:
         raise ValueError("Operation is not specified")

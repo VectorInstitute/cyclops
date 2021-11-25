@@ -105,6 +105,7 @@ def read_config(file = False):
     parser.add('--test', type=str, required=False,
                help='Filename of features/prediction to use as test (for model drift evaluation)')
 
+    
     args = parser.parse_args()
 
     # args.commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('ascii')

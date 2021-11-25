@@ -52,7 +52,7 @@ def eval_drift(reference, production, column_mapping, config, html=False):
     if html:
         dashboard = Dashboard(tabs=[DataDriftTab])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
-        dashboard.save(report_filename) #TODO: filename should be a parameter
+        dashboard.save(report_filename) 
     else:
         with open(report_filename, 'w') as f:
             json.dump(json_report, f)
@@ -110,7 +110,7 @@ def log_to_mlflow(config, metrics):
 
 def main(config):
     if config.type == "dataset":
-        if len(config.slice) > 0:
+        if config.slice is not None and len(config.slice) > 0:
             data = pd.read_csv(config.input)
             eval_data = data.loc[data[config.slice].isin(config.data_eval)]
             ref_data = data.loc[data[config.slice].isin(config.data_ref)]

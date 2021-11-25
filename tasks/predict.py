@@ -12,8 +12,6 @@ from tasks.utils.utils import AverageBinaryClassificationMetric
 import mlflow
 from mlflow import log_params
 
-import config.config as config
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def predict(model, loader):
@@ -34,12 +32,10 @@ def main(args):
     # read data
     exp = mlflow.get_experiment_by_name('Prediction')
     with mlflow.start_run(experiment_id=exp.experiment_id):
-        config = conf.read_config(args.dataset_config)
-        mlflow.log_dict(vars(config), 'dataset_config.json')
         mlflow.log_dict(vars(args), 'args.json')
         mlflow.log_params({'timestamp': datetime.datetime.now()})
         data = pd.read_csv(args.input)
-        dataset = pandas_to_dataset(data, config.features, config.target)
+        dataset = pandas_to_dataset(data, args.features, args.target)
         
         args.data_dim = dataset.dim()
         loader = to_loader(dataset, args)
