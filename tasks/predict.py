@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 from tasks.model import get_model
 from tasks.dataset import pandas_to_dataset
 from tasks.train import to_loader
-import tasks.datapipeline.config as conf
 from tasks.utils.utils import AverageBinaryClassificationMetric
 
 import mlflow

@@ -10,7 +10,7 @@ def save_data(data, config, format='csv'):
     if (format != 'csv'):
         print("Unsupported format {}".format(format))
         exit
-    if len(config.output_full_path) == 0:
+    if config.output_full_path == None or len(config.output_full_path) == 0:
         t = time.localtime()
         date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
         name = f'admin_data_{date}.csv'

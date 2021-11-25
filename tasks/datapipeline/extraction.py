@@ -153,11 +153,12 @@ def split (data, config):
     data['test'] = 0
     data['val'] = 0
     if (config.split_column in ('year', 'hospital_id')):
-        test_const = int(config.test)
-        val_const = int (config.val)    
+        test_const = int(config.test_split)
+        val_const = int (config.val_split)    
     else:
-        test_const = config.test
-        val_const = config.val                
+        test_const = config.test_split
+        val_const = config.val_split
+    
     data.loc[data[config.split_column] == test_const, 'train'] = 0
     data.loc[data[config.split_column] == test_const, 'test'] = 1
     data.loc[data[config.split_column] == test_const, 'val'] = 0

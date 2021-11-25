@@ -8,7 +8,7 @@ from datetime import datetime
 
 def read_config(file = False):
     if not file:
-        parser = configargparse.ArgumentParser(default_config_files = ['gemini.cfg'])
+        parser = configargparse.ArgumentParser(default_config_files = ['config/gemini.cfg'])
     else:
         parser = configargparse.ArgumentParser(default_config_files = [file])
         
@@ -38,7 +38,7 @@ def read_config(file = False):
 
     # data extraction parameters
     parser.add('--features', default=[], type= str,  action='append', required=False, help='List of features for the model')
-    parser.add('--target', default=[], type = str, action='append', required = False, help = 'Column we are trying to predict')
+    parser.add('--target', type = str, required = False, help = 'Column we are trying to predict')
     parser.add('--pop_size', type=int, default=10000, required=False, help='Total number of records to read from the database (0 - to read all)')
     parser.add('--filter_year', type=int, default= 0, required = False, help='Select only records from before specified year')
 
@@ -48,9 +48,9 @@ def read_config(file = False):
 
     # train/test/val split parameters
     parser.add('--split_column', default='year', type=str, required=False, help='Column we are use to split data into train, test, val')
-    parser.add('--test', type=str, required=False, help='Test split values')
-    parser.add('--val', type=str,  required=False, help='Val split values')
-    parser.add('--train', default=[], type=str, action='append', required=False, help='Train split values (if not set, all excdept test/val values)')
+    parser.add('--test_split', type=str, required=False, help='Test split values')
+    parser.add('--val_split', type=str,  required=False, help='Val split values')
+    parser.add('--train_split', default=[], type=str, action='append', required=False, help='Train split values (if not set, all excdept test/val values)')
 
     ######################### Model Training and Prediction #######################################################
     parser.add_argument("--model", type=str, default="mlp")
@@ -96,8 +96,6 @@ def read_config(file = False):
                help="Full path for the report (filename is generated if not provided)")
     parser.add('-html', action='store_true', help='Produce HTML report (otherwise save json report)')
 
-    parser.add('--target', default='target', type=str, required=False,
-               help='Column we are trying to predict')
     parser.add('-target_num', action='store_true', required=False,
                help='Is target numerical (as opposed to categorical)')
     parser.add('--prediction_col', default='prediction', type=str, required=False, help='Name of the prediction column')
