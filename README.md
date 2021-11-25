@@ -36,17 +36,19 @@ Refer to config/gemini.cfg for basic configuration parameters. (Additional one a
 Luigi batch processing is used to run the whole flow (data extract, predict, analyze) as a pipeline. Luigi parameters are apecified in config/gemini_luigi.cfg
 
 ## Running as Pipeline: <a name="pipeline"></a>
-Pipeline containing data extraction, prediction and analysis steps can be run by executing the following command:
+Luigi batch processing is used to execute the whole pipeline containing data extraction, prediction and analysis steps.
 
-To run the simulation, run:
-
-`luigi --module pipeline_simulation Simulation --date-from 2018-01-01 --date-to 2020-06-01 --local-scheduler`
-
-Simulation runs ML pipeline for each month in the specified interval (date-from to date-to)
+Prerequisites:
+* configure envronment variables (above)
+* ensure that configuration in config/gemini.cfg is up to date (has correct username for the database access, model path, csv file with reference data/predictions) 
 
 To run pipeline once for specific time period, run:
 
 `luigi --module pipeline Analysis --date-from 2018-08-01 --date-to 2018-10-01 --local-scheduler`
+
+Simulation runs ML pipeline for each month in the specified interval (date-from to date-to). To run the simulation, run:
+
+`luigi --module pipeline_simulation Simulation --date-from 2018-01-01 --date-to 2020-06-01 --local-scheduler`
 
 ## Pipeline Tasks: <a name="components"></a>
 In addition to Luigi pipeline, each of the components of the pipeline can be run on it's own from command line or from Jupyter notebook.
