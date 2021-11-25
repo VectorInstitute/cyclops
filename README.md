@@ -53,7 +53,10 @@ In addition to Luigi pipeline, each of the components of the pipeline can be run
 To run each task from the command line:
 `python main.py --<action> <optional parameter overwrites>`
 
-actions: extract, train, predict, analyze
+where <action>: extract, train, predict, analyze
+To get a full list of possible arguments, run:
+
+`python main.py -h`
 
 ### Data Extraction:  <a name="data"></a>
 Examples of running data extraction from command line:
