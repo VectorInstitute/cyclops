@@ -25,9 +25,9 @@ def analyze_dataset_drift(ref_data, eval_data, config):
     column_mapping['numerical_features'] = config.numerical_features
     column_mapping['categorical_features'] = config.categorical_features
     if config.target_num:
-        column_mapping['numerical_features'] += [config.target]
+        column_mapping['numerical_features'] = config.numerical_features + [config.target]
     else:
-       column_mapping['categorical_features'] += [config.target]
+       column_mapping['categorical_features'] = config.categorical_features +  [config.target]
     analysis_columns = column_mapping['numerical_features'] + column_mapping['categorical_features']
 
     # prepare data - select only numeric and categorical features
@@ -35,9 +35,9 @@ def analyze_dataset_drift(ref_data, eval_data, config):
     reference_data = ref_data[analysis_columns].dropna()
     eval_data = eval_data[analysis_columns].dropna()
       
-    drift = eval_drift(reference_data, eval_data, column_mapping,config,  html=config.html)
+    drift, fn = eval_drift(reference_data, eval_data, column_mapping,config,  html=config.html)
 
-    return drift  
+    return drift, fn
 
 #evaluate data drift with Evidently Profile
 def eval_drift(reference, production, column_mapping, config, html=False):
@@ -49,6 +49,7 @@ def eval_drift(reference, production, column_mapping, config, html=False):
     json_report = json.loads(report)
 
     report_filename = get_report_filename(config)
+    dasboard = None
     if html:
         dashboard = Dashboard(tabs=[DataDriftTab])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
@@ -82,6 +83,7 @@ def analyze_model_drift(reference, test, config):
     json_report = json.loads(report)
 
     report_filename = get_report_filename(config)
+    performance_dashboard = None
     if config.html:
         perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
         perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
@@ -125,5 +127,6 @@ def main(config):
         metrics, fn = analyze_model_drift(reference, test, config)
     # log results of analysis to mlflow
     log_to_mlflow(config, metrics)
+    
     return fn
 
