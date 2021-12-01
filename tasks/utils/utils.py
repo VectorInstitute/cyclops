@@ -31,7 +31,8 @@ class AverageBinaryClassificationMetric:
 
         self.preds.append(preds >= 0.5)
         self.targets.append(targets)
-        self.loss_list.append(loss.item())
+        if loss: 
+            self.loss_list.append(loss.item())
 
     def compute_metrics(self):
 

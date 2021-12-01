@@ -6,7 +6,6 @@ import os
 import time
 import sqlalchemy
 import pandas.io.sql as psql
-import datapipeline.config as conf
 import re
 
 # constants
@@ -41,6 +40,9 @@ def extract(config):
     engine = sqlalchemy.create_engine(f'postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
 
     pop_size = '' if config.pop_size == 0 else f'limit {config.pop_size}'
+    filter = f"WHERE DATE_PART('year', i.admit_date_time) <= {int(config.filter_year)}" if config.filter_year else ''
+    filter = f"WHERE i.admit_date_time  > '{config.filter_date_from}' AND i.admit_date_time <= '{config.filter_date_to}'" if config.filter_date_from else filter
+
     # extract basic demographics and length of stay information from ip_administrative
     query_full = f"""select distinct
         i.patient_id_hashed as patient_id,
@@ -81,6 +83,7 @@ def extract(config):
                                 e.triage_level
                   FROM er_administrative e) e
                   ON i.genc_id=e.genc_id
+      {filter}
       ORDER BY patient_id, genc_id
       {pop_size}"""
 
@@ -150,11 +153,12 @@ def split (data, config):
     data['test'] = 0
     data['val'] = 0
     if (config.split_column in ('year', 'hospital_id')):
-        test_const = int(config.test)
-        val_const = int (config.val)    
+        test_const = int(config.test_split)
+        val_const = int (config.val_split)    
     else:
-        test_const = config.test
-        val_const = config.val                
+        test_const = config.test_split
+        val_const = config.val_split
+    
     data.loc[data[config.split_column] == test_const, 'train'] = 0
     data.loc[data[config.split_column] == test_const, 'test'] = 1
     data.loc[data[config.split_column] == test_const, 'val'] = 0
@@ -193,6 +197,5 @@ def transform(data):
     data["los"]=data["los"].apply(binary_legth_of_stay)
     data["hospital_id"] = data["hospital_id"].replace(HOSPITAL_ID)
     data  = transform_diagnosis(data)
-    print(data.columns.tolist())
     return data
 
