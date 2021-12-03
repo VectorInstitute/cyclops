@@ -19,9 +19,9 @@ def mlp(args):
     data_dim = args.data_dim
 
     return nn.Sequential(
-        nn.Linear(data_dim, 100),
+        nn.Linear(data_dim, 16),
         nn.SiLU(),
-        nn.Linear(100, 150),
+        nn.Linear(16, 8),
         nn.SiLU(),
-        nn.Linear(150, 1),
+        nn.Linear(8, 1),
     )

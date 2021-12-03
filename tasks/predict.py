@@ -30,7 +30,11 @@ def predict(model, loader):
 
 def main(args):
     # read data
-    exp = mlflow.get_experiment_by_name('Prediction')
+    exp_name = 'Prediction'
+    exp = mlflow.get_experiment_by_name(exp_name)
+    if exp == None:
+        mlflow.create_experiment(exp_name)
+        exp = mlflow.get_experiment_by_name(exp_name) 
     with mlflow.start_run(experiment_id=exp.experiment_id):
         mlflow.log_dict(vars(args), 'args.json')
         mlflow.log_params({'timestamp': datetime.datetime.now()})

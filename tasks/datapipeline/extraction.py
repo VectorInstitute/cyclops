@@ -7,6 +7,7 @@ import time
 import sqlalchemy
 import pandas.io.sql as psql
 import re
+from tqdm import tqdm
 
 # constants
 HOSPITAL_ID = {'THPM':0, 'SBK':1, 'UHNTG':2, 'SMH':3, 'UHNTW':4, 'THPC':5, 'PMH':6, 'MSH':7}
@@ -34,6 +35,124 @@ TRAJECTORIES = {
         'COVID19': ('U07', 'U08'),
         'Factors influencing health status and contact with health services': ('Z00', 'Z99')
     }
+
+DRUG_SCREEN=['amitriptyline', 'amphetamine', 'barbiturates', 'barbiturates_scn', 'barbiturates_and_sedatives_blood',
+                      'benzodiazepine_scn', 'benzodiazepines_screen', 'cannabinoids',
+                     'clozapine', 'cocaine', 'cocaine_metabolite', 'codeine', 'cocaine_metabolite',
+                     'codeine_metabolite_urine', 'desipramine', 'dextromethorphan', 'dim_per_dip_metabolite',
+                     'dimen_per_diphenhydramine', 'doxepin', 'ephedrine_per_pseudo', 'fluoxetine',
+                     'hydrocodone', 'hydromorphone', 'imipramine', 'lidocaine', 'mda_urine', 'mdma_ecstacy',
+                     'methadone', 'meperidine_urine', 'methadone_metabolite_urine', 'methamphetamine', 'morphine',
+                     'morphine_metabolite_urine', 'nortriptyline', 'olanzapine_metabolite_u',
+                     'olanzapine_urine', 'opiates_urine', 'oxycodone', 'oxycodone_cobas', 'oxycodone_metabolite',
+                      'phenylpropanolamine', 'propoxyphene', 'sertraline',
+                     'trazodone', 'trazodone_metabolite', 'tricyclics_scn', 'venlafaxine', 'venlafaxine_metabolite']
+
+def numeric_categorical(item):
+    x=None
+    locals_=locals()
+    
+    item = '('+item.replace('to', ' + ').replace('-', ' + ')+')/2' # this neglects negative ranges. todo, find a fast regex filter
+    items = item.replace('  ',' ').replace('(', '( ').split(' ')
+    item=" ".join([i.lstrip('0') for i in items])
+    exec('x='+item, globals(), locals_)
+    return locals_['x']
+
+
+def x_to_numeric(x):
+    """
+    Handle different strings to convert to numeric values(which can't be done in psql)
+    """
+    if x is None:
+        return np.nan
+    elif x is np.nan:
+        return np.nan
+    elif isinstance(x, str):
+        # check if it matches the categorical pattern "2 to 5" or 2 - 5
+        if re.search(r'-?\d+ +(to|-) +-?\d+', x) is not None:
+            try:
+                return numeric_categorical(x)
+            except:
+                print(x)
+                raise
+        return re.sub('^-?[^0-9.]', '', str(x))
+        
+def name_count(items):
+    """
+    Inputs:
+        items (list): a list of itemsto count the number of repeating values
+    Returns:
+        list of tuples with the name of the occurence and the count of each occurence
+    """
+    all_items={}
+    for item in items:
+        if item in all_items.keys():
+            all_items[item]+=1
+        else:
+            all_items[item]=1
+    return sorted([(k,v) for k,v in all_items.items()], key=lambda x:-x[1])
+
+def get_scale(be_like, actual):
+    """
+    This function is applied to scale every measurement to a standard unit
+    """
+    replacements={'milliliters':'ml',
+            'millimeters':'mm',
+            'gm':'g',
+            'x10 ':'x10e',
+            'tril':'x10e12',
+            'bil':'x10e9'
+            }
+    if isinstance(be_like, str) & isinstance(actual, str):
+        # check if anything should be replaced:
+        for k, v in replacements.items():
+            be_like = be_like.replace(k,v)
+            actual = actual.replace(k, v)
+        scale=1
+        
+        # check if both have x10^X terms in them
+        multipliers = ['x10e6', 'x10e9', 'x10e12']
+        if any(item in be_like for item in multipliers) and any(item in actual for item in multipliers):
+            # then adjust
+            scale*=1000**-multipliers.index(re.search('x10e\d+', actual)[0]) * 1000**multipliers.index(re.search('x10e\d+', be_like)[0])
+            return scale
+        
+        
+        be_like_list=be_like.split('/') # split the numerator and denominators for the comparator units
+        actual_list=actual.split('/')# split the numerator and denominators for the units that need to be converted
+        if len(be_like_list) == len(actual_list):
+            success=1
+            for i in range(len(be_like_list)):
+                try:
+                    scale*=convert(actual_list[i], be_like_list[i])**(1 if i>0 else -1)
+                except:
+                    success=0
+                    # could not convert between units
+                    break
+            if success: return scale
+    return 'could not convert'
+
+def filter_string(item):
+    item=item.replace(')', ' ')
+    item=item.replace('(', ' ')
+    item=item.replace('%', ' percent ')
+    item=item.replace('+', ' plus ')
+    item=item.replace('#', ' number ')
+    item=item.replace('&', ' and ')
+    item=item.replace("'s", '')
+    item=item.replace(',', ' ')
+    item=item.replace('/', ' per ')
+    item=' '.join(item.split())
+    item=item.strip()
+    
+    
+    item=item.replace(' ', '_')
+    item=re.sub('[^0-9a-z_()]+', '_', item)
+    if len(item)>1:
+        if item[0] in '1234567890_':
+            item='a_'+item
+    return item
+
 
 def extract(config):
     print('postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
@@ -94,7 +213,7 @@ def extract(config):
     config.min_percent  = 0
     config.aggregation_window = 6
     config.output = config.output_folder
-    labs(config, engine)
+    #labs(config, engine)
 
     return data
 
@@ -103,7 +222,7 @@ def labs(args, engine):
     query_1 = "SELECT REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ') as unique_lab_names, COUNT(REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ')) as unique_lab_counts FROM lab GROUP BY unique_lab_names ORDER BY unique_lab_counts ASC;"  # select all lab.test_name_raw (equivalent to itemids in mimiciii)
 
     df = pd.read_sql(query_1, con=engine)
-    display(df.head(10))
+    print(df.head(10))
     unique_items = df['unique_lab_names'].values
 
     print('Total number of labs: ', len(df))

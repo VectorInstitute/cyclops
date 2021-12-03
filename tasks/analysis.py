@@ -104,6 +104,7 @@ def analyze_model_drift(reference, test, config):
 def log_to_mlflow(config, metrics):
     exp_name = 'DatasetAnalysis' if config.type == 'dataset' else 'ModelComparison'
     exp = mlflow.get_experiment_by_name(exp_name)
+    #print(exp)
     if exp == None:
         mlflow.create_experiment(exp_name)
         exp = mlflow.get_experiment_by_name(exp_name)
