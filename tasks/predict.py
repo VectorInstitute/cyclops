@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 
 from tasks.model import get_model
 from tasks.dataset import pandas_to_dataset
+from tasks.datapipeline.process_data import get_stats
 from tasks.train import to_loader
 from tasks.utils.utils import AverageBinaryClassificationMetric
 
@@ -39,7 +40,8 @@ def main(args):
         mlflow.log_dict(vars(args), 'args.json')
         mlflow.log_params({'timestamp': datetime.datetime.now()})
         data = pd.read_csv(args.input)
-        dataset = pandas_to_dataset(data, args.features, args.target)
+        stats = get_stats(args, None)
+        dataset = pandas_to_dataset(data, args.features, args.target, stats=stats, config=args)
         
         args.data_dim = dataset.dim()
         loader = to_loader(dataset, args)

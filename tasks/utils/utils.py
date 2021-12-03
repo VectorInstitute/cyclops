@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import numpy as np
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
 from mlflow import log_metrics
 
@@ -47,9 +47,10 @@ class AverageBinaryClassificationMetric:
         f1 = f1_score(target, preds)
         precision = precision_score(target, preds)
         recall = recall_score(target, preds)
+        auc =  roc_auc_score(target, preds)
 
         # MLflow metrics
-        mlflow_metric_dict = {"epoch_loss": avg_loss, "accuracy": acc, "f1_score": f1, "precision": precision, "recall": recall}
+        mlflow_metric_dict = {"epoch_loss": avg_loss, "accuracy": acc, "f1_score": f1, "precision": precision, "recall": recall, "auc": auc}
         log_metrics(mlflow_metric_dict)
 
         return {
@@ -58,4 +59,5 @@ class AverageBinaryClassificationMetric:
             "f1_score": f1,
             "precision": precision,
             "recall": recall,
+            "auc": auc
         }
