@@ -5,9 +5,10 @@ from functools import partial
 
 import numpy as np
 import torch
+
 from torch.utils.data import random_split
 
-from tasks.datapipeline.process_data import pipeline, get_splits, prune_columns
+from tasks.datapipeline.process_data import pipeline, get_splits, prune_columns, get_stats
 
 from tasks.registry import register_with_dictionary
 
@@ -46,8 +47,10 @@ def split_train_and_val(dataset, percent_val=0.2, seed=42):
 
     return train_dset, val_dset
 
-def pandas_to_dataset(df, feature_cols, target_cols):
+def pandas_to_dataset(df, feature_cols, target_cols, stats = None, config = None):
     df = prune_columns(feature_cols, df)
+    if stats is not None:
+       df[config.numerical_features] =  (df[config.numerical_features] - stats['means']) / stats['std']
     inputs = torch.tensor(df[feature_cols].values, dtype=torch.float32)
     target = torch.tensor(df[target_cols].values, dtype=torch.float32)
     target = torch.flatten(target)
@@ -65,9 +68,10 @@ def fakedata(args):
 def gemini(args):
     data, _ = pipeline(args)
     train, val, _ = get_splits(args, data)
+    stats =  get_stats(args, train)
 
-    train_dset = pandas_to_dataset(train, args.features, args.target)
-    val_dset = pandas_to_dataset(val, args.features, args.target)
+    train_dset = pandas_to_dataset(train, args.features, args.target, stats = stats, config = args)
+    val_dset = pandas_to_dataset(val, args.features, args.target, stats = stats, config = args)
 
     # return train and split for now to be consistent with fake data
     # TODO: change later

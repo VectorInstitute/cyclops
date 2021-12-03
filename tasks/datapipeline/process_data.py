@@ -3,6 +3,7 @@ import numpy as np
 import json
 import os
 import time
+import pickle
 
 import tasks.datapipeline.extraction as ex
 
@@ -43,6 +44,21 @@ def get_splits (config, data):
     val = data.loc[data['val'] == 1, all_columns].dropna()
 
     return train, val, test
+
+def get_stats(config, data):
+    if os.path.isfile(config.stats_path):
+       with open(config.stats_path, 'rb') as f:
+          stats = pickle.load(f)
+          print(stats)
+          return stats
+    else:
+       means = data[config.numerical_features].mean()
+       std = data[config.numerical_features].std()
+       dict = {'means':means, 'std': std}
+       print(dict)
+       with open(config.stats_path, 'wb') as f:
+           pickle.dump(dict, f)
+       return dict
 
 def pipeline (config):
     if not config.r:

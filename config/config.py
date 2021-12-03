@@ -35,6 +35,7 @@ def read_config(file = False):
     parser.add('--input', type=str, required=False, help='Data file to read from instead of database')
     parser.add("--output_folder", type=str, help='Which directory should we put the CSV results?')
     parser.add("--output_full_path", type=str, help='Where should we put the CSV results? Full path option.')
+    parser.add("--stats_path", type=str, help='Where to store/load features mean/std for normalization.')
 
     # data extraction parameters
     parser.add('--features', default=[], type= str,  action='append', required=False, help='List of features for the model')
@@ -70,7 +71,7 @@ def read_config(file = False):
     # training configs
     parser.add_argument('--lr', type=float, default=3e-4)
 
-    #prediction
+    #predictio
     parser.add("--threshold", type=float, default=0.5)
 
     # prediction input and output files
