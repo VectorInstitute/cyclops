@@ -7,6 +7,7 @@ import time
 import sqlalchemy
 import pandas.io.sql as psql
 import re
+from tqdm import tqdm
 
 # constants
 HOSPITAL_ID = {'THPM':0, 'SBK':1, 'UHNTG':2, 'SMH':3, 'UHNTW':4, 'THPC':5, 'PMH':6, 'MSH':7}
@@ -34,6 +35,124 @@ TRAJECTORIES = {
         'COVID19': ('U07', 'U08'),
         'Factors influencing health status and contact with health services': ('Z00', 'Z99')
     }
+
+DRUG_SCREEN=['amitriptyline', 'amphetamine', 'barbiturates', 'barbiturates_scn', 'barbiturates_and_sedatives_blood',
+                      'benzodiazepine_scn', 'benzodiazepines_screen', 'cannabinoids',
+                     'clozapine', 'cocaine', 'cocaine_metabolite', 'codeine', 'cocaine_metabolite',
+                     'codeine_metabolite_urine', 'desipramine', 'dextromethorphan', 'dim_per_dip_metabolite',
+                     'dimen_per_diphenhydramine', 'doxepin', 'ephedrine_per_pseudo', 'fluoxetine',
+                     'hydrocodone', 'hydromorphone', 'imipramine', 'lidocaine', 'mda_urine', 'mdma_ecstacy',
+                     'methadone', 'meperidine_urine', 'methadone_metabolite_urine', 'methamphetamine', 'morphine',
+                     'morphine_metabolite_urine', 'nortriptyline', 'olanzapine_metabolite_u',
+                     'olanzapine_urine', 'opiates_urine', 'oxycodone', 'oxycodone_cobas', 'oxycodone_metabolite',
+                      'phenylpropanolamine', 'propoxyphene', 'sertraline',
+                     'trazodone', 'trazodone_metabolite', 'tricyclics_scn', 'venlafaxine', 'venlafaxine_metabolite']
+
+def numeric_categorical(item):
+    x=None
+    locals_=locals()
+    
+    item = '('+item.replace('to', ' + ').replace('-', ' + ')+')/2' # this neglects negative ranges. todo, find a fast regex filter
+    items = item.replace('  ',' ').replace('(', '( ').split(' ')
+    item=" ".join([i.lstrip('0') for i in items])
+    exec('x='+item, globals(), locals_)
+    return locals_['x']
+
+
+def x_to_numeric(x):
+    """
+    Handle different strings to convert to numeric values(which can't be done in psql)
+    """
+    if x is None:
+        return np.nan
+    elif x is np.nan:
+        return np.nan
+    elif isinstance(x, str):
+        # check if it matches the categorical pattern "2 to 5" or 2 - 5
+        if re.search(r'-?\d+ +(to|-) +-?\d+', x) is not None:
+            try:
+                return numeric_categorical(x)
+            except:
+                print(x)
+                raise
+        return re.sub('^-?[^0-9.]', '', str(x))
+        
+def name_count(items):
+    """
+    Inputs:
+        items (list): a list of itemsto count the number of repeating values
+    Returns:
+        list of tuples with the name of the occurence and the count of each occurence
+    """
+    all_items={}
+    for item in items:
+        if item in all_items.keys():
+            all_items[item]+=1
+        else:
+            all_items[item]=1
+    return sorted([(k,v) for k,v in all_items.items()], key=lambda x:-x[1])
+
+def get_scale(be_like, actual):
+    """
+    This function is applied to scale every measurement to a standard unit
+    """
+    replacements={'milliliters':'ml',
+            'millimeters':'mm',
+            'gm':'g',
+            'x10 ':'x10e',
+            'tril':'x10e12',
+            'bil':'x10e9'
+            }
+    if isinstance(be_like, str) & isinstance(actual, str):
+        # check if anything should be replaced:
+        for k, v in replacements.items():
+            be_like = be_like.replace(k,v)
+            actual = actual.replace(k, v)
+        scale=1
+        
+        # check if both have x10^X terms in them
+        multipliers = ['x10e6', 'x10e9', 'x10e12']
+        if any(item in be_like for item in multipliers) and any(item in actual for item in multipliers):
+            # then adjust
+            scale*=1000**-multipliers.index(re.search('x10e\d+', actual)[0]) * 1000**multipliers.index(re.search('x10e\d+', be_like)[0])
+            return scale
+        
+        
+        be_like_list=be_like.split('/') # split the numerator and denominators for the comparator units
+        actual_list=actual.split('/')# split the numerator and denominators for the units that need to be converted
+        if len(be_like_list) == len(actual_list):
+            success=1
+            for i in range(len(be_like_list)):
+                try:
+                    scale*=convert(actual_list[i], be_like_list[i])**(1 if i>0 else -1)
+                except:
+                    success=0
+                    # could not convert between units
+                    break
+            if success: return scale
+    return 'could not convert'
+
+def filter_string(item):
+    item=item.replace(')', ' ')
+    item=item.replace('(', ' ')
+    item=item.replace('%', ' percent ')
+    item=item.replace('+', ' plus ')
+    item=item.replace('#', ' number ')
+    item=item.replace('&', ' and ')
+    item=item.replace("'s", '')
+    item=item.replace(',', ' ')
+    item=item.replace('/', ' per ')
+    item=' '.join(item.split())
+    item=item.strip()
+    
+    
+    item=item.replace(' ', '_')
+    item=re.sub('[^0-9a-z_()]+', '_', item)
+    if len(item)>1:
+        if item[0] in '1234567890_':
+            item='a_'+item
+    return item
+
 
 def extract(config):
     print('postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
@@ -88,9 +207,411 @@ def extract(config):
       {pop_size}"""
 
     data=pd.read_sql(query_full,con=engine)
-    print(data.head())
+    #print(data.head())
+
+    #temp: test labs:
+    config.min_percent  = 0
+    config.aggregation_window = 6
+    config.output = config.output_folder
+    #labs(config, engine)
 
     return data
+
+def labs(args, engine):
+    idx = pd.IndexSlice
+    query_1 = "SELECT REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ') as unique_lab_names, COUNT(REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ')) as unique_lab_counts FROM lab GROUP BY unique_lab_names ORDER BY unique_lab_counts ASC;"  # select all lab.test_name_raw (equivalent to itemids in mimiciii)
+
+    df = pd.read_sql(query_1, con=engine)
+    print(df.head(10))
+    unique_items = df['unique_lab_names'].values
+
+    print('Total number of labs: ', len(df))
+    print('\t num labs:  ', (df['unique_lab_counts'].sum()))
+    print('Total number of labsmeasured more than once: ', len(df.loc[df['unique_lab_counts'] > 1, :]))
+    print('\t num labs:  ', (df.loc[df['unique_lab_counts'] > 1, 'unique_lab_counts'].sum()))
+    print('Total number of labsmeasured more than 10x: ', len(df.loc[df['unique_lab_counts'] >= 10, :]))
+    print('\t num labs:  ', (df.loc[df['unique_lab_counts'] >= 10, 'unique_lab_counts'].sum()))
+    print('Total number of labsmeasured more than 100x: ', len(df.loc[df['unique_lab_counts'] >= 100, :]))
+    print('\t num labs:  ', (df.loc[df['unique_lab_counts'] >= 100, 'unique_lab_counts'].sum()))
+
+    # we lose aboutr 20k observations
+
+    unique_items = df.loc[df['unique_lab_counts'] >= 100, 'unique_lab_names'].values
+    # todo, we sould apply min_percent instead.
+
+    # min percent
+    # get the count of unique participants
+
+    if args.min_percent >= 1: args.min_percent = args.min_percent / 100
+
+    print("appling a min_percent of {args.min_percent} results in")
+
+    print('Total number of labsmeasured more than 100x: ',
+          len(df.loc[df['unique_lab_counts'] / len(df) >= args.min_percent, :]))
+
+    print("\t num_labs:  ", df.loc[df['unique_lab_counts'] / len(df) >= args.min_percent, 'unique_lab_counts'].sum())
+    # unique_items = df.loc[df['unique_lab_counts']/len(df)>= args.min_percent, 'unique_lab_names' ].values
+
+    # input()
+
+    print('Warning min_percent is not applied')
+
+    # get the hospitals in the dataframes
+    query_2 = "SELECT DISTINCT hospital_id FROM ip_administrative;"
+
+    dataset_hospitals = pd.read_sql(query_2, con=engine)
+
+    print(dataset_hospitals)
+    print(dataset_hospitals.values.ravel())
+
+    return_dfs = {}
+
+    for site in dataset_hospitals.values.ravel():
+        print(site)
+        assert site in HOSPITAL_ID.keys(), f"Could not find site {site} in constants.py HOSPITAL_ID dict"
+        #
+
+        # add the case strings (all of the columns)
+        query = f"""SELECT a.*,
+            a.test_name_raw_clean,
+            a.result_unit_clean,
+            CASE WHEN a.result_value_clean <> '.' THEN a.result_value_clean ELSE null END as result_value_clean,
+            i.hospital_id,
+            i.patient_id_hashed as patient_id,
+            DATE_PART('day', a.sample_collection_date_time - i.admit_date_time)*24 + DATE_PART('hour', a.sample_collection_date_time - i.admit_date_time) AS hours_in
+            FROM (select genc_id,
+                sample_collection_date_time,
+                CASE WHEN LOWER(lab.result_value) LIKE ANY('{{neg%%, not det%%,no,none seen, arterial, np}}') THEN '0'
+                    WHEN LOWER(lab.result_value) LIKE ANY('{{pos%%, det%%, yes, venous, present}}') THEN '1'
+                    WHEN LOWER(lab.result_value) = ANY('{{small, slight}}') THEN '1'
+                    WHEN LOWER(lab.result_value) = 'moderate' THEN '2'
+                    WHEN LOWER(lab.result_value) = 'large' THEN '3'
+                    WHEN LOWER(lab.result_value) = 'clear' THEN '0'
+                    WHEN LOWER(lab.result_value) = ANY('{{hazy, slcloudy, mild}}') THEN '1'
+                    WHEN LOWER(lab.result_value) = ANY('{{turbid, cloudy}}') THEN '2'
+                    WHEN LOWER(lab.result_value) = 'non-reactive' THEN '0'
+                    WHEN LOWER(lab.result_value) = 'low reactive' THEN '1'
+                    WHEN LOWER(lab.result_value) = 'reactive' THEN '2'
+                    WHEN REPLACE(lab.result_value, ' ', '') ~ '^(<|>)?=?-?[0-9]+\.?[0-9]*$'  THEN substring(lab.result_value from '(-?[0-9.]+)')
+                    WHEN lab.result_value ~ '^[0-9]{1}\+'  THEN substring(lab.result_value from '([0-9])')
+                    WHEN lab.result_value ~ '^-?\d+ +(to|-) +-?\d+' THEN substring(lab.result_value from '(-?\d+ +(to|-) +-?\d+)')
+                ELSE null END AS result_value_clean,
+                LOWER(lab.result_unit) as result_unit_clean,
+                REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ') AS test_name_raw_clean
+                FROM lab ) a
+
+            LEFT OUTER JOIN (SELECT ip_administrative.patient_id_hashed,
+                ip_administrative.genc_id,
+                ip_administrative.admit_date_time,
+                ip_administrative.hospital_id
+                FROM ip_administrative) i
+            ON a.genc_id=i.genc_id   
+            ORDER BY patient_id, a.genc_id ASC, hours_in ASC
+            LIMIT 25000000;
+            """
+
+        query = f"""SELECT a.genc_id,
+            CASE WHEN LOWER(a.result_value) LIKE ANY('{{neg%%, not det%%,no,none seen, arterial, np}}') THEN '0'
+                WHEN LOWER(a.result_value) LIKE ANY('{{pos%%, det%%, yes, venous, present}}') THEN '1'
+                WHEN LOWER(a.result_value) = ANY('{{small, slight}}') THEN '1'
+                WHEN LOWER(a.result_value) = 'moderate' THEN '2'
+                WHEN LOWER(a.result_value) = 'large' THEN '3'
+                WHEN LOWER(a.result_value) = 'clear' THEN '0'
+                WHEN LOWER(a.result_value) = ANY('{{hazy, slcloudy, mild}}') THEN '1'
+                WHEN LOWER(a.result_value) = ANY('{{turbid, cloudy}}') THEN '2'
+                WHEN LOWER(a.result_value) = 'non-reactive' THEN '0'
+                WHEN LOWER(a.result_value) = 'low reactive' THEN '1'
+                WHEN LOWER(a.result_value) = 'reactive' THEN '2'
+                WHEN REPLACE(a.result_value, ' ', '') ~ '^(<|>)?=?-?[0-9]+\.?[0-9]*$'  THEN substring(a.result_value from '(-?[0-9.]+)')
+                WHEN a.result_value ~ '^[0-9]{1}\+'  THEN substring(a.result_value from '([0-9])')
+                WHEN a.result_value ~ '^-?\d+ +(to|-) +-?\d+' THEN substring(a.result_value from '(-?\d+ +(to|-) +-?\d+)')
+            ELSE null END AS result_value_clean,
+            LOWER(a.result_unit) as result_unit_clean,
+            --CASE WHEN a.result_value_clean <> '.' THEN a.result_value_clean ELSE null END as result_value_clean,
+            i.hospital_id,
+            i.patient_id_hashed as patient_id,
+            DATE_PART('day', a.sample_collection_date_time - i.admit_date_time)*24 + DATE_PART('hour', a.sample_collection_date_time - i.admit_date_time) AS hours_in,
+            REPLACE(REPLACE(LOWER(a.lab_test_name_raw),'.','') , '-', ' ') AS test_name_raw_clean
+            FROM lab a
+            INNER JOIN ip_administrative i
+            ON a.genc_id=i.genc_id
+            WHERE i.hospital_id='{site}'
+            ORDER BY patient_id, a.genc_id ASC, hours_in ASC;
+            """
+
+        with open(f'{site}_lab_query3.sql', 'w') as f:
+            f.write(query)
+
+        do_load = True  # set to false to reload the query (takes ~ 20 minutes for 3000 patients)
+        if os.path.exists(os.path.join(args.output, f'{site}_tmp_labs2.csv')) and do_load:
+            print('loading from disk')
+            df = pd.read_csv(os.path.join(args.output, f'{site}_tmp_labs2.csv'))
+            df.set_index(['patient_id', 'genc_id', 'hours_in'], inplace=True)
+        else:
+            print('constructing from scratch')
+            time_old = time.time()
+            df = pd.read_sql(query, con=engine)
+            print(time.time() - time_old)
+            # drop the duplicated genc_id column
+            df = df.loc[:, ~df.columns.duplicated()]
+
+            df['hours_in'] = (df['hours_in'].values / args.aggregation_window).astype(int) * int(
+                args.aggregation_window)
+            df.set_index(['patient_id', 'genc_id', 'hours_in'], inplace=True)
+            # Unstack columns
+            print('successfully queried, now unstacking columns')
+
+            # replace the drug_screen values with the True/False.
+
+            print("TODO: convert DRUG SCREEN to categorical yes/no")
+            print(set(df.loc[df['test_name_raw_clean'].isin(DRUG_SCREEN), 'result_value_clean'].values.tolist()))
+
+            print(df.loc[df['test_name_raw_clean'].isin(DRUG_SCREEN), ['result_value_clean',
+                                                                       'test_name_raw_clean']].groupby(
+                'result_value_clean').count())
+
+            print(df.columns.tolist())
+
+            df.loc[~df['result_value_clean'].isna(), 'result_value_clean'] = df.loc[
+                ~df['result_value_clean'].isna(), 'result_value_clean'].apply(x_to_numeric)
+
+            df['result_value_clean'] = pd.to_numeric(df['result_value_clean'], 'coerce')
+
+            # standardise the units
+
+            # for col in df.columns.tolist():
+            #     print(col)
+
+            # #filter values #'test_name_raw_clean'
+            # to_remove=['lab_test_name_raw', 'test_code_raw', 'test_type_mapped', 'result_value', 'result_value_clean', 'reference_range', 'sample_collection_date_time', 'row_id']
+            # try:
+            #     df.drop(to_remove, axis=1, inplace=True)
+            # except KeyError:
+            #     pass
+
+            # sort out all of the drug screen cols to be True/False
+            for col in tqdm(DRUG_SCREEN, desc='drug_screen'):
+                df.loc[(df['test_name_raw_clean'].isin(DRUG_SCREEN)) & (
+                            (~df['result_unit_clean'].isna()) & (~df['result_value_clean'].isna())) & (
+                                   df['result_value_clean'] > 0), 'result_value_clean'] = 1.0
+                # make the unit NaN
+                df.loc[(df['test_name_raw_clean'].isin(DRUG_SCREEN)) & (~df['result_unit_clean'].isna()) & (
+                    ~df['result_value_clean'].isna()), 'result_unit_clean'] = np.nan
+
+            print(df.columns.tolist())
+            df.reset_index().to_csv(os.path.join(args.output, f'{site}_tmp_labs2.csv'))
+
+        # --------------------------------------------    UNIT CONVERSION -------------------------------------------------------------------
+
+        units_dict = \
+        df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(['hospital_id', 'test_name_raw_clean'])[
+            'result_unit_clean'].apply(name_count).to_dict()
+
+        conversion_list = []
+
+        df_cols = df.columns.tolist()
+        for k, v in units_dict.items():
+            if len(v) > 1:
+                for item in v[1:]:
+                    scale = get_scale(v[0][0], item[0])
+                    if not (isinstance(scale, str)):
+                        conversion_list.append((k[0], k[1], item[0], get_scale(v[0][0], item[0]), v[0][0],
+                                                item[1]))  # key: (original unit, scale, to_unit)
+
+        for item in conversion_list: print(item)
+
+        try:
+            print(f'rescued {np.sum(list(zip(*conversion_list))[-1])} labs by unit conversion')
+        except:
+            pass
+
+        def clean(item_name):
+            return str(item_name).replace('%', '%%').replace("'", "''"), filter_string(str(item_name))
+
+        # apply the scaling we found to the df
+        for item in tqdm(conversion_list, desc='unit_conversion'):
+            hospital_id, lab_name, from_unit, scale, to_unit, count = item
+            if clean(lab_name)[1] not in df_cols:
+                print(clean(lab_name))
+                continue
+            assert lab_name == clean(lab_name), f"{lab_name} is not the same as {clean(lab_name)}"
+            df.loc[(df['hospital_id'] == hospital_id) & (df['test_name_raw_clean'] == lab_name) & (
+                        df['result_unit_clean'] == from_unit), clean(lab_name)[1]] *= scale
+            df.loc[(df['hospital_id'] == hospital_id) & (df['test_name_raw_clean'] == lab_name) & (
+                        df['result_unit_clean'] == from_unit), 'result_unit_clean'] = to_unit
+
+        # --------------------------------------------    UNIT CONVERSION FOR UNKNOWN UNITS -------------------------------------------------------------------
+
+        units_dict = \
+        df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(['hospital_id', 'test_name_raw_clean'])[
+            'result_unit_clean'].apply(name_count).to_dict()
+
+        log = ""
+        determined_same = []
+        df_cols = df.columns.tolist()
+        for k, v in tqdm(units_dict.items()):
+            if clean(k[1])[1] not in df_cols:
+                continue
+            if len(v) > 1:
+                if v[0][1] < 20:
+                    continue
+                if isinstance(v[0][0], str):
+                    # comparison = df.loc[(df['hospital_id']==k[0])&(df['test_name_raw_clean']==k[1])&(df['result_unit_clean']==v[0][0]), clean(k[1])[1]].values
+                    comparison = df.loc[(df['hospital_id'] == k[0]) & (df['test_name_raw_clean'] == k[1]) & (
+                                df['result_unit_clean'] == v[0][0]), 'result_value_clean'].values
+                elif np.isnan(v[0][0]):
+                    # comparison = df.loc[(df['hospital_id']==k[0])&(df['test_name_raw_clean']==k[1])&(df['result_unit_clean'].isna()), clean(k[1])[1]].values
+                    comparison = df.loc[(df['hospital_id'] == k[0]) & (df['test_name_raw_clean'] == k[1]) & (
+                        df['result_unit_clean'].isna()), 'result_value_clean'].values
+                else:
+                    raise
+                norm_p = scipy.stats.kstest(comparison, 'norm')[1]
+
+                for item in v[1:]:
+                    if item[1] < 20:
+                        #                 print(f'too few samples for {k[1]}, {v[0][0]}, {v[0][1]}, {item[0]}, {item[1]}')
+                        continue
+                    if isinstance(item[0], str):
+                        # test_unit = df.loc[(df['hospital_id']==k[0])&(df['test_name_raw_clean']==k[1])&(df['result_unit_clean']==item[0]), clean(k[1])[1]].values
+                        test_unit = df.loc[(df['hospital_id'] == k[0]) & (df['test_name_raw_clean'] == k[1]) & (
+                                    df['result_unit_clean'] == item[0]), 'result_value_clean'].values
+                    elif np.isnan(item[0]):
+                        # test_unit = df.loc[(df['hospital_id']==k[0])&(df['test_name_raw_clean']==k[1])&(df['result_unit_clean'].isna()), clean(k[1])[1]].values
+                        test_unit = df.loc[(df['hospital_id'] == k[0]) & (df['test_name_raw_clean'] == k[1]) & (
+                            df['result_unit_clean'].isna()), 'result_value_clean'].values
+                    else:
+                        raise
+                    same_test = scipy.stats.mannwhitneyu(comparison, test_unit)[1]
+                    print(k[0], k[1], v[0][0], item[0], same_test)
+
+                    log += f"Are {k[0]} and {k[1]} the same? units are {v[0][0]} and {item[0]}, respectively (p={same_test}) \r\n"
+                    # sns.distplot([comparison, test_unit], hist = False, kde = True, kde_kws = {'shade': True, 'linewidth': 3}, label = [v[0][0], item[0]])
+
+                    # input()
+                    print((k[0], k[1], v[0][0], item[0], norm_p, same_test))
+                    # if same_test >=0.05:
+                    #     print((k[0], k[1], v[0][0], item[0], norm_p, same_test))
+                    #     if input()=='':
+                    #         determined_same.append((k[0], k[1], v[0][0], item[0], item[1], norm_p, same_test))
+
+        # put log to txt
+        with open(os.path.join(args.output, site + '_units_log.txt'), 'w') as f:
+            f.write(log)
+
+        # print(determined_same)
+        if len(determined_same) > 0:
+            def clean(item_name):
+                return str(item_name).replace('%', '%%').replace("'", "''"), filter_string(str(item_name))
+
+            # print(print(sorted(df.columns.tolist())
+            for item in tqdm(determined_same):
+                print(item)
+                hospital_id, lab_name, to_unit, from_unit, num_saved, norm_p, same_test = item
+                if clean(lab_name)[1] not in df_cols:
+                    print(clean(lab_name))
+                    continue
+                if isinstance(from_unit, str):
+                    df.loc[(df['hospital_id'] == hospital_id) & (df['test_name_raw_clean'] == lab_name) & (
+                                df['result_unit_clean'] == from_unit), 'result_unit_clean'] = to_unit
+                else:
+                    df.loc[(df['hospital_id'] == hospital_id) & (df['test_name_raw_clean'] == lab_name) & (
+                        df['result_unit_clean'].isna()), 'result_unit_clean'] = to_unit
+
+            np.sum(list(zip(*determined_same))[4])
+
+        units_dict = \
+        df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(['hospital_id', 'test_name_raw_clean'])[
+            'result_unit_clean'].apply(name_count).to_dict()
+
+        # eliminate features with unmatchable units
+
+        keep_vars = []
+        keep_vars_nan = []
+        for k, v in units_dict.items():
+            keep_vars.append((k[0], k[1], v[0][0]))
+
+        print(len(df))
+        print(sum(pd.Series(list(zip(df['hospital_id'], df['test_name_raw_clean'], df['result_unit_clean']))).isin(
+            keep_vars)) / len(df))
+        index = pd.Series(list(zip(df['hospital_id'], df['test_name_raw_clean'], df['result_unit_clean']))).isin(
+            keep_vars).values
+
+        df = df.loc[index]
+
+        # drop the text fields prior to the groupby
+        # if 'result_unit' in df.columns.tolist():
+        #     df.drop(['result_unit', 'result_unit_clean', 'test_name_raw_clean'], axis=1, inplace=True)
+
+        assert 'hospital_id' in df.columns
+
+        # sometimes there are multiple hospitals. Let us just make sure that the first hospital is there for all of the patient's encounters
+        df = df.drop(labels='hospital_id', axis=1).join(df.groupby(['patient_id', 'genc_id'])['hospital_id'].first(),
+                                                        how='left', on=['patient_id', 'genc_id'])
+
+        df['hospital_id'] = df['hospital_id'].replace(HOSPITAL_ID)
+
+        df.reset_index('hours_in', inplace=True)
+        df['hours_in'] = df['hours_in'].apply(lambda x: min(0, x))
+        df.set_index('hours_in', append=True, inplace=True)
+        print("doing massive groupby")
+        mean_vals = df.groupby(['patient_id', 'genc_id', 'hours_in', 'hospital_id', 'test_name_raw_clean',
+                                'result_unit_clean']).mean()  # could also do .agg('mean', 'median', 'std', 'min', 'max') for example.
+
+        print("doing massive unstack")
+
+        mean_vals = mean_vals.unstack(level=['test_name_raw_clean', 'result_unit_clean'])
+
+        # potentially drop oth level of multiindex
+        mean_vals = mean_vals.droplevel(level=0, axis='columns')
+
+        assert 'hospital_id' in mean_vals.index.names
+
+        mean_vals = mean_vals.groupby(by=mean_vals.columns,
+                                      axis=1).mean()  # because we made many of the columns the same
+
+        print(mean_vals.head())
+
+        print(len(mean_vals), ' patients had ',
+              len(mean_vals.columns) * len(set(mean_vals.index.get_level_values('hospital_id'))), ' lab types from ',
+              len(set(mean_vals.index.get_level_values('hospital_id'))), ' hospitals.')
+
+        # Now eliminate rows with fewer than args.min_percent data
+        drop_cols = []
+        # for name, hospital_id in HOSPITAL_ID.items():
+        #     # only get participants that don't have all np.nan for hospital id==hospital_id
+        #     temp_df = mean_vals.loc[mean_vals.index.get_level_values('hospital_id')==hospital_id]
+        #     temp_df = temp_df.unstack( level='hospital_id')
+        mean_vals = mean_vals.dropna(axis='columns', how='all')
+        # print(name, hospital_id, len(temp_df))
+
+        for col in mean_vals.columns:
+            print("obs_rate for ", col, (1 - mean_vals[col].isna().mean()))
+            if (1 - mean_vals[col].isna().mean()) < args.min_percent:
+                print(col, 1 - mean_vals[col].isna().mean())
+                # drop the column.
+                drop_cols.append(col)
+
+        # mean_vals['hospital_id2']= mean_vals.index.get_level_values('hospital_id')
+        # mean_vals = mean_vals.set_index('hospital_id2', append=True)
+        # mean_vals = mean_vals.unstack('hospital_id2')
+
+        # mean_vals.columns.names = [n.replace('_id2', '_id') for n in mean_vals.columns.names]
+        # mean_vals = mean_vals.set_index('hospital_id2', append=True)
+
+        print(mean_vals.head())
+
+        mean_vals = mean_vals.drop(drop_cols, axis=1)
+
+        print("After applying args.min_percent==", args.min_percent)
+        print(len(mean_vals), ' patients had ', len(mean_vals.columns), ' lab types from ', site)
+
+        mean_vals.sort_index(inplace=True)
+
+        return_dfs.update({site: mean_vals})
+        # break #TODO stop this
+
+    return return_dfs
+
 
 def binary_legth_of_stay(l):
     return 1 if l >= 7 else 0    #TODO: replace with parameter
