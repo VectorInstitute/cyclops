@@ -217,6 +217,53 @@ def extract(config):
 
     return data
 
+
+def simple_imput(mean_vals):
+    """
+    """
+    idx = pd.IndexSlice
+    # do simple imputation
+    # mask
+    mask = 1 - mean_vals.isna()
+    # measurement
+    measurement = mean_vals.copy()
+
+    print(measurement.loc[idx[:, :, 0], :].head())
+    print(measurement.loc[idx[:, :, 0], :].values.shape)
+    print(measurement.mean().values.shape)
+
+    print(measurement.loc[idx[:, :, 0, :]].groupby('genc_id').count())
+
+    # these expressions necessarily need to be executed seperately
+    subset_data = measurement.loc[idx[:, :, 0], :]
+    data_means = measurement.mean()
+    subset_data = subset_data.fillna(data_means)
+    measurement.loc[idx[:, :, 0], :] = subset_data.values
+
+    measurement = measurement.ffill()
+    # time_since
+    is_absent = 1 - mask
+    hours_of_absence = is_absent.groupby(['patient_id', 'genc_id']).cumsum()
+    time_df = hours_of_absence - hours_of_absence[is_absent == 0].fillna(method='ffill')
+    time_df = time_df.fillna(0)
+
+    final_data = pd.concat([measurement, mask, time_df], keys=['measurement', 'mask', 'time'], axis=1)
+    final_data.columns = final_data.columns.swaplevel(0, 1)
+    final_data.sort_index(axis='columns', inplace=True)
+
+    nancols = 0
+
+    try:
+        nancols = np.sum([a == 0 for a in final_data.loc[:, idx[:, 'mask']].sum().values])
+        print(nancols)
+    except:
+        print('could not get nancols')
+        pass
+
+    print(nancols, '/', len(sorted(set(final_data.columns.get_level_values(0)))))
+    return final_data
+
+
 def labs(args, engine):
     idx = pd.IndexSlice
     query_1 = "SELECT REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ') as unique_lab_names, COUNT(REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ')) as unique_lab_counts FROM lab GROUP BY unique_lab_names ORDER BY unique_lab_counts ASC;"  # select all lab.test_name_raw (equivalent to itemids in mimiciii)
@@ -609,6 +656,188 @@ def labs(args, engine):
 
         return_dfs.update({site: mean_vals})
         # break #TODO stop this
+
+        ########## SITE ITERATOR
+
+        for site, mean_vals in return_dfs.items():
+            #outcomes_df = outcomes_df_master.copy()
+
+            # get the overlapping genc_ids:
+            #print('outcomes_genc_ids across all sites:', len(set(outcomes_df.index.get_level_values('genc_id'))))
+            print(f'genc_ids in data at {site}:', len(set(mean_vals.index.get_level_values('genc_id'))))
+
+            #merged_genc_ids = set(outcomes_df.index.get_level_values('genc_id')).intersection(
+            #    set(mean_vals.index.get_level_values('genc_id')))
+
+            #print('combined:', len(merged_genc_ids))
+
+            # this excludes some people that
+            #outcomes_df = outcomes_df.loc[outcomes_df.index.get_level_values('genc_id').isin(merged_genc_ids)]
+            #mean_vals = mean_vals.loc[mean_vals.index.get_level_values('genc_id').isin(merged_genc_ids)]
+
+            # first assert that all genc_ids are in the outcomes from the mean_vals site.
+            mean_vals_genc_ids = set(mean_vals.index.get_level_values('genc_id'))
+            # for m in mean_vals_genc_ids:
+            #     if m not in outcomes_df.index.get_level_values('genc_id'):
+            #         print(m)
+            #assert (all([m in outcomes_df.index.get_level_values('genc_id') for m in
+            #             mean_vals_genc_ids]))  # everyone has a discharge, transfer, or death.
+
+            # but not all patients in outcomes have mean_vals
+
+            #outcomes_df = outcomes_df.loc[
+            #    outcomes_df.index.get_level_values('genc_id').isin(mean_vals.index.get_level_values('genc_id'))]
+
+            # get the common index of only genc_id, hours_in
+            mean_vals.reset_index(['patient_id', 'hospital_id'], inplace=True)
+            #outcomes_df.reset_index(['patient_id', 'hospital_id'], inplace=True)
+            #joined_index = mean_vals.index.union(outcomes_df.index)
+            #print('len(mean_vals) + len(outcomes_df) = len(mean_vals)+len(outcomes_df); len(joined_index)')
+            #print(f'{len(mean_vals)} + {len(outcomes_df)} = {len(mean_vals) + len(outcomes_df)}; {len(joined_index)}')
+            print('data: ', len(set(mean_vals.index.get_level_values('genc_id'))))
+            #print('outcomes: ', len(set(outcomes_df.index.get_level_values('genc_id'))))
+
+            #print(len(set(outcomes_df.reset_index('hours_in').index)),
+            #      len(set(mean_vals.reset_index('hours_in').index)))
+            #print(len(set(outcomes_df.reset_index('hours_in').index.union(mean_vals.reset_index('hours_in').index))))
+
+            # Instead of just having the end index, we want the entire length od stay regularly spaced.
+            #genc_min_max = pd.DataFrame(index=joined_index).reset_index()[['genc_id', 'hours_in']].groupby(
+            #    'genc_id').agg({'hours_in': ['min', 'max']})  # tuple of (genc_id, min_index, max_index)
+            #print(genc_min_max.head())
+            #genc_min_max = genc_min_max.set_index([('hours_in', 'min'), ('hours_in', 'max')],
+            #                                      append=True).index.tolist()
+            # now for each tuple, fill between min_index and max_index # TODO: how does this compare to the args aggregation window?
+            #new_index = []
+            #for item in genc_min_max:
+            #    # genc_id, min_hour, max_hour = item
+            #    hours_range = list(range(item[1], item[2] + 1))
+            #    new_index += list(zip([item[0]] * len(hours_range), hours_range))
+            #new_index = pd.MultiIndex.from_tuples(new_index, names=['genc_id', 'hours_in'])
+
+            # reindex dataframes
+            try:
+                # make sure it is only ['genc_id', 'hours_in]
+                #outcomes_df.reset_index(['patient_id', 'hospital_id'], inplace=True)
+                mean_vals.reset_index(['patient_id', 'hospital_id'], inplace=True)
+            except:
+                #assert len(outcomes_df.index.names) == 2
+                assert len(mean_vals.index.names) == 2
+                #assert len(set(outcomes_df.index.names).intersection({'genc_id', 'hours_in'})) == 2
+                #assert len(set(outcomes_df.index.names).intersection({'genc_id', 'hours_in'})) == 2
+
+            #print(outcomes_df.head())
+            print(mean_vals.head())
+
+            #outcomes_df = outcomes_df.replace('', np.nan)
+
+            # print(outcomes_df['patient_id'].isna().sum())
+            #outcomes_df = outcomes_df.reindex(new_index)
+            # now ffill the patient_id and hospital_id for all the new hours in we just added
+            # print(outcomes_df['patient_id'].isna().sum())
+            #outcomes_df[['patient_id', 'hospital_id']] = outcomes_df[['patient_id', 'hospital_id']].groupby('genc_id')[
+            #    ['patient_id', 'hospital_id']].ffill().groupby('genc_id')[['patient_id', 'hospital_id']].bfill()
+            # print(outcomes_df['patient_id'].isna().sum())
+            #outcomes_df = outcomes_df.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
+
+            #mean_vals = mean_vals.reindex(new_index)
+            # now ffill the patient_id and hospital_id for all the new hours in we just added
+            # print('mean_vals: ',mean_vals['patient_id'].isna().sum())
+            mean_vals[['patient_id', 'hospital_id']] = \
+            mean_vals[['patient_id', 'hospital_id']].groupby('genc_id')[['patient_id', 'hospital_id']].ffill().groupby(
+                'genc_id')[['patient_id', 'hospital_id']].bfill()
+            # print(mean_vals['patient_id'].isna().sum())
+            mean_vals = mean_vals.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
+
+            # assert that ll genc_ids have exactly 1 unique patient id (excluding NaN)
+
+            # assert all([i<=1 for i in outcomes_df.reset_index().groupby('genc_id')['patient_id'].nunique().values]) # some patients do not have patient IDs if they didn't have health cards.
+
+            # print(outcomes_df.reset_index()['patient_id'].isna().sum())
+            # print(outcomes_df.reset_index()['patient_id'].isin(['']).sum())
+            # print(len(outcomes_df.reset_index()['patient_id'].isna()))
+            # print(len(outcomes_df.reset_index()['patient_id'].isin([''])))
+
+            # print(len(outcomes_df.loc[(outcomes_df.reset_index()['patient_id'].isna())|(outcomes_df.reset_index()['patient_id'].isin(['']))]))
+            # genc_ids = outcomes_df.loc[(outcomes_df.reset_index()['patient_id'].isna())|(outcomes_df.reset_index()['patient_id'].isin(['']))].index.get_level_values('genc_id')
+
+            # print(outcome_df.loc[outcome_df.index.get_level_values('genc_id').isin(genc_ids)])
+
+            #assert all([i == 1 for i in outcomes_df.reset_index().groupby('genc_id')['patient_id'].nunique().values])
+
+            # assert that there are no missing patient ids or hospital ids
+            # assert np.isnan(outcomes_df.index.get_level_values('patient_id')).sum()==0
+            #assert np.isnan(outcomes_df.index.get_level_values('hospital_id')).sum() == 0
+            # assert np.isnan(mean_vals.index.get_level_values('patient_id')).sum()==0
+            assert np.isnan(mean_vals.index.get_level_values('hospital_id')).sum() == 0
+
+            # forward fill outcomes_df
+            #idx = pd.IndexSlice
+            #min_index = outcomes_df.reset_index('hours_in').groupby(
+            #   ['patient_id', 'genc_id', 'hospital_id']).min().set_index('hours_in', append=True).swaplevel(
+            #    i='hours_in', j='hospital_id').index  # back to patient_id, genc_id, hours_in, hospital_id
+            # outcomes_df.loc[idx[:, :, 0], :]=outcomes_df.loc[idx[:, :, 0], :].fillna(0)
+            #outcomes_df.loc[min_index, :] = outcomes_df.loc[min_index, :].fillna(
+            #    0)  # fill all the minimum values with 0
+            # first the resuscitation columns must be forward filled witha  limit
+
+            # currently aggregation window isn't applied yet.
+            #print(outcomes_df.head())
+            #outcomes_df['resus_24'] = outcomes_df['resus_24'].ffill(limit=24).fillna(0)
+            #outcomes_df['resus_48'] = outcomes_df['resus_24'].ffill(limit=48).fillna(0)
+            # ffill the rest of the outcomes.
+            #outcomes_df = outcomes_df.ffill()
+
+            # do we want to add a gap time at the end for outcomes to prevent leakage?
+
+            # formerly the groups were already hourly, but now we need to aggregate.
+            # mean_vals.index=mean_vals.index.set_levels(mean_vals.index.levels[2]*args.aggregation_window, level=2)
+            # outcomes_df.index=outcomes_df.index.set_levels(outcomes_df.index.levels[2]*args.aggregation_window, level=2)
+
+            # time at zero is a groupby mean
+            mean_vals_0 = mean_vals.loc[mean_vals.index.get_level_values('hours_in') < 0, :].groupby(
+                ['patient_id', 'genc_id', 'hospital_id']).mean()
+
+            mean_vals_0['hours_in'] = 0
+            mean_vals_0 = mean_vals_0.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
+
+            # now make sure mean_vals is 0 and up:
+            mean_vals = mean_vals.loc[mean_vals.index.get_level_values('hours_in') >= 0, :]
+
+            print(mean_vals_0.head())
+            # create new column which is hours in aggregator
+            mean_vals['agg_hours_in'] = (mean_vals.index.get_level_values('hours_in') // int(
+                args.aggregation_window) + 1) * int(args.aggregation_window)
+            mean_vals = mean_vals.groupby(['patient_id', 'genc_id', 'agg_hours_in', 'hospital_id']).mean()
+            mean_vals.index.names = ['patient_id', 'genc_id', 'hours_in', 'hospital_id']
+            mean_vals = mean_vals.append(mean_vals_0).sort_index()
+
+            # time at zero is a groupby mean
+            #outcomes_df_0 = outcomes_df.loc[outcomes_df.index.get_level_values('hours_in') < 0, :].groupby(
+                ['patient_id', 'genc_id', 'hospital_id']).max()
+
+            #outcomes_df_0['hours_in'] = 0
+            #outcomes_df_0 = outcomes_df_0.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
+
+            # now make sure mean_vals is 0 and up:
+            #outcomes_df = outcomes_df.loc[outcomes_df.index.get_level_values('hours_in') >= 0, :]
+
+            # create new column which is hours in aggregator
+            #outcomes_df['agg_hours_in'] = (outcomes_df.index.get_level_values('hours_in') // int(
+            #    args.aggregation_window) + 1) * int(args.aggregation_window)
+            #outcomes_df = outcomes_df.groupby(['patient_id', 'genc_id', 'agg_hours_in', 'hospital_id']).max()
+            #outcomes_df.index.names = ['patient_id', 'genc_id', 'hours_in', 'hospital_id']
+            #outcomes_df = outcomes_df.append(outcomes_df_0).sort_index()
+
+            # TODO add gap times
+            # outcomes_df = add_gap_time(outcomes_df)
+
+            final_data = simple_imput(mean_vals)
+
+            # write out dataframes to hdf
+            dynamic_hd5_filt_filename = 'all_hourly_data.h5'
+            #outcomes_df.to_hdf(os.path.join(args.output, dynamic_hd5_filt_filename), f'interventions_{site}')
+            final_data.to_hdf(os.path.join(args.output, dynamic_hd5_filt_filename), f'vitals_labs_{site}')
 
     return return_dfs
 
