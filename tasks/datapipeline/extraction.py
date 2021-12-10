@@ -213,7 +213,7 @@ def extract(config):
     config.min_percent  = 0
     config.aggregation_window = 6
     config.output = config.output_folder
-    #labs(config, engine)
+    labs(config, engine)
 
     return data
 
@@ -795,8 +795,7 @@ def labs(args, engine):
             # outcomes_df.index=outcomes_df.index.set_levels(outcomes_df.index.levels[2]*args.aggregation_window, level=2)
 
             # time at zero is a groupby mean
-            mean_vals_0 = mean_vals.loc[mean_vals.index.get_level_values('hours_in') < 0, :].groupby(
-                ['patient_id', 'genc_id', 'hospital_id']).mean()
+            mean_vals_0 = mean_vals.loc[mean_vals.index.get_level_values('hours_in') < 0, :].groupby(['patient_id', 'genc_id', 'hospital_id']).mean()
 
             mean_vals_0['hours_in'] = 0
             mean_vals_0 = mean_vals_0.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
@@ -814,7 +813,7 @@ def labs(args, engine):
 
             # time at zero is a groupby mean
             #outcomes_df_0 = outcomes_df.loc[outcomes_df.index.get_level_values('hours_in') < 0, :].groupby(
-                ['patient_id', 'genc_id', 'hospital_id']).max()
+            #    ['patient_id', 'genc_id', 'hospital_id']).max()
 
             #outcomes_df_0['hours_in'] = 0
             #outcomes_df_0 = outcomes_df_0.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
