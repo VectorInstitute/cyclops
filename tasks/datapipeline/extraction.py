@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import json
@@ -8,6 +7,7 @@ import sqlalchemy
 import pandas.io.sql as psql
 import re
 from tqdm import tqdm
+from tasks.datapipeline.extraction_utils import *
 
 def extract(config):
     print('postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
@@ -134,7 +134,10 @@ def extract(config):
             hours_range = list(range(item[1], item[2] + 1))
             new_index += list(zip([item[0]] * len(hours_range), hours_range))
         new_index = pd.MultiIndex.from_tuples(new_index, names=['genc_id', 'hours_in'])
-
+       
+        print("Before reindexing")
+        print(outcomes_df.columns)
+        print(mean_vals.columns)
         # reindex dataframes
         try:
             # make sure it is only ['genc_id', 'hours_in]
@@ -227,7 +230,7 @@ def extract(config):
         print(mean_vals_0.head())
         # create new column which is hours in aggregator
         mean_vals['agg_hours_in'] = (mean_vals.index.get_level_values('hours_in') // int(
-            args.aggregation_window) + 1) * int(args.aggregation_window)
+            config.aggregation_window) + 1) * int(config.aggregation_window)
         mean_vals = mean_vals.groupby(['patient_id', 'genc_id', 'agg_hours_in', 'hospital_id']).mean()
         mean_vals.index.names = ['patient_id', 'genc_id', 'hours_in', 'hospital_id']
         mean_vals = mean_vals.append(mean_vals_0).sort_index()
@@ -244,7 +247,7 @@ def extract(config):
 
         # create new column which is hours in aggregator
         outcomes_df['agg_hours_in'] = (outcomes_df.index.get_level_values('hours_in') // int(
-            args.aggregation_window) + 1) * int(args.aggregation_window)
+            config.aggregation_window) + 1) * int(config.aggregation_window)
         outcomes_df = outcomes_df.groupby(['patient_id', 'genc_id', 'agg_hours_in', 'hospital_id']).max()
         outcomes_df.index.names = ['patient_id', 'genc_id', 'hours_in', 'hospital_id']
         outcomes_df = outcomes_df.append(outcomes_df_0).sort_index()
@@ -255,9 +258,13 @@ def extract(config):
         final_data = simple_imput(mean_vals)
 
         # write out dataframes to hdf
+        print("Saving data to disk: " + config.output)
         dynamic_hd5_filt_filename = 'all_hourly_data.h5'
-        outcomes_df.to_hdf(os.path.join(args.output, dynamic_hd5_filt_filename), f'interventions_{site}')
-        final_data.to_hdf(os.path.join(args.output, dynamic_hd5_filt_filename), f'vitals_labs_{site}')
+        outcomes_df.to_hdf(os.path.join(config.output, dynamic_hd5_filt_filename), f'interventions_{site}')
+        final_data.to_hdf(os.path.join(config.output, dynamic_hd5_filt_filename), f'vitals_labs_{site}')
+	
+        outcomes_df.to_csv(os.path.join(config.output, f'interventions_{site}.cvs'))
+        final_data.to_csv(os.path.join(config.output, f'labs_{site}.cvs'))
 
     return data
 
@@ -435,9 +442,6 @@ def labs(args, engine):
 
         # print(determined_same)
         if len(determined_same) > 0:
-            def clean(item_name):
-                return str(item_name).replace('%', '%%').replace("'", "''"), filter_string(str(item_name))
-
             # print(print(sorted(df.columns.tolist())
             for item in tqdm(determined_same):
                 print(item)
@@ -522,7 +526,7 @@ def labs(args, engine):
     return return_dfs
 
 
-def outcomes(config, engine):
+def outcomes(args, engine):
     """
     discharge_disposition:
     1: Transferred to acute care inpatient institution
