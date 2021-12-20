@@ -64,7 +64,7 @@ def extract(config):
       {pop_size}"""
 
     data=pd.read_sql(query_full,con=engine)
-    data.set_index(['patient_id', 'genc_id'], inplace=True)
+#    data.set_index(['patient_id', 'genc_id'], inplace=True)
       
     if BASIC_DATA_ONLY:
         return data
