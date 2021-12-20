@@ -9,6 +9,8 @@ import re
 from tqdm import tqdm
 from tasks.datapipeline.extraction_utils import *
 
+BASIC_DATA_ONLY = True
+
 def extract(config):
     print('postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
     engine = sqlalchemy.create_engine(f'postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
@@ -63,7 +65,9 @@ def extract(config):
 
     data=pd.read_sql(query_full,con=engine)
     data.set_index(['patient_id', 'genc_id'], inplace=True)
-    #print(data.head())
+      
+    if BASIC_DATA_ONLY:
+        return data
 
     #temp: test labs:
     config.min_percent  = 0
@@ -173,20 +177,6 @@ def extract(config):
         # print(mean_vals['patient_id'].isna().sum())
         mean_vals = mean_vals.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
 
-        # assert that ll genc_ids have exactly 1 unique patient id (excluding NaN)
-
-        # assert all([i<=1 for i in outcomes_df.reset_index().groupby('genc_id')['patient_id'].nunique().values]) # some patients do not have patient IDs if they didn't have health cards.
-
-        # print(outcomes_df.reset_index()['patient_id'].isna().sum())
-        # print(outcomes_df.reset_index()['patient_id'].isin(['']).sum())
-        # print(len(outcomes_df.reset_index()['patient_id'].isna()))
-        # print(len(outcomes_df.reset_index()['patient_id'].isin([''])))
-
-        # print(len(outcomes_df.loc[(outcomes_df.reset_index()['patient_id'].isna())|(outcomes_df.reset_index()['patient_id'].isin(['']))]))
-        # genc_ids = outcomes_df.loc[(outcomes_df.reset_index()['patient_id'].isna())|(outcomes_df.reset_index()['patient_id'].isin(['']))].index.get_level_values('genc_id')
-
-        # print(outcome_df.loc[outcome_df.index.get_level_values('genc_id').isin(genc_ids)])
-
         assert all([i == 1 for i in outcomes_df.reset_index().groupby('genc_id')['patient_id'].nunique().values])
 
         # assert that there are no missing patient ids or hospital ids
@@ -200,7 +190,6 @@ def extract(config):
         min_index = outcomes_df.reset_index('hours_in').groupby(
             ['patient_id', 'genc_id', 'hospital_id']).min().set_index('hours_in', append=True).swaplevel(i='hours_in',
                                                                                                          j='hospital_id').index  # back to patient_id, genc_id, hours_in, hospital_id
-        # outcomes_df.loc[idx[:, :, 0], :]=outcomes_df.loc[idx[:, :, 0], :].fillna(0)
         outcomes_df.loc[min_index, :] = outcomes_df.loc[min_index, :].fillna(0)  # fill all the minimum values with 0
         # first the resuscitation columns must be forward filled witha  limit
 
@@ -262,9 +251,6 @@ def extract(config):
         dynamic_hd5_filt_filename = 'all_hourly_data.h5'
         outcomes_df.to_hdf(os.path.join(config.output, dynamic_hd5_filt_filename), f'interventions_{site}')
         final_data.to_hdf(os.path.join(config.output, dynamic_hd5_filt_filename), f'vitals_labs_{site}')
-	
-        outcomes_df.to_csv(os.path.join(config.output, f'interventions_{site}.cvs'))
-        final_data.to_csv(os.path.join(config.output, f'labs_{site}.cvs'))
 
     return data
 
