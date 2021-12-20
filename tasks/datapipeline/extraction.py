@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import json
@@ -8,151 +7,9 @@ import sqlalchemy
 import pandas.io.sql as psql
 import re
 from tqdm import tqdm
+from tasks.datapipeline.extraction_utils import *
 
-# constants
-HOSPITAL_ID = {'THPM':0, 'SBK':1, 'UHNTG':2, 'SMH':3, 'UHNTW':4, 'THPC':5, 'PMH':6, 'MSH':7}
-TRAJECTORIES = {
-        'Certain infectious and parasitic diseases': ('A00', 'B99'),
-        'Neoplasms': ('C00', 'D49'),
-        'Diseases of the blood and blood-forming organs and certain disorders involving the immune mechanism': ('D50','D89'),
-        'Endocrine, nutritional and metabolic diseases': ('E00', 'E89'),
-        'Mental, Behavioral and Neurodevelopmental disorders': ('F01', 'F99'),
-        'Diseases of the nervous system': ('G00', 'G99'),
-        'Diseases of the eye and adnexa': ('H00', 'H59'),
-        'Diseases of the ear and mastoid process': ('H60', 'H95'),
-        'Diseases of the circulatory system': ('I00', 'I99'),
-        'Diseases of the respiratory system': ('J00', 'J99'),
-        'Diseases of the digestive system': ('K00', 'K95'),
-        'Diseases of the skin and subcutaneous tissue': ('L00', 'L99'),
-        'Diseases of the musculoskeletal system and connective tissue': ('M00', 'M99'),
-        'Diseases of the genitourinary system': ('N00', 'N99'),
-        'Pregnancy, childbirth and the puerperium': ('O00', 'O99'),
-        'Certain conditions originating in the perinatal period': ('P00', 'P96'),
-        'Congenital malformations, deformations and chromosomal abnormalities': ('Q00','Q99'),
-        'Symptoms, signs and abnormal clinical and laboratory findings, not elsewhere classified': ('R00', 'R99'),
-        'Injury, poisoning and certain other consequences of external causes': ('S00', 'T88'),
-        'External causes of morbidity': ('V00', 'Y99'),
-        'COVID19': ('U07', 'U08'),
-        'Factors influencing health status and contact with health services': ('Z00', 'Z99')
-    }
-
-DRUG_SCREEN=['amitriptyline', 'amphetamine', 'barbiturates', 'barbiturates_scn', 'barbiturates_and_sedatives_blood',
-                      'benzodiazepine_scn', 'benzodiazepines_screen', 'cannabinoids',
-                     'clozapine', 'cocaine', 'cocaine_metabolite', 'codeine', 'cocaine_metabolite',
-                     'codeine_metabolite_urine', 'desipramine', 'dextromethorphan', 'dim_per_dip_metabolite',
-                     'dimen_per_diphenhydramine', 'doxepin', 'ephedrine_per_pseudo', 'fluoxetine',
-                     'hydrocodone', 'hydromorphone', 'imipramine', 'lidocaine', 'mda_urine', 'mdma_ecstacy',
-                     'methadone', 'meperidine_urine', 'methadone_metabolite_urine', 'methamphetamine', 'morphine',
-                     'morphine_metabolite_urine', 'nortriptyline', 'olanzapine_metabolite_u',
-                     'olanzapine_urine', 'opiates_urine', 'oxycodone', 'oxycodone_cobas', 'oxycodone_metabolite',
-                      'phenylpropanolamine', 'propoxyphene', 'sertraline',
-                     'trazodone', 'trazodone_metabolite', 'tricyclics_scn', 'venlafaxine', 'venlafaxine_metabolite']
-
-def numeric_categorical(item):
-    x=None
-    locals_=locals()
-    
-    item = '('+item.replace('to', ' + ').replace('-', ' + ')+')/2' # this neglects negative ranges. todo, find a fast regex filter
-    items = item.replace('  ',' ').replace('(', '( ').split(' ')
-    item=" ".join([i.lstrip('0') for i in items])
-    exec('x='+item, globals(), locals_)
-    return locals_['x']
-
-
-def x_to_numeric(x):
-    """
-    Handle different strings to convert to numeric values(which can't be done in psql)
-    """
-    if x is None:
-        return np.nan
-    elif x is np.nan:
-        return np.nan
-    elif isinstance(x, str):
-        # check if it matches the categorical pattern "2 to 5" or 2 - 5
-        if re.search(r'-?\d+ +(to|-) +-?\d+', x) is not None:
-            try:
-                return numeric_categorical(x)
-            except:
-                print(x)
-                raise
-        return re.sub('^-?[^0-9.]', '', str(x))
-        
-def name_count(items):
-    """
-    Inputs:
-        items (list): a list of itemsto count the number of repeating values
-    Returns:
-        list of tuples with the name of the occurence and the count of each occurence
-    """
-    all_items={}
-    for item in items:
-        if item in all_items.keys():
-            all_items[item]+=1
-        else:
-            all_items[item]=1
-    return sorted([(k,v) for k,v in all_items.items()], key=lambda x:-x[1])
-
-def get_scale(be_like, actual):
-    """
-    This function is applied to scale every measurement to a standard unit
-    """
-    replacements={'milliliters':'ml',
-            'millimeters':'mm',
-            'gm':'g',
-            'x10 ':'x10e',
-            'tril':'x10e12',
-            'bil':'x10e9'
-            }
-    if isinstance(be_like, str) & isinstance(actual, str):
-        # check if anything should be replaced:
-        for k, v in replacements.items():
-            be_like = be_like.replace(k,v)
-            actual = actual.replace(k, v)
-        scale=1
-        
-        # check if both have x10^X terms in them
-        multipliers = ['x10e6', 'x10e9', 'x10e12']
-        if any(item in be_like for item in multipliers) and any(item in actual for item in multipliers):
-            # then adjust
-            scale*=1000**-multipliers.index(re.search('x10e\d+', actual)[0]) * 1000**multipliers.index(re.search('x10e\d+', be_like)[0])
-            return scale
-        
-        
-        be_like_list=be_like.split('/') # split the numerator and denominators for the comparator units
-        actual_list=actual.split('/')# split the numerator and denominators for the units that need to be converted
-        if len(be_like_list) == len(actual_list):
-            success=1
-            for i in range(len(be_like_list)):
-                try:
-                    scale*=convert(actual_list[i], be_like_list[i])**(1 if i>0 else -1)
-                except:
-                    success=0
-                    # could not convert between units
-                    break
-            if success: return scale
-    return 'could not convert'
-
-def filter_string(item):
-    item=item.replace(')', ' ')
-    item=item.replace('(', ' ')
-    item=item.replace('%', ' percent ')
-    item=item.replace('+', ' plus ')
-    item=item.replace('#', ' number ')
-    item=item.replace('&', ' and ')
-    item=item.replace("'s", '')
-    item=item.replace(',', ' ')
-    item=item.replace('/', ' per ')
-    item=' '.join(item.split())
-    item=item.strip()
-    
-    
-    item=item.replace(' ', '_')
-    item=re.sub('[^0-9a-z_()]+', '_', item)
-    if len(item)>1:
-        if item[0] in '1234567890_':
-            item='a_'+item
-    return item
-
+BASIC_DATA_ONLY = True
 
 def extract(config):
     print('postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}')
@@ -207,13 +64,193 @@ def extract(config):
       {pop_size}"""
 
     data=pd.read_sql(query_full,con=engine)
-    #print(data.head())
+#    data.set_index(['patient_id', 'genc_id'], inplace=True)
+      
+    if BASIC_DATA_ONLY:
+        return data
 
     #temp: test labs:
     config.min_percent  = 0
     config.aggregation_window = 6
     config.output = config.output_folder
-    #labs(config, engine)
+
+    return_dfs = labs(config, engine)
+    outcomes_df_master = outcomes(config, engine)
+
+################################## Process/Combine results #####################################
+    # adsd hospital id to index to match numerics
+    print(set(outcomes_df_master['hospital_id'].replace(HOSPITAL_ID).values))
+    outcomes_df_master['hospital_id'] = outcomes_df_master['hospital_id'].replace(HOSPITAL_ID)
+
+    assert set(outcomes_df_master['hospital_id'].values).issubset(
+        set(list(HOSPITAL_ID.keys()) + list(HOSPITAL_ID.values()) + ['', np.nan, None]))
+
+    outcomes_df_master.set_index('hospital_id', append=True, inplace=True)
+
+    ########## SITE ITERATOR
+
+    for site, mean_vals in return_dfs.items():
+        outcomes_df = outcomes_df_master.copy()
+
+        # get the overlapping genc_ids:
+        print('outcomes_genc_ids across all sites:', len(set(outcomes_df.index.get_level_values('genc_id'))))
+        print(f'genc_ids in data at {site}:', len(set(mean_vals.index.get_level_values('genc_id'))))
+
+        merged_genc_ids = set(outcomes_df.index.get_level_values('genc_id')).intersection(
+            set(mean_vals.index.get_level_values('genc_id')))
+
+        print('combined:', len(merged_genc_ids))
+
+        # this excludes some people that
+        outcomes_df = outcomes_df.loc[outcomes_df.index.get_level_values('genc_id').isin(merged_genc_ids)]
+        mean_vals = mean_vals.loc[mean_vals.index.get_level_values('genc_id').isin(merged_genc_ids)]
+
+        # first assert that all genc_ids are in the outcomes from the mean_vals site.
+        mean_vals_genc_ids = set(mean_vals.index.get_level_values('genc_id'))
+        assert (all([m in outcomes_df.index.get_level_values('genc_id') for m in
+                     mean_vals_genc_ids]))  # everyone has a discharge, transfer, or death.
+
+        # but not all patients in outcomes have mean_vals
+        outcomes_df = outcomes_df.loc[
+            outcomes_df.index.get_level_values('genc_id').isin(mean_vals.index.get_level_values('genc_id'))]
+
+        # get the common index of only genc_id, hours_in
+        mean_vals.reset_index(['patient_id', 'hospital_id'], inplace=True)
+        outcomes_df.reset_index(['patient_id', 'hospital_id'], inplace=True)
+        joined_index = mean_vals.index.union(outcomes_df.index)
+        print('len(mean_vals) + len(outcomes_df) = len(mean_vals)+len(outcomes_df); len(joined_index)')
+        print(f'{len(mean_vals)} + {len(outcomes_df)} = {len(mean_vals) + len(outcomes_df)}; {len(joined_index)}')
+        print('data: ', len(set(mean_vals.index.get_level_values('genc_id'))))
+        print('outcomes: ', len(set(outcomes_df.index.get_level_values('genc_id'))))
+
+        print(len(set(outcomes_df.reset_index('hours_in').index)), len(set(mean_vals.reset_index('hours_in').index)))
+        print(len(set(outcomes_df.reset_index('hours_in').index.union(mean_vals.reset_index('hours_in').index))))
+
+        # Instead of just having the end index, we want the entire length od stay regularly spaced.
+        genc_min_max = pd.DataFrame(index=joined_index).reset_index()[['genc_id', 'hours_in']].groupby('genc_id').agg(
+            {'hours_in': ['min', 'max']})  # tuple of (genc_id, min_index, max_index)
+        print(genc_min_max.head())
+        genc_min_max = genc_min_max.set_index([('hours_in', 'min'), ('hours_in', 'max')], append=True).index.tolist()
+        # now for each tuple, fill between min_index and max_index # TODO: how does this compare to the args aggregation window?
+        new_index = []
+        for item in genc_min_max:
+            # genc_id, min_hour, max_hour = item
+            hours_range = list(range(item[1], item[2] + 1))
+            new_index += list(zip([item[0]] * len(hours_range), hours_range))
+        new_index = pd.MultiIndex.from_tuples(new_index, names=['genc_id', 'hours_in'])
+       
+        print("Before reindexing")
+        print(outcomes_df.columns)
+        print(mean_vals.columns)
+        # reindex dataframes
+        try:
+            # make sure it is only ['genc_id', 'hours_in]
+            outcomes_df.reset_index(['patient_id', 'hospital_id'], inplace=True)
+            mean_vals.reset_index(['patient_id', 'hospital_id'], inplace=True)
+        except:
+            assert len(outcomes_df.index.names) == 2
+            assert len(mean_vals.index.names) == 2
+            assert len(set(outcomes_df.index.names).intersection({'genc_id', 'hours_in'})) == 2
+            assert len(set(outcomes_df.index.names).intersection({'genc_id', 'hours_in'})) == 2
+
+        print(outcomes_df.head())
+        print(mean_vals.head())
+
+        outcomes_df = outcomes_df.replace('', np.nan)
+
+        # print(outcomes_df['patient_id'].isna().sum())
+        outcomes_df = outcomes_df.reindex(new_index)
+        # now ffill the patient_id and hospital_id for all the new hours in we just added
+        # print(outcomes_df['patient_id'].isna().sum())
+        outcomes_df[['patient_id', 'hospital_id']] = \
+        outcomes_df[['patient_id', 'hospital_id']].groupby('genc_id')[['patient_id', 'hospital_id']].ffill().groupby(
+            'genc_id')[['patient_id', 'hospital_id']].bfill()
+        # print(outcomes_df['patient_id'].isna().sum())
+        outcomes_df = outcomes_df.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
+
+        mean_vals = mean_vals.reindex(new_index)
+        # now ffill the patient_id and hospital_id for all the new hours in we just added
+        # print('mean_vals: ',mean_vals['patient_id'].isna().sum())
+        mean_vals[['patient_id', 'hospital_id']] = \
+        mean_vals[['patient_id', 'hospital_id']].groupby('genc_id')[['patient_id', 'hospital_id']].ffill().groupby(
+            'genc_id')[['patient_id', 'hospital_id']].bfill()
+        # print(mean_vals['patient_id'].isna().sum())
+        mean_vals = mean_vals.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
+
+        assert all([i == 1 for i in outcomes_df.reset_index().groupby('genc_id')['patient_id'].nunique().values])
+
+        # assert that there are no missing patient ids or hospital ids
+        # assert np.isnan(outcomes_df.index.get_level_values('patient_id')).sum()==0
+        assert np.isnan(outcomes_df.index.get_level_values('hospital_id')).sum() == 0
+        # assert np.isnan(mean_vals.index.get_level_values('patient_id')).sum()==0
+        assert np.isnan(mean_vals.index.get_level_values('hospital_id')).sum() == 0
+
+        # forward fill outcomes_df
+        idx = pd.IndexSlice
+        min_index = outcomes_df.reset_index('hours_in').groupby(
+            ['patient_id', 'genc_id', 'hospital_id']).min().set_index('hours_in', append=True).swaplevel(i='hours_in',
+                                                                                                         j='hospital_id').index  # back to patient_id, genc_id, hours_in, hospital_id
+        outcomes_df.loc[min_index, :] = outcomes_df.loc[min_index, :].fillna(0)  # fill all the minimum values with 0
+        # first the resuscitation columns must be forward filled witha  limit
+
+        # currently aggregation window isn't applied yet.
+        print(outcomes_df.head())
+        outcomes_df['resus_24'] = outcomes_df['resus_24'].ffill(limit=24).fillna(0)
+        outcomes_df['resus_48'] = outcomes_df['resus_24'].ffill(limit=48).fillna(0)
+        # ffill the rest of the outcomes.
+        outcomes_df = outcomes_df.ffill()
+
+        # do we want to add a gap time at the end for outcomes to prevent leakage?
+
+        # formerly the groups were already hourly, but now we need to aggregate.
+        # mean_vals.index=mean_vals.index.set_levels(mean_vals.index.levels[2]*args.aggregation_window, level=2)
+        # outcomes_df.index=outcomes_df.index.set_levels(outcomes_df.index.levels[2]*args.aggregation_window, level=2)
+
+        # time at zero is a groupby mean
+        mean_vals_0 = mean_vals.loc[mean_vals.index.get_level_values('hours_in') < 0, :].groupby(
+            ['patient_id', 'genc_id', 'hospital_id']).mean()
+
+        mean_vals_0['hours_in'] = 0
+        mean_vals_0 = mean_vals_0.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
+
+        # now make sure mean_vals is 0 and up:
+        mean_vals = mean_vals.loc[mean_vals.index.get_level_values('hours_in') >= 0, :]
+
+        print(mean_vals_0.head())
+        # create new column which is hours in aggregator
+        mean_vals['agg_hours_in'] = (mean_vals.index.get_level_values('hours_in') // int(
+            config.aggregation_window) + 1) * int(config.aggregation_window)
+        mean_vals = mean_vals.groupby(['patient_id', 'genc_id', 'agg_hours_in', 'hospital_id']).mean()
+        mean_vals.index.names = ['patient_id', 'genc_id', 'hours_in', 'hospital_id']
+        mean_vals = mean_vals.append(mean_vals_0).sort_index()
+
+        # time at zero is a groupby mean
+        outcomes_df_0 = outcomes_df.loc[outcomes_df.index.get_level_values('hours_in') < 0, :].groupby(
+            ['patient_id', 'genc_id', 'hospital_id']).max()
+
+        outcomes_df_0['hours_in'] = 0
+        outcomes_df_0 = outcomes_df_0.reset_index().set_index(['patient_id', 'genc_id', 'hours_in', 'hospital_id'])
+
+        # now make sure mean_vals is 0 and up:
+        outcomes_df = outcomes_df.loc[outcomes_df.index.get_level_values('hours_in') >= 0, :]
+
+        # create new column which is hours in aggregator
+        outcomes_df['agg_hours_in'] = (outcomes_df.index.get_level_values('hours_in') // int(
+            config.aggregation_window) + 1) * int(config.aggregation_window)
+        outcomes_df = outcomes_df.groupby(['patient_id', 'genc_id', 'agg_hours_in', 'hospital_id']).max()
+        outcomes_df.index.names = ['patient_id', 'genc_id', 'hours_in', 'hospital_id']
+        outcomes_df = outcomes_df.append(outcomes_df_0).sort_index()
+
+        # TODO add gap times
+        # outcomes_df = add_gap_time(outcomes_df)
+
+        final_data = simple_imput(mean_vals)
+
+        # write out dataframes to hdf
+        print("Saving data to disk: " + config.output)
+        dynamic_hd5_filt_filename = 'all_hourly_data.h5'
+        outcomes_df.to_hdf(os.path.join(config.output, dynamic_hd5_filt_filename), f'interventions_{site}')
+        final_data.to_hdf(os.path.join(config.output, dynamic_hd5_filt_filename), f'vitals_labs_{site}')
 
     return data
 
@@ -222,122 +259,51 @@ def labs(args, engine):
     query_1 = "SELECT REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ') as unique_lab_names, COUNT(REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ')) as unique_lab_counts FROM lab GROUP BY unique_lab_names ORDER BY unique_lab_counts ASC;"  # select all lab.test_name_raw (equivalent to itemids in mimiciii)
 
     df = pd.read_sql(query_1, con=engine)
-    print(df.head(10))
-    unique_items = df['unique_lab_names'].values
-
-    print('Total number of labs: ', len(df))
-    print('\t num labs:  ', (df['unique_lab_counts'].sum()))
-    print('Total number of labsmeasured more than once: ', len(df.loc[df['unique_lab_counts'] > 1, :]))
-    print('\t num labs:  ', (df.loc[df['unique_lab_counts'] > 1, 'unique_lab_counts'].sum()))
-    print('Total number of labsmeasured more than 10x: ', len(df.loc[df['unique_lab_counts'] >= 10, :]))
-    print('\t num labs:  ', (df.loc[df['unique_lab_counts'] >= 10, 'unique_lab_counts'].sum()))
-    print('Total number of labsmeasured more than 100x: ', len(df.loc[df['unique_lab_counts'] >= 100, :]))
-    print('\t num labs:  ', (df.loc[df['unique_lab_counts'] >= 100, 'unique_lab_counts'].sum()))
 
     # we lose aboutr 20k observations
-
     unique_items = df.loc[df['unique_lab_counts'] >= 100, 'unique_lab_names'].values
-    # todo, we sould apply min_percent instead.
 
     # min percent
     # get the count of unique participants
-
     if args.min_percent >= 1: args.min_percent = args.min_percent / 100
-
-    print("appling a min_percent of {args.min_percent} results in")
-
-    print('Total number of labsmeasured more than 100x: ',
-          len(df.loc[df['unique_lab_counts'] / len(df) >= args.min_percent, :]))
-
-    print("\t num_labs:  ", df.loc[df['unique_lab_counts'] / len(df) >= args.min_percent, 'unique_lab_counts'].sum())
-    # unique_items = df.loc[df['unique_lab_counts']/len(df)>= args.min_percent, 'unique_lab_names' ].values
-
-    # input()
-
-    print('Warning min_percent is not applied')
 
     # get the hospitals in the dataframes
     query_2 = "SELECT DISTINCT hospital_id FROM ip_administrative;"
 
     dataset_hospitals = pd.read_sql(query_2, con=engine)
-
-    print(dataset_hospitals)
-    print(dataset_hospitals.values.ravel())
-
     return_dfs = {}
 
     for site in dataset_hospitals.values.ravel():
         print(site)
         assert site in HOSPITAL_ID.keys(), f"Could not find site {site} in constants.py HOSPITAL_ID dict"
-        #
-
-        # add the case strings (all of the columns)
-        query = f"""SELECT a.*,
-            a.test_name_raw_clean,
-            a.result_unit_clean,
-            CASE WHEN a.result_value_clean <> '.' THEN a.result_value_clean ELSE null END as result_value_clean,
-            i.hospital_id,
-            i.patient_id_hashed as patient_id,
-            DATE_PART('day', a.sample_collection_date_time - i.admit_date_time)*24 + DATE_PART('hour', a.sample_collection_date_time - i.admit_date_time) AS hours_in
-            FROM (select genc_id,
-                sample_collection_date_time,
-                CASE WHEN LOWER(lab.result_value) LIKE ANY('{{neg%%, not det%%,no,none seen, arterial, np}}') THEN '0'
-                    WHEN LOWER(lab.result_value) LIKE ANY('{{pos%%, det%%, yes, venous, present}}') THEN '1'
-                    WHEN LOWER(lab.result_value) = ANY('{{small, slight}}') THEN '1'
-                    WHEN LOWER(lab.result_value) = 'moderate' THEN '2'
-                    WHEN LOWER(lab.result_value) = 'large' THEN '3'
-                    WHEN LOWER(lab.result_value) = 'clear' THEN '0'
-                    WHEN LOWER(lab.result_value) = ANY('{{hazy, slcloudy, mild}}') THEN '1'
-                    WHEN LOWER(lab.result_value) = ANY('{{turbid, cloudy}}') THEN '2'
-                    WHEN LOWER(lab.result_value) = 'non-reactive' THEN '0'
-                    WHEN LOWER(lab.result_value) = 'low reactive' THEN '1'
-                    WHEN LOWER(lab.result_value) = 'reactive' THEN '2'
-                    WHEN REPLACE(lab.result_value, ' ', '') ~ '^(<|>)?=?-?[0-9]+\.?[0-9]*$'  THEN substring(lab.result_value from '(-?[0-9.]+)')
-                    WHEN lab.result_value ~ '^[0-9]{1}\+'  THEN substring(lab.result_value from '([0-9])')
-                    WHEN lab.result_value ~ '^-?\d+ +(to|-) +-?\d+' THEN substring(lab.result_value from '(-?\d+ +(to|-) +-?\d+)')
-                ELSE null END AS result_value_clean,
-                LOWER(lab.result_unit) as result_unit_clean,
-                REPLACE(REPLACE(LOWER(lab.lab_test_name_raw),'.','') , '-', ' ') AS test_name_raw_clean
-                FROM lab ) a
-
-            LEFT OUTER JOIN (SELECT ip_administrative.patient_id_hashed,
-                ip_administrative.genc_id,
-                ip_administrative.admit_date_time,
-                ip_administrative.hospital_id
-                FROM ip_administrative) i
-            ON a.genc_id=i.genc_id   
-            ORDER BY patient_id, a.genc_id ASC, hours_in ASC
-            LIMIT 25000000;
-            """
-
         query = f"""SELECT a.genc_id,
-            CASE WHEN LOWER(a.result_value) LIKE ANY('{{neg%%, not det%%,no,none seen, arterial, np}}') THEN '0'
-                WHEN LOWER(a.result_value) LIKE ANY('{{pos%%, det%%, yes, venous, present}}') THEN '1'
-                WHEN LOWER(a.result_value) = ANY('{{small, slight}}') THEN '1'
-                WHEN LOWER(a.result_value) = 'moderate' THEN '2'
-                WHEN LOWER(a.result_value) = 'large' THEN '3'
-                WHEN LOWER(a.result_value) = 'clear' THEN '0'
-                WHEN LOWER(a.result_value) = ANY('{{hazy, slcloudy, mild}}') THEN '1'
-                WHEN LOWER(a.result_value) = ANY('{{turbid, cloudy}}') THEN '2'
-                WHEN LOWER(a.result_value) = 'non-reactive' THEN '0'
-                WHEN LOWER(a.result_value) = 'low reactive' THEN '1'
-                WHEN LOWER(a.result_value) = 'reactive' THEN '2'
-                WHEN REPLACE(a.result_value, ' ', '') ~ '^(<|>)?=?-?[0-9]+\.?[0-9]*$'  THEN substring(a.result_value from '(-?[0-9.]+)')
-                WHEN a.result_value ~ '^[0-9]{1}\+'  THEN substring(a.result_value from '([0-9])')
-                WHEN a.result_value ~ '^-?\d+ +(to|-) +-?\d+' THEN substring(a.result_value from '(-?\d+ +(to|-) +-?\d+)')
-            ELSE null END AS result_value_clean,
-            LOWER(a.result_unit) as result_unit_clean,
-            --CASE WHEN a.result_value_clean <> '.' THEN a.result_value_clean ELSE null END as result_value_clean,
-            i.hospital_id,
-            i.patient_id_hashed as patient_id,
-            DATE_PART('day', a.sample_collection_date_time - i.admit_date_time)*24 + DATE_PART('hour', a.sample_collection_date_time - i.admit_date_time) AS hours_in,
-            REPLACE(REPLACE(LOWER(a.lab_test_name_raw),'.','') , '-', ' ') AS test_name_raw_clean
-            FROM lab a
-            INNER JOIN ip_administrative i
-            ON a.genc_id=i.genc_id
-            WHERE i.hospital_id='{site}'
-            ORDER BY patient_id, a.genc_id ASC, hours_in ASC;
-            """
+        CASE WHEN LOWER(a.result_value) LIKE ANY('{{neg%%, not det%%,no,none seen, arterial, np}}') THEN '0'
+            WHEN LOWER(a.result_value) LIKE ANY('{{pos%%, det%%, yes, venous, present}}') THEN '1'
+            WHEN LOWER(a.result_value) = ANY('{{small, slight}}') THEN '1'
+            WHEN LOWER(a.result_value) = 'moderate' THEN '2'
+            WHEN LOWER(a.result_value) = 'large' THEN '3'
+            WHEN LOWER(a.result_value) = 'clear' THEN '0'
+            WHEN LOWER(a.result_value) = ANY('{{hazy, slcloudy, mild}}') THEN '1'
+            WHEN LOWER(a.result_value) = ANY('{{turbid, cloudy}}') THEN '2'
+            WHEN LOWER(a.result_value) = 'non-reactive' THEN '0'
+            WHEN LOWER(a.result_value) = 'low reactive' THEN '1'
+            WHEN LOWER(a.result_value) = 'reactive' THEN '2'
+            WHEN REPLACE(a.result_value, ' ', '') ~ '^(<|>)?=?-?[0-9]+\.?[0-9]*$'  THEN substring(a.result_value from '(-?[0-9.]+)')
+            WHEN a.result_value ~ '^[0-9]{1}\+'  THEN substring(a.result_value from '([0-9])')
+            WHEN a.result_value ~ '^-?\d+ +(to|-) +-?\d+' THEN substring(a.result_value from '(-?\d+ +(to|-) +-?\d+)')
+        ELSE null END AS result_value_clean,
+        LOWER(a.result_unit) as result_unit_clean,
+        --CASE WHEN a.result_value_clean <> '.' THEN a.result_value_clean ELSE null END as result_value_clean,
+        i.hospital_id,
+        i.patient_id_hashed as patient_id,
+        DATE_PART('day', a.sample_collection_date_time - i.admit_date_time)*24 + DATE_PART('hour', a.sample_collection_date_time - i.admit_date_time) AS hours_in,
+        REPLACE(REPLACE(LOWER(a.lab_test_name_raw),'.','') , '-', ' ') AS test_name_raw_clean
+        FROM lab a
+        INNER JOIN ip_administrative i
+        ON a.genc_id=i.genc_id
+        WHERE i.hospital_id='{site}'
+        ORDER BY patient_id, a.genc_id ASC, hours_in ASC;
+        """
 
         with open(f'{site}_lab_query3.sql', 'w') as f:
             f.write(query)
@@ -358,6 +324,7 @@ def labs(args, engine):
             df['hours_in'] = (df['hours_in'].values / args.aggregation_window).astype(int) * int(
                 args.aggregation_window)
             df.set_index(['patient_id', 'genc_id', 'hours_in'], inplace=True)
+
             # Unstack columns
             print('successfully queried, now unstacking columns')
 
@@ -377,18 +344,6 @@ def labs(args, engine):
 
             df['result_value_clean'] = pd.to_numeric(df['result_value_clean'], 'coerce')
 
-            # standardise the units
-
-            # for col in df.columns.tolist():
-            #     print(col)
-
-            # #filter values #'test_name_raw_clean'
-            # to_remove=['lab_test_name_raw', 'test_code_raw', 'test_type_mapped', 'result_value', 'result_value_clean', 'reference_range', 'sample_collection_date_time', 'row_id']
-            # try:
-            #     df.drop(to_remove, axis=1, inplace=True)
-            # except KeyError:
-            #     pass
-
             # sort out all of the drug screen cols to be True/False
             for col in tqdm(DRUG_SCREEN, desc='drug_screen'):
                 df.loc[(df['test_name_raw_clean'].isin(DRUG_SCREEN)) & (
@@ -403,31 +358,13 @@ def labs(args, engine):
 
         # --------------------------------------------    UNIT CONVERSION -------------------------------------------------------------------
 
-        units_dict = \
-        df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(['hospital_id', 'test_name_raw_clean'])[
-            'result_unit_clean'].apply(name_count).to_dict()
+        units_dict = df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(
+            ['hospital_id', 'test_name_raw_clean'])['result_unit_clean'].apply(name_count).to_dict()
 
-        conversion_list = []
+        conversion_list = convert_units(units_dict)
 
         df_cols = df.columns.tolist()
-        for k, v in units_dict.items():
-            if len(v) > 1:
-                for item in v[1:]:
-                    scale = get_scale(v[0][0], item[0])
-                    if not (isinstance(scale, str)):
-                        conversion_list.append((k[0], k[1], item[0], get_scale(v[0][0], item[0]), v[0][0],
-                                                item[1]))  # key: (original unit, scale, to_unit)
-
-        for item in conversion_list: print(item)
-
-        try:
-            print(f'rescued {np.sum(list(zip(*conversion_list))[-1])} labs by unit conversion')
-        except:
-            pass
-
-        def clean(item_name):
-            return str(item_name).replace('%', '%%').replace("'", "''"), filter_string(str(item_name))
-
+        
         # apply the scaling we found to the df
         for item in tqdm(conversion_list, desc='unit_conversion'):
             hospital_id, lab_name, from_unit, scale, to_unit, count = item
@@ -442,9 +379,8 @@ def labs(args, engine):
 
         # --------------------------------------------    UNIT CONVERSION FOR UNKNOWN UNITS -------------------------------------------------------------------
 
-        units_dict = \
-        df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(['hospital_id', 'test_name_raw_clean'])[
-            'result_unit_clean'].apply(name_count).to_dict()
+        units_dict = df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(
+            ['hospital_id', 'test_name_raw_clean'])['result_unit_clean'].apply(name_count).to_dict()
 
         log = ""
         determined_same = []
@@ -469,7 +405,6 @@ def labs(args, engine):
 
                 for item in v[1:]:
                     if item[1] < 20:
-                        #                 print(f'too few samples for {k[1]}, {v[0][0]}, {v[0][1]}, {item[0]}, {item[1]}')
                         continue
                     if isinstance(item[0], str):
                         # test_unit = df.loc[(df['hospital_id']==k[0])&(df['test_name_raw_clean']==k[1])&(df['result_unit_clean']==item[0]), clean(k[1])[1]].values
@@ -485,14 +420,7 @@ def labs(args, engine):
                     print(k[0], k[1], v[0][0], item[0], same_test)
 
                     log += f"Are {k[0]} and {k[1]} the same? units are {v[0][0]} and {item[0]}, respectively (p={same_test}) \r\n"
-                    # sns.distplot([comparison, test_unit], hist = False, kde = True, kde_kws = {'shade': True, 'linewidth': 3}, label = [v[0][0], item[0]])
 
-                    # input()
-                    print((k[0], k[1], v[0][0], item[0], norm_p, same_test))
-                    # if same_test >=0.05:
-                    #     print((k[0], k[1], v[0][0], item[0], norm_p, same_test))
-                    #     if input()=='':
-                    #         determined_same.append((k[0], k[1], v[0][0], item[0], item[1], norm_p, same_test))
 
         # put log to txt
         with open(os.path.join(args.output, site + '_units_log.txt'), 'w') as f:
@@ -500,9 +428,6 @@ def labs(args, engine):
 
         # print(determined_same)
         if len(determined_same) > 0:
-            def clean(item_name):
-                return str(item_name).replace('%', '%%').replace("'", "''"), filter_string(str(item_name))
-
             # print(print(sorted(df.columns.tolist())
             for item in tqdm(determined_same):
                 print(item)
@@ -519,12 +444,10 @@ def labs(args, engine):
 
             np.sum(list(zip(*determined_same))[4])
 
-        units_dict = \
-        df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(['hospital_id', 'test_name_raw_clean'])[
-            'result_unit_clean'].apply(name_count).to_dict()
+        units_dict = df[['hospital_id', 'test_name_raw_clean', 'result_unit_clean']].groupby(
+            ['hospital_id', 'test_name_raw_clean'])['result_unit_clean'].apply(name_count).to_dict()
 
         # eliminate features with unmatchable units
-
         keep_vars = []
         keep_vars_nan = []
         for k, v in units_dict.items():
@@ -545,8 +468,8 @@ def labs(args, engine):
         assert 'hospital_id' in df.columns
 
         # sometimes there are multiple hospitals. Let us just make sure that the first hospital is there for all of the patient's encounters
-        df = df.drop(labels='hospital_id', axis=1).join(df.groupby(['patient_id', 'genc_id'])['hospital_id'].first(),
-                                                        how='left', on=['patient_id', 'genc_id'])
+        df = df.drop(labels='hospital_id', axis=1).join(
+            df.groupby(['patient_id', 'genc_id'])['hospital_id'].first(), how='left', on=['patient_id', 'genc_id'])
 
         df['hospital_id'] = df['hospital_id'].replace(HOSPITAL_ID)
 
@@ -569,20 +492,10 @@ def labs(args, engine):
         mean_vals = mean_vals.groupby(by=mean_vals.columns,
                                       axis=1).mean()  # because we made many of the columns the same
 
-        print(mean_vals.head())
-
-        print(len(mean_vals), ' patients had ',
-              len(mean_vals.columns) * len(set(mean_vals.index.get_level_values('hospital_id'))), ' lab types from ',
-              len(set(mean_vals.index.get_level_values('hospital_id'))), ' hospitals.')
 
         # Now eliminate rows with fewer than args.min_percent data
         drop_cols = []
-        # for name, hospital_id in HOSPITAL_ID.items():
-        #     # only get participants that don't have all np.nan for hospital id==hospital_id
-        #     temp_df = mean_vals.loc[mean_vals.index.get_level_values('hospital_id')==hospital_id]
-        #     temp_df = temp_df.unstack( level='hospital_id')
         mean_vals = mean_vals.dropna(axis='columns', how='all')
-        # print(name, hospital_id, len(temp_df))
 
         for col in mean_vals.columns:
             print("obs_rate for ", col, (1 - mean_vals[col].isna().mean()))
@@ -591,76 +504,444 @@ def labs(args, engine):
                 # drop the column.
                 drop_cols.append(col)
 
-        # mean_vals['hospital_id2']= mean_vals.index.get_level_values('hospital_id')
-        # mean_vals = mean_vals.set_index('hospital_id2', append=True)
-        # mean_vals = mean_vals.unstack('hospital_id2')
-
-        # mean_vals.columns.names = [n.replace('_id2', '_id') for n in mean_vals.columns.names]
-        # mean_vals = mean_vals.set_index('hospital_id2', append=True)
-
-        print(mean_vals.head())
-
         mean_vals = mean_vals.drop(drop_cols, axis=1)
-
-        print("After applying args.min_percent==", args.min_percent)
-        print(len(mean_vals), ' patients had ', len(mean_vals.columns), ' lab types from ', site)
-
         mean_vals.sort_index(inplace=True)
 
         return_dfs.update({site: mean_vals})
-        # break #TODO stop this
 
     return return_dfs
+
+
+def outcomes(args, engine):
+    """
+    discharge_disposition:
+    1: Transferred to acute care inpatient institution
+    2: transferred to continuing care.
+    3: transferred to other
+    4: discharged to home or a home setting with support services
+    5: discharged home with no support services from an external agency required
+    6: signed out
+    7: died
+    8: cadaveric donor admitted for organ/tissue removal
+    9: stillbirth
+    10: transfer to another hospital
+    12: patient who does not return from a pass
+    20: transfer to another ED
+    30 transfer to residential care # Transfer to long-term care home (24-hour nursing), mental health and/or addiction treatment centre
+or hospice/palliative care facility
+    40: transfer to group/supportive living #Transfer to assisted living/supportive housing or transitional housing, including shelters; these
+settings do not have 24-hour nursing care.
+    61: absent without leave AWOL
+    62: AMA
+    65:did not return from pass/leave
+    66: died while on pass leave
+    67: suicide out of facility
+    72: died in facility
+    73: MAID
+    74: suicide
+    90: transfer to correctional
+
+
+
+    We group these as:
+    discharge: 4, 5, 30, 40, 90
+    mortality: 7, 66?, 72?, 73? # todo ask about 72 (inpatient mortality vs in hosp mortality?)
+    acute: 1
+    transfer:  2, 3, 10, 20
+    suicide: 67, 74
+    Leave AMA: 6, 12, 61, 62, 65
+    ignored: 8, 9
+    remaining: 66, 73
+    """
+    query = """ SELECT i.patient_id, i.genc_id, i.hospital_id, h.hours_in, h.mort_24, h.mort_48, h.disch_24, h.disch_48, h.resus_24, h.resus_48, h.acute_24, h.acute_48, h.trans_24, h.trans_48, h.suicide_24, h.suicide_48, h.ama_24, h.ama_48 from ((select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -24 AS hours_in,
+        1 AS mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition IN (7, 66, 72, 73))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -48 AS hours_in,
+        null::int4 as mort_24,
+        1 AS mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition IN (7, 66, 72, 73))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -24 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        1 AS disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition  IN (4,5,30, 40, 90))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -48 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        1 AS disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition  IN (4,5,30, 40, 90))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', g.intervention_episode_start_date - d.admit_date_time)*24 -24 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        1 AS resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+        LEFT OUTER JOIN (select intervention.genc_id,
+            intervention.intervention_code,
+            intervention.intervention_episode_start_date
+            FROM intervention
+            WHERE intervention.intervention_episode_start_date is not null) g
+        ON d.genc_id = g.genc_id
+    WHERE g.intervention_code = '1HZ30JN' OR g.intervention_code = '1GZ30JH' OR g.intervention_code like '1HZ34__')
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', g.intervention_episode_start_date - d.admit_date_time)*24 -48 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        1 AS resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+        LEFT OUTER JOIN (select intervention.genc_id,
+            intervention.intervention_code,
+            intervention.intervention_episode_start_date
+            FROM intervention
+            WHERE intervention.intervention_episode_start_date is not null) g
+        ON d.genc_id = g.genc_id
+    WHERE g.intervention_code = '1HZ30JN' OR g.intervention_code = '1GZ30JH' OR g.intervention_code like '1HZ34__')
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -24 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        1 AS acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition = 1)
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -48 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        1 AS  acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition = 1)
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -24 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as  acute_48,
+        1 AS trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition  IN (2, 3, 10, 20))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -48 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        1 AS trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition  IN (2, 3, 10, 20))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -24 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        1 AS suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition  IN (67, 74))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -48 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        1 AS suicide_48,
+        null::int4 as ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition  IN (67, 74))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -24 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        1 AS ama_24,
+        null::int4 as ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition  IN (6, 12, 61, 62, 65))
+
+    UNION
+
+    (select distinct
+        d.hospital_id,
+        d.patient_id_hashed as patient_id,
+        d.genc_id,
+        DATE_PART('day', d.discharge_date_time - d.admit_date_time)*24 + DATE_PART('hour', d.discharge_date_time - d.admit_date_time) -48 AS hours_in,
+        null::int4 as mort_24,
+        null::int4 as mort_48,
+        null::int4 as disch_24,
+        null::int4 as disch_48,
+        null::int4 as resus_24,
+        null::int4 as resus_48,
+        null::int4 as acute_24,
+        null::int4 as acute_48,
+        null::int4 as trans_24,
+        null::int4 as trans_48,
+        null::int4 as suicide_24,
+        null::int4 as suicide_48,
+        null::int4 as ama_24,
+        1 AS ama_48
+    FROM ip_administrative d
+    WHERE d.discharge_disposition  IN (6, 12, 61, 62, 65))) h
+
+    LEFT JOIN (SELECT ip_administrative.patient_id_hashed AS patient_id,
+          ip_administrative.genc_id,
+          ip_administrative.hospital_id
+          FROM ip_administrative) i
+      ON h.genc_id=i.genc_id
+
+    ORDER BY patient_id, genc_id ASC, hours_in ASC;
+    """
+    outcomes_df = pd.read_sql(query, con=engine)
+
+    assert set(outcomes_df['hospital_id'].values).issubset(
+        set(list(HOSPITAL_ID.keys()) + list(HOSPITAL_ID.values()) + ['', np.nan, None]))
+
+    outcomes_df['hours_in'] = (outcomes_df['hours_in'].values / args.aggregation_window).astype(int)
+    outcomes_df.set_index(['patient_id', 'genc_id', 'hours_in'], inplace=True)
+
+    # outcomes happening before 0 hours, are set to happen at 0 hours
+    hours_index = np.asarray(list(set(outcomes_df.index.get_level_values('hours_in'))))
+    hours_index = hours_index[hours_index <= 0]
+
+    idx = pd.IndexSlice
+
+    zero_values = outcomes_df.loc[idx[:, :, hours_index], :].groupby(['patient_id', 'genc_id']).max()
+
+    # do the groupby with the aximum outcome (i.e. 1 or 0)
+    outcomes_df = outcomes_df.groupby(['patient_id', 'genc_id', 'hours_in']).max()
+
+    outcomes_df.loc[idx[:, :, 0], :] = zero_values
+
+    # now eliminate all of the negative indices
+    hours_index = np.asarray(list(set(outcomes_df.index.get_level_values('hours_in'))))
+    hours_index = hours_index[hours_index >= 0]
+
+    outcomes_df = outcomes_df.loc[idx[:, :, hours_index], :]
+
+    outcomes_df.sort_index(inplace=True)
+
+    return outcomes_df
 
 
 def binary_legth_of_stay(l):
     return 1 if l >= 7 else 0    #TODO: replace with parameter
 
-def insert_decimal(string, index=2):
-    return string[:index] + '.' + string[index:]
-
-def get_category(code, trajectories=TRAJECTORIES):
-    """
-    Usage:
-    df['ICD10'].apply(get_category, args=(trajectories,))
-    """
-    if code is None:
-        return np.nan
-    try:
-        code = str(code)
-    except:
-        return np.nan
-    for item, value in trajectories.items():
-        # check that code is greater than value_1
-        if (re.sub('[^a-zA-Z]', '', code).upper() > value[0][0].upper()):
-            # example, code is T and comparator is S
-            pass
-        elif (re.sub('[^a-zA-Z]', '', code).upper() == value[0][0].upper()) and (
-                float(insert_decimal(re.sub('[^0-9]', '', code), index=2)) >= int(value[0][1:])):
-            # example S21 > s00
-            pass
-        else:
-            continue
-
-        # check that code is less than value_2
-        if (re.sub('[^a-zA-Z]', '', code).upper() < value[1][0].upper()):
-            # example, code is S and comparator is T
-            #             print(value[0], code, value[1])
-            return "_".join(value)
-        elif (re.sub('[^a-zA-Z]', '', code).upper() == value[1][0].upper()) and (
-                int(float(insert_decimal(re.sub('[^0-9]', '', code), index=2))) <= int(value[1][1:])):
-            # example S21 > s00
-            #             print(value[0], code, value[1])
-            return "_".join(value)
-        else:
-            continue
-    raise Exception("Code cannot be converted: {}".format(code))
-
-def transform_diagnosis(data):
-    # apply the categorical ICD10 filter and one hot encode:
-    data = pd.concat((data, pd.get_dummies(data.loc[:, 'mr_diagnosis'].apply(get_category, args=(TRAJECTORIES,)), dummy_na=True, columns=TRAJECTORIES.keys(), prefix='icd10')), axis=1)
-    
-    return data
 
 # add a column to signal training/val or test
 def split (data, config):

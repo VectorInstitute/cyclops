@@ -72,6 +72,7 @@ def pipeline (config):
         # read data from database
         data = ex.extract(config)
         data = ex.transform(data)
+        print("Extraction Complete")
         if len(config.split_column) > 0:
             data = ex.split(data, config)
 
