@@ -104,6 +104,8 @@ sample_code/mlflow_training.ipynb - training progress and validation results are
 
 sample_code/analysis_demo.ipynb - shows how to generate Evidently reports; as well to plot results of pipeline simulation
 
+sample_code/noise-injection.ipynb - utility notebook for noise injection into features, as well as exploration of labs, outcomes extracted data.
+
 
 
 
