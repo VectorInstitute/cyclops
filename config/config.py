@@ -111,7 +111,7 @@ def read_config(file = False):
 
     # args.commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('ascii')
 
-    print({k: v for k, v in vars(args).items()})
+    #print({k: v for k, v in vars(args).items()})
 
     if args.input == None and args.password == None:
         args.password = getpass.getpass(prompt='Database password: ', stream=None)
@@ -127,8 +127,12 @@ def write_config(config):
     date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
     print(date)
 
-    with open(os.path.join(config.output, f'args_{date}.json'), 'w') as fp:
-        fp.write(json.dumps({k: v for k, v in vars(config).items() if k != 'password'}, indent=4))
+    with open(os.path.join(config.output_folder, f'args_{date}.json'), 'w') as fp:
+        fp.write(json.dumps(to_print(config), indent=4))
+
+# remove passoword from config for serialization
+def to_print(config):
+   return {k: v for k, v in vars(config).items() if k != 'password'}
 
 # Config testing code
 if __name__ == '__main__':

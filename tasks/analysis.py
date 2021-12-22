@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import time
 import os
+from config.config import to_print
 
 from evidently.model_profile import Profile
 from evidently.profile_sections import DataDriftProfileSection, ClassificationPerformanceProfileSection
@@ -110,7 +111,7 @@ def log_to_mlflow(config, metrics):
         exp = mlflow.get_experiment_by_name(exp_name)
 
     with mlflow.start_run(experiment_id=exp.experiment_id): 
-        mlflow.log_dict(vars(config), 'config.json')
+        mlflow.log_dict(to_print(config), 'config.json')
         mlflow.log_artifact(metrics['report_filename'])
         mlflow.log_metrics(metrics['results'])
         mlflow.log_params({'timestamp':metrics['timestamp']})
