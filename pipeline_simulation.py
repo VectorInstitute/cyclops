@@ -2,6 +2,9 @@ import luigi
 import pipeline
 from dateutil.relativedelta import relativedelta
 
+# Simulation of continuous pipeline running on regular intervals (monthly)
+# for every interval between date_from to date_to
+
 class Simulation(luigi.Task): 
     date_from = luigi.DateParameter()
     date_to = luigi.DateParameter()

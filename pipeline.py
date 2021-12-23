@@ -6,6 +6,9 @@ import tasks.predict as predict
 import tasks.analysis as analysis
 import os
 
+#Pipeline definition consisting of three tasks: Extraction -> Prediction -> Analysis
+#Runs for a single data slice given by the time interval date_from - date_to 
+
 class BaseGeminiTask(luigi.Task):
     date_from = luigi.DateParameter()
     date_to = luigi.DateParameter()
@@ -16,9 +19,9 @@ class BaseGeminiTask(luigi.Task):
         folder = os.path.join(self.artifact_folder, self.date_to.strftime('%Y-%m-%d'))
         try:
             os.mkdir(folder)
-        except: 
-            #folder must already exist
-            return folder
+        except OSError:
+            return folder 
+
         return folder
 
 @inherits(BaseGeminiTask)

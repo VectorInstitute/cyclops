@@ -1,9 +1,8 @@
-import configargparse
 import torch
 import pandas as pd
 import datetime
-from torch.utils.data import DataLoader
 
+from config.config import to_print
 from tasks.model import get_model
 from tasks.dataset import pandas_to_dataset
 from tasks.datapipeline.process_data import get_stats
@@ -37,7 +36,7 @@ def main(args):
         mlflow.create_experiment(exp_name)
         exp = mlflow.get_experiment_by_name(exp_name) 
     with mlflow.start_run(experiment_id=exp.experiment_id):
-        mlflow.log_dict(vars(args), 'args.json')
+        mlflow.log_dict(to_print(args), 'args.json')
         mlflow.log_params({'timestamp': datetime.datetime.now()})
         data = pd.read_csv(args.input)
         stats = get_stats(args, None)
@@ -58,6 +57,6 @@ def main(args):
         data.loc[data['prediction'] >= args.threshold,'prediction'] = 1
         data.loc[data['prediction'] < args.threshold,'prediction'] = 0
         data.to_csv(args.result_output)
-        #mlflow.log_artifact(args.output)
+        
 
     
