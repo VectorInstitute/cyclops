@@ -11,12 +11,16 @@ from mlflow import log_params
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 def to_loader(dataset, args, shuffle=False):
-    return DataLoader(dataset,
-                      batch_size=args.batch_size,
-                      shuffle=shuffle,
-                      num_workers=args.num_workers,
-                      pin_memory=True)
+    return DataLoader(
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=shuffle,
+        num_workers=args.num_workers,
+        pin_memory=True,
+    )
+
 
 @torch.no_grad()
 def validate(model, val_loader, loss_fn):
@@ -28,7 +32,7 @@ def validate(model, val_loader, loss_fn):
         target = target.to(device, non_blocking=True).to(data.dtype)
 
         output = model(data)
-        
+
         loss = loss_fn(output.squeeze(dim=1), target)
 
         metric.add_step(loss, output, target)
@@ -67,8 +71,7 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
         epoch_metric_dict = metric.compute_metrics()
 
-        dict_str = " ".join(
-            f"{k}: {v:.2f}" for k, v in epoch_metric_dict.items())
+        dict_str = " ".join(f"{k}: {v:.2f}" for k, v in epoch_metric_dict.items())
 
         to_print = f"epoch {e} {dict_str}"
 
@@ -80,9 +83,15 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
 def main(args):
     # MLflow parameters
-    mlflow_params_dict = {"dataset": args.dataset, "no of workers": args.num_workers,
-                          "train data shuffle": args.shuffle, "model": args.model, "learning rate": args.lr,
-                          "no of epochs": args.num_epochs, "batch size": args.batch_size}
+    mlflow_params_dict = {
+        "dataset": args.dataset,
+        "no of workers": args.num_workers,
+        "train data shuffle": args.shuffle,
+        "model": args.model,
+        "learning rate": args.lr,
+        "no of epochs": args.num_epochs,
+        "batch size": args.batch_size,
+    }
     log_params(mlflow_params_dict)
 
     train_dataset, val_dataset = get_dataset(args.dataset)(args)
@@ -102,4 +111,3 @@ def main(args):
     torch.save(model.state_dict(), args.model_path)
 
     validate(model, val_loader, loss_fn)
-

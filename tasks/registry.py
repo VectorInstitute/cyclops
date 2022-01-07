@@ -3,7 +3,6 @@
 
 
 def register_with_dictionary(register_dict, func=None, *, name=None):
-
     def wrap(func):
         register_dict[func.__name__ if name is None else name] = func
         return func

@@ -14,6 +14,7 @@ from mlflow import log_params
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 def predict(model, loader):
     output = []
     metric = AverageBinaryClassificationMetric()
@@ -28,20 +29,23 @@ def predict(model, loader):
     val_metric_dict = metric.compute_metrics()
     return output
 
+
 def main(args):
     # read data
-    exp_name = 'Prediction'
+    exp_name = "Prediction"
     exp = mlflow.get_experiment_by_name(exp_name)
     if exp == None:
         mlflow.create_experiment(exp_name)
-        exp = mlflow.get_experiment_by_name(exp_name) 
+        exp = mlflow.get_experiment_by_name(exp_name)
     with mlflow.start_run(experiment_id=exp.experiment_id):
-        mlflow.log_dict(to_print(args), 'args.json')
-        mlflow.log_params({'timestamp': datetime.datetime.now()})
+        mlflow.log_dict(to_print(args), "args.json")
+        mlflow.log_params({"timestamp": datetime.datetime.now()})
         data = pd.read_csv(args.input)
         stats = get_stats(args, None)
-        dataset = pandas_to_dataset(data, args.features, args.target, stats=stats, config=args)
-        
+        dataset = pandas_to_dataset(
+            data, args.features, args.target, stats=stats, config=args
+        )
+
         args.data_dim = dataset.dim()
         loader = to_loader(dataset, args)
 
@@ -53,10 +57,7 @@ def main(args):
         result = predict(model, loader)
 
         # save results csv
-        data['prediction'] = result
-        data.loc[data['prediction'] >= args.threshold,'prediction'] = 1
-        data.loc[data['prediction'] < args.threshold,'prediction'] = 0
+        data["prediction"] = result
+        data.loc[data["prediction"] >= args.threshold, "prediction"] = 1
+        data.loc[data["prediction"] < args.threshold, "prediction"] = 0
         data.to_csv(args.result_output)
-        
-
-    
