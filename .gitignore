@@ -6,3 +6,4 @@ docs/build
 htmlcov
 .coverage
 venv
+.ipynb_checkpoints
