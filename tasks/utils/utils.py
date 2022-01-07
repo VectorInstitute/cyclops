@@ -13,7 +13,6 @@ from mlflow import log_metrics
 
 @dataclass(init=False, eq=False)
 class AverageBinaryClassificationMetric:
-
     def reset(self):
         self.loss_list = []
         self.preds = []
@@ -24,20 +23,21 @@ class AverageBinaryClassificationMetric:
 
     def add_step(self, loss, logits, targets):
         """Note logits is pre-sigmoid
-            All inputs should be tensors
+        All inputs should be tensors
         """
         preds = logits.detach().sigmoid().cpu().numpy()
         targets = targets.cpu().numpy()
 
         self.preds.append(preds >= 0.5)
         self.targets.append(targets)
-        if loss: 
+        if loss:
             self.loss_list.append(loss.item())
 
     def compute_metrics(self):
 
-        avg_loss = sum(self.loss_list) / len(self.loss_list) if len(
-            self.loss_list) > 0 else 0
+        avg_loss = (
+            sum(self.loss_list) / len(self.loss_list) if len(self.loss_list) > 0 else 0
+        )
 
         preds = np.concatenate(self.preds).ravel()
         target = np.concatenate(self.targets).astype(preds.dtype).ravel()
@@ -47,10 +47,17 @@ class AverageBinaryClassificationMetric:
         f1 = f1_score(target, preds)
         precision = precision_score(target, preds)
         recall = recall_score(target, preds)
-        auc =  roc_auc_score(target, preds)
+        auc = roc_auc_score(target, preds)
 
         # MLflow metrics
-        mlflow_metric_dict = {"epoch_loss": avg_loss, "accuracy": acc, "f1_score": f1, "precision": precision, "recall": recall, "auc": auc}
+        mlflow_metric_dict = {
+            "epoch_loss": avg_loss,
+            "accuracy": acc,
+            "f1_score": f1,
+            "precision": precision,
+            "recall": recall,
+            "auc": auc,
+        }
         log_metrics(mlflow_metric_dict)
 
         return {
@@ -59,5 +66,5 @@ class AverageBinaryClassificationMetric:
             "f1_score": f1,
             "precision": precision,
             "recall": recall,
-            "auc": auc
+            "auc": auc,
         }
