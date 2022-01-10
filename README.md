@@ -15,6 +15,10 @@
 
 ## Setup: <a name="setup"></a>
 
+The development environment has been tested on the Gemini HPC server, using
+`python = 3.8.5`. There are two ways to setup the environment and install
+dependencies.
+
 ### Using Anaconda/Miniconda
 
 To create environment, run:
