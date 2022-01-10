@@ -1,0 +1,6 @@
+name: vector_delirium
+dependencies:
+ - python=3.8.5
+ - pip
+ - pip:
+   - -r requirements.txt 

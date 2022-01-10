@@ -10,3 +10,4 @@ venv
 *.pt
 *.csv
 mlruns
+.profile
