@@ -1,6 +1,7 @@
 # Vector-Delirium
 
 ## Table of Contents
+
 1. [Setup](#setup)
 2. [Configuration Files](#config)
 3. [Running as Pipeline](#pipeline)
@@ -14,98 +15,164 @@
 
 ## Setup: <a name="setup"></a>
 
-To install prerequisites run:
-`conda create --name <env> --file requirements.txt`
+### Using Anaconda/Miniconda
 
-Add the following two environment variables to your profile in order to run full pipeline: 
+To create environment, run:
+```bash
+conda env create -f environment.yml
 ```
+
+### Using pip and venv
+
+To create virtual environment and install dependencies, run:
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Add the following environment variables in order to run luigi pipelines: 
+```bash
 export PGPASSWORD=<your-gemini-db-password>
 export LUIGI_CONFIG_PATH="$HOME/vector-delirium/config/gemini_luigi.cfg"
 export PYTHONPATH="${PYTHONPATH}:$HOME/vector-delirium/"
 ```
 
-To do that edit .profile to add these three lines. The run it for changes to take effect:
-`source .profile`
+To do that edit `.profile` to add the above lines. Then source the file, for
+changes to take effect:
+```bash
+source .profile
+```
 
 ## Configuration Files: <a name="config"></a>
-There is one configuration file config/gemini.cfg that contains all the parameters for individual tasks (data extraction, model training and prediction, analysis). The config parser is in config/config.py.
 
-Refer to config/gemini.cfg for basic configuration parameters. (Additional one are described in config/config.py).  If extracting from the database, update your username in config file:
-`username = <your-gemini-db-username>`
+There is one configuration file `config/gemini.cfg` that contains all the
+parameters for individual tasks (data extraction, model training and prediction,
+analysis). The config parser is in `config/config.py`.
 
-Luigi batch processing is used to run the whole flow (data extract, predict, analyze) as a pipeline. Luigi parameters are apecified in config/gemini_luigi.cfg
+Refer to `config/gemini.cfg` for basic configuration parameters.
+(Additional ones are described in `config/config.py`). If extracting from the
+database, update your username in config file: `username = <your-gemini-db-username>`
+
+Luigi batch processing is used to run the whole flow (data extract, predict,
+analyze) as a pipeline. Luigi parameters are apecified in `config/gemini_luigi.cfg`.
 
 ## Running as Pipeline: <a name="pipeline"></a>
-Luigi batch processing is used to execute the whole pipeline containing data extraction, prediction and analysis steps.
 
-Prerequisites:
+Luigi batch processing is used to execute the whole pipeline containing
+data extraction, prediction and analysis steps.
+
+### Prerequisites:
+
 * configure envronment variables (above)
-* trained model exists and model_path parameter in the config/gemini.cfg specifies the path
+* trained model exists and model_path parameter in the `config/gemini.cfg`
+specifies the path
 * analysis step requires reference data csv (that includes model predictions) 
-* ensure that configuration in config/gemini.cfg is up to date (has correct username for the database access, model path, csv file with reference data/predictions) 
+* ensure that configuration in `config/gemini.cfg` is up to date
+(has correct username for the database access, model path, csv file with
+reference data/predictions) 
 
 To run pipeline once for specific time period, run:
 
-`luigi --module pipeline Analysis --date-from 2018-08-01 --date-to 2018-10-01 --local-scheduler`
+```bash
+luigi --module pipeline Analysis --date-from 2018-08-01 --date-to 2018-10-01 --local-scheduler
+```
 
-Simulation runs ML pipeline for each month in the specified interval (date-from to date-to). To run the simulation, run:
+Simulation runs ML pipeline for each month in the specified interval
+(date-from to date-to). To run the simulation, run:
 
-`luigi --module pipeline_simulation Simulation --date-from 2018-01-01 --date-to 2020-06-01 --local-scheduler`
+```bash
+luigi --module pipeline_simulation Simulation --date-from 2018-01-01 --date-to 2020-06-01 --local-scheduler
+```
 
 ## Pipeline Tasks: <a name="components"></a>
-In addition to Luigi pipeline, each of the components of the pipeline can be run on it's own from command line or from Jupyter notebook.
-To run each task from the command line:
-`python main.py --<action> <optional parameter overwrites>`
 
-where <action>: extract, train, predict, analyze
+In addition to Luigi pipeline, each of the components of the pipeline can be run
+on it's own from command line or from Jupyter notebook.
+To run each task from the command line:
+```bash
+python main.py --<action> <optional parameter overwrites>
+```
+
+where `<action>`: extract, train, predict, analyze
 To get a full list of possible arguments, run:
 
-`python main.py -h`
+```bash
+python main.py -h
+```
 
 ### Data Extraction:  <a name="data"></a>
+
 Examples of running data extraction from command line:
-1) To extract all available records from the database and save to csv (or change parameters in the config/gemini.cfg):
 
-`python main.py --extract -r -w --output_folder '../' --pop_size 0`
+1) To extract all available records from the database and save to csv
+(or change parameters in the `config/gemini.cfg`):
 
-2) To extract 20,000 records, save to file, split into train, test and val sets by hospital_id column:
+```bash
+python main.py --extract -r -w --output_folder '../' --pop_size 0
+```
 
-`python main.py --extract -r --pop_size 20000 -w --output_full_path='../temp.csv' --split_column hospital_id --test_split 3 --val_split 7 `
+2) To extract 20,000 records, save to file, split into train, test and val sets
+by `hospital_id` column:
+
+```bash
+python main.py --extract -r --pop_size 20000 -w --output_full_path='../temp.csv' --split_column hospital_id --test_split 3 --val_split 7 
+```
 
 ### Model Training:  <a name="training"></a>
+
 To train a model:
 
-`python main.py --train --input '../data.csv'`
+```bash
+python main.py --train --input '../data.csv'
+```
 
 ### Prediction:  <a name="prediction"></a>
+
 Run prediction:
 
-`python main.py --predict --input '../sample.csv' --result_output '../result.csv'`
+```bash
+python main.py --predict --input '../sample.csv' --result_output '../result.csv'
+```
 
 ### Analysis:  <a name="analysis"></a>
-To run dataset drift analysis, update config/gemini.cfg configuration with preferred options. If 'slice' option is not specified, report compares the data provided in 'reference' and 'test' files (specified in config file or as command line options). 
 
-`python main.py --analyze -html`
+To run dataset drift analysis, update `config/gemini.cfg` configuration with
+preferred options. If `slice` option is not specified, report compares the data
+provided in `reference` and `test` files (specified in config file or as command
+line options). 
 
-Alternatively, can use 'slice' option to specify a column to slice data for analysis. In this case data is read from single file specified by 'input' parameter and 'data_ref' and 'data_eval' need to be specified for the two slices to be compared. For example,
+```bash
+python main.py --analyze -html
+```
 
-`python main.py --analyze --slice year --data_ref 2015 --data_eval 2016 -html`
+Alternatively, can use `slice` option to specify a column to slice data for
+analysis. In this case data is read from single file specified by `input`
+parameter and `data_ref` and `data_eval` need to be specified for the two slices
+to be compared. For example,
 
-To run performance analysis (result files should be first generated by running prediction step):
+```bash
+python main.py --analyze --slice year --data_ref 2015 --data_eval 2016 -html
+```
 
-`python main.py --analyze --type performance --reference '../ref_results.csv' --test '../test_results.csv -html`
+To run performance analysis (result files should be first generated by running
+prediction step):
 
-For both reports, html flag stands for 'generate HTML report', if not provided JSON report is generated instead.
+```bash
+python main.py --analyze --type performance --reference '../ref_results.csv' --test '../test_results.csv -html
+```
+
+For both reports, html flag stands for `generate HTML report`, if not provided
+JSON report is generated instead.
 
 ## Sample Notebooks:  <a name="notebooks"></a>
-sample_code/training_demo.ipynb - sample model training notebook
 
-sample_code/mlflow_training.ipynb - training progress and validation results are logged to MLFlow. This notebook illustrates how to use them to monitor training.
-
-sample_code/analysis_demo.ipynb - shows how to generate Evidently reports; as well to plot results of pipeline simulation
-
-sample_code/noise-injection.ipynb - utility notebook for noise injection into features, as well as exploration of labs, outcomes extracted data.
-
-
-
-
+* `sample_code/training_demo.ipynb` - sample model training notebook
+* `sample_code/mlflow_training.ipynb` - training progress and validation results
+are logged to MLFlow. This notebook illustrates how to use them to monitor
+training.
+* `sample_code/analysis_demo.ipynb` - shows how to generate Evidently reports; as
+well to plot results of pipeline simulation
+* `sample_code/noise-injection.ipynb` - utility notebook for noise injection into
+features, as well as exploration of labs, outcomes extracted data.
