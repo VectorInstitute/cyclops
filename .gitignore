@@ -7,3 +7,6 @@ htmlcov
 .coverage
 venv
 .ipynb_checkpoints
+*.pt
+*.csv
+mlruns
