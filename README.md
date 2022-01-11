@@ -3,6 +3,8 @@
 ## Table of Contents
 
 1. [Setup](#setup)
+    * [Using Anaconda/Miniconda](#conda)
+    * [Using pip and venv](#pipvenv)
 2. [Configuration Files](#config)
 3. [Running as Pipeline](#pipeline)
 4. [Pipeline Components](#components)
@@ -10,7 +12,8 @@
     * [Model Training](#training)
     * [Prediction](#prediction)
     * [Analysis](#analysis)
-    * [Sample Notebooks](#notebooks)
+5. [Sample Notebooks](#notebooks)
+6. [Framework Design](#design)
 
 
 ## Setup: <a name="setup"></a>
@@ -19,14 +22,14 @@ The development environment has been tested on the Gemini HPC server, using
 `python = 3.8.5`. There are two ways to setup the environment and install
 dependencies.
 
-### Using Anaconda/Miniconda
+### Using Anaconda/Miniconda: <a name="conda"></a>
 
 To create environment, run:
 ```bash
 conda env create -f environment.yml
 ```
 
-### Using pip and venv
+### Using pip and venv: <a name="pipvenv"></a>
 
 To create virtual environment and install dependencies, run:
 ```bash
@@ -180,3 +183,9 @@ training.
 well to plot results of pipeline simulation
 * `sample_code/noise-injection.ipynb` - utility notebook for noise injection into
 features, as well as exploration of labs, outcomes extracted data.
+
+## Framework Design: <a name="design"></a>
+
+<p float="left">
+  <img src="./assets/evaluation_framework_on_gemini.png" />
+</p>
