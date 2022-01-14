@@ -1,3 +1,5 @@
+"""Script to run pipeline using Luigi."""
+
 import luigi
 import pipeline
 from dateutil.relativedelta import relativedelta
@@ -7,10 +9,13 @@ from dateutil.relativedelta import relativedelta
 
 
 class Simulation(luigi.Task):
+    """Simulation class."""
+
     date_from = luigi.DateParameter()
     date_to = luigi.DateParameter()
 
     def requires(self):
+        """[TODO: Add docstring]."""
         results = []
         current_from = self.date_from
         current_to = current_from + relativedelta(months=1)
@@ -21,5 +26,6 @@ class Simulation(luigi.Task):
         return results
 
     def run(self):
+        """[TODO: Add docstring]."""
         times = len(self.input())
         print(f"Ran analysis {times} times")

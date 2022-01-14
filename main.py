@@ -1,3 +1,5 @@
+"""Main entrypoint script."""
+
 import tasks.train as train
 import tasks.analysis as analysis
 import tasks.predict as predict

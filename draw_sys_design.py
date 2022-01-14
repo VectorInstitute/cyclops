@@ -10,15 +10,16 @@ ASSETS_DIR = "./assets"
 
 
 def draw_implementation_on_gemini():
+    """Draw system diagram for implementation on GEMINI."""
     with Diagram(
-        "evaluation framework on Gemini",
+        "Evaluation framework on GEMINI",
         filename="evaluation_framework_on_gemini",
         show=False,
     ):
         with Cluster("dev environment"):
             jupyter = Custom("Jupyter", join(ASSETS_DIR, "jupyter.png"))
-            gitlab = Custom("Gitlab", join(ASSETS_DIR, "gitlab.png"))
-            python = Python("Python")
+            _ = Custom("Gitlab", join(ASSETS_DIR, "gitlab.png"))
+            _ = Python("Python")
         luigi = Custom("Luigi", join(ASSETS_DIR, "luigi.png"))
 
         with Cluster("drift detection dependencies"):
@@ -35,15 +36,16 @@ def draw_implementation_on_gemini():
 
 
 def draw_implementation_extended():
+    """Draw system diagram for implementation with extended capabilities."""
     with Diagram(
-        "evaluation framework extended",
+        "Evaluation framework extended",
         filename="evaluation_framework_extended",
         show=False,
     ):
         with Cluster("dev environment"):
             jupyter = Custom("Jupyter", join(ASSETS_DIR, "jupyter.png"))
-            gitlab = Custom("Gitlab", join(ASSETS_DIR, "gitlab.png"))
-            python = Python("Python")
+            _ = Custom("Gitlab", join(ASSETS_DIR, "gitlab.png"))
+            _ = Python("Python")
         prefect = Custom("Prefect", join(ASSETS_DIR, "prefect.png"))
 
         with Cluster("drift detection dependencies"):
