@@ -1,4 +1,4 @@
-"""Python logging function"""
+"""Python logging function."""
 
 import logging
 from typing import Optional
@@ -15,7 +15,7 @@ def setup_logging(
     fmt: Optional[str] = LOG_FORMAT,
 ):
     """
-    Setup logger.
+    Create logger, and set it up.
 
     Parameters
     ----------
