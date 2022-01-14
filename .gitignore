@@ -11,3 +11,4 @@ venv
 *.csv
 mlruns
 .profile
+.env
