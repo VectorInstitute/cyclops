@@ -25,7 +25,13 @@ def read_config(file=False):
     ######################### Data Extraction #######################################################
 
     # database connection parameters
-    parser.add("--user", type=str, required=False, help="Postgres user")
+    parser.add(
+        "--user",
+        type=str,
+        required=False,
+        default=os.environ["USER"],
+        help="Postgres user",
+    )
     parser.add(
         "--password",
         default=os.environ["PGPASSWORD"],

@@ -42,14 +42,14 @@ pip install -r requirements.txt
 Add the following environment variables in order to run luigi pipelines: 
 ```bash
 export PGPASSWORD=<your-gemini-db-password>
-export LUIGI_CONFIG_PATH="$HOME/vector-delirium/config/gemini_luigi.cfg"
-export PYTHONPATH="${PYTHONPATH}:$HOME/vector-delirium/"
+export LUIGI_CONFIG_PATH="${PWD}/config/gemini_luigi.cfg"
+export PYTHONPATH="${PYTHONPATH}:${PWD}"
 ```
 
-To do that edit `.profile` to add the above lines. Then source the file, for
+To do that edit `.env` to add the above lines. Then source the file, for
 changes to take effect:
 ```bash
-source .profile
+source .env
 ```
 
 ## Configuration Files: <a name="config"></a>
