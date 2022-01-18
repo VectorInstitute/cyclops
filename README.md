@@ -24,9 +24,10 @@ dependencies.
 
 ### Using Anaconda/Miniconda: <a name="conda"></a>
 
-To create environment, run:
+To create and activate environment, run:
 ```bash
 conda env create -f environment.yml
+conda activate vector_delirium
 ```
 
 ### Using pip and venv: <a name="pipvenv"></a>
@@ -175,9 +176,28 @@ JSON report is generated instead.
 
 ## Sample Notebooks:  <a name="notebooks"></a>
 
+To use the notebooks, the `vector_delirium` conda environment or the `venv`
+virtual environment can be installed and used inside an Ipython kernel. To use
+the conda environment:
+
+```bash
+conda activate vector_delirium
+python -m ipykernel install --user --name <name_of_kernel>
+```
+
+To use venv's virtual environment:
+
+```bash
+source venv/bin/activate
+python -m ipykernel install --user --name <name_of_kernel>
+```
+
+Now, you can navigate to the notebook's `Kernel` tab and set it as
+`<name_of_kernel>`.
+
 * `sample_code/training_demo.ipynb` - sample model training notebook
-* `sample_code/mlflow_training.ipynb` - training progress and validation results
-are logged to MLFlow. This notebook illustrates how to use them to monitor
+* `sample_code/mlflow_demo.ipynb` - training progress and validation results
+are logged to MLFlow, this notebook illustrates how to use them to monitor
 training.
 * `sample_code/analysis_demo.ipynb` - shows how to generate Evidently reports; as
 well to plot results of pipeline simulation
