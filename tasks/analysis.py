@@ -11,6 +11,7 @@ from evidently.profile_sections import (
 )
 from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
+from evidently.pipeline.column_mapping import ColumnMapping
 
 import mlflow
 
@@ -29,19 +30,19 @@ def get_report_filename(config):
 
 
 def analyze_dataset_drift(ref_data, eval_data, config):
-    column_mapping = {}
-    column_mapping["numerical_features"] = config.numerical_features
-    column_mapping["categorical_features"] = config.categorical_features
+    column_mapping = ColumnMapping()
+    column_mapping.numerical_features = config.numerical_features
+    column_mapping.categorical_features = config.categorical_features
     if config.target_num:
-        column_mapping["numerical_features"] = config.numerical_features + [
+        column_mapping.numerical_features = config.numerical_features + [
             config.target
         ]
     else:
-        column_mapping["categorical_features"] = config.categorical_features + [
+        column_mapping.categorical_features = config.categorical_features + [
             config.target
         ]
     analysis_columns = (
-        column_mapping["numerical_features"] + column_mapping["categorical_features"]
+        column_mapping.numerical_features + column_mapping.categorical_features
     )
 
     # prepare data - select only numeric and categorical features
@@ -58,9 +59,9 @@ def analyze_dataset_drift(ref_data, eval_data, config):
 
 # evaluate data drift with Evidently Profile
 def eval_drift(reference, production, column_mapping, config, html=False):
-    column_mapping["drift_conf_level"] = 0.95
-    column_mapping["drift_features_share"] = 0.5
-    data_drift_profile = Profile(sections=[DataDriftProfileSection])
+    column_mapping.drift_conf_level = 0.95
+    column_mapping.drift_features_share = 0.5
+    data_drift_profile = Profile(sections=[DataDriftProfileSection()])
     data_drift_profile.calculate(reference, production, column_mapping=column_mapping)
     report = data_drift_profile.json()
     json_report = json.loads(report)
@@ -68,7 +69,7 @@ def eval_drift(reference, production, column_mapping, config, html=False):
     report_filename = get_report_filename(config)
     dasboard = None
     if html:
-        dashboard = Dashboard(tabs=[DataDriftTab])
+        dashboard = Dashboard(tabs=[DataDriftTab()])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
         dashboard.save(report_filename)
     else:
@@ -78,7 +79,7 @@ def eval_drift(reference, production, column_mapping, config, html=False):
     metrics = {"drifts": [], "report_filename": report_filename, "results": {}}
     results = json_report["data_drift"]["data"]["metrics"]
     for feature in (
-        column_mapping["numerical_features"] + column_mapping["categorical_features"]
+        column_mapping.numerical_features + column_mapping.categorical_features
     ):
         metrics["drifts"].append((feature, results[feature]["p_value"]))
     metrics["timestamp"] = json_report["timestamp"]
@@ -90,14 +91,14 @@ def eval_drift(reference, production, column_mapping, config, html=False):
 
 # compare performance of the model on two sets of data
 def analyze_model_drift(reference, test, config):
-    column_mapping = {}
+    column_mapping = ColumnMapping()
 
-    column_mapping["target"] = config.target
-    column_mapping["prediction"] = config.prediction_col
-    column_mapping["numerical_features"] = config.numerical_features
-    column_mapping["categorical_features"] = config.categorical_features
+    column_mapping.target = config.target
+    column_mapping.prediction = config.prediction_col
+    column_mapping.numerical_features = config.numerical_features
+    column_mapping.categorical_features = config.categorical_features
 
-    perfomance_profile = Profile(sections=[ClassificationPerformanceProfileSection])
+    perfomance_profile = Profile(sections=[ClassificationPerformanceProfileSection()])
     perfomance_profile.calculate(reference, test, column_mapping=column_mapping)
     report = perfomance_profile.json()
     json_report = json.loads(report)
@@ -105,7 +106,7 @@ def analyze_model_drift(reference, test, config):
     report_filename = get_report_filename(config)
     performance_dashboard = None
     if config.html:
-        perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab])
+        perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab()])
         perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
         perfomance_dashboard.save(report_filename)
     else:
