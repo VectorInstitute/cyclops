@@ -9,6 +9,7 @@ click==8.0.3
 cloudpickle==2.0.0
 ConfigArgParse==1.5.3
 configparser==5.2.0
+cycler==0.11.0
 databricks-cli==0.16.2
 dataclasses==0.6
 debugpy==1.5.1
@@ -21,6 +22,7 @@ evidently==0.1.40.dev0
 filelock==3.4.2
 flake8==4.0.1
 Flask==2.0.2
+fonttools==4.28.5
 gitdb==4.0.9
 GitPython==3.1.25
 greenlet==1.1.2
@@ -36,10 +38,12 @@ Jinja2==3.0.3
 joblib==1.1.0
 jupyter-client==7.1.0
 jupyter-core==4.9.1
+kiwisolver==1.3.2
 lockfile==0.12.2
 luigi==3.0.3
 Mako==1.1.6
 MarkupSafe==2.0.1
+matplotlib==3.5.1
 matplotlib-inline==0.1.3
 mccabe==0.6.1
 mlflow==1.22.0
@@ -54,6 +58,7 @@ pathspec==0.9.0
 patsy==0.5.2
 pexpect==4.8.0
 pickleshare==0.7.5
+Pillow==9.0.0
 platformdirs==2.4.1
 plotly==5.5.0
 pre-commit==2.16.0

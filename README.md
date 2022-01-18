@@ -47,8 +47,8 @@ export LUIGI_CONFIG_PATH="${PWD}/config/gemini_luigi.cfg"
 export PYTHONPATH="${PYTHONPATH}:${PWD}"
 ```
 
-To do that edit `.env` to add the above lines. Then source the file, for
-changes to take effect:
+To do that, add a file named `.env` to the root of this repo and add
+the above lines to the file. Then source the file, for changes to take effect:
 ```bash
 source .env
 ```

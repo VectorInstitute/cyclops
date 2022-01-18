@@ -12,3 +12,4 @@ venv
 mlruns
 .profile
 .env
+*.html
