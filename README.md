@@ -3,26 +3,31 @@
 ## Table of Contents
 
 1. [Setup](#setup)
-    * [Using Anaconda/Miniconda](#conda)
-    * [Using pip and venv](#pipvenv)
-2. [Configuration Files](#config)
-3. [Running as Pipeline](#pipeline)
-4. [Pipeline Components](#components)
+    * [Python virtual environment](#python)
+        * [Using Anaconda/Miniconda](#conda)
+        * [Using pip and venv](#pipvenv)
+    * [Pre-installed virtual environment paths](#preinstalled)
+    * [Environment variables](#envvar)
+3. [Configuration Files](#config)
+4. [Running as Pipeline](#pipeline)
+5. [Pipeline Components](#components)
     * [Data Extraction](#data)
     * [Model Training](#training)
     * [Prediction](#prediction)
     * [Analysis](#analysis)
-5. [Sample Notebooks](#notebooks)
-6. [Framework Design](#design)
+6. [Sample Notebooks](#notebooks)
+7. [Framework Design](#design)
 
 
 ## Setup: <a name="setup"></a>
+
+### Python virtual environment: <a name="python"></a>
 
 The development environment has been tested on the Gemini HPC server, using
 `python = 3.8.5`. There are two ways to setup the environment and install
 dependencies.
 
-### Using Anaconda/Miniconda: <a name="conda"></a>
+#### Using Anaconda/Miniconda: <a name="conda"></a>
 
 To create and activate environment, run:
 ```bash
@@ -30,7 +35,7 @@ conda env create -f environment.yml
 conda activate vector_delirium
 ```
 
-### Using pip and venv: <a name="pipvenv"></a>
+#### Using pip and venv: <a name="pipvenv"></a>
 
 To create virtual environment and install dependencies, run:
 ```bash
@@ -40,6 +45,17 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+### Pre-installed virtual environment paths: <a name="preinstalled"></a>
+Pre-installed environments on the HPC are available. For conda environment:
+```bash
+conda activate /mnt/nfs/project/delirium/dev_env/conda
+```
+For pipenv venv:
+```bash
+source /mnt/nfs/project/delirium/dev_env/venv
+```
+
+### Environment variables: <a name="envvar"></a>
 Add the following environment variables in order to run luigi pipelines: 
 ```bash
 export PGPASSWORD=<your-gemini-db-password>
