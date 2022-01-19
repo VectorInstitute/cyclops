@@ -8,15 +8,15 @@
         * [Using pip and venv](#pipvenv)
     * [Pre-installed virtual environment paths](#preinstalled)
     * [Environment variables](#envvar)
-3. [Configuration Files](#config)
-4. [Running as Pipeline](#pipeline)
-5. [Pipeline Components](#components)
+2. [Configuration Files](#config)
+3. [Running as Pipeline](#pipeline)
+4. [Pipeline Components](#components)
     * [Data Extraction](#data)
     * [Model Training](#training)
     * [Prediction](#prediction)
     * [Analysis](#analysis)
-6. [Sample Notebooks](#notebooks)
-7. [Framework Design](#design)
+5. [Sample Notebooks](#notebooks)
+6. [Framework Design](#design)
 
 
 ## Setup: <a name="setup"></a>
