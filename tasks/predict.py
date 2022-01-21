@@ -10,7 +10,6 @@ from tasks.train import to_loader
 from tasks.utils.utils import AverageBinaryClassificationMetric
 
 import mlflow
-from mlflow import log_params
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -26,7 +25,6 @@ def predict(model, loader):
         metric.add_step(0, out, target)
         output = output + out.squeeze(dim=1).tolist()
 
-    val_metric_dict = metric.compute_metrics()
     return output
 
 
@@ -34,7 +32,7 @@ def main(args):
     # read data
     exp_name = "Prediction"
     exp = mlflow.get_experiment_by_name(exp_name)
-    if exp == None:
+    if exp is None:
         mlflow.create_experiment(exp_name)
         exp = mlflow.get_experiment_by_name(exp_name)
     with mlflow.start_run(experiment_id=exp.experiment_id):

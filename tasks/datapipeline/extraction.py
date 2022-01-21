@@ -1,13 +1,27 @@
-import pandas as pd
-import numpy as np
-import json
+"""Data extraction module."""
+
 import os
 import time
+
+import pandas as pd
+import numpy as np
+import scipy
 import sqlalchemy
-import pandas.io.sql as psql
-import re
 from tqdm import tqdm
-from tasks.datapipeline.extraction_utils import *
+
+from tasks.datapipeline.constants import (
+    HOSPITAL_ID,
+    DRUG_SCREEN,
+)
+from tasks.datapipeline.utils import (
+    transform_diagnosis,
+    name_count,
+    clean,
+    convert_units,
+    x_to_numeric,
+    simple_imput
+)
+
 
 BASIC_DATA_ONLY = True
 
@@ -40,10 +54,10 @@ def extract(config):
         CASE when i.gender = 'F' THEN 1 ELSE 0 END AS sex,
         i.age,
         CASE when i.discharge_disposition = 7 THEN 1 ELSE 0 END AS mort_hosp,
-	    i.discharge_date_time, 
-	    i.admit_date_time,
-	    f.diagnosis_code as mr_diagnosis,
-	    DATE_PART('year', i.admit_date_time) as year, 
+        i.discharge_date_time,
+        i.admit_date_time,
+        f.diagnosis_code as mr_diagnosis,
+        DATE_PART('year', i.admit_date_time) as year,
         (extract(epoch from i.discharge_date_time)::FLOAT - extract(epoch from i.admit_date_time)::float)/(24*60*60) as los,
         CASE when NULLIF(REPLACE(REPLACE(i.readmission, 'Yes', '9'), 'No', '5'), '')::numeric::integer = 2 or  NULLIF(REPLACE(REPLACE(i.readmission, 'Yes', '9'), 'No', '5'), '')::numeric::integer = 4  THEN 1 ELSE 0 END AS readmission_7,
         CASE when NULLIF(REPLACE(REPLACE(i.readmission, 'Yes', '9'), 'No', '5'), '')::numeric::integer = 2 or  NULLIF(REPLACE(REPLACE(i.readmission, 'Yes', '9'), 'No', '5'), '')::numeric::integer = 3 or  NULLIF(REPLACE(REPLACE(i.readmission, 'Yes', '9'), 'No', '5'), '')::numeric::integer = 4  THEN 1 ELSE 0 END AS readmission_28,
@@ -62,7 +76,7 @@ def extract(config):
                   FROM diagnosis d
                   WHERE d.diagnosis_code = 'Z515') g
                   ON i.genc_id=g.genc_id
-          LEFT OUTER JOIN (SELECT e.genc_id, 
+          LEFT OUTER JOIN (SELECT e.genc_id,
                                 e.admit_via_ambulance,
                                 e.disposition_date_time,
                                 e.duration_er_stay_derived AS los_er,
@@ -649,7 +663,6 @@ def labs(args, engine):
 
         # eliminate features with unmatchable units
         keep_vars = []
-        keep_vars_nan = []
         for k, v in units_dict.items():
             keep_vars.append((k[0], k[1], v[0][0]))
 
