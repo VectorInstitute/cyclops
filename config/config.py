@@ -1,3 +1,5 @@
+"""Configuration module."""
+
 import getpass
 import configargparse
 import time
@@ -16,13 +18,13 @@ def read_config(file=False):
 
     parser.add("-c", "--config_file", is_config_file=True, help="config file path")
 
-    ######################### Operation #######################################################
+    ######################### Operation #########################
     parser.add("--extract", action="store_true", help="Run data extraction")
     parser.add("--train", action="store_true", help="Execute model training code")
     parser.add("--predict", action="store_true", help="Run prediction")
     parser.add("--analyze", action="store_true", help="Run analysis")
 
-    ######################### Data Extraction #######################################################
+    ######################### Data Extraction #########################
 
     # database connection parameters
     parser.add(
@@ -249,7 +251,7 @@ def read_config(file=False):
 
     # print({k: v for k, v in vars(args).items()})
 
-    if args.input == None and args.password == None:
+    if args.input is None and args.password is None:
         args.password = getpass.getpass(prompt="Database password: ", stream=None)
     if len(args.filter_date_from) and len(args.filter_date_to):
         args.filter_date_from = datetime.strptime(args.filter_date_from, "%Y%m%d")

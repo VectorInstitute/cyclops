@@ -34,9 +34,7 @@ def analyze_dataset_drift(ref_data, eval_data, config):
     column_mapping.numerical_features = config.numerical_features
     column_mapping.categorical_features = config.categorical_features
     if config.target_num:
-        column_mapping.numerical_features = config.numerical_features + [
-            config.target
-        ]
+        column_mapping.numerical_features = config.numerical_features + [config.target]
     else:
         column_mapping.categorical_features = config.categorical_features + [
             config.target
@@ -67,7 +65,6 @@ def eval_drift(reference, production, column_mapping, config, html=False):
     json_report = json.loads(report)
 
     report_filename = get_report_filename(config)
-    dasboard = None
     if html:
         dashboard = Dashboard(tabs=[DataDriftTab()])
         dashboard.calculate(reference, production, column_mapping=column_mapping)
@@ -104,7 +101,6 @@ def analyze_model_drift(reference, test, config):
     json_report = json.loads(report)
 
     report_filename = get_report_filename(config)
-    performance_dashboard = None
     if config.html:
         perfomance_dashboard = Dashboard(tabs=[ClassificationPerformanceTab()])
         perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
@@ -132,8 +128,7 @@ def analyze_model_drift(reference, test, config):
 def log_to_mlflow(config, metrics):
     exp_name = "DatasetAnalysis" if config.type == "dataset" else "ModelComparison"
     exp = mlflow.get_experiment_by_name(exp_name)
-    # print(exp)
-    if exp == None:
+    if exp is None:
         mlflow.create_experiment(exp_name)
         exp = mlflow.get_experiment_by_name(exp_name)
 

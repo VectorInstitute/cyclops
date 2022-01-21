@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from tasks.dataset import get_dataset, split_train_and_val
+from tasks.dataset import get_dataset
 from tasks.model import get_model
 from tasks.utils.utils import AverageBinaryClassificationMetric
 

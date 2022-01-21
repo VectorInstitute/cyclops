@@ -1,6 +1,6 @@
+"""Process data module."""
+
 import pandas as pd
-import numpy as np
-import json
 import os
 import time
 import pickle
@@ -12,7 +12,7 @@ def save_data(data, config, format="csv"):
     if format != "csv":
         print("Unsupported format {}".format(format))
         exit
-    if config.output_full_path == None or len(config.output_full_path) == 0:
+    if config.output_full_path is None or len(config.output_full_path) == 0:
         t = time.localtime()
         date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
         name = f"admin_data_{date}.csv"
@@ -24,10 +24,6 @@ def save_data(data, config, format="csv"):
 
 
 def prune_columns(config_columns, data):
-    columns = []
-
-    # print(config_columns, data.columns)
-
     for c in config_columns:
         if c not in list(data.columns):
             data[c] = 0
@@ -68,8 +64,7 @@ def pipeline(config):
     if not config.r:
         # read data from file
         try:
-            with open(config.input) as f:
-                data = pd.read_csv(config.input)
+            data = pd.read_csv(config.input)
         except:
             print("Error: unable to read file {}".format(config.input))
     else:

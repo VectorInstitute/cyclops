@@ -1,6 +1,5 @@
 from functools import partial
 
-import torch
 import torch.nn as nn
 
 from tasks.registry import register_with_dictionary
