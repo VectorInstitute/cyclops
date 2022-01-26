@@ -8,9 +8,8 @@ repos:
     rev: 4.0.1
     hooks:
     - id: flake8
-      exclude: ^(config/|tasks/)
 -   repo: https://github.com/PyCQA/pydocstyle
     rev: 6.1.1
     hooks:
     - id: pydocstyle
-      exclude: ^(config/|tasks/)
+      exclude: ^(tasks/)

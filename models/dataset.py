@@ -1,10 +1,10 @@
-"""File for data pipelines which are then put into torch dataset format
-"""
+"""Dataset creation for training/inference using PyTorch."""
+
+from typing import Optional, Callable
 from dataclasses import dataclass
 from functools import partial
 
 import torch
-
 from torch.utils.data import random_split
 
 from tasks.datapipeline.process_data import (
@@ -14,33 +14,103 @@ from tasks.datapipeline.process_data import (
     get_stats,
 )
 
-from tasks.registry import register_with_dictionary
+
+def register_dataset(
+    register_dict: dict, func: Optional[Callable] = None, name: Optional[str] = None
+):
+    """Register datasets, returned by functions.
+
+    Parameters
+    ----------
+    register_dict: dict
+        Dictionary to track dataset implementations.
+    func: Callable, optional
+        Function that returns data subset(s).
+    name: str, optional
+        Name of dataset.
+
+    Returns
+    -------
+    Callable:
+        Function call that to register dataset, that can be used as a decorator.
+    """
+
+    def wrap(func):
+        register_dict[func.__name__ if name is None else name] = func
+        return func
+
+    # called with params
+    if func is None:
+        return wrap
+
+    return wrap(func)
+
 
 DATA_REGISTRY = {}
-register = partial(register_with_dictionary, DATA_REGISTRY)
+register = partial(register_dataset, DATA_REGISTRY)
 
 
 @dataclass
 class BaseData:
+    """Base dataset class."""
+
     inputs: torch.Tensor
     target: torch.Tensor
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple:
+        """Get item for iterator.
+
+        Parameters
+        ----------
+        idx: int
+            Index of sample to fetch from dataset.
+
+        Returns
+        -------
+        tuple
+            Input and target.
+        """
         return self.inputs[idx], self.target[idx]
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Return size of dataset, i.e. no. of samples.
+
+        Returns
+        -------
+        int
+            Size of dataset.
+        """
         return len(self.target)
 
-    def dim(self):
+    def dim(self) -> int:
+        """Get dataset dimensions (no. of features).
+
+        Returns
+        -------
+        int
+            Number of features.
+        """
         return self.inputs.size(dim=1)
 
 
 def get_dataset(name):
+    """Get dataset from registered datasets.
+
+    Parameters
+    ----------
+    name: str
+        Name of dataset.
+
+    Returns
+    -------
+    Callable
+        Function that can be called to return dataset(s).
+    """
     return DATA_REGISTRY[name]
 
 
 def split_train_and_val(dataset, percent_val=0.2, seed=42):
-    """Takes a pytorch dataset and split it into train and validation set"""
+    """Split PyTorch dataset into train and validation set."""
     len_dset = len(dataset)
 
     validation_length = int(len_dset * percent_val)
@@ -56,6 +126,15 @@ def split_train_and_val(dataset, percent_val=0.2, seed=42):
 
 
 def pandas_to_dataset(df, feature_cols, target_cols, stats=None, config=None):
+    """Convert pandas dataframe to dataset.
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+        Dataset as a pandas dataframe.
+    feature_cols: list
+        List of feature columns to consider.
+    """
     df = prune_columns(feature_cols, df)
     if stats is not None:
         df[config.numerical_features] = (
@@ -69,6 +148,7 @@ def pandas_to_dataset(df, feature_cols, target_cols, stats=None, config=None):
 
 @register
 def fakedata(args):
+    """Fake data."""
     inputs = torch.randn(args.data_len, args.data_dim, dtype=torch.float32)
     target = (inputs.sum(1) > 0).long()
 
@@ -78,6 +158,7 @@ def fakedata(args):
 
 @register
 def gemini(args):
+    """GEMINI data."""
     data, _ = pipeline(args)
     train, val, _ = get_splits(args, data)
     stats = get_stats(args, train)

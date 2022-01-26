@@ -1,6 +1,6 @@
 """Model catalog."""
 
-from typing import Optional, Callable
+from typing import Optional
 
 from models.mlp import MLP
 
@@ -8,9 +8,7 @@ from models.mlp import MLP
 MODEL_CATALOG = {}
 
 
-def register_model(
-    register_dict: dict, model: type, name: Optional[str] = None
-) -> Callable:
+def register_model(register_dict: dict, model: type, name: Optional[str] = None):
     """Register model with dict.
 
     Parameters

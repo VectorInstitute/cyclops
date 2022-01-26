@@ -1,7 +1,6 @@
 """Training script for baseline model."""
 
 import os
-import sys
 import logging
 
 import torch
@@ -10,10 +9,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from mlflow import log_params
 
-from tasks.dataset import get_dataset
-from tasks.utils.utils import AverageBinaryClassificationMetric
-
 from models.catalog import get_model
+from models.metrics import AverageBinaryClassificationMetric
+from models.dataset import get_dataset
 
 from cyclops.utils.log import setup_logging
 

@@ -1,29 +1,48 @@
+"""Metrics used for model training/validation."""
+
 from dataclasses import dataclass
 
 import numpy as np
+import torch
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
-
 from mlflow import log_metrics
-
-# TODO: perhaps we can add the wandb/mlflow blah blah blah
-# metric here
-
-# we can also register these and pull the right metric
 
 
 @dataclass(init=False, eq=False)
 class AverageBinaryClassificationMetric:
+    """Metrics for binary classification tasks.
+
+    Attributes
+    ----------
+    loss: list
+        List to track loss.
+    preds: list
+        List of predictions.
+    targets: list
+        List of targets.
+    """
+
     def reset(self):
+        """Reset the tracked loss, prediction and target containers."""
         self.loss_list = []
         self.preds = []
         self.targets = []
 
     def __init__(self):
+        """Instantiate."""
         self.reset()
 
-    def add_step(self, loss, logits, targets):
-        """Note logits is pre-sigmoid
-        All inputs should be tensors
+    def add_step(self, loss: torch.Tensor, logits: torch.Tensor, targets: torch.Tensor):
+        """Add loss, predictions and targets during a step of training/validation.
+
+        Parameters
+        ----------
+        loss: torch.Tensor
+            Loss for current step.
+        logits: torch.Tensor
+            Prediction at current step.
+        targets: torch.Tensor
+            Classification targets at current step.
         """
         preds = logits.detach().sigmoid().cpu().numpy()
         targets = targets.cpu().numpy()
@@ -34,7 +53,14 @@ class AverageBinaryClassificationMetric:
             self.loss_list.append(loss.item())
 
     def compute_metrics(self):
+        """Compute metrics for current step, logs them to MLFlow.
 
+        Returns
+        -------
+        dict
+            Computed metrics (average loss, accuracy, f1 score,\
+                    precision, recall and AUC).
+        """
         avg_loss = (
             sum(self.loss_list) / len(self.loss_list) if len(self.loss_list) > 0 else 0
         )
@@ -56,7 +82,7 @@ class AverageBinaryClassificationMetric:
             "f1_score": f1,
             "precision": precision,
             "recall": recall,
-            "auc": auc,
+            "AUC": auc,
         }
         log_metrics(mlflow_metric_dict)
 
@@ -66,5 +92,5 @@ class AverageBinaryClassificationMetric:
             "f1_score": f1,
             "precision": precision,
             "recall": recall,
-            "auc": auc,
+            "AUC": auc,
         }
