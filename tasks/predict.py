@@ -1,25 +1,41 @@
-import torch
-import pandas as pd
+"""Prediction script."""
+
+import os
+import sys
+import logging
 import datetime
 
+import torch
+import pandas as pd
+import mlflow
+
 from config import config_to_dict
-from tasks.model import get_model
+
+from models.catalog import get_model
+
 from tasks.dataset import pandas_to_dataset
 from tasks.datapipeline.process_data import get_stats
 from tasks.train import to_loader
 from tasks.utils.utils import AverageBinaryClassificationMetric
 
-import mlflow
+from cyclops.utils.log import setup_logging
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# Logging.
+LOGGER = logging.getLogger(__name__)
+LOG_FILE = "{}.log".format(os.path.basename(__file__))
+setup_logging(log_path=LOG_FILE, print_level="INFO", logger=LOGGER)
+
+
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def predict(model, loader):
     output = []
     metric = AverageBinaryClassificationMetric()
     for (data, target) in loader:
-        data = data.to(device, non_blocking=True)
-        target = target.to(device, non_blocking=True).to(data.dtype)
+        data = data.to(DEVICE, non_blocking=True)
+        target = target.to(DEVICE, non_blocking=True).to(data.dtype)
 
         out = model(data)
         metric.add_step(0, out, target)
@@ -48,7 +64,7 @@ def main(args):
         loader = to_loader(dataset, args)
 
         # read model
-        model = get_model(args.model)(args).to(device)
+        model = get_model(args.model)(2, args.data_dim, [16, 8], 1, "silu").to(DEVICE)
         model.load_state_dict(torch.load(args.model_path))
         model.eval()
 

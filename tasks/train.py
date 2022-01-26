@@ -11,15 +11,16 @@ from tqdm import tqdm
 from mlflow import log_params
 
 from tasks.dataset import get_dataset
-from tasks.model import get_model
 from tasks.utils.utils import AverageBinaryClassificationMetric
+
+from models.catalog import get_model
 
 from cyclops.utils.log import setup_logging
 
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-LOG_FILE = "{}.log".format(os.path.basename(sys.argv[0]))
+LOG_FILE = "{}.log".format(os.path.basename(__file__))
 setup_logging(log_path=LOG_FILE, print_level="INFO", logger=LOGGER)
 
 
@@ -84,7 +85,7 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
 
 def main(args):
-    # MLflow parameters
+    # MLflow parameters.
     mlflow_params_dict = {
         "dataset": args.dataset,
         "no of workers": args.num_workers,
@@ -101,10 +102,10 @@ def main(args):
     train_loader = to_loader(train_dataset, args, args.shuffle)
     val_loader = to_loader(val_dataset, args, shuffle=False)
 
-    # set data dimensions automatically based on dataset
+    # Set data dimensions automatically based on dataset.
     args.data_dim = train_dataset.dim()
 
-    model = get_model(args.model)(args).to(DEVICE)
+    model = get_model(args.model)(2, args.data_dim, [16, 8], 1, "silu").to(DEVICE)
     loss_fn = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 

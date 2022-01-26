@@ -17,7 +17,7 @@ from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-LOG_FILE = "{}.log".format(os.path.basename(sys.argv[0]))
+LOG_FILE = "{}.log".format(os.path.basename(__file__))
 setup_logging(log_path=LOG_FILE, print_level="INFO", logger=LOGGER)
 
 
