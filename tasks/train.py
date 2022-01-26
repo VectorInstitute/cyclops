@@ -1,15 +1,29 @@
+"""Training script for baseline model."""
+
+import os
+import sys
+import logging
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from mlflow import log_params
 
 from tasks.dataset import get_dataset
 from tasks.model import get_model
 from tasks.utils.utils import AverageBinaryClassificationMetric
 
-from mlflow import log_params
+from cyclops.utils.log import setup_logging
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# Logging.
+LOGGER = logging.getLogger(__name__)
+LOG_FILE = "{}.log".format(os.path.basename(sys.argv[0]))
+setup_logging(log_path=LOG_FILE, print_level="INFO", logger=LOGGER)
+
+
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def to_loader(dataset, args, shuffle=False):
@@ -27,42 +41,32 @@ def validate(model, val_loader, loss_fn):
 
     metric = AverageBinaryClassificationMetric()
     for (data, target) in val_loader:
-
-        data = data.to(device, non_blocking=True)
-        target = target.to(device, non_blocking=True).to(data.dtype)
+        data = data.to(DEVICE, non_blocking=True)
+        target = target.to(DEVICE, non_blocking=True).to(data.dtype)
 
         output = model(data)
-
         loss = loss_fn(output.squeeze(dim=1), target)
 
         metric.add_step(loss, output, target)
 
     val_metric_dict = metric.compute_metrics()
-
     dict_str = " ".join(f"{k}: {v:.2f}" for k, v in val_metric_dict.items())
-
     to_print = f"validation: {dict_str}"
 
-    # put this in a logger
-    print(to_print)
+    LOGGER.info(to_print)
 
 
 def train(model, optimizer, dataloader, loss_fn, num_epochs):
-
     metric = AverageBinaryClassificationMetric()
-
     for e in tqdm(range(num_epochs)):
-
         for (data, target) in dataloader:
-            data = data.to(device, non_blocking=True)
-            target = target.to(device, non_blocking=True).to(data.dtype)
+            data = data.to(DEVICE, non_blocking=True)
+            target = target.to(DEVICE, non_blocking=True).to(data.dtype)
 
             optimizer.zero_grad()
 
             output = model(data)
-
             loss = loss_fn(output.squeeze(), target)
-
             loss.backward()
 
             optimizer.step()
@@ -70,13 +74,11 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
             metric.add_step(loss.detach(), output.detach(), target)
 
         epoch_metric_dict = metric.compute_metrics()
-
         dict_str = " ".join(f"{k}: {v:.2f}" for k, v in epoch_metric_dict.items())
-
         to_print = f"epoch {e} {dict_str}"
 
         # put this in a logger
-        print(to_print)
+        LOGGER.info(to_print)
 
         metric.reset()
 
@@ -102,12 +104,10 @@ def main(args):
     # set data dimensions automatically based on dataset
     args.data_dim = train_dataset.dim()
 
-    model = get_model(args.model)(args).to(device)
+    model = get_model(args.model)(args).to(DEVICE)
     loss_fn = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     train(model, optimizer, train_loader, loss_fn, num_epochs=args.num_epochs)
-
     torch.save(model.state_dict(), args.model_path)
-
     validate(model, val_loader, loss_fn)

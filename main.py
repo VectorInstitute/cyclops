@@ -4,7 +4,8 @@ import tasks.train as train
 import tasks.analysis as analysis
 import tasks.predict as predict
 from tasks.datapipeline.process_data import pipeline as extract
-import config.config as config
+
+import config
 
 
 # Top level to invoke specific operations

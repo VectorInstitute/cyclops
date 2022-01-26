@@ -2,7 +2,7 @@ import torch
 import pandas as pd
 import datetime
 
-from config.config import to_print
+from config import config_to_dict
 from tasks.model import get_model
 from tasks.dataset import pandas_to_dataset
 from tasks.datapipeline.process_data import get_stats
@@ -36,7 +36,7 @@ def main(args):
         mlflow.create_experiment(exp_name)
         exp = mlflow.get_experiment_by_name(exp_name)
     with mlflow.start_run(experiment_id=exp.experiment_id):
-        mlflow.log_dict(to_print(args), "args.json")
+        mlflow.log_dict(config_to_dict(args), "args.json")
         mlflow.log_params({"timestamp": datetime.datetime.now()})
         data = pd.read_csv(args.input)
         stats = get_stats(args, None)

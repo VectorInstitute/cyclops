@@ -19,7 +19,7 @@ from tasks.datapipeline.utils import (
     clean,
     convert_units,
     x_to_numeric,
-    simple_imput
+    simple_imput,
 )
 
 

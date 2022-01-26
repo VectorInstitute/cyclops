@@ -16,9 +16,11 @@ def save_data(data, config, format="csv"):
         t = time.localtime()
         date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
         name = f"admin_data_{date}.csv"
+        os.makedirs(config.output_folder, exist_ok=True)
         path = os.path.join(config.output_folder, name)
     else:
         path = config.output_full_path
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     data.to_csv(path)
     return path
 

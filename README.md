@@ -39,7 +39,7 @@ conda activate vector_delirium
 
 To create virtual environment and install dependencies, run:
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -59,28 +59,41 @@ source /mnt/nfs/project/delirium/dev_env/venv
 Add the following environment variables in order to run luigi pipelines: 
 ```bash
 export PGPASSWORD=<your-gemini-db-password>
-export LUIGI_CONFIG_PATH="${PWD}/config/gemini_luigi.cfg"
 export PYTHONPATH="${PYTHONPATH}:${PWD}"
 ```
 
 To do that, add a file named `.env` to the root of this repo and add
-the above lines to the file. Then source the file, for changes to take effect:
-```bash
-source .env
-```
+the above lines to the file. The variables are automatically added to the
+configuration.
 
 ## Configuration Files: <a name="config"></a>
 
-There is one configuration file `config/gemini.cfg` that contains all the
-parameters for individual tasks (data extraction, model training and prediction,
-analysis). The config parser is in `config/config.py`.
+There are four configuration files:
+* `configs/default/data.yaml`
+* `configs/default/model.yaml`
+* `configs/default/analysis.yaml`
+* `configs/default/workflow.yaml`
 
-Refer to `config/gemini.cfg` for basic configuration parameters.
-(Additional ones are described in `config/config.py`). If extracting from the
-database, update your username in config file: `username = <your-gemini-db-username>`
+Each file contains the parameters for respective tasks
+(`data extraction`, `model training and inference`,
+`analysis` and `workflows`). The config parser script is `config.py`.
 
-Luigi batch processing is used to run the whole flow (data extract, predict,
-analyze) as a pipeline. Luigi parameters are apecified in `config/gemini_luigi.cfg`.
+Refer to `configs/default` for default configuration parameters. 
+(Additional ones are described in `config.py`).
+
+A copy of the config dir can be made for bootstrapping, for custom experiments
+and pipelines. For example:
+```bash
+cp -r configs/default configs/<name_of_experiment>
+```
+Edit the new configs, then the new configs can be passed to the main script using:
+```bash
+python3 main.py -c configs/<name_of_experiment>/*.yaml
+```
+
+Luigi batch processing is used to run the whole workflow (data extract, predict,
+analyze) as a pipeline. Luigi parameters are specified in
+`configs/default/workflow.yaml`.
 
 ## Running as Pipeline: <a name="pipeline"></a>
 
@@ -89,13 +102,12 @@ data extraction, prediction and analysis steps.
 
 ### Prerequisites:
 
-* configure envronment variables (above)
-* trained model exists and model_path parameter in the `config/gemini.cfg`
+* configure environment variables (above)
+* trained model exists and `model_path` parameter in the `configs/default/model.yaml`
 specifies the path
 * analysis step requires reference data csv (that includes model predictions) 
-* ensure that configuration in `config/gemini.cfg` is up to date
-(has correct username for the database access, model path, csv file with
-reference data/predictions) 
+* ensure that configuration in `configs/default/analysis.yaml` is up to date
+(has model path, csv file with reference data/predictions) 
 
 To run pipeline once for specific time period, run:
 
@@ -116,14 +128,14 @@ In addition to Luigi pipeline, each of the components of the pipeline can be run
 on it's own from command line or from Jupyter notebook.
 To run each task from the command line:
 ```bash
-python main.py --<action> <optional parameter overwrites>
+python3 main.py --<action> <optional parameter overwrites>
 ```
 
 where `<action>`: extract, train, predict, analyze
 To get a full list of possible arguments, run:
 
 ```bash
-python main.py -h
+python3 main.py -h
 ```
 
 ### Data Extraction:  <a name="data"></a>
@@ -131,17 +143,17 @@ python main.py -h
 Examples of running data extraction from command line:
 
 1) To extract all available records from the database and save to csv
-(or change parameters in the `config/gemini.cfg`):
+(or change parameters in the `configs/default/data.yaml`):
 
 ```bash
-python main.py --extract -r -w --output_folder '../' --pop_size 0
+python3 main.py --extract -r -w --output_folder './_out' --pop_size 0
 ```
 
 2) To extract 20,000 records, save to file, split into train, test and val sets
 by `hospital_id` column:
 
 ```bash
-python main.py --extract -r --pop_size 20000 -w --output_full_path='../temp.csv' --split_column hospital_id --test_split 3 --val_split 7 
+python3 main.py --extract -r --pop_size 20000 -w --output_full_path='./data.csv' --split_column hospital_id --test_split 3 --val_split 7 
 ```
 
 ### Model Training:  <a name="training"></a>
@@ -149,7 +161,7 @@ python main.py --extract -r --pop_size 20000 -w --output_full_path='../temp.csv'
 To train a model:
 
 ```bash
-python main.py --train --input '../data.csv'
+python3 main.py --train --input './data.csv'
 ```
 
 ### Prediction:  <a name="prediction"></a>
@@ -157,18 +169,18 @@ python main.py --train --input '../data.csv'
 Run prediction:
 
 ```bash
-python main.py --predict --input '../sample.csv' --result_output '../result.csv'
+python3 main.py --predict --input './data.csv' --result_output './result.csv'
 ```
 
 ### Analysis:  <a name="analysis"></a>
 
-To run dataset drift analysis, update `config/gemini.cfg` configuration with
+To run dataset drift analysis, update `configs/default/analysis.yaml` configuration with
 preferred options. If `slice` option is not specified, report compares the data
 provided in `reference` and `test` files (specified in config file or as command
 line options). 
 
 ```bash
-python main.py --analyze -html
+python3 main.py --analyze -html
 ```
 
 Alternatively, can use `slice` option to specify a column to slice data for
@@ -177,14 +189,14 @@ parameter and `data_ref` and `data_eval` need to be specified for the two slices
 to be compared. For example,
 
 ```bash
-python main.py --analyze --slice year --data_ref 2015 --data_eval 2016 -html
+python3 main.py --analyze --slice year --data_ref 2015 --data_eval 2016 -html
 ```
 
 To run performance analysis (result files should be first generated by running
 prediction step):
 
 ```bash
-python main.py --analyze --type performance --reference '../ref_results.csv' --test '../test_results.csv -html
+python3 main.py --analyze --type performance --reference './ref_results.csv' --test './test_results.csv -html
 ```
 
 For both reports, html flag stands for `generate HTML report`, if not provided
@@ -198,14 +210,14 @@ the conda environment:
 
 ```bash
 conda activate <name> or <path/to/conda/env>
-python -m ipykernel install --user --name <name_of_kernel>
+python3 -m ipykernel install --user --name <name_of_kernel>
 ```
 
 To use venv's virtual environment:
 
 ```bash
 source <path/to/venv>
-python -m ipykernel install --user --name <name_of_kernel>
+python3 -m ipykernel install --user --name <name_of_kernel>
 ```
 
 Now, you can navigate to the notebook's `Kernel` tab and set it as
@@ -218,8 +230,6 @@ are logged to MLFlow, this notebook illustrates how to use them to monitor
 training.
 * `sample_code/analysis_demo.ipynb` - shows how to generate Evidently reports; as
 well to plot results of pipeline simulation
-* `sample_code/noise-injection.ipynb` - utility notebook for noise injection into
-features, as well as exploration of labs, outcomes extracted data.
 
 ## Framework Design: <a name="design"></a>
 
