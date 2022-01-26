@@ -13,3 +13,4 @@ mlruns
 .profile
 .env
 *.html
+_extract

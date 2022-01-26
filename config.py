@@ -1,32 +1,51 @@
 """Configuration module."""
 
+import os
+import sys
+import logging
+import subprocess
 import getpass
+import argparse
 import configargparse
 import time
-import os
 import json
 from datetime import datetime
+from dotenv import load_dotenv
+
+from cyclops.utils.log import setup_logging
 
 
-def read_config(file=False):
-    if not file:
+# Logging.
+LOGGER = logging.getLogger(__name__)
+LOG_FILE = "{}.log".format(os.path.basename(sys.argv[0]))
+setup_logging(log_path=LOG_FILE, print_level="INFO", logger=LOGGER)
+
+
+# Load environment vars.
+load_dotenv()
+
+
+def read_config(config_path=None):
+    if not config_path:
         parser = configargparse.ArgumentParser(
-            default_config_files=["config/gemini.cfg"]
+            config_file_parser_class=configargparse.YAMLConfigFileParser,
+            default_config_files=["./configs/default/*.yaml"],
         )
     else:
-        parser = configargparse.ArgumentParser(default_config_files=[file])
+        parser = configargparse.ArgumentParser(
+            config_file_parser_class=configargparse.YAMLConfigFileParser,
+            default_config_files=[config_path],
+        )
+    parser.add("-c", "--config_path", is_config_file=True, help="config file path")
 
-    parser.add("-c", "--config_file", is_config_file=True, help="config file path")
-
-    ######################### Operation #########################
+    # ************************Operation.************************
     parser.add("--extract", action="store_true", help="Run data extraction")
     parser.add("--train", action="store_true", help="Execute model training code")
     parser.add("--predict", action="store_true", help="Run prediction")
     parser.add("--analyze", action="store_true", help="Run analysis")
 
-    ######################### Data Extraction #########################
-
-    # database connection parameters
+    # ************************Data Extraction.************************
+    # Database connection parameters.
     parser.add(
         "--user",
         type=str,
@@ -45,7 +64,7 @@ def read_config(file=False):
     parser.add("--host", type=str, required=False, help="Postgres host")
     parser.add("--database", type=str, required=False, help="Postgres database")
 
-    # data source and destination parameters
+    # Data source and destination parameters.
     parser.add("-w", action="store_true", help="Write extracted data to disk")
     parser.add("-r", action="store_true", help="Read from the database")
     parser.add(
@@ -70,7 +89,7 @@ def read_config(file=False):
         help="Where to store/load features mean/std for normalization.",
     )
 
-    # data extraction parameters
+    # Data extraction parameters.
     parser.add(
         "--features",
         default=[],
@@ -95,23 +114,26 @@ def read_config(file=False):
         help="Select only records from before specified year",
     )
 
-    # specify 'from' and 'to' dates, only records with admit_date in this range will be selected
+    # Specify 'from' and 'to' dates, only records with admit_date
+    # in this range will be selected.
     parser.add(
         "--filter_date_from",
         type=str,
         default="",
         required=False,
-        help="Format: yyyy-mm-dd. Select starting from this admit_date. Used in conjunction with --filter_date_to",
+        help="Format: yyyy-mm-dd. Select starting from this admit_date.\
+                Used in conjunction with --filter_date_to",
     )
     parser.add(
         "--filter_date_to",
         type=str,
         default="",
         required=False,
-        help="Format: yyyy-mm-dd. Select before this admit_date. Used in conjunction with --filter_date_from",
+        help="Format: yyyy-mm-dd. Select before this admit_date.\
+                Used in conjunction with --filter_date_from",
     )
 
-    # train/test/val split parameters
+    # Train/test/val split parameters.
     parser.add(
         "--split_column",
         type=str,
@@ -129,36 +151,36 @@ def read_config(file=False):
         help="Train split values (if not set, all excdept test/val values)",
     )
 
-    ######################### Model Training and Prediction #######################################################
+    # ************************Model Training and Prediction.************************
     parser.add_argument("--model", type=str, default="mlp")
     parser.add_argument("--model_path", type=str, default="./model.pt")
 
-    # data configs
+    # Data-loading config.
     parser.add_argument("--dataset", type=str)
     parser.add_argument("--batch_size", type=int)
     parser.add_argument("--num_workers", type=int)
     parser.add_argument("--num_epochs", type=int)
     parser.add_argument("--shuffle", action="store_true")
 
-    # used mostly for fake data, can take it out
+    # Used mostly for fake data, can take it out.
     parser.add_argument("--data_dim", type=int, default=24)
     parser.add_argument("--data_len", type=int, default=10000)
 
-    # training configs
+    # Training config.
     parser.add_argument("--lr", type=float, default=3e-4)
 
-    # predictio
+    # Prediction config.
     parser.add("--threshold", type=float, default=0.5)
 
-    # prediction input and output files
-    parser.add("--result_output", type=str, default="../result.csv")
+    # Prediction output path.
+    parser.add("--result_output", type=str, default="./result.csv")
 
-    ######################### Analysis #######################################################
+    # ************************Analysis************************
     parser.add_argument(
         "--type", type=str, default="dataset", help="Type of report to generate"
     )
 
-    # data-specific parameters
+    # Data-specific parameters.
     parser.add(
         "--slice",
         type=str,
@@ -197,7 +219,6 @@ def read_config(file=False):
         required=False,
         help="List of categorical features (for analysis)",
     )
-
     parser.add(
         "--report_path",
         type=str,
@@ -216,7 +237,6 @@ def read_config(file=False):
         action="store_true",
         help="Produce HTML report (otherwise save json report)",
     )
-
     parser.add(
         "-target_num",
         action="store_true",
@@ -231,7 +251,7 @@ def read_config(file=False):
         help="Name of the prediction column",
     )
 
-    # model performance parameters
+    # Model performance parameters.
     parser.add(
         "--reference",
         type=str,
@@ -242,17 +262,19 @@ def read_config(file=False):
         "--test",
         type=str,
         required=False,
-        help="Filename of features/prediction to use as test (for model drift evaluation)",
+        help="Filename of features/prediction to use as test\
+                (for model drift evaluation)",
     )
 
     args, _ = parser.parse_known_args()
 
-    # args.commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('ascii')
-
-    # print({k: v for k, v in vars(args).items()})
+    args.commit = (
+        subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode("ascii")
+    )
 
     if args.input is None and args.password is None:
         args.password = getpass.getpass(prompt="Database password: ", stream=None)
+
     if len(args.filter_date_from) and len(args.filter_date_to):
         args.filter_date_from = datetime.strptime(args.filter_date_from, "%Y%m%d")
         args.filter_date_to = datetime.strptime(args.filter_date_to, "%Y%m%d")
@@ -260,22 +282,42 @@ def read_config(file=False):
     return args
 
 
-def write_config(config):
-    # save args to args_{date}.json
-    t = time.localtime()
-    date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
-    print(date)
+def config_to_dict(config: argparse.Namespace) -> dict:
+    """Creates dict out of config, removing password.
 
-    with open(os.path.join(config.output_folder, f"args_{date}.json"), "w") as fp:
-        fp.write(json.dumps(to_print(config), indent=4))
+    Parameters
+    ----------
+    config: argparse.Namespace
+        Configuration stored in object.
 
-
-# remove passoword from config for serialization
-def to_print(config):
+    Returns
+    -------
+    dict
+        dict with configuration parameters.
+    """
     return {k: v for k, v in vars(config).items() if k != "password"}
 
 
-# Config testing code
+def write_config(config: argparse.Namespace):
+    """Save configuration to file.
+
+    Parameters
+    ----------
+    config: argparse.Namespace
+        Configuration stored in object.
+    """
+    t = time.localtime()
+    date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
+
+    LOGGER.info(f"Writing configuration with timestamp {date}!")
+    config_to_save = config_to_dict(config)
+    LOGGER.info(config_to_save)
+
+    os.makedirs(config.output_folder, exist_ok=True)
+    with open(os.path.join(config.output_folder, f"config_{date}.json"), "w") as fp:
+        fp.write(json.dumps(config_to_save, indent=4))
+
+
 if __name__ == "__main__":
     params = read_config()
     write_config(params)

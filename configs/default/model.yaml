@@ -1,0 +1,20 @@
+---
+# By default training on gemini data starts on the data loaded from 'input' file above.
+model: "mlp"
+
+# Used for saving when training and for reading saved model on inference.
+model_path: "./model.pt"
+dataset: "gemini"
+batch_size: 64
+num_workers: 0
+num_epochs: 10
+shuffle: False
+data_dim: 24
+data_len: 10000
+lr: 3e-4
+
+# Classification threshold for prediction.
+threshold: 0.5
+
+# Output of prediction is saved to this file (includes original data as well).
+result_output: "./result.csv"
