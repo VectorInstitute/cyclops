@@ -1,3 +1,5 @@
+"""Analysis script."""
+
 import pandas as pd
 import json
 import time

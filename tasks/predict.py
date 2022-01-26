@@ -1,7 +1,6 @@
 """Prediction script."""
 
 import os
-import sys
 import logging
 import datetime
 
@@ -12,11 +11,11 @@ import mlflow
 from config import config_to_dict
 
 from models.catalog import get_model
+from models.metrics import AverageBinaryClassificationMetric
+from models.dataset import pandas_to_dataset
 
-from tasks.dataset import pandas_to_dataset
 from tasks.datapipeline.process_data import get_stats
 from tasks.train import to_loader
-from tasks.utils.utils import AverageBinaryClassificationMetric
 
 from cyclops.utils.log import setup_logging
 
