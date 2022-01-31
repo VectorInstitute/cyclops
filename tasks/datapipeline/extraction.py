@@ -9,13 +9,13 @@ import scipy
 import sqlalchemy
 from tqdm import tqdm
 
-from tasks.datapipeline.constants import (
+from cyclops.processors.constants import (
     HOSPITAL_ID,
     DRUG_SCREEN,
 )
-from tasks.datapipeline.utils import (
+from cyclops.processors.utils import (
     transform_diagnosis,
-    name_count,
+    count_occurrences,
     clean,
     convert_units,
     x_to_numeric,
@@ -522,7 +522,7 @@ def labs(args, engine):
         units_dict = (
             df[["hospital_id", "test_name_raw_clean", "result_unit_clean"]]
             .groupby(["hospital_id", "test_name_raw_clean"])["result_unit_clean"]
-            .apply(name_count)
+            .apply(count_occurrences)
             .to_dict()
         )
 
@@ -557,7 +557,7 @@ def labs(args, engine):
         units_dict = (
             df[["hospital_id", "test_name_raw_clean", "result_unit_clean"]]
             .groupby(["hospital_id", "test_name_raw_clean"])["result_unit_clean"]
-            .apply(name_count)
+            .apply(count_occurrences)
             .to_dict()
         )
 
@@ -657,7 +657,7 @@ def labs(args, engine):
         units_dict = (
             df[["hospital_id", "test_name_raw_clean", "result_unit_clean"]]
             .groupby(["hospital_id", "test_name_raw_clean"])["result_unit_clean"]
-            .apply(name_count)
+            .apply(count_occurrences)
             .to_dict()
         )
 

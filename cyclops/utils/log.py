@@ -1,10 +1,12 @@
 """Python logging function."""
 
+import os
 import logging
 from typing import Optional
 
 
 LOG_FORMAT = "%(asctime)-15s %(levelname)-5s %(name)-15s - %(message)s"
+LOG_FILE_PATH = os.path.join(os.environ["PROJECT_ROOT"], "log.log")
 
 
 def setup_logging(

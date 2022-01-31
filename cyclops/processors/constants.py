@@ -1,6 +1,5 @@
 """Constants."""
 
-
 HOSPITAL_ID = {
     "THPM": 0,
     "SBK": 1,
@@ -14,7 +13,7 @@ HOSPITAL_ID = {
 TRAJECTORIES = {
     "Certain infectious and parasitic diseases": ("A00", "B99"),
     "Neoplasms": ("C00", "D49"),
-    "Diseases of the blood and blood-forming organs and certain disorders involving the immune mechanism": (
+    "Diseases of the blood and blood-forming organs and certain disorders involving the immune mechanism": (  # noqa: E501
         "D50",
         "D89",
     ),
@@ -35,7 +34,7 @@ TRAJECTORIES = {
         "Q00",
         "Q99",
     ),
-    "Symptoms, signs and abnormal clinical and laboratory findings, not elsewhere classified": (
+    "Symptoms, signs and abnormal clinical and laboratory findings, not elsewhere classified": (  # noqa: E501
         "R00",
         "R99",
     ),
@@ -50,7 +49,6 @@ TRAJECTORIES = {
         "Z99",
     ),
 }
-
 DRUG_SCREEN = [
     "amitriptyline",
     "amphetamine",
