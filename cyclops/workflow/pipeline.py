@@ -1,16 +1,20 @@
 """Pipeline module that defines different tasks that can be executed in a workflow."""
 
+import os
+
 import luigi
 from luigi.util import inherits
+
+import config as config_parser
+
 from tasks.datapipeline.process_data import pipeline
-import config.config as config_parser
 import tasks.predict as predict
 import tasks.analysis as analysis
-import os
+
 
 # Pipeline definition consisting of three tasks:
 # Extraction -> Prediction -> Analysis
-# Runs for a single data slice given by the time interval date_from - date_to
+# Runs for a single data slice given by the time interval date_from - date_to.
 
 
 class BaseGeminiTask(luigi.Task):
@@ -22,7 +26,13 @@ class BaseGeminiTask(luigi.Task):
     config_file = luigi.Parameter()
 
     def get_artifact_folder(self):
-        """Get folder where artifacts from running task are stored."""
+        """Get folder where artifacts from running task are stored.
+
+        Returns
+        -------
+        str
+            Folder to store artifacts.
+        """
         folder = os.path.join(self.artifact_folder, self.date_to.strftime("%Y-%m-%d"))
         try:
             os.mkdir(folder)

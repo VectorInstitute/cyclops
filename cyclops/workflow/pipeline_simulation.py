@@ -1,8 +1,17 @@
 """Script to run pipeline using Luigi."""
 
-import luigi
-import pipeline
+import logging
 from dateutil.relativedelta import relativedelta
+import luigi
+
+import cyclops.workflow.pipeline as pipeline
+from cyclops.utils.log import setup_logging, LOG_FILE_PATH
+
+
+# Logging.
+LOGGER = logging.getLogger(__name__)
+setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
+
 
 # Simulation of continuous pipeline running on regular intervals (monthly)
 # for every interval between date_from to date_to
@@ -26,6 +35,6 @@ class Simulation(luigi.Task):
         return results
 
     def run(self):
-        """[TODO: Add docstring]."""
+        """Run simulation."""
         times = len(self.input())
-        print(f"Ran analysis {times} times")
+        LOGGER.info(f"Ran analysis {times} times")

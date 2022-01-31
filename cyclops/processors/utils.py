@@ -1,37 +1,68 @@
-"""Util functions used in data extraction."""
+"""Utility functions used in data extraction."""
+
+from collections import Counter
+from typing import Iterable, List
 
 import numpy as np
 import pandas as pd
 import re
 
-from tasks.datapipeline.constants import TRAJECTORIES
+from cyclops.processors.constants import TRAJECTORIES
 
 
-def filter_string(item):
-    item = item.replace(")", " ")
-    item = item.replace("(", " ")
-    item = item.replace("%", " percent ")
-    item = item.replace("+", " plus ")
-    item = item.replace("#", " number ")
-    item = item.replace("&", " and ")
-    item = item.replace("'s", "")
-    item = item.replace(",", " ")
-    item = item.replace("/", " per ")
-    item = " ".join(item.split())
+def normalize_special_characters(item: str) -> str:
+    """Replace special characters with string equivalents.
+
+    Parameters
+    ----------
+    item: str
+        Input string.
+
+    Returns
+    -------
+    str
+        Output string after normalizing.
+    """
+    replacements = {
+        "(": " ",
+        ")": " ",
+        ",": " ",
+        "%": " percent ",
+        "+": " plus ",
+        "#": " number ",
+        "&": " and ",
+        "'s": "",
+        "/": " per ",
+    }
+    for replacee, replacement in replacements.items():
+        item = item.replace(replacee, replacement)
+
     item = item.strip()
-
-    item = item.replace(" ", "_")
-    item = re.sub("[^0-9a-z_()]+", "_", item)
-    if len(item) > 1:
-        if item[0] in "1234567890_":
-            item = "a_" + item
+    item = re.sub(r"\s+", "_", item)
+    item = re.sub(r"[^0-9a-z_()]+", "_", item)
+    item = re.sub(r"(?s:(^[0-9_].+))", "a_\1", item)
     return item
 
 
+def count_occurrences(items: Iterable) -> List:
+    """Count number of occurrences of the items.
+
+    Parameters
+    ----------
+    items: Iterable
+        Iterable of items to count the number of repeated values.
+
+    Returns
+    -------
+    List
+        (item, count) ordered by count, descending order.
+    """
+    counter = Counter(items)
+    return sorted(counter.items(), key=lambda x: x[1], reverse=True)
+
+
 def get_scale(be_like, actual):
-    """
-    This function is applied to scale every measurement to a standard unit
-    """
+    """Scale every measurement to a standard unit."""
     replacements = {
         "milliliters": "ml",
         "millimeters": "mm",
@@ -54,8 +85,8 @@ def get_scale(be_like, actual):
         ):
             # then adjust
             scale *= 1000 ** -multipliers.index(
-                re.search("x10e\d+", actual)[0]
-            ) * 1000 ** multipliers.index(re.search("x10e\d+", be_like)[0])
+                re.search(r"x10e\d+", actual)[0]
+            ) * 1000 ** multipliers.index(re.search(r"x10e\d+", be_like)[0])
             return scale
 
         be_like_list = be_like.split(
@@ -63,15 +94,15 @@ def get_scale(be_like, actual):
         )  # split the numerator and denominators for the comparator units
         actual_list = actual.split(
             "/"
-        )  # split the numerator and denominators for the units that need to be converted
+        )  # split the numerator and denominators for the units to be converted
         if len(be_like_list) == len(actual_list):
             success = 1
             for i in range(len(be_like_list)):
                 try:
-                    scale *= convert(actual_list[i], be_like_list[i]) ** (
+                    scale *= convert_unit(actual_list[i], be_like_list[i]) ** (
                         1 if i > 0 else -1
                     )
-                except:
+                except Exception:
                     success = 0
                     # could not convert between units
                     break
@@ -80,26 +111,8 @@ def get_scale(be_like, actual):
     return "could not convert"
 
 
-def name_count(items):
-    """
-    Inputs:
-        items (list): a list of itemsto count the number of repeating values
-    Returns:
-        list of tuples with the name of the occurence and the count of each occurence
-    """
-    all_items = {}
-    for item in items:
-        if item in all_items.keys():
-            all_items[item] += 1
-        else:
-            all_items[item] = 1
-    return sorted([(k, v) for k, v in all_items.items()], key=lambda x: -x[1])
-
-
 def x_to_numeric(x):
-    """
-    Handle different strings to convert to numeric values(which can't be done in psql)
-    """
+    """Handle different strings to convert to numeric values (can't be done in psql)."""
     if x is None:
         return np.nan
     elif x is np.nan:
@@ -109,13 +122,14 @@ def x_to_numeric(x):
         if re.search(r"-?\d+ +(to|-) +-?\d+", x) is not None:
             try:
                 return numeric_categorical(x)
-            except:
+            except Exception:
                 print(x)
                 raise
         return re.sub("^-?[^0-9.]", "", str(x))
 
 
 def numeric_categorical(item):
+    """[TODO]: Add docstring."""
     x = None
     locals_ = locals()
 
@@ -129,19 +143,13 @@ def numeric_categorical(item):
 
 
 def simple_imput(mean_vals):
-    """ """
+    """[TODO]: Add docstring."""
     idx = pd.IndexSlice
     # do simple imputation
     # mask
     mask = 1 - mean_vals.isna()
     # measurement
     measurement = mean_vals.copy()
-
-    print(measurement.loc[idx[:, :, 0], :].head())
-    print(measurement.loc[idx[:, :, 0], :].values.shape)
-    print(measurement.mean().values.shape)
-
-    print(measurement.loc[idx[:, :, 0, :]].groupby("genc_id").count())
 
     # these expressions necessarily need to be executed seperately
     subset_data = measurement.loc[idx[:, :, 0], :]
@@ -169,7 +177,7 @@ def simple_imput(mean_vals):
             [a == 0 for a in final_data.loc[:, idx[:, "mask"]].sum().values]
         )
         print(nancols)
-    except:
+    except Exception:
         print("could not get nancols")
         pass
 
@@ -178,19 +186,26 @@ def simple_imput(mean_vals):
 
 
 def clean(item_name):
-    return str(item_name).replace("%", "%%").replace("'", "''"), filter_string(
-        str(item_name)
-    )
+    """[TODO]: Add docstring."""
+    return str(item_name).replace("%", "%%").replace(
+        "'", "''"
+    ), normalize_special_characters(str(item_name))
 
 
-def convert(from_unit, to_unit):
-    """
-    converts many units found in labs
-    Inputs:
-        from_unit (str): the unit that we are trying to convert
-        to_unit (str): the target to convert to
-    Returns:
-        (int): the scale of one from_unit to to_unit
+def convert_unit(from_unit, to_unit):
+    """Convert units found in labs.
+
+    Parameters
+    ----------
+    from_unit: str
+        The unit that we are trying to convert.
+    to_unit: str
+        The target to convert to.
+
+    Returns
+    -------
+    int
+        The scale of one from_unit to to_unit.
     """
     if from_unit == to_unit:
         return 1  # scale is 1
@@ -223,15 +238,15 @@ def convert(from_unit, to_unit):
 
 
 def get_category(code, trajectories=TRAJECTORIES):
-    """
-    Usage:
+    """Get ICD10 category.
+
     df['ICD10'].apply(get_category, args=(trajectories,))
     """
     if code is None:
         return np.nan
     try:
         code = str(code)
-    except:
+    except Exception:
         return np.nan
     for item, value in trajectories.items():
         # check that code is greater than value_1
@@ -265,7 +280,7 @@ def get_category(code, trajectories=TRAJECTORIES):
 
 
 def transform_diagnosis(data):
-    # apply the categorical ICD10 filter and one hot encode:
+    """Apply categorical ICD10 filters and encode as one-hot vector."""
     data = pd.concat(
         (
             data,
@@ -282,10 +297,12 @@ def transform_diagnosis(data):
 
 
 def insert_decimal(string, index=2):
+    """[TODO]: Add docstring."""
     return string[:index] + "." + string[index:]
 
 
 def convert_units(units_dict):
+    """[TODO]: Add docstring."""
     conversion_list = []
     for k, v in units_dict.items():
         if len(v) > 1:

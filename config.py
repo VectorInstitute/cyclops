@@ -1,7 +1,6 @@
 """Configuration module."""
 
 import os
-import sys
 import logging
 import subprocess
 import getpass
@@ -10,22 +9,34 @@ import configargparse
 import time
 import json
 from datetime import datetime
+from typing import Optional, Dict
 from dotenv import load_dotenv
 
-from cyclops.utils.log import setup_logging
+from cyclops.utils.log import setup_logging, LOG_FILE_PATH
 
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-LOG_FILE = "{}.log".format(os.path.basename(__file__))
-setup_logging(log_path=LOG_FILE, print_level="INFO", logger=LOGGER)
+setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
 
 
 # Load environment vars.
 load_dotenv()
 
 
-def read_config(config_path=None):
+def read_config(config_path: Optional[str] = None) -> argparse.Namespace:
+    """Read configuration.
+
+    Parameters
+    ----------
+    config_path: str, optional
+        Path to config files.
+
+    Returns
+    -------
+    args: argparse.Namespace
+        Configuration stored in object.
+    """
     if not config_path:
         parser = configargparse.ArgumentParser(
             config_file_parser_class=configargparse.YAMLConfigFileParser,
@@ -51,18 +62,21 @@ def read_config(config_path=None):
         type=str,
         required=False,
         default=os.environ["USER"],
-        help="Postgres user",
+        help="Database username",
     )
     parser.add(
         "--password",
         default=os.environ["PGPASSWORD"],
         type=str,
         required=False,
-        help="Postgres password",
+        help="Database password",
     )
-    parser.add("--port", type=int, help="Postgres port")
-    parser.add("--host", type=str, required=False, help="Postgres host")
-    parser.add("--database", type=str, required=False, help="Postgres database")
+    parser.add("--port", type=int, help="DB server port")
+    parser.add("--host", type=str, required=False, help="DB server hostname")
+    parser.add(
+        "--dbms", type=str, required=False, help="DB system", choices=["postgresql"]
+    )
+    parser.add("--database", type=str, required=False, help="database name")
 
     # Data source and destination parameters.
     parser.add("-w", action="store_true", help="Write extracted data to disk")
@@ -87,6 +101,11 @@ def read_config(config_path=None):
         "--stats_path",
         type=str,
         help="Where to store/load features mean/std for normalization.",
+    )
+    parser.add(
+        "--sql_query_path",
+        type=str,
+        help="Path to .sql file with SQL query.",
     )
 
     # Data extraction parameters.
@@ -282,8 +301,8 @@ def read_config(config_path=None):
     return args
 
 
-def config_to_dict(config: argparse.Namespace) -> dict:
-    """Creates dict out of config, removing password.
+def config_to_dict(config: argparse.Namespace) -> Dict:
+    """Create dict out of config, removing password.
 
     Parameters
     ----------

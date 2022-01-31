@@ -3,12 +3,16 @@
 # Use flag 'r' on command line to indicate 'read from database'
 # By default user and password are read from environment 
 # variables USER and PGPASSWORD respectively.
+dbms: "postgresql"
 port: 5432
 host: "db.gemini-hpc.ca"
 database: "delirium_v3_0_0"
 
 # If reading data from previously saved csv file.
 input: "/mnt/nfs/project/delirium/data/all_before_2018.csv"
+
+# SQL query file path.
+sql_query_path: "/mnt/nfs/home/krishnanam/vector-delirium/cyclops/queries/gemini/admin_diagnosis.sql"
 
 # If write flag ('w') is specified, save extracted data to this folder with generated filename
 # alternatively can specify output_full_path to indicate full path and filename.
