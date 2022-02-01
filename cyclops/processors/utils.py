@@ -1,7 +1,7 @@
 """Utility functions used in data extraction."""
 
 from collections import Counter
-from typing import Iterable, List
+from typing import Iterable, List, Union
 
 import numpy as np
 import pandas as pd
@@ -61,6 +61,76 @@ def count_occurrences(items: Iterable) -> List:
     return sorted(counter.items(), key=lambda x: x[1], reverse=True)
 
 
+def convert_to_numeric(x):
+    """Convert different strings to numeric values.
+
+    Parameters
+    ----------
+    x: str
+        Input string.
+
+    Returns
+    -------
+    Union[int, float]
+        Converted numeric output.
+    """
+    if x in (None, np.nan):
+        return np.nan
+    if not isinstance(x, str):
+        # Originally this case implicitly returned None.
+        raise TypeError(f"Expected string, received {type(x)}")
+
+    if is_range(x):
+        try:
+            return compute_range_avg(x)
+        except Exception:
+            print(x)
+            raise
+    return re.sub("^-?[^0-9.]", "", str(x))
+
+
+def is_range(x: str) -> bool:
+    """Test if x matches range pattern.
+
+    e.g. "2 to 5" or "2 - 5"
+
+    Parameters
+    ----------
+    x: str
+        Input string to test if its a range.
+
+    Returns
+    -------
+    bool
+        True if categorical, False otherwise.
+    """
+    # [TODO:] Why is a space required? Isn't 1-5 all right, too?
+    categorical_pattern = re.compile(r"-?\d+\s+(?:to|-)\s+(-?\d+)")
+    return categorical_pattern.search(x) is not None
+
+
+def compute_range_avg(item: str) -> Union[int, float]:
+    """Compute the average of a range.
+
+    For instance, 5 - 7 -> 6, and 1 - 4 -> 2.5
+
+    Parameters
+    ----------
+    item: str
+        Input string which mentions a range.
+
+    Returns
+    -------
+    Union[int, float]
+        Computed average of range.
+    """
+    pattern_str = r"^(?P<first>-?\d+)\s*(?:to|-)\s*(?P<second>-?\d+)$"
+    pattern = re.compile(pattern_str)
+    if not (matched := pattern.search(item)):
+        raise ValueError(f"'item' does not match expected pattern {pattern_str}")
+    return (int(matched.group("first")) + int(matched.group("second"))) / 2
+
+
 def get_scale(be_like, actual):
     """Scale every measurement to a standard unit."""
     replacements = {
@@ -109,37 +179,6 @@ def get_scale(be_like, actual):
             if success:
                 return scale
     return "could not convert"
-
-
-def x_to_numeric(x):
-    """Handle different strings to convert to numeric values (can't be done in psql)."""
-    if x is None:
-        return np.nan
-    elif x is np.nan:
-        return np.nan
-    elif isinstance(x, str):
-        # check if it matches the categorical pattern "2 to 5" or 2 - 5
-        if re.search(r"-?\d+ +(to|-) +-?\d+", x) is not None:
-            try:
-                return numeric_categorical(x)
-            except Exception:
-                print(x)
-                raise
-        return re.sub("^-?[^0-9.]", "", str(x))
-
-
-def numeric_categorical(item):
-    """[TODO]: Add docstring."""
-    x = None
-    locals_ = locals()
-
-    item = (
-        "(" + item.replace("to", " + ").replace("-", " + ") + ")/2"
-    )  # this neglects negative ranges. todo, find a fast regex filter
-    items = item.replace("  ", " ").replace("(", "( ").split(" ")
-    item = " ".join([i.lstrip("0") for i in items])
-    exec("x=" + item, globals(), locals_)
-    return locals_["x"]
 
 
 def simple_imput(mean_vals):

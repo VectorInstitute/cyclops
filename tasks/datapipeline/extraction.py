@@ -18,7 +18,7 @@ from cyclops.processors.utils import (
     count_occurrences,
     clean,
     convert_units,
-    x_to_numeric,
+    convert_to_numeric,
     simple_imput,
 )
 
@@ -491,7 +491,7 @@ def labs(args, engine):
 
             df.loc[~df["result_value_clean"].isna(), "result_value_clean"] = df.loc[
                 ~df["result_value_clean"].isna(), "result_value_clean"
-            ].apply(x_to_numeric)
+            ].apply(convert_to_numeric)
 
             df["result_value_clean"] = pd.to_numeric(df["result_value_clean"], "coerce")
 
