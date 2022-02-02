@@ -226,6 +226,8 @@ Now, you can navigate to the notebook's `Kernel` tab and set it as
 * `sample_code/data_extraction.ipynb` - notebook to illustrate data extraction
 * `sample_code/training_demo.ipynb` - sample model training notebook
 * `sample_code/mlflow_demo.ipynb` - training progress and validation results
+* `sample_code/playground.ipynb` - train some baseline, extract difference slices of data
+
 are logged to MLFlow, this notebook illustrates how to use them to monitor
 training.
 * `sample_code/analysis_demo.ipynb` - shows how to generate Evidently reports; as
