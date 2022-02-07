@@ -1,12 +1,33 @@
-"""Figure out ORMs."""
+"""Object Relational Mapper (ORM) using sqlalchemy."""
 
 import logging
 from collections import defaultdict
 
-from sqlalchemy import select, case
+import pandas as pd
+import sqlalchemy
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from sqlalchemy.ext.automap import automap_base
+from sqlalchemy import inspect
+from sqlalchemy import select, func, text, case
+from sqlalchemy import MetaData, Table, Column
+from sqlalchemy import (
+    Integer,
+    Unicode,
+    String,
+    DateTime,
+    Boolean,
+    Numeric,
+    Text,
+    Date,
+    UniqueConstraint,
+    UnicodeText,
+    Index,
+)
+
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Query
+
+from sqlalchemy.sql import extract
+from sqlalchemy.sql.expression import and_, or_, exists
 
 import config
 from cyclops.utils.log import setup_logging, LOG_FILE_PATH
@@ -21,41 +42,102 @@ def _get_db_url(dbms, user, pwd, host, port, db):
     return f"{dbms}://{user}:{pwd}@{host}:{port}/{db}"
 
 
-cfg = config.read_config("../configs/default/*.yaml")
-
-Base = automap_base()
-CONN_STR = _get_db_url(
-    cfg.dbms,
-    cfg.user,
-    cfg.password,
-    cfg.host,
-    cfg.port,
-    cfg.database,
-)
-engine = create_engine(CONN_STR, echo=True)
-session = Session(engine, future=True)
-
-Base.prepare(engine, reflect=True)
-
-table_names = ["ip_administrative", "er_administrative", "diagnosis"]
-
-tables = defaultdict(None)  # type: ignore
-for table_name in table_names:
-    tables[table_name] = getattr(Base.classes, table_name)
+def _get_attr_name(name: str) -> str:
+    return name[name.index(".") + 1 :]
 
 
-# query with ORM columns
-statement = select(
-    getattr(tables["ip_administrative"], "patient_id_hashed"),
-    getattr(tables["ip_administrative"], "genc_id"),
-    getattr(tables["ip_administrative"], "hospital_id"),
-    case((getattr(tables["ip_administrative"], "gender") == "F", 1), else_=0),
-    getattr(tables["ip_administrative"], "age"),
-    case(
-        (getattr(tables["ip_administrative"], "discharge_disposition") == 7, 1), else_=0
-    ),
-)
+class Schema:
+    def __init__(self, name, x):
+        self.name = name
+        self.x = x
 
-# list of tuples
-result = session.execute(statement).first()
-print(len(result), result)
+
+class Table:
+    def __init__(self, name, x):
+        self.name = name
+        self.x = x
+
+
+class DB:
+    """Database class.
+
+    Attributes
+    ----------
+    config: argparse.Namespace
+        Configuration stored in object.
+    engine: sqlalchemy.engine.base.Engine
+        SQL extraction engine.
+    inspector: sqlalchemy.engine.reflection.Inspector
+        Module for schema inspection.
+    session: sqlalchemy.orm.session.Session
+    """
+
+    def __init__(self, config):
+        """Instantiate.
+
+        Attributes
+        ----------
+        config: argparse.Namespace
+            Configuration stored in object.
+        """
+        self.config = config
+        self.engine = create_engine(
+            _get_db_url(
+                config.dbms,
+                config.user,
+                config.password,
+                config.host,
+                config.port,
+                config.database,
+            )
+        )
+        self.inspector = inspect(self.engine)
+
+        # Create a session for using ORM.
+        Session = sessionmaker(self.engine)
+        Session.configure(bind=self.engine)
+        self.session = Session()
+
+        self._setup()
+
+    def _setup(self):
+        meta = dict()
+        schemas = self.inspector.get_schema_names()
+
+        for s in ["public"]:
+            metadata = MetaData(schema=s)
+            metadata.reflect(bind=self.engine)
+            meta[s] = metadata
+
+            schema = Schema(s, meta[s])
+
+            for t in meta[s].tables:
+                table = Table(t, meta[s].tables[t])
+                for c in meta[s].tables[t].columns:
+                    # Set up column attributes in each table
+                    setattr(table, c.name, c)
+                # Set up table attributes in each schema
+                setattr(schema, _get_attr_name(table.name), table)
+            # Set up schema attributes in the database
+            setattr(self, s, schema)
+
+
+if __name__ == "__main__":
+    cfg = config.read_config("../configs/default/*.yaml")
+    db = DB(cfg)
+    query = select(
+        db.public.ip_administrative.patient_id_hashed.label("patient_id"),
+        db.public.ip_administrative.genc_id,
+        db.public.ip_administrative.hospital_id,
+        case((db.public.ip_administrative.gender == "F", 1), else_=0).label("sex"),
+        db.public.ip_administrative.age,
+        case(
+            (db.public.ip_administrative.discharge_disposition == 7, 1), else_=0
+        ).label("mort_hosp"),
+        db.public.ip_administrative.discharge_date_time,
+        db.public.ip_administrative.admit_date_time,
+        db.public.diagnosis.diagnosis_code.label("mr_diagnosis"),
+        extract("year", db.public.ip_administrative.admit_date_time).label("year"),
+    )
+    df = pd.read_sql_query(query, db.engine)
+    print(df.count())
