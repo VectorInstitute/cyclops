@@ -12,7 +12,6 @@ from sqlalchemy import inspect
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 
-import config
 from cyclops.utils.log import setup_logging, LOG_FILE_PATH
 
 
@@ -26,23 +25,23 @@ def _get_db_url(dbms: str, user: str, pwd: str, host: str, port: str, db: str) -
 
 
 def _get_attr_name(name: str) -> str:
-    return name[name.index(".") + 1:]
+    return name[name.index(".") + 1 :]  # noqa: E203
 
 
 class Schema:
     """Database schema wrapper.
-    
-        Attributes
-        ----------
-        name: str
-            Name of schema.
-        x: sqlalchemy.sql.schema.MetaData
-            Metadata for schema.
+
+    Attributes
+    ----------
+    name: str
+        Name of schema.
+    x: sqlalchemy.sql.schema.MetaData
+        Metadata for schema.
     """
-    
+
     def __init__(self, name: str, x: sqlalchemy.sql.schema.MetaData):
         """Instantiate.
-        
+
         Parameters
         ----------
         name: str
@@ -56,7 +55,7 @@ class Schema:
 
 class Table:
     """Database table wrapper.
-    
+
     Attributes
     ----------
     name: str
@@ -64,9 +63,10 @@ class Table:
     x: sqlalchemy.sql.schema.Table
         Metadata for schema.
     """
+
     def __init__(self, name: str, x: sqlalchemy.sql.schema.Table):
         """Instantiate.
-        
+
         Parameters
         ----------
         name: str
@@ -76,13 +76,13 @@ class Table:
         """
         self.name = name
         self.x = x
-        
-        
+
+
 class DBMetaclass(type):
     """Meta class for Database, keeps track of instances for singleton."""
-    
+
     __instances = {}
-    
+
     def __call__(cls, *args, **kwargs):
         """Call."""
         if cls not in cls.__instances:
@@ -134,7 +134,7 @@ class Database(metaclass=DBMetaclass):
         LOGGER.info("Database setup, ready to run queries!")
 
     def _setup(self):
-        """Setup ORM DB."""
+        """Prepare ORM DB."""
         meta = dict()
         # TODO: Unify this when using for mimic.
         # schemas = self.inspector.get_schema_names()
@@ -153,19 +153,18 @@ class Database(metaclass=DBMetaclass):
 
     def run_query(self, query: sqlalchemy.sql.selectable.Subquery) -> pd.DataFrame:
         """Run query.
-        
+
         Parameters
         ----------
         query: sqlalchemy.sql.selectable.Subquery
-        
+
         Returns
         -------
         pd.DataFrame
             Extracted data from query.
         """
         start_time = time.time()
-        with self.session.connection() as conn:
-            data =  pd.read_sql_query(query, self.engine)
+        with self.session.connection():
+            data = pd.read_sql_query(query, self.engine)
         LOGGER.info(f"Query returned successfully, took {time.time() - start_time} s")
         return data
-        

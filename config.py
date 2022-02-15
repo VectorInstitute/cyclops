@@ -15,13 +15,12 @@ from dotenv import load_dotenv
 
 # Load environment vars.
 load_dotenv()
-from cyclops.utils.log import setup_logging, LOG_FILE_PATH
+from cyclops.utils.log import setup_logging, LOG_FILE_PATH  # noqa: E402
 
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
-
 
 
 def read_config(config_path: Optional[str] = None) -> argparse.Namespace:
