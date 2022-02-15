@@ -1,12 +1,15 @@
 """Object Relational Mapper (ORM) using sqlalchemy."""
 
+import time
+import argparse
 import logging
 
 import pandas as pd
+
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import inspect
 from sqlalchemy import MetaData
-
 from sqlalchemy.orm import sessionmaker
 
 import config
@@ -18,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
 
 
-def _get_db_url(dbms, user, pwd, host, port, db):
+def _get_db_url(dbms: str, user: str, pwd: str, host: str, port: str, db: str) -> str:
     return f"{dbms}://{user}:{pwd}@{host}:{port}/{db}"
 
 
@@ -27,19 +30,68 @@ def _get_attr_name(name: str) -> str:
 
 
 class Schema:
-    def __init__(self, name, x):
+    """Database schema wrapper.
+    
+        Attributes
+        ----------
+        name: str
+            Name of schema.
+        x: sqlalchemy.sql.schema.MetaData
+            Metadata for schema.
+    """
+    
+    def __init__(self, name: str, x: sqlalchemy.sql.schema.MetaData):
+        """Instantiate.
+        
+        Parameters
+        ----------
+        name: str
+            Name of schema.
+        x: sqlalchemy.sql.schema.MetaData
+            Metadata for schema.
+        """
         self.name = name
         self.x = x
 
 
 class Table:
-    def __init__(self, name, x):
+    """Database table wrapper.
+    
+    Attributes
+    ----------
+    name: str
+        Name of table.
+    x: sqlalchemy.sql.schema.Table
+        Metadata for schema.
+    """
+    def __init__(self, name: str, x: sqlalchemy.sql.schema.Table):
+        """Instantiate.
+        
+        Parameters
+        ----------
+        name: str
+            Name of table.
+        x: sqlalchemy.sql.schema.Table
+            Table schema.
+        """
         self.name = name
         self.x = x
+        
+        
+class DBMetaclass(type):
+    """Meta class for Database, keeps track of instances for singleton."""
+    
+    __instances = {}
+    
+    def __call__(cls, *args, **kwargs):
+        """Call."""
+        if cls not in cls.__instances:
+            cls.__instances[cls] = super().__call__(*args, **kwargs)
+        return cls.__instances[cls]
 
 
-class DB:
-    """Database class.
+class Database(metaclass=DBMetaclass):
+    """Database class (singleton).
 
     Attributes
     ----------
@@ -52,10 +104,10 @@ class DB:
     session: sqlalchemy.orm.session.Session
     """
 
-    def __init__(self, config):
+    def __init__(self, config: argparse.Namespace):
         """Instantiate.
 
-        Attributes
+        Parameters
         ----------
         config: argparse.Namespace
             Configuration stored in object.
@@ -79,10 +131,12 @@ class DB:
         self.session = Session()
 
         self._setup()
+        LOGGER.info("Database setup, ready to run queries!")
 
     def _setup(self):
         """Setup ORM DB."""
         meta = dict()
+        # TODO: Unify this when using for mimic.
         # schemas = self.inspector.get_schema_names()
 
         for s in ["public"]:
@@ -97,6 +151,21 @@ class DB:
                 setattr(schema, _get_attr_name(table.name), table)
             setattr(self, s, schema)
 
-    def run_query(self, query):
-        """Run query."""
-        return pd.read_sql_query(query, self.engine)
+    def run_query(self, query: sqlalchemy.sql.selectable.Subquery) -> pd.DataFrame:
+        """Run query.
+        
+        Parameters
+        ----------
+        query: sqlalchemy.sql.selectable.Subquery
+        
+        Returns
+        -------
+        pd.DataFrame
+            Extracted data from query.
+        """
+        start_time = time.time()
+        with self.session.connection() as conn:
+            data =  pd.read_sql_query(query, self.engine)
+        LOGGER.info(f"Query returned successfully, took {time.time() - start_time} s")
+        return data
+        
