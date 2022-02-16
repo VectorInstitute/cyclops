@@ -46,7 +46,7 @@ def register_dataset(
     return wrap(func)
 
 
-DATA_REGISTRY = {}
+DATA_REGISTRY: dict = {}
 register = partial(register_dataset, DATA_REGISTRY)
 
 

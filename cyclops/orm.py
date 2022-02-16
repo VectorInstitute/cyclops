@@ -81,7 +81,7 @@ class Table:
 class DBMetaclass(type):
     """Meta class for Database, keeps track of instances for singleton."""
 
-    __instances = {}
+    __instances: dict = {}
 
     def __call__(cls, *args, **kwargs):
         """Call."""

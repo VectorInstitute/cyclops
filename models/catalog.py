@@ -25,7 +25,7 @@ def register_model(register_dict: dict, model: type, name: Optional[str] = None)
         MODEL_CATALOG[name] = model
 
 
-def get_model(name: str) -> type:
+def get_model(name: str) -> Optional[type]:
     """Get model from catalog.
 
     Parameters
