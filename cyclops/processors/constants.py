@@ -99,3 +99,4 @@ DRUG_SCREEN = [
     "venlafaxine",
     "venlafaxine_metabolite",
 ]
+EMPTY_STRING = ""
