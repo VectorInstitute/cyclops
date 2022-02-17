@@ -100,3 +100,30 @@ DRUG_SCREEN = [
     "venlafaxine_metabolite",
 ]
 EMPTY_STRING = ""
+NEGATIVE_RESULT_TERMS = [
+    "neg",
+    "not det",
+    "no",
+    "none seen",
+    "arterial",
+    "np",
+    "non-reactive",
+    "clear",
+    "trace",
+]
+POSITIVE_RESULT_TERMS = [
+    "pos",
+    "^\s*det",
+    "yes",
+    "venous",
+    "present",
+    "hazy",
+    "slcloudy",
+    "mild",
+    "low reactive",
+    "large",
+    "turbid",
+    "cloudy",
+    "low reactive",
+    "reactive",
+]

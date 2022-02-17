@@ -10,6 +10,16 @@ from sqlalchemy.sql.expression import and_
 import config
 from cyclops.orm import Database
 from cyclops.processors.constants import EMPTY_STRING
+from cyclops.processors.column_names import (
+    ENCOUNTER_ID,
+    HOSPITAL_ID,
+    ADMIT_TIMESTAMP,
+    DISCHARGE_TIMESTAMP,
+    LAB_TEST_RESULT_VALUE,
+    LAB_TEST_TIMESTAMP,
+    LAB_TEST_NAME,
+    LAB_TEST_RESULT_UNIT,
+)
 from cyclops.utils.log import setup_logging, LOG_FILE_PATH
 
 
@@ -57,16 +67,16 @@ def query_gemini_delirium_lab(db: Database) -> pd.DataFrame:
     """
     query = (
         select(
-            db.public.ip_administrative.genc_id,
-            db.public.ip_administrative.hospital_id,
-            db.public.ip_administrative.admit_date_time,
-            db.public.ip_administrative.discharge_date_time,
+            db.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
+            db.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
+            db.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
+            db.public.ip_administrative.discharge_date_time.label(DISCHARGE_TIMESTAMP),
             db.public.ip_administrative.del_present,
             db.public.ip_administrative.gemini_cohort,
-            db.public.lab.lab_test_name_mapped,
-            db.public.lab.result_value,
-            db.public.lab.result_unit,
-            db.public.lab.sample_collection_date_time,
+            db.public.lab.lab_test_name_mapped.label(LAB_TEST_NAME),
+            db.public.lab.result_value.label(LAB_TEST_RESULT_VALUE),
+            db.public.lab.result_unit.label(LAB_TEST_RESULT_UNIT),
+            db.public.lab.sample_collection_date_time.label(LAB_TEST_TIMESTAMP),
         )
         .join(
             db.public.lab.x,
@@ -87,3 +97,6 @@ if __name__ == "__main__":
     db = Database(cfg)
     data = query_gemini_delirium_lab(db)
     print(len(data))
+    data.to_hdf(
+        "/mnt/nfs/project/delirium/_extract/extract.h5", key="query_gemini_delirium_lab"
+    )
