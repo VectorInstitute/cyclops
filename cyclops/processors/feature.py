@@ -5,6 +5,8 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_string_dtype
+from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
@@ -111,8 +113,12 @@ class BinaryFeatureMeta(FeatureMeta):
     0, 1.
     """
 
-    def __init__(self, feature_type="binary"):
+    def __init__(self, feature_type="binary", group=None):
         super().__init__(feature_type)
+
+        # Group is used to track the group of a binary categorical
+        # variable
+        self.group = group
 
     def parse(self, series):
         unique = np.unique(series.values)
@@ -125,9 +131,9 @@ class BinaryFeatureMeta(FeatureMeta):
 
         # Convert strings to numerical binary values
         if not np.array_equal(unique, np.array([0, 1])):
-            series = category_to_numeric(series, unique=unique).astype(np.uint8)
+            series = category_to_numeric(series, unique=unique)
 
-        return series
+        return series.astype(np.uint8)
 
 
 class NumericFeatureMeta(FeatureMeta):
@@ -232,6 +238,7 @@ class FeatureStore:
         # self.df = self.df_to_features(df) if df is not None else None
         self.df = None
         self.df_unscaled = None
+        self.metas = []
         self.maintain_unscaled = maintain_unscaled
 
     @property
@@ -242,7 +249,7 @@ class FeatureStore:
         Returns:
             (list<str>): Feature names.
         """
-        return df.columns
+        return list(self.df.columns)
 
     @property
     def types(self):
@@ -254,7 +261,7 @@ class FeatureStore:
         Returns:
             (list<str>): Feature type names.
         """
-        return [f.feature_type for f in self.features_meta]
+        return [f.feature_type for f in self.metas]
 
     def extract_features(self, names):
         """
@@ -331,20 +338,20 @@ class FeatureStore:
         if len(self.df) != len(values):
             raise ValueError("Number of rows must be the same for all features added.")
 
-    def _handle_features_names(self, df, names):
+    def _handle_features_names(self, values, names):
         """
         Determines feature names either based on those inputted,
         or by generating names if none were given.
 
         Parameters:
-            df (pandas.DataFrame): Features DataFrame.
+            values (numpy.ndarray): An array of values, e.g., from
+                df.values.
             names (list<str>, str): A list of names, or a string is
                 accepted if adding a single feature.
 
         Returns:
             (list<str>): Parsed/generated feature names
         """
-        values = df.values
 
         # If names is not defined, come up with some default names
         df_len = 0 if self.df is None else len(self.df.columns)
@@ -368,7 +375,7 @@ class FeatureStore:
             return values
 
         df = pd.DataFrame(values)
-        names = self._handle_features_names(df, names)
+        names = self._handle_features_names(df.values, names)
         df.columns = names
         return df
 
@@ -389,19 +396,21 @@ class FeatureStore:
             df_org = df.copy(deep=True)
 
         # Add to features metadata
+        metas = []
         for col in df:
-            df[col].attrs["meta"] = FMeta(**init_kwargs)
-
             # If forcing unscaled
             if unscaled:
                 if "scale" in parse_kwargs:
                     parse_kwargs["scale"] = False
 
-            df[col] = df[col].attrs["meta"].parse(df[col], **parse_kwargs)
+            metas.append(FMeta(**init_kwargs))
+
+            df[col] = metas[-1].parse(df[col], **parse_kwargs)
 
         # Add to features
         if not unscaled:
             self.df = pd.concat([self.df, df], axis=1)
+            self.metas = np.concatenate([self.metas, metas])
         else:
             self.df_unscaled = pd.concat([self.df_unscaled, df], axis=1)
 
@@ -411,7 +420,7 @@ class FeatureStore:
                 df_org, FMeta, init_kwargs, parse_kwargs, attr_kwargs, unscaled=True
             )
 
-    def add_binary(self, values, names=None, feature_type="binary"):
+    def add_binary(self, values, names=None, feature_type="binary", group=None):
         """
         Adds binary features.
 
@@ -424,7 +433,7 @@ class FeatureStore:
         # Input checking and preparation
         df = self._format_add(values, names)
 
-        init_kwargs = {"feature_type": feature_type}
+        init_kwargs = {"feature_type": feature_type, "group": group}
         parse_kwargs = {}
         attr_kwargs = {}
         self._add(df, BinaryFeatureMeta, init_kwargs, parse_kwargs, attr_kwargs)
@@ -481,4 +490,99 @@ class FeatureStore:
             onehot = np.zeros((a.size, a.max() + 1))
             onehot[np.arange(a.size), a] = 1
 
-            self.add_binary(onehot, names=binary_names, feature_type=feature_type)
+            self.add_binary(
+                onehot, names=binary_names, feature_type=feature_type, group=col
+            )
+
+    def _attempt_to_numeric(self, df):
+        for c in df.columns:
+            try:
+                df[c] = pd.to_numeric(df[c])
+            except:
+                pass
+        return df
+
+    def add_features(self, values, names=None):
+        if isinstance(values, pd.DataFrame):
+            df = values
+        elif isinstance(values, np.ndarray):
+            names = self._handle_features_names(values, names=names)
+            df = pd.DataFrame(values, columns=names)
+        else:
+            raise ValueError("values must be a pandas.DataFrame or numpy.ndarray.")
+
+        # Attempt to turn any possible columns to numeric
+        df = self._attempt_to_numeric(df)
+
+        # Infer other column types
+        # print(df.info(verbose=True))
+        df = df.infer_objects()
+        # print(df.info(verbose=True))
+
+        for col in df:
+            unique = np.unique(df[col].values)
+            np.sort(unique)
+
+            # Check if it can be represented as binary
+            # (Numeric or string alike)
+            if len(unique) == 2:
+                # Add as binary
+                self.add_binary(df[col].values, names=col)
+                continue
+
+            # Check for and add numerical features
+            if is_numeric_dtype(df[col]):
+                self.add_numeric(df[col].values, names=col)
+
+            # Check for (non-binary valued) string types
+            elif is_string_dtype(df[col]):
+                # Don't parse columns with too many unique values
+                if len(unique) > 100:
+                    raise ValueError("Failed to parse feature {}".format(col))
+
+                # Add as categorical
+                self.add_categorical(df[col].values, names=col)
+                continue
+
+            else:
+                raise ValueException("Unsure about column data type.")
+
+    def remove_features(self, names):
+        raise NotImplementedError()
+
+        names = [names] if isinstance(names, str) else names
+        drop_cols = set(names).intersection(set(self.df.columns))
+
+        # Drop columns directly
+        self.df.drop(list(drop_cols), axis=1, inplace=True)
+        self.metas = None  # UPDATE METAS
+        if self.maintain_unscaled:
+            self.df_unscaled.drop(list(drop_cols), axis=1, inplace=True)
+
+        # Check for additional, non-column drops, e.g.,
+        # dropping a categorical group
+        additional = set(names).difference(drop_cols)
+
+        categorical = [
+            m.group for m in self.metas if m.feature_type == "categorical-binary"
+        ]
+
+        drop_categorical = additional.intersection(categorical)
+
+        # Drop columns directly
+        for d in drop_categorical:
+            cat = [c for c in categorical if c.group == d]
+
+            self.df.drop(cat, axis=1, inplace=True)
+            if self.maintain_unscaled:
+                self.df_unscaled.drop(cat, axis=1, inplace=True)
+
+        remaining = additional.difference(drop_categorical)
+        if len(remaining) != 0:
+            raise ValueError("Cannot drop non-existent features: {}".format(remaining))
+
+    def scale(self, values):
+        raise NotImplementedError()
+
+    def inverse_scale(self, values):
+        raise NotImplementedError()
