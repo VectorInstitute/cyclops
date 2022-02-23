@@ -113,7 +113,7 @@ NEGATIVE_RESULT_TERMS = [
 ]
 POSITIVE_RESULT_TERMS = [
     "pos",
-    "^\s*det",
+    r"^\s*det",
     "yes",
     "venous",
     "present",

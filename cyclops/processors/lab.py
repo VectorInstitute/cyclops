@@ -6,6 +6,7 @@ import re
 import pandas as pd
 
 from cyclops.processors.base import Processor
+from cyclops.processors.feature import FeatureStore
 from cyclops.processors.constants import (
     POSITIVE_RESULT_TERMS,
     NEGATIVE_RESULT_TERMS,
@@ -113,6 +114,10 @@ def is_non_empty_value(result_value: str) -> bool:
     return False if result_value == "" else True
 
 
+def str_to_float(result_value: str) -> float:
+    return float(result_value)
+
+
 class LabsProcessor(Processor):
     """Labs processor class."""
 
@@ -127,6 +132,7 @@ class LabsProcessor(Processor):
             List of column names of features that must be present in data.
         """
         super().__init__(data, must_have_columns)
+        self.feature_store = FeatureStore()
 
     def process(self):
         """Process raw lab data towards making them feature-ready.
@@ -136,25 +142,51 @@ class LabsProcessor(Processor):
         """
         LOGGER.info("Processing raw lab data...")
         LOGGER.info(
-            f"# labs: {len(self.data)}, # encounters: {self.data[ENCOUNTER_ID].nunique()}"
+            f"# labs: {len(self.data)},\
+            # encounters: {self.data[ENCOUNTER_ID].nunique()}"
         )
+
         LOGGER.info("Filtering labs within aggregation window...")
         self.data = filter_labs_in_window(self.data)
         LOGGER.info(
-            f"# labs: {len(self.data)}, # encounters: {self.data[ENCOUNTER_ID].nunique()}"
+            f"# labs: {len(self.data)},\
+            # encounters: {self.data[ENCOUNTER_ID].nunique()}"
         )
+
+        LOGGER.info("Fixing inequalities and removing outlier values...")
+        self.data[LAB_TEST_RESULT_VALUE] = (
+            self.data[LAB_TEST_RESULT_VALUE].apply(fix_inequalities).copy()
+        )
+
         LOGGER.info("Removing labs with empty result values...")
         self.data = self.data[
             self.data[LAB_TEST_RESULT_VALUE].apply(is_non_empty_value)
         ].copy()
         LOGGER.info(
-            f"# labs: {len(self.data)}, # encounters: {self.data[ENCOUNTER_ID].nunique()}"
+            f"# labs: {len(self.data)},\
+            # encounters: {self.data[ENCOUNTER_ID].nunique()}"
         )
+
+        LOGGER.info("Converting string result values to numeric...")
+        self.data[LAB_TEST_RESULT_VALUE] = self.data[LAB_TEST_RESULT_VALUE].astype(
+            "float"
+        )
+
+        LOGGER.info("Creating features...")
         self._featurize()
 
     def _featurize(self):
         """For each test, create appropriate features."""
-        grouped_labs = self.data.groupby([LAB_TEST_NAME])
+        grouped_labs = self.data.groupby([ENCOUNTER_ID, LAB_TEST_NAME])
+        for group_name, group in grouped_labs:
+            LOGGER.info(
+                f"Test name: {group_name},\
+                        Mean value: {group[LAB_TEST_RESULT_VALUE].mean()},\
+                        Min value: {group[LAB_TEST_RESULT_VALUE].min()},\
+                        Max value: {group[LAB_TEST_RESULT_VALUE].max()},\
+                        Median value: {group[LAB_TEST_RESULT_VALUE].median()}"
+            )
+            break
 
 
 if __name__ == "__main__":
