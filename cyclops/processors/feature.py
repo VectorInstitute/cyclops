@@ -78,7 +78,7 @@ class FeatureMeta(ABC):
     def parse(self, series):
         return series
 
-    def _scale(self, values):
+    def scale(self, values):
         """
         An identity function used to handle scaling for classes
         without scaling support.
@@ -91,7 +91,7 @@ class FeatureMeta(ABC):
         """
         return values
 
-    def _inverse_scale(self, values):
+    def inverse_scale(self, values):
         """
         An identity function used to handle inverse scaling for
         classes without scaling support.
@@ -159,16 +159,13 @@ class NumericFeatureMeta(FeatureMeta):
         super().__init__(feature_type)
         self.normalization = normalization
 
-    def parse(self, series, scale=True):
+    def parse(self, series):
         # Create scaling object and scale data
         if self.normalization is None:
             self.scaler = None
         else:
             Scaler = self._get_scaler_type(self.normalization)
             self.scaler = Scaler().fit(series.values.reshape(-1, 1))
-
-        if scale:
-            return self.scale(series)
 
         return series
 
@@ -234,12 +231,23 @@ class NumericFeatureMeta(FeatureMeta):
 
 
 class FeatureStore:
-    def __init__(self, df=None, maintain_unscaled=False):
-        # self.df = self.df_to_features(df) if df is not None else None
-        self.df = None
-        self.df_unscaled = None
-        self.metas = []
-        self.maintain_unscaled = maintain_unscaled
+    def __init__(self, df=None):
+        # Can optionally provide a FeatureStore with a DataFrame
+        # to add on initialize
+        if df is None:
+            self.df = None
+        else:
+            self.df = self.add_features(df)
+        self.meta = []
+
+    @property
+    def df_unscaled(self):
+        return self.df
+
+    @property
+    def df_scaled(self):
+        # Creates and scales a copy
+        return self.self_scale()
 
     @property
     def names(self):
@@ -261,7 +269,7 @@ class FeatureStore:
         Returns:
             (list<str>): Feature type names.
         """
-        return [f.feature_type for f in self.metas]
+        return [f.feature_type for f in self.meta]
 
     def extract_features(self, names):
         """
@@ -379,7 +387,7 @@ class FeatureStore:
         df.columns = names
         return df
 
-    def _add(self, df, FMeta, init_kwargs, parse_kwargs, attr_kwargs, unscaled=False):
+    def _add(self, df, FMeta, init_kwargs, parse_kwargs, attr_kwargs):
         """
         An internal use function for prepping to add features
         of the same type.
@@ -392,33 +400,23 @@ class FeatureStore:
             (numpy.ndarray): Prepared feature matrix.
             (list<str>): Prepared feature names.
         """
-        if self.maintain_unscaled:
-            df_org = df.copy(deep=True)
 
         # Add to features metadata
-        metas = []
+        meta = []
         for col in df:
-            # If forcing unscaled
-            if unscaled:
-                if "scale" in parse_kwargs:
-                    parse_kwargs["scale"] = False
+            # Define feature column metadata
+            meta.append(FMeta(**init_kwargs))
 
-            metas.append(FMeta(**init_kwargs))
-
-            df[col] = metas[-1].parse(df[col], **parse_kwargs)
+            # Update dataframe with parsed values
+            df[col] = meta[-1].parse(df[col], **parse_kwargs)
 
         # Add to features
-        if not unscaled:
-            self.df = pd.concat([self.df, df], axis=1)
-            self.metas = np.concatenate([self.metas, metas])
-        else:
-            self.df_unscaled = pd.concat([self.df_unscaled, df], axis=1)
+        self.df = pd.concat([self.df, df], axis=1)
 
-        # Maintain unscaled
-        if self.maintain_unscaled and not unscaled:
-            self._add(
-                df_org, FMeta, init_kwargs, parse_kwargs, attr_kwargs, unscaled=True
-            )
+        if self.meta is None:
+            self.meta = meta
+        else:
+            self.meta.extend(meta)
 
     def add_binary(self, values, names=None, feature_type="binary", group=None):
         """
@@ -439,12 +437,7 @@ class FeatureStore:
         self._add(df, BinaryFeatureMeta, init_kwargs, parse_kwargs, attr_kwargs)
 
     def add_numeric(
-        self,
-        values,
-        names=None,
-        feature_type="numeric",
-        normalization="standardize",
-        scale=True,
+        self, values, names=None, feature_type="numeric", normalization="standardize"
     ):
         """
         Adds numeric features.
@@ -459,7 +452,7 @@ class FeatureStore:
 
         init_kwargs = {"feature_type": feature_type, "normalization": normalization}
         init_kwargs = {"feature_type": feature_type}
-        parse_kwargs = {"scale": scale}
+        parse_kwargs = {}
         attr_kwargs = {}
         self._add(df, NumericFeatureMeta, init_kwargs, parse_kwargs, attr_kwargs)
 
@@ -547,42 +540,102 @@ class FeatureStore:
             else:
                 raise ValueException("Unsure about column data type.")
 
-    def remove_features(self, names):
-        raise NotImplementedError()
+    def _drop_cols(self, cols):
+        assert cols is not None or inds is not None
+        # Drop columns
+        col_inds = [self.df.columns.get_loc(c) for c in cols]
+        self.df.drop(self.df.columns[col_inds], axis=1, inplace=True)
 
-        names = [names] if isinstance(names, str) else names
-        drop_cols = set(names).intersection(set(self.df.columns))
+        for i in sorted(col_inds, reverse=True):
+            del self.meta[i]
 
-        # Drop columns directly
-        self.df.drop(list(drop_cols), axis=1, inplace=True)
-        self.metas = None  # UPDATE METAS
-        if self.maintain_unscaled:
-            self.df_unscaled.drop(list(drop_cols), axis=1, inplace=True)
-
-        # Check for additional, non-column drops, e.g.,
-        # dropping a categorical group
-        additional = set(names).difference(drop_cols)
-
-        categorical = [
-            m.group for m in self.metas if m.feature_type == "categorical-binary"
+    def _drop_categorical(self, names):
+        # Find which corresponding group columns to drop
+        drop_group_cols = [
+            c
+            for i, c in enumerate(self.df.columns)
+            if self.meta[i].feature_type == "categorical-binary"
+            and self.meta[i].group in names
         ]
 
-        drop_categorical = additional.intersection(categorical)
+        # Drop corresponding columns
+        self._drop_cols(drop_group_cols)
 
-        # Drop columns directly
-        for d in drop_categorical:
-            cat = [c for c in categorical if c.group == d]
+    def drop_features(self, names):
+        # Find feature columns to drop
+        names = set([names]) if isinstance(names, str) else set(names)
+        drop_cols = names.intersection(set(self.df.columns))
+        remaining = names.difference(drop_cols)
 
-            self.df.drop(cat, axis=1, inplace=True)
-            if self.maintain_unscaled:
-                self.df_unscaled.drop(cat, axis=1, inplace=True)
+        # Find categorical groups to drop
+        all_groups = [
+            m.group for m in self.meta if m.feature_type == "categorical-binary"
+        ]
+        drop_groups = set([c for c in remaining if c in all_groups])
 
-        remaining = additional.difference(drop_categorical)
+        # Abort if not all the names are some column or
+        # categorical group
+        remaining = remaining.difference(drop_groups)
         if len(remaining) != 0:
             raise ValueError("Cannot drop non-existent features: {}".format(remaining))
 
-    def scale(self, values):
-        raise NotImplementedError()
+        # Drop columns
+        self._drop_cols(drop_cols)
 
-    def inverse_scale(self, values):
-        raise NotImplementedError()
+        # Drop categorical group columns
+        self._drop_categorical(list(drop_groups))
+
+    def parse_values(self, values):
+        if isinstance(values, pd.DataFrame):
+            df = values
+        elif isinstance(values, np.ndarray):
+            if values.ndim == 1:
+                values = np.expand_dims(values, -1)
+            df = pd.DataFrame(values)
+        else:
+            raise ValueError("scale accepts a Pandas DataFrame or NumPy matrix")
+
+        if len(df.columns) != len(self.df.columns):
+            raise ValueError("Incorrect number of features")
+
+        return df
+
+    def self_scale(self):
+        df = self.df.copy(deep=True)
+        for i, col in enumerate(self.df.columns):
+            df[col] = self.meta[i].scale(df[col])
+        return df
+
+    def split(self, percents, scaled=False, randomize=True, seed=None):
+        """
+
+        Parameters:
+            percents (list<int>, int): A list of percentages
+            adding to 1, or a single percentage to perform
+            a split into two datasets.
+        """
+        # Parse probability (list) p
+        if isinstance(percents, list):
+            assert sum(percents) == 1
+        elif isinstance(percents, int):
+            assert percents > 0 and percents < 1
+            percents = [percents, 1 - percents]
+
+        # Scale if need be
+        if scaled:
+            df = self.self_scale()
+        else:
+            df = self.df
+
+        # Randomize
+        if randomize:
+            kwargs = {"random_state": seed} if seed is not None else {}
+            df = df.sample(frac=1).reset_index(drop=True, **kwargs)
+
+        # Parition
+        # Create dataset lengths from percentages
+        n = len(df)
+        lengths = [round(p * n) for p in percents]
+        lengths = lengths[:-1]
+
+        return np.split(df, lengths)
