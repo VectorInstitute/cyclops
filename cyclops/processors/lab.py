@@ -3,14 +3,11 @@
 import logging
 import re
 
+import numpy as np
 import pandas as pd
 
 from cyclops.processors.base import Processor
 from cyclops.processors.feature import FeatureStore
-from cyclops.processors.constants import (
-    POSITIVE_RESULT_TERMS,
-    NEGATIVE_RESULT_TERMS,
-)
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
     ADMIT_TIMESTAMP,
@@ -19,7 +16,9 @@ from cyclops.processors.column_names import (
     LAB_TEST_NAME,
     LAB_TEST_RESULT_UNIT,
 )
+from cyclops.processors.utils import is_non_empty_value
 from cyclops.utils.log import setup_logging, LOG_FILE_PATH
+from cyclops.utils.profile import time_function
 
 
 # Logging.
@@ -99,23 +98,38 @@ def fix_inequalities(search_string: str) -> str:
     return matches.group(2) if matches else ""
 
 
-def is_non_empty_value(result_value: str) -> bool:
-    """Return True if value == '', else False.
+def to_lower(string: str) -> str:
+    """Convert string to lowercase letters.
 
     Parameters
     ----------
-    result_value: str
-        Result value of lab test.
+    string: str
+        Input string.
 
     Returns
     -------
-    bool
-        True if non-empty string, else False."""
-    return False if result_value == "" else True
+    str
+        Output string in lowercase.
+
+    """
+    return string.lower()
 
 
-def str_to_float(result_value: str) -> float:
-    return float(result_value)
+def strip_whitespace(string: str) -> str:
+    """Remove all whitespaces from string.
+
+    Parameters
+    ----------
+    string: str
+        Input string.
+
+    Returns
+    -------
+    str
+       Output string with whitespace removed.
+
+    """
+    return re.sub(re.compile(r"\s+"), "", string)
 
 
 class LabsProcessor(Processor):
@@ -132,61 +146,73 @@ class LabsProcessor(Processor):
             List of column names of features that must be present in data.
         """
         super().__init__(data, must_have_columns)
-        self.feature_store = FeatureStore()
 
+    def _log_counts_step(self, step_description: str):
+        """Log num. of encounters and num. of lab tests.
+
+        Parameters
+        ----------
+        step_description: Description of intermediate processing step.
+
+        """
+        LOGGER.info(step_description)
+        num_labs = len(self.data)
+        num_encounters = self.data[ENCOUNTER_ID].nunique()
+        LOGGER.info(f"# labs: {num_labs}, # encounters: {num_encounters}")
+
+    @time_function
     def process(self):
         """Process raw lab data towards making them feature-ready.
 
-        Raw data -> Filter by time window -> Group by test name -> Auto-featurization.
+        Raw data -> Filter by time window -> Remove inequalities ->
+        Remove empty values, strings, convert units to lowercase -> Auto-featurization.
 
         """
-        LOGGER.info("Processing raw lab data...")
-        LOGGER.info(
-            f"# labs: {len(self.data)},\
-            # encounters: {self.data[ENCOUNTER_ID].nunique()}"
-        )
-
-        LOGGER.info("Filtering labs within aggregation window...")
+        self._log_counts_step("Processing raw lab data...")
         self.data = filter_labs_in_window(self.data)
-        LOGGER.info(
-            f"# labs: {len(self.data)},\
-            # encounters: {self.data[ENCOUNTER_ID].nunique()}"
-        )
-
-        LOGGER.info("Fixing inequalities and removing outlier values...")
+        self._log_counts_step("Filtering labs within aggregation window...")
         self.data[LAB_TEST_RESULT_VALUE] = (
             self.data[LAB_TEST_RESULT_VALUE].apply(fix_inequalities).copy()
         )
-
-        LOGGER.info("Removing labs with empty result values...")
+        self._log_counts_step("Fixing inequalities and removing outlier values...")
         self.data = self.data[
             self.data[LAB_TEST_RESULT_VALUE].apply(is_non_empty_value)
         ].copy()
-        LOGGER.info(
-            f"# labs: {len(self.data)},\
-            # encounters: {self.data[ENCOUNTER_ID].nunique()}"
-        )
+        self._log_counts_step("Removing labs with empty result values...")
 
         LOGGER.info("Converting string result values to numeric...")
         self.data[LAB_TEST_RESULT_VALUE] = self.data[LAB_TEST_RESULT_VALUE].astype(
             "float"
         )
 
+        LOGGER.info("Cleaning units and converting to SI...")
+        self.data[LAB_TEST_RESULT_UNIT] = self.data[LAB_TEST_RESULT_UNIT].apply(
+            to_lower
+        )
+        self.data[LAB_TEST_RESULT_UNIT] = self.data[LAB_TEST_RESULT_UNIT].apply(
+            strip_whitespace
+        )
+
         LOGGER.info("Creating features...")
-        self._featurize()
+        return self._featurize()
 
     def _featurize(self):
         """For each test, create appropriate features."""
+        lab_tests = list(self.data[LAB_TEST_NAME].unique())
+        encounters = list(self.data[ENCOUNTER_ID].unique())
+        LOGGER.info(
+            f"# labs features: {len(lab_tests)}, # encounters: {len(encounters)}"
+        )
+        features = np.zeros((len(encounters), len(lab_tests)))
+        features = pd.DataFrame(features, index=encounters, columns=lab_tests)
+
         grouped_labs = self.data.groupby([ENCOUNTER_ID, LAB_TEST_NAME])
-        for group_name, group in grouped_labs:
-            LOGGER.info(
-                f"Test name: {group_name},\
-                        Mean value: {group[LAB_TEST_RESULT_VALUE].mean()},\
-                        Min value: {group[LAB_TEST_RESULT_VALUE].min()},\
-                        Max value: {group[LAB_TEST_RESULT_VALUE].max()},\
-                        Median value: {group[LAB_TEST_RESULT_VALUE].median()}"
-            )
-            break
+        for (encounter_id, lab_test_name), labs in grouped_labs:
+            features.loc[encounter_id, lab_test_name] = labs[
+                LAB_TEST_RESULT_VALUE
+            ].mean()
+
+        return features
 
 
 if __name__ == "__main__":
@@ -201,5 +227,8 @@ if __name__ == "__main__":
         LAB_TEST_RESULT_VALUE,
         LAB_TEST_RESULT_UNIT,
     ]
+    feature_store = FeatureStore()
     labs_processor = LabsProcessor(data, must_have_columns)
-    labs_processor.process()
+    lab_features = labs_processor.process()
+    feature_store.add_features(lab_features)
+    print(feature_store.df)
