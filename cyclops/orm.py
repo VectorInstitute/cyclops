@@ -1,6 +1,5 @@
 """Object Relational Mapper (ORM) using sqlalchemy."""
 
-import time
 import argparse
 import logging
 
@@ -13,6 +12,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 
 from cyclops.utils.log import setup_logging, LOG_FILE_PATH
+from cyclops.utils.profile import time_function
 
 
 # Logging.
@@ -151,6 +151,7 @@ class Database(metaclass=DBMetaclass):
                 setattr(schema, _get_attr_name(table.name), table)
             setattr(self, s, schema)
 
+    @time_function
     def run_query(self, query: sqlalchemy.sql.selectable.Subquery) -> pd.DataFrame:
         """Run query.
 
@@ -163,8 +164,7 @@ class Database(metaclass=DBMetaclass):
         pd.DataFrame
             Extracted data from query.
         """
-        start_time = time.time()
         with self.session.connection():
             data = pd.read_sql_query(query, self.engine)
-        LOGGER.info(f"Query returned successfully, took {time.time() - start_time} s")
+        LOGGER.info("Query returned successfully!")
         return data

@@ -7,7 +7,24 @@ import numpy as np
 import pandas as pd
 import re
 
-from cyclops.processors.constants import TRAJECTORIES
+from cyclops.processors.constants import EMPTY_STRING
+
+
+def is_non_empty_value(value: str) -> bool:
+    """Return True if value == '', else False.
+
+    Parameters
+    ----------
+    value: str
+        Result value of lab test.
+
+    Returns
+    -------
+    bool
+        True if non-empty string, else False.
+
+    """
+    return False if value == EMPTY_STRING else True
 
 
 def normalize_special_characters(item: str) -> str:
@@ -274,134 +291,6 @@ def convert_unit(from_unit, to_unit):
     raise Exception(
         f"Either {from_unit} or {to_unit} are not multiples of ['g', 'mol', 'l']"
     )
-
-
-def insert_decimal(input_: str, index: int = 2):
-    """Insert decimal at index.
-
-    Parameters
-    ----------
-    input_: str
-        Input string.
-    index: int
-        Index at which to insert decimal.
-
-    Returns
-    -------
-    str:
-        String after inserting decimal.
-    """
-    return input_[:index] + "." + input_[index:]
-
-
-def get_code_letter(code):
-    """Get the letter from diagnosis code.
-
-    E.g. M55 -> M
-
-    Parameters
-    ----------
-    code: str
-        Input diagnosis code.
-
-    Returns
-    -------
-    str:
-        Extracted letter.
-    """
-    return re.sub("[^a-zA-Z]", "", code).upper()
-
-
-def get_code_numerics(code):
-    """Get the numeric values from diagnosis code.
-
-    E.g. M55 -> 55
-
-    Parameters
-    ----------
-    code: str
-        Input diagnosis code.
-
-    Returns
-    -------
-    str:
-        Extracted numeric.
-    """
-    return re.sub("[^0-9]", "", code)
-
-
-def get_icd_category(
-    code: str, trajectories: dict = TRAJECTORIES, raise_err: bool = False
-):
-    """Get ICD10 category.
-
-    code: str
-        Input diagnosis code.
-    trajectories: dict, optional
-        Dictionary mapping of ICD10 trajectories.
-    raise_err: Flag to raise error if code cannot be converted (for debugging.)
-
-    Returns
-    -------
-    str:
-        Mapped ICD10 category code.
-
-    """
-    if code is None:
-        return np.nan
-
-    try:
-        code = str(code)
-    except Exception:
-        return np.nan
-
-    for item, (code_low, code_high) in trajectories.items():
-        icd_category = "_".join([code_low, code_high])
-        code_letter = get_code_letter(code)
-        code_low_letter = get_code_letter(code_low)
-        code_high_letter = get_code_letter(code_high)
-        if code_letter > code_low_letter:
-            pass
-        elif (code_letter == code_low_letter) and (
-            float(insert_decimal(get_code_numerics(code), index=2))
-            >= int(get_code_numerics(code_low))
-        ):
-            pass
-        else:
-            continue
-        if code_letter < code_high_letter:
-            return icd_category
-        elif (code_letter == code_high_letter) and (
-            int(float(insert_decimal(get_code_numerics(code), index=2)))
-            <= int(get_code_numerics(code_high))
-        ):
-            return icd_category
-        else:
-            continue
-
-    if raise_err:
-        raise Exception("Code cannot be converted: {}".format(code))
-    else:
-        return np.nan
-
-
-def transform_diagnosis(data):
-    """Apply categorical ICD10 filters and encode as one-hot vector."""
-    data = pd.concat(
-        (
-            data,
-            pd.get_dummies(
-                data.loc[:, "mr_diagnosis"].apply(
-                    get_icd_category, args=(TRAJECTORIES,)
-                ),
-                dummy_na=True,
-                columns=TRAJECTORIES.keys(),
-                prefix="icd10",
-            ),
-        ),
-        axis=1,
-    )
-    return data
 
 
 def convert_units(units_dict):

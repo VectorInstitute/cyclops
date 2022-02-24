@@ -11,7 +11,8 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 def category_to_numeric(series, inplace=False, unique=None):
-    """
+    """[TODO: Add title].
+
     Takes a series and replaces its the values with the index
     of their value in the array's sorted, unique values.
 
@@ -34,26 +35,8 @@ def category_to_numeric(series, inplace=False, unique=None):
     return series.replace(map_dict, inplace=inplace)
 
 
-def is_string_type(arr):
-    """
-    Checks whether a NumPy array has a datatype which could
-    possibly hold string values.
-
-    Parameters:
-        arr (numpy.ndarray): A NumPy array.
-
-    Returns:
-        (bool) Whether this array's datatype could
-            possibly hold string values.
-    """
-    s = "".join([char for char in str(arr.dtype) if char.isalpha()])
-    STR_TYPE = ["U", "O", "S", "str", "string", "object"]
-    return s in STR_TYPE
-
-
 class FeatureMeta(ABC):
-    """
-    An abstract feature class to act as parent for concrete feature classes.
+    """Abstract feature class to act as parent for concrete feature classes.
 
     Attributes
     ----------
@@ -73,15 +56,15 @@ class FeatureMeta(ABC):
     """
 
     def __init__(self, feature_type):
+        """Instantiate."""
         self.feature_type = feature_type
 
     def parse(self, series):
+        """Parse."""
         return series
 
     def scale(self, values):
-        """
-        An identity function used to handle scaling for classes
-        without scaling support.
+        """Scale values, returns input if not implemented in child class.
 
         Parameters:
             values (numpy.ndarray): A 1-dimensional NumPy array.
@@ -92,9 +75,7 @@ class FeatureMeta(ABC):
         return values
 
     def inverse_scale(self, values):
-        """
-        An identity function used to handle inverse scaling for
-        classes without scaling support.
+        """Inverse scale values, returns input if not implemented in child class.
 
         Parameters:
             values (numpy.ndarray): A 1-dimensional NumPy array.
@@ -114,6 +95,7 @@ class BinaryFeatureMeta(FeatureMeta):
     """
 
     def __init__(self, feature_type="binary", group=None):
+        """Instantiate."""
         super().__init__(feature_type)
 
         # Group is used to track the group of a binary categorical
@@ -121,6 +103,7 @@ class BinaryFeatureMeta(FeatureMeta):
         self.group = group
 
     def parse(self, series):
+        """Parse."""
         unique = np.unique(series.values)
         np.sort(unique)
 
@@ -156,10 +139,12 @@ class NumericFeatureMeta(FeatureMeta):
     """
 
     def __init__(self, feature_type="numeric", normalization="standardize"):
+        """Instantiate."""
         super().__init__(feature_type)
         self.normalization = normalization
 
     def parse(self, series):
+        """Parse."""
         # Create scaling object and scale data
         if self.normalization is None:
             self.scaler = None
@@ -182,7 +167,7 @@ class NumericFeatureMeta(FeatureMeta):
         scaler_map = {"standardize": StandardScaler, "minMax": MinMaxScaler}
 
         # Raise an exception if the normalization string is not recognized
-        if not normalization in list(scaler_map.keys()):
+        if normalization not in list(scaler_map.keys()):
             raise ValueError(
                 "'{}' is invalid. Normalization input must be in None, {}".format(
                     normalization,
@@ -251,36 +236,41 @@ class FeatureStore:
 
     @property
     def names(self):
-        """
-        Accessed an as attribute, this function returns feature names.
+        """Access as attribute, feature names.
 
-        Returns:
-            (list<str>): Feature names.
+        Returns
+        -------
+        (list<str>)
+            Feature names.
         """
         return list(self.df.columns)
 
     @property
     def types(self):
-        """
-        Accessed an as attribute, this function returns feature type
-        names. Note: These are built-in feature names, not NumPy's
+        """Access as attribute, feature types names.
+
+        Note: These are built-in feature names, not NumPy's
         dtype feature names, for example.
 
-        Returns:
-            (list<str>): Feature type names.
+        Returns
+        -------
+        (list<str>)
+            Feature type names.
         """
         return [f.feature_type for f in self.meta]
 
     def extract_features(self, names):
-        """
-        Extract features by name.
+        """Extract features by name.
 
-        Parameters:
-            names (list<str>, str): Feature name(s).
+        Parameters
+        ----------
+        names: (list<str>, str)
+            Feature name(s).
 
-        Returns:
-            (pandas.DataFrame): Requested features formatted as a
-                DataFrame.
+        Returns
+        -------
+        (pandas.DataFrame)
+            Requested features formatted as a DataFrame.
         """
         # Convert to a list if extracting a single feature
         names = [names] if isinstance(names, str) else names
@@ -288,13 +278,13 @@ class FeatureStore:
         # Ensure all features exist
         inter = set(names).intersection(set(self.df.columns))
         if len(inter) != len(names):
-            raise ValueException(
+            raise ValueError(
                 "Features {} do not exist.".format(
                     set(names).difference(set(self.df.columns))
                 )
             )
 
-        return df[names]
+        return self.df[names]
 
     def _values_expand(self, values):
         """
@@ -314,8 +304,9 @@ class FeatureStore:
         return values
 
     def _assert_feature_length(self, df):
-        """
-        Asserts that the number of features in a dataset is the same
+        """Assert feature length.
+
+        Assert that the number of features in a dataset is the same
         as the number of features added here.
 
         Parameters:
@@ -332,23 +323,10 @@ class FeatureStore:
                 )
             )
 
-    def _assert_nrows(self, obj):
-        """
-        Asserts number of samples (rows) in a Pandas Series/
-        DataFrame is the same as any previously added features.
-
-        Parameters:
-            obj (pandas.Series, pandas.DataFrame): Features.
-        """
-        if self.df is None:
-            return
-
-        if len(self.df) != len(values):
-            raise ValueError("Number of rows must be the same for all features added.")
-
     def _handle_features_names(self, values, names):
-        """
-        Determines feature names either based on those inputted,
+        """Determine feature names.
+
+        Determine feature names either based on those inputted,
         or by generating names if none were given.
 
         Parameters:
@@ -360,7 +338,6 @@ class FeatureStore:
         Returns:
             (list<str>): Parsed/generated feature names
         """
-
         # If names is not defined, come up with some default names
         df_len = 0 if self.df is None else len(self.df.columns)
         if names is None:
@@ -388,9 +365,7 @@ class FeatureStore:
         return df
 
     def _add(self, df, FMeta, init_kwargs, parse_kwargs, attr_kwargs):
-        """
-        An internal use function for prepping to add features
-        of the same type.
+        """Add features of the same type (internal method).
 
         Parameters:
             df (pandas.DataFrame): Feature DataFrame to concat.
@@ -419,8 +394,7 @@ class FeatureStore:
             self.meta.extend(meta)
 
     def add_binary(self, values, names=None, feature_type="binary", group=None):
-        """
-        Adds binary features.
+        """Add binary features.
 
         Parameters:
             values (list, numpy.ndarray, pandas.Series,
@@ -439,8 +413,7 @@ class FeatureStore:
     def add_numeric(
         self, values, names=None, feature_type="numeric", normalization="standardize"
     ):
-        """
-        Adds numeric features.
+        """Add numeric features.
 
         Parameters:
             values (numpy.ndarray): Feature vector or matrix.
@@ -457,8 +430,7 @@ class FeatureStore:
         self._add(df, NumericFeatureMeta, init_kwargs, parse_kwargs, attr_kwargs)
 
     def add_categorical(self, values, names=None, feature_type="categorical-binary"):
-        """
-        Adds categorical features.
+        """Add categorical features.
 
         Parameters:
             values (numpy.ndarray): Feature vector or matrix.
@@ -491,7 +463,7 @@ class FeatureStore:
         for c in df.columns:
             try:
                 df[c] = pd.to_numeric(df[c])
-            except:
+            except Exception:
                 pass
         return df
 
@@ -538,10 +510,10 @@ class FeatureStore:
                 continue
 
             else:
-                raise ValueException("Unsure about column data type.")
+                raise ValueError("Unsure about column data type.")
 
     def _drop_cols(self, cols):
-        assert cols is not None or inds is not None
+        assert cols is not None
         # Drop columns
         col_inds = [self.df.columns.get_loc(c) for c in cols]
         self.df.drop(self.df.columns[col_inds], axis=1, inplace=True)
@@ -607,7 +579,7 @@ class FeatureStore:
         return df
 
     def split(self, percents, scaled=False, randomize=True, seed=None):
-        """
+        """Split dataset into training/validation/test.
 
         Parameters:
             percents (list<int>, int): A list of percentages
