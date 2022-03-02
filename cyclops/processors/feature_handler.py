@@ -1,4 +1,4 @@
-"""Feature containers for automatic feature creation from raw data."""
+"""Feature handling for automatic feature creation from processed data."""
 
 
 from abc import ABC
@@ -87,11 +87,12 @@ class FeatureMeta(ABC):
 
 
 class BinaryFeatureMeta(FeatureMeta):
-    """
-    A class for handling binary features, i.e., with values 0, 1. Any
-    acceptable inputs which can be converted to binary values, such
+    """A class for handling binary features, i.e., with values 0, 1.
+
+    Any acceptable inputs which can be converted to binary values, such
     as an array with only unique values 'A', 'B' will be converted to
     0, 1.
+
     """
 
     def __init__(self, feature_type="binary", group=None):
@@ -120,9 +121,7 @@ class BinaryFeatureMeta(FeatureMeta):
 
 
 class NumericFeatureMeta(FeatureMeta):
-    """
-    A class for handling numeric features, with normalization
-    functionality.
+    """A class for handling numeric features, with normalization functionality.
 
     Methods
     -------
@@ -155,8 +154,7 @@ class NumericFeatureMeta(FeatureMeta):
         return series
 
     def _get_scaler_type(self, normalization):
-        """
-        Returns a scaling object mapped from a string value.
+        """Return a scaling object mapped from a string value.
 
         Parameters:
             normalization (str): A string specifying which scaler to return.
@@ -179,9 +177,9 @@ class NumericFeatureMeta(FeatureMeta):
         return scaler_map[normalization]
 
     def scale(self, series):
-        """
-        Scales a 1D array based on selected scaling object. If the
-        scaler is none, it acts as an identity function.
+        """Scale a 1D array based on selected scaling object.
+
+        If the scaler is none, it acts as an identity function.
 
         Parameters:
             values (numpy.ndarray): A 1-dimensional NumPy array.
@@ -197,8 +195,8 @@ class NumericFeatureMeta(FeatureMeta):
         )
 
     def inverse_scale(self, series):
-        """
-        Inverses scaling a 1D array based on selected scaling object.
+        """Apply Inverse scaling to a 1D array based on selected scaling object.
+
         If the scaler is none, it acts as an identity function.
 
         Parameters:
@@ -215,9 +213,10 @@ class NumericFeatureMeta(FeatureMeta):
         )
 
 
-class FeatureStore:
+class FeatureHandler:
     def __init__(self, df=None):
-        # Can optionally provide a FeatureStore with a DataFrame
+        """Instantiate."""
+        # Can optionally provide a FeatureHandler with a DataFrame
         # to add on initialize
         if df is None:
             self.df = None
@@ -287,10 +286,10 @@ class FeatureStore:
         return self.df[names]
 
     def _values_expand(self, values):
-        """
-        Expands a 1-dimensional NumPy array to be 2D. This is necessary when
-        handling a feature array which must be converted to a feature matrix
-        with one feature.
+        """Expand a 1-dimensional NumPy array to be 2D.
+
+        This is necessary when handling a feature array which must be converted
+        to a feature matrix with one feature.
 
         Parameters:
             values (numpy.ndarray): Feature vector or matrix.

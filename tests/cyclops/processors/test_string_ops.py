@@ -1,9 +1,9 @@
-"""Test utils module for processors."""
+"""Test string_ops module for processors."""
 
 import numpy as np
 import pytest
 
-from cyclops.processors.utils import (
+from cyclops.processors.string_ops import (
     count_occurrences,
     normalize_special_characters,
     convert_to_numeric,

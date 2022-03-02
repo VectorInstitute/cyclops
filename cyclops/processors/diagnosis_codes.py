@@ -7,10 +7,11 @@ import numpy as np
 import pandas as pd
 
 from cyclops.processors.base import Processor
-from cyclops.processors.feature import FeatureStore
+from cyclops.processors.feature_handler import FeatureHandler
 from cyclops.processors.column_names import ENCOUNTER_ID, DIAGNOSIS_CODE
 from cyclops.processors.constants import TRAJECTORIES, EMPTY_STRING
-from cyclops.processors.utils import is_non_empty_value
+from cyclops.processors.string_ops import is_non_empty_value
+
 from cyclops.utils.log import setup_logging, LOG_FILE_PATH
 from cyclops.utils.profile import time_function
 
@@ -20,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
 
 
-def insert_decimal(input_: str, index: int = 2):
+def insert_decimal(input_: str, index: int = 2) -> str:
     """Insert decimal at index.
 
     Parameters
@@ -38,7 +39,7 @@ def insert_decimal(input_: str, index: int = 2):
     return input_[:index] + "." + input_[index:]
 
 
-def get_code_letter(code):
+def get_code_letter(code: str) -> str:
     """Get the letter from diagnosis code.
 
     E.g. M55 -> M
@@ -56,7 +57,7 @@ def get_code_letter(code):
     return re.sub("[^a-zA-Z]", EMPTY_STRING, code).upper()
 
 
-def get_code_numerics(code):
+def get_code_numerics(code: str) -> str:
     """Get the numeric values from diagnosis code.
 
     E.g. M55 -> 55
@@ -76,7 +77,7 @@ def get_code_numerics(code):
 
 def get_icd_category(
     code: str, trajectories: dict = TRAJECTORIES, raise_err: bool = False
-):
+) -> str:
     """Get ICD10 category.
 
     code: str
@@ -181,8 +182,7 @@ class DiagnosisProcessor(Processor):
         encounters = list(self.data[ENCOUNTER_ID].unique())
         icd_codes = list(self.data[DIAGNOSIS_CODE].unique())
 
-        features = np.zeros((len(encounters), len(icd_codes)))
-        features = pd.DataFrame(features, index=encounters, columns=icd_codes)
+        features = pd.DataFrame(index=encounters, columns=icd_codes)
 
         grouped_codes = self.data.groupby([ENCOUNTER_ID])
         for encounter_id, codes in grouped_codes:
@@ -199,8 +199,8 @@ if __name__ == "__main__":
         key="query_gemini_delirium_diagnosis",
     )
     must_have_columns = [ENCOUNTER_ID, DIAGNOSIS_CODE]
-    feature_store = FeatureStore()
+    feature_handler = FeatureHandler()
     diagnosis_processor = DiagnosisProcessor(data, must_have_columns)
     diagnosis_features = diagnosis_processor.process()
-    feature_store.add_features(diagnosis_features)
-    print(feature_store.df)
+    feature_handler.add_features(diagnosis_features)
+    print(feature_handler.df)

@@ -4,10 +4,8 @@ from os.path import join
 from diagrams import Diagram, Cluster, Edge
 from diagrams.custom import Custom
 from diagrams.programming.language import Python
-from diagrams.generic.storage import Storage
 from diagrams.programming.flowchart import Database
 from diagrams.generic.database import SQL
-from diagrams.onprem.queue import Kafka
 
 
 ASSETS_DIR = "./assets"
@@ -82,7 +80,7 @@ def draw_dr_cyclops():
             hospB = Custom("", join(ASSETS_DIR, "hospAB.png"))
             dbB = Custom("", join(ASSETS_DIR, "dbB.png"))
         with Cluster("hospital site Z"):
-            hospZ = Custom("", join(ASSETS_DIR, "hospZ.png"))
+            _ = Custom("", join(ASSETS_DIR, "hospZ.png"))
             dbZ = Custom("", join(ASSETS_DIR, "dbZ.png"))
         storage = Database("Databases (GEMINI/MIMIC)")
         stream = Custom("", join(ASSETS_DIR, "stream.png"))
@@ -108,6 +106,6 @@ def draw_dr_cyclops():
 
 
 if __name__ == "__main__":
-    draw_data_layer()
+    draw_dr_cyclops()
     # draw_implementation_on_gemini()
     # draw_implementation_extended()
