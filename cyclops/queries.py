@@ -172,6 +172,9 @@ def query_gemini_vitals(db: Database, year: int, hospital: str) -> pd.DataFrame:
             db.public.vitals.x,
             db.public.ip_administrative.genc_id == db.public.vitals.genc_id,
         )
+        .where(
+            db.public.vitals.measurement_mapped != EMPTY_STRING,
+        )
     )
     return db.run_query(query)
 
