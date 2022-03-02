@@ -82,22 +82,26 @@ class VitalsProcessor(Processor):
         )
         self._log_counts_step("Filtering vitals within aggregation window...")
 
-        self.data = self.data.loc[
-            self.data[VITAL_MEASUREMENT_NAME] != "oxygen flow rate"
+        self.data = self.data[
+            ~self.data[VITAL_MEASUREMENT_NAME].apply(find_string_match, args=("oxygen",))
         ].copy()
-        # TODO: Add special processing to handle oxygen flow rate.
-        self._log_counts_step("Drop oxygen flow rate samples...")
 
-        #         self.data[VITAL_MEASUREMENT_VALUE].loc[
-        #             self.data[VITAL_MEASUREMENT_VALUE].apply(
-        #                 find_string_match, args=("|".join(POSITIVE_RESULT_TERMS),)
-        #             )
-        #         ] = '1'
-        #         self.data[VITAL_MEASUREMENT_VALUE].loc[
-        #             self.data[VITAL_MEASUREMENT_VALUE].apply(
-        #                 find_string_match, args=("|".join(NEGATIVE_RESULT_TERMS),)
-        #             )
-        #         ] = '0'
+        # TODO: Add special processing to handle oxygen flow rate, saturation.
+        self._log_counts_step("Drop oxygen flow rate, saturation samples...")
+        
+        self.data[VITAL_MEASUREMENT_VALUE][
+            self.data[VITAL_MEASUREMENT_VALUE].apply(find_string_match, args=("|".join(POSITIVE_RESULT_TERMS),))
+        ] = '1'
+        self.data[VITAL_MEASUREMENT_VALUE][
+            self.data[VITAL_MEASUREMENT_VALUE].apply(find_string_match, args=("|".join(NEGATIVE_RESULT_TERMS),))
+        ] = '0'
+        self._log_counts_step("Convert Positive/Negative to 1/0...")
+        
+        self.data[VITAL_MEASUREMENT_VALUE] = self.data[VITAL_MEASUREMENT_VALUE].astype(
+            "float"
+        ).copy()
+        LOGGER.info("Converting string result values to numeric...")
+
         self.data = self.data[
             self.data[VITAL_MEASUREMENT_VALUE].apply(is_non_empty_value)
         ].copy()
@@ -117,7 +121,6 @@ class VitalsProcessor(Processor):
 
         grouped_vitals = self.data.groupby([ENCOUNTER_ID, VITAL_MEASUREMENT_NAME])
         for (encounter_id, vital_name), vitals in grouped_vitals:
-            print(vitals[VITAL_MEASUREMENT_VALUE].dtypes)
-            # features.loc[encounter_id, vital_name] = val_to_fill
+            features.loc[encounter_id, vital_name] = vitals[VITAL_MEASUREMENT_VALUE].mean()
 
         return features
