@@ -13,7 +13,7 @@ setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
 
 
 def time_function(func: Callable) -> Callable:
-    """Timing decorator function.
+    """Time decorator function.
 
     Parameters
     ----------

@@ -1,15 +1,29 @@
 """Constants."""
 
-HOSPITAL_ID = {
-    "THPM": 0,
-    "SBK": 1,
-    "UHNTG": 2,
-    "SMH": 3,
-    "UHNTW": 4,
-    "THPC": 5,
-    "PMH": 6,
-    "MSH": 7,
+# Generic.
+YEAR = "year"
+
+# GEMINI Admin.
+THPM = "THPM"
+SBK = "SBK"
+UHNTG = "UHNTG"
+SMH = "SMH"
+UHNTW = "UHNTW"
+THPC = "THPC"
+PMH = "PMH"
+MSH = "MSH"
+HOSPITAL_ID_MAP = {
+    THPM: 0,
+    SBK: 1,
+    UHNTG: 2,
+    SMH: 3,
+    UHNTW: 4,
+    THPC: 5,
+    PMH: 6,
+    MSH: 7,
 }
+
+# Diagnostic codes.
 TRAJECTORIES = {
     "Certain infectious and parasitic diseases": ("A00", "B99"),
     "Neoplasms": ("C00", "D49"),
@@ -49,6 +63,8 @@ TRAJECTORIES = {
         "Z99",
     ),
 }
+
+# GEMINI labs.
 DRUG_SCREEN = [
     "amitriptyline",
     "amphetamine",
@@ -110,6 +126,7 @@ NEGATIVE_RESULT_TERMS = [
     "non-reactive",
     "clear",
     "trace",
+    "negative",
 ]
 POSITIVE_RESULT_TERMS = [
     "pos",
@@ -126,4 +143,5 @@ POSITIVE_RESULT_TERMS = [
     "cloudy",
     "low reactive",
     "reactive",
+    "positive",
 ]
