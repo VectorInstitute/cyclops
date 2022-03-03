@@ -26,6 +26,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def to_loader(dataset, args, shuffle=False):
+    """Create dataloader."""
     return DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -37,7 +38,7 @@ def to_loader(dataset, args, shuffle=False):
 
 @torch.no_grad()
 def validate(model, val_loader, loss_fn):
-
+    """Validate."""
     metric = AverageBinaryClassificationMetric()
     for (data, target) in val_loader:
         data = data.to(DEVICE, non_blocking=True)
@@ -56,6 +57,7 @@ def validate(model, val_loader, loss_fn):
 
 
 def train(model, optimizer, dataloader, loss_fn, num_epochs):
+    """Train."""
     metric = AverageBinaryClassificationMetric()
     for e in tqdm(range(num_epochs)):
         for (data, target) in dataloader:
@@ -83,6 +85,7 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
 
 def main(args):
+    """Run training and validation."""
     # MLflow parameters.
     mlflow_params_dict = {
         "dataset": args.dataset,

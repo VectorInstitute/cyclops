@@ -5,15 +5,12 @@ import logging
 import pandas as pd
 
 from cyclops.processors.base import Processor
-from cyclops.processors.feature_handler import FeatureHandler
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
-    ADMIT_TIMESTAMP,
     LAB_TEST_RESULT_VALUE,
     LAB_TEST_TIMESTAMP,
     LAB_TEST_NAME,
     LAB_TEST_RESULT_UNIT,
-    REFERENCE_RANGE,
 )
 from cyclops.processors.string_ops import (
     is_non_empty_value,
@@ -46,29 +43,23 @@ class LabsProcessor(Processor):
         """
         super().__init__(data, must_have_columns)
 
-    def _log_counts_step(self, step_description: str):
-        """Log num. of encounters and num. of lab tests.
-
-        Parameters
-        ----------
-        step_description: Description of intermediate processing step.
-
-        """
-        LOGGER.info(step_description)
-        num_labs = len(self.data)
-        num_encounters = self.data[ENCOUNTER_ID].nunique()
-        LOGGER.info(f"# labs: {num_labs}, # encounters: {num_encounters}")
-
     @time_function
-    def process(self):
+    def process(self) -> pd.DataFrame:
         """Process raw lab data towards making them feature-ready.
 
         Raw data -> Filter by time window -> Remove inequalities ->
-        Remove empty values, strings -> convert units -> Feature handler
+        Remove empty values, strings -> Convert units -> Feature handler
+
+        Returns
+        -------
+        pandas.DataFrame:
+            Processed lab features.
 
         """
         self._log_counts_step("Processing raw lab data...")
-        self.data = filter_within_admission_window(self.data, LAB_TEST_TIMESTAMP)
+        self.data = filter_within_admission_window(
+            self.data, LAB_TEST_TIMESTAMP  # type: ignore
+        )
         self._log_counts_step("Filtering labs within aggregation window...")
         self.data[LAB_TEST_RESULT_VALUE] = (
             self.data[LAB_TEST_RESULT_VALUE].apply(fix_inequalities).copy()
@@ -96,8 +87,15 @@ class LabsProcessor(Processor):
         LOGGER.info("Creating features...")
         return self._featurize()
 
-    def _featurize(self):
-        """For each test, create appropriate features."""
+    def _featurize(self) -> pd.DataFrame:
+        """For each test, create appropriate features.
+
+        Returns
+        -------
+        pandas.DataFrame:
+            Processed lab features.
+
+        """
         lab_tests = list(self.data[LAB_TEST_NAME].unique())
         encounters = list(self.data[ENCOUNTER_ID].unique())
         LOGGER.info(
@@ -112,23 +110,3 @@ class LabsProcessor(Processor):
             ].mean()
 
         return features
-
-
-if __name__ == "__main__":
-    data = pd.read_hdf(
-        "/mnt/nfs/project/delirium/_extract/extract.h5", key="query_gemini_delirium_lab"
-    )
-    must_have_columns = [
-        ENCOUNTER_ID,
-        ADMIT_TIMESTAMP,
-        LAB_TEST_NAME,
-        LAB_TEST_TIMESTAMP,
-        LAB_TEST_RESULT_VALUE,
-        LAB_TEST_RESULT_UNIT,
-        REFERENCE_RANGE,
-    ]
-    feature_handler = FeatureHandler()
-    labs_processor = LabsProcessor(data, must_have_columns)
-    lab_features = labs_processor.process()
-    feature_handler.add_features(lab_features)
-    print(feature_handler.df)
