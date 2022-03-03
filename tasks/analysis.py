@@ -19,6 +19,7 @@ import mlflow
 
 
 def get_report_filename(config):
+    """Get report filename."""
     if len(config.report_full_path) == 0:
         t = time.localtime()
         date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
@@ -32,6 +33,7 @@ def get_report_filename(config):
 
 
 def analyze_dataset_drift(ref_data, eval_data, config):
+    """Run drift analysis."""
     column_mapping = ColumnMapping()
     column_mapping.numerical_features = config.numerical_features
     column_mapping.categorical_features = config.categorical_features
@@ -59,6 +61,7 @@ def analyze_dataset_drift(ref_data, eval_data, config):
 
 # evaluate data drift with Evidently Profile
 def eval_drift(reference, production, column_mapping, config, html=False):
+    """Run eval drift."""
     column_mapping.drift_conf_level = 0.95
     column_mapping.drift_features_share = 0.5
     data_drift_profile = Profile(sections=[DataDriftProfileSection()])
@@ -90,6 +93,7 @@ def eval_drift(reference, production, column_mapping, config, html=False):
 
 # compare performance of the model on two sets of data
 def analyze_model_drift(reference, test, config):
+    """Analyze model drift."""
     column_mapping = ColumnMapping()
 
     column_mapping.target = config.target
@@ -128,6 +132,7 @@ def analyze_model_drift(reference, test, config):
 
 
 def log_to_mlflow(config, metrics):
+    """Log to mlflow."""
     exp_name = "DatasetAnalysis" if config.type == "dataset" else "ModelComparison"
     exp = mlflow.get_experiment_by_name(exp_name)
     if exp is None:
@@ -142,6 +147,7 @@ def log_to_mlflow(config, metrics):
 
 
 def main(config):
+    """Run analysis."""
     if config.type == "dataset":
         if config.slice is not None and len(config.slice) > 0:
             data = pd.read_csv(config.input)

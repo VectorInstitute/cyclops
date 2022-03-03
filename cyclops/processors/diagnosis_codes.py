@@ -3,11 +3,9 @@
 import logging
 import re
 
-import numpy as np
 import pandas as pd
 
 from cyclops.processors.base import Processor
-from cyclops.processors.feature_handler import FeatureHandler
 from cyclops.processors.column_names import ENCOUNTER_ID, DIAGNOSIS_CODE
 from cyclops.processors.constants import TRAJECTORIES, EMPTY_STRING
 from cyclops.processors.string_ops import is_non_empty_value
@@ -145,37 +143,24 @@ class DiagnosisProcessor(Processor):
         """
         super().__init__(data, must_have_columns)
 
-    def _log_counts_step(self, step_description: str):
-        """Log num. of encounters and num. of lab tests.
-
-        Parameters
-        ----------
-        step_description: Description of intermediate processing step.
-
-        """
-        LOGGER.info(step_description)
-        num_codes = len(self.data)
-        num_encounters = self.data[ENCOUNTER_ID].nunique()
-        LOGGER.info(f"# diagnosis codes: {num_codes}, # encounters: {num_encounters}")
-
     @time_function
-    def process(self) -> np.ndarray:
+    def process(self) -> pd.DataFrame:
         """Process raw diagnosis codes into ICD codes (one-hot encoded).
 
         Returns
         -------
-        numpy.ndarray:
+        pandas.DataFrame:
             One-hot encoded binary ICD features.
 
         """
         self._log_counts_step("Processing raw diagnosis codes...")
-        self.data[DIAGNOSIS_CODE] = (
-            self.data[DIAGNOSIS_CODE].apply(get_icd_category).copy()
+        self.data[DIAGNOSIS_CODE] = (  # type: ignore
+            self.data[DIAGNOSIS_CODE].apply(get_icd_category).copy()  # type: ignore
         )
 
         self._log_counts_step("Converting diagnosis codes to ICD codes...")
-        self.data = self.data[
-            self.data[DIAGNOSIS_CODE].apply(is_non_empty_value)
+        self.data = self.data[  # type: ignore
+            self.data[DIAGNOSIS_CODE].apply(is_non_empty_value)  # type: ignore
         ].copy()
         self._log_counts_step("Removing unmapped, i.e. nan codes...")
 
@@ -191,16 +176,3 @@ class DiagnosisProcessor(Processor):
                 features.loc[encounter_id, icd_code_encounter] = 1
 
         return features
-
-
-if __name__ == "__main__":
-    data = pd.read_hdf(
-        "/mnt/nfs/project/delirium/_extract/extract.h5",
-        key="query_gemini_delirium_diagnosis",
-    )
-    must_have_columns = [ENCOUNTER_ID, DIAGNOSIS_CODE]
-    feature_handler = FeatureHandler()
-    diagnosis_processor = DiagnosisProcessor(data, must_have_columns)
-    diagnosis_features = diagnosis_processor.process()
-    feature_handler.add_features(diagnosis_features)
-    print(feature_handler.df)

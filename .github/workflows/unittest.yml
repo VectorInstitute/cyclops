@@ -1,0 +1,22 @@
+name: Unit-tests
+
+on:
+  push:
+    paths:
+      - .github/workflows/unittest.yml
+      - '**.py'
+  pull_request:
+    paths:
+      - .github/workflows/unittest.yml
+      - '**.py'
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create virtual environment, install dependencies and run tests
+        run: |
+          python3 -m venv venv && source venv/bin/activate
+          pip install --upgrade pip && pip install -r requirements.txt
+          python3 -m pytest tests/

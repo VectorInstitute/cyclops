@@ -214,6 +214,8 @@ class NumericFeatureMeta(FeatureMeta):
 
 
 class FeatureHandler:
+    """Feature handler class."""
+
     def __init__(self, df=None):
         """Instantiate."""
         # Can optionally provide a FeatureHandler with a DataFrame
@@ -226,11 +228,12 @@ class FeatureHandler:
 
     @property
     def df_unscaled(self):
+        """Return unscaled dataframe."""
         return self.df
 
     @property
     def df_scaled(self):
-        # Creates and scales a copy
+        """Scale and return scaled dataframe."""
         return self.self_scale()
 
     @property
@@ -374,7 +377,6 @@ class FeatureHandler:
             (numpy.ndarray): Prepared feature matrix.
             (list<str>): Prepared feature names.
         """
-
         # Add to features metadata
         meta = []
         for col in df:
@@ -467,6 +469,7 @@ class FeatureHandler:
         return df
 
     def add_features(self, values, names=None):
+        """Add features."""
         if isinstance(values, pd.DataFrame):
             df = values
         elif isinstance(values, np.ndarray):
@@ -533,6 +536,7 @@ class FeatureHandler:
         self._drop_cols(drop_group_cols)
 
     def drop_features(self, names):
+        """Drop features."""
         # Find feature columns to drop
         names = set([names]) if isinstance(names, str) else set(names)
         drop_cols = names.intersection(set(self.df.columns))
@@ -557,6 +561,7 @@ class FeatureHandler:
         self._drop_categorical(list(drop_groups))
 
     def parse_values(self, values):
+        """Parse values."""
         if isinstance(values, pd.DataFrame):
             df = values
         elif isinstance(values, np.ndarray):
@@ -572,6 +577,7 @@ class FeatureHandler:
         return df
 
     def self_scale(self):
+        """Apply self scaling."""
         df = self.df.copy(deep=True)
         for i, col in enumerate(self.df.columns):
             df[col] = self.meta[i].scale(df[col])
