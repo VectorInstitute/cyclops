@@ -31,7 +31,7 @@ setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
 class LabsProcessor(Processor):
     """Labs processor class."""
 
-    def __init__(self, data: pd.DataFrame, must_have_columns: list):
+    def __init__(self, data: pd.DataFrame, must_have_columns: list) -> None:
         """Instantiate.
 
         Parameters
