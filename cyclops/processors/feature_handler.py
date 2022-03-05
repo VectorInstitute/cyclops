@@ -11,23 +11,30 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 def category_to_numeric(series, inplace=False, unique=None):
-    """[TODO: Add title].
+    """Convert categorical column to numerical.
 
     Takes a series and replaces its the values with the index
     of their value in the array's sorted, unique values.
 
-    Parameters:
-        series (pandas.Series): A Pandas series.
-        inplace (bool): Whether to replace values in-place.
-        unique (numpy.ndarray): The series' unique values may
-            be optionally given if already calculated.
+    Parameters
+    ----------
+    series: pandas.Series
+        Input column of categorical values.
+    inplace: bool, optional
+        Flag to replace values in-place.
+    unique: numpy.ndarray, optional
+        Pre-computed unique values.
+        
+    Returns
+    -------
+    pandas.Series
+        Converted numerical column of values.
+
     """
-    # Calculate unique values if not given
     if unique is None:
         unique = np.unique(series.values)
     unique.sort()
 
-    # Create mapping from sorted unique values to index
     map_dict = dict()
     for i, u in enumerate(unique):
         map_dict[u] = i
@@ -128,11 +135,11 @@ class NumericFeatureMeta(FeatureMeta):
     _get_scaler_type(values):
         Returns a scaling object mapped from a string value.
 
-    _scale(values):
+    scale(values):
         Scales a 1D array based on selected scaling object. If the
         scaler is none, it acts as an identity function.
 
-    _scale(values):
+    inverse_scale(values):
         Inverses scaling a 1D array based on selected scaling object.
         If the scaler is none, it acts as an identity function.
     """
@@ -234,7 +241,7 @@ class FeatureHandler:
     @property
     def df_scaled(self):
         """Scale and return scaled dataframe."""
-        return self.self_scale()
+        return self._scale()
 
     @property
     def names(self):
@@ -472,19 +479,16 @@ class FeatureHandler:
         """Add features."""
         if isinstance(values, pd.DataFrame):
             df = values
-        elif isinstance(values, np.ndarray):
-            names = self._handle_features_names(values, names=names)
-            df = pd.DataFrame(values, columns=names)
         else:
-            raise ValueError("values must be a pandas.DataFrame or numpy.ndarray.")
+            raise ValueError(
+                "input to feature handler must be a pandas.DataFrame."
+            )
 
         # Attempt to turn any possible columns to numeric
         df = self._attempt_to_numeric(df)
 
         # Infer other column types
-        # print(df.info(verbose=True))
         df = df.infer_objects()
-        # print(df.info(verbose=True))
 
         for col in df:
             unique = np.unique(df[col].values)
@@ -576,43 +580,9 @@ class FeatureHandler:
 
         return df
 
-    def self_scale(self):
-        """Apply self scaling."""
+    def _scale(self):
+        """Apply scaling."""
         df = self.df.copy(deep=True)
         for i, col in enumerate(self.df.columns):
             df[col] = self.meta[i].scale(df[col])
         return df
-
-    def split(self, percents, scaled=False, randomize=True, seed=None):
-        """Split dataset into training/validation/test.
-
-        Parameters:
-            percents (list<int>, int): A list of percentages
-            adding to 1, or a single percentage to perform
-            a split into two datasets.
-        """
-        # Parse probability (list) p
-        if isinstance(percents, list):
-            assert sum(percents) == 1
-        elif isinstance(percents, int):
-            assert percents > 0 and percents < 1
-            percents = [percents, 1 - percents]
-
-        # Scale if need be
-        if scaled:
-            df = self.self_scale()
-        else:
-            df = self.df
-
-        # Randomize
-        if randomize:
-            kwargs = {"random_state": seed} if seed is not None else {}
-            df = df.sample(frac=1).reset_index(drop=True, **kwargs)
-
-        # Parition
-        # Create dataset lengths from percentages
-        n = len(df)
-        lengths = [round(p * n) for p in percents]
-        lengths = lengths[:-1]
-
-        return np.split(df, lengths)

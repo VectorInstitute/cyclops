@@ -89,12 +89,12 @@ class VitalsProcessor(Processor):
         return self._featurize()
 
     def _featurize(self) -> pd.DataFrame:
-        """For each test, create appropriate features.
+        """For each vital measurement, create appropriate features.
 
         Returns
         -------
         pandas.DataFrame:
-            Processed lab features.
+            Processed vitals.
 
         """
         vitals_names = list(self.data[VITAL_MEASUREMENT_NAME].unique())

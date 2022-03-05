@@ -6,6 +6,14 @@ HOSPITAL_ID = "hospital_id"
 ADMIT_TIMESTAMP = "admit_timestamp"
 DISCHARGE_TIMESTAMP = "discharge_timestamp"
 
+AGE = "age"
+SEX = "sex"
+CITY = "city"
+PROVINCE = "province"
+COUNTRY = "country"
+LANGUAGE = "language"
+TOTAL_COST = "total_cost"
+
 DIAGNOSIS_CODE = "diagnosis_code"
 
 LAB_TEST_NAME = "lab_test_name"

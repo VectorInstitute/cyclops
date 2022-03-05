@@ -77,6 +77,10 @@ class Processor:
         self.data = _gather_required_columns(data, must_have_columns)
         self.must_have_columns = must_have_columns
 
+    def print_data(self) -> None:
+        """Print data."""
+        LOGGER.info(self.data)
+
     def _log_counts_step(self, step_description: str) -> None:
         """Log num. of encounters and num. of samples (rows).
 
