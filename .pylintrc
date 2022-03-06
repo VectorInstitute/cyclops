@@ -1,5 +1,6 @@
 [MASTER]
 ignore=models/
+disable=import-error
 
 [FORMAT]
 max-line-length=88

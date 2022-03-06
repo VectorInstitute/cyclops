@@ -106,7 +106,7 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
             return icd_category
 
     if raise_err:
-        raise Exception("Code cannot be converted: {}".format(code))
+        raise Exception(f"Code cannot be converted: {code}")
     return EMPTY_STRING
 
 

@@ -7,8 +7,8 @@ from luigi.util import inherits
 
 import config as config_parser
 
-import tasks.predict as predict
-import tasks.analysis as analysis
+from tasks import predict
+from tasks import analysis
 
 
 # Pipeline definition consisting of three tasks:

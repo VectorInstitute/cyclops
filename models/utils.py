@@ -3,7 +3,7 @@
 import typing
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 ACT_FN_MAP = {

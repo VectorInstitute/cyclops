@@ -3,7 +3,7 @@
 import math
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from models.utils import get_activation_fn
 
