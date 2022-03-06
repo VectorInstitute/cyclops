@@ -15,8 +15,9 @@ class DataPipelineManager:
 
     def __init__(self, config):
         """Instantiate."""
-        pass
 
     def run(self):
         """Run pipeline SQL querier -> Processor -> data."""
-        pass
+
+    def setup(self):
+        """Set up data pipeline manager."""

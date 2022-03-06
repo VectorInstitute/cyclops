@@ -33,6 +33,9 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
 
 
+# pylint: disable=singleton-comparison
+
+
 def debug_query_msg(func: Callable) -> Callable:
     """Debug message decorator function.
 
@@ -48,21 +51,21 @@ def debug_query_msg(func: Callable) -> Callable:
     """
 
     def wrapper_func(*args, **kwargs):
-        LOGGER.debug(f"Running query function: {func.__name__}")
+        LOGGER.debug("Running query function: %s", {func.__name__})
         query_result = func(*args, **kwargs)
-        LOGGER.debug(f"Finished query function: {func.__name__}")
+        LOGGER.debug("Finished query function: %s", {func.__name__})
         return query_result
 
     return wrapper_func
 
 
 @debug_query_msg
-def query_gemini_delirium_diagnosis(db: Database) -> pd.DataFrame:
+def query_gemini_delirium_diagnosis(gemini: Database) -> pd.DataFrame:
     """Query lab data for delirium subset.
 
     Parameters
     ----------
-    db: cyclops.orm.Database
+    gemini: cyclops.orm.Database
         Database ORM object.
 
     Returns
@@ -72,32 +75,34 @@ def query_gemini_delirium_diagnosis(db: Database) -> pd.DataFrame:
     """
     query = (
         select(
-            db.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
-            db.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
-            db.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
-            db.public.ip_administrative.discharge_date_time.label(DISCHARGE_TIMESTAMP),
-            db.public.ip_administrative.del_present,
-            db.public.ip_administrative.gemini_cohort,
-            db.public.diagnosis.diagnosis_code.label(DIAGNOSIS_CODE),
-            db.public.diagnosis.diagnosis_type,
-            db.public.diagnosis.is_er_diagnosis,
+            gemini.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
+            gemini.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
+            gemini.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
+            gemini.public.ip_administrative.discharge_date_time.label(
+                DISCHARGE_TIMESTAMP
+            ),
+            gemini.public.ip_administrative.del_present,
+            gemini.public.ip_administrative.gemini_cohort,
+            gemini.public.diagnosis.diagnosis_code.label(DIAGNOSIS_CODE),
+            gemini.public.diagnosis.diagnosis_type,
+            gemini.public.diagnosis.is_er_diagnosis,
         )
         .join(
-            db.public.diagnosis.x,
-            db.public.ip_administrative.genc_id == db.public.diagnosis.genc_id,
+            gemini.public.diagnosis.x,
+            gemini.public.ip_administrative.genc_id == gemini.public.diagnosis.genc_id,
         )
-        .where(db.public.ip_administrative.gemini_cohort == True)  # noqa: E712
+        .where(gemini.public.ip_administrative.gemini_cohort == True)  # noqa: E712
     )
-    return db.run_query(query)
+    return gemini.run_query(query)
 
 
 @debug_query_msg
-def query_gemini_delirium_lab(db: Database) -> pd.DataFrame:
+def query_gemini_delirium_lab(gemini: Database) -> pd.DataFrame:
     """Query lab data for delirium subset.
 
     Parameters
     ----------
-    db: cyclops.orm.Database
+    gemini: cyclops.orm.Database
         Database ORM object.
 
     Returns
@@ -107,39 +112,41 @@ def query_gemini_delirium_lab(db: Database) -> pd.DataFrame:
     """
     query = (
         select(
-            db.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
-            db.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
-            db.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
-            db.public.ip_administrative.discharge_date_time.label(DISCHARGE_TIMESTAMP),
-            db.public.ip_administrative.del_present,
-            db.public.ip_administrative.gemini_cohort,
-            db.public.lab.lab_test_name_mapped.label(LAB_TEST_NAME),
-            db.public.lab.result_value.label(LAB_TEST_RESULT_VALUE),
-            db.public.lab.result_unit.label(LAB_TEST_RESULT_UNIT),
-            db.public.lab.sample_collection_date_time.label(LAB_TEST_TIMESTAMP),
-            db.public.lab.reference_range.label(REFERENCE_RANGE),
+            gemini.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
+            gemini.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
+            gemini.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
+            gemini.public.ip_administrative.discharge_date_time.label(
+                DISCHARGE_TIMESTAMP
+            ),
+            gemini.public.ip_administrative.del_present,
+            gemini.public.ip_administrative.gemini_cohort,
+            gemini.public.lab.lab_test_name_mapped.label(LAB_TEST_NAME),
+            gemini.public.lab.result_value.label(LAB_TEST_RESULT_VALUE),
+            gemini.public.lab.result_unit.label(LAB_TEST_RESULT_UNIT),
+            gemini.public.lab.sample_collection_date_time.label(LAB_TEST_TIMESTAMP),
+            gemini.public.lab.reference_range.label(REFERENCE_RANGE),
         )
         .join(
-            db.public.lab.x,
-            db.public.ip_administrative.genc_id == db.public.lab.genc_id,
+            gemini.public.lab.x,
+            gemini.public.ip_administrative.genc_id == gemini.public.lab.genc_id,
         )
         .where(
             and_(
-                db.public.ip_administrative.gemini_cohort == True,  # noqa: E712
-                db.public.lab.lab_test_name_mapped != EMPTY_STRING,
+                gemini.public.ip_administrative.gemini_cohort == True,  # noqa: E712
+                gemini.public.lab.lab_test_name_mapped != EMPTY_STRING,
             )
         )
     )
-    return db.run_query(query)
+    return gemini.run_query(query)
 
 
 @debug_query_msg
-def query_gemini_vitals(db: Database, year: int, hospital: str) -> pd.DataFrame:
+def query_gemini_vitals(gemini: Database, year: int, hospital: str) -> pd.DataFrame:
     """Query vitals data for delirium subset.
 
     Parameters
     ----------
-    db: cyclops.orm.Database
+    gemini: cyclops.orm.Database
         Database ORM object.
     year: int
         Specific year to filter vitals.
@@ -153,30 +160,32 @@ def query_gemini_vitals(db: Database, year: int, hospital: str) -> pd.DataFrame:
     """
     query = (
         select(
-            db.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
-            db.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
-            db.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
-            db.public.ip_administrative.discharge_date_time.label(DISCHARGE_TIMESTAMP),
-            db.public.vitals.measurement_mapped.label(VITAL_MEASUREMENT_NAME),
-            db.public.vitals.measurement_value.label(VITAL_MEASUREMENT_VALUE),
-            db.public.vitals.measure_date_time.label(VITAL_MEASUREMENT_TIMESTAMP),
-            db.public.vitals.reference_range.label(REFERENCE_RANGE),
+            gemini.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
+            gemini.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
+            gemini.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
+            gemini.public.ip_administrative.discharge_date_time.label(
+                DISCHARGE_TIMESTAMP
+            ),
+            gemini.public.vitals.measurement_mapped.label(VITAL_MEASUREMENT_NAME),
+            gemini.public.vitals.measurement_value.label(VITAL_MEASUREMENT_VALUE),
+            gemini.public.vitals.measure_date_time.label(VITAL_MEASUREMENT_TIMESTAMP),
+            gemini.public.vitals.reference_range.label(REFERENCE_RANGE),
         )
         .where(
             and_(
-                db.public.ip_administrative.hospital_id == hospital,
-                extract(YEAR, db.public.ip_administrative.admit_date_time) == year,
+                gemini.public.ip_administrative.hospital_id == hospital,
+                extract(YEAR, gemini.public.ip_administrative.admit_date_time) == year,
             )
         )
         .join(
-            db.public.vitals.x,
-            db.public.ip_administrative.genc_id == db.public.vitals.genc_id,
+            gemini.public.vitals.x,
+            gemini.public.ip_administrative.genc_id == db.public.vitals.genc_id,
         )
         .where(
-            db.public.vitals.measurement_mapped != EMPTY_STRING,
+            gemini.public.vitals.measurement_mapped != EMPTY_STRING,
         )
     )
-    return db.run_query(query)
+    return gemini.run_query(query)
 
 
 if __name__ == "__main__":

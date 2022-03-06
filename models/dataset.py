@@ -5,14 +5,8 @@ from dataclasses import dataclass
 from functools import partial
 
 import torch
+import pandas as pd
 from torch.utils.data import random_split
-
-from tasks.datapipeline.process_data import (
-    pipeline,
-    get_splits,
-    prune_columns,
-    get_stats,
-)
 
 
 def register_dataset(
@@ -125,23 +119,28 @@ def split_train_and_val(dataset, percent_val=0.2, seed=42):
     return train_dset, val_dset
 
 
-def pandas_to_dataset(df, feature_cols, target_cols, stats=None, config=None):
+def pandas_to_dataset(
+    dataframe: pd.DataFrame,
+    feature_cols: list,
+    target_cols: list,
+    stats: dict = None,
+    config=None,
+):
     """Convert pandas dataframe to dataset.
 
     Parameters
     ----------
-    df: pandas.DataFrame
+    dataframe: pandas.DataFrame
         Dataset as a pandas dataframe.
     feature_cols: list
         List of feature columns to consider.
     """
-    df = prune_columns(feature_cols, df)
     if stats is not None:
-        df[config.numerical_features] = (
-            df[config.numerical_features] - stats["means"]
+        dataframe[config.numerical_features] = (
+            dataframe[config.numerical_features] - stats["means"]
         ) / stats["std"]
-    inputs = torch.tensor(df[feature_cols].values, dtype=torch.float32)
-    target = torch.tensor(df[target_cols].values, dtype=torch.float32)
+    inputs = torch.tensor(dataframe[feature_cols].values, dtype=torch.float32)
+    target = torch.tensor(dataframe[target_cols].values, dtype=torch.float32)
     target = torch.flatten(target)
     return BaseData(inputs, target)
 
@@ -157,19 +156,5 @@ def fakedata(args):
 
 
 @register
-def gemini(args):
+def gemini():
     """GEMINI data."""
-    data, _ = pipeline(args)
-    train, val, _ = get_splits(args, data)
-    stats = get_stats(args, train)
-
-    train_dset = pandas_to_dataset(
-        train, args.features, args.target, stats=stats, config=args
-    )
-    val_dset = pandas_to_dataset(
-        val, args.features, args.target, stats=stats, config=args
-    )
-
-    # return train and split for now to be consistent with fake data
-    # TODO: change later
-    return train_dset, val_dset

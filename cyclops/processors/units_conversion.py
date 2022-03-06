@@ -43,9 +43,9 @@ def get_scale(be_like, actual):
         )  # split the numerator and denominators for the units to be converted
         if len(be_like_list) == len(actual_list):
             success = 1
-            for i in range(len(be_like_list)):
+            for i, be_like_item in enumerate(be_like_list):
                 try:
-                    scale *= convert_unit(actual_list[i], be_like_list[i]) ** (
+                    scale *= convert_unit(actual_list[i], be_like_item) ** (
                         1 if i > 0 else -1
                     )
                 except Exception:
@@ -116,7 +116,7 @@ def convert_units(units_dict):
         if len(v) > 1:
             for item in v[1:]:
                 scale = get_scale(v[0][0], item[0])
-                if not (isinstance(scale, str)):
+                if not isinstance(scale, str):
                     conversion_list.append(
                         (
                             k[0],

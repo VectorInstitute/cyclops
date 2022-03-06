@@ -100,7 +100,9 @@ class VitalsProcessor(Processor):
         vitals_names = list(self.data[VITAL_MEASUREMENT_NAME].unique())
         encounters = list(self.data[ENCOUNTER_ID].unique())
         LOGGER.info(
-            f"# vitals features: {len(vitals_names)}, # encounters: {len(encounters)}"
+            "# vitals features: %d, # encounters: %d",
+            len(vitals_names),
+            len(encounters)
         )
         features = pd.DataFrame(index=encounters, columns=vitals_names)
 

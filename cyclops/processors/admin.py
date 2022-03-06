@@ -6,8 +6,6 @@ import pandas as pd
 
 from cyclops.processors.base import Processor
 from cyclops.processors.column_names import ENCOUNTER_ID, AGE, SEX
-from cyclops.processors.constants import TRAJECTORIES, EMPTY_STRING
-from cyclops.processors.string_ops import is_non_empty_value
 
 from cyclops.utils.log import setup_logging, LOG_FILE_PATH
 from cyclops.utils.profile import time_function
@@ -46,18 +44,18 @@ class AdminProcessor(Processor):
         self._log_counts_step("Processing raw admin data...")
 
         encounters = list(self.data[ENCOUNTER_ID].unique())
-        admin_column_names = [AGE, SEX]
+        admin_col_names = [AGE, SEX]
         LOGGER.info(
-            f"# admin features: {len(admin_column_names)}, # encounters: {len(encounters)}"
+            f"# admin features: {len(admin_col_names)}, # encounters: {len(encounters)}"
         )
-        features = pd.DataFrame(index=encounters, columns=admin_column_names)
+        features = pd.DataFrame(index=encounters, columns=admin_col_names)
 
         grouped_admin = self.data.groupby([ENCOUNTER_ID])
         for encounter_id, admin in grouped_admin:
-            for admin_column_name in admin_column_names:
-                assert admin[admin_column_name].nunique() == 1
-                features.loc[encounter_id, admin_column_name] = admin[
-                    admin_column_name
+            for admin_col_name in admin_col_names:
+                assert admin[admin_col_name].nunique() == 1
+                features.loc[encounter_id, admin_col_name] = admin[
+                    admin_col_name
                 ].unique()[0]
 
         return features

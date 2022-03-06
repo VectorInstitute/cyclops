@@ -30,7 +30,7 @@ class MLP(nn.Module):
             Activation function.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=R0913
         self,
         num_layers: int,
         in_dim: int,
@@ -74,30 +74,31 @@ class MLP(nn.Module):
         self.model = nn.Sequential(*layers)
 
         # Initialize weights.
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.kaiming_uniform_(m.weight, a=math.sqrt(5))
-                fan_in, _ = nn.init._calculate_fan_in_and_fan_out(m.weight)
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.kaiming_uniform_(module.weight, a=math.sqrt(5))
+                fan_in, _ = nn.init._calculate_fan_in_and_fan_out(module.weight)
                 bound = 1 / math.sqrt(fan_in)
-                nn.init.uniform_(m.bias, -bound, bound)
+                nn.init.uniform_(module.bias, -bound, bound)
 
     def _layer(self, in_dim, out_dim, activation=None):
         if activation:
-            return [
+            layer = [
                 nn.Linear(in_dim, out_dim),
                 self.activation,
             ]
         else:
-            return [
+            layer = [
                 nn.Linear(in_dim, out_dim),
             ]
+        return layer
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, input_: torch.Tensor):
         """Forward pass.
 
         Parameters
         ----------
-        x: torch.Tensor
+        input_: torch.Tensor
             Input to the model.
 
         Returns
@@ -105,4 +106,4 @@ class MLP(nn.Module):
         torch.Tensor
             Model output.
         """
-        return self.model(x)
+        return self.model(input_)

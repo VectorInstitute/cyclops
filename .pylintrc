@@ -1,0 +1,11 @@
+[MASTER]
+ignore=models/
+
+[FORMAT]
+max-line-length=88
+
+[TYPECHECK]
+generated-members=numpy.*, torch.*
+
+[SIMILARITIES]
+ignore-imports=yes
