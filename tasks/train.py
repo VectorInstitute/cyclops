@@ -1,13 +1,14 @@
 """Training script for baseline model."""
 
-import os
 import logging
 
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from mlflow import log_params
+
+from codebase_ops import get_log_file_path
 
 from models.catalog import get_model
 from models.metrics import AverageBinaryClassificationMetric
@@ -18,8 +19,7 @@ from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-LOG_FILE = "{}.log".format(os.path.basename(__file__))
-setup_logging(log_path=LOG_FILE, print_level="INFO", logger=LOGGER)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

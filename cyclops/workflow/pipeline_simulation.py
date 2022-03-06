@@ -6,7 +6,7 @@ import luigi
 
 from codebase_ops import get_log_file_path
 
-import cyclops.workflow.pipeline as pipeline
+from cyclops.workflow import pipeline
 from cyclops.utils.log import setup_logging
 
 

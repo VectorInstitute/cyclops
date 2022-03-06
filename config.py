@@ -336,7 +336,7 @@ def write_config(config: argparse.Namespace):
 
     os.makedirs(config.output_folder, exist_ok=True)
     with open(
-        os.path.join(config.output_folder, f"config_{date}.json"), "w"
+        os.path.join(config.output_folder, f"config_{date}.json"), "w", encoding="utf-8"
     ) as file_handle:
         file_handle.write(json.dumps(config_to_save, indent=4))
 

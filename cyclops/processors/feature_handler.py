@@ -33,12 +33,10 @@ def _get_scaler_type(normalization_method: str) -> type:
     scaler_map = {"standard": StandardScaler, "min-max": MinMaxScaler}
 
     # Raise an exception if the normalization string is not recognized.
-    if normalization_method not in list(scaler_map.keys()):
+    if normalization_method not in scaler_map:
+        options = ", ".join(["'" + k + "'" for k in scaler_map])
         raise ValueError(
-            "'{}' is invalid. Normalization input must be in None, {}".format(
-                normalization_method,
-                ", ".join(["'" + k + "'" for k in list(scaler_map.keys())]),
-            )
+            f"'{normalization_method}' is invalid, must be in None, {options}"
         )
 
     return scaler_map[normalization_method]
@@ -70,7 +68,7 @@ def _category_to_numeric(
     if unique is None:
         unique = np.unique(series.values)
 
-    map_dict = dict()
+    map_dict: dict = {}
     for i, unique_val in enumerate(unique):
         map_dict[unique_val] = i
 
@@ -369,11 +367,7 @@ class FeatureHandler:
         # Ensure all features exist
         inter = set(names).intersection(set(self.features.columns))
         if len(inter) != len(names):
-            raise ValueError(
-                "Features {} do not exist.".format(
-                    set(names).difference(set(self.features.columns))
-                )
-            )
+            raise ValueError(f"Features {inter} do not exist.")
 
         return self.features[names]
 
@@ -497,7 +491,7 @@ class FeatureHandler:
             elif is_string_dtype(features[col]):
                 # Don't parse columns with too many unique values.
                 if len(unique) > 100:
-                    raise ValueError("Failed to parse feature {}".format(col))
+                    raise ValueError(f"Failed to parse feature {col}")
                 # Add as categorical.
                 self._add_categorical(features[col])
                 continue
@@ -561,7 +555,7 @@ class FeatureHandler:
         # Abort if not all the names are some column or categorical group.
         remaining = remaining.difference(drop_groups)
         if len(remaining) != 0:
-            raise ValueError("Cannot drop non-existent features: {}".format(remaining))
+            raise ValueError(f"Cannot drop non-existent features: {remaining}")
 
         # Drop columns.
         self._drop_cols(list(drop_cols))

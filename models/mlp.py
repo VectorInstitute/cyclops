@@ -3,12 +3,12 @@
 import math
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from models.utils import get_activation_fn
 
 
-class MLP(nn.Module):
+class MLP(nn.Module):  # pylint: disable=too-few-public-methods
     """A Multi-Layer Perceptron (MLP).
 
     Also known as a Fully-Connected Network (FCN). This

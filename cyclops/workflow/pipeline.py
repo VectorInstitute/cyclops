@@ -7,8 +7,8 @@ from luigi.util import inherits
 
 import config as config_parser
 
-import tasks.predict as predict
-import tasks.analysis as analysis
+from tasks import predict
+from tasks import analysis
 
 
 # Pipeline definition consisting of three tasks:
@@ -16,7 +16,7 @@ import tasks.analysis as analysis
 # Runs for a single data slice given by the time interval date_from - date_to.
 
 
-class BaseGeminiTask(luigi.Task):
+class BaseGeminiTask(luigi.Task):  # pylint: disable=too-few-public-methods
     """Base task class."""
 
     date_from = luigi.DateParameter()

@@ -1,8 +1,8 @@
 """Main entrypoint script."""
 
-import tasks.train as train
-import tasks.analysis as analysis
-import tasks.predict as predict
+from tasks import train
+from tasks import analysis
+from tasks import predict
 
 import config
 

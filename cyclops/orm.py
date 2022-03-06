@@ -122,7 +122,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
     def _setup(self):
         """Prepare ORM DB."""
-        meta = dict()
+        meta: dict = {}
         # schemas = self.inspector.get_schema_names()
 
         for schema_name in ["public"]:
