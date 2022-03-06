@@ -131,7 +131,7 @@ class FeatureMeta(ABC):
         """
         return series
 
-    def inverse_scale(self, values):
+    def inverse_scale(self, values: pd.Series) -> pd.Series:
         """Inverse scale feature column, returns input if not implemented in child class.
 
         Parameters
@@ -259,7 +259,8 @@ class NumericFeatureMeta(FeatureMeta):
             return series
 
         return pd.Series(
-            np.squeeze(self.scaler.transform(series.values.reshape(-1, 1)))
+            np.squeeze(self.scaler.transform(series.values.reshape(-1, 1))),
+            index=series.index
         )
 
     def inverse_scale(self, series):
@@ -277,7 +278,8 @@ class NumericFeatureMeta(FeatureMeta):
             return series
 
         return pd.Series(
-            np.squeeze(self.scaler.inverse_transform(series.values.reshape(-1, 1)))
+            np.squeeze(self.scaler.inverse_transform(series.values.reshape(-1, 1))),
+            index=series.index
         )
 
 
