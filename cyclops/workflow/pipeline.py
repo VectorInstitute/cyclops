@@ -16,7 +16,7 @@ from tasks import analysis
 # Runs for a single data slice given by the time interval date_from - date_to.
 
 
-class BaseGeminiTask(luigi.Task):
+class BaseGeminiTask(luigi.Task):  # pylint: disable=too-few-public-methods
     """Base task class."""
 
     date_from = luigi.DateParameter()
