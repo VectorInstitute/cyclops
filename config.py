@@ -1,29 +1,33 @@
 """Configuration module."""
 
 import os
+import time
 import logging
+import json
+from datetime import datetime
+from typing import Optional, Dict
 import subprocess
 import getpass
 import argparse
 import configargparse
-import time
-import json
-from datetime import datetime
-from typing import Optional, Dict
 from dotenv import load_dotenv
+
+from codebase_ops import get_log_file_path
+from cyclops.utils.log import setup_logging
 
 
 # Load environment vars.
 load_dotenv()
-from cyclops.utils.log import setup_logging, LOG_FILE_PATH  # noqa: E402
 
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-def read_config(config_path: Optional[str] = None) -> argparse.Namespace:
+def read_config(  # pylint: disable=too-many-statements
+    config_path: Optional[str] = None,
+) -> argparse.Namespace:
     """Read configuration.
 
     Parameters
@@ -324,16 +328,17 @@ def write_config(config: argparse.Namespace):
     config: argparse.Namespace
         Configuration stored in object.
     """
-    t = time.localtime()
-    date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
+    date = time.strftime("%Y-%b-%d_%H-%M-%S", time.localtime())
 
-    LOGGER.info(f"Writing configuration with timestamp {date}!")
+    LOGGER.info("Writing configuration with timestamp %s!", date)
     config_to_save = config_to_dict(config)
     LOGGER.info(config_to_save)
 
     os.makedirs(config.output_folder, exist_ok=True)
-    with open(os.path.join(config.output_folder, f"config_{date}.json"), "w") as fp:
-        fp.write(json.dumps(config_to_save, indent=4))
+    with open(
+        os.path.join(config.output_folder, f"config_{date}.json"), "w"
+    ) as file_handle:
+        file_handle.write(json.dumps(config_to_save, indent=4))
 
 
 if __name__ == "__main__":

@@ -59,7 +59,7 @@ def validate(model, val_loader, loss_fn):
 def train(model, optimizer, dataloader, loss_fn, num_epochs):
     """Train."""
     metric = AverageBinaryClassificationMetric()
-    for e in tqdm(range(num_epochs)):
+    for epoch in tqdm(range(num_epochs)):
         for (data, target) in dataloader:
             data = data.to(DEVICE, non_blocking=True)
             target = target.to(DEVICE, non_blocking=True).to(data.dtype)
@@ -76,7 +76,7 @@ def train(model, optimizer, dataloader, loss_fn, num_epochs):
 
         epoch_metric_dict = metric.compute_metrics()
         dict_str = " ".join(f"{k}: {v:.2f}" for k, v in epoch_metric_dict.items())
-        to_print = f"epoch {e} {dict_str}"
+        to_print = f"epoch {epoch} {dict_str}"
 
         # put this in a logger
         LOGGER.info(to_print)

@@ -7,7 +7,6 @@ from luigi.util import inherits
 
 import config as config_parser
 
-from tasks.datapipeline.process_data import pipeline
 import tasks.predict as predict
 import tasks.analysis as analysis
 
@@ -33,7 +32,10 @@ class BaseGeminiTask(luigi.Task):
         str
             Folder to store artifacts.
         """
-        folder = os.path.join(self.artifact_folder, self.date_to.strftime("%Y-%m-%d"))
+        folder = os.path.join(
+            self.artifact_folder,
+            self.date_to.strftime("%Y-%m-%d"),  # pylint: disable=no-member
+        )
         try:
             os.mkdir(folder)
         except OSError:
@@ -49,13 +51,7 @@ class DataExtraction(BaseGeminiTask):
     def run(self):
         """Run extraction task."""
         # read and parse default configuration
-        config = config_parser.read_config(self.config_file)
-        config.filter_date_from = self.date_from
-        config.filter_date_to = self.date_to
-        config.output_full_path = self.output().fn
-        config.w = True
-        config.r = True
-        pipeline(config)
+        _ = config_parser.read_config(self.config_file)
 
     def output(self):
         """Save extracted data output CSV file."""

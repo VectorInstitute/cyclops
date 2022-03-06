@@ -1,5 +1,7 @@
 """Draw system level evaluation framework architecture diagram."""
 
+# pylint: disable=pointless-statement,expression-not-assigned
+
 from os.path import join
 from diagrams import Diagram, Cluster, Edge
 from diagrams.custom import Custom
@@ -74,14 +76,14 @@ def draw_dr_cyclops():
     """Draw design of components of dr_cyclops."""
     with Diagram("dr_cyclops", filename="dr_cyclops", show=False):
         with Cluster("hospital site A"):
-            hospA = Custom("", join(ASSETS_DIR, "hospAB.png"))
-            dbA = Custom("", join(ASSETS_DIR, "dbA.png"))
+            hosp_a = Custom("", join(ASSETS_DIR, "hospAB.png"))
+            db_a = Custom("", join(ASSETS_DIR, "dbA.png"))
         with Cluster("hospital site B"):
-            hospB = Custom("", join(ASSETS_DIR, "hospAB.png"))
-            dbB = Custom("", join(ASSETS_DIR, "dbB.png"))
+            hosp_b = Custom("", join(ASSETS_DIR, "hospAB.png"))
+            db_b = Custom("", join(ASSETS_DIR, "dbB.png"))
         with Cluster("hospital site Z"):
             _ = Custom("", join(ASSETS_DIR, "hospZ.png"))
-            dbZ = Custom("", join(ASSETS_DIR, "dbZ.png"))
+            db_z = Custom("", join(ASSETS_DIR, "dbZ.png"))
         storage = Database("Databases (GEMINI/MIMIC)")
         stream = Custom("", join(ASSETS_DIR, "stream.png"))
         with Cluster("dr_cyclops data layer"):
@@ -95,10 +97,10 @@ def draw_dr_cyclops():
         with Cluster("dr_cyclops drift-detection layer"):
             drift = Custom("drift detection", join(ASSETS_DIR, "drift.png"))
 
-        dbA >> storage
-        dbB >> storage
-        dbZ >> stream >> process
-        hospA - Edge(color="brown", style="dotted") - hospB
+        db_a >> storage
+        db_b >> storage
+        db_z >> stream >> process
+        hosp_a - Edge(color="brown", style="dotted") - hosp_b
         storage >> extract >> process >> feast
         feast >> model_tr
         feast >> model_ev

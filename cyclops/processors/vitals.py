@@ -4,6 +4,8 @@ import logging
 
 import pandas as pd
 
+from codebase_ops import get_log_file_path
+
 from cyclops.processors.base import Processor
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
@@ -14,29 +16,17 @@ from cyclops.processors.column_names import (
 from cyclops.processors.string_ops import is_non_empty_value, find_string_match
 from cyclops.processors.common import filter_within_admission_window
 from cyclops.processors.constants import POSITIVE_RESULT_TERMS, NEGATIVE_RESULT_TERMS
-from cyclops.utils.log import setup_logging, LOG_FILE_PATH
+from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
 class VitalsProcessor(Processor):
     """Vitals processor class."""
-
-    def __init__(self, data: pd.DataFrame, must_have_columns: list) -> None:
-        """Instantiate.
-
-        Parameters
-        ----------
-        data: pandas.DataFrame
-            Dataframe with raw features.
-        must_have_columns: list
-            List of column names of features that must be present in data.
-        """
-        super().__init__(data, must_have_columns)
 
     @time_function
     def process(self) -> pd.DataFrame:
@@ -59,8 +49,6 @@ class VitalsProcessor(Processor):
                 find_string_match, args=("oxygen",)
             )
         ].copy()
-
-        # TODO: Add special processing to handle oxygen flow rate, saturation.
         self._log_counts_step("Drop oxygen flow rate, saturation samples...")
 
         self.data[VITAL_MEASUREMENT_VALUE][
@@ -89,18 +77,20 @@ class VitalsProcessor(Processor):
         return self._featurize()
 
     def _featurize(self) -> pd.DataFrame:
-        """For each test, create appropriate features.
+        """For each vital measurement, create appropriate features.
 
         Returns
         -------
         pandas.DataFrame:
-            Processed lab features.
+            Processed vitals.
 
         """
         vitals_names = list(self.data[VITAL_MEASUREMENT_NAME].unique())
         encounters = list(self.data[ENCOUNTER_ID].unique())
         LOGGER.info(
-            f"# vitals features: {len(vitals_names)}, # encounters: {len(encounters)}"
+            "# vitals features: %d, # encounters: %d",
+            len(vitals_names),
+            len(encounters),
         )
         features = pd.DataFrame(index=encounters, columns=vitals_names)
 

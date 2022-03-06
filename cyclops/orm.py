@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+from dataclasses import dataclass
 
 import pandas as pd
 
@@ -11,23 +12,28 @@ from sqlalchemy import inspect
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 
-from cyclops.utils.log import setup_logging, LOG_FILE_PATH
+from codebase_ops import get_log_file_path
+
+from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-def _get_db_url(dbms: str, user: str, pwd: str, host: str, port: str, db: str) -> str:
-    return f"{dbms}://{user}:{pwd}@{host}:{port}/{db}"
+def _get_db_url(  # pylint: disable=too-many-arguments
+    dbms: str, user: str, pwd: str, host: str, port: str, database: str
+) -> str:
+    return f"{dbms}://{user}:{pwd}@{host}:{port}/{database}"
 
 
 def _get_attr_name(name: str) -> str:
     return name[name.index(".") + 1 :]  # noqa: E203
 
 
+@dataclass
 class Schema:
     """Database schema wrapper.
 
@@ -35,24 +41,15 @@ class Schema:
     ----------
     name: str
         Name of schema.
-    x: sqlalchemy.sql.schema.MetaData
+    data: sqlalchemy.sql.schema.MetaData
         Metadata for schema.
     """
 
-    def __init__(self, name: str, x: sqlalchemy.sql.schema.MetaData):
-        """Instantiate.
-
-        Parameters
-        ----------
-        name: str
-            Name of schema.
-        x: sqlalchemy.sql.schema.MetaData
-            Metadata for schema.
-        """
-        self.name = name
-        self.x = x
+    name: str
+    data: sqlalchemy.sql.schema.MetaData
 
 
+@dataclass
 class Table:
     """Database table wrapper.
 
@@ -60,22 +57,12 @@ class Table:
     ----------
     name: str
         Name of table.
-    x: sqlalchemy.sql.schema.Table
+    data: sqlalchemy.sql.schema.Table
         Metadata for schema.
     """
 
-    def __init__(self, name: str, x: sqlalchemy.sql.schema.Table):
-        """Instantiate.
-
-        Parameters
-        ----------
-        name: str
-            Name of table.
-        x: sqlalchemy.sql.schema.Table
-            Table schema.
-        """
-        self.name = name
-        self.x = x
+    name: str
+    data: sqlalchemy.sql.schema.MetaData
 
 
 class DBMetaclass(type):
@@ -90,7 +77,7 @@ class DBMetaclass(type):
         return cls.__instances[cls]
 
 
-class Database(metaclass=DBMetaclass):
+class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
     """Database class (singleton).
 
     Attributes
@@ -126,9 +113,9 @@ class Database(metaclass=DBMetaclass):
         self.inspector = inspect(self.engine)
 
         # Create a session for using ORM.
-        Session = sessionmaker(self.engine)
-        Session.configure(bind=self.engine)
-        self.session = Session()
+        session = sessionmaker(self.engine)
+        session.configure(bind=self.engine)
+        self.session = session()
 
         self._setup()
         LOGGER.info("Database setup, ready to run queries!")
@@ -136,20 +123,19 @@ class Database(metaclass=DBMetaclass):
     def _setup(self):
         """Prepare ORM DB."""
         meta = dict()
-        # TODO: Unify this when using for mimic.
         # schemas = self.inspector.get_schema_names()
 
-        for s in ["public"]:
-            metadata = MetaData(schema=s)
+        for schema_name in ["public"]:
+            metadata = MetaData(schema=schema_name)
             metadata.reflect(bind=self.engine)
-            meta[s] = metadata
-            schema = Schema(s, meta[s])
-            for t in meta[s].tables:
-                table = Table(t, meta[s].tables[t])
-                for column in meta[s].tables[t].columns:
+            meta[schema_name] = metadata
+            schema = Schema(schema_name, meta[schema_name])
+            for table_name in meta[schema_name].tables:
+                table = Table(table_name, meta[schema_name].tables[table_name])
+                for column in meta[schema_name].tables[table_name].columns:
                     setattr(table, column.name, column)
                 setattr(schema, _get_attr_name(table.name), table)
-            setattr(self, s, schema)
+            setattr(self, schema_name, schema)
 
     @time_function
     def run_query(self, query: sqlalchemy.sql.selectable.Subquery) -> pd.DataFrame:

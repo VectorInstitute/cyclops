@@ -1,5 +1,7 @@
 """Constants."""
 
+# pylint: disable=line-too-long
+
 # Generic.
 YEAR = "year"
 

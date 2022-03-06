@@ -41,7 +41,6 @@ def get_activation_fn(act: str) -> typing.Union[torch.nn.Module, None]:
     ValueError
         If the input activation string doesn't match supported ones.
     """
-    if act in ACT_FN_MAP:
-        return ACT_FN_MAP[act]
-    else:
+    if act not in ACT_FN_MAP:
         raise ValueError("[!] Invalid activation function.")
+    return ACT_FN_MAP[act]

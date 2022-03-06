@@ -8,13 +8,11 @@ from models.mlp import MLP
 MODEL_CATALOG = {}
 
 
-def register_model(register_dict: dict, model: type, name: Optional[str] = None):
+def register_model(model: type, name: Optional[str] = None):
     """Register model with dict.
 
     Parameters
     ----------
-    register_dict: dict
-        Dictionary to store registered model implementations.
     model: type
         Model implementation wrapped in a class.
     name: str, optional
@@ -45,9 +43,8 @@ def get_model(name: str) -> Optional[type]:
     """
     if name not in MODEL_CATALOG:
         raise NotImplementedError
-    else:
-        return MODEL_CATALOG.get(name)
+    return MODEL_CATALOG.get(name)
 
 
-# Register model implmentations.
-register_model(MODEL_CATALOG, MLP)
+# Register model implementations.
+register_model(MLP)
