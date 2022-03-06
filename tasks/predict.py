@@ -14,7 +14,6 @@ from models.catalog import get_model
 from models.metrics import AverageBinaryClassificationMetric
 from models.dataset import pandas_to_dataset
 
-from tasks.datapipeline.process_data import get_stats
 from tasks.train import to_loader
 
 from cyclops.utils.log import setup_logging
@@ -55,10 +54,7 @@ def main(args):
         mlflow.log_dict(config_to_dict(args), "args.json")
         mlflow.log_params({"timestamp": datetime.datetime.now()})
         data = pd.read_csv(args.input)
-        stats = get_stats(args, None)
-        dataset = pandas_to_dataset(
-            data, args.features, args.target, stats=stats, config=args
-        )
+        dataset = pandas_to_dataset(data, args.features, args.target, config=args)
 
         args.data_dim = dataset.dim()
         loader = to_loader(dataset, args)
@@ -68,10 +64,4 @@ def main(args):
         model.load_state_dict(torch.load(args.model_path))
         model.eval()
 
-        result = predict(model, loader)
-
-        # save results csv
-        data["prediction"] = result
-        data.loc[data["prediction"] >= args.threshold, "prediction"] = 1
-        data.loc[data["prediction"] < args.threshold, "prediction"] = 0
-        data.to_csv(args.result_output)
+        _ = predict(model, loader)

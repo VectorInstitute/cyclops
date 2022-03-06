@@ -19,9 +19,9 @@ def get_scale(be_like, actual):
     }
     if isinstance(be_like, str) & isinstance(actual, str):
         # check if anything should be replaced:
-        for k, v in replacements.items():
-            be_like = be_like.replace(k, v)
-            actual = actual.replace(k, v)
+        for k, value in replacements.items():
+            be_like = be_like.replace(k, value)
+            actual = actual.replace(k, value)
         scale = 1
 
         # check if both have x10^X terms in them
@@ -43,12 +43,12 @@ def get_scale(be_like, actual):
         )  # split the numerator and denominators for the units to be converted
         if len(be_like_list) == len(actual_list):
             success = 1
-            for i in range(len(be_like_list)):
+            for i, be_like_item in enumerate(be_like_list):
                 try:
-                    scale *= convert_unit(actual_list[i], be_like_list[i]) ** (
+                    scale *= convert_unit(actual_list[i], be_like_item) ** (
                         1 if i > 0 else -1
                     )
-                except Exception:
+                except (TypeError, ValueError):
                     success = 0
                     # could not convert between units
                     break
@@ -102,7 +102,7 @@ def convert_unit(from_unit, to_unit):
             return c_mat[
                 units.index(from_unit), units.index(to_unit)
             ]  # scale is the result of this
-        elif (base_unit in from_unit) + (base_unit in to_unit) == 1:
+        if (base_unit in from_unit) + (base_unit in to_unit) == 1:
             raise Exception(f"Base units do not match for {from_unit} and {to_unit}")
     raise Exception(
         f"Either {from_unit} or {to_unit} are not multiples of ['g', 'mol', 'l']"
@@ -112,18 +112,18 @@ def convert_unit(from_unit, to_unit):
 def convert_units(units_dict):
     """[TODO]: Add docstring."""
     conversion_list = []
-    for k, v in units_dict.items():
-        if len(v) > 1:
-            for item in v[1:]:
-                scale = get_scale(v[0][0], item[0])
-                if not (isinstance(scale, str)):
+    for k, value in units_dict.items():
+        if len(value) > 1:
+            for item in value[1:]:
+                scale = get_scale(value[0][0], item[0])
+                if not isinstance(scale, str):
                     conversion_list.append(
                         (
                             k[0],
                             k[1],
                             item[0],
-                            get_scale(v[0][0], item[0]),
-                            v[0][0],
+                            get_scale(value[0][0], item[0]),
+                            value[0][0],
                             item[1],
                         )
                     )  # key: (original unit, scale, to_unit)

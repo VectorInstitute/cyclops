@@ -70,27 +70,15 @@ class AverageBinaryClassificationMetric:
 
         acc = (preds == target).mean()
 
-        f1 = f1_score(target, preds)
-        precision = precision_score(target, preds)
-        recall = recall_score(target, preds)
-        auc = roc_auc_score(target, preds)
-
-        # MLflow metrics
-        mlflow_metric_dict = {
+        # Metrics.
+        metrics_dict = {
             "epoch_loss": avg_loss,
             "accuracy": acc,
-            "f1_score": f1,
-            "precision": precision,
-            "recall": recall,
-            "AUC": auc,
+            "f1_score": f1_score(target, preds),
+            "precision": precision_score(target, preds),
+            "recall": recall_score(target, preds),
+            "AUC": roc_auc_score(target, preds),
         }
-        log_metrics(mlflow_metric_dict)
+        log_metrics(metrics_dict)
 
-        return {
-            "epoch_loss": avg_loss,
-            "accuracy": acc,
-            "f1_score": f1,
-            "precision": precision,
-            "recall": recall,
-            "AUC": auc,
-        }
+        return metrics_dict

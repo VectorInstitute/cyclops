@@ -60,7 +60,6 @@ Add the following environment variables in order to run luigi pipelines:
 ```bash
 export PGPASSWORD=<your-gemini-db-password>
 export PYTHONPATH="${PYTHONPATH}:${PWD}"
-export PROJECT_ROOT="${PWD}"
 ```
 
 To do that, add a file named `.env` to the root of this repo and add

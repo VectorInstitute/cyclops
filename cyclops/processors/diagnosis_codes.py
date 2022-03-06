@@ -5,18 +5,19 @@ import re
 
 import pandas as pd
 
+from codebase_ops import get_log_file_path
+
 from cyclops.processors.base import Processor
 from cyclops.processors.column_names import ENCOUNTER_ID, DIAGNOSIS_CODE
 from cyclops.processors.constants import TRAJECTORIES, EMPTY_STRING
 from cyclops.processors.string_ops import is_non_empty_value
-
-from cyclops.utils.log import setup_logging, LOG_FILE_PATH
+from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=LOG_FILE_PATH, print_level="INFO", logger=LOGGER)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
 def insert_decimal(input_: str, index: int = 2) -> str:
@@ -73,14 +74,12 @@ def get_code_numerics(code: str) -> str:
     return re.sub("[^0-9]", EMPTY_STRING, code)
 
 
-def get_icd_category(
-    code: str, trajectories: dict = TRAJECTORIES, raise_err: bool = False
-) -> str:
+def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> str:
     """Get ICD10 category.
 
     code: str
         Input diagnosis code.
-    trajectories: dict, optional
+    trajectories: dict
         Dictionary mapping of ICD10 trajectories.
     raise_err: Flag to raise error if code cannot be converted (for debugging.)
 
@@ -92,56 +91,27 @@ def get_icd_category(
     """
     if code is None:
         return EMPTY_STRING
+    code = str(code)
 
-    try:
-        code = str(code)
-    except Exception:
-        return EMPTY_STRING
-
-    for item, (code_low, code_high) in trajectories.items():
+    for _, (code_low, code_high) in trajectories.items():
         icd_category = "_".join([code_low, code_high])
         code_letter = get_code_letter(code)
-        code_low_letter = get_code_letter(code_low)
         code_high_letter = get_code_letter(code_high)
-        if code_letter > code_low_letter:
-            pass
-        elif (code_letter == code_low_letter) and (
-            float(insert_decimal(get_code_numerics(code), index=2))
-            >= int(get_code_numerics(code_low))
-        ):
-            pass
-        else:
-            continue
         if code_letter < code_high_letter:
             return icd_category
-        elif (code_letter == code_high_letter) and (
+        if (code_letter == code_high_letter) and (
             int(float(insert_decimal(get_code_numerics(code), index=2)))
             <= int(get_code_numerics(code_high))
         ):
             return icd_category
-        else:
-            continue
 
     if raise_err:
         raise Exception("Code cannot be converted: {}".format(code))
-    else:
-        return EMPTY_STRING
+    return EMPTY_STRING
 
 
 class DiagnosisProcessor(Processor):
     """Diagnosis codes processor class."""
-
-    def __init__(self, data: pd.DataFrame, must_have_columns: list):
-        """Instantiate.
-
-        Parameters
-        ----------
-        data: pandas.DataFrame
-            Dataframe with raw features.
-        must_have_columns: list
-            List of column names of features that must be present in data.
-        """
-        super().__init__(data, must_have_columns)
 
     @time_function
     def process(self) -> pd.DataFrame:
@@ -155,7 +125,9 @@ class DiagnosisProcessor(Processor):
         """
         self._log_counts_step("Processing raw diagnosis codes...")
         self.data[DIAGNOSIS_CODE] = (  # type: ignore
-            self.data[DIAGNOSIS_CODE].apply(get_icd_category).copy()  # type: ignore
+            self.data[DIAGNOSIS_CODE]  # type: ignore
+            .apply(get_icd_category, args=(TRAJECTORIES,))
+            .copy()
         )
 
         self._log_counts_step("Converting diagnosis codes to ICD codes...")

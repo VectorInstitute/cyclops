@@ -3,7 +3,6 @@
 import tasks.train as train
 import tasks.analysis as analysis
 import tasks.predict as predict
-from tasks.datapipeline.process_data import pipeline as extract
 
 import config
 
@@ -11,9 +10,7 @@ import config
 # Top level to invoke specific operations
 if __name__ == "__main__":
     args = config.read_config()
-    if args.extract:
-        extract(args)
-    elif args.train:
+    if args.train:
         train.main(args)
     elif args.predict:
         predict.main(args)

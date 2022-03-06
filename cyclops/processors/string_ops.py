@@ -1,10 +1,10 @@
 """String operations used in data extraction."""
 
+import re
 from collections import Counter
 from typing import Iterable, List, Union
 
 import numpy as np
-import re
 
 from cyclops.processors.constants import EMPTY_STRING
 
@@ -25,8 +25,8 @@ def find_string_match(search_string: str, search_terms: str) -> bool:
         True if any matches were found, else False.
     """
     search_string = search_string.lower()
-    x = re.search(search_terms, search_string)
-    return True if x else False
+    found = re.search(search_terms, search_string)
+    return bool(found)
 
 
 def fix_inequalities(search_string: str) -> str:
@@ -101,7 +101,7 @@ def is_non_empty_value(value: str) -> bool:
         True if non-empty string, else False.
 
     """
-    return False if value == EMPTY_STRING else True
+    return not value == EMPTY_STRING
 
 
 def normalize_special_characters(item: str) -> str:
@@ -155,42 +155,42 @@ def count_occurrences(items: Iterable) -> List:
     return sorted(counter.items(), key=lambda x: x[1], reverse=True)
 
 
-def convert_to_numeric(x):
-    """Convert different strings to numeric values.
+def convert_to_numeric(input_: Union[str, float, None]) -> Union[int, str, float]:
+    """Convert input to numeric values.
 
     Parameters
     ----------
-    x: str
-        Input string.
+    input_: str
+        Input value to try and convert to numeric.
 
     Returns
     -------
-    Union[int, float]
+    Union[str, float]
         Converted numeric output.
     """
-    if x in (None, np.nan):
+    if input_ in (None, np.nan):
         return np.nan
-    if not isinstance(x, str):
+    if not isinstance(input_, str):
         # Originally this case implicitly returned None.
-        raise TypeError(f"Expected string, received {type(x)}")
+        raise TypeError(f"Expected string, received {type(input_)}")
 
-    if is_range(x):
+    if is_range(input_):
         try:
-            return compute_range_avg(x)
+            return compute_range_avg(input_)
         except Exception:
-            print(x)
+            print(input_)
             raise
-    return re.sub("^-?[^0-9.]", "", str(x))
+    return re.sub("^-?[^0-9.]", "", str(input_))
 
 
-def is_range(x: str) -> bool:
+def is_range(input_: str) -> bool:
     """Test if x matches range pattern.
 
     e.g. "2 to 5" or "2 - 5"
 
     Parameters
     ----------
-    x: str
+    input_: str
         Input string to test if its a range.
 
     Returns
@@ -200,7 +200,7 @@ def is_range(x: str) -> bool:
     """
     # [TODO:] Why is a space required? Isn't 1-5 all right, too?
     categorical_pattern = re.compile(r"-?\d+\s+(?:to|-)\s+(-?\d+)")
-    return categorical_pattern.search(x) is not None
+    return categorical_pattern.search(input_) is not None
 
 
 def compute_range_avg(item: str) -> Union[int, float]:
@@ -220,6 +220,6 @@ def compute_range_avg(item: str) -> Union[int, float]:
     """
     pattern_str = r"^(?P<first>-?\d+)\s*(?:to|-)\s*(?P<second>-?\d+)$"
     pattern = re.compile(pattern_str)
-    if not (matched := pattern.search(item)):
+    if not (matched := pattern.search(item)):  # pylint: disable=superfluous-parens
         raise ValueError(f"'item' does not match expected pattern {pattern_str}")
     return (int(matched.group("first")) + int(matched.group("second"))) / 2

@@ -1,11 +1,13 @@
 """Analysis script."""
 
-import pandas as pd
-import json
-import time
-import os
-from config import config_to_dict
+# pylint: disable-all
 
+import os
+import time
+import json
+
+import pandas as pd
+import mlflow
 from evidently.model_profile import Profile
 from evidently.profile_sections import (
     DataDriftProfileSection,
@@ -15,14 +17,14 @@ from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
 from evidently.pipeline.column_mapping import ColumnMapping
 
-import mlflow
+from config import config_to_dict
 
 
 def get_report_filename(config):
     """Get report filename."""
     if len(config.report_full_path) == 0:
-        t = time.localtime()
-        date = time.strftime("%Y-%b-%d_%H-%M-%S", t)
+        curr_time = time.localtime()
+        date = time.strftime("%Y-%b-%d_%H-%M-%S", curr_time)
         ext = "html" if config.html else "json"
         filename = os.path.join(
             config.report_path, f"{config.type}_report_{date}.{ext}"
@@ -52,11 +54,11 @@ def analyze_dataset_drift(ref_data, eval_data, config):
     reference_data = ref_data[analysis_columns].dropna()
     eval_data = eval_data[analysis_columns].dropna()
 
-    drift, fn = eval_drift(
+    drift, func = eval_drift(
         reference_data, eval_data, column_mapping, config, html=config.html
     )
 
-    return drift, fn
+    return drift, func
 
 
 # evaluate data drift with Evidently Profile
@@ -75,8 +77,8 @@ def eval_drift(reference, production, column_mapping, config, html=False):
         dashboard.calculate(reference, production, column_mapping=column_mapping)
         dashboard.save(report_filename)
     else:
-        with open(report_filename, "w") as f:
-            json.dump(json_report, f)
+        with open(report_filename, "w") as file_handle:
+            json.dump(json_report, file_handle)
 
     metrics = {"drifts": [], "report_filename": report_filename, "results": {}}
     results = json_report["data_drift"]["data"]["metrics"]
@@ -112,8 +114,8 @@ def analyze_model_drift(reference, test, config):
         perfomance_dashboard.calculate(reference, test, column_mapping=column_mapping)
         perfomance_dashboard.save(report_filename)
     else:
-        with open(report_filename, "w") as f:
-            json.dump(json_report, f)
+        with open(report_filename, "w") as file_handle:
+            json.dump(json_report, file_handle)
 
     metrics = {"results": {}, "report_filename": report_filename}
     results = json_report["classification_performance"]["data"]["metrics"]
@@ -157,12 +159,12 @@ def main(config):
             ref_data = pd.read_csv(config.reference)
             eval_data = pd.read_csv(config.test)
 
-        metrics, fn = analyze_dataset_drift(ref_data, eval_data, config)
+        metrics, func = analyze_dataset_drift(ref_data, eval_data, config)
     else:
         reference = pd.read_csv(config.reference)
         test = pd.read_csv(config.test)
-        metrics, fn = analyze_model_drift(reference, test, config)
+        metrics, func = analyze_model_drift(reference, test, config)
     # log results of analysis to mlflow
     log_to_mlflow(config, metrics)
 
-    return fn
+    return func

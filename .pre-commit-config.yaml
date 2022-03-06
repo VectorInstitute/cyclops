@@ -1,9 +1,10 @@
+default_language_version:
+    python: python3.8.5
 repos:
 -   repo: https://github.com/ambv/black
     rev: 21.12b0
     hooks:
     - id: black
-      language_version: python3.8.5
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 4.0.1
     hooks:
@@ -17,6 +18,13 @@ repos:
     hooks:
     - id: mypy
       additional_dependencies: [types-python-dateutil==2.8.8]
+-   repo: local
+    hooks:
+    - id: pylint
+      name: pylint
+      language: python
+      entry: pylint --rcfile=.pylintrc
+      files: ".*.py$"
 -   repo: local
     hooks:
     - id: pytest
