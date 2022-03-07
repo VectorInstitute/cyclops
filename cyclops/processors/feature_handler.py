@@ -313,7 +313,7 @@ class FeatureHandler:
 
     def __init__(self, features: Optional[pd.DataFrame] = None) -> None:
         """Instantiate."""
-        self.meta: list = []
+        self.meta: dict = {}
         self.features = pd.DataFrame()
         if features is not None:
             self.add_features(features)
@@ -358,10 +358,34 @@ class FeatureHandler:
     def _scale(self) -> pd.DataFrame:
         """Apply scaling."""
         features = self.features.copy(deep=True)
-        for i, col in enumerate(self.features.columns):
-            if self.meta[i].feature_type == NUMERIC:
-                features[col] = self.meta[i].scale(features[col])
+        for col in self.features.columns:
+            if self.meta[col].feature_type == NUMERIC:
+                features[col] = self.meta[col].scale(features[col])
         return features
+
+    def get_numerical_features(self) -> list:
+        """Get all numerical features added to the handler.
+
+        Returns
+        -------
+        list
+            List of numerical features.
+        """
+        return [col for col in self.features if self.meta[col].feature_type == NUMERIC]
+
+    def get_categorical_features(self) -> list:
+        """Get all categorical features added to the handler.
+
+        Returns
+        -------
+        list
+            List of categorical features.
+        """
+        return [
+            col
+            for col in self.features
+            if self.meta[col].feature_type in [BINARY, CATEGORICAL_BINARY]
+        ]
 
     def extract_features(self, names: list) -> pd.DataFrame:
         """Extract features by name.
@@ -414,7 +438,7 @@ class FeatureHandler:
         self.features = pd.concat([self.features, series], axis=1)
 
         # Add to meta.
-        self.meta.append(meta)
+        self.meta[series.name] = meta
 
     def _add_binary(self, series: pd.Series, group: Optional[str] = None) -> None:
         """Add binary features.
@@ -526,15 +550,13 @@ class FeatureHandler:
         Parameters
         ----------
         cols: list
-            List of columns to drop.
+            List of column names to drop.
         """
         assert cols is not None
-        # Drop columns.
-        col_inds = [self.features.columns.get_loc(c) for c in cols]
-        self.features.drop(self.features.columns[col_inds], axis=1, inplace=True)
+        self.features.drop(cols, axis=1, inplace=True)
 
-        for i in sorted(col_inds, reverse=True):
-            del self.meta[i]
+        for col in cols:
+            del self.meta[col]
 
     def _drop_categorical(self, names: list) -> None:
         """Drop categorical groups of features.
@@ -546,10 +568,10 @@ class FeatureHandler:
         """
         # Find which corresponding group columns to drop.
         drop_group_cols = [
-            c
-            for i, c in enumerate(self.features.columns)
-            if self.meta[i].feature_type == CATEGORICAL_BINARY
-            and self.meta[i].group in names
+            col
+            for col in self.features.columns
+            if self.meta[col].feature_type == CATEGORICAL_BINARY
+            and self.meta[col].group in names
         ]
 
         # Drop corresponding columns.
@@ -570,7 +592,7 @@ class FeatureHandler:
 
         # Find categorical groups to drop.
         all_groups = [
-            m.group for m in self.meta if m.feature_type == CATEGORICAL_BINARY
+            m.group for m in self.meta.values() if m.feature_type == CATEGORICAL_BINARY
         ]
         drop_groups = {c for c in remaining if c in all_groups}
 
