@@ -26,7 +26,7 @@ def insert_decimal(input_: str, index: int = 2) -> str:
     ----------
     input_: str
         Input string.
-    index: int
+    index: int, optional
         Index at which to insert decimal.
 
     Returns
@@ -130,10 +130,10 @@ class DiagnosisProcessor(Processor):
 
     def _normalize_diagnosis_codes(self) -> None:
         """Normalize diagnosis codes by getting corresponding ICD code."""
-        self.data[DIAGNOSIS_CODE] = (  # type: ignore
-            self.data[DIAGNOSIS_CODE]  # type: ignore
-            .apply(get_icd_category, args=(TRAJECTORIES,))
-            .copy()
+        self.data[DIAGNOSIS_CODE] = self.data[  # type: ignore
+            DIAGNOSIS_CODE
+        ].apply(  # type: ignore
+            get_icd_category, args=(TRAJECTORIES,)
         )
         self._log_counts_step("Converting diagnosis codes to ICD codes...")
 
@@ -160,5 +160,6 @@ class DiagnosisProcessor(Processor):
             icd_codes_encounter = codes[DIAGNOSIS_CODE]
             for icd_code_encounter in icd_codes_encounter:
                 features.loc[encounter_id, icd_code_encounter] = 1
+        features.fillna(0, inplace=True)
 
         return features
