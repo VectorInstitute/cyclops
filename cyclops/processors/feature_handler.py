@@ -314,9 +314,8 @@ class FeatureHandler:
     def __init__(self, features: Optional[pd.DataFrame] = None) -> None:
         """Instantiate."""
         self.meta: list = []
-        if features is None:
-            self.features = pd.DataFrame()
-        else:
+        self.features = pd.DataFrame()
+        if features is not None:
             self.add_features(features)
 
     @property
@@ -479,10 +478,11 @@ class FeatureHandler:
             Features to add.
 
         """
-        if isinstance(features, pd.DataFrame):
+        if not isinstance(features, pd.DataFrame):
+            raise ValueError("Input to feature handler must be a pandas.DataFrame.")
+
+        if len(self.features.index) == 0:
             self.features = pd.DataFrame(index=features.index)
-        else:
-            raise ValueError("input to feature handler must be a pandas.DataFrame.")
 
         # Attempt to turn any possible columns to numeric.
         features = _attempt_to_numeric(features)
@@ -508,17 +508,17 @@ class FeatureHandler:
             # Check for and add numerical features.
             if is_numeric_dtype(features[col]):
                 self._add_numeric(features[col])
+                continue
 
             # Check for (non-binary valued) string types.
-            elif is_string_dtype(features[col]):
+            if is_string_dtype(features[col]):
                 # Don't parse columns with too many unique values.
                 if len(unique) > 100:
                     raise ValueError(f"Failed to parse feature {col}")
                 self._add_categorical(features[col])
                 continue
 
-            else:
-                raise ValueError("Unsure about column data type.")
+            raise ValueError("Unsure about column data type.")
 
     def _drop_cols(self, cols: list) -> None:
         """Drop columns.
