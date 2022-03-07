@@ -15,12 +15,12 @@ def fill_missing_with_nan(string: str) -> Union[float, str]:
     Parameters
     ----------
     string: str
-        The string to search for possible matches.
+        Input string.
 
     Returns
     -------
     Union[str, float]
-        NaN id input was empty, else input.
+        NaN if input was empty, else input.
     """
     return np.nan if string == EMPTY_STRING else string
 

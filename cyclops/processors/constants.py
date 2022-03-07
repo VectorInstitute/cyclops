@@ -5,6 +5,16 @@
 # Generic.
 YEAR = "year"
 
+# Feature handler.
+FEATURE_TYPE = "feature_type"
+NUMERIC = "numeric"
+BINARY = "binary"
+CATEGORICAL_BINARY = "categorical-binary"
+NORMALIZATION_METHOD = "normalization_method"
+GROUP = "group"
+STANDARD = "standard"
+MIN_MAX = "min-max"
+
 # GEMINI Admin.
 THPM = "THPM"
 SBK = "SBK"
