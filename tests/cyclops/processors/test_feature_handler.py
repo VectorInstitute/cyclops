@@ -2,6 +2,7 @@
 
 import pytest
 
+import numpy as np
 import pandas as pd
 
 from cyclops.processors.feature_handler import _category_to_numeric, FeatureHandler
@@ -44,7 +45,18 @@ def test_input():
     return input_
 
 
-def test_add_features(test_input):  # pylint: disable=redefined-outer-name
+@pytest.fixture
+def test_input_extra_column():
+    """Create test input dataframe with single column to add."""
+    input_ = pd.DataFrame(index=[0, 1, 2, 4], columns=["D"])
+    input_.loc[0] = [15.0]
+    input_.loc[1] = [5.1]
+    return input_
+
+
+def test_add_features(  # pylint: disable=redefined-outer-name
+    test_input, test_input_extra_column
+):
     """Test adding features."""
     feature_handler = FeatureHandler()
     feature_handler.add_features(test_input)
@@ -52,6 +64,12 @@ def test_add_features(test_input):  # pylint: disable=redefined-outer-name
     assert (feature_handler.features["A-dog"].values == [0, 0, 0, 1]).all()
     assert (feature_handler.features["B"].values == [10, 2, 3, 9.1]).all()
     assert (feature_handler.features["C"].values == [0, 0, 1, 0]).all()
+
+    feature_handler.add_features(test_input_extra_column)
+    assert feature_handler.features["D"][0] == 15.0
+    assert feature_handler.features["D"][1] == 5.1
+    assert np.isnan(feature_handler.features["D"][2])
+    assert np.isnan(feature_handler.features["D"][4])
 
     feature_handler = FeatureHandler(test_input)
     assert (feature_handler.features["A-cat"].values == [0, 1, 1, 0]).all()
