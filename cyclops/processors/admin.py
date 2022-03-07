@@ -32,6 +32,18 @@ class AdminProcessor(Processor):
         """
         self._log_counts_step("Processing raw admin data...")
 
+        return self._create_features()
+
+    def _create_features(self) -> pd.DataFrame:
+        """Create admin features.
+
+        Current support for ['age', 'sex']
+
+        Returns
+        -------
+        pandas.DataFrame:
+            Processed admin features.
+        """
         encounters = list(self.data[ENCOUNTER_ID].unique())
         admin_col_names = [AGE, SEX]
         LOGGER.info(

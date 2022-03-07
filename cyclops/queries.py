@@ -90,7 +90,7 @@ def query_gemini_delirium_diagnosis(gemini: Database) -> pd.DataFrame:
             gemini.public.diagnosis.is_er_diagnosis,
         )
         .join(
-            gemini.public.diagnosis.x,
+            gemini.public.diagnosis.data,
             gemini.public.ip_administrative.genc_id == gemini.public.diagnosis.genc_id,
         )
         .where(gemini.public.ip_administrative.gemini_cohort == True)  # noqa: E712
@@ -129,7 +129,7 @@ def query_gemini_delirium_lab(gemini: Database) -> pd.DataFrame:
             gemini.public.lab.reference_range.label(REFERENCE_RANGE),
         )
         .join(
-            gemini.public.lab.x,
+            gemini.public.lab.data,
             gemini.public.ip_administrative.genc_id == gemini.public.lab.genc_id,
         )
         .where(
@@ -180,7 +180,7 @@ def query_gemini_vitals(gemini: Database, year: int, hospital: str) -> pd.DataFr
             )
         )
         .join(
-            gemini.public.vitals.x,
+            gemini.public.vitals.data,
             gemini.public.ip_administrative.genc_id == db.public.vitals.genc_id,
         )
         .where(
