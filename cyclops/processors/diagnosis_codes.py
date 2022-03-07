@@ -10,7 +10,6 @@ from codebase_ops import get_log_file_path
 from cyclops.processors.base import Processor
 from cyclops.processors.column_names import ENCOUNTER_ID, DIAGNOSIS_CODE
 from cyclops.processors.constants import TRAJECTORIES, EMPTY_STRING
-from cyclops.processors.string_ops import is_non_empty_value
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -124,21 +123,36 @@ class DiagnosisProcessor(Processor):
 
         """
         self._log_counts_step("Processing raw diagnosis codes...")
+
+        self._normalize_diagnosis_codes()
+
+        return self._create_features()
+
+    def _normalize_diagnosis_codes(self) -> None:
+        """Normalize diagnosis codes by getting corresponding ICD code."""
         self.data[DIAGNOSIS_CODE] = (  # type: ignore
             self.data[DIAGNOSIS_CODE]  # type: ignore
             .apply(get_icd_category, args=(TRAJECTORIES,))
             .copy()
         )
-
         self._log_counts_step("Converting diagnosis codes to ICD codes...")
-        self.data = self.data[  # type: ignore
-            self.data[DIAGNOSIS_CODE].apply(is_non_empty_value)  # type: ignore
-        ].copy()
-        self._log_counts_step("Removing unmapped, i.e. nan codes...")
 
+    def _create_features(self) -> pd.DataFrame:
+        """Create features, grouping by icd codes and creating indicator variables.
+
+        Returns
+        -------
+        pandas.DataFrame:
+            Processed diagnosis code features.
+
+        """
         encounters = list(self.data[ENCOUNTER_ID].unique())
         icd_codes = list(self.data[DIAGNOSIS_CODE].unique())
-
+        LOGGER.info(
+            "# diagnosis features: %d, # encounters: %d",
+            len(icd_codes),
+            len(encounters),
+        )
         features = pd.DataFrame(index=encounters, columns=icd_codes)
 
         grouped_codes = self.data.groupby([ENCOUNTER_ID])

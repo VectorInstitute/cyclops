@@ -1,5 +1,7 @@
 """Labs processor module."""
 
+# mypy: ignore-errors
+
 import logging
 
 import pandas as pd
@@ -14,10 +16,11 @@ from cyclops.processors.column_names import (
     LAB_TEST_RESULT_UNIT,
 )
 from cyclops.processors.string_ops import (
-    is_non_empty_value,
     fix_inequalities,
     to_lower,
     strip_whitespace,
+    remove_text_in_parentheses,
+    fill_missing_with_nan,
 )
 from cyclops.processors.common import filter_within_admission_window
 from cyclops.utils.log import setup_logging
@@ -46,24 +49,33 @@ class LabsProcessor(Processor):
 
         """
         self._log_counts_step("Processing raw lab data...")
-        self.data = filter_within_admission_window(
-            self.data, LAB_TEST_TIMESTAMP  # type: ignore
-        )
-        self._log_counts_step("Filtering labs within aggregation window...")
-        self.data[LAB_TEST_RESULT_VALUE] = (
-            self.data[LAB_TEST_RESULT_VALUE].apply(fix_inequalities).copy()
+
+        self._aggregate_labs()
+        self._normalize_lab_names()
+        self._normalize_result_values()
+        self._normalize_units()
+
+        return self._create_features()
+
+    def _normalize_result_values(self) -> None:
+        """Normalize result values, e.g. remove linequalities, convert to SI units."""
+        self.data[LAB_TEST_RESULT_VALUE] = self.data[LAB_TEST_RESULT_VALUE].apply(
+            fix_inequalities
         )
         self._log_counts_step("Fixing inequalities and removing outlier values...")
-        self.data = self.data[
-            self.data[LAB_TEST_RESULT_VALUE].apply(is_non_empty_value)
-        ].copy()
-        self._log_counts_step("Removing labs with empty result values...")
+
+        self.data[LAB_TEST_RESULT_VALUE] = self.data[LAB_TEST_RESULT_VALUE].apply(
+            fill_missing_with_nan
+        )
+        self._log_counts_step("Fill empty result string values with NaN...")
 
         LOGGER.info("Converting string result values to numeric...")
         self.data[LAB_TEST_RESULT_VALUE] = self.data[LAB_TEST_RESULT_VALUE].astype(
             "float"
         )
 
+    def _normalize_units(self) -> None:
+        """Normalize units strings, convert units to SI, result values accordingly."""
         LOGGER.info("Cleaning units and converting to SI...")
         self.data[LAB_TEST_RESULT_UNIT] = self.data[LAB_TEST_RESULT_UNIT].apply(
             to_lower
@@ -72,11 +84,23 @@ class LabsProcessor(Processor):
             strip_whitespace
         )
 
-        LOGGER.info("Creating features...")
-        return self._featurize()
+    def _normalize_lab_names(self) -> None:
+        """Normalize lab test names, e.g. remove parentheses make lower case."""
+        self.data[LAB_TEST_NAME] = self.data[LAB_TEST_NAME].apply(
+            remove_text_in_parentheses
+        )
+        self.data[LAB_TEST_NAME] = self.data[LAB_TEST_NAME].apply(to_lower)
+        self._log_counts_step(
+            "Remove text in parentheses and normalize lab test names..."
+        )
 
-    def _featurize(self) -> pd.DataFrame:
-        """For each test, create appropriate features.
+    def _aggregate_labs(self) -> None:
+        """Aggregate labs based on static or time-interval windows."""
+        self.data = filter_within_admission_window(self.data, LAB_TEST_TIMESTAMP)
+        self._log_counts_step("Aggregating labs within aggregation window...")
+
+    def _create_features(self) -> pd.DataFrame:
+        """Create features, grouping by test and gathering result values.
 
         Returns
         -------
@@ -84,6 +108,7 @@ class LabsProcessor(Processor):
             Processed lab features.
 
         """
+        LOGGER.info("Creating features...")
         lab_tests = list(self.data[LAB_TEST_NAME].unique())
         encounters = list(self.data[ENCOUNTER_ID].unique())
         LOGGER.info(

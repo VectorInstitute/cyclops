@@ -1,5 +1,7 @@
 """Vitals processor module."""
 
+# mypy: ignore-errors
+
 import logging
 
 import pandas as pd
@@ -13,7 +15,7 @@ from cyclops.processors.column_names import (
     VITAL_MEASUREMENT_VALUE,
     VITAL_MEASUREMENT_TIMESTAMP,
 )
-from cyclops.processors.string_ops import is_non_empty_value, find_string_match
+from cyclops.processors.string_ops import fill_missing_with_nan, find_string_match
 from cyclops.processors.common import filter_within_admission_window
 from cyclops.processors.constants import POSITIVE_RESULT_TERMS, NEGATIVE_RESULT_TERMS
 from cyclops.utils.log import setup_logging
@@ -39,18 +41,15 @@ class VitalsProcessor(Processor):
 
         """
         self._log_counts_step("Processing raw vitals data...")
-        self.data = filter_within_admission_window(
-            self.data, VITAL_MEASUREMENT_TIMESTAMP  # type: ignore
-        )
-        self._log_counts_step("Filtering vitals within aggregation window...")
 
-        self.data = self.data[
-            ~self.data[VITAL_MEASUREMENT_NAME].apply(
-                find_string_match, args=("oxygen",)
-            )
-        ].copy()
-        self._log_counts_step("Drop oxygen flow rate, saturation samples...")
+        self._aggregate_vitals()
+        self._drop_unsupported_vitals()
+        self._normalize_values()
 
+        return self._create_features()
+
+    def _normalize_values(self) -> None:
+        """Normalize vital values, e.g. fill empty strings with NaNs."""
         self.data[VITAL_MEASUREMENT_VALUE][
             self.data[VITAL_MEASUREMENT_VALUE].apply(
                 find_string_match, args=("|".join(POSITIVE_RESULT_TERMS),)
@@ -63,20 +62,35 @@ class VitalsProcessor(Processor):
         ] = "0"
         self._log_counts_step("Convert Positive/Negative to 1/0...")
 
-        self.data[VITAL_MEASUREMENT_VALUE] = (
-            self.data[VITAL_MEASUREMENT_VALUE].astype("float").copy()
+        self.data[VITAL_MEASUREMENT_VALUE] = self.data[VITAL_MEASUREMENT_VALUE].apply(
+            fill_missing_with_nan
+        )
+        self._log_counts_step("Fill empty result string values with NaN...")
+
+        self.data[VITAL_MEASUREMENT_VALUE] = self.data[VITAL_MEASUREMENT_VALUE].astype(
+            "float"
         )
         LOGGER.info("Converting string result values to numeric...")
 
+    def _drop_unsupported_vitals(self) -> None:
+        """Drop some vitals currently not supported."""
         self.data = self.data[
-            self.data[VITAL_MEASUREMENT_VALUE].apply(is_non_empty_value)
-        ].copy()
-        self._log_counts_step("Removing vitals with empty result values...")
+            ~self.data[VITAL_MEASUREMENT_NAME].apply(
+                find_string_match, args=("oxygen",)
+            )
+        ]
+        self._log_counts_step(
+            "Drop oxygen flow rate, saturation samples (unsupported)..."
+        )
 
-        LOGGER.info("Creating features...")
-        return self._featurize()
+    def _aggregate_vitals(self) -> None:
+        """Aggregate vitals based on static or time-interval windows."""
+        self.data = filter_within_admission_window(
+            self.data, VITAL_MEASUREMENT_TIMESTAMP
+        )
+        self._log_counts_step("Aggregating vitals within aggregation window...")
 
-    def _featurize(self) -> pd.DataFrame:
+    def _create_features(self) -> pd.DataFrame:
         """For each vital measurement, create appropriate features.
 
         Returns
@@ -85,6 +99,7 @@ class VitalsProcessor(Processor):
             Processed vitals.
 
         """
+        LOGGER.info("Creating features...")
         vitals_names = list(self.data[VITAL_MEASUREMENT_NAME].unique())
         encounters = list(self.data[ENCOUNTER_ID].unique())
         LOGGER.info(

@@ -9,12 +9,28 @@ import numpy as np
 from cyclops.processors.constants import EMPTY_STRING
 
 
-def find_string_match(search_string: str, search_terms: str) -> bool:
+def fill_missing_with_nan(string: str) -> Union[float, str]:
+    """Return NaN if input string is empty.
+
+    Parameters
+    ----------
+    string: str
+        The string to search for possible matches.
+
+    Returns
+    -------
+    Union[str, float]
+        NaN id input was empty, else input.
+    """
+    return np.nan if string == EMPTY_STRING else string
+
+
+def find_string_match(string: str, search_terms: str) -> bool:
     """Find string terms in search string to see if there are matches.
 
     Parameters
     ----------
-    search_string: str
+    string: str
         The string to search for possible matches.
     search_terms: str
         String terms to search x1|x2...|xn.
@@ -24,12 +40,30 @@ def find_string_match(search_string: str, search_terms: str) -> bool:
     bool
         True if any matches were found, else False.
     """
-    search_string = search_string.lower()
-    found = re.search(search_terms, search_string)
+    string = string.lower()
+    found = re.search(search_terms, string)
     return bool(found)
 
 
-def fix_inequalities(search_string: str) -> str:
+def remove_text_in_parentheses(string: str) -> str:
+    """Remove text within parentheses.
+
+    e.g. test (T) -> test
+
+    Parameters
+    ----------
+    string: str
+        Input string.
+
+    Returns
+    -------
+    str
+        Output string with text inside including parentheses removed.
+    """
+    return re.sub(r"\([^)]*\)", "", string).strip()
+
+
+def fix_inequalities(string: str) -> str:
     """Match result value, remove inequality symbols (<, >, =).
 
     For e.g.
@@ -37,7 +71,7 @@ def fix_inequalities(search_string: str) -> str:
 
     Parameters
     ----------
-    search_string: str
+    string: str
         The string to search for possible matches.
 
     Returns
@@ -45,10 +79,10 @@ def fix_inequalities(search_string: str) -> str:
     str
         Result value string is matched to regex, symbols removed.
     """
-    search_string = search_string.lower()
+    string = string.lower()
     matches = re.search(
         r"^\s*(<|>)?=?\s*(-?\s*[0-9]+(?P<floating>\.)?(?(floating)[0-9]+|))\s*$",
-        search_string,
+        string,
     )
     return matches.group(2) if matches else ""
 
@@ -87,13 +121,13 @@ def strip_whitespace(string: str) -> str:
     return re.sub(re.compile(r"\s+"), "", string)
 
 
-def is_non_empty_value(value: str) -> bool:
-    """Return True if value == '', else False.
+def is_non_empty_string(string: str) -> bool:
+    """Return True if value == "", else False.
 
     Parameters
     ----------
-    value: str
-        Result value of lab test.
+    string: str
+        Input string.
 
     Returns
     -------
@@ -101,7 +135,7 @@ def is_non_empty_value(value: str) -> bool:
         True if non-empty string, else False.
 
     """
-    return not value == EMPTY_STRING
+    return not string == EMPTY_STRING
 
 
 def normalize_special_characters(item: str) -> str:

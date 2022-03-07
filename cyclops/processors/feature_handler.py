@@ -1,6 +1,7 @@
 """Feature handling for automatic feature creation from processed data."""
 
 
+import logging
 import abc
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any, Union
@@ -11,10 +12,19 @@ from pandas.api.types import is_string_dtype
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
+from codebase_ops import get_log_file_path
+
+from cyclops.utils.log import setup_logging
+
 
 NUMERIC = "numeric"
 BINARY = "binary"
 CATEGORICAL_BINARY = "categorical-binary"
+
+
+# Logging.
+LOGGER = logging.getLogger(__name__)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
 def _get_scaler_type(normalization_method: str) -> type:
@@ -477,6 +487,11 @@ class FeatureHandler:
         for col in features:
             unique = np.unique(features[col].values)
 
+            # If all values are NaN, feature is dropped.
+            if len(unique) == 1 and np.isnan(unique[0]):
+                LOGGER.warning("Feature %s has all NaNs, will not be added.", col)
+                continue
+
             # Check if it can be represented as binary.
             # (Numeric or string alike)
             if len(unique) == 2:
@@ -487,14 +502,15 @@ class FeatureHandler:
             # Check for and add numerical features.
             if is_numeric_dtype(features[col]):
                 self._add_numeric(features[col])
+
             # Check for (non-binary valued) string types.
             elif is_string_dtype(features[col]):
                 # Don't parse columns with too many unique values.
                 if len(unique) > 100:
                     raise ValueError(f"Failed to parse feature {col}")
-                # Add as categorical.
                 self._add_categorical(features[col])
                 continue
+
             else:
                 raise ValueError("Unsure about column data type.")
 
