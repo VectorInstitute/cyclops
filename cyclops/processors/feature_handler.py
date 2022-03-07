@@ -14,12 +14,17 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from codebase_ops import get_log_file_path
 
+from cyclops.processors.constants import (
+    FEATURE_TYPE,
+    NUMERIC,
+    BINARY,
+    CATEGORICAL_BINARY,
+    NORMALIZATION_METHOD,
+    GROUP,
+    STANDARD,
+    MIN_MAX,
+)
 from cyclops.utils.log import setup_logging
-
-
-NUMERIC = "numeric"
-BINARY = "binary"
-CATEGORICAL_BINARY = "categorical-binary"
 
 
 # Logging.
@@ -40,7 +45,7 @@ def _get_scaler_type(normalization_method: str) -> type:
     type
         An sklearn.preprocessing scaling object.
     """
-    scaler_map = {"standard": StandardScaler, "min-max": MinMaxScaler}
+    scaler_map = {STANDARD: StandardScaler, MIN_MAX: MinMaxScaler}
 
     # Raise an exception if the normalization string is not recognized.
     if normalization_method not in scaler_map:
@@ -202,7 +207,7 @@ class BinaryFeatureMeta(FeatureMeta):
             raise ValueError(
                 "Binary features must have two unique values, e.g., [0, 1], ['A', 'B']."
             )
-        # Convert strings to numerical binary values
+        # Convert strings to numerical binary values.
         if not np.array_equal(unique, np.array([0, 1])):
             series = _category_to_numeric(series, unique=unique)
 
@@ -222,7 +227,7 @@ class NumericFeatureMeta(FeatureMeta):
     def __init__(
         self,
         feature_type: str = NUMERIC,
-        normalization_method: Optional[str] = "standard",
+        normalization_method: Optional[str] = STANDARD,
     ):
         """Instantiate.
 
@@ -355,7 +360,8 @@ class FeatureHandler:
         """Apply scaling."""
         features = self.features.copy(deep=True)
         for i, col in enumerate(self.features.columns):
-            features[col] = self.meta[i].scale(features[col])
+            if self.meta[i].feature_type == NUMERIC:
+                features[col] = self.meta[i].scale(features[col])
         return features
 
     def extract_features(self, names: list) -> pd.DataFrame:
@@ -421,11 +427,11 @@ class FeatureHandler:
         group: str, optional
             Feature type name.
         """
-        init_kwargs = {"feature_type": BINARY, "group": group}
+        init_kwargs = {FEATURE_TYPE: BINARY, GROUP: group}
         parse_kwargs: Dict = {}
         self._add_feature(series, BinaryFeatureMeta, init_kwargs, parse_kwargs)
 
-    def _add_numeric(self, series: pd.Series, normalization_method="standard") -> None:
+    def _add_numeric(self, series: pd.Series, normalization_method=STANDARD) -> None:
         """Add numeric feature.
 
         Parameters
@@ -434,8 +440,8 @@ class FeatureHandler:
             Feature column.
         """
         init_kwargs: Dict[str, Any] = {
-            "feature_type": NUMERIC,
-            "normalization_method": normalization_method,
+            FEATURE_TYPE: NUMERIC,
+            NORMALIZATION_METHOD: normalization_method,
         }
         parse_kwargs: Dict = {}
         self._add_feature(series, NumericFeatureMeta, init_kwargs, parse_kwargs)
@@ -542,7 +548,7 @@ class FeatureHandler:
         drop_group_cols = [
             c
             for i, c in enumerate(self.features.columns)
-            if self.meta[i].feature_type == "categorical-binary"
+            if self.meta[i].feature_type == CATEGORICAL_BINARY
             and self.meta[i].group in names
         ]
 
@@ -564,7 +570,7 @@ class FeatureHandler:
 
         # Find categorical groups to drop.
         all_groups = [
-            m.group for m in self.meta if m.feature_type == "categorical-binary"
+            m.group for m in self.meta if m.feature_type == CATEGORICAL_BINARY
         ]
         drop_groups = {c for c in remaining if c in all_groups}
 
