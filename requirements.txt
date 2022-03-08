@@ -9,6 +9,7 @@ astunparse==1.6.3
 attrs==21.4.0
 Babel==2.9.1
 backcall==0.2.0
+beautifulsoup4==4.10.0
 black==21.12b0
 blis==0.7.5
 cachetools==5.0.0
@@ -21,6 +22,7 @@ cloudpickle==2.0.0
 ConfigArgParse==1.5.3
 configparser==5.2.0
 coverage==6.3.2
+css-html-js-minify==2.5.5
 cycler==0.11.0
 cymem==2.0.6
 databricks-cli==0.16.2
@@ -76,6 +78,7 @@ libclang==12.0.0
 llvmlite==0.38.0
 lockfile==0.12.2
 luigi==3.0.3
+lxml==4.8.0
 Mako==1.1.6
 Markdown==3.3.6
 MarkupSafe==2.0.1
@@ -93,6 +96,7 @@ nodeenv==1.6.0
 numba==0.55.0
 numexpr==2.8.1
 numpy==1.21.5
+numpydoc==1.2
 oauthlib==3.1.1
 opencv-python==4.5.5.62
 opt-einsum==3.3.0
@@ -132,6 +136,7 @@ python-daemon==2.3.0
 python-dateutil==2.8.2
 python-dotenv==0.19.2
 python-editor==1.0.4
+python-slugify==6.1.1
 pytz==2021.3
 PyWavelets==1.2.0
 PyYAML==5.4.1
@@ -150,6 +155,7 @@ six==1.16.0
 smart-open==5.2.1
 smmap==5.0.0
 snowballstemmer==2.2.0
+soupsieve==2.3.1
 spacy==3.2.1
 spacy-legacy==3.0.8
 spacy-loggers==1.0.1
@@ -177,6 +183,7 @@ tensorflow-estimator==2.7.0
 tensorflow-io-gcs-filesystem==0.23.1
 tensorflow-probability==0.12.2
 termcolor==1.1.0
+text-unidecode==1.3
 thinc==8.0.13
 threadpoolctl==3.0.0
 tifffile==2021.11.2
@@ -193,6 +200,7 @@ types-python-dateutil==2.8.8
 types-setuptools==57.4.9
 types-toml==0.10.4
 typing_extensions==4.0.1
+Unidecode==1.3.3
 urllib3==1.26.8
 virtualenv==20.13.0
 wasabi==0.9.0

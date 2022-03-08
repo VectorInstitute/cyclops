@@ -76,6 +76,8 @@ def get_code_numerics(code: str) -> str:
 def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> str:
     """Get ICD10 category.
 
+    Parameters
+    ----------
     code: str
         Input diagnosis code.
     trajectories: dict
@@ -86,7 +88,6 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
     -------
     str:
         Mapped ICD10 category code.
-
     """
     if code is None:
         return EMPTY_STRING
