@@ -8,6 +8,7 @@ Welcome to cyclops's documentation!
 
    intro
    gemini_hpc
+   design
    api
 
 
