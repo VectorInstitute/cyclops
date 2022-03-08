@@ -1,12 +1,14 @@
-Welcome to vector-delirium's documentation!
-===========================================
+Welcome to cyclops's documentation!
+===================================
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   README
-   modules
+   intro
+   gemini_hpc
+   api
 
 
 Indices and tables
