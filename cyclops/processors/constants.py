@@ -34,6 +34,7 @@ HOSPITAL_ID_MAP = {
     PMH: 6,
     MSH: 7,
 }
+MORTALITY_DISCHARGE_DISPOSITION = 7
 
 # Diagnostic codes.
 TRAJECTORIES = {

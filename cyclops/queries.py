@@ -17,6 +17,8 @@ from cyclops.processors.column_names import (
     HOSPITAL_ID,
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
+    DISCHARGE_DISPOSITION,
+    READMISSION,
     DIAGNOSIS_CODE,
     LAB_TEST_RESULT_VALUE,
     LAB_TEST_TIMESTAMP,
@@ -143,17 +145,17 @@ def query_gemini_delirium_lab(gemini: Database) -> pd.DataFrame:
 
 
 @debug_query_msg
-def query_gemini_vitals(gemini: Database, year: int, hospital: str) -> pd.DataFrame:
-    """Query vitals data for delirium subset.
+def query_gemini_admin_vitals(gemini: Database, years: list, hospitals: list) -> pd.DataFrame:
+    """Query admin + vitals data filtering by hospitals and years.
 
     Parameters
     ----------
     gemini: cyclops.orm.Database
         Database ORM object.
-    year: int
-        Specific year to filter vitals.
-    hospital: str
-        Hospital site to apply as filter.
+    years: list
+        Specific year(s) to filter vitals, e.g. [2019, 2020].
+    hospitals: str
+        Specific hospital site(s) to apply as filter e.g. ['SMH'].
 
     Returns
     -------
@@ -164,10 +166,14 @@ def query_gemini_vitals(gemini: Database, year: int, hospital: str) -> pd.DataFr
         select(
             gemini.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
             gemini.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
+            gemini.public.ip_administrative.age.label(AGE),
+            gemini.public.ip_administrative.gender.label(SEX),
             gemini.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
             gemini.public.ip_administrative.discharge_date_time.label(
                 DISCHARGE_TIMESTAMP
             ),
+            gemini.public.ip_administrative.discharge_disposition.label(DISCHARGE_DISPOSITION),
+            gemini.public.ip_administrative.readmission.label(READMISSION),
             gemini.public.vitals.measurement_mapped.label(VITAL_MEASUREMENT_NAME),
             gemini.public.vitals.measurement_value.label(VITAL_MEASUREMENT_VALUE),
             gemini.public.vitals.measure_date_time.label(VITAL_MEASUREMENT_TIMESTAMP),
@@ -175,13 +181,13 @@ def query_gemini_vitals(gemini: Database, year: int, hospital: str) -> pd.DataFr
         )
         .where(
             and_(
-                gemini.public.ip_administrative.hospital_id == hospital,
-                extract(YEAR, gemini.public.ip_administrative.admit_date_time) == year,
+                gemini.public.ip_administrative.hospital_id.in_(hospitals),
+                extract(YEAR, gemini.public.ip_administrative.admit_date_time).in_(years),
             )
         )
         .join(
             gemini.public.vitals.data,
-            gemini.public.ip_administrative.genc_id == db.public.vitals.genc_id,
+            gemini.public.ip_administrative.genc_id == gemini.public.vitals.genc_id,
         )
         .where(
             gemini.public.vitals.measurement_mapped != EMPTY_STRING,
@@ -205,9 +211,9 @@ if __name__ == "__main__":
         "/mnt/nfs/project/delirium/_extract/delirium_extract.h5",
         key="query_gemini_delirium_diagnosis",
     )
-    data = query_gemini_vitals(db, 2020, SMH)
+    data = query_gemini_admin_vitals(db, [2020], [SMH])
     print(len(data))
     data.to_hdf(
         "/mnt/nfs/project/delirium/_extract/extract.h5",
-        key="query_gemini_vitals",
+        key="query_gemini_admin_vitals",
     )
