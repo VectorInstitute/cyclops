@@ -53,8 +53,8 @@ class AdminProcessor(Processor):
         )
         features = pd.DataFrame(index=encounters, columns=admin_col_names)
 
-        grouped_admin = self.data.groupby([ENCOUNTER_ID])
-        for encounter_id, admin in grouped_admin:
+        grouped = self.data.groupby([ENCOUNTER_ID])
+        for encounter_id, admin in grouped:
             for admin_col_name in admin_col_names:
                 assert admin[admin_col_name].nunique() == 1
                 features.loc[encounter_id, admin_col_name] = admin[

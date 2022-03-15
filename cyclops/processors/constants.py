@@ -34,8 +34,9 @@ HOSPITAL_ID_MAP = {
     PMH: 6,
     MSH: 7,
 }
+MORTALITY_DISCHARGE_DISPOSITION_CODES = [7, 72, 73, 74]
 
-# Diagnostic codes.
+# Diagnostic codes (ICD-10).
 TRAJECTORIES = {
     "Certain infectious and parasitic diseases": ("A00", "B99"),
     "Neoplasms": ("C00", "D49"),

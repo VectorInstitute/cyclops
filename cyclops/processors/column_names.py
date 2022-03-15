@@ -5,6 +5,8 @@ ENCOUNTER_ID = "encounter_id"
 HOSPITAL_ID = "hospital_id"
 ADMIT_TIMESTAMP = "admit_timestamp"
 DISCHARGE_TIMESTAMP = "discharge_timestamp"
+DISCHARGE_DISPOSITION = "discharge_disposition"
+READMISSION = "readmission"
 
 AGE = "age"
 SEX = "sex"
@@ -15,6 +17,9 @@ LANGUAGE = "language"
 TOTAL_COST = "total_cost"
 
 DIAGNOSIS_CODE = "diagnosis_code"
+
+LENGTH_OF_STAY_IN_ER = "length_of_stay_in_er"
+MORTALITY_IN_HOSPITAL = "mortality_in_hospital"
 
 LAB_TEST_NAME = "lab_test_name"
 LAB_TEST_TIMESTAMP = "lab_test_timestamp"
