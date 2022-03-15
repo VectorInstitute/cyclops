@@ -14,6 +14,8 @@ from cyclops.orm import Database
 from cyclops.processors.constants import EMPTY_STRING, SMH, YEAR
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
+    AGE,
+    SEX,
     HOSPITAL_ID,
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
@@ -145,7 +147,9 @@ def query_gemini_delirium_lab(gemini: Database) -> pd.DataFrame:
 
 
 @debug_query_msg
-def query_gemini_admin_vitals(gemini: Database, years: list, hospitals: list) -> pd.DataFrame:
+def query_gemini_admin_vitals(
+    gemini: Database, years: list, hospitals: list
+) -> pd.DataFrame:
     """Query admin + vitals data filtering by hospitals and years.
 
     Parameters
@@ -172,7 +176,9 @@ def query_gemini_admin_vitals(gemini: Database, years: list, hospitals: list) ->
             gemini.public.ip_administrative.discharge_date_time.label(
                 DISCHARGE_TIMESTAMP
             ),
-            gemini.public.ip_administrative.discharge_disposition.label(DISCHARGE_DISPOSITION),
+            gemini.public.ip_administrative.discharge_disposition.label(
+                DISCHARGE_DISPOSITION
+            ),
             gemini.public.ip_administrative.readmission.label(READMISSION),
             gemini.public.vitals.measurement_mapped.label(VITAL_MEASUREMENT_NAME),
             gemini.public.vitals.measurement_value.label(VITAL_MEASUREMENT_VALUE),
@@ -182,7 +188,9 @@ def query_gemini_admin_vitals(gemini: Database, years: list, hospitals: list) ->
         .where(
             and_(
                 gemini.public.ip_administrative.hospital_id.in_(hospitals),
-                extract(YEAR, gemini.public.ip_administrative.admit_date_time).in_(years),
+                extract(YEAR, gemini.public.ip_administrative.admit_date_time).in_(
+                    years
+                ),
             )
         )
         .join(

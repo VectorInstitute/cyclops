@@ -47,12 +47,12 @@ UNSUPPORTED = [
 
 def is_supported(lab_test_name: str) -> bool:
     """Check if lab test is supported (due to units not converted yet).
-    
+
     Parameters
     ----------
     lab_test_name: str
         Name of lab test.
-    
+
     Returns
     -------
     bool
@@ -131,12 +131,8 @@ class LabsProcessor(Processor):
 
     def _drop_unsupported_labs(self) -> None:
         """Drop some labs currently not supported."""
-        self.data = self.data.loc[
-            self.data[LAB_TEST_NAME].apply(is_supported)
-        ]
-        self._log_counts_step(
-            "Drop unsupported..."
-        )
+        self.data = self.data.loc[self.data[LAB_TEST_NAME].apply(is_supported)]
+        self._log_counts_step("Drop unsupported...")
 
     def _create_features(self) -> pd.DataFrame:
         """Create features, grouping by test and gathering result values.
