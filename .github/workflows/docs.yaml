@@ -14,8 +14,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Create virtual environment, install dependencies and build docs
-        uses: actions/checkout@v2
         run: |
           python3 -m venv venv && source venv/bin/activate
           pip install --upgrade pip && pip install -r docs/requirements.txt
