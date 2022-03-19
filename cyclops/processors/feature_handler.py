@@ -44,6 +44,7 @@ def _get_scaler_type(normalization_method: str) -> type:
     -------
     type
         An sklearn.preprocessing scaling object.
+
     """
     scaler_map = {STANDARD: StandardScaler, MIN_MAX: MinMaxScaler}
 
@@ -105,6 +106,7 @@ def _attempt_to_numeric(dataframe: pd.DataFrame) -> pd.DataFrame:
     -------
     pd.DataFrame
         Output dataframe, with possibly type converted columns.
+
     """
     for column in dataframe.columns:
         try:
@@ -121,18 +123,24 @@ class FeatureMeta(ABC):
     ----------
     feature_type : str
         The type of the feature, e.g., 'binary', 'numeric', or 'categorical-binary'.
+    is_target: bool
+        Is the feature a target variable, True if yes, else False.
 
     """
 
-    def __init__(self, feature_type: str) -> None:
+    def __init__(self, feature_type: str, is_target: bool) -> None:
         """Instantiate.
 
         Parameters
         ----------
         feature_type : str
             The type of the feature, e.g., 'binary', 'numeric', or 'categorical-binary'.
+        is_target: bool
+            Is the feature a target variable, True if yes, else False.
+
         """
         self.feature_type = feature_type
+        self.is_target = is_target
 
     @abstractmethod
     def parse(self, series: pd.Series) -> pd.Series:
@@ -147,6 +155,7 @@ class FeatureMeta(ABC):
         -------
         pandas.Series
             Parsed feature column.
+
         """
         return series
 
@@ -157,6 +166,7 @@ class FeatureMeta(ABC):
         -------
         str
             Returns feature type.
+
         """
         return self.feature_type
 
@@ -172,9 +182,15 @@ class BinaryFeatureMeta(FeatureMeta):
     ----------
     group: str, optional
         Name of group of feature, incase it belongs to a categorical group.
+
     """
 
-    def __init__(self, feature_type: str = BINARY, group: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        feature_type: str = BINARY,
+        is_target: bool = False,
+        group: Optional[str] = None,
+    ) -> None:
         """Instantiate.
 
         Parameters
@@ -183,8 +199,11 @@ class BinaryFeatureMeta(FeatureMeta):
             The type of the feature, e.g., 'binary', 'numeric', or 'categorical-binary'.
         group: str, optional
             Name of group of feature, incase it belongs to a categorical group.
+        is_target: bool
+            Is the feature a target variable, True if yes, else False.
+
         """
-        super().__init__(feature_type)
+        super().__init__(feature_type, is_target)
 
         # Group is used to track the group of a binary categorical variable.
         self.group = group
@@ -201,6 +220,7 @@ class BinaryFeatureMeta(FeatureMeta):
         -------
         pandas.Series
             Parsed feature column.
+
         """
         unique = np.unique(series.values)
         if len(unique) != 2:
@@ -227,6 +247,7 @@ class NumericFeatureMeta(FeatureMeta):
     def __init__(
         self,
         feature_type: str = NUMERIC,
+        is_target: bool = False,
         normalization_method: Optional[str] = STANDARD,
     ):
         """Instantiate.
@@ -235,10 +256,13 @@ class NumericFeatureMeta(FeatureMeta):
         ----------
         feature_type : str, optional
             The type of the feature, e.g., 'binary', 'numeric', or 'categorical-binary'.
+        is_target: bool
+            Is the feature a target variable, True if yes, else False.
         normalization_method: str, optional
             Name of normalization method, 'standard', 'min-max' or None.
+
         """
-        super().__init__(feature_type)
+        super().__init__(feature_type, is_target)
         self.normalization_method = normalization_method
         self.scaler = None
 
@@ -254,6 +278,7 @@ class NumericFeatureMeta(FeatureMeta):
         -------
         pandas.Series
             Parsed feature column.
+
         """
         if self.normalization_method is not None:
             scaler = _get_scaler_type(self.normalization_method)
@@ -275,6 +300,7 @@ class NumericFeatureMeta(FeatureMeta):
         -------
         pandas.Series
             Output feature column with scaled values.
+
         """
         if self.scaler is None:
             return series
@@ -298,6 +324,7 @@ class NumericFeatureMeta(FeatureMeta):
         -------
         pandas.Series
             Output feature column with inverse scaled values.
+
         """
         if self.scaler is None:
             return series
@@ -309,11 +336,34 @@ class NumericFeatureMeta(FeatureMeta):
 
 
 class FeatureHandler:
-    """Feature handler class."""
+    """Feature handler class.
 
-    def __init__(self, features: Optional[pd.DataFrame] = None) -> None:
-        """Instantiate."""
+    Attributes
+    ----------
+    meta: dict
+        Dictionary to store meta information for each feature.
+    features: pandas.DataFrame
+        Container to store features added.
+    normalization_method: str
+        Normalization method applicable for numeric features.
+
+    """
+
+    def __init__(
+        self, features: Optional[pd.DataFrame] = None, normalization_method=STANDARD
+    ) -> None:
+        """Instantiate.
+
+        Parameters
+        ----------
+        features: pandas.DataFrame
+            Features to add, instantiated along with the feature handler.
+        normalization_method: str
+            Normalization method applicable for numeric features.
+
+        """
         self.meta: dict = {}
+        self.normalization_method = normalization_method
         self.features = pd.DataFrame()
         if features is not None:
             self.add_features(features)
@@ -336,6 +386,7 @@ class FeatureHandler:
         -------
         list
             List of feature names.
+
         """
         feature_names: list = []
         if self.features:
@@ -343,17 +394,30 @@ class FeatureHandler:
         return feature_names
 
     @property
-    def types(self) -> list:
+    def types(self) -> dict:
         """Access as attribute, feature types names.
 
         Note: These are built-in feature names.
 
         Returns
         -------
-        list
-            Feature type names.
+        dict
+            Feature type mapped for each feature.
+
         """
-        return [f.feature_type for f in self.meta]
+        return {f: meta.get_feature_type() for f, meta in self.meta.items()}
+
+    @property
+    def targets(self) -> dict:
+        """Access as attribute, which feature columns are potential target variables.
+
+        Returns
+        -------
+        list
+            True/False if feature columns are potential target variables.
+
+        """
+        return {f: meta.is_target() for f, meta in self.meta.items()}
 
     def _scale(self) -> pd.DataFrame:
         """Apply scaling."""
@@ -370,6 +434,7 @@ class FeatureHandler:
         -------
         list
             List of numerical features.
+
         """
         return [col for col in self.features if self.meta[col].feature_type == NUMERIC]
 
@@ -380,6 +445,7 @@ class FeatureHandler:
         -------
         list
             List of categorical features.
+
         """
         return [
             col
@@ -399,6 +465,7 @@ class FeatureHandler:
         -------
         pandas.DataFrame
             Requested features formatted as a DataFrame.
+
         """
         # Convert to a list if extracting a single feature
         names = [names] if isinstance(names, str) else names
@@ -449,22 +516,24 @@ class FeatureHandler:
             Feature column.
         group: str, optional
             Feature type name.
+
         """
         init_kwargs = {FEATURE_TYPE: BINARY, GROUP: group}
         parse_kwargs: Dict = {}
         self._add_feature(series, BinaryFeatureMeta, init_kwargs, parse_kwargs)
 
-    def _add_numeric(self, series: pd.Series, normalization_method=STANDARD) -> None:
+    def _add_numeric(self, series: pd.Series) -> None:
         """Add numeric feature.
 
         Parameters
         ----------
         series: pandas.Series
             Feature column.
+
         """
         init_kwargs: Dict[str, Any] = {
             FEATURE_TYPE: NUMERIC,
-            NORMALIZATION_METHOD: normalization_method,
+            NORMALIZATION_METHOD: self.normalization_method,
         }
         parse_kwargs: Dict = {}
         self._add_feature(series, NumericFeatureMeta, init_kwargs, parse_kwargs)
@@ -479,6 +548,7 @@ class FeatureHandler:
         ----------
         series: pandas.Series
             Feature column.
+
         """
         unique = np.unique(series)
 
@@ -551,6 +621,7 @@ class FeatureHandler:
         ----------
         cols: list
             List of column names to drop.
+
         """
         assert cols is not None
         self.features.drop(cols, axis=1, inplace=True)
@@ -565,6 +636,7 @@ class FeatureHandler:
         ----------
         names: list
             List of names of categorical columns to drop.
+
         """
         # Find which corresponding group columns to drop.
         drop_group_cols = [
@@ -584,6 +656,7 @@ class FeatureHandler:
         ----------
         names: Union[str, list, set]
             Name(s) of features to drop.
+
         """
         # Find feature columns to drop.
         names = set([names]) if isinstance(names, str) else set(names)
