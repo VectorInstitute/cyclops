@@ -1,0 +1,28 @@
+name: Build and Deploy Documentation (Github pages)
+
+on:
+  push:
+    paths:
+      - .github/workflows/docs.yml
+      - 'docs/**.rst'
+  pull_request:
+    paths:
+      - .github/workflows/docs.yml
+      - 'docs/**.rst'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create virtual environment, install dependencies and build docs
+        run: |
+          python3 -m venv venv && source venv/bin/activate
+          pip install --upgrade pip && pip install -r docs/requirements.txt
+          cd docs && make html
+
+      - name: Deploy to Github pages
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          branch: github_pages
+          folder: docs/build
