@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "cyclops"
+version = "0.1.0"
+description = "Framework for ML data processing, model evaluation and drift detection for clinical use-cases"
+authors = ["Vector AI Engineering <ai_engineering@vectorinstitute.ai>"]
+
+[tool.poetry.dependencies]
+python = "3.8.5"
+nb-black = { git = "https://github.com/dnanhkhoa/nb_black.git", rev = "be0c810503867abc4a5e9d05ba75a16fce57dfee" }
+jupyter = "^1.0.0"
+pandas = "^1.4.1"
+SQLAlchemy = "^1.4.32"
+evidently = "^0.1.46-alpha.0"
+ConfigArgParse = "^1.5.3"
+python-dotenv = "^0.19.2"
+matplotlib = "^3.5.1"
+mlflow = "^1.24.0"
+torch = "^1.11.0"
+alibi-detect = "^0.9.0"
+alibi = "^0.6.5"
+shap = "^0.40.0"
+xgboost = "^1.5.2"
+pytest = "^7.1.1"
+pre-commit = "^2.17.0"
+pylint = "^2.12.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

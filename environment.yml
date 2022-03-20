@@ -1,4 +1,4 @@
-name: vector_delirium
+name: cyclops
 dependencies:
  - python=3.8.5
  - pip
