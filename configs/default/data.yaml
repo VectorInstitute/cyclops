@@ -5,8 +5,8 @@
 # variables USER and PGPASSWORD respectively.
 dbms: "postgresql"
 port: 5432
-host: "db.gemini-hpc.ca"
-database: "delirium_v3_0_0"
+host: "localhost" #"db.gemini-hpc.ca"
+database: "mimiciv" #"delirium_v3_0_0"
 
 # If reading data from previously saved csv file.
 input: "/mnt/nfs/project/delirium/data/all_before_2018.csv"

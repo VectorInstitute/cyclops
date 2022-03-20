@@ -1,8 +1,5 @@
 """Queries using SQLAlchemy ORM towards different models."""
 
-import logging
-from typing import Callable
-
 import pandas as pd
 from sqlalchemy import select, extract
 from sqlalchemy.sql.expression import and_
@@ -27,38 +24,11 @@ from cyclops.processors.column_names import (
     VITAL_MEASUREMENT_TIMESTAMP,
     REFERENCE_RANGE,
 )
-from cyclops.utils.log import setup_logging
 
-
-# Logging.
-LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
-
+from cyclops.query_utils import debug_query_msg
+import cyclops.query_utils as q_utils
 
 # pylint: disable=singleton-comparison
-
-
-def debug_query_msg(func: Callable) -> Callable:
-    """Debug message decorator function.
-
-    Parameters
-    ----------
-    func: function
-        Function to apply decorator.
-
-    Returns
-    -------
-    Callable
-        Wrapper function to apply as decorator.
-    """
-
-    def wrapper_func(*args, **kwargs):
-        LOGGER.debug("Running query function: %s", {func.__name__})
-        query_result = func(*args, **kwargs)
-        LOGGER.debug("Finished query function: %s", {func.__name__})
-        return query_result
-
-    return wrapper_func
 
 
 @debug_query_msg
