@@ -18,5 +18,5 @@ jobs:
       - name: Create virtual environment, install dependencies and run tests
         run: |
           python3 -m venv venv && source venv/bin/activate
-          pip install --upgrade pip && pip install -r requirements.txt
+          pip install --upgrade pip && pip install poetry && poetry install
           python3 -m pytest tests/

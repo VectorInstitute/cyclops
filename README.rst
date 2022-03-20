@@ -27,7 +27,7 @@ To create and activate environment, run:
 .. code-block:: bash
 
    conda env create -f environment.yml
-   conda activate vector_delirium
+   conda activate cyclops
 
 Using pip and venv
 ~~~~~~~~~~~~~~~~~~
@@ -39,7 +39,8 @@ To create virtual environment and install dependencies, run:
    python3 -m venv venv
    source venv/bin/activate
    pip install --upgrade pip
-   pip install -r requirements.txt
+   pip install poetry
+   poetry install
 
 Configuration Files
 -------------------
