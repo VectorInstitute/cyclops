@@ -68,6 +68,14 @@ processors.labs module
    :undoc-members:
    :show-inheritance:
 
+processors.outcomes module
+--------------------------
+
+.. automodule:: processors.outcomes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 processors.string\_ops module
 -----------------------------
 

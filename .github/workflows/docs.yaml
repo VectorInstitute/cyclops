@@ -18,7 +18,7 @@ jobs:
       - name: Create virtual environment, install dependencies and build docs
         run: |
           python3 -m venv venv && source venv/bin/activate
-          pip install --upgrade pip && pip install -r docs/requirements.txt
+          pip install --upgrade pip && pip install -r requirements.txt
           cd docs && make html
 
       - name: Deploy to Github pages

@@ -26,6 +26,9 @@ nb-black = "^1.0.7"
 black = "^22.1.0"
 psycopg2 = "^2.9.3"
 tables = "^3.7.0"
+Sphinx = "^4.4.0"
+numpydoc = "^1.2"
+sphinx-rtd-theme = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 

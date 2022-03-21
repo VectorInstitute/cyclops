@@ -5,17 +5,11 @@ Developing on the GEMINI HPC
 Pre-installed virtual environment paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Pre-installed environments on the HPC are available. For conda environment:
-
-.. code-block:: bash
-
-   conda activate /mnt/nfs/project/delirium/dev_env/conda
-
 For pipenv venv:
 
 .. code-block:: bash
 
-   source /mnt/nfs/project/delirium/dev_env/venv
+   source /mnt/nfs/project/delirium/dev_env/cyclops-uzNue7B5-py3.8/bin/activate
 
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
