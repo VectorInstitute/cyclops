@@ -14,6 +14,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Install apt dependencies
+        run: sudo apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v2
       - name: Create virtual environment, install dependencies and build docs
         run: |
