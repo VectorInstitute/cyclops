@@ -5,10 +5,16 @@ on:
     paths:
       - .github/workflows/unittest.yml
       - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
   pull_request:
     paths:
       - .github/workflows/unittest.yml
       - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
 
 jobs:
   pytest:
