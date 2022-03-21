@@ -99,8 +99,11 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
     @time_function
     @query_params_to_type(Select)
-    def run_query(self, query : Union[Select, Subquery, Table, DBTable], \
-        limit: Optional[int] = None) -> pd.DataFrame:
+    def run_query(
+        self,
+        query: Union[Select, Subquery, Table, DBTable],
+        limit: Optional[int] = None,
+    ) -> pd.DataFrame:
         """Run query.
 
         Parameters
@@ -118,10 +121,10 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         # Limit the results returned
         if limit is not None:
             query = query.limit(limit)
-        
+
         # Run the query and return the results
         with self.session.connection():
             data = pd.read_sql_query(query, self.engine)
-        
+
         LOGGER.info("Query returned successfully!")
         return data
