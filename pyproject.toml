@@ -6,7 +6,6 @@ authors = ["Vector AI Engineering <ai_engineering@vectorinstitute.ai>"]
 
 [tool.poetry.dependencies]
 python = "3.8.5"
-nb-black = { git = "https://github.com/dnanhkhoa/nb_black.git", rev = "be0c810503867abc4a5e9d05ba75a16fce57dfee" }
 jupyter = "^1.0.0"
 pandas = "^1.4.1"
 SQLAlchemy = "^1.4.32"
@@ -23,6 +22,7 @@ xgboost = "^1.5.2"
 pytest = "^7.1.1"
 pre-commit = "^2.17.0"
 pylint = "^2.12.2"
+nb-black = "^1.0.7"
 
 [tool.poetry.dev-dependencies]
 
