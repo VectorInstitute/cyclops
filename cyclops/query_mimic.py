@@ -154,7 +154,7 @@ def diagnoses(db: Database, version: Optional[int] = None) -> Select:
             subquery.c.icd_version, version, to_int=True)).subquery()
     
     # Trim whitespace from icd_codes
-    subquery = q_utils.trim_columns(subquery, ["icd_code"]).subquery()
+    subquery = q_utils.trim_attributes(subquery, ["icd_code"]).subquery()
     
     # Rename long_title to icd_title
     subquery = q_utils.rename_attributes(subquery, \
@@ -225,7 +225,7 @@ def patient_diagnoses(db: Database, version: Optional[int] = None, \
             subquery.c.icd_version, version, to_int=True)).subquery()
     
     # Trim whitespace from icd_codes
-    query = q_utils.trim_columns(subquery, ["icd_code"])
+    query = q_utils.trim_attributes(subquery, ["icd_code"])
     
     if not include_icd_title:
         return query
