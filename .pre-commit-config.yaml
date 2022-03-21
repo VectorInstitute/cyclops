@@ -5,10 +5,13 @@ repos:
     rev: 21.12b0
     hooks:
     - id: black
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 4.0.1
+-   repo: local
     hooks:
     - id: flake8
+      name: flake8
+      language: python
+      entry: pflake8
+      files: ".*.py$"
 -   repo: https://github.com/PyCQA/pydocstyle
     rev: 6.1.1
     hooks:
@@ -23,7 +26,7 @@ repos:
     - id: pylint
       name: pylint
       language: python
-      entry: pylint --rcfile=.pylintrc
+      entry: pylint
       files: ".*.py$"
 -   repo: local
     hooks:

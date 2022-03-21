@@ -29,8 +29,31 @@ tables = "^3.7.0"
 Sphinx = "^4.4.0"
 numpydoc = "^1.2"
 sphinx-rtd-theme = "^1.0.0"
+pyproject-flake8 = "^0.0.1-alpha.2"
 
 [tool.poetry.dev-dependencies]
+
+[tool.mypy]
+ignore_missing_imports = true
+install_types = true
+pretty = true
+non_interactive = true
+
+[tool.pylint]
+    [tool.pylint.master]
+    disable=["import-error"]
+
+    [tool.pylint.format]
+    max-line-length=88
+
+    [tool.pylint.typecheck]
+    generated-members=["numpy.*", "torch.*"]
+
+    [tool.pylint.similarities]
+    ignore-imports=["yes"]
+
+[tool.flake8]
+max-line-length = 88
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

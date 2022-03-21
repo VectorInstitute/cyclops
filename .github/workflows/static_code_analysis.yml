@@ -33,10 +33,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install flake8
-        run: python3 -m pip install flake8
+        run: python3 -m pip install pyproject-flake8
       - uses: actions/checkout@v2
       - name: Run flake8
-        run: python3 -m flake8 --config .flake8 .
+        run: python3 -m pflake8
 
   pylint:
     runs-on: ubuntu-latest
@@ -45,7 +45,7 @@ jobs:
         run: python3 -m pip install pylint
       - uses: actions/checkout@v2
       - name: Run pylint
-        run: python3 -m pylint --rcfile .pylintrc cyclops/ models/
+        run: python3 -m pylint cyclops/ models/
 
   pydocstyle:
     runs-on: ubuntu-latest
