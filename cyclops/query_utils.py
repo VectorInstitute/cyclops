@@ -1,3 +1,7 @@
+"""Utility functions for querying."""
+
+from typing import List, Any, Callable, Union
+
 import numpy as np
 import sqlalchemy
 from sqlalchemy import cast
@@ -16,9 +20,6 @@ from codebase_ops import get_log_file_path
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
-
-from functools import wraps
-from typing import List, Any, Callable, Union
 
 
 @dataclass
@@ -121,7 +122,8 @@ def _to_subquery(t: Union[Select, Subquery, Table, DBTable]) -> Subquery:
 
     Parameters
     ----------
-    t: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
+    t: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table
         Query to convert.
 
     Returns
@@ -143,7 +145,7 @@ def _to_subquery(t: Union[Select, Subquery, Table, DBTable]) -> Subquery:
 
     raise ValueError(
         """t has type {}, but must have one of the
-        following types:""".format(
+        following types: {}""".format(
             type(t), ", ".join(QUERY_TYPES)
         )
     )
@@ -155,7 +157,8 @@ def _to_select(t: Union[Select, Subquery, Table, DBTable]) -> Select:
 
     Parameters
     ----------
-    t: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
+    t: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table
         Query to convert.
 
     Returns
@@ -177,7 +180,7 @@ def _to_select(t: Union[Select, Subquery, Table, DBTable]) -> Select:
 
     raise ValueError(
         """t has type {}, but must have one of the
-        following types:""".format(
+        following types: {}""".format(
             type(t), ", ".join(QUERY_TYPES)
         )
     )
@@ -251,7 +254,7 @@ def query_params_to_type(to_type: Any):
     Callable
         The processed function.
     """
-    if not to_type in QUERY_TYPES:
+    if to_type not in QUERY_TYPES:
         raise ValueError("to_type must be in {}".format(QUERY_TYPES))
 
     to_type_fn = QUERY_TO_TYPE_FNS[to_type]
@@ -274,7 +277,8 @@ def get_attribute(
 
     Parameters
     ----------
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
         The query with the column.
     a : str or sqlalchemy.sql.schema.Column
         Attribute to get. It is either a Column object or the column name.
@@ -302,7 +306,7 @@ def get_attribute(
         return a
 
     # Otherwise, a string
-    if not a in col_names:
+    if a not in col_names:
         raise ValueError("Query does not contain column {}".format(a))
 
     return t.c[col_names.index(a)]
@@ -324,7 +328,8 @@ def get_attributes(
 
     Parameters
     ----------
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
         The query with the column.
     a : str or sqlalchemy.sql.schema.Column
         Attribute to get. It is either a Column object or the column name.
@@ -350,9 +355,11 @@ def drop_attributes(
 
     Parameters
     ----------
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
         The query with the column.
-    col : str or sqlalchemy.sql.schema.Column or list of str or list of sqlalchemy.sql.schema.Column
+    col : str or sqlalchemy.sql.schema.Column or list of str or list of
+    sqlalchemy.sql.schema.Column
         Attribute to get. It is either a Column object or the column name.
 
     Returns
@@ -361,7 +368,7 @@ def drop_attributes(
         The corresponding query with attributes dropped.
     """
     drop_cols = get_attributes(t, drop_cols)
-    return select(*[c for c in t.c if not c in drop_cols])
+    return select(*[c for c in t.c if c not in drop_cols])
 
 
 @query_params_to_type(Subquery)
@@ -371,7 +378,8 @@ def rename_attributes(t: Union[Select, Subquery, Table, DBTable], d: dict) -> Se
 
     Parameters
     ----------
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
         The query.
     d : dict
         Dictionary mapping current attribute names (key) to new ones (value).
@@ -405,7 +413,8 @@ def reorder_attributes(
 
     Parameters
     ----------
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
         The query to reorder.
     cols : list of str or list of sqlalchemy.sql.schema.Column
         New attribute order.
@@ -448,7 +457,8 @@ def apply_to_attributes(
 
     Parameters
     ----------
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
         The query.
     cols : list of str or list of sqlalchemy.sql.schema.Column
         Attributes to which to apply the function.
@@ -469,7 +479,7 @@ def apply_to_attributes(
     name_d = dict()
     trimmed = []
     for c in t.c:
-        if not c in cols:
+        if c not in cols:
             continue
         new_name = "temp" + c.name + "temp"
         name_d[new_name] = c.name
@@ -498,7 +508,8 @@ def trim_attributes(
 
     Parameters
     ----------
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
         The query.
     cols : list of str or list of sqlalchemy.sql.schema.Column
         Attributes to trim.
@@ -533,8 +544,8 @@ def rga(o, *attr_args):
     """
     # Get attribute
     try:
-        next_attr = getattr(t, attr_args[0])
-    except:
+        next_attr = getattr(o, attr_args[0])
+    except ValueError:
         raise ValueError("No such attribute {}".format(attr_args[0]))
 
     # Base case

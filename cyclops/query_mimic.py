@@ -1,30 +1,9 @@
 """MIMIC-IV queries using SQLAlchemy ORM."""
 
-import pandas as pd
 from sqlalchemy import select, func
-from sqlalchemy.sql.expression import and_
 from sqlalchemy import Integer
 
-import config
-from codebase_ops import get_log_file_path
-
 from cyclops.orm import Database
-from cyclops.processors.constants import EMPTY_STRING, SMH, YEAR
-from cyclops.processors.column_names import (
-    ENCOUNTER_ID,
-    HOSPITAL_ID,
-    ADMIT_TIMESTAMP,
-    DISCHARGE_TIMESTAMP,
-    DIAGNOSIS_CODE,
-    LAB_TEST_RESULT_VALUE,
-    LAB_TEST_TIMESTAMP,
-    LAB_TEST_NAME,
-    LAB_TEST_RESULT_UNIT,
-    VITAL_MEASUREMENT_NAME,
-    VITAL_MEASUREMENT_VALUE,
-    VITAL_MEASUREMENT_TIMESTAMP,
-    REFERENCE_RANGE,
-)
 
 from cyclops.query_utils import debug_query_msg, query_params_to_type
 import cyclops.query_utils as q_utils
@@ -113,7 +92,8 @@ def join_with_patients(
     ----------
     db : cyclops.orm.Database
         Database ORM object.
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
         A query with column subject_id.
     process_anchor_year : bool, default=True
         Whether to process and include the patient's anchor

@@ -7,7 +7,6 @@ from typing import Optional, Union
 
 import pandas as pd
 
-import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import inspect
 from sqlalchemy import MetaData
@@ -108,7 +107,8 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         Parameters
         ----------
-        query: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+        query: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+        or sqlalchemy.sql.schema.Table or DBTable
             Query to run.
         limit: Optional[int]
             Limit query result to limit.

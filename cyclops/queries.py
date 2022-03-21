@@ -5,7 +5,6 @@ from sqlalchemy import select, extract
 from sqlalchemy.sql.expression import and_
 
 import config
-from codebase_ops import get_log_file_path
 
 from cyclops.orm import Database
 from cyclops.processors.constants import EMPTY_STRING, SMH, YEAR
@@ -30,7 +29,6 @@ from cyclops.processors.column_names import (
 )
 
 from cyclops.query_utils import debug_query_msg
-import cyclops.query_utils as q_utils
 
 # pylint: disable=singleton-comparison
 
