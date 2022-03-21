@@ -47,6 +47,7 @@ entrypoints==0.4
 evidently==0.1.45.dev0
 executing==0.8.3
 filelock==3.6.0
+flake8==4.0.1
 Flask==2.0.3
 flatbuffers==2.0
 fonttools==4.31.1
@@ -152,12 +153,15 @@ pure-eval==0.2.2
 py==1.11.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
+pycodestyle==2.8.0
 pycparser==2.21
 pydantic==1.8.2
+pyflakes==2.4.0
 Pygments==2.11.2
 pylev==1.4.0
 pylint==2.12.2
 pyparsing==3.0.7
+pyproject-flake8==0.0.1a2
 pyrsistent==0.18.1
 pytest==7.1.1
 python-dateutil==2.8.2
