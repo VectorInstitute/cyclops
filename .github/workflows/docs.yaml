@@ -14,11 +14,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Install apt dependencies
+        run: sudo apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v2
       - name: Create virtual environment, install dependencies and build docs
         run: |
           python3 -m venv venv && source venv/bin/activate
-          pip install --upgrade pip && pip install -r docs/requirements.txt
+          pip install --upgrade pip && pip install poetry && poetry install
           cd docs && make html
 
       - name: Deploy to Github pages
