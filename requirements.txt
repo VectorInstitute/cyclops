@@ -35,7 +35,7 @@ distlib==0.3.4
 dm-tree==0.1.6
 docker==5.0.3
 entrypoints==0.4
-evidently==0.1.46.dev0
+evidently==0.1.45.dev0
 executing==0.8.3
 filelock==3.6.0
 Flask==2.0.3
@@ -100,6 +100,7 @@ networkx==2.7.1
 nodeenv==1.6.0
 notebook==6.4.10
 numba==0.53.1
+numexpr==2.8.1
 numpy==1.22.3
 oauthlib==3.2.0
 opencv-python==4.5.5.64
@@ -125,6 +126,7 @@ prometheus-flask-exporter==0.19.0
 prompt-toolkit==3.0.28
 protobuf==3.19.4
 psutil==5.9.0
+psycopg2==2.9.3
 ptyprocess==0.7.0
 pure-eval==0.2.2
 py==1.11.0
@@ -172,6 +174,7 @@ sqlparse==0.4.2
 srsly==2.4.2
 stack-data==0.2.0
 statsmodels==0.13.2
+tables==3.7.0
 tabulate==0.8.9
 tenacity==8.0.1
 tensorboard==2.8.0
