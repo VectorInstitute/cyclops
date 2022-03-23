@@ -30,6 +30,7 @@ Sphinx = "^4.4.0"
 numpydoc = "^1.2"
 sphinx-rtd-theme = "^1.0.0"
 pyproject-flake8 = "^0.0.1-alpha.2"
+pytest-cov = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
 
