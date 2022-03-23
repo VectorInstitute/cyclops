@@ -1,4 +1,4 @@
-name: Build and Deploy Documentation (Github pages)
+name: Documentation and Coverage Report
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
           python3 -m venv venv && source venv/bin/activate
           pip install --upgrade pip && pip install poetry && poetry install
           cd docs && make html
-          pytest --cov=cyclops --cov-report html && cp -r htmlcov docs/build/html
+          cd .. && pytest --cov=cyclops --cov-report html && cp -r htmlcov docs/build/html
 
       - name: Deploy to Github pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
