@@ -1,4 +1,4 @@
-name: Build and Deploy Documentation (Github pages)
+name: Documentation and Coverage Report
 
 on:
   push:
