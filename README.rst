@@ -10,11 +10,11 @@ in the health (or clinical) setting. It provides three high-level features:
 * Model training and evaluation support
 * Drift detection toolkit
 
-Setup
------
+Getting Started
+---------------
 
-Python virtual environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setup Python virtual environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The development environment has been tested on ``python = 3.8.5``. 
 There are two ways to setup the environment and install dependencies.
@@ -41,6 +41,11 @@ To create virtual environment and install dependencies, run:
    pip install --upgrade pip
    pip install poetry
    poetry install
+
+
+`Documentation <https://vectorinstitute.github.io/cyclops/>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 Example Notebooks
 -----------------
