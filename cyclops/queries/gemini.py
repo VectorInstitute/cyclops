@@ -28,7 +28,7 @@ from cyclops.processors.column_names import (
     REFERENCE_RANGE,
 )
 
-from cyclops.query_utils import debug_query_msg
+from cyclops.queries.utils import debug_query_msg
 
 # pylint: disable=singleton-comparison
 

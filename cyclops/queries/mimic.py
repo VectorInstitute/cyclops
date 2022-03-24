@@ -8,9 +8,9 @@ from sqlalchemy.sql.selectable import Select, Subquery
 from sqlalchemy.sql.schema import Table
 
 from cyclops.orm import Database
-import cyclops.query_utils as q_utils
-from cyclops.query_utils import debug_query_msg, query_params_to_type
-from cyclops.query_utils import DBTable
+import cyclops.queries.utils as q_utils
+from cyclops.queries.utils import debug_query_msg, query_params_to_type
+from cyclops.queries.utils import DBTable
 
 
 TABLE = {
