@@ -4,11 +4,19 @@ on:
   push:
     paths:
       - .github/workflows/docs.yml
-      - 'docs/**.rst'
+      - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
+      - '**.rst'
   pull_request:
     paths:
       - .github/workflows/docs.yml
-      - 'docs/**.rst'
+      - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
+      - '**.rst'
 
 jobs:
   build:

@@ -1,20 +1,16 @@
 """MIMIC-IV queries using SQLAlchemy ORM."""
 
-from sqlalchemy import select, func
-from sqlalchemy import Integer
-
-from cyclops.orm import Database
-
-from cyclops.query_utils import debug_query_msg, query_params_to_type
-import cyclops.query_utils as q_utils
-
-from sqlalchemy.sql.selectable import Select, Subquery
-from sqlalchemy.sql.schema import Table
-from cyclops.query_utils import DBTable
-
 from typing import List, Union, Optional
 
-# pylint: disable=singleton-comparison
+from sqlalchemy import select, func
+from sqlalchemy import Integer
+from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy.sql.schema import Table
+
+from cyclops.orm import Database
+import cyclops.query_utils as q_utils
+from cyclops.query_utils import debug_query_msg, query_params_to_type
+from cyclops.query_utils import DBTable
 
 
 TABLE = {
@@ -27,12 +23,12 @@ TABLE = {
 
 
 @debug_query_msg
-def patients(db: Database, process_anchor_year: bool = True) -> Select:
+def patients(database: Database, process_anchor_year: bool = True) -> Select:
     """Query MIMIC patient data.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database : cyclops.orm.Database
         Database ORM object.
     process_anchor_year : bool, default=True
         Whether to process and include the patient's anchor
@@ -44,19 +40,19 @@ def patients(db: Database, process_anchor_year: bool = True) -> Select:
         Select ORM object.
 
     """
-    t = TABLE["patients"](db)
+    table_ = TABLE["patients"](database)
 
     if not process_anchor_year:
-        return select(t.data)
+        return select(table_.data)
 
     # Process and include patient's anchor year
     # i.e., year of car information
     subquery = select(
-        t.data,
-        (func.substr(t.anchor_year_group, 1, 4).cast(Integer)).label(
+        table_.data,
+        (func.substr(table_.anchor_year_group, 1, 4).cast(Integer)).label(
             "anchor_year_group_start"
         ),
-        (func.substr(t.anchor_year_group, 8, 12).cast(Integer)).label(
+        (func.substr(table_.anchor_year_group, 8, 12).cast(Integer)).label(
             "anchor_year_group_end"
         ),
     ).subquery()
@@ -82,8 +78,8 @@ def patients(db: Database, process_anchor_year: bool = True) -> Select:
 @debug_query_msg
 @query_params_to_type(Subquery)
 def join_with_patients(
-    db: Database,
-    t: Union[Select, Subquery, Table, DBTable],
+    database: Database,
+    table_: Union[Select, Subquery, Table, DBTable],
     process_anchor_year: bool = True,
 ) -> Select:
     """Join a subquery with MIMIC patient static information.
@@ -92,9 +88,9 @@ def join_with_patients(
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
-    t : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or DBTable
         A query with column subject_id.
     process_anchor_year : bool, default=True
@@ -105,26 +101,29 @@ def join_with_patients(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
-    if not hasattr(t.c, "subject_id"):
+    if not hasattr(table_.c, "subject_id"):
         raise ValueError("Subquery t must have attribute 'subject_id'.")
 
     # Get patients
-    p = patients(db, process_anchor_year=process_anchor_year).subquery()
+    patients_ = patients(database, process_anchor_year=process_anchor_year).subquery()
 
     # Join on patients (subject column)
-    query = select(t, p).where(t.c.subject_id == p.c.subject_id)
+    query = select(table_, patients_).where(
+        table_.c.subject_id == patients_.c.subject_id
+    )
 
     return query
 
 
 @debug_query_msg
-def diagnoses(db: Database, version: Optional[int] = None) -> Select:
+def diagnoses(database: Database, version: Optional[int] = None) -> Select:
     """Query MIMIC possible diagnoses.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     version : int, optional
         If specified, restrict ICD codes to this version.
@@ -133,10 +132,11 @@ def diagnoses(db: Database, version: Optional[int] = None) -> Select:
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get diagnoses
-    t = TABLE["diagnoses"](db)
-    subquery = select(t.data).subquery()
+    table_ = TABLE["diagnoses"](database)
+    subquery = select(table_.data).subquery()
 
     # Filter by version
     if version is not None:
@@ -164,13 +164,13 @@ def diagnoses(db: Database, version: Optional[int] = None) -> Select:
 
 @debug_query_msg
 def diagnoses_by_substring(
-    db: Database, substring: str, version: Optional[int] = None
+    database: Database, substring: str, version: Optional[int] = None
 ) -> Select:
     """Query MIMIC possible diagnoses by ICD code substring.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     substring : str
         Substring to match in an ICD code.
@@ -181,9 +181,10 @@ def diagnoses_by_substring(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get diagnoses
-    subquery = diagnoses(db, version=version).subquery()
+    subquery = diagnoses(database, version=version).subquery()
 
     # Get diagnoses by substring
     query = select(subquery).where(
@@ -195,13 +196,13 @@ def diagnoses_by_substring(
 
 @debug_query_msg
 def patient_diagnoses(
-    db: Database, version: Optional[int] = None, include_icd_title: bool = True
+    database: Database, version: Optional[int] = None, include_icd_title: bool = True
 ) -> Select:
     """Query MIMIC patient diagnoses.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     version : int, optional
         If specified, restrict ICD codes to this version.
@@ -212,10 +213,11 @@ def patient_diagnoses(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get patient diagnoses
-    t = TABLE["patient_diagnoses"](db)
-    subquery = select(t.data).subquery()
+    table_ = TABLE["patient_diagnoses"](database)
+    subquery = select(table_.data).subquery()
 
     # Filter by version
     if version is not None:
@@ -235,7 +237,7 @@ def patient_diagnoses(
     subquery = query.subquery()
 
     # Get codes
-    code_subquery = diagnoses(db, version=version)
+    code_subquery = diagnoses(database, version=version)
 
     # Get patient diagnoses, including ICD title
     query = select(subquery, code_subquery.c.icd_title).join(
@@ -247,13 +249,13 @@ def patient_diagnoses(
 
 @debug_query_msg
 def patient_diagnoses_by_icd_codes(
-    db: Database, codes: Union[str, List[str]], version: Optional[int] = None
+    database: Database, codes: Union[str, List[str]], version: Optional[int] = None
 ) -> Select:
     """Query MIMIC patient diagnoses, taking only specified ICD codes.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     codes : str or list of str
         The ICD codes to take.
@@ -264,9 +266,10 @@ def patient_diagnoses_by_icd_codes(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get patient diagnoses
-    subquery = patient_diagnoses(db, version=version).subquery()
+    subquery = patient_diagnoses(database, version=version).subquery()
 
     # Select those in the given ICD codes
     query = select(subquery).where(
@@ -278,13 +281,13 @@ def patient_diagnoses_by_icd_codes(
 
 @debug_query_msg
 def patient_diagnoses_by_substring(
-    db: Database, substring: str, version: Optional[int] = None
+    database: Database, substring: str, version: Optional[int] = None
 ) -> Select:
     """Query MIMIC patient diagnoses by an ICD code substring.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     substring : str
         Substring to match in an ICD code.
@@ -295,12 +298,15 @@ def patient_diagnoses_by_substring(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get codes by substring
-    code_subquery = diagnoses_by_substring(db, substring, version=version).subquery()
+    code_subquery = diagnoses_by_substring(
+        database, substring, version=version
+    ).subquery()
 
     # Get patient diagnoses
-    patient_subquery = patient_diagnoses(db, version=version).subquery()
+    patient_subquery = patient_diagnoses(database, version=version).subquery()
 
     # Get patient diagnoses by substring
     query = select(patient_subquery, code_subquery.c.icd_title).join(
@@ -311,12 +317,12 @@ def patient_diagnoses_by_substring(
 
 
 @debug_query_msg
-def event_labels(db: Database, category: Optional[str] = None) -> Select:
+def event_labels(database: Database, category: Optional[str] = None) -> Select:
     """Query MIMIC event labels.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     category : str, optional
         If specified, restrict to this category.
@@ -325,9 +331,10 @@ def event_labels(db: Database, category: Optional[str] = None) -> Select:
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
-    t = TABLE["event_labels"](db)
-    sel = select(t.data)
+    table_ = TABLE["event_labels"](database)
+    sel = select(table_.data)
 
     # Filter by category
     if category is not None:
@@ -341,13 +348,13 @@ def event_labels(db: Database, category: Optional[str] = None) -> Select:
 
 @debug_query_msg
 def event_labels_by_substring(
-    db: Database, substring: str, category: Optional[str] = None
+    database: Database, substring: str, category: Optional[str] = None
 ) -> Select:
     """Query MIMIC event labels by substring.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     substring : str
         Substring to match in an event label.
@@ -358,9 +365,10 @@ def event_labels_by_substring(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get event labels
-    subquery = event_labels(db, category=category).subquery()
+    subquery = event_labels(database, category=category).subquery()
 
     # Get labels by label substring
     query = select(subquery).where(q_utils.substring_cond(subquery.c.label, substring))
@@ -370,13 +378,13 @@ def event_labels_by_substring(
 
 @debug_query_msg
 def events(
-    db: Database, join_on_labels: bool = True, category: Optional[str] = None
+    database: Database, join_on_labels: bool = True, category: Optional[str] = None
 ) -> Select:
     """Query MIMIC events.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     join_on_labels : bool, default=True
         Whether to join events with event labels by itemid.
@@ -387,14 +395,15 @@ def events(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
-    t = TABLE["events"](db)
-    sel = select(t.data)
+    table_ = TABLE["events"](database)
+    sel = select(table_.data)
 
     # Filter by category
     if category is not None:
         subquery = sel.subquery()
-        labels_subquery = event_labels(db, category=category).subquery()
+        labels_subquery = event_labels(database, category=category).subquery()
         subquery = (
             select(subquery, labels_subquery.c.category)
             .join(labels_subquery, subquery.c.itemid == labels_subquery.c.itemid)
@@ -410,21 +419,21 @@ def events(
     subquery = sel.subquery()
     query = select(
         q_utils.drop_attributes(subquery, ["itemid"]).subquery(),
-        db.mimic_icu.d_items.data,
-    ).filter(subquery.c.itemid == db.mimic_icu.d_items.itemid)
+        database.mimic_icu.d_items.data,
+    ).filter(subquery.c.itemid == database.mimic_icu.d_items.itemid)
 
     return query
 
 
 @debug_query_msg
 def events_by_itemids(
-    db: Database, itemids: List[int], category: Optional[str] = None
+    database: Database, itemids: List[int], category: Optional[str] = None
 ) -> Select:
     """Query MIMIC events, taking only specified itemids.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     itemids : list of int
         The itemids to take.
@@ -435,9 +444,10 @@ def events_by_itemids(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get events
-    subquery = events(db, category=category).subquery()
+    subquery = events(database, category=category).subquery()
 
     # Get events in the itemids list
     cond = q_utils.in_list_condition(subquery.c.itemid, itemids, to_int=True)
@@ -448,13 +458,13 @@ def events_by_itemids(
 
 @debug_query_msg
 def events_by_labels(
-    db: Database, labels: Union[str, List[str]], category: Optional[str] = None
+    database: Database, labels: Union[str, List[str]], category: Optional[str] = None
 ) -> Select:
     """Query MIMIC events, taking only specified labels.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     labels : str or list of str
         The labels to take.
@@ -465,9 +475,10 @@ def events_by_labels(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get events
-    subquery = events(db, category=category).subquery()
+    subquery = events(database, category=category).subquery()
 
     # Get those in label list
     cond = q_utils.in_list_condition(subquery.c.label, labels, lower=False, strip=False)
@@ -478,13 +489,13 @@ def events_by_labels(
 
 @debug_query_msg
 def events_by_label_substring(
-    db: Database, substring: str, category: Optional[str] = None
+    database: Database, substring: str, category: Optional[str] = None
 ) -> Select:
     """Query MIMIC events by label substring.
 
     Parameters
     ----------
-    db : cyclops.orm.Database
+    database: cyclops.orm.Database
         Database ORM object.
     substring : str
         Substring to match in an event label.
@@ -495,9 +506,10 @@ def events_by_label_substring(
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     # Get events
-    subquery = events(db, category=category).subquery()
+    subquery = events(database, category=category).subquery()
 
     # Get by substring
     cond = q_utils.substring_cond(subquery.c.label, substring)

@@ -43,7 +43,7 @@ def read_config(  # pylint: disable=too-many-statements
     if not config_path:
         parser = configargparse.ArgumentParser(
             config_file_parser_class=configargparse.YAMLConfigFileParser,
-            default_config_files=["./configs/default/*.yaml"],
+            default_config_files=["./configs/gemini/*.yaml"],
         )
     else:
         parser = configargparse.ArgumentParser(
@@ -104,11 +104,6 @@ def read_config(  # pylint: disable=too-many-statements
         "--stats_path",
         type=str,
         help="Where to store/load features mean/std for normalization.",
-    )
-    parser.add(
-        "--sql_query_path",
-        type=str,
-        help="Path to .sql file with SQL query.",
     )
 
     # Data extraction parameters.
