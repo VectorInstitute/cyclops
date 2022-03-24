@@ -39,3 +39,4 @@ jobs:
         with:
           branch: github_pages
           folder: docs/build/html
+          target-folder: docs/build/html/_static/htmlcov
