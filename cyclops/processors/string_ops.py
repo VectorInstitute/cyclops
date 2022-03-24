@@ -21,6 +21,7 @@ def fill_missing_with_nan(string: str) -> Union[float, str]:
     -------
     Union[str, float]
         NaN if input was empty, else input.
+
     """
     return np.nan if string == EMPTY_STRING else string
 
@@ -39,6 +40,7 @@ def find_string_match(string: str, search_terms: str) -> bool:
     -------
     bool
         True if any matches were found, else False.
+
     """
     string = string.lower()
     found = re.search(search_terms, string)
@@ -59,6 +61,7 @@ def remove_text_in_parentheses(string: str) -> str:
     -------
     str
         Output string with text inside including parentheses removed.
+
     """
     return re.sub(r"\([^)]*\)", "", string).strip()
 
@@ -78,6 +81,7 @@ def fix_inequalities(string: str) -> str:
     -------
     str
         Result value string is matched to regex, symbols removed.
+
     """
     string = string.lower()
     matches = re.search(
@@ -150,6 +154,7 @@ def normalize_special_characters(item: str) -> str:
     -------
     str
         Output string after normalizing.
+
     """
     replacements = {
         "(": " ",
@@ -184,6 +189,7 @@ def count_occurrences(items: Iterable) -> List:
     -------
     List
         (item, count) ordered by count, descending order.
+
     """
     counter = Counter(items)
     return sorted(counter.items(), key=lambda x: x[1], reverse=True)
@@ -201,6 +207,7 @@ def convert_to_numeric(input_: Union[str, float, None]) -> Union[int, str, float
     -------
     Union[str, float]
         Converted numeric output.
+
     """
     if input_ in (None, np.nan):
         return np.nan
@@ -231,6 +238,7 @@ def is_range(input_: str) -> bool:
     -------
     bool
         True if categorical, False otherwise.
+
     """
     # [TODO:] Why is a space required? Isn't 1-5 all right, too?
     categorical_pattern = re.compile(r"-?\d+\s+(?:to|-)\s+(-?\d+)")
@@ -251,6 +259,7 @@ def compute_range_avg(item: str) -> Union[int, float]:
     -------
     Union[int, float]
         Computed average of range.
+
     """
     pattern_str = r"^(?P<first>-?\d+)\s*(?:to|-)\s*(?P<second>-?\d+)$"
     pattern = re.compile(pattern_str)

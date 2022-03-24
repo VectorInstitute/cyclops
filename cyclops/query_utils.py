@@ -32,6 +32,7 @@ class DBSchema:
         Name of schema.
     data: sqlalchemy.sql.schema.MetaData
         Metadata for schema.
+
     """
 
     name: str
@@ -48,6 +49,7 @@ class DBTable:
         Name of table.
     data: sqlalchemy.sql.schema.Table
         Metadata for schema.
+
     """
 
     name: str
@@ -82,6 +84,7 @@ def debug_query_msg(func: Callable) -> Callable:
     -------
     Callable
         Wrapper function to apply as decorator.
+
     """
 
     def wrapper_func(*args, **kwargs):
@@ -94,7 +97,7 @@ def debug_query_msg(func: Callable) -> Callable:
 
 
 def to_list(a: Any):
-    """Converts some object to a list object unless already one.
+    """Convert some object to a list of object(s) unless already one.
 
     Parameters
     ----------
@@ -105,6 +108,7 @@ def to_list(a: Any):
     -------
     Callable
         The processed function.
+
     """
     if isinstance(a, list):
         return a
@@ -117,8 +121,7 @@ def to_list(a: Any):
 
 # === TYPE/QUERY CONVERSION ===
 def _to_subquery(t: Union[Select, Subquery, Table, DBTable]) -> Subquery:
-    """Converts a query from some type in QUERY_TYPES to
-    type sqlalchemy.sql.selectable.Subquery.
+    """Convert a query from some type in QUERY_TYPES to Subquery type.
 
     Parameters
     ----------
@@ -130,6 +133,7 @@ def _to_subquery(t: Union[Select, Subquery, Table, DBTable]) -> Subquery:
     -------
     sqlalchemy.sql.selectable.Subquery
         The converted query.
+
     """
     if isinstance(t, Subquery):
         return t
@@ -152,8 +156,7 @@ def _to_subquery(t: Union[Select, Subquery, Table, DBTable]) -> Subquery:
 
 
 def _to_select(t: Union[Select, Subquery, Table, DBTable]) -> Select:
-    """Converts a query from some type in QUERY_TYPES to
-    type sqlalchemy.sql.selectable.Select.
+    """Convert a query from some type in QUERY_TYPES to Select type.
 
     Parameters
     ----------
@@ -165,6 +168,7 @@ def _to_select(t: Union[Select, Subquery, Table, DBTable]) -> Select:
     -------
     sqlalchemy.sql.selectable.Select
         The converted query.
+
     """
     if isinstance(t, Select):
         return t
@@ -196,7 +200,9 @@ QUERY_TO_TYPE_FNS = {
 
 
 def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Callable:
-    """Decorator which processes a function's arguments by taking all
+    """Decorate function with conversion of input types to a specific type.
+
+    Decorator which processes a function's arguments by taking all
     parameters with type in relevant_types and converting them using
     some to_type_fn function. Non-relevant types are left alone.
 
@@ -211,12 +217,11 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
     -------
     Callable
         The processed function.
+
     """
 
     def decorator(func: Callable) -> Callable:
-        """Decorator function converting query type parameters
-        to Subquery type.
-        """
+        """Decorate function to convert query type parameters to Subquery type."""
         LOGGER.debug("H0")
 
         def wrapper_func(*args, **kwargs):
@@ -241,8 +246,7 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
 
 
 def query_params_to_type(to_type: Any):
-    """Decorator function converting query type parameters to some
-    specified query type in QUERY_TYPES.
+    """Decorate function to convert query type params to specified type in QUERY_TYPES.
 
     Parameters
     ----------
@@ -253,6 +257,7 @@ def query_params_to_type(to_type: Any):
     -------
     Callable
         The processed function.
+
     """
     if to_type not in QUERY_TYPES:
         raise ValueError("to_type must be in {}".format(QUERY_TYPES))
@@ -268,8 +273,9 @@ def get_attribute(
     a: Union[str, Column],
     assert_same: bool = True,
 ):
-    """Extracts an attribute object from the subquery. The attribute
-    given may be a column object or the column name (string).
+    """Extract an attribute object from the subquery.
+
+    The attribute given may be a column object or the column name (string).
 
     The assert_same parameter is designed as a fail-safe such that
     when a column object is passed in, it is asserted to be in the
@@ -289,6 +295,7 @@ def get_attribute(
     -------
     sqlalchemy.sql.schema.Column
         The corresponding attribute in the query.
+
     """
     col_names = [c.name for c in t.columns]
 
@@ -318,8 +325,9 @@ def get_attributes(
     a: Union[str, Column, List[Union[str, Column]]],
     assert_same: bool = True,
 ):
-    """Extracts a number of attributes from the subquery. The
-    attribute(s) given may be a column object, column name
+    """Extract a number of attributes from the subquery.
+
+    The attribute(s) given may be a column object, column name
     (string), or a list of any combination of these objects.
 
     The assert_same parameter is designed as a fail-safe such that
@@ -340,6 +348,7 @@ def get_attributes(
     -------
     list of sqlalchemy.sql.schema.Column
         The corresponding attributes in the query.
+
     """
     return [get_attribute(t, aa, assert_same=assert_same) for aa in to_list(a)]
 
@@ -349,8 +358,9 @@ def drop_attributes(
     t: Union[Select, Subquery, Table, DBTable],
     drop_cols: Union[str, Column, List[Union[str, Column]]],
 ) -> Select:
-    """Drops some attribute(s) from a query. The attribute(s)
-    given may be a column object, column name (string), or a
+    """Drop some attribute(s) from a query.
+
+    The attribute(s) given may be a column object, column name (string), or a
     list of any combination of these objects.
 
     Parameters
@@ -366,6 +376,7 @@ def drop_attributes(
     -------
     sqlalchemy.sql.selectable.Select
         The corresponding query with attributes dropped.
+
     """
     drop_cols = get_attributes(t, drop_cols)
     return select(*[c for c in t.c if c not in drop_cols])
@@ -373,7 +384,9 @@ def drop_attributes(
 
 @query_params_to_type(Subquery)
 def rename_attributes(t: Union[Select, Subquery, Table, DBTable], d: dict) -> Select:
-    """Renames a query's attributes according to a dictionary of strings,
+    """Rename a query's attributes.
+
+    Rename query's attributes according to a dictionary of strings,
     where the key is the current name, and the value is the replacement.
 
     Parameters
@@ -388,6 +401,7 @@ def rename_attributes(t: Union[Select, Subquery, Table, DBTable], d: dict) -> Se
     -------
     sqlalchemy.sql.selectable.Select
         The corresponding query with attributes renamed.
+
     """
     # Make sure we aren't renaming to columns to be the same
     d_values = list(d.values())
@@ -404,7 +418,9 @@ def reorder_attributes(
     cols: List[Union[str, Column]],
     assert_same: bool = True,
 ) -> Select:
-    """Reorder a query's attributes according to a list of strings or
+    """Reorder a query's attributes.
+
+    Reorder query's attributes according to a list of strings or
     column objects in the query.
 
     The assert_same parameter is designed as a fail-safe such that
@@ -425,6 +441,7 @@ def reorder_attributes(
     -------
     sqlalchemy.sql.selectable.Select
         The reordered query.
+
     """
     # Get the old/new column names
     old_order = [c.name for c in t.c]
@@ -453,7 +470,7 @@ def apply_to_attributes(
     fn: Callable,
 ) -> Select:
     """
-    Applies a function to some attributes.
+    Apply a function to some attributes.
 
     Parameters
     ----------
@@ -470,6 +487,7 @@ def apply_to_attributes(
     -------
     sqlalchemy.sql.selectable.Select
         The query with function applied.
+
     """
     org_col_names = list(t.c)
     cols = get_attributes(t, cols)
@@ -503,7 +521,9 @@ def apply_to_attributes(
 def trim_attributes(
     t: Union[Select, Subquery, Table, DBTable], cols: List[Union[str, Column]]
 ):
-    """Returns query with columns listed having their
+    """Trim attributes and remove leading/trailing whitespace.
+
+    Returns query with columns listed having their
     leading/trailing whitespace trimmed (stripped).
 
     Parameters
@@ -518,6 +538,7 @@ def trim_attributes(
     -------
     sqlalchemy.sql.selectable.Select
         The query with trimmed attrbutes.
+
     """
     return apply_to_attributes(
         t, cols, lambda x: process_attribute(x, to_str=True, trim=True)
@@ -525,8 +546,7 @@ def trim_attributes(
 
 
 def rga(o, *attr_args):
-    """Recursive getattr (rga) is designed to express a
-    series of attribute accesses with strings.
+    """Recursive getattr (rga): express a series of attribute accesses with strings.
 
     E.g., o.a.b.c == rga(o, "a", "b", "c")
 
@@ -541,6 +561,7 @@ def rga(o, *attr_args):
     -------
     any
         The object accessed by the final attribute.
+
     """
     # Get attribute
     try:
@@ -571,6 +592,7 @@ def process_elem(e: Any, **kwargs: dict) -> Any:
     -------
     Any
         The preprocessed element.
+
     """
     # Extract kwargs
     lower = kwargs.get("lower", False)
@@ -616,6 +638,7 @@ def process_list(lst: Union[Any, List[Any]], **kwargs: dict) -> List[Any]:
     -------
     Any
         The preprocessed element.
+
     """
     # Convert potentially non-list variable to list
     lst = to_list(lst)
@@ -638,6 +661,7 @@ def process_attribute(col: Column, **kwargs: dict) -> Column:
     -------
     sqlalchemy.sql.schema.Column
         The preprocessed column.
+
     """
     # Extract kwargs
     lower = kwargs.get("lower", False)
@@ -696,6 +720,7 @@ def equals_cond(
     -------
     sqlalchemy.sql.elements.BinaryExpression
         An expression representing where the condition was satisfied.
+
     """
     return process_attribute(col, lower=lower, trim=trim, **kwargs) == process_elem(
         value, lower=lower, trim=trim, **kwargs
@@ -727,6 +752,7 @@ def string_format_cond(
     -------
     sqlalchemy.sql.elements.BinaryExpression
         An expression representing where the condition was satisfied.
+
     """
     return process_attribute(col, to_str=True, **kwargs).like(
         fmt.format(process_elem(value, to_str=True, **kwargs))
@@ -757,6 +783,7 @@ def substring_cond(
     -------
     sqlalchemy.sql.elements.BinaryExpression
         An expression representing where the condition was satisfied.
+
     """
     return string_format_cond(col, substring, "%%{}%%", lower=lower, **kwargs)
 
@@ -789,6 +816,7 @@ def startswith_cond(
     -------
     sqlalchemy.sql.elements.BinaryExpression
         An expression representing where the condition was satisfied.
+
     """
     return string_format_cond(col, value, "{}%%", lower=lower, trim=trim, **kwargs)
 
@@ -821,6 +849,7 @@ def endswith_cond(
     -------
     sqlalchemy.sql.elements.BinaryExpression
         An expression representing where the condition was satisfied.
+
     """
     return string_format_cond(col, value, "%%{}", lower=lower, trim=trim, **kwargs)
 
@@ -852,6 +881,7 @@ def in_list_condition(
     -------
     sqlalchemy.sql.elements.BinaryExpression
         An expression representing where the condition was satisfied.
+
     """
     return process_attribute(col, lower=lower, trim=trim, **kwargs).in_(
         process_list(lst, lower=lower, trim=trim, **kwargs)

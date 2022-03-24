@@ -26,6 +26,7 @@ def filter_within_admission_window(
     -------
     pandas.DataFrame
         Filtered data frame, with aggregates collected within window.
+
     """
     data_filtered = data.copy()
     sample_time = data_filtered[sample_ts_col_name]

@@ -37,6 +37,7 @@ def is_code_in_list(code: float, codes: list) -> bool:
     -------
     bool
         True if code is in list, else False.
+
     """
     return code in codes
 
@@ -78,6 +79,7 @@ class OutcomesProcessor(Processor):
         -------
         pandas.DataFrame:
             Processed outcomes features.
+
         """
         encounters = list(self.data[ENCOUNTER_ID].unique())
         outcomes_col_names = []

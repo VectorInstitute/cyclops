@@ -24,6 +24,7 @@ def _check_must_have_columns(data: pd.DataFrame, must_have_columns: list) -> Non
         DataFrame to check.
     must_have_columns: list
         List of column names that must be present in data.
+
     """
     column_names = list(data.columns)
     for column_name in must_have_columns:
@@ -60,6 +61,7 @@ class Processor:  # pylint: disable=too-few-public-methods
         Dataframe with raw features.
     must_have_columns: list
         List of column names that must be present in data.
+
     """
 
     def __init__(self, data: pd.DataFrame, must_have_columns: list) -> None:
@@ -71,6 +73,7 @@ class Processor:  # pylint: disable=too-few-public-methods
             Dataframe with raw features.
         must_have_columns: list
             List of column names of features that must be present in data.
+
         """
         assert isinstance(data, pd.DataFrame)
         assert isinstance(must_have_columns, list)

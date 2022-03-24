@@ -42,6 +42,7 @@ def patients(db: Database, process_anchor_year: bool = True) -> Select:
     -------
     sqlalchemy.sql.selectable.Select
         Select ORM object.
+
     """
     t = TABLE["patients"](db)
 
@@ -86,6 +87,7 @@ def join_with_patients(
     process_anchor_year: bool = True,
 ) -> Select:
     """Join a subquery with MIMIC patient static information.
+
     Assumes that the query t has column 'subject_id'.
 
     Parameters
