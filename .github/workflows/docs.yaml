@@ -30,8 +30,9 @@ jobs:
           python3 -m venv venv && source venv/bin/activate
           pip install --upgrade pip && pip install poetry && poetry install
           cd docs && make html
-          cd .. && pytest --cov=cyclops --cov-report html && cp -r htmlcov docs/build/html/
-          ls docs/build/html
+          cd .. && pytest --cov=cyclops --cov-report html && cp -r htmlcov docs/build/html/_static/
+          ls docs/build/html/_static
+          ls docs/build/html/_static/htmlcov
 
       - name: Deploy to Github pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
