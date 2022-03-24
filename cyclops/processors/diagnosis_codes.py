@@ -33,6 +33,7 @@ def insert_decimal(input_: str, index: int = 2) -> str:
     -------
     str:
         String after inserting decimal.
+
     """
     return input_[:index] + "." + input_[index:]
 
@@ -51,6 +52,7 @@ def get_code_letter(code: str) -> str:
     -------
     str:
         Extracted letter.
+
     """
     return re.sub("[^a-zA-Z]", EMPTY_STRING, code).upper()
 
@@ -69,6 +71,7 @@ def get_code_numerics(code: str) -> str:
     -------
     str:
         Extracted numeric.
+
     """
     return re.sub("[^0-9]", EMPTY_STRING, code)
 
@@ -88,6 +91,7 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
     -------
     str:
         Mapped ICD10 category code.
+
     """
     if code is None:
         return EMPTY_STRING

@@ -43,6 +43,7 @@ class AdminProcessor(Processor):
         -------
         pandas.DataFrame:
             Processed admin features.
+
         """
         encounters = list(self.data[ENCOUNTER_ID].unique())
         admin_col_names = [AGE, SEX]

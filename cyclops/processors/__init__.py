@@ -1,1 +1,1 @@
-"""Processors module."""
+"""Processors package."""

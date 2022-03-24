@@ -4,11 +4,19 @@ on:
   push:
     paths:
       - .github/workflows/docs.yml
-      - 'docs/**.rst'
+      - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
+      - '**.rst'
   pull_request:
     paths:
       - .github/workflows/docs.yml
-      - 'docs/**.rst'
+      - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
+      - '**.rst'
 
 jobs:
   build:
@@ -22,7 +30,8 @@ jobs:
           python3 -m venv venv && source venv/bin/activate
           pip install --upgrade pip && pip install poetry && poetry install
           cd docs && make html
-          cd .. && pytest --cov=cyclops --cov-report html && cp -r htmlcov docs/build/html/
+          cd .. && pytest --cov=cyclops --cov-report html && cp htmlcov/* docs/build/html/_static/
+          mv docs/build/html/_static/index.html docs/build/html/_static/coverage_report.html
 
       - name: Deploy to Github pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
