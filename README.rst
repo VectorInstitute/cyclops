@@ -46,11 +46,10 @@ To create virtual environment and install dependencies, run:
 `Documentation <https://vectorinstitute.github.io/cyclops/>`_
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Notebooks
+---------
 
-Example Notebooks
------------------
-
-To use the notebooks, the python virtual environment can be installed and
+To use jupyter notebooks, the python virtual environment can be installed and
 used inside an Ipython kernel. After activating the virtual environment, run:
 
 .. code-block:: bash
@@ -60,9 +59,5 @@ used inside an Ipython kernel. After activating the virtual environment, run:
 Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 ``<name_of_kernel>``.
 
-The following example notebooks can be useful to view the functionality of the
-framework:
-
-* ``sample_code/data_layer.ipynb`` - Example to run data extraction and processing.
-* ``sample_code/delirium.ipynb`` - Exploratory data analysis for developing a 
-  delirium model.
+Tutorial notebooks in ``notebooks/tutorials`` can be useful to view the
+functionality of the framework
