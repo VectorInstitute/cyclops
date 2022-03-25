@@ -60,4 +60,4 @@ Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 ``<name_of_kernel>``.
 
 Tutorial notebooks in ``notebooks/tutorials`` can be useful to view the
-functionality of the framework
+functionality of the framework.
