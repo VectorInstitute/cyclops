@@ -2,6 +2,8 @@ name: Documentation and Coverage Report
 
 on:
   push:
+    branches:
+      - master
     paths:
       - .github/workflows/docs.yml
       - '**.py'
@@ -10,6 +12,8 @@ on:
       - requirements.txt
       - '**.rst'
   pull_request:
+    branches:
+      - master
     paths:
       - .github/workflows/docs.yml
       - '**.py'

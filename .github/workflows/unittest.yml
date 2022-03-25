@@ -2,6 +2,8 @@ name: Unit-tests
 
 on:
   push:
+    branches:
+      - master
     paths:
       - .github/workflows/unittest.yml
       - '**.py'
@@ -9,6 +11,8 @@ on:
       - pyproject.toml
       - requirements.txt
   pull_request:
+    branches:
+      - master
     paths:
       - .github/workflows/unittest.yml
       - '**.py'
