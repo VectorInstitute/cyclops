@@ -5,6 +5,7 @@
 import logging
 from dataclasses import dataclass
 from typing import List, Any, Callable, Union
+from functools import wraps
 
 import numpy as np
 import sqlalchemy
@@ -88,6 +89,7 @@ def debug_query_msg(func_: Callable) -> Callable:
 
     """
 
+    @wraps(func_)
     def wrapper_func(*args, **kwargs):
         LOGGER.debug("Running query function: %s", {func_.__name__})
         query_result = func_(*args, **kwargs)
@@ -221,6 +223,7 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
         """Decorate function to convert query type parameters to Subquery type."""
         LOGGER.debug("H0")
 
+        @wraps(func_)
         def wrapper_func(*args, **kwargs):
             # Convert relevant arguments
             args = list(args)
@@ -272,7 +275,6 @@ def get_attribute(
     """Extract an attribute object from the subquery.
 
     The attribute given may be a column object or the column name (string).
-
     The assert_same parameter is designed as a fail-safe such that
     when a column object is passed in, it is asserted to be in the
     query. Made optional because an attribute may have been altered.
@@ -523,7 +525,8 @@ def apply_to_attributes(
 
 
 def trim_attributes(
-    table_: Union[Select, Subquery, Table, DBTable], cols: List[Union[str, Column]]
+    table_: Union[sqlalchemy.sql.visitors.TraversibleType, DBTable],
+    cols: List[Union[str, Column]],
 ):
     """Trim attributes and remove leading/trailing whitespace.
 
@@ -532,8 +535,7 @@ def trim_attributes(
 
     Parameters
     ----------
-    table_ : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or DBTable
+    table_ : sqlalchemy.sql.visitors.TraversibleType or DBTable
         The query.
     cols : list of str or list of sqlalchemy.sql.schema.Column
         Attributes to trim.

@@ -6,3 +6,4 @@ cyclops API
 
    orm
    processors
+   queries
