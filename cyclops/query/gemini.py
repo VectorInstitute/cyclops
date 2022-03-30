@@ -175,8 +175,9 @@ def join_with_patients(
 
 
 @debug_query_msg
-def diagnoses(diagnosis_codes: Union[List[str], str] = None,
-              diagnosis_types: List[str] = None) -> QueryInterface:
+def diagnoses(
+    diagnosis_codes: Union[List[str], str] = None, diagnosis_types: List[str] = None
+) -> QueryInterface:
     """Query diagnosis data.
 
     Parameters
