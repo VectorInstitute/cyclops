@@ -16,7 +16,6 @@ from cyclops.processors.column_names import (
     SEX,
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
-    DIAGNOSIS_CODE,
     LAB_TEST_RESULT_VALUE,
     LAB_TEST_TIMESTAMP,
     LAB_TEST_NAME,
@@ -85,9 +84,9 @@ def patients(
 
     Parameters
     ----------
-    years: str, optional
+    years: list of str, optional
         Years for which patient encounters are to be filtered.
-    hospitals: list, optional
+    hospitals: list of str, optional
         Hospital sites from which patient encounters are to be filtered.
     from_date: str, optional
         Gather patients admitted >= from_date in YYYY-MM-DD format.
@@ -173,6 +172,57 @@ def join_with_patients(
         table_.c.encounter_id == patients_table.c.encounter_id
     )
     return QueryInterface(_db, query)
+
+
+@debug_query_msg
+def diagnoses(diagnosis_codes: Union[List[str], str] = None,
+              diagnosis_types: List[str] = None) -> QueryInterface:
+    """Query diagnosis data.
+
+    Parameters
+    ----------
+    diagnosis_codes: list of str or str, optional
+        Names of diagnosis codes to include, or a diagnosis code search string,
+        all diagnosis data are included if not provided.
+    diagnosis_types: list of str, optional
+        Include only those diagnoses that are of certain type.
+
+    The following types of diagnoses are available:
+    M         Most Responsible Diagnosis
+    1              Pre-Admit Comorbidity
+    2             Post-Admit Comorbidity
+    3                Secondary Diagnosis
+    4                   Morphology Codes
+    5                Admitting Diagnosis
+    6   Proxy Most Responsible Diagnosis
+    9      External Cause of Injury Code
+    0                            Newborn
+    W   First Service Transfer Diagnosis
+    X  Second Service Transfer Diagnosis
+    Y   Third Service Transfer Diagnosis
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    table_ = TABLE_MAP[DIAGNOSIS]
+    subquery = select(table_.data)
+    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
+    if diagnosis_codes:
+        subquery = (
+            select(subquery)
+            .where(in_(subquery.c.diagnosis_code, diagnosis_codes, to_str=True))
+            .subquery()
+        )
+    if diagnosis_types:
+        subquery = (
+            select(subquery)
+            .where(in_(subquery.c.diagnosis_type, diagnosis_types, to_str=True))
+            .subquery()
+        )
+    return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
