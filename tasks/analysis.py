@@ -17,7 +17,7 @@ from evidently.dashboard import Dashboard
 from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
 from evidently.pipeline.column_mapping import ColumnMapping
 
-from config import config_to_dict
+from cyclops.config import config_to_dict
 
 
 def get_report_filename(config):

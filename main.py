@@ -9,7 +9,7 @@ from tasks import train
 from tasks import analysis
 from tasks import predict
 
-import config
+from cyclops import config
 
 
 # Top level to invoke specific operations

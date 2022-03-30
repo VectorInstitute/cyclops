@@ -6,7 +6,7 @@ import unittest
 import json
 import yaml
 
-import config
+from cyclops import config
 from codebase_ops import PROJECT_ROOT
 
 
