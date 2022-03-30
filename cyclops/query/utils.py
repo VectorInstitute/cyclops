@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass
 from typing import List, Any, Callable, Union
 from functools import wraps
+from datetime import datetime
 
 import numpy as np
 import sqlalchemy
@@ -22,6 +23,22 @@ from codebase_ops import get_log_file_path
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
+
+def to_datetime_format(date: str) -> datetime:
+    """Convert date in string format YYYY-MM-DD to datetime.
+
+    Parameters
+    ----------
+    date: str
+        Input date in string format.
+    Returns
+    -------
+    datetime
+        Date in datetime format.
+
+    """
+    return datetime.strptime(date, "%Y-%m-%d")
 
 
 @dataclass
@@ -122,14 +139,13 @@ def to_list(obj: Any):
     return [obj]
 
 
-# === TYPE/QUERY CONVERSION ===
 def _to_subquery(table_: Union[Select, Subquery, Table, DBTable]) -> Subquery:
     """Convert a query from some type in QUERY_TYPES to Subquery type.
 
     Parameters
     ----------
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         Query to convert.
 
     Returns
@@ -161,8 +177,8 @@ def _to_select(table_: Union[Select, Subquery, Table, DBTable]) -> Select:
 
     Parameters
     ----------
-    t: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         Query to convert.
 
     Returns
@@ -189,7 +205,7 @@ def _to_select(table_: Union[Select, Subquery, Table, DBTable]) -> Select:
     )
 
 
-# Dictionary mapping query type -> query type conversion function
+# Dictionary mapping query type -> query type conversion function.
 QUERY_TO_TYPE_FNS = {
     Subquery: _to_subquery,
     Select: _to_select,
@@ -221,17 +237,16 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
 
     def decorator(func_: Callable) -> Callable:
         """Decorate function to convert query type parameters to Subquery type."""
-        LOGGER.debug("H0")
 
         @wraps(func_)
         def wrapper_func(*args, **kwargs):
-            # Convert relevant arguments
+            # Convert relevant arguments.
             args = list(args)
             for i, arg in enumerate(args):
                 if type(arg) in relevant_types:
                     args[i] = to_type_fn(arg)
 
-            # Convert relevant keyword arguments
+            # Convert relevant keyword arguments.
             kwargs = dict(kwargs)
             for key, kwarg in kwargs.items():
                 if type(kwarg) in relevant_types:
@@ -265,10 +280,9 @@ def query_params_to_type(to_type: Any):
     return param_types_to_type(QUERY_TYPES, to_type_fn)
 
 
-# === QUERY MANIPULATION ===
 @query_params_to_type(Subquery)
 def get_attribute(
-    table_: Union[sqlalchemy.sql.visitors.TraversibleType, DBTable],
+    table_: Union[Select, Subquery, Table, DBTable],
     attr: Union[str, Column],
     assert_same: bool = True,
 ):
@@ -281,7 +295,8 @@ def get_attribute(
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.visitors.TraversibleType or DBTable
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query with the column.
     attr: str or sqlalchemy.sql.schema.Column
         Attribute to get. It is either a Column object or the column name.
@@ -296,10 +311,10 @@ def get_attribute(
     """
     col_names = [c.name for c in table_.columns]
 
-    # If a Column object
+    # If a Column object.
     if isinstance(attr, Column):
         # Make sure the column object provided matches
-        # the column in the query of the same name
+        # the column in the query of the same name.
         if assert_same:
             if attr != table_.c[col_names.index(attr.name)]:
                 raise ValueError(
@@ -309,7 +324,7 @@ def get_attribute(
                 )
         return attr
 
-    # Otherwise, a string
+    # Otherwise, a string.
     if attr not in col_names:
         raise ValueError(f"Query does not contain column {attr}")
 
@@ -334,7 +349,7 @@ def get_attributes(
     Parameters
     ----------
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or DBTable
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query with the column.
     attrs: str or sqlalchemy.sql.schema.Column
         Attribute to get. It is either a Column object or the column name.
@@ -354,7 +369,7 @@ def get_attributes(
 
 @query_params_to_type(Subquery)
 def drop_attributes(
-    table_: Union[sqlalchemy.sql.visitors.TraversibleType, DBTable],
+    table_: Union[Select, Subquery, Table, DBTable],
     drop_cols: Union[str, Column, List[Union[str, Column]]],
 ) -> Select:
     """Drop some attribute(s) from a query.
@@ -364,7 +379,8 @@ def drop_attributes(
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.visitors.TraversibleType or DBTable
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query with the column.
     col : str or sqlalchemy.sql.schema.Column or list of str or list of
     sqlalchemy.sql.schema.Column
@@ -382,7 +398,7 @@ def drop_attributes(
 
 @query_params_to_type(Subquery)
 def rename_attributes(
-    table_: Union[sqlalchemy.sql.visitors.TraversibleType, DBTable], old_new_map: dict
+    table_: Union[Select, Subquery, Table, DBTable], old_new_map: dict
 ) -> Select:
     """Rename a query's attributes.
 
@@ -391,7 +407,8 @@ def rename_attributes(
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.visitors.TraversibleType or DBTable
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query.
     d : dict
         Dictionary mapping current attribute names (key) to new ones (value).
@@ -402,12 +419,12 @@ def rename_attributes(
         The corresponding query with attributes renamed.
 
     """
-    # Make sure we aren't renaming to columns to be the same
+    # Make sure we aren't renaming to columns to be the same.
     values = list(old_new_map.values())
     if len(values) != len(set(values)):
         raise ValueError("Cannot rename two attributes to the same name.")
 
-    # Rename
+    # Rename.
     return select(
         *[
             c.label(old_new_map[c.name]) if c.name in old_new_map else c
@@ -418,7 +435,7 @@ def rename_attributes(
 
 @query_params_to_type(Subquery)
 def reorder_attributes(
-    table_: Union[sqlalchemy.sql.visitors.TraversibleType, DBTable],
+    table_: Union[Select, Subquery, Table, DBTable],
     cols: List[Union[str, Column]],
     assert_same: bool = True,
 ) -> Select:
@@ -433,7 +450,8 @@ def reorder_attributes(
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.visitors.TraversibleType or DBTable
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query to reorder.
     cols : list of str or list of sqlalchemy.sql.schema.Column
         New attribute order.
@@ -446,11 +464,11 @@ def reorder_attributes(
         The reordered query.
 
     """
-    # Get the old/new column names
+    # Get the old/new column names.
     old_order = [c.name for c in table_.c]
     new_order = [c.name for c in get_attributes(table_, cols, assert_same=assert_same)]
 
-    # Make sure we have exactly the same set of old/new column names
+    # Make sure we have exactly the same set of old/new column names.
     if not set(old_order) == set(new_order):
         old_order_print = ", ".join(old_order)
         new_order_print = ", ".join(new_order)
@@ -459,7 +477,7 @@ def reorder_attributes(
             to re-order, not {new_order_print}."""
         )
 
-    # Reorder the columns
+    # Reorder the columns.
     new_cols = []
     for col in new_order:
         new_cols.append(table_.c[old_order.index(col)])
@@ -469,7 +487,7 @@ def reorder_attributes(
 
 @query_params_to_type(Subquery)
 def apply_to_attributes(
-    table_: Union[sqlalchemy.sql.visitors.TraversibleType, DBTable],
+    table_: Union[Select, Subquery, Table, DBTable],
     cols: List,
     func_: Callable,
 ) -> Select:
@@ -478,7 +496,8 @@ def apply_to_attributes(
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.visitors.TraversibleType or DBTable
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query.
     cols : list of str or list of sqlalchemy.sql.schema.Column
         Attributes to which to apply the function.
@@ -499,7 +518,7 @@ def apply_to_attributes(
     if isinstance(cols[0], str):
         col_names = cols
 
-    # Apply function to columns
+    # Apply function to columns.
     name_d = {}
     trimmed = []
     for col in table_.c:
@@ -509,23 +528,23 @@ def apply_to_attributes(
         name_d[new_name] = col.name
         trimmed.append(func_(col).label("temp" + col.name + "temp"))
 
-    # Append new columns
+    # Append new columns.
     subquery = select(table_, *trimmed).subquery()
 
-    # Drop old columns
+    # Drop old columns.
     subquery = drop_attributes(subquery, col_names)
 
-    # Rename those temporary columns
+    # Rename those temporary columns.
     subquery = rename_attributes(subquery, name_d).subquery()
 
-    # Re-order the columns as they were originally
+    # Re-order the columns as they were originally.
     query = reorder_attributes(subquery, org_col_names, assert_same=False)
 
     return query
 
 
 def trim_attributes(
-    table_: Union[sqlalchemy.sql.visitors.TraversibleType, DBTable],
+    table_: Union[Select, Subquery, Table, DBTable],
     cols: List[Union[str, Column]],
 ):
     """Trim attributes and remove leading/trailing whitespace.
@@ -535,7 +554,8 @@ def trim_attributes(
 
     Parameters
     ----------
-    table_ : sqlalchemy.sql.visitors.TraversibleType or DBTable
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query.
     cols : list of str or list of sqlalchemy.sql.schema.Column
         Attributes to trim.
@@ -569,18 +589,17 @@ def rga(obj, *attr_args):
         The object accessed by the final attribute.
 
     """
-    # Get attribute
+    # Get attribute.
     next_attr = getattr(obj, attr_args[0])
 
-    # Base case
+    # Base case.
     if len(attr_args) == 1:
         return next_attr
 
-    # Recurse
+    # Recurse.
     return getattr(next_attr, attr_args[1:])
 
 
-# === CONDITIONS ===
 def process_elem(elem: Any, **kwargs: bool) -> Any:
     """Preprocess some basic object such as an integer, float, or string.
 
@@ -597,18 +616,18 @@ def process_elem(elem: Any, **kwargs: bool) -> Any:
         The preprocessed element.
 
     """
-    # Extract kwargs
+    # Extract kwargs.
     lower = kwargs.get("lower", False)
     trim = kwargs.get("trim", False)
     to_str = kwargs.get("to_str", False)
     to_int = kwargs.get("to_int", False)
     to_float = kwargs.get("to_float", False)
 
-    # Convert to string
+    # Convert to string.
     if to_str:
         elem = str(elem)
 
-    # If a string
+    # If a string.
     if isinstance(elem, str):
         if lower:
             elem = elem.lower()
@@ -616,11 +635,11 @@ def process_elem(elem: Any, **kwargs: bool) -> Any:
         if trim:
             elem = elem.strip()
 
-    # Convert to int
+    # Convert to int.
     if to_int:
         elem = int(elem)
 
-    # Convert to float
+    # Convert to float.
     if to_float:
         elem = float(elem)
 
@@ -643,10 +662,10 @@ def process_list(lst: Union[Any, List[Any]], **kwargs: bool) -> List[Any]:
         The preprocessed element.
 
     """
-    # Convert potentially non-list variable to list
+    # Convert potentially non-list variable to list.
     lst = to_list(lst)
 
-    # Process elements
+    # Process elements.
     return [process_elem(i, **kwargs) for i in lst]
 
 
@@ -666,24 +685,24 @@ def process_attribute(col: Column, **kwargs: bool) -> Column:
         The preprocessed column.
 
     """
-    # Extract kwargs
+    # Extract kwargs.
     lower = kwargs.get("lower", False)
     trim = kwargs.get("trim", False)
     to_str = kwargs.get("to_str", False)
     to_int = kwargs.get("to_int", False)
     to_float = kwargs.get("to_float", False)
 
-    # Convert to string
+    # Convert to string.
     if to_str:
         col = cast(col, String)
 
-    # If a string column
+    # If a string column.
     if "VARCHAR" in str(col.type):
-        # Lower column
+        # Lower column.
         if lower:
             col = func.lower(col)
 
-        # Trim whitespace
+        # Trim whitespace.
         if trim:
             col = func.trim(col)
 
@@ -696,7 +715,7 @@ def process_attribute(col: Column, **kwargs: bool) -> Column:
     return col
 
 
-def equals_cond(
+def equals(
     col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
 ) -> BinaryExpression:
     """Condition that a column has some value.
@@ -730,7 +749,41 @@ def equals_cond(
     )
 
 
-def string_format_cond(
+def not_equals(
+    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+) -> BinaryExpression:
+    """Condition that a column is not equal to some value.
+
+    Assumes that if searching for a string, both the value and column values
+    should be converted to lowercase and trimmed of leading/trailing whitespace.
+
+    Parameters
+    ----------
+    col : sqlalchemy.sql.schema.Column
+        The column to condition.
+    val : Any
+        The value to match in the column.
+    lower : bool, default=True
+        Whether to convert the value and column to lowercase.
+        This is only relevant when the column/value are strings.
+    trim : bool, default=True
+        Whether to trim (strip) whitespace on the value and column.
+        This is only relevant when the column/value are strings.
+    **kwargs : dict, optional
+        Remaining preprocessing keyword arguments.
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BinaryExpression
+        An expression representing where the condition was satisfied.
+
+    """
+    return process_attribute(col, lower=lower, trim=trim, **kwargs) != process_elem(
+        value, lower=lower, trim=trim, **kwargs
+    )
+
+
+def has_string_format(
     col: Column, value: Any, fmt: str, to_str: bool = True, **kwargs: bool
 ) -> BinaryExpression:
     """Condition that a column has some string formatting.
@@ -762,7 +815,7 @@ def string_format_cond(
     )
 
 
-def substring_cond(
+def has_substring(
     col: Column, substring: Any, lower: bool = True, **kwargs: bool
 ) -> BinaryExpression:
     """Condition that a column has some substring.
@@ -788,10 +841,10 @@ def substring_cond(
         An expression representing where the condition was satisfied.
 
     """
-    return string_format_cond(col, substring, "%%{}%%", lower=lower, **kwargs)
+    return has_string_format(col, substring, "%%{}%%", lower=lower, **kwargs)
 
 
-def startswith_cond(
+def starts_with(
     col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
 ) -> BinaryExpression:
     """Condition that a column starts with some value/string.
@@ -821,10 +874,10 @@ def startswith_cond(
         An expression representing where the condition was satisfied.
 
     """
-    return string_format_cond(col, value, "{}%%", lower=lower, trim=trim, **kwargs)
+    return has_string_format(col, value, "{}%%", lower=lower, trim=trim, **kwargs)
 
 
-def endswith_cond(
+def ends_with(
     col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
 ) -> BinaryExpression:
     """Condition that a column ends with some value/string.
@@ -854,10 +907,10 @@ def endswith_cond(
         An expression representing where the condition was satisfied.
 
     """
-    return string_format_cond(col, value, "%%{}", lower=lower, trim=trim, **kwargs)
+    return has_string_format(col, value, "%%{}", lower=lower, trim=trim, **kwargs)
 
 
-def in_list_condition(
+def in_(
     col: Column, lst: List[Any], lower: bool = True, trim: bool = True, **kwargs: bool
 ) -> BinaryExpression:
     """Condition that a column value is in a list of values.

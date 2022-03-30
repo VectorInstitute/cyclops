@@ -8,12 +8,21 @@ from sqlalchemy.sql.selectable import Select, Subquery
 from sqlalchemy.sql.schema import Table
 
 from cyclops.orm import Database
-import cyclops.queries.utils as q_utils
-from cyclops.queries.utils import debug_query_msg, query_params_to_type
-from cyclops.queries.utils import DBTable
+from cyclops.query.utils import (
+    debug_query_msg,
+    query_params_to_type,
+    drop_attributes,
+    trim_attributes,
+    rename_attributes,
+    reorder_attributes,
+    equals,
+    has_substring,
+    in_,
+    DBTable,
+)
 
 
-TABLE = {
+TABLE_MAP = {
     "patients": lambda db: db.mimic_core.patients,
     "diagnoses": lambda db: db.mimic_hosp.d_icd_diagnoses,
     "patient_diagnoses": lambda db: db.mimic_hosp.diagnoses_icd,
@@ -40,13 +49,12 @@ def patients(database: Database, process_anchor_year: bool = True) -> Select:
         Select ORM object.
 
     """
-    table_ = TABLE["patients"](database)
+    table_ = TABLE_MAP["patients"](database)
 
     if not process_anchor_year:
         return select(table_.data)
 
-    # Process and include patient's anchor year
-    # i.e., year of car information
+    # Process and include patient's anchor year, i.e., year of care information.
     subquery = select(
         table_.data,
         (func.substr(table_.anchor_year_group, 1, 4).cast(Integer)).label(
@@ -71,7 +79,7 @@ def patients(database: Database, process_anchor_year: bool = True) -> Select:
         (subquery.c.year - subquery.c.anchor_year).label("anchor_year_difference"),
     ).subquery()
 
-    query = q_utils.drop_attributes(subquery, ["anchor_year_group"])
+    query = drop_attributes(subquery, ["anchor_year_group"])
     return query
 
 
@@ -91,7 +99,7 @@ def join_with_patients(
     database: cyclops.orm.Database
         Database ORM object.
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or DBTable
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         A query with column subject_id.
     process_anchor_year : bool, default=True
         Whether to process and include the patient's anchor
@@ -106,10 +114,10 @@ def join_with_patients(
     if not hasattr(table_.c, "subject_id"):
         raise ValueError("Subquery t must have attribute 'subject_id'.")
 
-    # Get patients
+    # Get patients.
     patients_ = patients(database, process_anchor_year=process_anchor_year).subquery()
 
-    # Join on patients (subject column)
+    # Join on patients (subject column).
     query = select(table_, patients_).where(
         table_.c.subject_id == patients_.c.subject_id
     )
@@ -134,30 +142,26 @@ def diagnoses(database: Database, version: Optional[int] = None) -> Select:
         Select ORM object.
 
     """
-    # Get diagnoses
-    table_ = TABLE["diagnoses"](database)
+    # Get diagnoses.
+    table_ = TABLE_MAP["diagnoses"](database)
     subquery = select(table_.data).subquery()
 
-    # Filter by version
+    # Filter by version.
     if version is not None:
         subquery = (
             select(subquery)
-            .where(q_utils.equals_cond(subquery.c.icd_version, version, to_int=True))
+            .where(equals(subquery.c.icd_version, version, to_int=True))
             .subquery()
         )
 
-    # Trim whitespace from icd_codes
-    subquery = q_utils.trim_attributes(subquery, ["icd_code"]).subquery()
+    # Trim whitespace from icd_codes.
+    subquery = trim_attributes(subquery, ["icd_code"]).subquery()
 
-    # Rename long_title to icd_title
-    subquery = q_utils.rename_attributes(
-        subquery, {"long_title": "icd_title"}
-    ).subquery()
+    # Rename long_title to icd_title.
+    subquery = rename_attributes(subquery, {"long_title": "icd_title"}).subquery()
 
-    # Re-order the columns nicely
-    query = q_utils.reorder_attributes(
-        subquery, ["icd_code", "icd_title", "icd_version"]
-    )
+    # Re-order the columns nicely.
+    query = reorder_attributes(subquery, ["icd_code", "icd_title", "icd_version"])
 
     return query
 
@@ -183,13 +187,11 @@ def diagnoses_by_substring(
         Select ORM object.
 
     """
-    # Get diagnoses
+    # Get diagnoses.
     subquery = diagnoses(database, version=version).subquery()
 
-    # Get diagnoses by substring
-    query = select(subquery).where(
-        q_utils.substring_cond(subquery.c.icd_title, substring)
-    )
+    # Get diagnoses by substring.
+    query = select(subquery).where(has_substring(subquery.c.icd_title, substring))
 
     return query
 
@@ -215,31 +217,31 @@ def patient_diagnoses(
         Select ORM object.
 
     """
-    # Get patient diagnoses
-    table_ = TABLE["patient_diagnoses"](database)
+    # Get patient diagnoses.
+    table_ = TABLE_MAP["patient_diagnoses"](database)
     subquery = select(table_.data).subquery()
 
     # Filter by version
     if version is not None:
         subquery = (
             select(subquery)
-            .where(q_utils.equals_cond(subquery.c.icd_version, version, to_int=True))
+            .where(equals(subquery.c.icd_version, version, to_int=True))
             .subquery()
         )
 
-    # Trim whitespace from icd_codes
-    query = q_utils.trim_attributes(subquery, ["icd_code"])
+    # Trim whitespace from icd_codes.
+    query = trim_attributes(subquery, ["icd_code"])
 
     if not include_icd_title:
         return query
 
-    # Include ICD title
+    # Include ICD title.
     subquery = query.subquery()
 
-    # Get codes
+    # Get codes.
     code_subquery = diagnoses(database, version=version)
 
-    # Get patient diagnoses, including ICD title
+    # Get patient diagnoses, including ICD title.
     query = select(subquery, code_subquery.c.icd_title).join(
         subquery, subquery.c.icd_code == code_subquery.c.icd_code
     )
@@ -268,13 +270,11 @@ def patient_diagnoses_by_icd_codes(
         Select ORM object.
 
     """
-    # Get patient diagnoses
+    # Get patient diagnoses.
     subquery = patient_diagnoses(database, version=version).subquery()
 
-    # Select those in the given ICD codes
-    query = select(subquery).where(
-        q_utils.in_list_condition(subquery.c.icd_code, codes, to_str=True)
-    )
+    # Select those in the given ICD codes.
+    query = select(subquery).where(in_(subquery.c.icd_code, codes, to_str=True))
 
     return query
 
@@ -300,15 +300,15 @@ def patient_diagnoses_by_substring(
         Select ORM object.
 
     """
-    # Get codes by substring
+    # Get codes by substring.
     code_subquery = diagnoses_by_substring(
         database, substring, version=version
     ).subquery()
 
-    # Get patient diagnoses
+    # Get patient diagnoses.
     patient_subquery = patient_diagnoses(database, version=version).subquery()
 
-    # Get patient diagnoses by substring
+    # Get patient diagnoses by substring.
     query = select(patient_subquery, code_subquery.c.icd_title).join(
         code_subquery, patient_subquery.c.icd_code == code_subquery.c.icd_code
     )
@@ -333,15 +333,13 @@ def event_labels(database: Database, category: Optional[str] = None) -> Select:
         Select ORM object.
 
     """
-    table_ = TABLE["event_labels"](database)
+    table_ = TABLE_MAP["event_labels"](database)
     sel = select(table_.data)
 
-    # Filter by category
+    # Filter by category.
     if category is not None:
         subquery = sel.subquery()
-        return select(subquery).where(
-            q_utils.equals_cond(subquery.c.category, category)
-        )
+        return select(subquery).where(equals(subquery.c.category, category))
 
     return sel
 
@@ -367,11 +365,11 @@ def event_labels_by_substring(
         Select ORM object.
 
     """
-    # Get event labels
+    # Get event labels.
     subquery = event_labels(database, category=category).subquery()
 
-    # Get labels by label substring
-    query = select(subquery).where(q_utils.substring_cond(subquery.c.label, substring))
+    # Get labels by label substring.
+    query = select(subquery).where(has_substring(subquery.c.label, substring))
 
     return query
 
@@ -397,10 +395,10 @@ def events(
         Select ORM object.
 
     """
-    table_ = TABLE["events"](database)
+    table_ = TABLE_MAP["events"](database)
     sel = select(table_.data)
 
-    # Filter by category
+    # Filter by category.
     if category is not None:
         subquery = sel.subquery()
         labels_subquery = event_labels(database, category=category).subquery()
@@ -410,15 +408,15 @@ def events(
             .subquery()
         )
 
-        sel = select(subquery).where(q_utils.equals_cond(subquery.c.category, category))
+        sel = select(subquery).where(equals(subquery.c.category, category))
 
     if not join_on_labels:
         return sel
 
-    # Get and include event label
+    # Get and include event label.
     subquery = sel.subquery()
     query = select(
-        q_utils.drop_attributes(subquery, ["itemid"]).subquery(),
+        drop_attributes(subquery, ["itemid"]).subquery(),
         database.mimic_icu.d_items.data,
     ).filter(subquery.c.itemid == database.mimic_icu.d_items.itemid)
 
@@ -446,11 +444,11 @@ def events_by_itemids(
         Select ORM object.
 
     """
-    # Get events
+    # Get events.
     subquery = events(database, category=category).subquery()
 
-    # Get events in the itemids list
-    cond = q_utils.in_list_condition(subquery.c.itemid, itemids, to_int=True)
+    # Get events in the itemids list.
+    cond = in_(subquery.c.itemid, itemids, to_int=True)
     query = select(subquery).where(cond)
 
     return query
@@ -477,11 +475,11 @@ def events_by_labels(
         Select ORM object.
 
     """
-    # Get events
+    # Get events.
     subquery = events(database, category=category).subquery()
 
-    # Get those in label list
-    cond = q_utils.in_list_condition(subquery.c.label, labels, lower=False, strip=False)
+    # Get those in label list.
+    cond = in_(subquery.c.label, labels, lower=False, strip=False)
     query = select(subquery).where(cond)
 
     return query
@@ -508,11 +506,11 @@ def events_by_label_substring(
         Select ORM object.
 
     """
-    # Get events
+    # Get events.
     subquery = events(database, category=category).subquery()
 
-    # Get by substring
-    cond = q_utils.substring_cond(subquery.c.label, substring)
+    # Get by substring.
+    cond = has_substring(subquery.c.label, substring)
     query = select(subquery).where(cond)
 
     return query

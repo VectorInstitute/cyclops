@@ -18,9 +18,8 @@ from codebase_ops import get_log_file_path
 
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
+from cyclops.query.utils import DBSchema, DBTable, DBMetaclass, query_params_to_type
 
-from cyclops.queries.utils import DBSchema, DBTable, DBMetaclass
-from cyclops.queries.utils import query_params_to_type
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

@@ -17,6 +17,7 @@ LANGUAGE = "language"
 TOTAL_COST = "total_cost"
 
 DIAGNOSIS_CODE = "diagnosis_code"
+DIAGNOSIS_TYPE = "diagnosis_type"
 
 LENGTH_OF_STAY_IN_ER = "length_of_stay_in_er"
 MORTALITY_IN_HOSPITAL = "mortality_in_hospital"
