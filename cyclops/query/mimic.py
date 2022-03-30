@@ -90,7 +90,7 @@ def join_with_patients(
     database: cyclops.orm.Database
         Database ORM object.
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or DBTable
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         A query with column subject_id.
     process_anchor_year : bool, default=True
         Whether to process and include the patient's anchor

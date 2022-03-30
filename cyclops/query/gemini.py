@@ -1,15 +1,18 @@
-"""GEMINI queries using SQLAlchemy ORM towards different models."""
+"""GEMINI query API."""
 
-from typing import List
+from typing import List, Union, Optional
 
 import pandas as pd
-from sqlalchemy import select, extract
+from sqlalchemy import select, extract, DateTime
+from sqlalchemy.sql.selectable import Select, Subquery
 from sqlalchemy.sql.expression import and_
+from sqlalchemy.sql.schema import Table
 
-import config
+from cyclops import config
 
 from cyclops.orm import Database
-from cyclops.processors.constants import EMPTY_STRING, SMH, YEAR
+from cyclops.query.interface import QueryInterface
+from cyclops.processors.constants import EMPTY_STRING, YEAR
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
     AGE,
@@ -29,7 +32,17 @@ from cyclops.processors.column_names import (
     VITAL_MEASUREMENT_TIMESTAMP,
     REFERENCE_RANGE,
 )
-from cyclops.queries.utils import debug_query_msg
+from cyclops.query.utils import (
+    debug_query_msg,
+    rename_attributes,
+    in_,
+    to_datetime_format,
+    equals,
+    DBTable,
+    query_params_to_type,
+    not_equals,
+    has_substring
+)
 from cyclops.constants import GEMINI
 
 
@@ -52,140 +65,192 @@ TABLE_MAP = {
     PHARMACY: _db.public.pharmacy,
     INTERVENTION: _db.public.intervention,
 }
+GEMINI_COLUMN_MAP = {
+    "genc_id": ENCOUNTER_ID,
+    "admit_date_time": ADMIT_TIMESTAMP,
+    "discharge_date_time": DISCHARGE_TIMESTAMP,
+    "gender": SEX,
+    "result_value": LAB_TEST_RESULT_VALUE,
+    "result_unit": LAB_TEST_RESULT_UNIT,
+    "lab_test_name_mapped": LAB_TEST_NAME,
+    "sample_collection_date_time": LAB_TEST_TIMESTAMP,
+    "measurement_mapped": VITAL_MEASUREMENT_NAME,
+    "measurement_value": VITAL_MEASUREMENT_VALUE,
+    "measure_date_time": VITAL_MEASUREMENT_TIMESTAMP
+}
 
 
 @debug_query_msg
 def patients(
-    year: str = None,
-    hospitals: List[str] = None,
-    from_date: str = None,
-    to_date: str = None,
-    delirium_cohort: bool = False,
-) -> Select:
+    years: List[str] = [],
+    hospitals: List[str] = [],
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    delirium_cohort: Optional[bool] = False,
+) -> QueryInterface:
     """Query patient encounters.
 
     Parameters
     ----------
-    year: str
-        Gather patient encounters only from specified year.
-    hospitals: list
-        Gather patient encounters from specified sites.
+    years: str, optional
+        Years for which patient encounters are to be filtered.
+    hospitals: list, optional
+        Hospital sites from which patient encounters are to be filtered.
     from_date: str, optional
-        Gather patients admitted >= from_date.
+        Gather patients admitted >= from_date in YYYY-MM-DD format.
     to_date: str, optional
-        Gather patients admitted <= to_date.
+        Gather patients admitted <= to_date in YYYY-MM-DD format.
     delirium_cohort: bool, optional
         Gather patient encounters for which delirium label is available.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
 
     """
     table_ = TABLE_MAP[IP_ADMIN]
-    subquery = select(table_.data).subquery()
+    subquery = select(table_.data)
+    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
 
-    return query
+    if years:
+        subquery = (
+            select(subquery)
+            .where(in_(extract(YEAR, subquery.c.admit_timestamp), years))
+            .subquery()
+        )
+    if hospitals:
+        subquery = (
+            select(subquery).where(in_(subquery.c.hospital_id, hospitals, to_str=True)).subquery()
+        )
+    if from_date:
+        subquery = (
+            select(subquery)
+            .where(subquery.c.admit_timestamp >= to_datetime_format(from_date))
+            .subquery()
+        )
+    if to_date:
+        subquery = (
+            select(subquery)
+            .where(subquery.c.admit_timestamp <= to_datetime_format(to_date))
+            .subquery()
+        )
+    if delirium_cohort:
+        subquery = (
+            select(subquery).where(equals(subquery.c.gemini_cohort, True)).subquery()
+        )
+
+    return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
-def labs(database: Database) -> pd.DataFrame:
+@query_params_to_type(Subquery)
+def join_with_patients(
+    patients_table: Union[Select, Subquery, Table, DBTable],
+    table_: Union[Select, Subquery, Table, DBTable],
+) -> QueryInterface:
+    """Join a subquery with GEMINI patient static information.
+
+    Assumes that both query tables have "encounter_id".
+
+    Parameters
+    ----------
+    patients_table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
+        Patient query table.
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or DBTable
+        A query table such as labs or vitals.
+        
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    if not hasattr(table_.c, ENCOUNTER_ID) or not hasattr(patients_table.c, ENCOUNTER_ID):
+        raise ValueError("Input query table and patients table must have encounter_id!")
+
+    # Join on patients (encounter_id).
+    query = select(table_, patients_table).where(
+        table_.c.encounter_id == patients_table.c.encounter_id
+    )
+    return QueryInterface(_db, query)
+
+
+@debug_query_msg
+def labs(lab_tests: Union[List[str], str] = []) -> QueryInterface:
     """Query lab data.
 
     Parameters
     ----------
-    database: cyclops.orm.Database
-        Database ORM object.
+    lab_tests: list of str, optional
+        Names of lab tests to include, or a lab test name search string,
+        all lab tests are included if not provided.
 
     Returns
     -------
-    pandas.DataFrame
-        Extracted data from query.
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
 
     """
-    query = (
-        select(
-            database.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
-            database.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
-            database.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
-            database.public.ip_administrative.discharge_date_time.label(
-                DISCHARGE_TIMESTAMP
-            ),
-            database.public.ip_administrative.del_present,
-            database.public.ip_administrative.gemini_cohort,
-            database.public.lab.lab_test_name_mapped.label(LAB_TEST_NAME),
-            database.public.lab.result_value.label(LAB_TEST_RESULT_VALUE),
-            database.public.lab.result_unit.label(LAB_TEST_RESULT_UNIT),
-            database.public.lab.sample_collection_date_time.label(LAB_TEST_TIMESTAMP),
-            database.public.lab.reference_range.label(REFERENCE_RANGE),
-        )
-        .join(
-            database.public.lab.data,
-            database.public.ip_administrative.genc_id == database.public.lab.genc_id,
-        )
-        .where(
-            and_(
-                database.public.ip_administrative.gemini_cohort == True,  # noqa: E712
-                database.public.lab.lab_test_name_mapped != EMPTY_STRING,
-            )
-        )
+    table_ = TABLE_MAP[LAB]
+    subquery = select(table_.data)
+    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
+    subquery = (
+        select(subquery)
+        .where(not_equals(subquery.c.lab_test_name, EMPTY_STRING, to_str=True))
+        .subquery()
     )
-    return database.run_query(query)
+    if lab_tests and isinstance(lab_tests, list):
+        subquery = (
+            select(subquery)
+            .where(in_(subquery.c.lab_test_name, lab_tests, to_str=True))
+            .subquery()
+        )
+    elif lab_tests and isinstance(lab_tests, str):
+        subquery = (
+            select(subquery)
+            .where(has_substring(subquery.c.lab_test_name, lab_tests, to_str=True))
+            .subquery()
+        )
+    return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
-def vitals(database: Database, years: list, hospitals: list) -> pd.DataFrame:
-    """Query admin + vitals data filtering by hospitals and years.
+def vitals(vital_names: Union[List[str], str] = []) -> QueryInterface:
+    """Query vitals data.
 
     Parameters
     ----------
-    database: cyclops.orm.Database
-        Database ORM object.
-    years: list
-        Specific year(s) to filter vitals, e.g. [2019, 2020].
-    hospitals: str
-        Specific hospital site(s) to apply as filter e.g. ['SMH'].
+    vital_names: list of str or str, optional
+        Names of vital measurements to include, or a vital name search string,
+        all measurements are included if not provided.
 
     Returns
     -------
-    pandas.DataFrame
-        Extracted data from query.
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
 
     """
-    query = (
-        select(
-            database.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
-            database.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
-            database.public.ip_administrative.age.label(AGE),
-            database.public.ip_administrative.gender.label(SEX),
-            database.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
-            database.public.ip_administrative.discharge_date_time.label(
-                DISCHARGE_TIMESTAMP
-            ),
-            database.public.ip_administrative.discharge_disposition.label(
-                DISCHARGE_DISPOSITION
-            ),
-            database.public.ip_administrative.readmission.label(READMISSION),
-            database.public.vitals.measurement_mapped.label(VITAL_MEASUREMENT_NAME),
-            database.public.vitals.measurement_value.label(VITAL_MEASUREMENT_VALUE),
-            database.public.vitals.measure_date_time.label(VITAL_MEASUREMENT_TIMESTAMP),
-            database.public.vitals.reference_range.label(REFERENCE_RANGE),
-        )
-        .where(
-            and_(
-                database.public.ip_administrative.hospital_id.in_(hospitals),
-                extract(YEAR, database.public.ip_administrative.admit_date_time).in_(
-                    years
-                ),
-            )
-        )
-        .join(
-            database.public.vitals.data,
-            database.public.ip_administrative.genc_id == database.public.vitals.genc_id,
-        )
-        .where(
-            database.public.vitals.measurement_mapped != EMPTY_STRING,
-        )
+    table_ = TABLE_MAP[VITALS]
+    subquery = select(table_.data)
+    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
+    subquery = (
+        select(subquery)
+        .where(not_equals(subquery.c.vital_measurement_name, EMPTY_STRING, to_str=True))
+        .subquery()
     )
-    return database.run_query(query)
+    if vital_names and isinstance(vital_names, list):
+        subquery = (
+            select(subquery)
+            .where(in_(subquery.c.vital_measurement_name, vital_names, to_str=True))
+            .subquery()
+        )
+    if vital_names and isinstance(vital_names, str):
+        subquery = (
+            select(subquery)
+            .where(has_substring(subquery.c.vital_measurement_name, vital_names, to_str=True))
+            .subquery()
+        )
+    return QueryInterface(_db, subquery)

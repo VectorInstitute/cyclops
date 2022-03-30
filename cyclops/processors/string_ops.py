@@ -19,7 +19,7 @@ def fill_missing_with_nan(string: str) -> Union[float, str]:
 
     Returns
     -------
-    Union[str, float]
+    str or float
         NaN if input was empty, else input.
 
     """
@@ -205,7 +205,7 @@ def convert_to_numeric(input_: Union[str, float, None]) -> Union[int, str, float
 
     Returns
     -------
-    Union[str, float]
+    str or int or float
         Converted numeric output.
 
     """
@@ -257,7 +257,7 @@ def compute_range_avg(item: str) -> Union[int, float]:
 
     Returns
     -------
-    Union[int, float]
+    int or float
         Computed average of range.
 
     """
