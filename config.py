@@ -1,10 +1,10 @@
 """Configuration module."""
 
 import os
+import glob
 import time
 import logging
 import json
-from datetime import datetime
 from typing import Optional, Dict
 import subprocess
 import getpass
@@ -12,7 +12,7 @@ import argparse
 import configargparse
 from dotenv import load_dotenv
 
-from codebase_ops import get_log_file_path
+from codebase_ops import get_log_file_path, PROJECT_ROOT
 from cyclops.utils.log import setup_logging
 
 
@@ -25,9 +25,158 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-def read_config(  # pylint: disable=too-many-statements
-    config_path: Optional[str] = None,
-) -> argparse.Namespace:
+DEFAULT_CONFIG_PATH = os.path.join(PROJECT_ROOT, "configs/gemini/*.yaml")
+
+
+def _check_if_config_files_exist(config_path):
+    """Check if all four config files exist in mentioned path."""
+    config_file_paths = glob.glob(config_path)
+    config_file_names = [
+        os.path.splitext(os.path.basename(file_path))[0]
+        for file_path in config_file_paths
+    ]
+    if sorted(config_file_names) != ["data", "drift", "model", "workflow"]:
+        return False
+    return True
+
+
+def _create_parser(
+    config_path: str = DEFAULT_CONFIG_PATH,
+) -> configargparse.ArgumentParser:
+    """Create argument parser.
+
+    Parameters
+    ----------
+    config_path: str
+        Path to config files.
+
+    Returns
+    -------
+    configargparse.ArgumentParser
+        ArgumentParser object to help input arguments, that override parameters
+        from the configuration files.
+
+    """
+    if os.path.isdir(config_path):
+        config_path = os.path.join(config_path, "*.yaml")
+
+    if not _check_if_config_files_exist(config_path):
+        raise AssertionError(
+            "Specified configuration folder does not have all configuration files!"
+        )
+
+    return configargparse.ArgumentParser(
+        config_file_parser_class=configargparse.YAMLConfigFileParser,
+        default_config_files=[config_path],
+    )
+
+
+def _add_sub_task_args(parser: configargparse.ArgumentParser) -> None:
+    """Add sub-task toggle flags to argument parser."""
+    parser.add("--extract", action="store_true", help="Run data extraction")
+    parser.add("--train", action="store_true", help="Train baseline models")
+    parser.add("--predict", action="store_true", help="Run prediction")
+    parser.add("--drift", action="store_true", help="Run drift experiment")
+
+
+def _add_data_query_args(parser: configargparse.ArgumentParser) -> None:
+    """Add data querying parameters to argument parser."""
+    parser.add(
+        "--password",
+        default=os.environ.get("PGPASSWORD", None),
+        type=str,
+        required=False,
+        help="Database password.",
+    )
+    parser.add("--port", type=int, help="DB server port.")
+    parser.add("--host", type=str, required=False, help="DB server hostname.")
+    parser.add(
+        "--dbms", type=str, required=False, help="DB system.", choices=["postgresql"]
+    )
+    parser.add("--database", type=str, required=False, help="Name of the database.")
+    parser.add(
+        "--years",
+        type=str,
+        default=[],
+        action="append",
+        required=False,
+        help="Extract data filtered from specified year(s).",
+    )
+    parser.add(
+        "--hospitals",
+        type=str,
+        default=[],
+        action="append",
+        required=False,
+        help="Extract data filtered from specified hospital(s) sites.",
+    )
+    parser.add(
+        "--from_date",
+        type=str,
+        default="",
+        required=False,
+        help="""Format: yyyy-mm-dd. Filter patient encounters starting from
+        this admission date.""",
+    )
+    parser.add(
+        "--to_date",
+        type=str,
+        default="",
+        required=False,
+        help="Format: yyyy-mm-dd. Select before this admit_date.",
+    )
+    parser.add(
+        "--output_folder",
+        type=str,
+        default="_extract",
+        help="Output folder to store extracted data.",
+    )
+
+
+def _add_data_process_args(parser: configargparse.ArgumentParser) -> None:
+    """Add data processing parameters to argument parser."""
+    parser.add(
+        "--aggregation_strategy",
+        type=str,
+        default="static",
+        required=False,
+        help="""Aggregation strategy. If 'static', then patient events from time window
+        are collapsed to statistics per encounter. If 'temporal',
+        then patient events are aggregrated into smaller time windows specified
+        by aggregation_window. 'static' processing is suitable for time-invariant
+        models, and 'temporal' for time-series or recurrent models.""",
+    )
+    parser.add(
+        "--aggregation_range",
+        type=int,
+        default=168,
+        required=False,
+        help="""No. of hours after admission to consider for aggregating patient
+        events data.""",
+    )
+    parser.add(
+        "--aggregation_window",
+        type=int,
+        default=24,
+        required=False,
+        help="No. of hours (window) to consider for aggregating patient events data.",
+    )
+    parser.add(
+        "--imputation_strategy",
+        type=str,
+        default="mean",
+        required=False,
+        choices=[None, "mean"],
+        help="""Imputation strategy to apply for missing values.""",
+    )
+
+
+def _get_commit_id() -> str:
+    """Get the commit id of HEAD."""
+    return subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode("ascii")
+
+
+def read_config(config_path: Optional[str] = None) -> argparse.Namespace:
     """Read configuration.
 
     Parameters
@@ -39,262 +188,23 @@ def read_config(  # pylint: disable=too-many-statements
     -------
     args: argparse.Namespace
         Configuration stored in object.
+
     """
-    if not config_path:
-        parser = configargparse.ArgumentParser(
-            config_file_parser_class=configargparse.YAMLConfigFileParser,
-            default_config_files=["./configs/gemini/*.yaml"],
-        )
+    if config_path:
+        parser = _create_parser(config_path)
     else:
-        parser = configargparse.ArgumentParser(
-            config_file_parser_class=configargparse.YAMLConfigFileParser,
-            default_config_files=[config_path],
-        )
-    parser.add("-c", "--config_path", is_config_file=True, help="config file path")
+        parser = _create_parser()
 
-    # ************************Operation.************************
-    parser.add("--extract", action="store_true", help="Run data extraction")
-    parser.add("--train", action="store_true", help="Execute model training code")
-    parser.add("--predict", action="store_true", help="Run prediction")
-    parser.add("--analyze", action="store_true", help="Run analysis")
-
-    # ************************Data Extraction.************************
-    # Database connection parameters.
-    parser.add(
-        "--user",
-        type=str,
-        required=False,
-        default=os.environ["USER"],
-        help="Database username",
-    )
-    parser.add(
-        "--password",
-        default=os.environ["PGPASSWORD"],
-        type=str,
-        required=False,
-        help="Database password",
-    )
-    parser.add("--port", type=int, help="DB server port")
-    parser.add("--host", type=str, required=False, help="DB server hostname")
-    parser.add(
-        "--dbms", type=str, required=False, help="DB system", choices=["postgresql"]
-    )
-    parser.add("--database", type=str, required=False, help="database name")
-
-    # Data source and destination parameters.
-    parser.add("-w", action="store_true", help="Write extracted data to disk")
-    parser.add("-r", action="store_true", help="Read from the database")
-    parser.add(
-        "--input",
-        type=str,
-        required=False,
-        help="Data file to read from instead of database",
-    )
-    parser.add(
-        "--output_folder",
-        type=str,
-        help="Which directory should we put the CSV results?",
-    )
-    parser.add(
-        "--output_full_path",
-        type=str,
-        help="Where should we put the CSV results? Full path option.",
-    )
-    parser.add(
-        "--stats_path",
-        type=str,
-        help="Where to store/load features mean/std for normalization.",
-    )
-
-    # Data extraction parameters.
-    parser.add(
-        "--features",
-        default=[],
-        type=str,
-        action="append",
-        required=False,
-        help="List of features for the model",
-    )
-    parser.add(
-        "--target", type=str, required=False, help="Column we are trying to predict"
-    )
-    parser.add(
-        "--pop_size",
-        type=int,
-        required=False,
-        help="Total number of records to read from the database (0 - to read all)",
-    )
-    parser.add(
-        "--filter_year",
-        type=int,
-        required=False,
-        help="Select only records from before specified year",
-    )
-
-    # Specify 'from' and 'to' dates, only records with admit_date
-    # in this range will be selected.
-    parser.add(
-        "--filter_date_from",
-        type=str,
-        default="",
-        required=False,
-        help="Format: yyyy-mm-dd. Select starting from this admit_date.\
-                Used in conjunction with --filter_date_to",
-    )
-    parser.add(
-        "--filter_date_to",
-        type=str,
-        default="",
-        required=False,
-        help="Format: yyyy-mm-dd. Select before this admit_date.\
-                Used in conjunction with --filter_date_from",
-    )
-
-    # Train/test/val split parameters.
-    parser.add(
-        "--split_column",
-        type=str,
-        required=False,
-        help="Column we are use to split data into train, test, val",
-    )
-    parser.add("--test_split", type=str, required=False, help="Test split values")
-    parser.add("--val_split", type=str, required=False, help="Val split values")
-    parser.add(
-        "--train_split",
-        default=[],
-        type=str,
-        action="append",
-        required=False,
-        help="Train split values (if not set, all excdept test/val values)",
-    )
-
-    # ************************Model Training and Prediction.************************
-    parser.add_argument("--model", type=str, default="mlp")
-    parser.add_argument("--model_path", type=str, default="./model.pt")
-
-    # Data-loading config.
-    parser.add_argument("--dataset", type=str)
-    parser.add_argument("--batch_size", type=int)
-    parser.add_argument("--num_workers", type=int)
-    parser.add_argument("--num_epochs", type=int)
-    parser.add_argument("--shuffle", action="store_true")
-
-    # Used mostly for fake data, can take it out.
-    parser.add_argument("--data_dim", type=int, default=24)
-    parser.add_argument("--data_len", type=int, default=10000)
-
-    # Training config.
-    parser.add_argument("--lr", type=float, default=3e-4)
-
-    # Prediction config.
-    parser.add("--threshold", type=float, default=0.5)
-
-    # Prediction output path.
-    parser.add("--result_output", type=str, default="./result.csv")
-
-    # ************************Analysis************************
-    parser.add_argument(
-        "--type", type=str, default="dataset", help="Type of report to generate"
-    )
-
-    # Data-specific parameters.
-    parser.add(
-        "--slice",
-        type=str,
-        required=False,
-        help="What column to use to slice data for analysis?",
-    )
-    parser.add(
-        "--data_ref",
-        default=[],
-        type=int,
-        action="append",
-        required=False,
-        help="List of slices to take as reference data",
-    )
-    parser.add(
-        "--data_eval",
-        default=[],
-        type=int,
-        action="append",
-        required=False,
-        help="List of slices to evaluate on",
-    )
-    parser.add(
-        "--numerical_features",
-        default=[],
-        type=str,
-        action="append",
-        required=False,
-        help="List of numerical features (for analysis)",
-    )
-    parser.add(
-        "--categorical_features",
-        default=[],
-        type=str,
-        action="append",
-        required=False,
-        help="List of categorical features (for analysis)",
-    )
-    parser.add(
-        "--report_path",
-        type=str,
-        required=False,
-        help="Directory where to store html report?",
-    )
-    parser.add(
-        "--report_full_path",
-        default="",
-        type=str,
-        required=False,
-        help="Full path for the report (filename is generated if not provided)",
-    )
-    parser.add(
-        "-html",
-        action="store_true",
-        help="Produce HTML report (otherwise save json report)",
-    )
-    parser.add(
-        "-target_num",
-        action="store_true",
-        required=False,
-        help="Is target numerical (as opposed to categorical)",
-    )
-    parser.add(
-        "--prediction_col",
-        default="prediction",
-        type=str,
-        required=False,
-        help="Name of the prediction column",
-    )
-
-    # Model performance parameters.
-    parser.add(
-        "--reference",
-        type=str,
-        required=False,
-        help="Filename of features/prediction to use as reference",
-    )
-    parser.add(
-        "--test",
-        type=str,
-        required=False,
-        help="Filename of features/prediction to use as test\
-                (for model drift evaluation)",
-    )
+    _add_sub_task_args(parser)
+    _add_data_query_args(parser)
+    _add_data_process_args(parser)
 
     args, _ = parser.parse_known_args()
 
-    args.commit = (
-        subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode("ascii")
-    )
-
-    if args.input is None and args.password is None:
+    args.commit = _get_commit_id()
+    args.user = os.environ["USER"]
+    if args.password is None:
         args.password = getpass.getpass(prompt="Database password: ", stream=None)
-
-    if len(args.filter_date_from) and len(args.filter_date_to):
-        args.filter_date_from = datetime.strptime(args.filter_date_from, "%Y%m%d")
-        args.filter_date_to = datetime.strptime(args.filter_date_to, "%Y%m%d")
 
     return args
 
@@ -311,17 +221,24 @@ def config_to_dict(config: argparse.Namespace) -> Dict:
     -------
     dict
         dict with configuration parameters.
+
     """
     return {k: v for k, v in vars(config).items() if k != "password"}
 
 
-def write_config(config: argparse.Namespace):
-    """Save configuration to file.
+def write_config(config: argparse.Namespace) -> str:
+    """Save configuration parameters to file (for bookkeeping/tracking experiments).
 
     Parameters
     ----------
     config: argparse.Namespace
         Configuration stored in object.
+
+    Returns
+    -------
+    str
+        Path to saved config parameters in json format.
+
     """
     date = time.strftime("%Y-%b-%d_%H-%M-%S", time.localtime())
 
@@ -330,12 +247,7 @@ def write_config(config: argparse.Namespace):
     LOGGER.info(config_to_save)
 
     os.makedirs(config.output_folder, exist_ok=True)
-    with open(
-        os.path.join(config.output_folder, f"config_{date}.json"), "w", encoding="utf-8"
-    ) as file_handle:
+    file_path = os.path.join(config.output_folder, f"config_{date}.json")
+    with open(file_path, "w", encoding="utf-8") as file_handle:
         file_handle.write(json.dumps(config_to_save, indent=4))
-
-
-if __name__ == "__main__":
-    params = read_config()
-    write_config(params)
+    return file_path

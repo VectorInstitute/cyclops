@@ -1,4 +1,9 @@
-"""Main entrypoint script."""
+"""Main script for running sub-tasks.
+
+A main script to run sub-tasks like data extraction or model training/inference,
+or a data drift experiment.
+
+"""
 
 from tasks import train
 from tasks import analysis
@@ -16,5 +21,7 @@ if __name__ == "__main__":
         predict.main(args)
     elif args.analyze:
         analysis.main(args)
+    elif args.extract:
+        pass
     else:
         raise ValueError("Operation is not specified")
