@@ -2,10 +2,8 @@
 
 from typing import List, Union, Optional
 
-import pandas as pd
-from sqlalchemy import select, extract, DateTime
+from sqlalchemy import select, extract
 from sqlalchemy.sql.selectable import Select, Subquery
-from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.schema import Table
 
 from cyclops import config
@@ -15,13 +13,9 @@ from cyclops.query.interface import QueryInterface
 from cyclops.processors.constants import EMPTY_STRING, YEAR
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
-    AGE,
     SEX,
-    HOSPITAL_ID,
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
-    DISCHARGE_DISPOSITION,
-    READMISSION,
     DIAGNOSIS_CODE,
     LAB_TEST_RESULT_VALUE,
     LAB_TEST_TIMESTAMP,
@@ -30,7 +24,6 @@ from cyclops.processors.column_names import (
     VITAL_MEASUREMENT_NAME,
     VITAL_MEASUREMENT_VALUE,
     VITAL_MEASUREMENT_TIMESTAMP,
-    REFERENCE_RANGE,
 )
 from cyclops.query.utils import (
     debug_query_msg,
@@ -41,7 +34,7 @@ from cyclops.query.utils import (
     DBTable,
     query_params_to_type,
     not_equals,
-    has_substring
+    has_substring,
 )
 from cyclops.constants import GEMINI
 
@@ -76,14 +69,14 @@ GEMINI_COLUMN_MAP = {
     "sample_collection_date_time": LAB_TEST_TIMESTAMP,
     "measurement_mapped": VITAL_MEASUREMENT_NAME,
     "measurement_value": VITAL_MEASUREMENT_VALUE,
-    "measure_date_time": VITAL_MEASUREMENT_TIMESTAMP
+    "measure_date_time": VITAL_MEASUREMENT_TIMESTAMP,
 }
 
 
 @debug_query_msg
 def patients(
-    years: List[str] = [],
-    hospitals: List[str] = [],
+    years: List[str] = None,
+    hospitals: List[str] = None,
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     delirium_cohort: Optional[bool] = False,
@@ -121,7 +114,9 @@ def patients(
         )
     if hospitals:
         subquery = (
-            select(subquery).where(in_(subquery.c.hospital_id, hospitals, to_str=True)).subquery()
+            select(subquery)
+            .where(in_(subquery.c.hospital_id, hospitals, to_str=True))
+            .subquery()
         )
     if from_date:
         subquery = (
@@ -155,20 +150,22 @@ def join_with_patients(
 
     Parameters
     ----------
-    patients_table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or DBTable
+    patients_table: sqlalchemy.sql.selectable.Select or
+    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
         Patient query table.
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or DBTable
         A query table such as labs or vitals.
-        
+
     Returns
     -------
     cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
 
     """
-    if not hasattr(table_.c, ENCOUNTER_ID) or not hasattr(patients_table.c, ENCOUNTER_ID):
+    if not hasattr(table_.c, ENCOUNTER_ID) or not hasattr(
+        patients_table.c, ENCOUNTER_ID
+    ):
         raise ValueError("Input query table and patients table must have encounter_id!")
 
     # Join on patients (encounter_id).
@@ -179,7 +176,7 @@ def join_with_patients(
 
 
 @debug_query_msg
-def labs(lab_tests: Union[List[str], str] = []) -> QueryInterface:
+def labs(lab_tests: Union[List[str], str] = None) -> QueryInterface:
     """Query lab data.
 
     Parameters
@@ -218,7 +215,7 @@ def labs(lab_tests: Union[List[str], str] = []) -> QueryInterface:
 
 
 @debug_query_msg
-def vitals(vital_names: Union[List[str], str] = []) -> QueryInterface:
+def vitals(vital_names: Union[List[str], str] = None) -> QueryInterface:
     """Query vitals data.
 
     Parameters
@@ -250,7 +247,11 @@ def vitals(vital_names: Union[List[str], str] = []) -> QueryInterface:
     if vital_names and isinstance(vital_names, str):
         subquery = (
             select(subquery)
-            .where(has_substring(subquery.c.vital_measurement_name, vital_names, to_str=True))
+            .where(
+                has_substring(
+                    subquery.c.vital_measurement_name, vital_names, to_str=True
+                )
+            )
             .subquery()
         )
     return QueryInterface(_db, subquery)

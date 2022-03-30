@@ -10,14 +10,13 @@ from datetime import datetime
 
 import numpy as np
 import sqlalchemy
-from sqlalchemy import cast, Unicode
+from sqlalchemy import cast
 from sqlalchemy import String, Integer, Float
 from sqlalchemy import select, func
 from sqlalchemy.sql.selectable import Select, Subquery
 from sqlalchemy.sql.schema import Table, Column
 from sqlalchemy.sql.elements import BinaryExpression
 
-import cyclops.orm as orm
 from cyclops.utils.log import setup_logging
 from codebase_ops import get_log_file_path
 

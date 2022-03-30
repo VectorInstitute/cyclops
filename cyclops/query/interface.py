@@ -34,5 +34,6 @@ class QueryInterface:
         if self.data is None:
             self.data = self._db.run_query(self.query, limit=limit)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Print SQL when printing the QueryInterface object."""
         return str(self.query)
