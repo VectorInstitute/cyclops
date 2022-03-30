@@ -1,68 +1,17 @@
 ---
-# Database parameters, required if running extraction from database
-# Use flag 'r' on command line to indicate 'read from database'
-# By default user and password are read from environment 
-# variables USER and PGPASSWORD respectively.
+# Gemini database parameters, required if running extraction from database.
 dbms: "postgresql"
 port: 5432
 host: "localhost"
 database: "mimiciv"
 
-# If reading data from previously saved csv file.
-input: ""
-
-# If write flag ('w') is specified, save extracted data to this folder with generated filename
-# alternatively can specify output_full_path to indicate full path and filename.
 output_folder: "./_extract"
-output_full_path: ""
 
-# Dataset description - features/target.
-features: [
-  "sex",
-  "age",
-  "mort_hosp",
-  "readmission_7",
-  "readmission_28",
-  "palliative",
-  "los_er",
-  "icd10_A00_B99",
-  "icd10_C00_D49",
-  "icd10_D50_D89",
-  "icd10_E00_E89",
-  "icd10_F01_F99",
-  "icd10_G00_G99",
-  "icd10_H00_H59",
-  "icd10_H60_H95",
-  "icd10_I00_I99",
-  "icd10_J00_J99",
-  "icd10_K00_K95",
-  "icd10_L00_L99",
-  "icd10_M00_M99",
-  "icd10_N00_N99",
-  "icd10_O00_O99",
-  "icd10_Q00_Q99",
-  "icd10_R00_R99",
-  "icd10_S00_T88",
-  "icd10_U07_U08",
-  "icd10_Z00_Z99",
-  "icd10_nan"
-]
-
-# Prediction target.
-target: "los"
-
-# Extract records <= filter_year.
-filter_year: 2020
+# Extract data from years.
+years: []
+# Extract data from hospital sites.
+hospitals: []
 
 # yyyy-mm-dd. Select starting from filter_date_from to filter_date_to.
-filter_date_from: ""
-filter_date_to: ""
-
-# Indicates column for train/val/test slicing. Currently tested ('year' and 'hospital_id').
-split_column: "year"
-train_split: 2016
-val_split: 2017
-test_split: 2018
-
-# Total number of records to read from the database (0 - to read all)'
-pop_size: 10000
+from_date: ""
+to_date: ""
