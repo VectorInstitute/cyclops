@@ -1,5 +1,7 @@
 """GEMINI queries using SQLAlchemy ORM towards different models."""
 
+from typing import List
+
 import pandas as pd
 from sqlalchemy import select, extract
 from sqlalchemy.sql.expression import and_
@@ -27,54 +29,69 @@ from cyclops.processors.column_names import (
     VITAL_MEASUREMENT_TIMESTAMP,
     REFERENCE_RANGE,
 )
-
 from cyclops.queries.utils import debug_query_msg
+from cyclops.constants import GEMINI
 
-# pylint: disable=singleton-comparison
+
+IP_ADMIN = "ip_admin"
+ER_ADMIN = "er_admin"
+DIAGNOSIS = "diagnosis"
+LAB = "lab"
+VITALS = "vitals"
+PHARMACY = "pharmacy"
+INTERVENTION = "intervention"
+
+
+_db = Database(config.read_config(GEMINI))
+TABLE_MAP = {
+    IP_ADMIN: _db.public.ip_administrative,
+    ER_ADMIN: _db.public.er_administrative,
+    DIAGNOSIS: _db.public.diagnosis,
+    LAB: _db.public.lab,
+    VITALS: _db.public.vitals,
+    PHARMACY: _db.public.pharmacy,
+    INTERVENTION: _db.public.intervention,
+}
 
 
 @debug_query_msg
-def query_gemini_delirium_diagnosis(database: Database) -> pd.DataFrame:
-    """Query lab data for delirium subset.
+def patients(
+    year: str = None,
+    hospitals: List[str] = None,
+    from_date: str = None,
+    to_date: str = None,
+    delirium_cohort: bool = False,
+) -> Select:
+    """Query patient encounters.
 
     Parameters
     ----------
-    database: cyclops.orm.Database
-        Database ORM object.
+    year: str
+        Gather patient encounters only from specified year.
+    hospitals: list
+        Gather patient encounters from specified sites.
+    from_date: str, optional
+        Gather patients admitted >= from_date.
+    to_date: str, optional
+        Gather patients admitted <= to_date.
+    delirium_cohort: bool, optional
+        Gather patient encounters for which delirium label is available.
 
     Returns
     -------
-    pandas.DataFrame
-        Extracted data from query.
+    sqlalchemy.sql.selectable.Select
+        Select ORM object.
 
     """
-    query = (
-        select(
-            database.public.ip_administrative.genc_id.label(ENCOUNTER_ID),
-            database.public.ip_administrative.hospital_id.label(HOSPITAL_ID),
-            database.public.ip_administrative.admit_date_time.label(ADMIT_TIMESTAMP),
-            database.public.ip_administrative.discharge_date_time.label(
-                DISCHARGE_TIMESTAMP
-            ),
-            database.public.ip_administrative.del_present,
-            database.public.ip_administrative.gemini_cohort,
-            database.public.diagnosis.diagnosis_code.label(DIAGNOSIS_CODE),
-            database.public.diagnosis.diagnosis_type,
-            database.public.diagnosis.is_er_diagnosis,
-        )
-        .join(
-            database.public.diagnosis.data,
-            database.public.ip_administrative.genc_id
-            == database.public.diagnosis.genc_id,
-        )
-        .where(database.public.ip_administrative.gemini_cohort == True)  # noqa: E712
-    )
-    return database.run_query(query)
+    table_ = TABLE_MAP[IP_ADMIN]
+    subquery = select(table_.data).subquery()
+
+    return query
 
 
 @debug_query_msg
-def query_gemini_delirium_lab(database: Database) -> pd.DataFrame:
-    """Query lab data for delirium subset.
+def labs(database: Database) -> pd.DataFrame:
+    """Query lab data.
 
     Parameters
     ----------
@@ -118,9 +135,7 @@ def query_gemini_delirium_lab(database: Database) -> pd.DataFrame:
 
 
 @debug_query_msg
-def query_gemini_admin_vitals(
-    database: Database, years: list, hospitals: list
-) -> pd.DataFrame:
+def vitals(database: Database, years: list, hospitals: list) -> pd.DataFrame:
     """Query admin + vitals data filtering by hospitals and years.
 
     Parameters
@@ -174,26 +189,3 @@ def query_gemini_admin_vitals(
         )
     )
     return database.run_query(query)
-
-
-if __name__ == "__main__":
-    cfg = config.read_config("../configs/default/*.yaml")
-    db = Database(cfg)
-    data = query_gemini_delirium_lab(db)
-    print(len(data))
-    data.to_hdf(
-        "/mnt/nfs/project/delirium/_extract/delirium_extract.h5",
-        key="query_gemini_delirium_lab",
-    )
-    data = query_gemini_delirium_diagnosis(db)
-    print(len(data))
-    data.to_hdf(
-        "/mnt/nfs/project/delirium/_extract/delirium_extract.h5",
-        key="query_gemini_delirium_diagnosis",
-    )
-    data = query_gemini_admin_vitals(db, [2020], [SMH])
-    print(len(data))
-    data.to_hdf(
-        "/mnt/nfs/project/delirium/_extract/extract.h5",
-        key="query_gemini_admin_vitals",
-    )

@@ -47,6 +47,12 @@ class TestConfig(unittest.TestCase):
         cfg = config.read_config(os.path.join(PROJECT_ROOT, "configs/mimic/*.yaml"))
         assert cfg.database == "mimiciv"
 
+        cfg = config.read_config("mimic")
+        assert cfg.database == "mimiciv"
+
+        cfg = config.read_config("gemini")
+        assert cfg.host == "db.gemini-hpc.ca"
+
         cfg = config.read_config(self.dummy_config_dir)
         assert cfg.database == "test"
         assert cfg.years == ["2020", "2019"]

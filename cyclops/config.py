@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from codebase_ops import get_log_file_path, PROJECT_ROOT
 from cyclops.utils.log import setup_logging
+from cyclops.constants import GEMINI, MIMIC
 
 
 # Load environment vars.
@@ -25,7 +26,10 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-DEFAULT_CONFIG_PATH = os.path.join(PROJECT_ROOT, "configs/gemini/*.yaml")
+DEFAULT_CONFIG_PATHS_MAP = {
+    GEMINI: os.path.join(PROJECT_ROOT, "configs/gemini/*.yaml"),
+    MIMIC: os.path.join(PROJECT_ROOT, "configs/mimic/*.yaml"),
+}
 
 
 def _check_if_config_files_exist(config_path):
@@ -41,7 +45,7 @@ def _check_if_config_files_exist(config_path):
 
 
 def _create_parser(
-    config_path: str = DEFAULT_CONFIG_PATH,
+    config_path: str = DEFAULT_CONFIG_PATHS_MAP[GEMINI],
 ) -> configargparse.ArgumentParser:
     """Create argument parser.
 
@@ -57,6 +61,8 @@ def _create_parser(
         from the configuration files.
 
     """
+    if DEFAULT_CONFIG_PATHS_MAP.get(config_path):
+        config_path = DEFAULT_CONFIG_PATHS_MAP[config_path]
     if os.path.isdir(config_path):
         config_path = os.path.join(config_path, "*.yaml")
 
@@ -115,15 +121,16 @@ def _add_data_query_args(parser: configargparse.ArgumentParser) -> None:
         type=str,
         default="",
         required=False,
-        help="""Format: yyyy-mm-dd. Filter patient encounters starting from
-        this admission date.""",
+        help="""Format: yyyy-mm-dd. Filter to include patient encounters starting
+        from this date.""",
     )
     parser.add(
         "--to_date",
         type=str,
         default="",
         required=False,
-        help="Format: yyyy-mm-dd. Select before this admit_date.",
+        help="""Format: yyyy-mm-dd. Filter to include patient encounters before this
+        date.""",
     )
     parser.add(
         "--output_folder",

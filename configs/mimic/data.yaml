@@ -1,5 +1,5 @@
 ---
-# Gemini database parameters, required if running extraction from database.
+# MIMIC database parameters, required if running extraction from database.
 dbms: "postgresql"
 port: 5432
 host: "localhost"
@@ -11,7 +11,6 @@ output_folder: "./_extract"
 years: []
 # Extract data from hospital sites.
 hospitals: []
-
-# yyyy-mm-dd. Select starting from filter_date_from to filter_date_to.
+# yyyy-mm-dd. Select starting from from_date and/or to_date.
 from_date: ""
 to_date: ""
