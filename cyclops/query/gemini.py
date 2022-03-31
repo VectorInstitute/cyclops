@@ -7,7 +7,6 @@ from sqlalchemy.sql.selectable import Select, Subquery
 from sqlalchemy.sql.schema import Table
 
 from cyclops import config
-
 from cyclops.orm import Database
 from cyclops.query.interface import QueryInterface
 from cyclops.processors.constants import EMPTY_STRING, YEAR
@@ -49,13 +48,13 @@ INTERVENTION = "intervention"
 
 _db = Database(config.read_config(GEMINI))
 TABLE_MAP = {
-    IP_ADMIN: _db.public.ip_administrative,
-    ER_ADMIN: _db.public.er_administrative,
-    DIAGNOSIS: _db.public.diagnosis,
-    LAB: _db.public.lab,
-    VITALS: _db.public.vitals,
-    PHARMACY: _db.public.pharmacy,
-    INTERVENTION: _db.public.intervention,
+    IP_ADMIN: lambda db: db.public.ip_administrative,
+    ER_ADMIN: lambda db: db.public.er_administrative,
+    DIAGNOSIS: lambda db: db.public.diagnosis,
+    LAB: lambda db: db.public.lab,
+    VITALS: lambda db: db.public.vitals,
+    PHARMACY: lambda db: db.public.pharmacy,
+    INTERVENTION: lambda db: db.public.intervention,
 }
 GEMINI_COLUMN_MAP = {
     "genc_id": ENCOUNTER_ID,
@@ -101,7 +100,7 @@ def patients(
         Constructed query, wrapped in an interface object.
 
     """
-    table_ = TABLE_MAP[IP_ADMIN]
+    table_ = TABLE_MAP[IP_ADMIN](_db)
     subquery = select(table_.data)
     subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
 
@@ -208,7 +207,7 @@ def diagnoses(
         Constructed query, wrapped in an interface object.
 
     """
-    table_ = TABLE_MAP[DIAGNOSIS]
+    table_ = TABLE_MAP[DIAGNOSIS](_db)
     subquery = select(table_.data)
     subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
     if diagnosis_codes:
@@ -242,7 +241,7 @@ def labs(lab_tests: Union[List[str], str] = None) -> QueryInterface:
         Constructed query, wrapped in an interface object.
 
     """
-    table_ = TABLE_MAP[LAB]
+    table_ = TABLE_MAP[LAB](_db)
     subquery = select(table_.data)
     subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
     subquery = (
@@ -281,7 +280,7 @@ def vitals(vital_names: Union[List[str], str] = None) -> QueryInterface:
         Constructed query, wrapped in an interface object.
 
     """
-    table_ = TABLE_MAP[VITALS]
+    table_ = TABLE_MAP[VITALS](_db)
     subquery = select(table_.data)
     subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
     subquery = (

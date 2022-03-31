@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import socket
 
 from typing import Optional, Union
 
@@ -24,6 +25,9 @@ from cyclops.query.utils import DBSchema, DBTable, DBMetaclass, query_params_to_
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
+
+SOCKET_CONNECTION_TIMEOUT = 5
 
 
 def _get_db_url(  # pylint: disable=too-many-arguments
@@ -59,15 +63,28 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
             Configuration stored in object.
         """
         self.config = config
+        self.engine = None
+        self.inspector = None
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(SOCKET_CONNECTION_TIMEOUT)
+        is_port_open = sock.connect_ex((config.host, config.port))
+        if is_port_open:
+            LOGGER.error("""The DB server is not reachable, check if server is up!""")
+            return
+        self._create_engine()
+
+    def _create_engine(self) -> None:
+        """Attempt to create an engine, connect to DB."""
         self.engine = create_engine(
             _get_db_url(
-                config.dbms,
-                config.user,
-                config.password,
-                config.host,
-                config.port,
-                config.database,
-            )
+                self.config.dbms,
+                self.config.user,
+                self.config.password,
+                self.config.host,
+                self.config.port,
+                self.config.database,
+            ),
         )
         self.inspector = inspect(self.engine)
 

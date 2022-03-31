@@ -7,7 +7,6 @@ import logging
 import json
 from typing import Optional, Dict
 import subprocess
-import getpass
 import argparse
 import configargparse
 from dotenv import load_dotenv
@@ -211,7 +210,9 @@ def read_config(config_path: Optional[str] = None) -> argparse.Namespace:
     args.commit = _get_commit_id()
     args.user = os.environ["USER"]
     if args.password is None:
-        args.password = getpass.getpass(prompt="Database password: ", stream=None)
+        LOGGER.warning(
+            "DB password is not set! Add it to config, or PGPASSWORD env variable!"
+        )
 
     return args
 
