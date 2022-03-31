@@ -23,6 +23,7 @@ from cyclops.processors.constants import (
     GROUP,
     STANDARD,
     MIN_MAX,
+    MISSING_CATEGORY,
 )
 from cyclops.utils.log import setup_logging
 
@@ -388,9 +389,7 @@ class FeatureHandler:
             List of feature names.
 
         """
-        feature_names: list = []
-        if self.features:
-            feature_names = list(self.features.columns)
+        feature_names = list(self.features.columns)
         return feature_names
 
     @property
@@ -408,7 +407,7 @@ class FeatureHandler:
         return {f: meta.get_feature_type() for f, meta in self.meta.items()}
 
     @property
-    def targets(self) -> dict:
+    def targets(self) -> list:
         """Access as attribute, which feature columns are potential target variables.
 
         Returns
@@ -417,7 +416,7 @@ class FeatureHandler:
             True/False if feature columns are potential target variables.
 
         """
-        return {f: meta.is_target() for f, meta in self.meta.items()}
+        return [f for f, meta in self.meta.items() if meta.is_target]
 
     def _scale(self) -> pd.DataFrame:
         """Apply scaling."""
@@ -522,8 +521,8 @@ class FeatureHandler:
         parse_kwargs: Dict = {}
         self._add_feature(series, BinaryFeatureMeta, init_kwargs, parse_kwargs)
 
-    def _add_numeric(self, series: pd.Series) -> None:
-        """Add numeric feature.
+    def _add_numerical(self, series: pd.Series) -> None:
+        """Add numerical feature.
 
         Parameters
         ----------
@@ -563,6 +562,22 @@ class FeatureHandler:
         for col in features:
             self._add_binary(features[col], group=series.name)
 
+    def set_targets(self, names: Union[str, list, set]) -> None:
+        """Set some feature columns to be targets.
+
+        Each feature has meta info, among which is a `is_target` flag
+        to track if it may be a target variable.
+
+        Parameters
+        ----------
+        names: str or list or set
+            Names of feature(s) to set as target(s).
+
+        """
+        names = set([names]) if isinstance(names, str) else set(names)
+        for name in names:
+            self.meta[name].is_target = True
+
     def add_features(self, features: pd.DataFrame) -> None:
         """Add features.
 
@@ -585,6 +600,8 @@ class FeatureHandler:
         features = features.infer_objects()
 
         for col in features:
+            if is_string_dtype(features[col]):
+                features[col] = features[col].fillna(MISSING_CATEGORY)
             unique = np.unique(features[col].values)
 
             # If all values are NaN, feature is dropped.
@@ -601,7 +618,7 @@ class FeatureHandler:
 
             # Check for and add numerical features.
             if is_numeric_dtype(features[col]):
-                self._add_numeric(features[col])
+                self._add_numerical(features[col])
                 continue
 
             # Check for (non-binary valued) string types.
@@ -654,7 +671,7 @@ class FeatureHandler:
 
         Parameters
         ----------
-        names: Union[str, list, set]
+        names: str or list or set]
             Name(s) of features to drop.
 
         """

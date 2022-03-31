@@ -14,6 +14,7 @@ NORMALIZATION_METHOD = "normalization_method"
 GROUP = "group"
 STANDARD = "standard"
 MIN_MAX = "min-max"
+MISSING_CATEGORY = "MISSING_CATEGORY"
 
 # GEMINI Admin.
 THPM = "THPM"
