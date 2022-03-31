@@ -1,6 +1,6 @@
 
-cyclops
--------
+# cyclops
+---------
 
 cyclops is a framework for facilitating research and deployment of ML models 
 in the health (or clinical) setting. It provides three high-level features:
