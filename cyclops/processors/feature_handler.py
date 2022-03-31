@@ -23,7 +23,7 @@ from cyclops.processors.constants import (
     GROUP,
     STANDARD,
     MIN_MAX,
-    MISSING_CATEGORY
+    MISSING_CATEGORY,
 )
 from cyclops.utils.log import setup_logging
 
@@ -407,7 +407,7 @@ class FeatureHandler:
         return {f: meta.get_feature_type() for f, meta in self.meta.items()}
 
     @property
-    def targets(self) -> dict:
+    def targets(self) -> list:
         """Access as attribute, which feature columns are potential target variables.
 
         Returns
