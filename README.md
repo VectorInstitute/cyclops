@@ -1,7 +1,6 @@
 
-************
-Introduction
-************
+cyclops
+-------
 
 cyclops is a framework for facilitating research and deployment of ML models 
 in the health (or clinical) setting. It provides three high-level features:
@@ -10,51 +9,45 @@ in the health (or clinical) setting. It provides three high-level features:
 * Model training and evaluation support
 * Drift detection toolkit
 
-Getting Started
----------------
 
-Setup Python virtual environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+## Getting Started
+
+### Setup Python virtual environment
 
 The development environment has been tested on ``python = 3.8.5``. 
 There are two ways to setup the environment and install dependencies.
 
-Using Anaconda/Miniconda
-~~~~~~~~~~~~~~~~~~~~~~~~
+#### Using Anaconda/Miniconda
 
 To create and activate environment, run:
 
-.. code-block:: bash
+```bash
+conda env create -f environment.yml
+conda activate cyclops
+```
 
-   conda env create -f environment.yml
-   conda activate cyclops
-
-Using pip, venv and poetry
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Using pip, venv and poetry
 
 To create virtual environment and install dependencies, run:
 
-.. code-block:: bash
+```bash
+python3 -m venv <path/to/virtual/environment>
+source <path/to/virtual/environment>/bin/activate
+pip install --upgrade pip
+pip install poetry
+poetry install
+```
 
-   python3 -m venv <path/to/virtual/environment>
-   source <path/to/virtual/environment>/bin/activate
-   pip install --upgrade pip
-   pip install poetry
-   poetry install
+## [Documentation](https://vectorinstitute.github.io/cyclops/)
 
-
-`Documentation <https://vectorinstitute.github.io/cyclops/>`_
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Notebooks
----------
+## Notebooks
 
 To use jupyter notebooks, the python virtual environment can be installed and
 used inside an Ipython kernel. After activating the virtual environment, run:
 
-.. code-block:: bash
-
-   python3 -m ipykernel install --user --name <name_of_kernel>
+```bash
+python3 -m ipykernel install --user --name <name_of_kernel>
+```
 
 Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 ``<name_of_kernel>``.
