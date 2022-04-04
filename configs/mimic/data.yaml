@@ -4,6 +4,7 @@ dbms: "postgresql"
 port: 5432
 host: "localhost"
 database: "mimiciv"
+user: "postgres"
 password: "pwd"
 
 output_folder: "./_extract"

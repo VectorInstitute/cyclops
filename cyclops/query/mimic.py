@@ -1,4 +1,4 @@
-"""MIMIC-IV queries using SQLAlchemy ORM."""
+"""MIMIC-IV query API."""
 
 from typing import List, Union, Optional
 
@@ -21,6 +21,7 @@ from cyclops.query.utils import (
     in_,
     DBTable,
 )
+from cyclops.query.interface import QueryInterface
 from cyclops.constants import MIMIC
 
 
@@ -35,12 +36,14 @@ TABLE_MAP = {
 
 
 @debug_query_msg
-def patients(process_anchor_year: bool = True) -> Select:
+def patients(years: List[str] = None, process_anchor_year: bool = True) -> Select:
     """Query MIMIC patient data.
 
     Parameters
     ----------
-    process_anchor_year : bool, default=True
+    years: list of str, optional
+        Years for which patient encounters are to be filtered.
+    process_anchor_year : bool, optional
         Whether to process and include the patient's anchor
         year, i.e., year of care information.
 
@@ -51,6 +54,9 @@ def patients(process_anchor_year: bool = True) -> Select:
 
     """
     table_ = TABLE_MAP["patients"](_db)
+
+    if not process_anchor_year and years:
+        raise ValueError("process_anchor_year must be set to True to use years filter!")
 
     if not process_anchor_year:
         return select(table_.data)
@@ -80,15 +86,18 @@ def patients(process_anchor_year: bool = True) -> Select:
         (subquery.c.year - subquery.c.anchor_year).label("anchor_year_difference"),
     ).subquery()
 
-    query = drop_attributes(subquery, ["anchor_year_group"])
-    return query
+    subquery = drop_attributes(subquery, ["anchor_year_group"]).subquery()
+
+    if years:
+        subquery = select(subquery).where(in_(subquery.c.year, years)).subquery()
+    return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
 @query_params_to_type(Subquery)
 def join_with_patients(
+    patients_table: Union[Select, Subquery, Table, DBTable],
     table_: Union[Select, Subquery, Table, DBTable],
-    process_anchor_year: bool = True,
 ) -> Select:
     """Join a subquery with MIMIC patient static information.
 
@@ -96,46 +105,52 @@ def join_with_patients(
 
     Parameters
     ----------
+    patients_table: sqlalchemy.sql.selectable.Select or
+    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+        Patient query table.
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         A query with column subject_id.
-    process_anchor_year : bool, default=True
-        Whether to process and include the patient's anchor
-        year, i.e., get the year of care information.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
 
     """
-    if not hasattr(table_.c, "subject_id"):
-        raise ValueError("Subquery t must have attribute 'subject_id'.")
-
-    # Get patients.
-    patients_ = patients(process_anchor_year=process_anchor_year).subquery()
+    if not hasattr(table_.c, "subject_id") or not hasattr(
+        patients_table.c, "subject_id"
+    ):
+        raise ValueError(
+            "Input query table and patients table must have attribute 'subject_id'."
+        )
 
     # Join on patients (subject column).
-    query = select(table_, patients_).where(
-        table_.c.subject_id == patients_.c.subject_id
+    subquery = (
+        select(table_, patients_table)
+        .where(table_.c.subject_id == patients_table.c.subject_id)
+        .subquery()
     )
 
-    return query
+    return QueryInterface(_db, subquery)
 
 
-@debug_query_msg
-def diagnoses(version: Optional[int] = None) -> Select:
+def _diagnoses(
+    version: Optional[int] = None, substring: Optional[str] = None
+) -> Select:
     """Query MIMIC possible diagnoses.
 
     Parameters
     ----------
-    version : int, optional
+    version: int, optional
         If specified, restrict ICD codes to this version.
+    substring: str, optional
+        Search sub-string for diagnoses, applied on the ICD long title.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
+    sqlalchemy.sql.selectable.Subquery
+        Constructed subquery, with matched diagnoses.
 
     """
     # Get diagnoses.
@@ -157,40 +172,25 @@ def diagnoses(version: Optional[int] = None) -> Select:
     subquery = rename_attributes(subquery, {"long_title": "icd_title"}).subquery()
 
     # Re-order the columns nicely.
-    query = reorder_attributes(subquery, ["icd_code", "icd_title", "icd_version"])
+    subquery = reorder_attributes(
+        subquery, ["icd_code", "icd_title", "icd_version"]
+    ).subquery()
 
-    return query
+    if substring:
+        subquery = (
+            select(subquery)
+            .where(has_substring(subquery.c.icd_title, substring, to_str=True))
+            .subquery()
+        )
 
-
-@debug_query_msg
-def diagnoses_by_substring(substring: str, version: Optional[int] = None) -> Select:
-    """Query MIMIC possible diagnoses by ICD code substring.
-
-    Parameters
-    ----------
-    substring : str
-        Substring to match in an ICD code.
-    version : int, optional
-        If specified, restrict ICD codes to this version.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
-
-    """
-    # Get diagnoses.
-    subquery = diagnoses(version=version).subquery()
-
-    # Get diagnoses by substring.
-    query = select(subquery).where(has_substring(subquery.c.icd_title, substring))
-
-    return query
+    return subquery
 
 
 @debug_query_msg
-def patient_diagnoses(
-    version: Optional[int] = None, include_icd_title: bool = True
+def diagnoses(
+    version: Optional[int] = None,
+    substring: str = None,
+    diagnosis_codes: Union[str, List[str]] = None,
 ) -> Select:
     """Query MIMIC patient diagnoses.
 
@@ -198,13 +198,16 @@ def patient_diagnoses(
     ----------
     version : int, optional
         If specified, restrict ICD codes to this version.
-    include_icd_title : bool, default=True
-        Whether to include ICD code titles.
+    substring : str
+        Substring to match in an ICD code.
+    diagnosis_codes : str or list of str
+        The ICD codes to filter.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
 
     """
     # Get patient diagnoses.
@@ -222,82 +225,28 @@ def patient_diagnoses(
     # Trim whitespace from icd_codes.
     query = trim_attributes(subquery, ["icd_code"])
 
-    if not include_icd_title:
-        return query
-
     # Include ICD title.
     subquery = query.subquery()
 
     # Get codes.
-    code_subquery = diagnoses(version=version)
+    code_subquery = _diagnoses(version=version, substring=substring)
 
     # Get patient diagnoses, including ICD title.
-    query = select(subquery, code_subquery.c.icd_title).join(
-        subquery, subquery.c.icd_code == code_subquery.c.icd_code
+    subquery = (
+        select(subquery, code_subquery.c.icd_title)
+        .join(subquery, subquery.c.icd_code == code_subquery.c.icd_code)
+        .subquery()
     )
-
-    return query
-
-
-@debug_query_msg
-def patient_diagnoses_by_icd_codes(
-    codes: Union[str, List[str]], version: Optional[int] = None
-) -> Select:
-    """Query MIMIC patient diagnoses, taking only specified ICD codes.
-
-    Parameters
-    ----------
-    codes : str or list of str
-        The ICD codes to take.
-    version : int, optional
-        If specified, restrict ICD codes to this version.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
-
-    """
-    # Get patient diagnoses.
-    subquery = patient_diagnoses(version=version).subquery()
 
     # Select those in the given ICD codes.
-    query = select(subquery).where(in_(subquery.c.icd_code, codes, to_str=True))
+    if diagnosis_codes:
+        subquery = (
+            select(subquery)
+            .where(in_(subquery.c.icd_code, diagnosis_codes, to_str=True))
+            .subquery()
+        )
 
-    return query
-
-
-@debug_query_msg
-def patient_diagnoses_by_substring(
-    substring: str, version: Optional[int] = None
-) -> Select:
-    """Query MIMIC patient diagnoses by an ICD code substring.
-
-    Parameters
-    ----------
-    substring : str
-        Substring to match in an ICD code.
-    version : int, optional
-        If specified, restrict ICD codes to this version.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
-
-    """
-    # Get codes by substring.
-    code_subquery = diagnoses_by_substring(substring, version=version).subquery()
-
-    # Get patient diagnoses.
-    patient_subquery = patient_diagnoses(version=version).subquery()
-
-    # Get patient diagnoses by substring.
-    query = select(patient_subquery, code_subquery.c.icd_title).join(
-        code_subquery, patient_subquery.c.icd_code == code_subquery.c.icd_code
-    )
-
-    return query
+    return QueryInterface(_db, subquery)
 
 
 @debug_query_msg

@@ -87,6 +87,12 @@ def _add_sub_task_args(parser: configargparse.ArgumentParser) -> None:
 def _add_data_query_args(parser: configargparse.ArgumentParser) -> None:
     """Add data querying parameters to argument parser."""
     parser.add(
+        "--user",
+        type=str,
+        required=False,
+        help="Username for querying database.",
+    )
+    parser.add(
         "--password",
         default=os.environ.get("PGPASSWORD", None),
         type=str,
@@ -208,7 +214,8 @@ def read_config(config_path: Optional[str] = None) -> argparse.Namespace:
     args, _ = parser.parse_known_args()
 
     args.commit = _get_commit_id()
-    args.user = os.environ["USER"]
+    if not args.user:
+        args.user = os.environ["USER"]
     if args.password is None:
         LOGGER.warning(
             "DB password is not set! Add it to config, or PGPASSWORD env variable!"
