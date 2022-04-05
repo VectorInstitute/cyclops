@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           python-version: 3.8.5
+          cache: 'poetry'
       - name: Create virtual environment, install dependencies and run tests
         run: |
           python3 -m venv venv && source venv/bin/activate
