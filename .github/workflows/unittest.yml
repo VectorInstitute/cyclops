@@ -27,6 +27,7 @@ jobs:
       - name: Install apt dependencies
         run: sudo apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
           python-version: 3.8.5
           cache: 'poetry'
