@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 import numpy as np
 import torch
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from mlflow import log_metrics
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
 
 @dataclass(init=False, eq=False)

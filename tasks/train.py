@@ -3,19 +3,16 @@
 import logging
 
 import torch
+from mlflow import log_params
 from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from mlflow import log_params
 
 from codebase_ops import get_log_file_path
-
-from models.catalog import get_model
-from models.metrics import AverageBinaryClassificationMetric
-from models.dataset import get_dataset
-
 from cyclops.utils.log import setup_logging
-
+from models.catalog import get_model
+from models.dataset import get_dataset
+from models.metrics import AverageBinaryClassificationMetric
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

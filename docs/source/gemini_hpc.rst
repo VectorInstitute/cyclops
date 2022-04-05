@@ -15,7 +15,7 @@ Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
 
 To use querying features, which involves access to GEMINI's database, add the
-GEMINI password to the environment variables: 
+GEMINI password to the environment variables:
 
 .. code-block:: bash
 

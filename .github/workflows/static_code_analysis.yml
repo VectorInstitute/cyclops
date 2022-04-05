@@ -15,47 +15,19 @@ on:
       - '**.py'
 
 jobs:
-  mypy:
+  run-code-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Install mypy
-        run: python3 -m pip install mypy types-cachetools types-requests
-      - uses: actions/checkout@v2
-      - name: Run mypy
-        run: python3 -m mypy .
-
-  black:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install black
-        run: python3 -m pip install black
-      - uses: actions/checkout@v2
-      - name: Run black
-        run: python3 -m black . --check
-
-  flake8:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install flake8
-        run: python3 -m pip install pyproject-flake8
-      - uses: actions/checkout@v2
-      - name: Run flake8
-        run: python3 -m pflake8
-
-  pylint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install pylint
-        run: python3 -m pip install pylint
-      - uses: actions/checkout@v2
-      - name: Run pylint
-        run: python3 -m pylint cyclops/ models/
-
-  pydocstyle:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install pydocstyle
-        run: python3 -m pip install pydocstyle
-      - uses: actions/checkout@v2
-      - name: Run pydocstyle
-        run: python3 -m pydocstyle .
+      - name: Install apt dependencies
+        run: sudo apt-get install libcurl4-openssl-dev libssl-dev
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.8.5
+          cache: 'poetry'
+      - name: Install dependencies and check code
+        run: |
+          poetry install && source $(poetry env info --path)/bin/activate
+          pre-commit run --all-files

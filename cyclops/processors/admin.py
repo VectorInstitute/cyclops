@@ -5,12 +5,10 @@ import logging
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-
 from cyclops.processors.base import Processor
-from cyclops.processors.column_names import ENCOUNTER_ID, AGE, SEX
+from cyclops.processors.column_names import AGE, ENCOUNTER_ID, SEX
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
-
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

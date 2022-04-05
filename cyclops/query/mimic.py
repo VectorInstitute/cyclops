@@ -1,28 +1,26 @@
 """MIMIC-IV queries using SQLAlchemy ORM."""
 
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
-from sqlalchemy import select, func
-from sqlalchemy import Integer
-from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy import Integer, func, select
 from sqlalchemy.sql.schema import Table
+from sqlalchemy.sql.selectable import Select, Subquery
 
 from cyclops import config
+from cyclops.constants import MIMIC
 from cyclops.orm import Database
 from cyclops.query.utils import (
+    DBTable,
     debug_query_msg,
-    query_params_to_type,
     drop_attributes,
-    trim_attributes,
-    rename_attributes,
-    reorder_attributes,
     equals,
     has_substring,
     in_,
-    DBTable,
+    query_params_to_type,
+    rename_attributes,
+    reorder_attributes,
+    trim_attributes,
 )
-from cyclops.constants import MIMIC
-
 
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {

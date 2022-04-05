@@ -5,12 +5,8 @@ or a data drift experiment.
 
 """
 
-from tasks import train
-from tasks import analysis
-from tasks import predict
-
 from cyclops import config
-
+from tasks import analysis, predict, train
 
 # Top level to invoke specific operations
 if __name__ == "__main__":

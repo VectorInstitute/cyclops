@@ -28,15 +28,19 @@ jobs:
     steps:
       - name: Install apt dependencies
         run: sudo apt-get install libcurl4-openssl-dev libssl-dev
-      - uses: actions/checkout@v2
-      - name: Create virtual environment, install dependencies, build docs and coverage report
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.8.5
+          cache: 'poetry'
+      - name: Install dependencies, build docs and coverage report
         run: |
-          python3 -m venv venv && source venv/bin/activate
-          pip install --upgrade pip && pip install poetry && poetry install
+          poetry install && source $(poetry env info --path)/bin/activate
           cd docs && make html
           cd .. && coverage run -m pytest && coverage html && cp htmlcov/* docs/build/html/_static/
           mv docs/build/html/_static/index.html docs/build/html/_static/coverage_report.html
-
       - name: Deploy to Github pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
         with:

@@ -26,9 +26,14 @@ jobs:
     steps:
       - name: Install apt dependencies
         run: sudo apt-get install libcurl4-openssl-dev libssl-dev
-      - uses: actions/checkout@v2
-      - name: Create virtual environment, install dependencies and run tests
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.8.5
+          cache: 'poetry'
+      - name: Install dependencies and run unit tests
         run: |
-          python3 -m venv venv && source venv/bin/activate
-          pip install --upgrade pip && pip install poetry && poetry install
+          poetry install && source $(poetry env info --path)/bin/activate
           python3 -m pytest tests/

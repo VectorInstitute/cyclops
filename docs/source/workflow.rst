@@ -16,7 +16,7 @@ Each file contains the parameters for respective tasks
 (\ ``data extraction``\ , ``model training and inference``\ ,
 ``analysis`` and ``workflows``\ ). The config parser script is ``config.py``.
 
-Refer to ``configs/default`` for default configuration parameters. 
+Refer to ``configs/default`` for default configuration parameters.
 (Additional ones are described in ``config.py``\ ).
 
 A copy of the config dir can be made for bootstrapping, for custom experiments

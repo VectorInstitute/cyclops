@@ -3,24 +3,18 @@
 import argparse
 import logging
 import socket
-
 from typing import Optional, Union
 
 import pandas as pd
-
-from sqlalchemy import create_engine
-from sqlalchemy import inspect
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql.selectable import Select, Subquery
 from sqlalchemy.sql.schema import Table
+from sqlalchemy.sql.selectable import Select, Subquery
 
 from codebase_ops import get_log_file_path
-
+from cyclops.query.utils import DBMetaclass, DBSchema, DBTable, query_params_to_type
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
-from cyclops.query.utils import DBSchema, DBTable, DBMetaclass, query_params_to_type
-
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

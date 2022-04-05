@@ -34,6 +34,9 @@ pytest-cov = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
 
+[tool.isort]
+profile = "black"
+
 [tool.mypy]
 ignore_missing_imports = true
 install_types = true

@@ -1,23 +1,19 @@
 """Prediction script."""
 
-import logging
 import datetime
+import logging
 
-import torch
-import pandas as pd
 import mlflow
+import pandas as pd
+import torch
 
 from codebase_ops import get_log_file_path
-
-from models.catalog import get_model
-from models.metrics import AverageBinaryClassificationMetric
-from models.dataset import pandas_to_dataset
-
-from tasks.train import to_loader
-
 from cyclops.config import config_to_dict
 from cyclops.utils.log import setup_logging
-
+from models.catalog import get_model
+from models.dataset import pandas_to_dataset
+from models.metrics import AverageBinaryClassificationMetric
+from tasks.train import to_loader
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

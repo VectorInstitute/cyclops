@@ -2,14 +2,11 @@
 
 import os
 
+import config as config_parser
 import luigi
 from luigi.util import inherits
 
-import config as config_parser
-
-from tasks import predict
-from tasks import analysis
-
+from tasks import analysis, predict
 
 # Pipeline definition consisting of three tasks:
 # Extraction -> Prediction -> Analysis
