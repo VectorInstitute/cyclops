@@ -28,7 +28,11 @@ jobs:
     steps:
       - name: Install apt dependencies
         run: sudo apt-get install libcurl4-openssl-dev libssl-dev
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.8.5
+          cache: 'poetry'
       - name: Create virtual environment, install dependencies, build docs and coverage report
         run: |
           python3 -m venv venv && source venv/bin/activate
