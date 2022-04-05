@@ -9,6 +9,7 @@ from sqlalchemy.sql.selectable import Select, Subquery
 from cyclops import config
 from cyclops.constants import MIMIC
 from cyclops.orm import Database
+from cyclops.query.interface import QueryInterface
 from cyclops.query.utils import (
     DBTable,
     debug_query_msg,
@@ -21,9 +22,6 @@ from cyclops.query.utils import (
     reorder_attributes,
     trim_attributes,
 )
-from cyclops.query.interface import QueryInterface
-from cyclops.constants import MIMIC
-
 
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {
