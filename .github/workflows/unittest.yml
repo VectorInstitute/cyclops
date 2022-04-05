@@ -27,12 +27,13 @@ jobs:
       - name: Install apt dependencies
         run: sudo apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
       - uses: actions/setup-python@v3
         with:
           python-version: 3.8.5
           cache: 'poetry'
-      - name: Create virtual environment, install dependencies and run tests
-        run: |
-          python3 -m venv venv && source venv/bin/activate
-          pip install --upgrade pip && pip install poetry && poetry install
-          python3 -m pytest tests/
+      - name: Install dependencies
+        run: poetry install
+      - name: Run unit tests
+        run: python3 -m pytest tests/
