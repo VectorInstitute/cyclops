@@ -1,14 +1,13 @@
 """Script to run pipeline using Luigi."""
 
 import logging
-from dateutil.relativedelta import relativedelta
+
 import luigi
+from dateutil.relativedelta import relativedelta
 
 from codebase_ops import get_log_file_path
-
-from cyclops.workflow import pipeline
 from cyclops.utils.log import setup_logging
-
+from cyclops.workflow import pipeline
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

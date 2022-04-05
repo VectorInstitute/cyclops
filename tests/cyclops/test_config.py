@@ -1,13 +1,14 @@
 """Test configuration module."""
 
+import json
 import os
 import shutil
 import unittest
-import json
+
 import yaml
 
-from cyclops import config
 from codebase_ops import PROJECT_ROOT
+from cyclops import config
 
 
 def _save_to_yaml(to_save: dict, file_path: str) -> None:

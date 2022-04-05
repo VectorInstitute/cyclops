@@ -5,10 +5,8 @@ import logging
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-
 from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.utils.log import setup_logging
-
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

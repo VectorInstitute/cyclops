@@ -1,11 +1,11 @@
 """Dataset creation for training/inference using PyTorch."""
 
-from typing import Optional, Callable
 from dataclasses import dataclass
 from functools import partial
+from typing import Callable, Optional
 
-import torch
 import pandas as pd
+import torch
 from torch.utils.data import random_split
 
 

@@ -5,7 +5,6 @@ import typing
 import torch
 from torch import nn
 
-
 ACT_FN_MAP = {
     "none": None,
     "hardtanh": nn.Hardtanh(),

@@ -10,22 +10,21 @@ from codebase_ops import get_log_file_path
 from cyclops.processors.base import Processor
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
-    LAB_TEST_RESULT_VALUE,
-    LAB_TEST_TIMESTAMP,
     LAB_TEST_NAME,
     LAB_TEST_RESULT_UNIT,
-)
-from cyclops.processors.string_ops import (
-    fix_inequalities,
-    to_lower,
-    strip_whitespace,
-    remove_text_in_parentheses,
-    fill_missing_with_nan,
+    LAB_TEST_RESULT_VALUE,
+    LAB_TEST_TIMESTAMP,
 )
 from cyclops.processors.common import filter_within_admission_window
+from cyclops.processors.string_ops import (
+    fill_missing_with_nan,
+    fix_inequalities,
+    remove_text_in_parentheses,
+    strip_whitespace,
+    to_lower,
+)
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
-
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

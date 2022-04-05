@@ -1,7 +1,7 @@
 """A query interface class to wrap database objects and queries."""
 
-from typing import Union, Optional
 from dataclasses import dataclass
+from typing import Optional, Union
 
 import pandas as pd
 from sqlalchemy.sql.selectable import Select, Subquery

@@ -6,11 +6,11 @@ import numpy as np
 import pytest
 
 from cyclops.processors.string_ops import (
-    count_occurrences,
-    normalize_special_characters,
-    convert_to_numeric,
-    is_range,
     compute_range_avg,
+    convert_to_numeric,
+    count_occurrences,
+    is_range,
+    normalize_special_characters,
 )
 
 

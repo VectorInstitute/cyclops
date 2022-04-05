@@ -4,7 +4,6 @@ from typing import Optional
 
 from models.mlp import MLP
 
-
 MODEL_CATALOG = {}
 
 

@@ -3,12 +3,12 @@
 # pylint: disable=pointless-statement,expression-not-assigned
 
 from os.path import join
-from diagrams import Diagram, Cluster, Edge
-from diagrams.custom import Custom
-from diagrams.programming.language import Python
-from diagrams.programming.flowchart import Database
-from diagrams.generic.database import SQL
 
+from diagrams import Cluster, Diagram, Edge
+from diagrams.custom import Custom
+from diagrams.generic.database import SQL
+from diagrams.programming.flowchart import Database
+from diagrams.programming.language import Python
 
 ASSETS_DIR = "./assets"
 

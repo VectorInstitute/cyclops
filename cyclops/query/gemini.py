@@ -1,41 +1,40 @@
 """GEMINI query API."""
 
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
-from sqlalchemy import select, extract
-from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy import extract, select
 from sqlalchemy.sql.schema import Table
+from sqlalchemy.sql.selectable import Select, Subquery
 
 from cyclops import config
+from cyclops.constants import GEMINI
 from cyclops.orm import Database
-from cyclops.query.interface import QueryInterface
-from cyclops.processors.constants import EMPTY_STRING, YEAR
 from cyclops.processors.column_names import (
-    ENCOUNTER_ID,
-    SEX,
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
-    LAB_TEST_RESULT_VALUE,
-    LAB_TEST_TIMESTAMP,
+    ENCOUNTER_ID,
     LAB_TEST_NAME,
     LAB_TEST_RESULT_UNIT,
+    LAB_TEST_RESULT_VALUE,
+    LAB_TEST_TIMESTAMP,
+    SEX,
     VITAL_MEASUREMENT_NAME,
-    VITAL_MEASUREMENT_VALUE,
     VITAL_MEASUREMENT_TIMESTAMP,
+    VITAL_MEASUREMENT_VALUE,
 )
+from cyclops.processors.constants import EMPTY_STRING, YEAR
+from cyclops.query.interface import QueryInterface
 from cyclops.query.utils import (
-    debug_query_msg,
-    rename_attributes,
-    in_,
-    to_datetime_format,
-    equals,
     DBTable,
-    query_params_to_type,
-    not_equals,
+    debug_query_msg,
+    equals,
     has_substring,
+    in_,
+    not_equals,
+    query_params_to_type,
+    rename_attributes,
+    to_datetime_format,
 )
-from cyclops.constants import GEMINI
-
 
 IP_ADMIN = "ip_admin"
 ER_ADMIN = "er_admin"

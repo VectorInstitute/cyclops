@@ -4,21 +4,19 @@
 
 import logging
 from dataclasses import dataclass
-from typing import List, Any, Callable, Union
-from functools import wraps
 from datetime import datetime
+from functools import wraps
+from typing import Any, Callable, List, Union
 
 import numpy as np
 import sqlalchemy
-from sqlalchemy import cast
-from sqlalchemy import String, Integer, Float
-from sqlalchemy import select, func
-from sqlalchemy.sql.selectable import Select, Subquery
-from sqlalchemy.sql.schema import Table, Column
+from sqlalchemy import Float, Integer, String, cast, func, select
 from sqlalchemy.sql.elements import BinaryExpression
+from sqlalchemy.sql.schema import Column, Table
+from sqlalchemy.sql.selectable import Select, Subquery
 
-from cyclops.utils.log import setup_logging
 from codebase_ops import get_log_file_path
+from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

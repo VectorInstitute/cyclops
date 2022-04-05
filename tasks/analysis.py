@@ -2,20 +2,20 @@
 
 # pylint: disable-all
 
+import json
 import os
 import time
-import json
 
-import pandas as pd
 import mlflow
-from evidently.model_profile import Profile
-from evidently.profile_sections import (
-    DataDriftProfileSection,
-    ClassificationPerformanceProfileSection,
-)
+import pandas as pd
 from evidently.dashboard import Dashboard
-from evidently.tabs import DataDriftTab, ClassificationPerformanceTab
+from evidently.model_profile import Profile
 from evidently.pipeline.column_mapping import ColumnMapping
+from evidently.profile_sections import (
+    ClassificationPerformanceProfileSection,
+    DataDriftProfileSection,
+)
+from evidently.tabs import ClassificationPerformanceTab, DataDriftTab
 
 from cyclops.config import config_to_dict
 

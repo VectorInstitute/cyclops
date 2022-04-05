@@ -3,7 +3,7 @@
 Introduction
 ************
 
-cyclops is a framework for facilitating research and deployment of ML models 
+cyclops is a framework for facilitating research and deployment of ML models
 in the health (or clinical) setting. It provides three high-level features:
 
 * Data extraction and processing
@@ -16,7 +16,7 @@ Getting Started
 Setup Python virtual environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The development environment has been tested on ``python = 3.8.5``. 
+The development environment has been tested on ``python = 3.8.5``.
 There are two ways to setup the environment and install dependencies.
 
 Using Anaconda/Miniconda

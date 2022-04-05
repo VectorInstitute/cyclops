@@ -1,20 +1,20 @@
 """Configuration module."""
 
-import os
-import glob
-import time
-import logging
-import json
-from typing import Optional, Dict
-import subprocess
 import argparse
+import glob
+import json
+import logging
+import os
+import subprocess
+import time
+from typing import Dict, Optional
+
 import configargparse
 from dotenv import load_dotenv
 
-from codebase_ops import get_log_file_path, PROJECT_ROOT
-from cyclops.utils.log import setup_logging
+from codebase_ops import PROJECT_ROOT, get_log_file_path
 from cyclops.constants import GEMINI, MIMIC
-
+from cyclops.utils.log import setup_logging
 
 # Load environment vars.
 load_dotenv()

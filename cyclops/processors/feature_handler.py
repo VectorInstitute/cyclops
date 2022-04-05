@@ -1,32 +1,29 @@
 """Feature handling for automatic feature creation from processed data."""
 
 
-import logging
 import abc
+import logging
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, Union
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_string_dtype
-from pandas.api.types import is_numeric_dtype
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from pandas.api.types import is_numeric_dtype, is_string_dtype
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from codebase_ops import get_log_file_path
-
 from cyclops.processors.constants import (
-    FEATURE_TYPE,
-    NUMERIC,
     BINARY,
     CATEGORICAL_BINARY,
-    NORMALIZATION_METHOD,
+    FEATURE_TYPE,
     GROUP,
-    STANDARD,
     MIN_MAX,
     MISSING_CATEGORY,
+    NORMALIZATION_METHOD,
+    NUMERIC,
+    STANDARD,
 )
 from cyclops.utils.log import setup_logging
-
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
