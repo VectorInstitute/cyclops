@@ -37,7 +37,7 @@ jobs:
           cache: 'poetry'
       - name: Install dependencies, build docs and coverage report
         run: |
-          poetry install
+          poetry install && source $(poetry env info --path)/bin/activate
           cd docs && make html
           cd .. && coverage run -m pytest && coverage html && cp htmlcov/* docs/build/html/_static/
           mv docs/build/html/_static/index.html docs/build/html/_static/coverage_report.html
