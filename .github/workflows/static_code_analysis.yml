@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: 3.8.5
           cache: 'poetry'
-      - name: Install dependencies
-        run: poetry install && source $(poetry env info --path)/bin/activate
-      - name: Check code
-        uses: pre-commit/action@v2.0.3
+      - name: Install dependencies and check code
+        run: |
+          poetry install && source $(poetry env info --path)/bin/activate
+      - uses: pre-commit/action@v2.0.3

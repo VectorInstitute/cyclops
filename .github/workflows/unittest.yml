@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: 3.8.5
           cache: 'poetry'
-      - name: Install dependencies
-        run: poetry install && source $(poetry env info --path)/bin/activate
-      - name: Run unit tests
-        run: python3 -m pytest tests/
+      - name: Install dependencies and run unit tests
+        run: |
+          poetry install && source $(poetry env info --path)/bin/activate
+          python3 -m pytest tests/
