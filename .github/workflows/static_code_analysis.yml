@@ -30,4 +30,4 @@ jobs:
       - name: Install dependencies and check code
         run: |
           poetry install && source $(poetry env info --path)/bin/activate
-      - uses: pre-commit/action@v2.0.3
+          pre-commit run --all-files
