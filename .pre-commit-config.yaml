@@ -18,6 +18,7 @@ repos:
       - id: requirements-txt-fixer
       - id: trailing-whitespace
       - id: check-yaml
+
   - repo: https://github.com/ambv/black
     rev: 21.12b0
     hooks:
