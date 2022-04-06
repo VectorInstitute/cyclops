@@ -135,9 +135,8 @@ def patients(
     return QueryInterface(_db, subquery)
 
 
-@debug_query_msg
 @query_params_to_type(Subquery)
-def join_with_patients(
+def _join_with_patients(
     patients_table: Union[Select, Subquery, Table, DBTable],
     table_: Union[Select, Subquery, Table, DBTable],
 ) -> QueryInterface:
@@ -174,7 +173,7 @@ def join_with_patients(
 
 @debug_query_msg
 def diagnoses(
-    diagnosis_codes: Union[List[str], str] = None, diagnosis_types: List[str] = None
+    diagnosis_codes: Union[List[str], str] = None, diagnosis_types: List[str] = None, patients: Optional[QueryInterface] = None
 ) -> QueryInterface:
     """Query diagnosis data.
 
@@ -221,11 +220,14 @@ def diagnoses(
             .where(in_(subquery.c.diagnosis_type, diagnosis_types, to_str=True))
             .subquery()
         )
+    if patients:
+        return _join_with_patients(patients.query, subquery)
+    
     return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
-def labs(lab_tests: Union[List[str], str] = None) -> QueryInterface:
+def labs(lab_tests: Union[List[str], str] = None, patients: Optional[QueryInterface] = None) -> QueryInterface:
     """Query lab data.
 
     Parameters
@@ -260,11 +262,14 @@ def labs(lab_tests: Union[List[str], str] = None) -> QueryInterface:
             .where(has_substring(subquery.c.lab_test_name, lab_tests, to_str=True))
             .subquery()
         )
+    if patients:
+        return _join_with_patients(patients.query, subquery)
+    
     return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
-def vitals(vital_names: Union[List[str], str] = None) -> QueryInterface:
+def vitals(vital_names: Union[List[str], str] = None, patients: Optional[QueryInterface] = None) -> QueryInterface:
     """Query vitals data.
 
     Parameters
@@ -303,4 +308,7 @@ def vitals(vital_names: Union[List[str], str] = None) -> QueryInterface:
             )
             .subquery()
         )
+    if patients:
+        return _join_with_patients(patients.query, subquery)
+    
     return QueryInterface(_db, subquery)
