@@ -135,9 +135,8 @@ def patients(
     return QueryInterface(_db, subquery)
 
 
-@debug_query_msg
 @query_params_to_type(Subquery)
-def join_with_patients(
+def _join_with_patients(
     patients_table: Union[Select, Subquery, Table, DBTable],
     table_: Union[Select, Subquery, Table, DBTable],
 ) -> QueryInterface:
@@ -174,7 +173,9 @@ def join_with_patients(
 
 @debug_query_msg
 def diagnoses(
-    diagnosis_codes: Union[List[str], str] = None, diagnosis_types: List[str] = None
+    diagnosis_codes: Union[List[str], str] = None,
+    diagnosis_types: List[str] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
     """Query diagnosis data.
 
@@ -185,6 +186,8 @@ def diagnoses(
         all diagnosis data are included if not provided.
     diagnosis_types: list of str, optional
         Include only those diagnoses that are of certain type.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with diagnoses.
 
     The following types of diagnoses are available:
     M         Most Responsible Diagnosis
@@ -221,11 +224,17 @@ def diagnoses(
             .where(in_(subquery.c.diagnosis_type, diagnosis_types, to_str=True))
             .subquery()
         )
+    if patients:
+        return _join_with_patients(patients.query, subquery)
+
     return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
-def labs(lab_tests: Union[List[str], str] = None) -> QueryInterface:
+def labs(
+    lab_tests: Union[List[str], str] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterface:
     """Query lab data.
 
     Parameters
@@ -233,6 +242,8 @@ def labs(lab_tests: Union[List[str], str] = None) -> QueryInterface:
     lab_tests: list of str, optional
         Names of lab tests to include, or a lab test name search string,
         all lab tests are included if not provided.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with labs.
 
     Returns
     -------
@@ -260,11 +271,17 @@ def labs(lab_tests: Union[List[str], str] = None) -> QueryInterface:
             .where(has_substring(subquery.c.lab_test_name, lab_tests, to_str=True))
             .subquery()
         )
+    if patients:
+        return _join_with_patients(patients.query, subquery)
+
     return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
-def vitals(vital_names: Union[List[str], str] = None) -> QueryInterface:
+def vitals(
+    vital_names: Union[List[str], str] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterface:
     """Query vitals data.
 
     Parameters
@@ -272,6 +289,8 @@ def vitals(vital_names: Union[List[str], str] = None) -> QueryInterface:
     vital_names: list of str or str, optional
         Names of vital measurements to include, or a vital name search string,
         all measurements are included if not provided.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with vitals.
 
     Returns
     -------
@@ -303,4 +322,7 @@ def vitals(vital_names: Union[List[str], str] = None) -> QueryInterface:
             )
             .subquery()
         )
+    if patients:
+        return _join_with_patients(patients.query, subquery)
+
     return QueryInterface(_db, subquery)
