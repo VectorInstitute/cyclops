@@ -2,6 +2,7 @@
 
 from typing import List, Optional, Union
 
+import sqlalchemy
 from sqlalchemy import Integer, func, select
 from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
@@ -34,7 +35,9 @@ TABLE_MAP = {
 
 
 @debug_query_msg
-def patients(years: List[str] = None, process_anchor_year: bool = True) -> Select:
+def patients(
+    years: List[str] = None, process_anchor_year: bool = True
+) -> QueryInterface:
     """Query MIMIC patient data.
 
     Parameters
@@ -93,10 +96,10 @@ def patients(years: List[str] = None, process_anchor_year: bool = True) -> Selec
 
 @debug_query_msg
 @query_params_to_type(Subquery)
-def join_with_patients(
+def _join_with_patients(
     patients_table: Union[Select, Subquery, Table, DBTable],
     table_: Union[Select, Subquery, Table, DBTable],
-) -> Select:
+) -> QueryInterface:
     """Join a subquery with MIMIC patient static information.
 
     Assumes that the query t has column 'subject_id'.
@@ -134,8 +137,9 @@ def join_with_patients(
 
 
 def _diagnoses(
-    version: Optional[int] = None, substring: Optional[str] = None
-) -> Select:
+    version: Optional[int] = None,
+    substring: Optional[str] = None,
+) -> sqlalchemy.sql.selectable.Subquery:
     """Query MIMIC possible diagnoses.
 
     Parameters
@@ -156,7 +160,7 @@ def _diagnoses(
     subquery = select(table_.data).subquery()
 
     # Filter by version.
-    if version is not None:
+    if version:
         subquery = (
             select(subquery)
             .where(equals(subquery.c.icd_version, version, to_int=True))
@@ -189,7 +193,8 @@ def diagnoses(
     version: Optional[int] = None,
     substring: str = None,
     diagnosis_codes: Union[str, List[str]] = None,
-) -> Select:
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterface:
     """Query MIMIC patient diagnoses.
 
     Parameters
@@ -200,9 +205,10 @@ def diagnoses(
         Substring to match in an ICD code.
     diagnosis_codes : str or list of str
         The ICD codes to filter.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with diagnoses.
 
     Returns
-    -------
     -------
     cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
@@ -213,7 +219,7 @@ def diagnoses(
     subquery = select(table_.data).subquery()
 
     # Filter by version
-    if version is not None:
+    if version:
         subquery = (
             select(subquery)
             .where(equals(subquery.c.icd_version, version, to_int=True))
@@ -243,185 +249,120 @@ def diagnoses(
             .where(in_(subquery.c.icd_code, diagnosis_codes, to_str=True))
             .subquery()
         )
+    if patients:
+        return _join_with_patients(patients.query, subquery)
 
     return QueryInterface(_db, subquery)
 
 
 @debug_query_msg
-def event_labels(category: Optional[str] = None) -> Select:
+def _event_labels(
+    category: Optional[str] = None, substring: Optional[str] = None
+) -> sqlalchemy.sql.selectable.Subquery:
     """Query MIMIC event labels.
 
     Parameters
     ----------
     category : str, optional
         If specified, restrict to this category.
+    substring: str, optional
+        If specified, filter event labels by substring.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
+    sqlalchemy.sql.selectable.Subquery
+        Event labels filtered based on category, or substring.
 
     """
     table_ = TABLE_MAP["event_labels"](_db)
-    sel = select(table_.data)
+    subquery = select(table_.data).subquery()
 
     # Filter by category.
-    if category is not None:
-        subquery = sel.subquery()
-        return select(subquery).where(equals(subquery.c.category, category))
+    if category:
+        subquery = (
+            select(subquery).where(equals(subquery.c.category, category)).subquery()
+        )
 
-    return sel
+    # Filter by label substring.
+    if substring:
+        subquery = (
+            select(subquery)
+            .where(has_substring(subquery.c.label, substring))
+            .subquery()
+        )
 
-
-@debug_query_msg
-def event_labels_by_substring(substring: str, category: Optional[str] = None) -> Select:
-    """Query MIMIC event labels by substring.
-
-    Parameters
-    ----------
-    substring : str
-        Substring to match in an event label.
-    category : str, optional
-        If specified, restrict to this category.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
-
-    """
-    # Get event labels.
-    subquery = event_labels(category=category).subquery()
-
-    # Get labels by label substring.
-    query = select(subquery).where(has_substring(subquery.c.label, substring))
-
-    return query
+    return subquery
 
 
 @debug_query_msg
-def events(join_on_labels: bool = True, category: Optional[str] = None) -> Select:
+def events(
+    category: Optional[str] = None,
+    itemids: Optional[List[int]] = None,
+    labels: Optional[Union[str, List[str]]] = None,
+    substring: Optional[str] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterface:
     """Query MIMIC events.
 
     Parameters
     ----------
-    join_on_labels : bool, default=True
-        Whether to join events with event labels by itemid.
     category : str, optional
         If specified, restrict to this category.
+    itemids : list of int, optional
+        The itemids to take.
+    labels : str or list of str, optional
+        The labels to take.
+    substring : str, optional
+        Substring to match in an event label.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with events.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
 
     """
     table_ = TABLE_MAP["events"](_db)
-    sel = select(table_.data)
+    subquery = select(table_.data).subquery()
 
+    labels_subquery = _event_labels(category=category)
+    subquery = (
+        select(subquery, labels_subquery.c.category, labels_subquery.c.label)
+        .join(labels_subquery, subquery.c.itemid == labels_subquery.c.itemid)
+        .subquery()
+    )
     # Filter by category.
-    if category is not None:
-        subquery = sel.subquery()
-        labels_subquery = event_labels(category=category).subquery()
+    if category:
         subquery = (
-            select(subquery, labels_subquery.c.category)
-            .join(labels_subquery, subquery.c.itemid == labels_subquery.c.itemid)
+            select(subquery).where(equals(subquery.c.category, category)).subquery()
+        )
+
+    # Filter by itemids.
+    if itemids:
+        subquery = (
+            select(subquery)
+            .where(in_(subquery.c.itemid, itemids, to_int=True))
             .subquery()
         )
 
-        sel = select(subquery).where(equals(subquery.c.category, category))
+    # Filter by labels.
+    if labels:
+        subquery = (
+            select(subquery)
+            .where(in_(subquery.c.label, labels, lower=False, strip=False))
+            .subquery()
+        )
 
-    if not join_on_labels:
-        return sel
+    # Filter by label substring.
+    if substring:
+        subquery = (
+            select(subquery)
+            .where(has_substring(subquery.c.label, substring))
+            .subquery()
+        )
 
-    # Get and include event label.
-    subquery = sel.subquery()
-    query = select(
-        drop_attributes(subquery, ["itemid"]).subquery(),
-        _db.mimic_icu.d_items.data,
-    ).filter(subquery.c.itemid == _db.mimic_icu.d_items.itemid)
+    if patients:
+        return _join_with_patients(patients.query, subquery)
 
-    return query
-
-
-@debug_query_msg
-def events_by_itemids(itemids: List[int], category: Optional[str] = None) -> Select:
-    """Query MIMIC events, taking only specified itemids.
-
-    Parameters
-    ----------
-    itemids : list of int
-        The itemids to take.
-    category : str, optional
-        If specified, restrict to this category.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
-
-    """
-    # Get events.
-    subquery = events(category=category).subquery()
-
-    # Get events in the itemids list.
-    cond = in_(subquery.c.itemid, itemids, to_int=True)
-    query = select(subquery).where(cond)
-
-    return query
-
-
-@debug_query_msg
-def events_by_labels(
-    labels: Union[str, List[str]], category: Optional[str] = None
-) -> Select:
-    """Query MIMIC events, taking only specified labels.
-
-    Parameters
-    ----------
-    labels : str or list of str
-        The labels to take.
-    category : str, optional
-        If specified, restrict to this category.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
-
-    """
-    # Get events.
-    subquery = events(category=category).subquery()
-
-    # Get those in label list.
-    cond = in_(subquery.c.label, labels, lower=False, strip=False)
-    query = select(subquery).where(cond)
-
-    return query
-
-
-@debug_query_msg
-def events_by_label_substring(substring: str, category: Optional[str] = None) -> Select:
-    """Query MIMIC events by label substring.
-
-    Parameters
-    ----------
-    substring : str
-        Substring to match in an event label.
-    category : str, optional
-        If specified, restrict to this category.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
-
-    """
-    # Get events.
-    subquery = events(category=category).subquery()
-
-    # Get by substring.
-    cond = has_substring(subquery.c.label, substring)
-    query = select(subquery).where(cond)
-
-    return query
+    return QueryInterface(_db, subquery)
