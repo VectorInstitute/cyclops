@@ -316,9 +316,7 @@ def _vitals(
         subquery = (
             select(subquery)
             .where(
-                has_substring(
-                    subquery.c.vital_measurement_name, labels, to_str=True
-                )
+                has_substring(subquery.c.vital_measurement_name, labels, to_str=True)
             )
             .subquery()
         )
@@ -355,5 +353,5 @@ def events(
         return _labs(labels=labels, patients=patients)
     if category == "vitals":
         return _vitals(labels=labels, patients=patients)
-    
+
     raise ValueError("Invalid category of events specified!")
