@@ -58,6 +58,7 @@ def featurize(data: list = [], aggregator = None, imputer = None):
     vitals_features = vitals_processor.process()
 
     feature_handler = FeatureHandler()
+    feature_handler.add_features(admin_features)
     feature_handler.add_features(labs_features)
     feature_handler.add_features(vitals_features)
     
