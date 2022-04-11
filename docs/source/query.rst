@@ -19,6 +19,7 @@ query.interface module
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: data, query
 
 query.mimic module
 ------------------
@@ -35,6 +36,7 @@ query.utils module
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: data, name
 
 Module contents
 ---------------

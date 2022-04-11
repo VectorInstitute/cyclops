@@ -1,13 +1,14 @@
 """Processor API."""
 
-
 from dataclasses import dataclass
+from typing import Union
+
+import pandas as pd
 
 from cyclops.processors.admin import AdminProcessor
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
-    DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     LAB_TEST_NAME,
     LAB_TEST_RESULT_UNIT,
@@ -26,6 +27,8 @@ from cyclops.processors.vitals import VitalsProcessor
 
 @dataclass
 class Aggregator:
+    """Aggregator options."""
+
     strategy: str = "static"
     range_: int = 168
     window: int = 24
@@ -33,10 +36,32 @@ class Aggregator:
 
 @dataclass
 class Imputer:
+    """Imputation options."""
+
     strategy: str = "none"
 
 
-def featurize(data: list = [], aggregator=None, imputer=None):
+def featurize(
+    data: Union[list, pd.DataFrame],
+    aggregator: Aggregator = Aggregator(),  # pylint:disable=unused-argument
+    imputer: Imputer = Imputer(),  # pylint:disable=unused-argument
+) -> FeatureHandler:
+    """Process and create features from raw queried data.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame or list of pandas.DataFrame
+    aggregator: cyclops.processor.Aggregator, optional
+        Aggregation options.
+    imputer: cyclops.processor.Imputer, optional
+        Imputation options.
+
+    Returns
+    -------
+    cyclops.processors.feature_handler.FeatureHandler
+        Feature handler object, which is a container for processed features.
+
+    """
     admin_processor = AdminProcessor(data[0], [ENCOUNTER_ID, AGE, SEX])
     admin_features = admin_processor.process()
 

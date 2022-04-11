@@ -19,24 +19,28 @@ There are two ways to setup the environment and install dependencies.
 
 #### Using Anaconda/Miniconda
 
-To create and activate environment, run:
+First make sure that [Anaconda](https://docs.anaconda.com/anaconda/install/index.html)
+or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is installed.
+To create and activate a ``conda`` environment, run:
 
 ```bash
 conda env create -f environment.yml
 conda activate cyclops
 ```
 
-#### Using pip, venv and poetry
+#### Using poetry
 
-To create virtual environment and install dependencies, run:
+The python virtual environment can also be setup using
+[poetry](https://python-poetry.org/docs/#installation). Hence, make sure it is
+installed and then run:
 
 ```bash
-python3 -m venv <path/to/virtual/environment>
-source <path/to/virtual/environment>/bin/activate
-pip install --upgrade pip
-pip install poetry
 poetry install
+source $(poetry config virtualenvs.path)/<name_of_cyclops_env>/bin/activate
 ```
+where ``name_of_cyclops_env`` is a folder named something like
+``cyclops-mNjqcr0k-py3.8``.
+
 
 ## [Documentation](https://vectorinstitute.github.io/cyclops/)
 

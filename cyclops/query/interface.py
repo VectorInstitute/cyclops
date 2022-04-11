@@ -21,7 +21,7 @@ class QueryInterface:
     sqlalchemy.sql.selectable.Subquery
         The query.
     data: pandas.DataFrame
-        Data returned from executing the query.
+        Data returned from executing the query, as Pandas DataFrame.
 
     """
 
