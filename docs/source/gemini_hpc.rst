@@ -2,15 +2,6 @@
 Developing on the GEMINI HPC
 ----------------------------
 
-Pre-installed virtual environment paths
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For pipenv venv:
-
-.. code-block:: bash
-
-   source /mnt/nfs/project/delirium/dev_env/cyclops-uzNue7B5-py3.8/bin/activate
-
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
 
