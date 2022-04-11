@@ -36,11 +36,21 @@ author = "Vector AI Engineering"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
     "numpydoc",
     "sphinx.ext.viewcode",
 ]
 numpydoc_show_inherited_class_members = False
 numpydoc_show_class_members = False
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = True
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/", None),
+    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

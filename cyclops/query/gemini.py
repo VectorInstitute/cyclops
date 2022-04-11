@@ -231,15 +231,15 @@ def diagnoses(
 
 
 @debug_query_msg
-def labs(
-    lab_tests: Union[List[str], str] = None,
+def _labs(
+    labels: Optional[Union[str, List[str]]] = None,
     patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
     """Query lab data.
 
     Parameters
     ----------
-    lab_tests: list of str, optional
+    labels: list of str, optional
         Names of lab tests to include, or a lab test name search string,
         all lab tests are included if not provided.
     patients: QueryInterface, optional
@@ -259,16 +259,16 @@ def labs(
         .where(not_equals(subquery.c.lab_test_name, EMPTY_STRING, to_str=True))
         .subquery()
     )
-    if lab_tests and isinstance(lab_tests, list):
+    if labels and isinstance(labels, list):
         subquery = (
             select(subquery)
-            .where(in_(subquery.c.lab_test_name, lab_tests, to_str=True))
+            .where(in_(subquery.c.lab_test_name, labels, to_str=True))
             .subquery()
         )
-    elif lab_tests and isinstance(lab_tests, str):
+    elif labels and isinstance(labels, str):
         subquery = (
             select(subquery)
-            .where(has_substring(subquery.c.lab_test_name, lab_tests, to_str=True))
+            .where(has_substring(subquery.c.lab_test_name, labels, to_str=True))
             .subquery()
         )
     if patients:
@@ -278,15 +278,15 @@ def labs(
 
 
 @debug_query_msg
-def vitals(
-    vital_names: Union[List[str], str] = None,
+def _vitals(
+    labels: Optional[Union[str, List[str]]] = None,
     patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
     """Query vitals data.
 
     Parameters
     ----------
-    vital_names: list of str or str, optional
+    labels: list of str or str, optional
         Names of vital measurements to include, or a vital name search string,
         all measurements are included if not provided.
     patients: QueryInterface, optional
@@ -306,19 +306,17 @@ def vitals(
         .where(not_equals(subquery.c.vital_measurement_name, EMPTY_STRING, to_str=True))
         .subquery()
     )
-    if vital_names and isinstance(vital_names, list):
+    if labels and isinstance(labels, list):
         subquery = (
             select(subquery)
-            .where(in_(subquery.c.vital_measurement_name, vital_names, to_str=True))
+            .where(in_(subquery.c.vital_measurement_name, labels, to_str=True))
             .subquery()
         )
-    if vital_names and isinstance(vital_names, str):
+    if labels and isinstance(labels, str):
         subquery = (
             select(subquery)
             .where(
-                has_substring(
-                    subquery.c.vital_measurement_name, vital_names, to_str=True
-                )
+                has_substring(subquery.c.vital_measurement_name, labels, to_str=True)
             )
             .subquery()
         )
@@ -326,3 +324,34 @@ def vitals(
         return _join_with_patients(patients.query, subquery)
 
     return QueryInterface(_db, subquery)
+
+
+@debug_query_msg
+def events(
+    category: str,
+    labels: Optional[Union[str, List[str]]] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterface:
+    """Query events.
+
+    Parameters
+    ----------
+    category : str
+        Category of events i.e. labs, vitals, interventions, etc.
+    labels : str or list of str, optional
+        The labels to take.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with events.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    if category == "labs":
+        return _labs(labels=labels, patients=patients)
+    if category == "vitals":
+        return _vitals(labels=labels, patients=patients)
+
+    raise ValueError("Invalid category of events specified!")
