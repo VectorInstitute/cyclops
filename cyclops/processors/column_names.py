@@ -1,4 +1,4 @@
-"""Column names to use across datasets, expected for processing."""
+"""Column names to use across datasets, used for processing."""
 
 
 ENCOUNTER_ID = "encounter_id"
@@ -18,6 +18,7 @@ TOTAL_COST = "total_cost"
 
 DIAGNOSIS_CODE = "diagnosis_code"
 DIAGNOSIS_TYPE = "diagnosis_type"
+DIAGNOSIS_TRAJECTORIES = "diagnosis_trajectories"
 
 LENGTH_OF_STAY_IN_ER = "length_of_stay_in_er"
 MORTALITY_IN_HOSPITAL = "mortality_in_hospital"

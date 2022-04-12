@@ -44,22 +44,6 @@ UNSUPPORTED = [
 ]
 
 
-def is_supported(lab_test_name: str) -> bool:
-    """Check if lab test is supported (due to units not converted yet).
-
-    Parameters
-    ----------
-    lab_test_name: str
-        Name of lab test.
-
-    Returns
-    -------
-    bool
-        If supported return True, else False.
-    """
-    return lab_test_name not in UNSUPPORTED
-
-
 class LabsProcessor(Processor):
     """Labs processor class."""
 
@@ -132,29 +116,3 @@ class LabsProcessor(Processor):
         """Drop some labs currently not supported."""
         self.data = self.data.loc[self.data[LAB_TEST_NAME].apply(is_supported)]
         self._log_counts_step("Drop unsupported...")
-
-    def _create_features(self) -> pd.DataFrame:
-        """Create features, grouping by test and gathering result values.
-
-        Returns
-        -------
-        pandas.DataFrame:
-            Processed lab features.
-
-        """
-        LOGGER.info("Creating features...")
-        lab_tests = list(self.data[LAB_TEST_NAME].unique())
-        LOGGER.info(lab_tests)
-        encounters = list(self.data[ENCOUNTER_ID].unique())
-        LOGGER.info(
-            "# labs features: %d, # encounters: %d", len(lab_tests), len(encounters)
-        )
-        features = pd.DataFrame(index=encounters, columns=lab_tests)
-
-        grouped_labs = self.data.groupby([ENCOUNTER_ID, LAB_TEST_NAME])
-        for (encounter_id, lab_test_name), labs in grouped_labs:
-            features.loc[encounter_id, lab_test_name] = labs[
-                LAB_TEST_RESULT_VALUE
-            ].mean()
-
-        return features
