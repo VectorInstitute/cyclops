@@ -7,12 +7,10 @@ from typing import Union
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-
-from cyclops.utils.profile import time_function
+from cyclops.processors.column_names import ADMIT_TIMESTAMP, ENCOUNTER_ID
 from cyclops.processors.utils import log_counts_step
-from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.utils.log import setup_logging
-
+from cyclops.utils.profile import time_function
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -26,8 +24,8 @@ class Aggregator:
     strategy: str = "static"
     range_: int = 168
     window: int = 24
-        
-        
+
+
 def filter_within_admission_window(
     data: pd.DataFrame, sample_ts_col_name, aggregation_window: int = 24
 ) -> pd.DataFrame:

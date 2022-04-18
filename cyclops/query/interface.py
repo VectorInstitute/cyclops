@@ -1,7 +1,7 @@
 """A query interface class to wrap database objects and queries."""
 
-import os
 import logging
+import os
 from dataclasses import dataclass
 from typing import Optional, Union
 
@@ -9,10 +9,8 @@ import pandas as pd
 from sqlalchemy.sql.selectable import Select, Subquery
 
 from codebase_ops import get_log_file_path
-
 from cyclops.orm import Database
 from cyclops.utils.log import setup_logging
-
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -48,17 +46,17 @@ class QueryInterface:
     def __repr__(self) -> str:
         """Print SQL when printing the QueryInterface object."""
         return str(self.query)
-    
+
     def save(self, folder_path: str, file_name: str) -> None:
         """Save queried data in Parquet format.
-        
+
         Parameters
         ----------
         folder_path: str
             Path to directory where the file can be saved.
         file_name: str
             Name of file. Extension will be .gzip.
-        
+
         """
         save_path = os.path.join(folder_path, file_name + ".gzip")
         if isinstance(self.data, pd.DataFrame):
