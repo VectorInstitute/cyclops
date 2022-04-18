@@ -5,11 +5,11 @@ from typing import Union
 
 import pandas as pd
 
-from cyclops.processors.admin import AdminProcessor
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
     ENCOUNTER_ID,
+    DIAGNOSIS_CODE,
     LAB_TEST_NAME,
     LAB_TEST_RESULT_UNIT,
     LAB_TEST_RESULT_VALUE,
@@ -20,18 +20,10 @@ from cyclops.processors.column_names import (
     VITAL_MEASUREMENT_TIMESTAMP,
     VITAL_MEASUREMENT_VALUE,
 )
+from cyclops.processors.utils import check_must_have_columns, gather_columns
+from cyclops.processors.aggregate import Aggregator, gather_static_features
+from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.feature_handler import FeatureHandler
-from cyclops.processors.labs import LabsProcessor
-from cyclops.processors.vitals import VitalsProcessor
-
-
-@dataclass
-class Aggregator:
-    """Aggregator options."""
-
-    strategy: str = "static"
-    range_: int = 168
-    window: int = 24
 
 
 @dataclass
@@ -42,7 +34,8 @@ class Imputer:
 
 
 def featurize(
-    data: Union[list, pd.DataFrame],
+    static_data: Union[list, pd.DataFrame],
+    temporal_data: Union[list, pd.DataFrame],
     aggregator: Aggregator = Aggregator(),  # pylint:disable=unused-argument
     imputer: Imputer = Imputer(),  # pylint:disable=unused-argument
 ) -> FeatureHandler:
@@ -62,38 +55,18 @@ def featurize(
         Feature handler object, which is a container for processed features.
 
     """
-    admin_processor = AdminProcessor(data[0], [ENCOUNTER_ID, AGE, SEX])
-    admin_features = admin_processor.process()
-
-    labs_processor = LabsProcessor(
-        data[0],
-        [
-            ENCOUNTER_ID,
-            ADMIT_TIMESTAMP,
-            LAB_TEST_NAME,
-            LAB_TEST_TIMESTAMP,
-            LAB_TEST_RESULT_VALUE,
-            LAB_TEST_RESULT_UNIT,
-            REFERENCE_RANGE,
-        ],
-    )
-    labs_features = labs_processor.process()
-    vitals_processor = VitalsProcessor(
-        data[1],
-        [
-            ENCOUNTER_ID,
-            ADMIT_TIMESTAMP,
-            VITAL_MEASUREMENT_NAME,
-            VITAL_MEASUREMENT_VALUE,
-            VITAL_MEASUREMENT_TIMESTAMP,
-            REFERENCE_RANGE,
-        ],
-    )
-    vitals_features = vitals_processor.process()
-
     feature_handler = FeatureHandler()
-    feature_handler.add_features(admin_features)
-    feature_handler.add_features(labs_features)
-    feature_handler.add_features(vitals_features)
+    
+    if isinstance(static_data, pd.DataFrame):
+        static_data = [static_data]
+        
+    for dataframe in static_data:
+        if check_must_have_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
+            diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
+            diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
+            feature_handler.add_features(diagnoses_features)
+            dataframe.drop(DIAGNOSIS_CODE, axis=1, inplace=True)
+        static_features = gather_static_features(dataframe)
+        feature_handler.add_features(static_features)
 
     return feature_handler
