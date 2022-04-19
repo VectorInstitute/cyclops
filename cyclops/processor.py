@@ -34,8 +34,8 @@ class Imputer:
 
 
 def featurize(
-    static_data: Union[list, pd.DataFrame],
-    temporal_data: Union[list, pd.DataFrame],
+    static_data: Union[list, pd.DataFrame] = None,
+    temporal_data: Union[list, pd.DataFrame] = None,
     aggregator: Aggregator = Aggregator(),  # pylint:disable=unused-argument
     imputer: Imputer = Imputer(),  # pylint:disable=unused-argument
 ) -> FeatureHandler:
@@ -59,14 +59,21 @@ def featurize(
 
     if isinstance(static_data, pd.DataFrame):
         static_data = [static_data]
+    if isinstance(temporal_data, pd.DataFrame):
+        temporal_data = [temporal_data]
 
-    for dataframe in static_data:
-        if check_must_have_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
-            diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
-            diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
-            feature_handler.add_features(diagnoses_features)
-            dataframe.drop(DIAGNOSIS_CODE, axis=1, inplace=True)
-        static_features = gather_static_features(dataframe)
-        feature_handler.add_features(static_features)
+    if static_data:
+        for dataframe in static_data:
+            if check_must_have_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
+                diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
+                diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
+                feature_handler.add_features(diagnoses_features)
+                dataframe.drop(DIAGNOSIS_CODE, axis=1, inplace=True)
+            static_features = gather_static_features(dataframe)
+            feature_handler.add_features(static_features)
+    if temporal_data:
+        for dataframe in temporal_data:
+            temporal_features = gather_event_features(dataframe)
+            feature_handler.add_features(temporal_features)
 
     return feature_handler

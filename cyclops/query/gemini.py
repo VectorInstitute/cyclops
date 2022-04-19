@@ -77,6 +77,7 @@ def patients(
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     delirium_cohort: Optional[bool] = False,
+    include_er_data: Optional[bool] = False
 ) -> QueryInterface:
     """Query patient encounters.
 
@@ -92,6 +93,8 @@ def patients(
         Gather patients admitted <= to_date in YYYY-MM-DD format.
     delirium_cohort: bool, optional
         Gather patient encounters for which delirium label is available.
+    include_er_data: bool, optional
+        Gather Emergency Room data recorded for the particular encounter.
 
     Returns
     -------
@@ -130,6 +133,13 @@ def patients(
     if delirium_cohort:
         subquery = (
             select(subquery).where(equals(subquery.c.gemini_cohort, True)).subquery()
+        )
+    if include_er_data:
+        er_table = TABLE_MAP[ER_ADMIN](_db)
+        er_subquery = select(er_table.data)
+        er_subquery = rename_attributes(er_subquery, GEMINI_COLUMN_MAP).subquery()
+        subquery = (
+            select(subquery, er_subquery).where(subquery.c.encounter_id == er_subquery.c.encounter_id).subquery()
         )
 
     return QueryInterface(_db, subquery)

@@ -73,6 +73,8 @@ def gather_event_features(
     event_col: str
         Name of column with event info to use for creating features. e.g. lab
         test result values, or vital measurement value.
+    event_ts_col: str
+        Name of column with event timestamp to use for aggregation.
     aggregator: cyclops.processor.Aggregator
         Aggregation options.
 
@@ -85,11 +87,17 @@ def gather_event_features(
     log_counts_step(data, "Gathering event features...", columns=True)
     event_names = list(data[groupby_col].unique())
     encounters = list(data[ENCOUNTER_ID].unique())
+    
     features = pd.DataFrame(index=encounters, columns=event_names)
+    sample_time = data[sample_ts_col_name]
+    admit_time = data[ADMIT_TIMESTAMP]
+    
+    window_condition = abs((sample_time - admit_time) / pd.Timedelta(hours=1))
+    data_filtered = data_filtered.loc[window_condition <= aggregation_window]
 
     grouped_events = data.groupby([ENCOUNTER_ID, groupby_col])
     for (encounter_id, event_name), events in grouped_events:
-        features.loc[encounter_id, event_name] = events[event_col].mean()
+        features.loc[encounter_id, event_name] = events[event_col]
 
     return features
 
@@ -121,7 +129,7 @@ def gather_static_features(data) -> pd.DataFrame:
     """
     log_counts_step(data, "Gathering static features...", columns=True)
     encounters = list(data[ENCOUNTER_ID].unique())
-    col_names = list(data.columns)
+    col_names = [col_name for col_name in data.columns if col_name != ENCOUNTER_ID]
     features = pd.DataFrame(index=encounters, columns=col_names)
 
     grouped = data.groupby([ENCOUNTER_ID])
@@ -129,8 +137,8 @@ def gather_static_features(data) -> pd.DataFrame:
         for col_name in col_names:
             if statics[col_name].nunique() != 1:
                 LOGGER.warning(
-                    f"""Duplicate values encountered in patient statics,
-                    in {col_name} column!"""
+                    f"""None or Duplicate values encountered in patient statics,
+                    in {col_name} column, skipped for processing!"""
                 )
                 continue
             features.loc[encounter_id, col_name] = statics[col_name].unique()[0]
