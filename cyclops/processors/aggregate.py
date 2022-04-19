@@ -87,11 +87,11 @@ def gather_event_features(
     log_counts_step(data, "Gathering event features...", columns=True)
     event_names = list(data[groupby_col].unique())
     encounters = list(data[ENCOUNTER_ID].unique())
-    
+
     features = pd.DataFrame(index=encounters, columns=event_names)
     sample_time = data[sample_ts_col_name]
     admit_time = data[ADMIT_TIMESTAMP]
-    
+
     window_condition = abs((sample_time - admit_time) / pd.Timedelta(hours=1))
     data_filtered = data_filtered.loc[window_condition <= aggregation_window]
 

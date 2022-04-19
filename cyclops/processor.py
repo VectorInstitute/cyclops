@@ -65,8 +65,12 @@ def featurize(
     if static_data:
         for dataframe in static_data:
             if check_must_have_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
-                diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
-                diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
+                diagnoses_data = gather_columns(
+                    dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]
+                )
+                diagnoses_features = group_diagnosis_codes_to_trajectories(
+                    diagnoses_data
+                )
                 feature_handler.add_features(diagnoses_features)
                 dataframe.drop(DIAGNOSIS_CODE, axis=1, inplace=True)
             static_features = gather_static_features(dataframe)

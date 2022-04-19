@@ -71,13 +71,13 @@ GEMINI_COLUMN_MAP = {
 
 
 @debug_query_msg
-def patients(
+def patients(  # pylint=disable=too-many-arguments
     years: List[str] = None,
     hospitals: List[str] = None,
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     delirium_cohort: Optional[bool] = False,
-    include_er_data: Optional[bool] = False
+    include_er_data: Optional[bool] = False,
 ) -> QueryInterface:
     """Query patient encounters.
 
@@ -139,7 +139,9 @@ def patients(
         er_subquery = select(er_table.data)
         er_subquery = rename_attributes(er_subquery, GEMINI_COLUMN_MAP).subquery()
         subquery = (
-            select(subquery, er_subquery).where(subquery.c.encounter_id == er_subquery.c.encounter_id).subquery()
+            select(subquery, er_subquery)
+            .where(subquery.c.encounter_id == er_subquery.c.encounter_id)
+            .subquery()
         )
 
     return QueryInterface(_db, subquery)
