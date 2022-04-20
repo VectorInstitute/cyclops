@@ -417,10 +417,10 @@ def rename_attributes(
         The corresponding query with attributes renamed.
 
     """
-#     # Make sure we aren't renaming to columns to be the same.
-#     values = list(old_new_map.values())
-#     if len(values) != len(set(values)):
-#         raise ValueError("Cannot rename two attributes to the same name.")
+    #     # Make sure we aren't renaming to columns to be the same.
+    #     values = list(old_new_map.values())
+    #     if len(values) != len(set(values)):
+    #         raise ValueError("Cannot rename two attributes to the same name.")
     # Rename.
     return select(
         *[

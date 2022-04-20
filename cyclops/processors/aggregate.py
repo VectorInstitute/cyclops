@@ -8,7 +8,14 @@ import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.column_names import ADMIT_TIMESTAMP, ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP, TIMESTEP
+from cyclops.processors.column_names import (
+    ADMIT_TIMESTAMP,
+    ENCOUNTER_ID,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
+    TIMESTEP,
+)
 from cyclops.processors.utils import log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -21,14 +28,14 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 @dataclass
 class Aggregator:
     """Aggregation options for temporal data.
-    
+
     Attributes
     ----------
     strategy: str
         Strategy to aggregate within bucket. ['mean', 'median']
     bucket_size: float
         Size of a single step in the time-series in hours.
-        For example, if 2, temporal data is aggregated into bins of 2 hrs. 
+        For example, if 2, temporal data is aggregated into bins of 2 hrs.
     window: float
         Window length in hours, to consider for creating time-series.
         For example if its 100 hours, then all temporal data upto
@@ -36,7 +43,7 @@ class Aggregator:
         considered. This can be negative as well, in which case,
         events from the patient's time in the ER will be considered.
     """
-    
+
     strategy: str = "mean"
     bucket_size: int = 1
     window: int = 24
@@ -105,11 +112,13 @@ def gather_event_features(
         earliest_ts = min(events[EVENT_TIMESTAMP])
         for _, event in events.iterrows():
             event_ts = event[EVENT_TIMESTAMP]
-            timestep = (event_ts - earliest_ts) / pd.Timedelta(hours=aggregator.bucket_size)
+            timestep = (event_ts - earliest_ts) / pd.Timedelta(
+                hours=aggregator.bucket_size
+            )
             timestep_col[index] = int(timestep)
             index += 1
     data[TIMESTEP] = timestep_col.tolist()
-    
+
     features = data.copy()
     features = features.reset_index()
     features = features.set_index([ENCOUNTER_ID, TIMESTEP])
@@ -152,8 +161,9 @@ def gather_static_features(data) -> pd.DataFrame:
         for col_name in col_names:
             if statics[col_name].nunique() != 1:
                 LOGGER.warning(
-                    f"""None or Duplicate values encountered in patient statics,
-                    in {col_name} column, skipped for processing!"""
+                    """None or Duplicate values encountered in patient statics,
+                    in %s column, skipped for processing!""",
+                    col_name,
                 )
                 continue
             features.loc[encounter_id, col_name] = statics[col_name].unique()[0]

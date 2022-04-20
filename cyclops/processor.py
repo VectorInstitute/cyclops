@@ -7,19 +7,19 @@ import pandas as pd
 
 from cyclops.processors.aggregate import (
     Aggregator,
+    gather_event_features,
     gather_static_features,
-    gather_event_features
 )
 from cyclops.processors.column_names import (
-    DIAGNOSIS_CODE,
     ADMIT_TIMESTAMP,
+    DIAGNOSIS_CODE,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
-    SEX,
     EVENT_NAME,
+    EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
-    EVENT_TIMESTAMP
+    SEX,
 )
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.feature_handler import FeatureHandler

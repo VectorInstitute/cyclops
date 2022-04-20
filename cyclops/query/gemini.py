@@ -13,11 +13,11 @@ from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
-    SEX,
     EVENT_NAME,
+    EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
-    EVENT_TIMESTAMP
+    SEX,
 )
 from cyclops.processors.constants import EMPTY_STRING, YEAR
 from cyclops.query.interface import QueryInterface
@@ -267,7 +267,7 @@ def events(
     table_ = TABLE_MAP[category](_db)
     subquery = select(table_.data)
     subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
-    
+
     if category != INTERVENTION:
         subquery = (
             select(subquery)
@@ -283,9 +283,7 @@ def events(
         if labels and isinstance(labels, str):
             subquery = (
                 select(subquery)
-                .where(
-                    has_substring(subquery.c.event_name, labels, to_str=True)
-                )
+                .where(has_substring(subquery.c.event_name, labels, to_str=True))
                 .subquery()
             )
     if patients:
