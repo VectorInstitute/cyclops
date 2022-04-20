@@ -4,10 +4,11 @@ import logging
 from dataclasses import dataclass
 from typing import Union
 
+import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.column_names import ADMIT_TIMESTAMP, ENCOUNTER_ID
+from cyclops.processors.column_names import ADMIT_TIMESTAMP, ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP, TIMESTEP
 from cyclops.processors.utils import log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -19,29 +20,43 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 @dataclass
 class Aggregator:
-    """Aggregator options."""
-
-    strategy: str = "static"
-    range_: int = 168
+    """Aggregation options for temporal data.
+    
+    Attributes
+    ----------
+    strategy: str
+        Strategy to aggregate within bucket. ['mean', 'median']
+    bucket_size: float
+        Size of a single step in the time-series in hours.
+        For example, if 2, temporal data is aggregated into bins of 2 hrs. 
+    window: float
+        Window length in hours, to consider for creating time-series.
+        For example if its 100 hours, then all temporal data upto
+        100 hours after admission time, for a given encounter is
+        considered. This can be negative as well, in which case,
+        events from the patient's time in the ER will be considered.
+    """
+    
+    strategy: str = "mean"
+    bucket_size: int = 1
     window: int = 24
 
 
-def filter_within_admission_window(
-    data: pd.DataFrame, sample_ts_col_name, aggregation_window: int = 24
+def _filter_upto_window_since_admission(
+    data: pd.DataFrame, window: int = 24
 ) -> pd.DataFrame:
     """Filter data based on single time window value.
 
-    For e.g. if window is 24 hrs, then all data 24 hrs
-    before time of admission and after 24 hrs of admission are considered.
+    For e.g. if window is 24 hrs, then all data for the encounter
+    upto after 24 hrs of admission are considered. Useful for
+    one-shot prediction.
 
     Parameters
     ----------
     data: pandas.DataFrame
         Data before filtering.
-    sample_ts_col_name: str
-        Name of column corresponding to the sample timestamp.
-    aggregation_window: int, optional
-        Window (no. of hrs) before and after admission to consider.
+    window: int, optional
+        Window (no. of hrs) upto after admission to consider.
 
     Returns
     -------
@@ -50,31 +65,23 @@ def filter_within_admission_window(
 
     """
     data_filtered = data.copy()
-    sample_time = data_filtered[sample_ts_col_name]
+    sample_time = data_filtered[EVENT_TIMESTAMP]
     admit_time = data_filtered[ADMIT_TIMESTAMP]
-    window_condition = abs((sample_time - admit_time) / pd.Timedelta(hours=1))
-    data_filtered = data_filtered.loc[window_condition <= aggregation_window]
+    window_condition = (sample_time - admit_time) / pd.Timedelta(hours=1)
+    data_filtered = data_filtered.loc[window_condition <= window]
     return data_filtered
 
 
 @time_function
 def gather_event_features(
-    data, groupby_col, event_col, aggregator: Aggregator
+    data, aggregator: Aggregator
 ) -> Union[pd.DataFrame, pd.MultiIndex]:
-    """Gather events from encounters into statistical (static) or time-series features.
+    """Gather events from encounters into time-series features.
 
     Parameters
     ----------
     data: pandas.DataFrame
         Input data.
-    groupby_col: str
-        Name of column to use to group data, e.g. column with lab test names
-        can be used to group lab test data.
-    event_col: str
-        Name of column with event info to use for creating features. e.g. lab
-        test result values, or vital measurement value.
-    event_ts_col: str
-        Name of column with event timestamp to use for aggregation.
     aggregator: cyclops.processor.Aggregator
         Aggregation options.
 
@@ -85,19 +92,27 @@ def gather_event_features(
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
-    event_names = list(data[groupby_col].unique())
+    data = _filter_upto_window_since_admission(data, window=aggregator.window)
+    log_counts_step(data, "Filtering events within window...", columns=True)
+    event_names = list(data[EVENT_NAME].unique())
     encounters = list(data[ENCOUNTER_ID].unique())
 
-    features = pd.DataFrame(index=encounters, columns=event_names)
-    sample_time = data[sample_ts_col_name]
-    admit_time = data[ADMIT_TIMESTAMP]
+    timestep_col = np.zeros(len(data)).astype(int)
 
-    window_condition = abs((sample_time - admit_time) / pd.Timedelta(hours=1))
-    data_filtered = data_filtered.loc[window_condition <= aggregation_window]
-
-    grouped_events = data.groupby([ENCOUNTER_ID, groupby_col])
+    grouped_events = data.groupby([ENCOUNTER_ID, EVENT_NAME])
+    index = 0
     for (encounter_id, event_name), events in grouped_events:
-        features.loc[encounter_id, event_name] = events[event_col]
+        earliest_ts = min(events[EVENT_TIMESTAMP])
+        for _, event in events.iterrows():
+            event_ts = event[EVENT_TIMESTAMP]
+            timestep = (event_ts - earliest_ts) / pd.Timedelta(hours=aggregator.bucket_size)
+            timestep_col[index] = int(timestep)
+            index += 1
+    data[TIMESTEP] = timestep_col.tolist()
+    
+    features = data.copy()
+    features = features.reset_index()
+    features = features.set_index([ENCOUNTER_ID, TIMESTEP])
 
     return features
 

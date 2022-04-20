@@ -5,21 +5,21 @@ from typing import Union
 
 import pandas as pd
 
-from cyclops.processors.aggregate import Aggregator, gather_static_features
+from cyclops.processors.aggregate import (
+    Aggregator,
+    gather_static_features,
+    gather_event_features
+)
 from cyclops.processors.column_names import (
-    ADMIT_TIMESTAMP,
-    AGE,
     DIAGNOSIS_CODE,
+    ADMIT_TIMESTAMP,
+    DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
-    LAB_TEST_NAME,
-    LAB_TEST_RESULT_UNIT,
-    LAB_TEST_RESULT_VALUE,
-    LAB_TEST_TIMESTAMP,
-    REFERENCE_RANGE,
     SEX,
-    VITAL_MEASUREMENT_NAME,
-    VITAL_MEASUREMENT_TIMESTAMP,
-    VITAL_MEASUREMENT_VALUE,
+    EVENT_NAME,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT,
+    EVENT_TIMESTAMP
 )
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.feature_handler import FeatureHandler
@@ -77,7 +77,7 @@ def featurize(
             feature_handler.add_features(static_features)
     if temporal_data:
         for dataframe in temporal_data:
-            temporal_features = gather_event_features(dataframe)
-            feature_handler.add_features(temporal_features)
+            temporal_features = gather_event_features(dataframe, aggregator=aggregator)
+            # feature_handler.add_features(temporal_features)
 
-    return feature_handler
+    return temporal_features
