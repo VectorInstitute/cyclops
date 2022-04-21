@@ -4,9 +4,9 @@ import logging
 from dataclasses import dataclass
 from typing import Union
 
-from tqdm import tqdm
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import (
