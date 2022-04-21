@@ -628,6 +628,10 @@ class FeatureHandler:
 
             raise ValueError("Unsure about column data type.")
 
+        # "index" column gets added, debug later and remove.
+        if "index" in self.features.columns:
+            self.drop_features("index")
+
     def _drop_cols(self, cols: list) -> None:
         """Drop columns.
 
