@@ -1,4 +1,4 @@
-"""Column names to use across datasets, expected for processing."""
+"""Column names to use across datasets, used for processing."""
 
 
 ENCOUNTER_ID = "encounter_id"
@@ -18,17 +18,16 @@ TOTAL_COST = "total_cost"
 
 DIAGNOSIS_CODE = "diagnosis_code"
 DIAGNOSIS_TYPE = "diagnosis_type"
+DIAGNOSIS_TRAJECTORIES = "diagnosis_trajectories"
 
 LENGTH_OF_STAY_IN_ER = "length_of_stay_in_er"
 MORTALITY_IN_HOSPITAL = "mortality_in_hospital"
 
-LAB_TEST_NAME = "lab_test_name"
-LAB_TEST_TIMESTAMP = "lab_test_timestamp"
-LAB_TEST_RESULT_VALUE = "lab_test_result_value"
-LAB_TEST_RESULT_UNIT = "lab_test_result_unit"
-
-VITAL_MEASUREMENT_NAME = "vital_measurement_name"
-VITAL_MEASUREMENT_VALUE = "vital_measurement_value"
-VITAL_MEASUREMENT_TIMESTAMP = "vital_measurement_timestamp"
+EVENT_NAME = "event_name"
+EVENT_VALUE = "event_value"
+EVENT_VALUE_UNIT = "event_value_unit"
+EVENT_TIMESTAMP = "event_timestamp"
 
 REFERENCE_RANGE = "reference_range"
+
+TIMESTEP = "timestep"

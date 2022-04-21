@@ -1,5 +1,7 @@
 """MIMIC-IV query API."""
 
+# pylint: disable=duplicate-code
+
 from typing import List, Optional, Union
 
 import sqlalchemy

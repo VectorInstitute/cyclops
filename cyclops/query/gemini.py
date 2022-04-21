@@ -13,14 +13,11 @@ from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
-    LAB_TEST_NAME,
-    LAB_TEST_RESULT_UNIT,
-    LAB_TEST_RESULT_VALUE,
-    LAB_TEST_TIMESTAMP,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT,
     SEX,
-    VITAL_MEASUREMENT_NAME,
-    VITAL_MEASUREMENT_TIMESTAMP,
-    VITAL_MEASUREMENT_VALUE,
 )
 from cyclops.processors.constants import EMPTY_STRING, YEAR
 from cyclops.query.interface import QueryInterface
@@ -60,23 +57,24 @@ GEMINI_COLUMN_MAP = {
     "admit_date_time": ADMIT_TIMESTAMP,
     "discharge_date_time": DISCHARGE_TIMESTAMP,
     "gender": SEX,
-    "result_value": LAB_TEST_RESULT_VALUE,
-    "result_unit": LAB_TEST_RESULT_UNIT,
-    "lab_test_name_mapped": LAB_TEST_NAME,
-    "sample_collection_date_time": LAB_TEST_TIMESTAMP,
-    "measurement_mapped": VITAL_MEASUREMENT_NAME,
-    "measurement_value": VITAL_MEASUREMENT_VALUE,
-    "measure_date_time": VITAL_MEASUREMENT_TIMESTAMP,
+    "result_value": EVENT_VALUE,
+    "result_unit": EVENT_VALUE_UNIT,
+    "lab_test_name_mapped": EVENT_NAME,
+    "sample_collection_date_time": EVENT_TIMESTAMP,
+    "measurement_mapped": EVENT_NAME,
+    "measurement_value": EVENT_VALUE,
+    "measure_date_time": EVENT_TIMESTAMP,
 }
 
 
 @debug_query_msg
-def patients(
+def patients(  # pylint: disable=too-many-arguments
     years: List[str] = None,
     hospitals: List[str] = None,
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     delirium_cohort: Optional[bool] = False,
+    include_er_data: Optional[bool] = False,
 ) -> QueryInterface:
     """Query patient encounters.
 
@@ -92,6 +90,8 @@ def patients(
         Gather patients admitted <= to_date in YYYY-MM-DD format.
     delirium_cohort: bool, optional
         Gather patient encounters for which delirium label is available.
+    include_er_data: bool, optional
+        Gather Emergency Room data recorded for the particular encounter.
 
     Returns
     -------
@@ -130,6 +130,15 @@ def patients(
     if delirium_cohort:
         subquery = (
             select(subquery).where(equals(subquery.c.gemini_cohort, True)).subquery()
+        )
+    if include_er_data:
+        er_table = TABLE_MAP[ER_ADMIN](_db)
+        er_subquery = select(er_table.data)
+        er_subquery = rename_attributes(er_subquery, GEMINI_COLUMN_MAP).subquery()
+        subquery = (
+            select(subquery, er_subquery)
+            .where(subquery.c.encounter_id == er_subquery.c.encounter_id)
+            .subquery()
         )
 
     return QueryInterface(_db, subquery)
@@ -231,102 +240,6 @@ def diagnoses(
 
 
 @debug_query_msg
-def _labs(
-    labels: Optional[Union[str, List[str]]] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
-) -> QueryInterface:
-    """Query lab data.
-
-    Parameters
-    ----------
-    labels: list of str, optional
-        Names of lab tests to include, or a lab test name search string,
-        all lab tests are included if not provided.
-    patients: QueryInterface, optional
-        Patient encounters query wrapped, used to join with labs.
-
-    Returns
-    -------
-    cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
-
-    """
-    table_ = TABLE_MAP[LAB](_db)
-    subquery = select(table_.data)
-    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
-    subquery = (
-        select(subquery)
-        .where(not_equals(subquery.c.lab_test_name, EMPTY_STRING, to_str=True))
-        .subquery()
-    )
-    if labels and isinstance(labels, list):
-        subquery = (
-            select(subquery)
-            .where(in_(subquery.c.lab_test_name, labels, to_str=True))
-            .subquery()
-        )
-    elif labels and isinstance(labels, str):
-        subquery = (
-            select(subquery)
-            .where(has_substring(subquery.c.lab_test_name, labels, to_str=True))
-            .subquery()
-        )
-    if patients:
-        return _join_with_patients(patients.query, subquery)
-
-    return QueryInterface(_db, subquery)
-
-
-@debug_query_msg
-def _vitals(
-    labels: Optional[Union[str, List[str]]] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
-) -> QueryInterface:
-    """Query vitals data.
-
-    Parameters
-    ----------
-    labels: list of str or str, optional
-        Names of vital measurements to include, or a vital name search string,
-        all measurements are included if not provided.
-    patients: QueryInterface, optional
-        Patient encounters query wrapped, used to join with vitals.
-
-    Returns
-    -------
-    cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
-
-    """
-    table_ = TABLE_MAP[VITALS](_db)
-    subquery = select(table_.data)
-    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
-    subquery = (
-        select(subquery)
-        .where(not_equals(subquery.c.vital_measurement_name, EMPTY_STRING, to_str=True))
-        .subquery()
-    )
-    if labels and isinstance(labels, list):
-        subquery = (
-            select(subquery)
-            .where(in_(subquery.c.vital_measurement_name, labels, to_str=True))
-            .subquery()
-        )
-    if labels and isinstance(labels, str):
-        subquery = (
-            select(subquery)
-            .where(
-                has_substring(subquery.c.vital_measurement_name, labels, to_str=True)
-            )
-            .subquery()
-        )
-    if patients:
-        return _join_with_patients(patients.query, subquery)
-
-    return QueryInterface(_db, subquery)
-
-
-@debug_query_msg
 def events(
     category: str,
     labels: Optional[Union[str, List[str]]] = None,
@@ -337,7 +250,7 @@ def events(
     Parameters
     ----------
     category : str
-        Category of events i.e. labs, vitals, interventions, etc.
+        Category of events i.e. lab, vitals, intervention, etc.
     labels : str or list of str, optional
         The labels to take.
     patients: QueryInterface, optional
@@ -349,9 +262,31 @@ def events(
         Constructed query, wrapped in an interface object.
 
     """
-    if category == "labs":
-        return _labs(labels=labels, patients=patients)
-    if category == "vitals":
-        return _vitals(labels=labels, patients=patients)
+    if category not in [LAB, VITALS, INTERVENTION]:
+        raise ValueError("Invalid category of events specified!")
+    table_ = TABLE_MAP[category](_db)
+    subquery = select(table_.data)
+    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
 
-    raise ValueError("Invalid category of events specified!")
+    if category != INTERVENTION:
+        subquery = (
+            select(subquery)
+            .where(not_equals(subquery.c.event_name, EMPTY_STRING, to_str=True))
+            .subquery()
+        )
+        if labels and isinstance(labels, list):
+            subquery = (
+                select(subquery)
+                .where(in_(subquery.c.event_name, labels, to_str=True))
+                .subquery()
+            )
+        if labels and isinstance(labels, str):
+            subquery = (
+                select(subquery)
+                .where(has_substring(subquery.c.event_name, labels, to_str=True))
+                .subquery()
+            )
+    if patients:
+        return _join_with_patients(patients.query, subquery)
+
+    return QueryInterface(_db, subquery)
