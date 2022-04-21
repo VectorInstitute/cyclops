@@ -26,13 +26,22 @@ from cyclops.query.utils import (
     trim_attributes,
 )
 
+PATIENTS = "patients"
+ADMISSIONS = "admissions"
+DIAGNOSES = "diagnoses"
+PATIENT_DIAGNOSES = "patient_diagnoses"
+EVENT_LABELS = "event_labels"
+EVENTS = "events"
+
+
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {
-    "patients": lambda db: db.mimic_core.patients,
-    "diagnoses": lambda db: db.mimic_hosp.d_icd_diagnoses,
-    "patient_diagnoses": lambda db: db.mimic_hosp.diagnoses_icd,
-    "event_labels": lambda db: db.mimic_icu.d_items,
-    "events": lambda db: db.mimic_icu.chartevents,
+    PATIENTS: lambda db: db.mimic_core.patients,
+    ADMISSIONS: lambda db: db.mimic_core.admissions,
+    DIAGNOSES: lambda db: db.mimic_hosp.d_icd_diagnoses,
+    PATIENT_DIAGNOSES: lambda db: db.mimic_hosp.diagnoses_icd,
+    EVENT_LABELS: lambda db: db.mimic_icu.d_items,
+    EVENTS: lambda db: db.mimic_icu.chartevents,
 }
 
 
@@ -56,21 +65,22 @@ def patients(
         Select ORM object.
 
     """
-    table_ = TABLE_MAP["patients"](_db)
+    patients_table = TABLE_MAP[PATIENTS](_db)
+    admissions_table = TABLE_MAP[ADMISSIONS](_db)
 
     if not process_anchor_year and years:
         raise ValueError("process_anchor_year must be set to True to use years filter!")
 
     if not process_anchor_year:
-        return select(table_.data)
+        return select(patients_table.data)
 
     # Process and include patient's anchor year, i.e., year of care information.
     subquery = select(
-        table_.data,
-        (func.substr(table_.anchor_year_group, 1, 4).cast(Integer)).label(
+        patients_table.data,
+        (func.substr(patients_table.anchor_year_group, 1, 4).cast(Integer)).label(
             "anchor_year_group_start"
         ),
-        (func.substr(table_.anchor_year_group, 8, 12).cast(Integer)).label(
+        (func.substr(patients_table.anchor_year_group, 8, 12).cast(Integer)).label(
             "anchor_year_group_end"
         ),
     ).subquery()
@@ -93,6 +103,14 @@ def patients(
 
     if years:
         subquery = select(subquery).where(in_(subquery.c.year, years)).subquery()
+
+    admissions_subquery = select(admissions_table.data).subquery()
+    subquery = (
+        select(subquery, admissions_subquery)
+        .where(subquery.c.subject_id == admissions_subquery.c.subject_id)
+        .subquery()
+    )
+
     return QueryInterface(_db, subquery)
 
 
@@ -158,7 +176,7 @@ def _diagnoses(
 
     """
     # Get diagnoses.
-    table_ = TABLE_MAP["diagnoses"](_db)
+    table_ = TABLE_MAP[DIAGNOSES](_db)
     subquery = select(table_.data).subquery()
 
     # Filter by version.
@@ -217,7 +235,7 @@ def diagnoses(
 
     """
     # Get patient diagnoses.
-    table_ = TABLE_MAP["patient_diagnoses"](_db)
+    table_ = TABLE_MAP[PATIENT_DIAGNOSES](_db)
     subquery = select(table_.data).subquery()
 
     # Filter by version
@@ -276,7 +294,7 @@ def _event_labels(
         Event labels filtered based on category, or substring.
 
     """
-    table_ = TABLE_MAP["event_labels"](_db)
+    table_ = TABLE_MAP[EVENT_LABELS](_db)
     subquery = select(table_.data).subquery()
 
     # Filter by category.
@@ -325,7 +343,7 @@ def events(
         Constructed query, wrapped in an interface object.
 
     """
-    table_ = TABLE_MAP["events"](_db)
+    table_ = TABLE_MAP[EVENTS](_db)
     subquery = select(table_.data).subquery()
 
     labels_subquery = _event_labels(category=category)
