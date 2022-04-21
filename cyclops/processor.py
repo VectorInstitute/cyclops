@@ -66,6 +66,7 @@ def featurize(
                 dataframe.drop(DIAGNOSIS_CODE, axis=1, inplace=True)
             static_features = gather_static_features(dataframe)
             feature_handler.add_features(static_features)
+            
     if temporal_data:
         for dataframe in temporal_data:
             dataframe = clean_events(dataframe)

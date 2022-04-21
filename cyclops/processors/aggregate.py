@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Union
 
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
@@ -49,7 +50,7 @@ class Aggregator:
     window: int = 24
 
 
-def _filter_upto_window_since_admission(
+def filter_upto_window_since_admission(
     data: pd.DataFrame, window: int = 24
 ) -> pd.DataFrame:
     """Filter data based on single time window value.
@@ -107,7 +108,7 @@ def gather_event_features(
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
-    data = _filter_upto_window_since_admission(data, window=aggregator.window)
+    data = filter_upto_window_since_admission(data, window=aggregator.window)
     log_counts_step(data, "Filtering events within window...", columns=True)
     event_names = list(data[EVENT_NAME].unique())
 
@@ -115,7 +116,7 @@ def gather_event_features(
     features = pd.DataFrame(columns=columns)
 
     grouped_events = data.groupby([ENCOUNTER_ID])
-    for encounter_id, events in grouped_events:
+    for encounter_id, events in tqdm(grouped_events):
         events[TIMESTEP] = (
             events[EVENT_TIMESTAMP] - min(events[EVENT_TIMESTAMP])
         ) / pd.Timedelta(hours=aggregator.bucket_size)
