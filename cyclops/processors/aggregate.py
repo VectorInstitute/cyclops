@@ -85,6 +85,14 @@ def gather_event_features(
 ) -> Union[pd.DataFrame, pd.MultiIndex]:
     """Gather events from encounters into time-series features.
 
+    All the event data is grouped based on encounters. For each
+    encounter, the number of timesteps is determined, and the
+    event value for each event belonging to a timestep
+    is gathered accordingly to create a DataFrame of features,
+    where the number of feature columns is equal to number of
+    event names, e.g. lab tests + vital measurements. The features
+    DataFrame is then indexable using encounter_id and timestep.
+
     Parameters
     ----------
     data: pandas.DataFrame
@@ -104,22 +112,31 @@ def gather_event_features(
     event_names = list(data[EVENT_NAME].unique())
     encounters = list(data[ENCOUNTER_ID].unique())
 
-    timestep_col = np.zeros(len(data)).astype(int)
+    columns = [ENCOUNTER_ID, TIMESTEP] + event_names
+    features = pd.DataFrame(columns=columns)
 
-    grouped_events = data.groupby([ENCOUNTER_ID, EVENT_NAME])
-    index = 0
-    for (encounter_id, event_name), events in grouped_events:
-        earliest_ts = min(events[EVENT_TIMESTAMP])
-        for _, event in events.iterrows():
-            event_ts = event[EVENT_TIMESTAMP]
-            timestep = (event_ts - earliest_ts) / pd.Timedelta(
-                hours=aggregator.bucket_size
+    grouped_events = data.groupby([ENCOUNTER_ID])
+    for encounter_id, events in grouped_events:
+        events[TIMESTEP] = (
+            events[EVENT_TIMESTAMP] - min(events[EVENT_TIMESTAMP])
+        ) / pd.Timedelta(hours=aggregator.bucket_size)
+        events[TIMESTEP] = events[TIMESTEP].astype("int")
+        num_timesteps = max(events[TIMESTEP].unique())
+
+        for timestep in range(num_timesteps):
+            events_values_timestep = [np.nan for _ in range(len(event_names))]
+            events_timestep = events[events[TIMESTEP] == timestep]
+
+            for _, event_timestep in events_timestep.iterrows():
+                events_values_timestep[
+                    event_names.index(event_timestep[EVENT_NAME])
+                ] = event_timestep[EVENT_VALUE]
+            events_values_timestep = pd.DataFrame(
+                [[encounter_id, timestep, *events_values_timestep]],
+                columns=columns,
             )
-            timestep_col[index] = int(timestep)
-            index += 1
-    data[TIMESTEP] = timestep_col.tolist()
+            features = pd.concat([features, events_values_timestep])
 
-    features = data.copy()
     features = features.reset_index()
     features = features.set_index([ENCOUNTER_ID, TIMESTEP])
 

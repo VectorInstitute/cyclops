@@ -8,10 +8,9 @@ import pandas as pd
 
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import (
-    ENCOUNTER_ID,
-    VITAL_MEASUREMENT_NAME,
-    VITAL_MEASUREMENT_TIMESTAMP,
-    VITAL_MEASUREMENT_VALUE,
+    EVENT_NAME,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT
 )
 from cyclops.processors.constants import NEGATIVE_RESULT_TERMS, POSITIVE_RESULT_TERMS
 from cyclops.processors.string_ops import (
@@ -22,6 +21,7 @@ from cyclops.processors.string_ops import (
     strip_whitespace,
     to_lower,
 )
+from cyclops.processors.utils import log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -62,85 +62,150 @@ def is_supported(event_name: str) -> bool:
     return event_name not in UNSUPPORTED
 
 
-@time_function
-def process(self) -> pd.DataFrame:
-    """Process raw vitals data towards making them feature-ready.
+def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
+    """Drop events currently not supported for processing.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input data.
 
     Returns
     -------
-    pandas.DataFrame:
-        Processed lab features.
+    pandas.DataFrame
+        Output data with dropped events (rows) which had unsupported events.
 
     """
-    self._log_counts_step("Processing raw vitals data...")
-
-    self._aggregate_vitals()
-    self._drop_unsupported_vitals()
-    self._normalize_values()
-
-    return self._create_features()
+    data = data.loc[data[EVENT_NAME].apply(is_supported)]
+    log_counts_step(data, "Drop unsupported events...", columns=True)
+    
+    return data
 
 
-def _normalize_values(self) -> None:
-    """Normalize vital values, e.g. fill empty strings with NaNs."""
-    self.data[VITAL_MEASUREMENT_VALUE][
-        self.data[VITAL_MEASUREMENT_VALUE].apply(
+def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
+    """Normalize event names.
+
+    Perform basic cleaning/house-keeping of event names.
+    e.g. remove parantheses from the measurement-name,
+    convert to lower-case.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Output data with normalized event names.
+
+    """
+    data[EVENT_NAME] = data[EVENT_NAME].apply(
+        remove_text_in_parentheses
+    )
+    data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
+    log_counts_step(
+        data, "Remove text in parentheses and normalize lab test names...",
+        columns=True
+    )
+    
+    return data
+
+
+def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
+    """Normalize event values.
+
+    Perform basic cleaning/house-keeping of event values.
+    e.g. fill empty strings with NaNs, convert some strings to
+    equivalent boolean or numeric, so they can be used as features.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Output data with normalized event values.
+
+    """
+    data = data.copy()
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(
+        fix_inequalities
+    )
+    log_counts_step(data, "Fixing inequalities and removing outlier values...", columns=True)
+    
+    data[EVENT_VALUE][
+        data[EVENT_VALUE].apply(
             find_string_match, args=("|".join(POSITIVE_RESULT_TERMS),)
         )
     ] = "1"
-    self.data[VITAL_MEASUREMENT_VALUE][
-        self.data[VITAL_MEASUREMENT_VALUE].apply(
+    data[EVENT_VALUE][
+        data[EVENT_VALUE].apply(
             find_string_match, args=("|".join(NEGATIVE_RESULT_TERMS),)
         )
     ] = "0"
-    self._log_counts_step("Convert Positive/Negative to 1/0...")
+    log_counts_step(data, "Convert Positive/Negative to 1/0...", columns=True)
 
-    self.data[VITAL_MEASUREMENT_VALUE] = self.data[VITAL_MEASUREMENT_VALUE].apply(
-        fill_missing_with_nan
-    )
-    self._log_counts_step("Fill empty result string values with NaN...")
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(fill_missing_with_nan)
+    log_counts_step(data, "Fill empty result string values with NaN...", columns=True)
 
-    self.data[VITAL_MEASUREMENT_VALUE] = self.data[VITAL_MEASUREMENT_VALUE].astype(
-        "float"
-    )
+    data[EVENT_VALUE] = data[EVENT_VALUE].astype("float")
     LOGGER.info("Converting string result values to numeric...")
+    
+    return data
 
 
-def _drop_unsupported_vitals(self) -> None:
-    """Drop some vitals currently not supported."""
-    self.data = self.data[
-        ~self.data[VITAL_MEASUREMENT_NAME].apply(find_string_match, args=("oxygen",))
-    ]
-    self._log_counts_step("Drop oxygen flow rate, saturation samples (unsupported)...")
+def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
+    """Normalize event value units.
 
+    Perform basic cleaning/house-keeping of event value units.
+    e.g. converting units to SI.
 
-def _aggregate_vitals(self) -> None:
-    """Aggregate vitals based on static or time-interval windows."""
-    self.data = filter_within_admission_window(self.data, VITAL_MEASUREMENT_TIMESTAMP)
-    self._log_counts_step("Aggregating vitals within aggregation window...")
-
-
-def _create_features(self) -> pd.DataFrame:
-    """For each vital measurement, create appropriate features.
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input data.
 
     Returns
     -------
-    pandas.DataFrame:
-        Processed vitals.
+    pandas.DataFrame
+        Output data with normalized event value units.
 
     """
-    LOGGER.info("Creating features...")
-    vitals_names = list(self.data[VITAL_MEASUREMENT_NAME].unique())
-    encounters = list(self.data[ENCOUNTER_ID].unique())
-    LOGGER.info(
-        "# vitals features: %d, # encounters: %d",
-        len(vitals_names),
-        len(encounters),
+    LOGGER.info("Cleaning units and converting to SI...")
+    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(
+        to_lower
     )
-    features = pd.DataFrame(index=encounters, columns=vitals_names)
+    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(
+        strip_whitespace
+    )
+    
+    return data
 
-    grouped_vitals = self.data.groupby([ENCOUNTER_ID, VITAL_MEASUREMENT_NAME])
-    for (encounter_id, vital_name), vitals in grouped_vitals:
-        features.loc[encounter_id, vital_name] = vitals[VITAL_MEASUREMENT_VALUE].mean()
 
-    return features
+@time_function
+def clean_events(data) -> pd.DataFrame:
+    """Pre-process and clean raw event data.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Raw event data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Cleaned event data.
+
+    """
+    log_counts_step(data, "Cleaning raw event data...", columns=True)
+    data = drop_unsupported(data)
+    data = normalize_names(data)
+    data = normalize_values(data)
+    
+    if EVENT_VALUE_UNIT in list(data.columns):
+        data = normalize_units(data)
+
+    return data

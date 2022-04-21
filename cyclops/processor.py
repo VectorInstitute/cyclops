@@ -22,6 +22,7 @@ from cyclops.processors.column_names import (
     SEX,
 )
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
+from cyclops.processors.events import clean_events
 from cyclops.processors.feature_handler import FeatureHandler
 from cyclops.processors.utils import check_must_have_columns, gather_columns
 
@@ -77,7 +78,8 @@ def featurize(
             feature_handler.add_features(static_features)
     if temporal_data:
         for dataframe in temporal_data:
+            dataframe = clean_events(dataframe)
             temporal_features = gather_event_features(dataframe, aggregator=aggregator)
-            # feature_handler.add_features(temporal_features)
+            feature_handler.add_features(temporal_features)
 
-    return temporal_features
+    return feature_handler
