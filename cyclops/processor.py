@@ -10,17 +10,7 @@ from cyclops.processors.aggregate import (
     gather_event_features,
     gather_static_features,
 )
-from cyclops.processors.column_names import (
-    ADMIT_TIMESTAMP,
-    DIAGNOSIS_CODE,
-    DISCHARGE_TIMESTAMP,
-    ENCOUNTER_ID,
-    EVENT_NAME,
-    EVENT_TIMESTAMP,
-    EVENT_VALUE,
-    EVENT_VALUE_UNIT,
-    SEX,
-)
+from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import clean_events
 from cyclops.processors.feature_handler import FeatureHandler

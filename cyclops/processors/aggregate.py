@@ -110,7 +110,6 @@ def gather_event_features(
     data = _filter_upto_window_since_admission(data, window=aggregator.window)
     log_counts_step(data, "Filtering events within window...", columns=True)
     event_names = list(data[EVENT_NAME].unique())
-    encounters = list(data[ENCOUNTER_ID].unique())
 
     columns = [ENCOUNTER_ID, TIMESTEP] + event_names
     features = pd.DataFrame(columns=columns)

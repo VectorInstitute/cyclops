@@ -68,7 +68,7 @@ GEMINI_COLUMN_MAP = {
 
 
 @debug_query_msg
-def patients(  # pylint=disable=too-many-arguments
+def patients(  # pylint: disable=too-many-arguments
     years: List[str] = None,
     hospitals: List[str] = None,
     from_date: Optional[str] = None,

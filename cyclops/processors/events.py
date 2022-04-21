@@ -7,11 +7,7 @@ import logging
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.column_names import (
-    EVENT_NAME,
-    EVENT_VALUE,
-    EVENT_VALUE_UNIT
-)
+from cyclops.processors.column_names import EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT
 from cyclops.processors.constants import NEGATIVE_RESULT_TERMS, POSITIVE_RESULT_TERMS
 from cyclops.processors.string_ops import (
     fill_missing_with_nan,
@@ -78,7 +74,7 @@ def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
     """
     data = data.loc[data[EVENT_NAME].apply(is_supported)]
     log_counts_step(data, "Drop unsupported events...", columns=True)
-    
+
     return data
 
 
@@ -100,15 +96,12 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
         Output data with normalized event names.
 
     """
-    data[EVENT_NAME] = data[EVENT_NAME].apply(
-        remove_text_in_parentheses
-    )
+    data[EVENT_NAME] = data[EVENT_NAME].apply(remove_text_in_parentheses)
     data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
     log_counts_step(
-        data, "Remove text in parentheses and normalize lab test names...",
-        columns=True
+        data, "Remove text in parentheses and normalize lab test names...", columns=True
     )
-    
+
     return data
 
 
@@ -131,11 +124,11 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
 
     """
     data = data.copy()
-    data[EVENT_VALUE] = data[EVENT_VALUE].apply(
-        fix_inequalities
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(fix_inequalities)
+    log_counts_step(
+        data, "Fixing inequalities and removing outlier values...", columns=True
     )
-    log_counts_step(data, "Fixing inequalities and removing outlier values...", columns=True)
-    
+
     data[EVENT_VALUE][
         data[EVENT_VALUE].apply(
             find_string_match, args=("|".join(POSITIVE_RESULT_TERMS),)
@@ -153,7 +146,7 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
 
     data[EVENT_VALUE] = data[EVENT_VALUE].astype("float")
     LOGGER.info("Converting string result values to numeric...")
-    
+
     return data
 
 
@@ -175,13 +168,9 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
 
     """
     LOGGER.info("Cleaning units and converting to SI...")
-    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(
-        to_lower
-    )
-    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(
-        strip_whitespace
-    )
-    
+    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(to_lower)
+    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(strip_whitespace)
+
     return data
 
 
@@ -204,7 +193,7 @@ def clean_events(data) -> pd.DataFrame:
     data = drop_unsupported(data)
     data = normalize_names(data)
     data = normalize_values(data)
-    
+
     if EVENT_VALUE_UNIT in list(data.columns):
         data = normalize_units(data)
 
