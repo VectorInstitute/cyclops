@@ -83,30 +83,30 @@ def filter_upto_window_since_admission(
 
 def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.float64:
     """Aggregate multiple values within a bucket into single value.
-    
+
     Based on the strategy, collapse multiple values into a single
     value. For example, if strategy is 'mean', then return
     mean of values.
-    
+
     Parameters
     ----------
     values: pandas.Series
         List of input values that fall within the same bucket.
     strategy: str, optional
         Strategy for aggregation, options are ['mean', 'median']
-        
+
     Returns
     -------
     numpy.float64
         Single aggregated numerical value for the bucket.
-    
+
     """
     if strategy == "mean":
         return values.mean()
     if strategy == "median":
         return values.median()
-    
-    raise NotImplementedError(f"Provided {strategy} is not a valid one!") 
+
+    raise NotImplementedError(f"Provided {strategy} is not a valid one!")
 
 
 @time_function
@@ -153,12 +153,16 @@ def gather_event_features(
         num_timesteps = max(events[TIMESTEP].unique())
 
         for timestep in range(num_timesteps + 1):
-            events_values_timestep = pd.Series([np.nan for _ in range(len(event_names))], index=event_names)
+            events_values_timestep = pd.Series(
+                [np.nan for _ in range(len(event_names))], index=event_names
+            )
             events_timestep = events[events[TIMESTEP] == timestep]
             grouped_events_timestep = events_timestep.groupby([EVENT_NAME])
 
             for event_name, event_timestep in grouped_events_timestep:
-                events_values_timestep[event_name] = aggregate_values_in_bucket(event_timestep[EVENT_VALUE], strategy=aggregator.strategy)
+                events_values_timestep[event_name] = aggregate_values_in_bucket(
+                    event_timestep[EVENT_VALUE], strategy=aggregator.strategy
+                )
             events_values_timestep = pd.DataFrame(
                 [[encounter_id, timestep, *events_values_timestep]],
                 columns=columns,
