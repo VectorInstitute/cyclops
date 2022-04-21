@@ -488,8 +488,7 @@ def apply_to_attributes(
     cols: List,
     func_: Callable,
 ) -> Select:
-    """
-    Apply a function to some attributes.
+    """Apply a function to some attributes.
 
     Parameters
     ----------

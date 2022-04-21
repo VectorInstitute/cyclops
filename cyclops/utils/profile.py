@@ -24,6 +24,7 @@ def time_function(func: Callable) -> Callable:
     -------
     Callable
         Wrapper function to apply as decorator.
+
     """
 
     def wrapper_func(*args, **kwargs):

@@ -27,6 +27,7 @@ class MLP(nn.Module):  # pylint: disable=too-few-public-methods
             Size of the output.
         activation: str
             Activation function.
+
     """
 
     def __init__(  # pylint: disable=R0913
@@ -51,6 +52,7 @@ class MLP(nn.Module):  # pylint: disable=too-few-public-methods
             Size of the output.
         activation: str, optional
             Activation function.
+
         """
         super().__init__()
         self.num_layers = num_layers
@@ -104,5 +106,6 @@ class MLP(nn.Module):  # pylint: disable=too-few-public-methods
         -------
         torch.Tensor
             Model output.
+
         """
         return self.model(input_)

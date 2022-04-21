@@ -35,6 +35,7 @@ def formatter_message(message: str, use_color: bool = True) -> str:
     -------
     str
         Formatted message.
+
     """
     if use_color:
         message = message.replace("$RESET", RESET_SEQ).replace("$BOLD", BOLD_SEQ)
@@ -50,6 +51,7 @@ class ColoredFormatter(logging.Formatter):
     ----------
     use_color: bool
         Flag to toggle use of color.
+
     """
 
     def __init__(
@@ -63,6 +65,7 @@ class ColoredFormatter(logging.Formatter):
             Message format.
         use_color: bool
             Flag to set using colored formatting.
+
         """
         logging.Formatter.__init__(self, msg)
         self.use_color = use_color
@@ -79,6 +82,7 @@ class ColoredFormatter(logging.Formatter):
         -------
         str
             Formatted string for log.
+
         """
         levelname = record.levelname
         if self.use_color and levelname in COLORS:
@@ -96,8 +100,7 @@ def setup_logging(
     logger: Optional[logging.Logger] = None,
     fmt: Optional[str] = formatter_message(LOG_FORMAT, True),
 ):
-    """
-    Create logger, and set it up.
+    """Create logger, and set it up.
 
     Parameters
     ----------
@@ -111,6 +114,7 @@ def setup_logging(
         Pass logger if already exists, else a new logger object is created.
     fmt : str, optional
         Logging format, default format specified above.
+
     """
     logger = logger if logger else logging.getLogger()
     logger.setLevel(log_level)
