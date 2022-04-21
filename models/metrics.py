@@ -20,6 +20,7 @@ class AverageBinaryClassificationMetric:
         List of predictions.
     targets: list
         List of targets.
+
     """
 
     def reset(self):
@@ -43,6 +44,7 @@ class AverageBinaryClassificationMetric:
             Prediction at current step.
         targets: torch.Tensor
             Classification targets at current step.
+
         """
         preds = logits.detach().sigmoid().cpu().numpy()
         targets = targets.cpu().numpy()
@@ -60,6 +62,7 @@ class AverageBinaryClassificationMetric:
         dict
             Computed metrics (average loss, accuracy, f1 score,\
                     precision, recall and AUC).
+
         """
         avg_loss = (
             sum(self.loss_list) / len(self.loss_list) if len(self.loss_list) > 0 else 0

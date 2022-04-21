@@ -12,5 +12,6 @@ def get_log_file_path() -> str:
     -------
     str
         Path to store log file.
+
     """
     return os.path.join(PROJECT_ROOT, "log.log")

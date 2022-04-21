@@ -33,6 +33,12 @@ repos:
       entry: pflake8
       files: ".*.py$"
 
+  - repo: https://github.com/myint/docformatter
+    rev: v1.3.1
+    hooks:
+      - id: docformatter
+        args: [--in-place, --recursive, --wrap-summaries=88, --blank]
+
   - repo: https://github.com/PyCQA/pydocstyle
     rev: 6.1.1
     hooks:

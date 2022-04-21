@@ -15,6 +15,7 @@ def register_model(model: type, name: Optional[str] = None):
     model: type
         Model implementation wrapped in a class.
     name: str, optional
+
     """
     if not name:
         name = model.__name__
@@ -39,6 +40,7 @@ def get_model(name: str) -> Optional[type]:
     ------
     NotImplementedError
         If model name provided is not in the catalog.
+
     """
     if name not in MODEL_CATALOG:
         raise NotImplementedError

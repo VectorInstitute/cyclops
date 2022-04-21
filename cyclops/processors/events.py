@@ -54,6 +54,7 @@ def is_supported(event_name: str) -> bool:
     -------
     bool
         If supported return True, else False.
+
     """
     return event_name not in UNSUPPORTED
 

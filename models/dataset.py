@@ -27,6 +27,7 @@ def register_dataset(
     -------
     Callable:
         Function call that to register dataset, that can be used as a decorator.
+
     """
 
     def wrap(func):
@@ -63,6 +64,7 @@ class BaseData:
         -------
         tuple
             Input and target.
+
         """
         return self.inputs[idx], self.target[idx]
 
@@ -73,6 +75,7 @@ class BaseData:
         -------
         int
             Size of dataset.
+
         """
         return len(self.target)
 
@@ -83,6 +86,7 @@ class BaseData:
         -------
         int
             Number of features.
+
         """
         return self.inputs.size(dim=1)
 
@@ -99,6 +103,7 @@ def get_dataset(name):
     -------
     Callable
         Function that can be called to return dataset(s).
+
     """
     return DATA_REGISTRY[name]
 
@@ -134,6 +139,7 @@ def pandas_to_dataset(
         Dataset as a pandas dataframe.
     feature_cols: list
         List of feature columns to consider.
+
     """
     if stats is not None:
         dataframe[config.numerical_features] = (

@@ -46,6 +46,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
     inspector: sqlalchemy.engine.reflection.Inspector
         Module for schema inspection.
     session: sqlalchemy.orm.session.Session
+
     """
 
     def __init__(self, config: argparse.Namespace):
@@ -55,6 +56,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         ----------
         config: argparse.Namespace
             Configuration stored in object.
+
         """
         self.config = config
         self.engine = None
@@ -127,6 +129,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         -------
         pd.DataFrame
             Extracted data from query.
+
         """
         # Limit the results returned
         if limit is not None:

@@ -78,6 +78,7 @@ def convert_unit(from_unit, to_unit):
     -------
     int
         The scale of one from_unit to to_unit.
+
     """
     if from_unit == to_unit:
         return 1  # scale is 1

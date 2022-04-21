@@ -28,6 +28,7 @@ class BaseGeminiTask(luigi.Task):  # pylint: disable=too-few-public-methods
         -------
         str
             Folder to store artifacts.
+
         """
         folder = os.path.join(
             self.artifact_folder,

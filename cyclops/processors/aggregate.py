@@ -43,6 +43,7 @@ class Aggregator:
         100 hours after admission time, for a given encounter is
         considered. This can be negative as well, in which case,
         events from the patient's time in the ER will be considered.
+
     """
 
     strategy: str = "mean"
