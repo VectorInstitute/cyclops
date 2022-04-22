@@ -43,7 +43,7 @@ def to_datetime_format(date: str) -> datetime:
 class DBSchema:
     """Database schema wrapper.
 
-    Attributes
+    Parameters
     ----------
     name: str
         Name of schema.
@@ -60,7 +60,7 @@ class DBSchema:
 class DBTable:
     """Database table wrapper.
 
-    Attributes
+    Parameters
     ----------
     name: str
         Name of table.

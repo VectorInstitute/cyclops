@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../../cyclops"))
 sys.path.insert(0, os.path.abspath("../../cyclops/processors"))
 sys.path.insert(0, os.path.abspath("../../cyclops/utils"))
-sys.path.insert(0, os.path.abspath("../../cyclops/queries"))
+sys.path.insert(0, os.path.abspath("../../cyclops/query"))
 
 
 # -- Project information -----------------------------------------------------
@@ -40,12 +40,18 @@ extensions = [
     "sphinx.ext.intersphinx",
     "numpydoc",
     "sphinx.ext.viewcode",
+    "sphinxcontrib.apidoc",
 ]
 numpydoc_show_inherited_class_members = False
 numpydoc_show_class_members = False
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
+
+apidoc_module_dir = "../../cyclops"
+apidoc_excluded_paths = ["tests", "models", "*workflow"]
+apidoc_output_dir = "reference/api"
+apidoc_separate_modules = True
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/", None),
