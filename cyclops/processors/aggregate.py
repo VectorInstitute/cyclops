@@ -137,7 +137,7 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
 
 
 @time_function
-def gather_event_features(data, aggregator: Aggregator) -> pd.DataFrame:
+def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.DataFrame:
     """Gather events from encounters into time-series features.
 
     All the event data is grouped based on encounters. For each
@@ -201,7 +201,7 @@ def gather_event_features(data, aggregator: Aggregator) -> pd.DataFrame:
 
 
 @time_function
-def gather_static_features(data) -> pd.DataFrame:
+def gather_static_features(data: pd.DataFrame) -> pd.DataFrame:
     """Gathers encounter specific static features.
 
     Patient statics gathered into features. This function groups patient static
