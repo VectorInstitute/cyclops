@@ -218,12 +218,6 @@ def gather_static_features(data) -> pd.DataFrame:
     pandas.DataFrame:
         Processed static features.
 
-    Raises
-    ------
-    AssertionError
-        Asserts to ensure that each static features have a single unique value
-        for a patient for the encounter.
-
     """
     log_counts_step(data, "Gathering static features...", columns=True)
     encounters = list(data[ENCOUNTER_ID].unique())
