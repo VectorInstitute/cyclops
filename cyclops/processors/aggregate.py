@@ -30,7 +30,7 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 class Aggregator:
     """Aggregation options for temporal data.
 
-    Attributes
+    Parameters
     ----------
     strategy: str
         Strategy to aggregate within bucket. ['mean', 'median']

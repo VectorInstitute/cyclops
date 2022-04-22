@@ -9,9 +9,8 @@ Welcome to cyclops's documentation!
    intro
    gemini_hpc
    design
-   workflow
    coverage
-   api
+   reference/api/modules
 
 
 Indices and tables

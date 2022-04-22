@@ -21,7 +21,7 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 class QueryInterface:
     """An interface dataclass to actually wrap queries, and run them.
 
-    Attributes
+    Parameters
     ----------
     _db: cyclops.orm.Database
         Database object to create ORM, and query data.
