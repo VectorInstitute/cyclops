@@ -4,6 +4,7 @@
 
 # Generic.
 YEAR = "year"
+MONTH = "month"
 
 # Feature handler.
 FEATURE_TYPE = "feature_type"

@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass
-from typing import Union
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -51,14 +51,19 @@ class Aggregator:
     window: int = 24
 
 
-def filter_upto_window_since_admission(
-    data: pd.DataFrame, window: int = 24
+def filter_upto_window(
+    data: pd.DataFrame,
+    window: int = 24,
+    start_at_admission: bool = False,
+    start_window_ts: datetime = None,
 ) -> pd.DataFrame:
-    """Filter data based on single time window value.
+    """Filter data based on window value.
 
     For e.g. if window is 24 hrs, then all data for the encounter
-    upto after 24 hrs of admission are considered. Useful for
-    one-shot prediction.
+    upto after 24 hrs after the first event timestamp are considered. If
+    'start_at_admission' is True, the all events before admission are dropped.
+    Optionally, a start timestamp can be provided as the starting point to the
+    window.
 
     Parameters
     ----------
@@ -66,17 +71,34 @@ def filter_upto_window_since_admission(
         Data before filtering.
     window: int, optional
         Window (no. of hrs) upto after admission to consider.
+    start_at_admission: bool, optional
+        Flag to say if the window should start at the time of admission.
+    start_window_ts: datetime.datetime, optional
+        Specific time from which the window should start.
 
     Returns
     -------
     pandas.DataFrame
         Filtered data frame, with aggregates collected within window.
 
+    Raises
+    ------
+    ValueError
+        Incase user specifies both 'start_at_admission' and 'start_window_ts',
+        an error is raised.
+
     """
+    if start_at_admission and start_window_ts:
+        raise ValueError("Can only have a unique starting point for window!")
     data_filtered = data.copy()
     sample_time = data_filtered[EVENT_TIMESTAMP]
-    admit_time = data_filtered[ADMIT_TIMESTAMP]
-    window_condition = (sample_time - admit_time) / pd.Timedelta(hours=1)
+    start_time = min(sample_time)
+    if start_at_admission:
+        start_time = data_filtered[ADMIT_TIMESTAMP]
+    if start_window_ts:
+        start_time = start_window_ts
+    data_filtered = data_filtered.loc[sample_time >= start_time]
+    window_condition = (sample_time - start_time) / pd.Timedelta(hours=1)
     data_filtered = data_filtered.loc[window_condition <= window]
     return data_filtered
 
@@ -100,6 +122,11 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
     numpy.float64
         Single aggregated numerical value for the bucket.
 
+    Raises
+    ------
+    NotImplementedError
+        Asserts if supplied input strategy option is not recognised (implemented).
+
     """
     if strategy == "mean":
         return values.mean()
@@ -110,9 +137,7 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
 
 
 @time_function
-def gather_event_features(
-    data, aggregator: Aggregator
-) -> Union[pd.DataFrame, pd.MultiIndex]:
+def gather_event_features(data, aggregator: Aggregator) -> pd.DataFrame:
     """Gather events from encounters into time-series features.
 
     All the event data is grouped based on encounters. For each
@@ -132,12 +157,12 @@ def gather_event_features(
 
     Returns
     -------
-    pandas.DataFrame or pd.MultiIndex:
+    pandas.DataFrame:
         Processed event features.
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
-    data = filter_upto_window_since_admission(data, window=aggregator.window)
+    data = filter_upto_window(data, window=aggregator.window)
     log_counts_step(data, "Filtering events within window...", columns=True)
     event_names = list(data[EVENT_NAME].unique())
 
