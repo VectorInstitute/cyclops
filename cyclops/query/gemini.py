@@ -19,7 +19,7 @@ from cyclops.processors.column_names import (
     EVENT_VALUE_UNIT,
     SEX,
 )
-from cyclops.processors.constants import EMPTY_STRING, YEAR
+from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
 from cyclops.query.interface import QueryInterface
 from cyclops.query.utils import (
     DBTable,
@@ -70,6 +70,7 @@ GEMINI_COLUMN_MAP = {
 @debug_query_msg
 def patients(  # pylint: disable=too-many-arguments
     years: List[str] = None,
+    months: List[str] = None,
     hospitals: List[str] = None,
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
@@ -82,6 +83,8 @@ def patients(  # pylint: disable=too-many-arguments
     ----------
     years: list of str, optional
         Years for which patient encounters are to be filtered.
+    months: list of str, optional
+        Months for which patient encounters are to be filtered.
     hospitals: list of str, optional
         Hospital sites from which patient encounters are to be filtered.
     from_date: str, optional
@@ -107,6 +110,12 @@ def patients(  # pylint: disable=too-many-arguments
         subquery = (
             select(subquery)
             .where(in_(extract(YEAR, subquery.c.admit_timestamp), years))
+            .subquery()
+        )
+    if months:
+        subquery = (
+            select(subquery)
+            .where(in_(extract(MONTH, subquery.c.admit_timestamp), months))
             .subquery()
         )
     if hospitals:
