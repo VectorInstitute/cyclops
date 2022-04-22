@@ -7,12 +7,14 @@ on:
     paths:
       - .github/workflows/static_code_analysis.yml
       - '**.py'
+      - '**.ipynb'
   pull_request:
     branches:
       - master
     paths:
       - .github/workflows/static_code_analysis.yml
       - '**.py'
+      - '**.ipynb'
 
 jobs:
   run-code-check:
