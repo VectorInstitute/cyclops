@@ -3,6 +3,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,7 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     TIMESTEP,
 )
+from cyclops.processors.constants import MEAN, MEDIAN
 from cyclops.processors.utils import log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -32,23 +34,57 @@ class Aggregator:
 
     Parameters
     ----------
-    strategy: str
+    strategy: str, optional
         Strategy to aggregate within bucket. ['mean', 'median']
-    bucket_size: float
+    bucket_size: float, optional
         Size of a single step in the time-series in hours.
         For example, if 2, temporal data is aggregated into bins of 2 hrs.
-    window: float
+    window: float, optional
         Window length in hours, to consider for creating time-series.
         For example if its 100 hours, then all temporal data upto
         100 hours after admission time, for a given encounter is
         considered. This can be negative as well, in which case,
         events from the patient's time in the ER will be considered.
+    start_at_admission: bool, optional
+        Flag to say if the window should start at the time of admission.
+    start_window_ts: datetime.datetime, optional
+        Specific time from which the window should start.
 
     """
 
-    strategy: str = "mean"
+    strategy: str = MEAN
     bucket_size: int = 1
     window: int = 24
+    start_at_admission: bool = False
+    start_window_ts: Optional[datetime] = None
+
+
+def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
+    """Get the timestamp of the earliest event for an encounter.
+
+    Given 2 columns, i.e. encounter ID, and timestamp of events,
+    this function finds the timestamp of the earliest event for an
+    encounter, and returns that timestamp for all events.
+
+    Parameters
+    ----------
+    timestamps: pandas.DataFrame
+        Event timestamps and encounter IDs in a dataframe.
+
+    Returns
+    -------
+    pandas.Series
+        A series with earliest timestamp among events for each encounter.
+
+    """
+    earliest_ts_encounters = {}
+    for encounter_id, grouped_ts in timestamps.groupby(ENCOUNTER_ID):
+        earliest_ts_encounters[encounter_id] = min(grouped_ts[EVENT_TIMESTAMP])
+    earliest_ts = pd.Series(index=timestamps.index, dtype="datetime64[ns]")
+    for index, (encounter_id, _) in timestamps.iterrows():
+        earliest_ts[index] = earliest_ts_encounters[encounter_id]
+
+    return earliest_ts
 
 
 def filter_upto_window(
@@ -90,9 +126,12 @@ def filter_upto_window(
     """
     if start_at_admission and start_window_ts:
         raise ValueError("Can only have a unique starting point for window!")
+
     data_filtered = data.copy()
     sample_time = data_filtered[EVENT_TIMESTAMP]
-    start_time = min(sample_time)
+    start_time = get_earliest_ts_encounter(
+        data_filtered[[ENCOUNTER_ID, EVENT_TIMESTAMP]]
+    )
     if start_at_admission:
         start_time = data_filtered[ADMIT_TIMESTAMP]
     if start_window_ts:
@@ -100,6 +139,7 @@ def filter_upto_window(
     data_filtered = data_filtered.loc[sample_time >= start_time]
     window_condition = (sample_time - start_time) / pd.Timedelta(hours=1)
     data_filtered = data_filtered.loc[window_condition <= window]
+
     return data_filtered
 
 
@@ -128,9 +168,9 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
         Asserts if supplied input strategy option is not recognised (implemented).
 
     """
-    if strategy == "mean":
+    if strategy == MEAN:
         return values.mean()
-    if strategy == "median":
+    if strategy == MEDIAN:
         return values.median()
 
     raise NotImplementedError(f"Provided {strategy} is not a valid one!")
@@ -162,7 +202,12 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
-    data = filter_upto_window(data, window=aggregator.window)
+    data = filter_upto_window(
+        data,
+        window=aggregator.window,
+        start_at_admission=aggregator.start_at_admission,
+        start_window_ts=aggregator.start_window_ts,
+    )
     log_counts_step(data, "Filtering events within window...", columns=True)
     event_names = list(data[EVENT_NAME].unique())
 
