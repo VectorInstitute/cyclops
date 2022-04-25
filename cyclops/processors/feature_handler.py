@@ -584,6 +584,7 @@ class FeatureHandler:
             Features to add.
 
         """
+        print(len(self.features.index), type(features.index))
         if not isinstance(features, pd.DataFrame):
             raise ValueError("Input to feature handler must be a pandas.DataFrame.")
 

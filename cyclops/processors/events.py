@@ -11,7 +11,7 @@ from cyclops.processors.column_names import EVENT_NAME, EVENT_VALUE, EVENT_VALUE
 from cyclops.processors.constants import NEGATIVE_RESULT_TERMS, POSITIVE_RESULT_TERMS
 from cyclops.processors.string_ops import (
     fill_missing_with_nan,
-    find_string_match,
+    replace_if_string_match,
     fix_inequalities,
     remove_text_in_parentheses,
     strip_whitespace,
@@ -130,16 +130,8 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
         data, "Fixing inequalities and removing outlier values...", columns=True
     )
 
-    data[EVENT_VALUE][
-        data[EVENT_VALUE].apply(
-            find_string_match, args=("|".join(POSITIVE_RESULT_TERMS),)
-        )
-    ] = "1"
-    data[EVENT_VALUE][
-        data[EVENT_VALUE].apply(
-            find_string_match, args=("|".join(NEGATIVE_RESULT_TERMS),)
-        )
-    ] = "0"
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(replace_if_string_match, args=("|".join(POSITIVE_RESULT_TERMS), "1"))
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(replace_if_string_match, args=("|".join(NEGATIVE_RESULT_TERMS), "0"))
     log_counts_step(data, "Convert Positive/Negative to 1/0...", columns=True)
 
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(fill_missing_with_nan)
