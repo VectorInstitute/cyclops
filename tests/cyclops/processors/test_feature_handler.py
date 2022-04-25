@@ -1,5 +1,7 @@
 """Tests for feature handler module."""
 
+from unittest import TestCase
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -34,8 +36,8 @@ def test_category_to_numeric():
 
 
 @pytest.fixture
-def test_input():
-    """Create a test input."""
+def test_input_static():
+    """Create a test input (static)."""
     input_ = pd.DataFrame(index=[0, 1, 2, 4], columns=["A", "B", "C"])
     input_.loc[0] = ["sheep", 10, "0"]
     input_.loc[1] = ["cat", 2, "0"]
@@ -45,7 +47,7 @@ def test_input():
 
 
 @pytest.fixture
-def test_input_extra_column():
+def test_input_static_extra_column():
     """Create test input dataframe with single column to add."""
     input_ = pd.DataFrame(index=[0, 1, 2, 4], columns=["D"])
     input_.loc[0] = [15.0]
@@ -53,25 +55,87 @@ def test_input_extra_column():
     return input_
 
 
-def test_add_features(  # pylint: disable=redefined-outer-name
-    test_input, test_input_extra_column
+@pytest.fixture
+def test_input_temporal():
+    """Create a test input (temporal)."""
+    index = pd.MultiIndex.from_tuples(
+        [("sheep", 0), ("cat", 0), ("cat", 1), ("dog", 0)]
+    )
+    input_ = pd.DataFrame(index=index, columns=["A", "B", "C"])
+    input_.loc[("sheep", 0)] = ["cat", 10, "0"]
+    input_.loc[("cat", 0)] = ["dog", 2, "0"]
+    input_.loc[("cat", 1)] = ["cat", 3, "1"]
+    input_.loc[("dog", 0)] = ["camel", 9.1, "0"]
+    return input_
+
+
+def test_add_features_temporal(  # pylint: disable=redefined-outer-name
+    test_input_temporal,
 ):
     """Test adding features."""
     feature_handler = FeatureHandler()
-    feature_handler.add_features(test_input)
-    assert (feature_handler.features["A-cat"].values == [0, 1, 1, 0]).all()
-    assert (feature_handler.features["A-dog"].values == [0, 0, 0, 1]).all()
-    assert (feature_handler.features["B"].values == [10, 2, 3, 9.1]).all()
-    assert (feature_handler.features["C"].values == [0, 0, 1, 0]).all()
+    feature_handler.add_features(test_input_temporal)
+    assert (feature_handler.temporal.loc[("sheep", 0)] == [0, 1, 0, 10.0, 0]).all()
+    assert (feature_handler.temporal.loc[("cat", 0)] == [0, 0, 1, 2.0, 0]).all()
+    assert (feature_handler.temporal.loc[("cat", 1)] == [0, 1, 0, 3.0, 1]).all()
+    assert (feature_handler.temporal.loc[("dog", 0)] == [1, 0, 0, 9.1, 0]).all()
 
-    feature_handler.add_features(test_input_extra_column)
-    assert feature_handler.features["D"][0] == 15.0
-    assert feature_handler.features["D"][1] == 5.1
-    assert np.isnan(feature_handler.features["D"][2])
-    assert np.isnan(feature_handler.features["D"][4])
 
-    feature_handler = FeatureHandler(test_input)
-    assert (feature_handler.features["A-cat"].values == [0, 1, 1, 0]).all()
-    assert (feature_handler.features["A-dog"].values == [0, 0, 0, 1]).all()
-    assert (feature_handler.features["B"].values == [10, 2, 3, 9.1]).all()
-    assert (feature_handler.features["C"].values == [0, 0, 1, 0]).all()
+def test_add_features_static(  # pylint: disable=redefined-outer-name
+    test_input_static, test_input_static_extra_column
+):
+    """Test adding features."""
+    feature_handler = FeatureHandler()
+    feature_handler.add_features(test_input_static)
+    assert (feature_handler.static["A-cat"].values == [0, 1, 1, 0]).all()
+    assert (feature_handler.static["A-dog"].values == [0, 0, 0, 1]).all()
+    assert (feature_handler.static["B"].values == [10, 2, 3, 9.1]).all()
+    assert (feature_handler.static["C"].values == [0, 0, 1, 0]).all()
+
+    # Test properties.
+    assert all(
+        a == b
+        for a, b in zip(feature_handler.names, ["A-cat", "A-dog", "A-sheep", "B", "C"])
+    )
+    TestCase().assertDictEqual(
+        feature_handler.types,
+        {
+            "A-cat": "binary",
+            "A-dog": "binary",
+            "A-sheep": "binary",
+            "B": "numeric",
+            "C": "binary",
+        },
+    )
+
+    feature_handler.add_features(test_input_static_extra_column)
+    assert feature_handler.static["D"][0] == 15.0
+    assert feature_handler.static["D"][1] == 5.1
+    assert np.isnan(feature_handler.static["D"][2])
+    assert np.isnan(feature_handler.static["D"][4])
+
+    feature_handler = FeatureHandler(test_input_static)
+    assert (feature_handler.static["A-cat"].values == [0, 1, 1, 0]).all()
+    assert (feature_handler.static["A-dog"].values == [0, 0, 0, 1]).all()
+    assert (feature_handler.static["B"].values == [10, 2, 3, 9.1]).all()
+    assert (feature_handler.static["C"].values == [0, 0, 1, 0]).all()
+
+
+def test_drop_features_static(  # pylint: disable=redefined-outer-name
+    test_input_static,
+):
+    """Test dropping features."""
+    feature_handler = FeatureHandler()
+    feature_handler.add_features(test_input_static)
+    assert (feature_handler.static["A-cat"].values == [0, 1, 1, 0]).all()
+    assert (feature_handler.static["A-dog"].values == [0, 0, 0, 1]).all()
+    assert (feature_handler.static["B"].values == [10, 2, 3, 9.1]).all()
+    assert (feature_handler.static["C"].values == [0, 0, 1, 0]).all()
+
+    # Drop single feature.
+    feature_handler.drop_features(["B"])
+    assert "B" not in feature_handler.static.columns
+
+    # Drop categorical group of features.
+    feature_handler.drop_features("A")
+    assert all("A" not in col_name for col_name in feature_handler.static.columns)

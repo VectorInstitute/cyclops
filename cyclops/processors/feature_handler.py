@@ -14,7 +14,6 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from codebase_ops import get_log_file_path
 from cyclops.processors.constants import (
     BINARY,
-    CATEGORICAL_BINARY,
     FEATURE_TYPE,
     GROUP,
     MIN_MAX,
@@ -22,6 +21,8 @@ from cyclops.processors.constants import (
     NORMALIZATION_METHOD,
     NUMERIC,
     STANDARD,
+    STATIC,
+    TEMPORAL,
 )
 from cyclops.utils.log import setup_logging
 
@@ -89,6 +90,7 @@ def _category_to_numeric(
     if inplace:
         series.replace(map_dict, inplace=inplace)
         return series
+
     return series.replace(map_dict, inplace=inplace)
 
 
@@ -111,6 +113,7 @@ def _attempt_to_numeric(dataframe: pd.DataFrame) -> pd.DataFrame:
             dataframe[column] = pd.to_numeric(dataframe[column])
         except (ValueError, TypeError):
             pass
+
     return dataframe
 
 
@@ -362,17 +365,27 @@ class FeatureHandler:
         """
         self.meta: dict = {}
         self.normalization_method = normalization_method
-        self.features = pd.DataFrame()
+        self.features = {STATIC: pd.DataFrame(), TEMPORAL: pd.DataFrame()}
         if features is not None:
             self.add_features(features)
 
     @property
-    def unscaled(self) -> pd.DataFrame:
+    def static(self) -> pd.DataFrame:
+        """Return static features."""
+        return self.features[STATIC]
+
+    @property
+    def temporal(self) -> pd.DataFrame:
+        """Return temporal features."""
+        return self.features[TEMPORAL]
+
+    @property
+    def unscaled(self) -> Dict[str, pd.DataFrame]:
         """Return unscaled features."""
         return self.features
 
     @property
-    def scaled(self) -> pd.DataFrame:
+    def scaled(self) -> Dict[str, pd.DataFrame]:
         """Scale and return scaled dataframe."""
         return self._scale()
 
@@ -383,10 +396,10 @@ class FeatureHandler:
         Returns
         -------
         list
-            List of feature names.
+            List of all feature names.
 
         """
-        feature_names = list(self.features.columns)
+        feature_names = list(self.static.columns) + list(self.temporal.columns)
         return feature_names
 
     @property
@@ -404,52 +417,79 @@ class FeatureHandler:
         return {f: meta.get_feature_type() for f, meta in self.meta.items()}
 
     @property
-    def targets(self) -> list:
-        """Access as attribute, which feature columns are potential target variables.
+    def targets(self) -> Dict[str, list]:
+        """Access as attribute, names of feature columns are potential target variables.
 
         Returns
         -------
-        list
-            True/False if feature columns are potential target variables.
+        Dict
+            Target feature names (divided into 'static' and 'temporal').
 
         """
-        return [f for f, meta in self.meta.items() if meta.is_target]
+        return {
+            STATIC: [col for col in self.static if self.meta[col].is_target],
+            TEMPORAL: [col for col in self.temporal if self.meta[col].is_target],
+        }
 
-    def _scale(self) -> pd.DataFrame:
+    def _scale(self) -> Dict[str, pd.DataFrame]:
         """Apply scaling."""
-        features = self.features.copy(deep=True)
-        for col in self.features.columns:
+        static_features = self.static.copy(deep=True)
+        temporal_features = self.temporal.copy(deep=True)
+
+        for col in self.static.columns:
             if self.meta[col].feature_type == NUMERIC:
-                features[col] = self.meta[col].scale(features[col])
-        return features
+                static_features[col] = self.meta[col].scale(static_features[col])
+        for col in self.temporal.columns:
+            if self.meta[col].feature_type == NUMERIC:
+                temporal_features[col] = self.meta[col].scale(temporal_features[col])
 
-    def get_numerical_features(self) -> list:
-        """Get all numerical features added to the handler.
+        return {STATIC: static_features, TEMPORAL: temporal_features}
 
-        Returns
-        -------
-        list
-            List of numerical features.
-
-        """
-        return [col for col in self.features if self.meta[col].feature_type == NUMERIC]
-
-    def get_categorical_features(self) -> list:
-        """Get all categorical features added to the handler.
+    def _get_features_type(self, feature_type: str) -> Dict[str, list]:
+        """Get names of features added to the handler.
 
         Returns
         -------
-        list
-            List of categorical features.
+        Dict
+            Names of features (divided into 'static' and 'temporal').
 
         """
-        return [
-            col
-            for col in self.features
-            if self.meta[col].feature_type in [BINARY, CATEGORICAL_BINARY]
-        ]
+        return {
+            STATIC: [
+                col
+                for col in self.static
+                if self.meta[col].feature_type == feature_type
+            ],
+            TEMPORAL: [
+                col
+                for col in self.temporal
+                if self.meta[col].feature_type == feature_type
+            ],
+        }
 
-    def extract_features(self, names: list) -> pd.DataFrame:
+    def get_numerical_features(self) -> Dict[str, list]:
+        """Get names of all numerical features added to the handler.
+
+        Returns
+        -------
+        Dict
+            Names of numerical features (divided into 'static' and 'temporal').
+
+        """
+        return self._get_features_type(NUMERIC)
+
+    def get_categorical_features(self) -> Dict[str, list]:
+        """Get names of all categorical features added to the handler.
+
+        Returns
+        -------
+        Dict
+            Names of categorical features (divided into 'static' and 'temporal').
+
+        """
+        return self._get_features_type(BINARY)
+
+    def extract_features(self, names: list) -> Dict[str, pd.DataFrame]:
         """Extract features by name.
 
         Parameters
@@ -463,19 +503,25 @@ class FeatureHandler:
             Requested features formatted as a DataFrame.
 
         """
-        # Convert to a list if extracting a single feature
+        # Convert to a list if extracting a single feature.
         names = [names] if isinstance(names, str) else names
 
-        # Ensure all features exist
-        inter = set(names).intersection(set(self.features.columns))
+        # Ensure all features exist.
+        inter = set(names).intersection(set(self.names))
         if len(inter) != len(names):
             raise ValueError(f"Features {inter} do not exist.")
+        static_names = [n for n in names if n in self.static.columns]
+        temporal_names = [n for n in names if n in self.temporal.columns]
 
-        return self.features[names]
+        return {
+            STATIC: self.features[STATIC][static_names],
+            TEMPORAL: self.features[TEMPORAL][temporal_names],
+        }
 
-    def _add_feature(
+    def _add_feature(  # pylint: disable=too-many-arguments
         self,
         series: pd.Series,
+        aggregate_type: str,
         feature_meta: abc.ABCMeta,
         init_kwargs: Dict,
         parse_kwargs: Dict,
@@ -498,12 +544,16 @@ class FeatureHandler:
         series = meta.parse(series, **parse_kwargs)
 
         # Add to features.
-        self.features = pd.concat([self.features, series], axis=1)
+        self.features[aggregate_type] = pd.concat(
+            [self.features[aggregate_type], series], axis=1
+        )
 
         # Add to meta.
         self.meta[series.name] = meta
 
-    def _add_binary(self, series: pd.Series, group: Optional[str] = None) -> None:
+    def _add_binary(
+        self, series: pd.Series, aggregate_type: str, group: Optional[str] = None
+    ) -> None:
         """Add binary features.
 
         Parameters
@@ -516,9 +566,11 @@ class FeatureHandler:
         """
         init_kwargs = {FEATURE_TYPE: BINARY, GROUP: group}
         parse_kwargs: Dict = {}
-        self._add_feature(series, BinaryFeatureMeta, init_kwargs, parse_kwargs)
+        self._add_feature(
+            series, aggregate_type, BinaryFeatureMeta, init_kwargs, parse_kwargs
+        )
 
-    def _add_numerical(self, series: pd.Series) -> None:
+    def _add_numerical(self, series: pd.Series, aggregate_type: str) -> None:
         """Add numerical feature.
 
         Parameters
@@ -532,12 +584,11 @@ class FeatureHandler:
             NORMALIZATION_METHOD: self.normalization_method,
         }
         parse_kwargs: Dict = {}
-        self._add_feature(series, NumericFeatureMeta, init_kwargs, parse_kwargs)
+        self._add_feature(
+            series, aggregate_type, NumericFeatureMeta, init_kwargs, parse_kwargs
+        )
 
-    def _add_categorical(
-        self,
-        series: pd.Series,
-    ) -> None:
+    def _add_categorical(self, series: pd.Series, aggregate_type: str) -> None:
         """Add categorical feature.
 
         Parameters
@@ -557,7 +608,7 @@ class FeatureHandler:
         features = pd.DataFrame(onehot, index=series.index, columns=binary_names)
 
         for col in features:
-            self._add_binary(features[col], group=series.name)
+            self._add_binary(features[col], aggregate_type, group=series.name)
 
     def set_targets(self, names: Union[str, list, set]) -> None:
         """Set some feature columns to be targets.
@@ -587,8 +638,13 @@ class FeatureHandler:
         if not isinstance(features, pd.DataFrame):
             raise ValueError("Input to feature handler must be a pandas.DataFrame.")
 
-        if len(self.features.index) == 0:
-            self.features = pd.DataFrame(index=features.index)
+        if isinstance(features.index, pd.core.indexes.multi.MultiIndex):
+            aggregate_type = TEMPORAL
+        else:
+            aggregate_type = STATIC
+
+        if len(self.features[aggregate_type].index) == 0:
+            self.features[aggregate_type] = pd.DataFrame(index=features.index)
 
         # Attempt to turn any possible columns to numeric.
         features = _attempt_to_numeric(features)
@@ -610,12 +666,12 @@ class FeatureHandler:
             # (Numeric or string alike)
             if len(unique) == 2:
                 # Add as binary.
-                self._add_binary(features[col])
+                self._add_binary(features[col], aggregate_type=aggregate_type)
                 continue
 
             # Check for and add numerical features.
             if is_numeric_dtype(features[col]):
-                self._add_numerical(features[col])
+                self._add_numerical(features[col], aggregate_type=aggregate_type)
                 continue
 
             # Check for (non-binary valued) string types.
@@ -623,14 +679,16 @@ class FeatureHandler:
                 # Don't parse columns with too many unique values.
                 if len(unique) > 100:
                     raise ValueError(f"Failed to parse feature {col}")
-                self._add_categorical(features[col])
+                self._add_categorical(features[col], aggregate_type=aggregate_type)
                 continue
 
             raise ValueError("Unsure about column data type.")
 
         # "index" column gets added, debug later and remove.
-        if "index" in self.features.columns:
-            self.drop_features("index")
+        # if "index" in self.static_features.columns:
+        #     self.drop_features("index")
+        # if "index" in self.static_features.columns:
+        #     self.drop_features("index")
 
     def _drop_cols(self, cols: list) -> None:
         """Drop columns.
@@ -642,7 +700,10 @@ class FeatureHandler:
 
         """
         assert cols is not None
-        self.features.drop(cols, axis=1, inplace=True)
+        static_drops = [col for col in cols if col in self.static.columns]
+        temporal_drops = [col for col in cols if col in self.temporal.columns]
+        self.features[STATIC].drop(static_drops, axis=1, inplace=True)
+        self.features[TEMPORAL].drop(temporal_drops, axis=1, inplace=True)
 
         for col in cols:
             del self.meta[col]
@@ -659,9 +720,8 @@ class FeatureHandler:
         # Find which corresponding group columns to drop.
         drop_group_cols = [
             col
-            for col in self.features.columns
-            if self.meta[col].feature_type == CATEGORICAL_BINARY
-            and self.meta[col].group in names
+            for col in self.names
+            if self.meta[col].feature_type == BINARY and self.meta[col].group in names
         ]
 
         # Drop corresponding columns.
@@ -672,19 +732,17 @@ class FeatureHandler:
 
         Parameters
         ----------
-        names: str or list or set]
+        names: str or list or set
             Name(s) of features to drop.
 
         """
         # Find feature columns to drop.
         names = set([names]) if isinstance(names, str) else set(names)
-        drop_cols = names.intersection(set(self.features.columns))
+        drop_cols = names.intersection(set(self.names))
         remaining = names.difference(drop_cols)
 
         # Find categorical groups to drop.
-        all_groups = [
-            m.group for m in self.meta.values() if m.feature_type == CATEGORICAL_BINARY
-        ]
+        all_groups = [m.group for m in self.meta.values() if m.feature_type == BINARY]
         drop_groups = {c for c in remaining if c in all_groups}
 
         # Abort if not all the names are some column or categorical group.
