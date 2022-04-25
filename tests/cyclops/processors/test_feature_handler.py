@@ -43,6 +43,7 @@ def test_input_static():
     input_.loc[1] = ["cat", 2, "0"]
     input_.loc[2] = ["cat", 3, "1"]
     input_.loc[4] = ["dog", 9.1, "0"]
+
     return input_
 
 
@@ -52,6 +53,20 @@ def test_input_static_extra_column():
     input_ = pd.DataFrame(index=[0, 1, 2, 4], columns=["D"])
     input_.loc[0] = [15.0]
     input_.loc[1] = [5.1]
+
+    return input_
+
+
+@pytest.fixture
+def test_input_temporal_extra_column():
+    """Create test input dataframe with single column to add."""
+    index = pd.MultiIndex.from_tuples([("sheep", 0), ("cat", 0), ("cat", 1)])
+    input_ = pd.DataFrame(index=index, columns=["D"])
+
+    input_.loc[("sheep", 0)] = [0.7]
+    input_.loc[("cat", 0)] = [0.8]
+    input_.loc[("cat", 1)] = [1.9]
+
     return input_
 
 
@@ -66,11 +81,12 @@ def test_input_temporal():
     input_.loc[("cat", 0)] = ["dog", 2, "0"]
     input_.loc[("cat", 1)] = ["cat", 3, "1"]
     input_.loc[("dog", 0)] = ["camel", 9.1, "0"]
+
     return input_
 
 
 def test_add_features_temporal(  # pylint: disable=redefined-outer-name
-    test_input_temporal,
+    test_input_temporal, test_input_temporal_extra_column
 ):
     """Test adding features."""
     feature_handler = FeatureHandler()
@@ -79,6 +95,11 @@ def test_add_features_temporal(  # pylint: disable=redefined-outer-name
     assert (feature_handler.temporal.loc[("cat", 0)] == [0, 0, 1, 2.0, 0]).all()
     assert (feature_handler.temporal.loc[("cat", 1)] == [0, 1, 0, 3.0, 1]).all()
     assert (feature_handler.temporal.loc[("dog", 0)] == [1, 0, 0, 9.1, 0]).all()
+
+    feature_handler.add_features(test_input_temporal_extra_column)
+    assert (feature_handler.temporal.loc[("sheep", 0)] == [0, 1, 0, 10.0, 0, 0.7]).all()
+    assert (feature_handler.temporal.loc[("cat", 0)] == [0, 0, 1, 2.0, 0, 0.8]).all()
+    assert (feature_handler.temporal.loc[("cat", 1)] == [0, 1, 0, 3.0, 1, 1.9]).all()
 
 
 def test_add_features_static(  # pylint: disable=redefined-outer-name
@@ -139,3 +160,23 @@ def test_drop_features_static(  # pylint: disable=redefined-outer-name
     # Drop categorical group of features.
     feature_handler.drop_features("A")
     assert all("A" not in col_name for col_name in feature_handler.static.columns)
+
+
+def test_drop_features_temporal(  # pylint: disable=redefined-outer-name
+    test_input_temporal,
+):
+    """Test dropping features."""
+    feature_handler = FeatureHandler()
+    feature_handler.add_features(test_input_temporal)
+    assert (feature_handler.temporal.loc[("sheep", 0)] == [0, 1, 0, 10.0, 0]).all()
+    assert (feature_handler.temporal.loc[("cat", 0)] == [0, 0, 1, 2.0, 0]).all()
+    assert (feature_handler.temporal.loc[("cat", 1)] == [0, 1, 0, 3.0, 1]).all()
+    assert (feature_handler.temporal.loc[("dog", 0)] == [1, 0, 0, 9.1, 0]).all()
+
+    # Drop single feature.
+    feature_handler.drop_features(["B"])
+    assert "B" not in feature_handler.temporal.columns
+
+    # Drop categorical group of features.
+    feature_handler.drop_features("A")
+    assert all("A" not in col_name for col_name in feature_handler.temporal.columns)
