@@ -26,9 +26,11 @@ def fill_missing_with_nan(string: str) -> Union[float, str]:
     return np.nan if string == EMPTY_STRING else string
 
 
-def replace_if_string_match(search_string: str, search_terms: str, replace_value: str) -> str:
+def replace_if_string_match(
+    search_string: str, search_terms: str, replace_value: str
+) -> str:
     """Replace string with value, if string has matched terms.
-    
+
     If any of the 'search_terms' are found in the string, then
     it is replaced with the 'replace_value' string.
 
