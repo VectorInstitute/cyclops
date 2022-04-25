@@ -26,8 +26,13 @@ def fill_missing_with_nan(string: str) -> Union[float, str]:
     return np.nan if string == EMPTY_STRING else string
 
 
-def find_string_match(string: str, search_terms: str) -> bool:
-    """Find string terms in search string to see if there are matches.
+def replace_if_string_match(
+    search_string: str, search_terms: str, replace_value: str
+) -> str:
+    """Replace string with value, if string has matched terms.
+
+    If any of the 'search_terms' are found in the string, then
+    it is replaced with the 'replace_value' string.
 
     Parameters
     ----------
@@ -35,16 +40,20 @@ def find_string_match(string: str, search_terms: str) -> bool:
         The string to search for possible matches.
     search_terms: str
         String terms to search x1|x2...|xn.
+    replace_value: str
+        String which will replace if search found any matches.
 
     Returns
     -------
-    bool
-        True if any matches were found, else False.
+    str
+        The string to replace, 'replace_value' if matches found, else same as input.
 
     """
-    string = string.lower()
-    found = re.search(search_terms, string)
-    return bool(found)
+    search_string = search_string.lower()
+    found = re.search(search_terms, search_string)
+    if bool(found):
+        return replace_value
+    return search_string
 
 
 def remove_text_in_parentheses(string: str) -> str:
