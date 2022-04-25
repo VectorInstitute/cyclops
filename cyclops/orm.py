@@ -27,11 +27,13 @@ SOCKET_CONNECTION_TIMEOUT = 5
 def _get_db_url(  # pylint: disable=too-many-arguments
     dbms: str, user: str, pwd: str, host: str, port: str, database: str
 ) -> str:
+    """Combine to make Database URL string."""
     return f"{dbms}://{user}:{pwd}@{host}:{port}/{database}"
 
 
 def _get_attr_name(name: str) -> str:
-    return name[name.index(".") + 1 :]  # noqa: E203
+    """Get attribute name (second part of first.second)."""
+    return name.split(".")[-1]
 
 
 class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
