@@ -53,8 +53,7 @@ def replace_if_string_match(
     found = re.search(search_terms, search_string)
     if bool(found):
         return replace_value
-    else:
-        return search_string
+    return search_string
 
 
 def remove_text_in_parentheses(string: str) -> str:
