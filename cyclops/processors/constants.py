@@ -7,6 +7,8 @@ YEAR = "year"
 MONTH = "month"
 
 # Feature handler.
+MEAN = "mean"
+MEDIAN = "median"
 FEATURE_TYPE = "feature_type"
 NUMERIC = "numeric"
 BINARY = "binary"

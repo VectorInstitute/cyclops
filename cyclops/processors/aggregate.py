@@ -3,6 +3,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,7 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     TIMESTEP,
 )
+from cyclops.processors.constants import MEAN, MEDIAN
 from cyclops.processors.utils import log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -50,39 +52,39 @@ class Aggregator:
 
     """
 
-    strategy: str = "mean"
+    strategy: str = MEAN
     bucket_size: int = 1
     window: int = 24
     start_at_admission: bool = False
-    start_window_ts: datetime = None
-        
-        
+    start_window_ts: Optional[datetime] = None
+
+
 def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
     """Get the timestamp of the earliest event for an encounter.
-    
+
     Given 2 columns, i.e. encounter ID, and timestamp of events,
     this function finds the timestamp of the earliest event for an
     encounter, and returns that timestamp for all events.
-    
+
     Parameters
     ----------
     timestamps: pandas.DataFrame
         Event timestamps and encounter IDs in a dataframe.
-        
+
     Returns
     -------
     pandas.Series
         A series with earliest timestamp among events for each encounter.
-        
+
     """
     earliest_ts_encounters = {}
     for encounter_id, grouped_ts in timestamps.groupby(ENCOUNTER_ID):
         earliest_ts_encounters[encounter_id] = min(grouped_ts[EVENT_TIMESTAMP])
-    earliest_ts = [0] * len(timestamps)
+    earliest_ts = pd.Series(index=timestamps.index, dtype="datetime64[ns]")
     for index, (encounter_id, _) in timestamps.iterrows():
         earliest_ts[index] = earliest_ts_encounters[encounter_id]
-        
-    return pd.Series(earliest_ts)
+
+    return earliest_ts
 
 
 def filter_upto_window(
@@ -127,7 +129,9 @@ def filter_upto_window(
 
     data_filtered = data.copy()
     sample_time = data_filtered[EVENT_TIMESTAMP]
-    start_time = get_earliest_ts_encounter(data_filtered[[ENCOUNTER_ID, EVENT_TIMESTAMP]])
+    start_time = get_earliest_ts_encounter(
+        data_filtered[[ENCOUNTER_ID, EVENT_TIMESTAMP]]
+    )
     if start_at_admission:
         start_time = data_filtered[ADMIT_TIMESTAMP]
     if start_window_ts:
@@ -135,7 +139,7 @@ def filter_upto_window(
     data_filtered = data_filtered.loc[sample_time >= start_time]
     window_condition = (sample_time - start_time) / pd.Timedelta(hours=1)
     data_filtered = data_filtered.loc[window_condition <= window]
-    
+
     return data_filtered
 
 
@@ -164,9 +168,9 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
         Asserts if supplied input strategy option is not recognised (implemented).
 
     """
-    if strategy == "mean":
+    if strategy == MEAN:
         return values.mean()
-    if strategy == "median":
+    if strategy == MEDIAN:
         return values.median()
 
     raise NotImplementedError(f"Provided {strategy} is not a valid one!")
@@ -198,7 +202,12 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
-    data = filter_upto_window(data, window=aggregator.window, start_at_admission=aggregator.start_at_admission, start_window_ts=aggregator.start_window_ts)
+    data = filter_upto_window(
+        data,
+        window=aggregator.window,
+        start_at_admission=aggregator.start_at_admission,
+        start_window_ts=aggregator.start_window_ts,
+    )
     log_counts_step(data, "Filtering events within window...", columns=True)
     event_names = list(data[EVENT_NAME].unique())
 

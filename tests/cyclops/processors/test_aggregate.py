@@ -6,14 +6,19 @@ import pandas as pd
 import pytest
 
 from cyclops.processors.aggregate import filter_upto_window
-from cyclops.processors.column_names import ADMIT_TIMESTAMP, EVENT_TIMESTAMP
+from cyclops.processors.column_names import (
+    ADMIT_TIMESTAMP,
+    ENCOUNTER_ID,
+    EVENT_TIMESTAMP,
+)
 
 
 @pytest.fixture
 def test_input():
     """Create a test input."""
     input_ = pd.DataFrame(
-        index=[0, 1, 2, 4], columns=["A", "B", "C", EVENT_TIMESTAMP, ADMIT_TIMESTAMP]
+        index=[0, 1, 2, 4],
+        columns=[ENCOUNTER_ID, "B", "C", EVENT_TIMESTAMP, ADMIT_TIMESTAMP],
     )
     input_.loc[0] = [
         "sheep",
@@ -51,13 +56,13 @@ def test_input():
 def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name
     """Test filter_upto_window fn."""
     filtered_df = filter_upto_window(test_input)
-    assert "dog" not in filtered_df["A"]
+    assert "dog" not in filtered_df[ENCOUNTER_ID]
     filtered_df = filter_upto_window(test_input, start_at_admission=True)
-    assert "dog" not in filtered_df["A"] and "3" not in filtered_df["B"]
+    assert "dog" not in filtered_df[ENCOUNTER_ID] and "3" not in filtered_df["B"]
     filtered_df = filter_upto_window(
         test_input, start_window_ts=datetime(2022, 11, 6, 12, 13)
     )
-    assert len(filtered_df) == 1 and "dog" == filtered_df["A"].item()
+    assert len(filtered_df) == 1 and "dog" == filtered_df[ENCOUNTER_ID].item()
     with pytest.raises(ValueError):
         filtered_df = filter_upto_window(
             test_input,
