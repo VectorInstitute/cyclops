@@ -24,6 +24,7 @@ from cyclops.processors.constants import (
     STATIC,
     TEMPORAL,
 )
+from cyclops.processors.impute import impute_features, Imputer
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -445,7 +446,7 @@ class FeatureHandler:
 
         return {STATIC: static_features, TEMPORAL: temporal_features}
 
-    def _get_features_type(self, feature_type: str) -> Dict[str, list]:
+    def _get_feature_names_type(self, feature_type: str) -> Dict[str, list]:
         """Get names of features added to the handler.
 
         Returns
@@ -467,7 +468,7 @@ class FeatureHandler:
             ],
         }
 
-    def get_numerical_features(self) -> Dict[str, list]:
+    def get_numerical_feature_names(self) -> Dict[str, list]:
         """Get names of all numerical features added to the handler.
 
         Returns
@@ -476,9 +477,9 @@ class FeatureHandler:
             Names of numerical features (divided into 'static' and 'temporal').
 
         """
-        return self._get_features_type(NUMERIC)
+        return self._get_feature_names_type(NUMERIC)
 
-    def get_categorical_features(self) -> Dict[str, list]:
+    def get_categorical_feature_names(self) -> Dict[str, list]:
         """Get names of all categorical features added to the handler.
 
         Returns
@@ -487,7 +488,7 @@ class FeatureHandler:
             Names of categorical features (divided into 'static' and 'temporal').
 
         """
-        return self._get_features_type(BINARY)
+        return self._get_feature_names_type(BINARY)
 
     def extract_features(self, names: list) -> Dict[str, pd.DataFrame]:
         """Extract features by name.
@@ -689,6 +690,19 @@ class FeatureHandler:
         #     self.drop_features("index")
         # if "index" in self.static_features.columns:
         #     self.drop_features("index")
+        
+    def impute_features(self, static_imputer: Imputer, temporal_imputer: Imputer) -> None:
+        """Impute missing values in features.
+
+        Parameters
+        ----------
+        static_imputer: Imputer
+            Imputation options for static features.
+        temporal_imputer: Imputer
+            Imputation options for temporal features.
+            
+        """
+        self.features[STATIC] = impute_features(self.features[STATIC], imputer=static_imputer)
 
     def _drop_cols(self, cols: list) -> None:
         """Drop columns.

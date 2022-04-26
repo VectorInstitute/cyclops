@@ -208,18 +208,18 @@ def diagnoses(
         Patient encounters query wrapped, used to join with diagnoses.
 
     The following types of diagnoses are available:
-    M         Most Responsible Diagnosis
-    1              Pre-Admit Comorbidity
-    2             Post-Admit Comorbidity
-    3                Secondary Diagnosis
-    4                   Morphology Codes
-    5                Admitting Diagnosis
-    6   Proxy Most Responsible Diagnosis
-    9      External Cause of Injury Code
-    0                            Newborn
-    W   First Service Transfer Diagnosis
-    X  Second Service Transfer Diagnosis
-    Y   Third Service Transfer Diagnosis
+    - M         Most Responsible Diagnosis
+    - 1              Pre-Admit Comorbidity
+    - 2             Post-Admit Comorbidity
+    - 3                Secondary Diagnosis
+    - 4                   Morphology Codes
+    - 5                Admitting Diagnosis
+    - 6   Proxy Most Responsible Diagnosis
+    - 9      External Cause of Injury Code
+    - 0                            Newborn
+    - W   First Service Transfer Diagnosis
+    - X  Second Service Transfer Diagnosis
+    - Y   Third Service Transfer Diagnosis
 
     Returns
     -------
