@@ -1,9 +1,9 @@
 """Feature handling for automatic feature creation from processed data."""
 
 
-import os
 import abc
 import logging
+import os
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Union
 
@@ -775,7 +775,7 @@ class FeatureHandler:
 
         # Drop categorical group columns.
         self._drop_categorical(list(drop_groups))
-        
+
     def save(self, folder_path: str, file_name: str) -> None:
         """Save features data in Parquet format.
 
@@ -799,8 +799,10 @@ class FeatureHandler:
             LOGGER.info("Saving temporal features to %s", save_path)
             self.features[STATIC].to_parquet(save_path)
         if self.features[STATIC] is None and self.features[TEMPORAL] is None:
-            LOGGER.warning("Static and Temporal feature containers are empty, nothing to save!")
-            
+            LOGGER.warning(
+                "Static and Temporal feature containers are empty, nothing to save!"
+            )
+
     def load(self, folder_path: str, file_name: str) -> None:
         """Load features data from recognised compressed Parquet format.
 
@@ -809,7 +811,7 @@ class FeatureHandler:
         folder_path: str
             Path to directory with files to load from.
         file_name: str
-            Name of file ('static' and 'temporal' versions will both be loaded if exists).
+            Name of file ('static' and 'temporal' will both be attempted to load).
             Extension should be .gzip.
 
         """
