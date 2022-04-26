@@ -3,6 +3,7 @@
 
 import abc
 import logging
+import os
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Union
 
@@ -774,3 +775,56 @@ class FeatureHandler:
 
         # Drop categorical group columns.
         self._drop_categorical(list(drop_groups))
+
+    def save(self, folder_path: str, file_name: str) -> None:
+        """Save features data in Parquet format.
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to directory where the file can be saved.
+        file_name: str
+            Name of file (stored as 'static' and 'temporal').
+            Extension will be .gzip.
+
+        """
+        if isinstance(self.features[STATIC], pd.DataFrame):
+            save_file_name = file_name + "_" + STATIC
+            save_path = os.path.join(folder_path, save_file_name + ".gzip")
+            LOGGER.info("Saving static features to %s", save_path)
+            self.features[STATIC].to_parquet(save_path)
+        if isinstance(self.features[TEMPORAL], pd.DataFrame):
+            save_file_name = file_name + "_" + TEMPORAL
+            save_path = os.path.join(folder_path, save_file_name + ".gzip")
+            LOGGER.info("Saving temporal features to %s", save_path)
+            self.features[STATIC].to_parquet(save_path)
+        if self.features[STATIC] is None and self.features[TEMPORAL] is None:
+            LOGGER.warning(
+                "Static and Temporal feature containers are empty, nothing to save!"
+            )
+
+    def load(self, folder_path: str, file_name: str) -> None:
+        """Load features data from recognised compressed Parquet format.
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to directory with files to load from.
+        file_name: str
+            Name of file ('static' and 'temporal' will both be attempted to load).
+            Extension should be .gzip.
+
+        """
+        LOGGER.info("Loading features from file...")
+        load_file_name = file_name + "_" + STATIC
+        load_path = os.path.join(folder_path, load_file_name + ".gzip")
+        if os.path.isfile(load_path):
+            LOGGER.info("Found file to load for static features...")
+            LOGGER.info("Successfully loaded static features from file...")
+            self.features[STATIC] = pd.read_parquet(load_path)
+        load_file_name = file_name + "_" + TEMPORAL
+        load_path = os.path.join(folder_path, load_file_name + ".gzip")
+        if os.path.isfile(load_path):
+            LOGGER.info("Found file to load for temporal features...")
+            self.features[TEMPORAL] = pd.read_parquet(load_path)
+            LOGGER.info("Successfully loaded temporal features from file...")
