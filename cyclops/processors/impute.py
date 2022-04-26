@@ -50,11 +50,13 @@ def impute_features(features: pd.DataFrame, imputer: Imputer) -> pd.DataFrame:
     if not imputer.strategy:
         return features
     if imputer.strategy == MEAN:
-        per_column_impute_values = features.mean(axis=0, skipna=True, numeric_only=True)            
+        per_column_impute_values = features.mean(axis=0, skipna=True, numeric_only=True)
     if imputer.strategy == MEDIAN:
-        per_column_impute_values = features.median(axis=0, skipna=True, numeric_only=True)
+        per_column_impute_values = features.median(
+            axis=0, skipna=True, numeric_only=True
+        )
 
     for col, per_column_impute_value in per_column_impute_values.items():
         features[[col]] = features[[col]].fillna(per_column_impute_value)
-        
+
     return features
