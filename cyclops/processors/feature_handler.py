@@ -685,11 +685,9 @@ class FeatureHandler:
 
             raise ValueError("Unsure about column data type.")
 
-        # "index" column gets added, debug later and remove.
-        # if "index" in self.static_features.columns:
-        #     self.drop_features("index")
-        # if "index" in self.static_features.columns:
-        #     self.drop_features("index")
+        # "index" column gets added to temporal features, debug later and remove.
+        if "index" in self.features[TEMPORAL].columns:
+            self.drop_features("index")
 
     def impute_features(
         self, static_imputer: Imputer, temporal_imputer: Imputer
