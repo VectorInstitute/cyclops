@@ -13,32 +13,28 @@ from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import clean_events
 from cyclops.processors.feature_handler import FeatureHandler
+from cyclops.processors.impute import Imputer
 from cyclops.processors.utils import check_must_have_columns, gather_columns
-from cyclops.processors.impute import impute_features, Imputer
 
 
 def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
     """Process diagnoses data (codes) into trajectories, and create features.
-    
+
     Parameters
     ----------
     dataframe: pd.DataFrame
         Input DataFrame with diagnoses code data.
-    
+
     Returns
     -------
     pd.DataFrame
         Diagnoses codes processed into trajectory features.
-    
+
     """
     diagnoses_features = None
     if check_must_have_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
-        diagnoses_data = gather_columns(
-            dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]
-        )
-        diagnoses_features = group_diagnosis_codes_to_trajectories(
-            diagnoses_data
-        )
+        diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
+        diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
     return diagnoses_features
 
 
@@ -50,7 +46,7 @@ def featurize(
     temporal_imputer: Imputer = Imputer(),
 ) -> FeatureHandler:
     """Process and create features from raw queried data.
-    
+
     - User inputs static and temporal data in the form of raw dataframes.
     - If diagnoses codes are present in the static data, they are processed
     first.
@@ -92,7 +88,7 @@ def featurize(
             if diagnoses_features is not None:
                 dataframe.drop(DIAGNOSIS_CODE, axis=1, inplace=True)
                 feature_handler.add_features(diagnoses_features)
-                
+
             static_features = gather_static_features(dataframe)
             feature_handler.add_features(static_features)
 
@@ -101,7 +97,9 @@ def featurize(
             dataframe = clean_events(dataframe)
             temporal_features = gather_event_features(dataframe, aggregator=aggregator)
             feature_handler.add_features(temporal_features)
-            
-    feature_handler.impute_features(static_imputer=static_imputer, temporal_imputer=temporal_imputer)
+
+    feature_handler.impute_features(
+        static_imputer=static_imputer, temporal_imputer=temporal_imputer
+    )
 
     return feature_handler
