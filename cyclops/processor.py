@@ -9,7 +9,7 @@ from cyclops.processors.aggregate import (
     gather_event_features,
     gather_static_features,
 )
-from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
+from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID, HOSPITAL_ID, ADMIT_TIMESTAMP
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import clean_events
 from cyclops.processors.feature_handler import FeatureHandler
@@ -44,6 +44,7 @@ def featurize(
     aggregator: Aggregator = Aggregator(),
     static_imputer: Imputer = Imputer(),
     temporal_imputer: Imputer = Imputer(),
+    reference_cols: list = []
 ) -> FeatureHandler:
     """Process and create features from raw queried data.
 
@@ -90,7 +91,7 @@ def featurize(
                 feature_handler.add_features(diagnoses_features)
 
             static_features = gather_static_features(dataframe)
-            feature_handler.add_features(static_features)
+            feature_handler.add_features(static_features, reference_cols=reference_cols)
 
     if temporal_data:
         for dataframe in temporal_data:

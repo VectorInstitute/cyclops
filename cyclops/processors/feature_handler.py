@@ -368,6 +368,7 @@ class FeatureHandler:
         self.meta: dict = {}
         self.normalization_method = normalization_method
         self.features = {STATIC: pd.DataFrame(), TEMPORAL: pd.DataFrame()}
+        self.reference = pd.DataFrame()
         if features is not None:
             self.add_features(features)
 
@@ -628,13 +629,16 @@ class FeatureHandler:
         for name in names:
             self.meta[name].is_target = True
 
-    def add_features(self, features: pd.DataFrame) -> None:
+    def add_features(self, features: pd.DataFrame, reference_cols: list = []) -> None:
         """Add features.
 
         Parameters
         ----------
         features: pandas.DataFrame
             Features to add.
+        reference_cols: list, optional
+            Columns to add for referencing and creating slices of features
+            e.g. (filtering on hospital(s)).
 
         """
         if not isinstance(features, pd.DataFrame):
@@ -647,6 +651,13 @@ class FeatureHandler:
 
         if len(self.features[aggregate_type].index) == 0:
             self.features[aggregate_type] = pd.DataFrame(index=features.index)
+            
+        # Add non-feature columns as reference.
+        if aggregate_type == STATIC:
+            self.reference = pd.DataFrame(index=features.index)
+            for col in reference_cols:
+                self.reference[col] = features[col]
+                features.drop(col, axis=1, inplace=True)
 
         # Attempt to turn any possible columns to numeric.
         features = _attempt_to_numeric(features)
@@ -684,7 +695,7 @@ class FeatureHandler:
                 self._add_categorical(features[col], aggregate_type=aggregate_type)
                 continue
 
-            raise ValueError("Unsure about column data type.")
+            LOGGER.warning("Unsure about column %s data type.", col)
 
         # "index" column gets added to temporal features, debug later and remove.
         if "index" in self.features[TEMPORAL].columns:

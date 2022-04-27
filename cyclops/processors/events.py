@@ -187,8 +187,8 @@ def clean_events(data) -> pd.DataFrame:
 
     """
     log_counts_step(data, "Cleaning raw event data...", columns=True)
-    data = drop_unsupported(data)
     data = normalize_names(data)
+    data = drop_unsupported(data)
     data = normalize_values(data)
 
     if EVENT_VALUE_UNIT in list(data.columns):

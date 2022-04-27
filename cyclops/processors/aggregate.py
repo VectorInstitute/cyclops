@@ -268,6 +268,7 @@ def gather_static_features(data: pd.DataFrame) -> pd.DataFrame:
     encounters = list(data[ENCOUNTER_ID].unique())
     col_names = [col_name for col_name in data.columns if col_name != ENCOUNTER_ID]
     features = pd.DataFrame(index=encounters, columns=col_names)
+    features.index.name = ENCOUNTER_ID
 
     grouped = data.groupby([ENCOUNTER_ID])
     for encounter_id, statics in grouped:

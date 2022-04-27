@@ -2,7 +2,7 @@ from shift_detector import *
 from shift_reductor import *
 from shift_tester import *
 from shift_experiments import *
-from legacy_utils import *
+# from legacy_utils import *
 import re
 from collections import OrderedDict
 import numpy as np
@@ -21,8 +21,6 @@ import joblib
 import matplotlib.pyplot as plt
 import os
 import pickle
-
-sys.path.append("../..")
 
 from sklearn.metrics import (
     auc,
@@ -47,8 +45,7 @@ from evidently.dashboard.tabs import DataQualityTab
 from evidently.model_profile import Profile
 from evidently.model_profile.sections import DataQualityProfileSection
 
-import config
-import cyclops
+import cyclops.config
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
     HOSPITAL_ID,
@@ -64,106 +61,55 @@ from cyclops.processors.column_names import (
     COUNTRY,
     LANGUAGE,
     LENGTH_OF_STAY_IN_ER,
-    VITAL_MEASUREMENT_NAME,
-    VITAL_MEASUREMENT_VALUE,
-    VITAL_MEASUREMENT_TIMESTAMP,
-    LAB_TEST_NAME,
-    LAB_TEST_TIMESTAMP,
-    LAB_TEST_RESULT_VALUE,
-    LAB_TEST_RESULT_UNIT,
     REFERENCE_RANGE,
 )
-from cyclops.processors.constants import EMPTY_STRING
-from cyclops.processors.admin import AdminProcessor
-from cyclops.processors.vitals import VitalsProcessor
-from cyclops.processors.labs import LabsProcessor
-from cyclops.processors.outcomes import OutcomesProcessor
-from cyclops.processors.feature_handler import FeatureHandler
-from cyclops.orm import Database
+from cyclops.processor import featurize
+from cyclops.processors.aggregate import Aggregator
 
-cfg = config.read_config("../../configs/default/*.yaml")
-db = Database(cfg)
 
 def get_data(hospital, na_cutoff):
-
-    EXTRACT_SAVE_PATH = (
-        "/mnt/nfs/project/delirium/drift_exp/2018_2020_extract.h5"
-    )
+    EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/drift_exp/"
 
     # load admin
-    admin_data = pd.read_hdf(EXTRACT_SAVE_PATH, key=f"query_gemini_admin")
-    must_have_columns = [ENCOUNTER_ID, AGE, SEX]
-
-    admin_processor = AdminProcessor(admin_data, must_have_columns)
-    admin_features = admin_processor.process()
+    admin_data = pd.read_parquet(os.path.join(EXTRACT_SAVE_PATH, "admin_er_allhosp_2018_2020.gzip"))
+    admin_data = admin_data[[AGE, SEX, HOSPITAL_ID, ENCOUNTER_ID, ADMIT_TIMESTAMP, LENGTH_OF_STAY_IN_ER]]
 
     hosp_ids = admin_data.loc[admin_data["hospital_id"].isin(hospital),"encounter_id"]
-    hosp_label = '_'.join(sorted(hospital,key=str.lower))
-    file_name = "/mnt/nfs/project/delirium/drift_exp/" + hosp_label + "_2018_2020.pkl"
+    hosp_label = '_'.join(sorted(hospital, key=str.lower))
+    file_name = os.path.join(EXTRACT_SAVE_PATH, hosp_label + "_2018_2020_features.gzip")
     if os.path.exists(file_name):
-        x = pd.read_pickle(file_name)
+        x = pd.read_parquet(file_name)
     else:
         # load labs
-        labs = pd.read_hdf(EXTRACT_SAVE_PATH, key=f"query_gemini_admin_labs")
-        must_have_columns = [
-            ENCOUNTER_ID,
-            ADMIT_TIMESTAMP,
-            LAB_TEST_NAME,
-            LAB_TEST_TIMESTAMP,
-            LAB_TEST_RESULT_VALUE,
-            LAB_TEST_RESULT_UNIT,
-            REFERENCE_RANGE,
-        ]
-        labs_processor = LabsProcessor(labs, must_have_columns)
-        labs_features = labs_processor.process()
+        labs = pd.read_parquet(os.path.join(EXTRACT_SAVE_PATH, "labs_allhosp_2018_2020.gzip"))
 
         # load vitals
-        vitals = pd.read_hdf(EXTRACT_SAVE_PATH, key=f"query_gemini_admin_vitals")
-        must_have_columns = [
-            ENCOUNTER_ID,
-            ADMIT_TIMESTAMP,
-            VITAL_MEASUREMENT_NAME,
-            VITAL_MEASUREMENT_VALUE,
-            VITAL_MEASUREMENT_TIMESTAMP,
-            REFERENCE_RANGE,
-        ]
+        vitals = pd.read_parquet(os.path.join(EXTRACT_SAVE_PATH, "vitals_allhosp_2018_2020.gzip"))
 
-        vitals_processor = VitalsProcessor(vitals, must_have_columns)
-        vitals_features = vitals_processor.process()
-
-        # load outcomes
-        los_er_data = pd.read_hdf(EXTRACT_SAVE_PATH, key=f"query_gemini_los_er")
-
-        data = pd.merge(admin_data, los_er_data, how="outer")
-        must_have_columns = [
-            ENCOUNTER_ID,
-            ADMIT_TIMESTAMP,
-            AGE,
-            SEX,
-            DISCHARGE_DISPOSITION,
-            LENGTH_OF_STAY_IN_ER,
-        ]
-        outcomes_processor = OutcomesProcessor(data, must_have_columns)
-        outcome_targets = outcomes_processor.process()
-
-        # add features to feature handler
-        feature_handler = FeatureHandler()
-        feature_handler.add_features(admin_features)
-        feature_handler.add_features(labs_features)
-        feature_handler.add_features(vitals_features)
-        feature_handler.add_features(outcome_targets)
-
-        # features to create indicator features for
-        ind_cols = list(vitals_features.columns.values) + list(
-            labs_features.columns.values
+        feature_handler = featurize(
+            static_data=[admin_data],
+            temporal_data=[labs, vitals],
+            aggregator=Aggregator(bucket_size=5, window=5),
+            reference_cols=[HOSPITAL_ID, ADMIT_TIMESTAMP]
         )
 
-        x = feature_handler.features
+        # features to create indicator features for
+        ind_cols = list(set(list(vitals.columns) + list(labs.columns)).intersection(feature_handler.names))
+
+        
+        # Merge static and temporal features (temporal here is actually aggregated into a single bucket!)
+        static_features = feature_handler.features["static"]
+        temporal_features = feature_handler.features["temporal"]
+        temporal_features = temporal_features.reset_index(level=["timestep"])
+        merged_features = static_features.join(temporal_features)
+        
+        x = merged_features
         x = x.loc[x.index.isin(hosp_ids)]
+        
         # create indicator features
         x = get_indicators(x, ind_cols)
 
-        x.to_pickle(file_name)
+        x.to_parquet(file_name)
 
     return admin_data, x
     
@@ -271,7 +217,8 @@ def get_dataset_hospital(datset,outcome,hospital,na_cutoff):
     y_s = x_s[outcome]
     y_t = x_t[outcome]
             
-    outcomes = ["mortality_in_hospital", "length_of_stay_in_er"]
+    # outcomes = ["mortality_in_hospital", "length_of_stay_in_er"]
+    outcomes = ["length_of_stay_in_er"]
     x_s = x_s.drop(columns=outcomes)    
     x_t = x_t.drop(columns=outcomes)  
         
