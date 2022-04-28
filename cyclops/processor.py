@@ -1,19 +1,20 @@
 """Processor API."""
 
-from typing import Union
+from typing import Optional, Union
 
 import pandas as pd
 
+from cyclops.feature_handler import FeatureHandler
 from cyclops.processors.aggregate import (
     Aggregator,
     gather_event_features,
     gather_static_features,
 )
-from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID, HOSPITAL_ID, ADMIT_TIMESTAMP
+from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import clean_events
-from cyclops.processors.feature_handler import FeatureHandler
 from cyclops.processors.impute import Imputer
+from cyclops.processors.outcomes import generate_outcomes
 from cyclops.processors.utils import check_must_have_columns, gather_columns
 
 
@@ -38,13 +39,13 @@ def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
     return diagnoses_features
 
 
-def featurize(
+def featurize(  # pylint: disable=too-many-arguments
     static_data: Union[list, pd.DataFrame] = None,
     temporal_data: Union[list, pd.DataFrame] = None,
     aggregator: Aggregator = Aggregator(),
     static_imputer: Imputer = Imputer(),
     temporal_imputer: Imputer = Imputer(),
-    reference_cols: list = []
+    reference_cols: Optional[list] = None,
 ) -> FeatureHandler:
     """Process and create features from raw queried data.
 
@@ -69,6 +70,9 @@ def featurize(
         Imputation options for static data.
     temporal_imputer: cyclops.processor.Imputer, optional
         Imputation options for temporal data.
+    reference_cols: list, optional
+        Columns from patient static data to keep as reference columns in the
+        FeatureHandler.
 
     Returns
     -------
@@ -92,6 +96,10 @@ def featurize(
 
             static_features = gather_static_features(dataframe)
             feature_handler.add_features(static_features, reference_cols=reference_cols)
+
+            outcomes = generate_outcomes(dataframe)
+            if outcomes is not None:
+                feature_handler.add_features(outcomes)
 
     if temporal_data:
         for dataframe in temporal_data:

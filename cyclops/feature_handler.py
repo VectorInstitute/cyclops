@@ -368,7 +368,7 @@ class FeatureHandler:
         self.meta: dict = {}
         self.normalization_method = normalization_method
         self.features = {STATIC: pd.DataFrame(), TEMPORAL: pd.DataFrame()}
-        self.reference = pd.DataFrame()
+        self.reference = {STATIC: pd.DataFrame(), TEMPORAL: pd.DataFrame()}
         if features is not None:
             self.add_features(features)
 
@@ -629,7 +629,24 @@ class FeatureHandler:
         for name in names:
             self.meta[name].is_target = True
 
-    def add_features(self, features: pd.DataFrame, reference_cols: list = []) -> None:
+    def _instantiate_containers(self, index: pd.Index, aggregate_type: str) -> None:
+        """Instantiate feature and reference data containers, with indices.
+
+        Parameters
+        ----------
+        index: pandas.Index
+            Indices to set for feature and reference data containers.
+        aggregate_type: str
+            'static' or 'temporal', feature containers to instantiate.
+
+        """
+        if len(self.features[aggregate_type].index) == 0:
+            self.features[aggregate_type] = pd.DataFrame(index=index)
+            self.reference[aggregate_type] = pd.DataFrame(index=index)
+
+    def add_features(
+        self, features: pd.DataFrame, reference_cols: Optional[list] = None
+    ) -> None:
         """Add features.
 
         Parameters
@@ -637,7 +654,7 @@ class FeatureHandler:
         features: pandas.DataFrame
             Features to add.
         reference_cols: list, optional
-            Columns to add for referencing and creating slices of features
+            Reference columns stored for mapping and creating slices of features
             e.g. (filtering on hospital(s)).
 
         """
@@ -648,13 +665,12 @@ class FeatureHandler:
             aggregate_type = TEMPORAL
         else:
             aggregate_type = STATIC
+        self._instantiate_containers(features.index, aggregate_type)
 
-        if len(self.features[aggregate_type].index) == 0:
-            self.features[aggregate_type] = pd.DataFrame(index=features.index)
-            
-        # Add non-feature columns as reference.
+        if reference_cols is None:
+            reference_cols = []
+
         if aggregate_type == STATIC:
-            self.reference = pd.DataFrame(index=features.index)
             for col in reference_cols:
                 self.reference[col] = features[col]
                 features.drop(col, axis=1, inplace=True)
@@ -688,18 +704,11 @@ class FeatureHandler:
                 continue
 
             # Check for (non-binary valued) string types.
-            if is_string_dtype(features[col]):
-                # Don't parse columns with too many unique values.
-                if len(unique) > 100:
-                    raise ValueError(f"Failed to parse feature {col}")
+            if is_string_dtype(features[col]) and len(unique) < 100:
                 self._add_categorical(features[col], aggregate_type=aggregate_type)
                 continue
 
-            LOGGER.warning("Unsure about column %s data type.", col)
-
-        # "index" column gets added to temporal features, debug later and remove.
-        if "index" in self.features[TEMPORAL].columns:
-            self.drop_features("index")
+            LOGGER.warning("Unsure about column %s data type, will not be added", col)
 
     def impute_features(
         self, static_imputer: Imputer, temporal_imputer: Imputer
