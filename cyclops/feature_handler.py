@@ -25,7 +25,9 @@ from cyclops.processors.constants import (
     STATIC,
     TEMPORAL,
 )
+from cyclops.constants import FEATURES
 from cyclops.processors.impute import Imputer, impute_features
+from cyclops.plotter import plot_temporal_features
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -642,6 +644,7 @@ class FeatureHandler:
         """
         if len(self.features[aggregate_type].index) == 0:
             self.features[aggregate_type] = pd.DataFrame(index=index)
+            self.features[aggregate_type].columns.name = FEATURES
             self.reference[aggregate_type] = pd.DataFrame(index=index)
 
     def add_features(
@@ -729,6 +732,31 @@ class FeatureHandler:
         self.features[TEMPORAL] = impute_features(
             self.features[TEMPORAL], imputer=temporal_imputer
         )
+
+    def plot_features(
+        self,
+        encounter_id: int,
+        aggregate_type: Optional[str] = TEMPORAL,
+        names: Optional[list] = None,
+    ) -> None:
+        """Plot features.
+
+        Plots the time-series features for specified encounter.
+        If 'names' is not specified, then all available features are
+        plotted.
+
+        Parameters
+        ----------
+        encounter_id: int
+            Encounter ID.
+        aggregate_type: str
+            'static' or 'temporal' features to plot.
+        names: list, optional
+            Names of features to plot.
+
+        """
+        if aggregate_type == TEMPORAL:
+            plot_temporal_features(self.features[TEMPORAL], encounter_id, names)
 
     def _drop_cols(self, cols: list) -> None:
         """Drop columns.
