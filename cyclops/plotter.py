@@ -3,25 +3,26 @@
 from typing import Optional
 
 import pandas as pd
-import matplotlib.pyplot as plt
 import plotly.express as px
 
 from cyclops.constants import FEATURES
 
 
-def plot_static_features(features: pd.DataFrame, names: Optional[list] = None) -> None:
+def plot_static_features(  # pylint: disable=unused-argument, unused-argument
+    features: pd.DataFrame, names: Optional[list] = None
+) -> None:
     """Plot historgram of static features.
 
-    Plots the time-series features for specified encounter.
+    Plots the histogram of static features over all encounters.
     If 'names' is not specified, then all available features are
     plotted.
 
     Parameters
     ----------
     features: pandas.DataFrame
-        All available temporal features.
+        All available static features.
     names: list, optional
-        Names of features to plot for the given encounter.
+        Names of features to plot over all encounters.
 
     Raises
     ------

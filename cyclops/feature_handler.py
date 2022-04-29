@@ -13,6 +13,8 @@ from pandas.api.types import is_numeric_dtype, is_string_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from codebase_ops import get_log_file_path
+from cyclops.constants import FEATURES
+from cyclops.plotter import plot_temporal_features
 from cyclops.processors.constants import (
     BINARY,
     FEATURE_TYPE,
@@ -25,9 +27,7 @@ from cyclops.processors.constants import (
     STATIC,
     TEMPORAL,
 )
-from cyclops.constants import FEATURES
 from cyclops.processors.impute import Imputer, impute_features
-from cyclops.plotter import plot_temporal_features
 from cyclops.utils.log import setup_logging
 
 # Logging.
