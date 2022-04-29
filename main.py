@@ -1,7 +1,7 @@
 """Main script for running sub-tasks.
 
-A main script to run sub-tasks like data extraction or model
-training/inference, or a data drift experiment.
+A main script to run sub-tasks like data extraction or model training/inference, or a
+data drift experiment.
 
 """
 

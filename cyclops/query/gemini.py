@@ -17,6 +17,7 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
+    LENGTH_OF_STAY_IN_ER,
     SEX,
 )
 from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
@@ -64,6 +65,7 @@ GEMINI_COLUMN_MAP = {
     "measurement_mapped": EVENT_NAME,
     "measurement_value": EVENT_VALUE,
     "measure_date_time": EVENT_TIMESTAMP,
+    "duration_er_stay_derived": LENGTH_OF_STAY_IN_ER,
 }
 
 
