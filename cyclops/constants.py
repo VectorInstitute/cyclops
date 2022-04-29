@@ -3,3 +3,5 @@
 
 GEMINI = "gemini"
 MIMIC = "mimic"
+
+FEATURES = "features"
