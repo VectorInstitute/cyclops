@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.processors.feature_handler import FeatureHandler, _category_to_numeric
+from cyclops.feature_handler import FeatureHandler, _category_to_numeric
 
 
 def test_category_to_numeric():

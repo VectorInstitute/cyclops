@@ -177,7 +177,9 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
 
 
 @time_function
-def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.DataFrame:
+def gather_event_features(  # pylint: disable=too-many-locals
+    data: pd.DataFrame, aggregator: Aggregator
+) -> pd.DataFrame:
     """Gather events from encounters into time-series features.
 
     All the event data is grouped based on encounters. For each
@@ -187,6 +189,9 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
     where the number of feature columns is equal to number of
     event names, e.g. lab tests + vital measurements. The features
     DataFrame is then indexable using encounter_id and timestep.
+    If 'aggregator.window' and 'aggregator.bucket_size' are the same,
+    a faster groupby, since the result is a single feature value (i.e. single
+    timestep) and not a time-series.
 
     Parameters
     ----------
@@ -202,6 +207,7 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
+
     data = filter_upto_window(
         data,
         window=aggregator.window,
@@ -209,19 +215,30 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
         start_window_ts=aggregator.start_window_ts,
     )
     log_counts_step(data, "Filtering events within window...", columns=True)
+
     event_names = list(data[EVENT_NAME].unique())
+
+    if aggregator.window == aggregator.bucket_size:
+        encounters = list(data[ENCOUNTER_ID].unique())
+        features = pd.DataFrame(index=encounters, columns=event_names)
+        grouped_events = data.groupby([ENCOUNTER_ID, EVENT_NAME])
+        for (encounter_id, event_name), events in tqdm(grouped_events):
+            features.loc[encounter_id, event_name] = aggregate_values_in_bucket(
+                events[EVENT_VALUE], strategy=aggregator.strategy
+            )
+        return features
 
     columns = [ENCOUNTER_ID, TIMESTEP] + event_names
     features = pd.DataFrame(columns=columns)
-
     grouped_events = data.groupby([ENCOUNTER_ID])
+
     for encounter_id, events in tqdm(grouped_events):
         events[TIMESTEP] = (
             events[EVENT_TIMESTAMP] - min(events[EVENT_TIMESTAMP])
         ) / pd.Timedelta(hours=aggregator.bucket_size)
         events[TIMESTEP] = events[TIMESTEP].astype("int")
-        num_timesteps = max(events[TIMESTEP].unique())
 
+        num_timesteps = max(events[TIMESTEP].unique())
         for timestep in range(num_timesteps + 1):
             events_values_timestep = pd.Series(
                 [np.nan for _ in range(len(event_names))], index=event_names
@@ -239,7 +256,7 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
             )
             features = pd.concat([features, events_values_timestep])
 
-    features = features.reset_index()
+    features = features.reset_index(drop=True)
     features = features.set_index([ENCOUNTER_ID, TIMESTEP])
 
     return features
@@ -268,6 +285,7 @@ def gather_static_features(data: pd.DataFrame) -> pd.DataFrame:
     encounters = list(data[ENCOUNTER_ID].unique())
     col_names = [col_name for col_name in data.columns if col_name != ENCOUNTER_ID]
     features = pd.DataFrame(index=encounters, columns=col_names)
+    features.index.name = ENCOUNTER_ID
 
     grouped = data.groupby([ENCOUNTER_ID])
     for encounter_id, statics in grouped:
