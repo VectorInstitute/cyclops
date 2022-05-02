@@ -75,15 +75,19 @@ def remove_encounters_if_missing(
             )
             if fraction_missing > encounter_missingness_threshold:
                 features = features.drop(encounter_id, level=ENCOUNTER_ID)
-        num_encounters_dropped = len(encounter_ids) - len(set(features.index.get_level_values(0)))
-        LOGGER.info("Dropped %d encounters, due to missingness!", num_encounters_dropped)
+        num_encounters_dropped = len(encounter_ids) - len(
+            set(features.index.get_level_values(0))
+        )
+        LOGGER.info(
+            "Dropped %d encounters, due to missingness!", num_encounters_dropped
+        )
 
         return features
 
     encounter_ids = features.index
     fraction_missing = features.isna().sum(axis=1) / len(features.columns)
     features = features[fraction_missing <= encounter_missingness_threshold]
-    num_encounters_dropped =  len(encounter_ids) - len(features.index)
+    num_encounters_dropped = len(encounter_ids) - len(features.index)
     LOGGER.info("Dropped %d encounters, due to missingness!", num_encounters_dropped)
 
     return features
@@ -112,7 +116,9 @@ def remove_features_if_missing(
     fraction_missing = features.isna().sum(axis=0) / len(features)
     for col in fraction_missing.index:
         if fraction_missing[col] > feature_missingness_threshold:
-            LOGGER.info("Dropping %s feature, missingness is higher than threshold!", col)
+            LOGGER.info(
+                "Dropping %s feature, missingness is higher than threshold!", col
+            )
             features = features.drop(columns=[col])
 
     return features
