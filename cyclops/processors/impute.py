@@ -24,11 +24,44 @@ class Imputer:
     ----------
     strategy: str, optional
         Imputation strategy for features.
+    encounter_missingness_threshold: float, optional
+        Remove encounters with greater than a fraction of missing features.
+        By default, no encounters are removed.
+    feature_missingness_threshold: float, optional
+        Remove entire feature if more than specified fraction of
+        encounters have missing values for that feature.
 
     """
 
     strategy: Optional[str] = None
-
+    encounter_missingness_threshold: Optional[float] = 0.0
+    feature_missingness_threshold: Optional[float] = 0.0
+        
+        
+def remove_if_missing(features: pd.DataFrame, encounter_missingness_threshold: float, feature_missingness_threshold: float) -> pd.DataFrame:
+    """Remove encounters or features if missingness is above input thresholds.
+    
+    Parameters
+    ----------
+    features: pandas.DataFrame
+        Input features before removal based on missingness and imputation.
+    encounter_missingness_threshold: float
+        Remove encounters with greater than a fraction of missing features.
+        By default, no encounters are removed.
+    feature_missingness_threshold: float
+        Remove entire feature if more than specified fraction of
+        encounters have missing values for that feature.
+    
+    Returns
+    -------
+    pandas.DataFrame
+        Features after removal based on missingness.
+    
+    """
+    num_na_rows = features.isna().sum()
+    if num_na / len(row) > encounter_missingness_threshold:
+            
+        
 
 @time_function
 def impute_features(features: pd.DataFrame, imputer: Imputer) -> pd.DataFrame:
@@ -47,6 +80,7 @@ def impute_features(features: pd.DataFrame, imputer: Imputer) -> pd.DataFrame:
         Features after imputation.
 
     """
+    features = remove_if_missing(features, imputer.encounter_missingness_threshold, imputer.feature_missingness_threshold)
     if not imputer.strategy:
         return features
     if imputer.strategy == MEAN:
