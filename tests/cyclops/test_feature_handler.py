@@ -5,8 +5,10 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.preprocessing import StandardScaler
 
 from cyclops.feature_handler import FeatureHandler, _category_to_numeric
+from cyclops.processors.constants import MIN_MAX, STANDARD, STATIC, TEMPORAL
 
 
 def test_category_to_numeric():
@@ -180,3 +182,89 @@ def test_drop_features_temporal(  # pylint: disable=redefined-outer-name
     # Drop categorical group of features.
     feature_handler.drop_features("A")
     assert all("A" not in col_name for col_name in feature_handler.temporal.columns)
+
+
+def test_extract_features(  # pylint: disable=redefined-outer-name
+    test_input_static, test_input_temporal_extra_column
+):
+    """Test extracting features by name."""
+    feature_handler = FeatureHandler()
+    feature_handler.add_features(test_input_static)
+    feature_handler.add_features(test_input_temporal_extra_column)
+
+    # Extracting existing names
+    static_names = ["B", "C"]
+    temporal_names = ["D"]
+    names = static_names + temporal_names
+    extract_dict = feature_handler.extract_features(names)
+
+    assert extract_dict[STATIC].equals(feature_handler.static[static_names])
+    assert extract_dict[TEMPORAL].equals(feature_handler.temporal[temporal_names])
+
+    # Extracting non-existent names
+    non_existent = "NE"
+    with pytest.raises(ValueError) as e_info:
+        extract_dict = feature_handler.extract_features([non_existent])
+
+    assert non_existent in str(e_info.value)
+
+
+def test_standard_scaling(  # pylint: disable=redefined-outer-name
+    test_input_static, test_input_temporal_extra_column
+):
+    """Test standardization scaling functionality."""
+    feature_handler = FeatureHandler(normalization_method=STANDARD)
+    feature_handler.add_features(test_input_static)
+    feature_handler.add_features(test_input_temporal_extra_column)
+
+    scaled = feature_handler.scaled
+    static_scaled = scaled[STATIC]
+    temporal_scaled = scaled[TEMPORAL]
+
+    # Test static scaling
+    scaler = StandardScaler().fit(feature_handler.static["B"].values.reshape(-1, 1))
+    scaled = scaler.transform(
+        feature_handler.static["B"].values.reshape(-1, 1)
+    ).flatten()
+    assert np.allclose(static_scaled["B"].values, scaled)
+
+    # Test temporal scaling
+    scaler = StandardScaler().fit(feature_handler.temporal["D"].values.reshape(-1, 1))
+    scaled = scaler.transform(
+        feature_handler.temporal["D"].values.reshape(-1, 1)
+    ).flatten()
+    assert np.allclose(temporal_scaled["D"].values, scaled)
+
+
+def test_minmax_scaling(  # pylint: disable=redefined-outer-name
+    test_input_static, test_input_temporal_extra_column
+):
+    """Test min-max scaling functionality."""
+    feature_handler = FeatureHandler(normalization_method=MIN_MAX)
+    feature_handler.add_features(test_input_static)
+    feature_handler.add_features(test_input_temporal_extra_column)
+
+    scaled = feature_handler.scaled
+    static_scaled = scaled[STATIC]
+    temporal_scaled = scaled[TEMPORAL]
+
+    # Test static scaling
+    scaled = feature_handler.static["B"].values
+    scaled = (scaled - scaled.min()) / (scaled.max() - scaled.min())
+    assert np.allclose(static_scaled["B"].values, scaled)
+
+    # Test temporal scaling
+    scaled = feature_handler.temporal["D"].values
+    scaled = (scaled - scaled.min()) / (scaled.max() - scaled.min())
+    assert np.allclose(temporal_scaled["D"].values, scaled)
+
+
+def test_invalid_scaling(test_input_static):  # pylint: disable=redefined-outer-name
+    """Test non-existent scaling method exception."""
+    with pytest.raises(ValueError) as e_info:
+        feature_handler = FeatureHandler(normalization_method="NE")
+        feature_handler.add_features(test_input_static)
+
+    assert "None" in str(e_info.value)
+    assert "standard" in str(e_info.value)
+    assert "min-max" in str(e_info.value)
