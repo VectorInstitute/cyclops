@@ -14,7 +14,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from codebase_ops import get_log_file_path
 from cyclops.constants import FEATURES
-from cyclops.plotter import plot_temporal_features, plot_histogram
+from cyclops.plotter import plot_histogram, plot_temporal_features
 from cyclops.processors.constants import (
     BINARY,
     FEATURE_TYPE,
