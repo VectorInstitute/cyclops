@@ -14,7 +14,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from codebase_ops import get_log_file_path
 from cyclops.constants import FEATURES
-from cyclops.plotter import plot_temporal_features
+from cyclops.plotter import plot_temporal_features, plot_histogram
 from cyclops.processors.constants import (
     BINARY,
     FEATURE_TYPE,
@@ -735,28 +735,30 @@ class FeatureHandler:
 
     def plot_features(
         self,
-        encounter_id: int,
+        encounter_id: Optional[int] = None,
         aggregate_type: Optional[str] = TEMPORAL,
-        names: Optional[list] = None,
+        names: Optional[Union[str, list]] = None,
     ) -> None:
         """Plot features.
 
-        Plots the time-series features for specified encounter.
-        If 'names' is not specified, then all available features are
-        plotted.
+        High-level plotting function for features. Can be used
+        to plot static or temporal features based on arguments.
 
         Parameters
         ----------
-        encounter_id: int
+        encounter_id: int, optional
             Encounter ID.
         aggregate_type: str
             'static' or 'temporal' features to plot.
-        names: list, optional
+        names: list or str, optional
             Names of features to plot.
 
         """
         if aggregate_type == TEMPORAL:
-            plot_temporal_features(self.features[TEMPORAL], encounter_id, names)
+            if encounter_id:
+                plot_temporal_features(self.features[TEMPORAL], encounter_id, names)
+        if aggregate_type == STATIC:
+            plot_histogram(self.features[STATIC], names)
 
     def _drop_cols(self, cols: list) -> None:
         """Drop columns.
