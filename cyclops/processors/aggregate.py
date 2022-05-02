@@ -143,6 +143,40 @@ def filter_upto_window(
     return data_filtered
 
 
+def gather_events_into_single_bucket(
+    data: pd.DataFrame, aggregation_strategy: str
+) -> pd.DataFrame:
+    """Gather events into single bucket.
+
+    If aggregation window and bucket size are the same, then
+    all events fall into the same bucket, and hence instead of a
+    time-series, a single feature value per event is gathered.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input data.
+    aggregation_strategy: str
+        Aggregation strategy within bucket.
+
+    Returns
+    -------
+    pandas.DataFrame:
+        Processed event features.
+
+    """
+    encounters = list(data[ENCOUNTER_ID].unique())
+    event_names = list(data[EVENT_NAME].unique())
+    features = pd.DataFrame(index=encounters, columns=event_names)
+    grouped_events = data.groupby([ENCOUNTER_ID, EVENT_NAME])
+    for (encounter_id, event_name), events in tqdm(grouped_events):
+        features.loc[encounter_id, event_name] = aggregate_values_in_bucket(
+            events[EVENT_VALUE], strategy=aggregation_strategy
+        )
+
+    return features
+
+
 def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.float64:
     """Aggregate multiple values within a bucket into single value.
 
@@ -177,9 +211,7 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
 
 
 @time_function
-def gather_event_features(  # pylint: disable=too-many-locals
-    data: pd.DataFrame, aggregator: Aggregator
-) -> pd.DataFrame:
+def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.DataFrame:
     """Gather events from encounters into time-series features.
 
     All the event data is grouped based on encounters. For each
@@ -218,15 +250,9 @@ def gather_event_features(  # pylint: disable=too-many-locals
 
     event_names = list(data[EVENT_NAME].unique())
 
+    # All events are placed in a single bucket, hence not a time-series.
     if aggregator.window == aggregator.bucket_size:
-        encounters = list(data[ENCOUNTER_ID].unique())
-        features = pd.DataFrame(index=encounters, columns=event_names)
-        grouped_events = data.groupby([ENCOUNTER_ID, EVENT_NAME])
-        for (encounter_id, event_name), events in tqdm(grouped_events):
-            features.loc[encounter_id, event_name] = aggregate_values_in_bucket(
-                events[EVENT_VALUE], strategy=aggregator.strategy
-            )
-        return features
+        return gather_events_into_single_bucket(data, aggregator.strategy)
 
     columns = [ENCOUNTER_ID, TIMESTEP] + event_names
     features = pd.DataFrame(columns=columns)
