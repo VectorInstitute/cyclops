@@ -514,7 +514,7 @@ class FeatureHandler:
         # Ensure all features exist.
         inter = set(names).intersection(set(self.names))
         if len(inter) != len(names):
-            raise ValueError(f"Features {inter} do not exist.")
+            raise ValueError(f"Features {set(names) - inter} do not exist.")
         static_names = [n for n in names if n in self.static.columns]
         temporal_names = [n for n in names if n in self.temporal.columns]
 
