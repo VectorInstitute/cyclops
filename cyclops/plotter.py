@@ -8,9 +8,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def plot_histogram(
-    features: pd.DataFrame, name: Optional[list] = None
-) -> None:
+def plot_histogram(features: pd.DataFrame, name: Optional[list] = None) -> None:
     """Plot histogram of static features.
 
     Plots the histogram of static features over all encounters.
@@ -42,6 +40,7 @@ def plot_histogram(
     )
     fig.show()
 
+
 def plot_temporal_features(
     features: pd.DataFrame, encounter_id: int, names: Optional[list] = None
 ) -> None:
@@ -49,7 +48,7 @@ def plot_temporal_features(
 
     Plots a few time-series features for specified encounter.
     If 'names' is not specified, then all available features are
-    plotted. Supports a maximum of 7 features to plot, 
+    plotted. Supports a maximum of 7 features to plot,
 
     Parameters
     ----------
@@ -76,10 +75,16 @@ def plot_temporal_features(
     features_encounter = features.loc[encounter_id][names]
     num_timesteps = len(features_encounter.index)
     fig = make_subplots(rows=len(names), cols=1, x_title="timestep", y_title="value")
-    
+
     for idx, name in enumerate(names):
-        fig.add_trace(go.Scatter(x=features_encounter.index, y=features_encounter[name], name=name), row=idx+1, col=1)
-    
+        fig.add_trace(
+            go.Scatter(
+                x=features_encounter.index, y=features_encounter[name], name=name
+            ),
+            row=idx + 1,
+            col=1,
+        )
+
     fig.update_layout(
         title="Temporal Feature Visualization",
         autosize=False,

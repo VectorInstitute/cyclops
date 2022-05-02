@@ -143,13 +143,15 @@ def filter_upto_window(
     return data_filtered
 
 
-def gather_events_into_single_bucket(data: pd.DataFrame, aggregation_strategy: str) -> pd.DataFrame:
+def gather_events_into_single_bucket(
+    data: pd.DataFrame, aggregation_strategy: str
+) -> pd.DataFrame:
     """Gather events into single bucket.
-    
+
     If aggregation window and bucket size are the same, then
     all events fall into the same bucket, and hence instead of a
     time-series, a single feature value per event is gathered.
-    
+
     Parameters
     ----------
     data: pandas.DataFrame
@@ -161,7 +163,7 @@ def gather_events_into_single_bucket(data: pd.DataFrame, aggregation_strategy: s
     -------
     pandas.DataFrame:
         Processed event features.
-        
+
     """
     encounters = list(data[ENCOUNTER_ID].unique())
     event_names = list(data[EVENT_NAME].unique())
@@ -171,8 +173,9 @@ def gather_events_into_single_bucket(data: pd.DataFrame, aggregation_strategy: s
         features.loc[encounter_id, event_name] = aggregate_values_in_bucket(
             events[EVENT_VALUE], strategy=aggregation_strategy
         )
-        
+
     return features
+
 
 def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.float64:
     """Aggregate multiple values within a bucket into single value.
@@ -208,9 +211,7 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
 
 
 @time_function
-def gather_event_features(
-    data: pd.DataFrame, aggregator: Aggregator
-) -> pd.DataFrame:
+def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.DataFrame:
     """Gather events from encounters into time-series features.
 
     All the event data is grouped based on encounters. For each
