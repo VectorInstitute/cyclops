@@ -42,9 +42,10 @@ class Aggregator:
     window: float, optional
         Window length in hours, to consider for creating time-series.
         For example if its 100 hours, then all temporal data upto
-        100 hours after admission time, for a given encounter is
-        considered. This can be negative as well, in which case,
-        events from the patient's time in the ER will be considered.
+        100 hours for a given encounter is considered. The start time of
+        the time-series by default would be the earliest event recorded for that
+        encounter, for example the first lab test. It can also be the admission
+        time or a custom timestamp if provided.
     start_at_admission: bool, optional
         Flag to say if the window should start at the time of admission.
     start_window_ts: datetime.datetime, optional
