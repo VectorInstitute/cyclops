@@ -28,6 +28,7 @@ from cyclops.processors.constants import (
     TEMPORAL,
 )
 from cyclops.processors.impute import Imputer, impute_features
+from cyclops.processors.utils import is_timeseries_data
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -664,7 +665,7 @@ class FeatureHandler:
         if not isinstance(features, pd.DataFrame):
             raise ValueError("Input to feature handler must be a pandas.DataFrame.")
 
-        if isinstance(features.index, pd.core.indexes.multi.MultiIndex):
+        if is_timeseries_data(features):
             aggregate_type = TEMPORAL
         else:
             aggregate_type = STATIC
