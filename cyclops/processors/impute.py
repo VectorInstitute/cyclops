@@ -9,6 +9,7 @@ import pandas as pd
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.processors.constants import MEAN, MEDIAN
+from cyclops.processors.utils import is_timeseries_data
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -65,7 +66,7 @@ def remove_encounters_if_missing(
 
     """
     # If time-series features, then missingness computed over timesteps as well.
-    if isinstance(features.index, pd.core.indexes.multi.MultiIndex):
+    if is_timeseries_data(features):
         encounter_ids = set(features.index.get_level_values(0))
         for encounter_id in encounter_ids:
             features_encounter = features.loc[encounter_id]

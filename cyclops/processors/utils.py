@@ -13,6 +13,23 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
+def is_timeseries_data(data: pd.DataFrame) -> bool:
+    """Check if input data is time-series dataframe (multi-index).
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input dataframe.
+
+    Returns
+    -------
+    bool
+        Yes if dataframe has multi-index (timeseries), No otherwise.
+
+    """
+    return isinstance(data.index, pd.core.indexes.multi.MultiIndex)
+
+
 def check_must_have_columns(data: pd.DataFrame, must_have_columns: list) -> bool:
     """Check if data has required columns for processing.
 
@@ -49,7 +66,7 @@ def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:
         DataFrame with required columns, other columns discarded.
 
     """
-    return data[columns].copy()
+    return data[columns]
 
 
 def log_counts_step(data, step_description: str, rows=True, columns=False) -> None:
