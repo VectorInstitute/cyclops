@@ -1,4 +1,3 @@
-
 # cyclops
 ---------
 
@@ -14,33 +13,59 @@ in the health (or clinical) setting. It provides three high-level features:
 
 ### Setup Python virtual environment
 
-The development environment has been tested on ``python = 3.8.5``.
-There are two ways to setup the environment and install dependencies.
+The development environment has been tested on Python version `3.8.5`.
+
+[Install](https://github.com/pyenv/pyenv#installation) `pyenv` if not already installed.
+
+Assuming there is already some version of `python3` and `pyenv` installed, we can then set the Python version which will be used in the virutal environment,
+```
+# Install the desired Python version
+pyenv install <PYTHON VERSION>
+
+# Set/verify this version in the global environment
+pyenv global <PYTHON VERSION>
+python3 -V
+```
+
+There are two ways to setup the virutal environment and install package dependencies.
 
 #### Using Anaconda/Miniconda
 
-First make sure that [Anaconda](https://docs.anaconda.com/anaconda/install/index.html)
-or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is installed.
-To create and activate a ``conda`` environment, run:
-
+Assuming [Anaconda](https://docs.anaconda.com/anaconda/install/index.html) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is installed, create and activate a `conda` environment,
 ```bash
 conda env create -f environment.yml
 conda activate cyclops
 ```
 
-#### Using poetry
+#### Using pip/Poetry
 
-The python virtual environment can also be setup using
-[poetry](https://python-poetry.org/docs/#installation). Hence, make sure it is
-installed and then run:
-
-```bash
-poetry install
-source $(poetry config virtualenvs.path)/<name_of_cyclops_env>/bin/activate
+Assuming there is already some version of `pip` installed, we can create and activate a virtual environment,
 ```
-where ``name_of_cyclops_env`` is a folder named something like
-``cyclops-mNjqcr0k-py3.8``.
+# Install the virtualenv package
+python3 -m pip install --upgrade pip
+python3 -m pip install virtualenv
 
+# Create virtual environment at desired path
+python3 -m venv <PATH>
+
+# Enter virtual environment
+source <PATH>/bin/activate
+```
+
+Installing package dependencies is made easy with Poetry, which we can also install with `pip`,
+```
+# Install the Poetry package
+python3 -m pip install poetry
+
+# Install repository packages with Poetry
+cd <CYCLOPS REPOSITORY>
+poetry install
+```
+
+In the future, any updates to the packages can be made with
+```
+poetry update
+```
 
 ## [Documentation](https://vectorinstitute.github.io/cyclops/)
 
