@@ -51,7 +51,7 @@ def check_must_have_columns(data: pd.DataFrame, must_have_columns: list) -> bool
 
 
 def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:
-    """Gather specified columns and discard rest.
+    """Gather specified columns, discarding rest and return copy of columns.
 
     Parameters
     ----------
@@ -66,7 +66,7 @@ def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:
         DataFrame with required columns, other columns discarded.
 
     """
-    return data[columns]
+    return data[columns].copy()
 
 
 def log_counts_step(data, step_description: str, rows=True, columns=False) -> None:

@@ -129,4 +129,3 @@ def setup_logging(
         file_handler = logging.FileHandler(log_path)
         file_handler.setFormatter(ColoredFormatter(fmt))
         logger.addHandler(file_handler)
-        logger.info("Log file is %s", log_path)
