@@ -23,22 +23,6 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-def to_datetime_format(date: str) -> datetime:
-    """Convert date in string format YYYY-MM-DD to datetime.
-
-    Parameters
-    ----------
-    date: str
-        Input date in string format.
-    Returns
-    -------
-    datetime
-        Date in datetime format.
-
-    """
-    return datetime.strptime(date, "%Y-%m-%d")
-
-
 @dataclass
 class DBSchema:
     """Database schema wrapper.
@@ -88,33 +72,7 @@ class DBMetaclass(type):
 QUERY_TYPES = [Table, Select, Subquery, DBTable]
 
 
-# === GENERAL PURPOSE FUNCTIONS ===
-def debug_query_msg(func_: Callable) -> Callable:
-    """Debug message decorator function.
-
-    Parameters
-    ----------
-    func: function
-        Function to apply decorator.
-
-    Returns
-    -------
-    Callable
-        Wrapper function to apply as decorator.
-
-    """
-
-    @wraps(func_)
-    def wrapper_func(*args, **kwargs):
-        LOGGER.debug("Running query function: %s", {func_.__name__})
-        query_result = func_(*args, **kwargs)
-        LOGGER.debug("Finished query function: %s", {func_.__name__})
-        return query_result
-
-    return wrapper_func
-
-
-def to_list(obj: Any):
+def to_list(obj: Any) -> list:
     """Convert some object to a list of object(s) unless already one.
 
     Parameters
@@ -124,7 +82,7 @@ def to_list(obj: Any):
 
     Returns
     -------
-    Callable
+    list
         The processed function.
 
     """
@@ -135,6 +93,22 @@ def to_list(obj: Any):
         obj = list(obj)
 
     return [obj]
+
+
+def to_datetime_format(date: str) -> datetime:
+    """Convert date in string format YYYY-MM-DD to datetime.
+
+    Parameters
+    ----------
+    date: str
+        Input date in string format.
+    Returns
+    -------
+    datetime
+        Date in datetime format.
+
+    """
+    return datetime.strptime(date, "%Y-%m-%d")
 
 
 def _to_subquery(table_: Union[Select, Subquery, Table, DBTable]) -> Subquery:
@@ -203,15 +177,6 @@ def _to_select(table_: Union[Select, Subquery, Table, DBTable]) -> Select:
     )
 
 
-# Dictionary mapping query type -> query type conversion function.
-QUERY_TO_TYPE_FNS = {
-    Subquery: _to_subquery,
-    Select: _to_select,
-    Table: lambda x: x,
-    DBTable: lambda x: x,
-}
-
-
 def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Callable:
     """Decorate function with conversion of input types to a specific type.
 
@@ -271,10 +236,18 @@ def query_params_to_type(to_type: Any):
         The processed function.
 
     """
+    # Dictionary mapping query type -> query type conversion function.
+    query_to_type_fn_map = {
+        Subquery: _to_subquery,
+        Select: _to_select,
+        Table: lambda x: x,
+        DBTable: lambda x: x,
+    }
     if to_type not in QUERY_TYPES:
         raise ValueError(f"to_type must be in {QUERY_TYPES}")
 
-    to_type_fn = QUERY_TO_TYPE_FNS[to_type]
+    to_type_fn = query_to_type_fn_map[to_type]
+
     return param_types_to_type(QUERY_TYPES, to_type_fn)
 
 
@@ -327,6 +300,40 @@ def get_attribute(
         raise ValueError(f"Query does not contain column {attr}")
 
     return table_.c[col_names.index(attr)]
+
+
+@query_params_to_type(Subquery)
+def filter_attributes(
+    table_: Union[Select, Subquery, Table, DBTable],
+    attrs: Union[str, Column, List[Union[str, Column]]],
+):
+    """Filter a number of attributes from the subquery.
+
+    The attribute(s) may be a column name (string),
+    or a list of any strings.
+
+    Parameters
+    ----------
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        The query with the column.
+    attrs: str or sqlalchemy.sql.schema.Column
+        Attribute to get. It is either a Column object or the column name.
+
+    Returns
+    -------
+    list of sqlalchemy.sql.schema.Column
+        The corresponding attributes in the query.
+
+    """
+    col_names = [c.name for c in table_.columns]
+    filtered = []
+    for attr in to_list(attrs):
+        if attr not in col_names:
+            continue
+        filtered.append(table_.c[col_names.index(attr)])
+
+    return select(filtered)
 
 
 @query_params_to_type(Subquery)
@@ -417,11 +424,6 @@ def rename_attributes(
         The corresponding query with attributes renamed.
 
     """
-    #     # Make sure we aren't renaming to columns to be the same.
-    #     values = list(old_new_map.values())
-    #     if len(values) != len(set(values)):
-    #         raise ValueError("Cannot rename two attributes to the same name.")
-    # Rename.
     return select(
         *[
             c.label(old_new_map[c.name]) if c.name in old_new_map else c

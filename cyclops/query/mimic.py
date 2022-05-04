@@ -5,24 +5,36 @@
 from typing import List, Optional, Union
 
 import sqlalchemy
-from sqlalchemy import Integer, func, select
+from sqlalchemy import Integer, extract, func, select
 from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
 from cyclops import config
 from cyclops.constants import MIMIC
 from cyclops.orm import Database
+from cyclops.processors.column_names import (
+    ADMIT_TIMESTAMP,
+    DIAGNOSIS_CODE,
+    DISCHARGE_TIMESTAMP,
+    ENCOUNTER_ID,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT,
+    SEX,
+    YEAR,
+)
+from cyclops.processors.constants import MONTH
 from cyclops.query.interface import QueryInterface
 from cyclops.query.utils import (
     DBTable,
-    debug_query_msg,
     drop_attributes,
     equals,
     has_substring,
     in_,
-    query_params_to_type,
     rename_attributes,
     reorder_attributes,
+    to_list,
     trim_attributes,
 )
 
@@ -32,6 +44,7 @@ DIAGNOSES = "diagnoses"
 PATIENT_DIAGNOSES = "patient_diagnoses"
 EVENT_LABELS = "event_labels"
 EVENTS = "events"
+SUBJECT_ID = "subject_id"
 
 
 _db = Database(config.read_config(MIMIC))
@@ -43,11 +56,48 @@ TABLE_MAP = {
     EVENT_LABELS: lambda db: db.mimic_icu.d_items,
     EVENTS: lambda db: db.mimic_icu.chartevents,
 }
+MIMIC_COLUMN_MAP = {
+    "hadm_id": ENCOUNTER_ID,
+    "admittime": ADMIT_TIMESTAMP,
+    "dischtime": DISCHARGE_TIMESTAMP,
+    "gender": SEX,
+    "valueuom": EVENT_VALUE_UNIT,
+    "lab_test_name_mapped": EVENT_NAME,
+    "label": EVENT_NAME,
+    "valuenum": EVENT_VALUE,
+    "charttime": EVENT_TIMESTAMP,
+    "icd_code": DIAGNOSIS_CODE,
+}
 
 
-@debug_query_msg
+def get_lookup_table(table_name: str) -> QueryInterface:
+    """Get lookup table data.
+
+    Some tables are minimal reference tables that are
+    useful for reference. The entire table is wrapped as
+    a query to run.
+
+    Parameters
+    ----------
+    table_name: str
+        Name of the table.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    if table_name not in [DIAGNOSES, EVENT_LABELS]:
+        raise ValueError("Not a recognised lookup/dimension table!")
+
+    subquery = select(TABLE_MAP[table_name](_db).data).subquery()
+
+    return QueryInterface(_db, subquery)
+
+
 def patients(
-    years: List[str] = None, process_anchor_year: bool = True
+    years: List[str] = None, months: List[str] = None, process_anchor_year: bool = True
 ) -> QueryInterface:
     """Query MIMIC patient data.
 
@@ -55,14 +105,16 @@ def patients(
     ----------
     years: list of str, optional
         Years for which patient encounters are to be filtered.
+    months: list of str, optional
+        Months for which patient encounters are to be filtered.
     process_anchor_year : bool, optional
         Whether to process and include the patient's anchor
         year, i.e., year of care information.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
-        Select ORM object.
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
 
     """
     patients_table = TABLE_MAP[PATIENTS](_db)
@@ -91,7 +143,7 @@ def patients(
             subquery.c.anchor_year_group_start
             + (subquery.c.anchor_year_group_end - subquery.c.anchor_year_group_start)
             / 2
-        ).label("year"),
+        ).label(YEAR),
     ).subquery()
 
     subquery = select(
@@ -111,18 +163,24 @@ def patients(
         .subquery()
     )
 
+    if months:
+        subquery = (
+            select(subquery)
+            .where(in_(extract(MONTH, subquery.c.admittime), months))
+            .subquery()
+        )
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
+
     return QueryInterface(_db, subquery)
 
 
-@debug_query_msg
-@query_params_to_type(Subquery)
 def _join_with_patients(
     patients_table: Union[Select, Subquery, Table, DBTable],
     table_: Union[Select, Subquery, Table, DBTable],
 ) -> QueryInterface:
     """Join a subquery with MIMIC patient static information.
 
-    Assumes that the query t has column 'subject_id'.
+    Assumes that the query has column 'subject_id'.
 
     Parameters
     ----------
@@ -139,9 +197,7 @@ def _join_with_patients(
         Constructed query, wrapped in an interface object.
 
     """
-    if not hasattr(table_.c, "subject_id") or not hasattr(
-        patients_table.c, "subject_id"
-    ):
+    if not hasattr(table_.c, SUBJECT_ID) or not hasattr(patients_table.c, SUBJECT_ID):
         raise ValueError(
             "Input query table and patients table must have attribute 'subject_id'."
         )
@@ -158,7 +214,6 @@ def _join_with_patients(
 
 def _diagnoses(
     version: Optional[int] = None,
-    substring: Optional[str] = None,
 ) -> sqlalchemy.sql.selectable.Subquery:
     """Query MIMIC possible diagnoses.
 
@@ -166,8 +221,6 @@ def _diagnoses(
     ----------
     version: int, optional
         If specified, restrict ICD codes to this version.
-    substring: str, optional
-        Search sub-string for diagnoses, applied on the ICD long title.
 
     Returns
     -------
@@ -178,6 +231,7 @@ def _diagnoses(
     # Get diagnoses.
     table_ = TABLE_MAP[DIAGNOSES](_db)
     subquery = select(table_.data).subquery()
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
 
     # Filter by version.
     if version:
@@ -188,30 +242,22 @@ def _diagnoses(
         )
 
     # Trim whitespace from icd_codes.
-    subquery = trim_attributes(subquery, ["icd_code"]).subquery()
+    subquery = trim_attributes(subquery, [DIAGNOSIS_CODE]).subquery()
 
     # Rename long_title to icd_title.
     subquery = rename_attributes(subquery, {"long_title": "icd_title"}).subquery()
 
     # Re-order the columns nicely.
     subquery = reorder_attributes(
-        subquery, ["icd_code", "icd_title", "icd_version"]
+        subquery, [DIAGNOSIS_CODE, "icd_title", "icd_version"]
     ).subquery()
-
-    if substring:
-        subquery = (
-            select(subquery)
-            .where(has_substring(subquery.c.icd_title, substring, to_str=True))
-            .subquery()
-        )
 
     return subquery
 
 
-@debug_query_msg
 def diagnoses(
     version: Optional[int] = None,
-    substring: str = None,
+    substring: Optional[str] = None,
     diagnosis_codes: Union[str, List[str]] = None,
     patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
@@ -237,6 +283,7 @@ def diagnoses(
     # Get patient diagnoses.
     table_ = TABLE_MAP[PATIENT_DIAGNOSES](_db)
     subquery = select(table_.data).subquery()
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
 
     # Filter by version
     if version:
@@ -247,78 +294,43 @@ def diagnoses(
         )
 
     # Trim whitespace from icd_codes.
-    query = trim_attributes(subquery, ["icd_code"])
-
-    # Include ICD title.
-    subquery = query.subquery()
+    subquery = trim_attributes(subquery, [DIAGNOSIS_CODE]).subquery()
 
     # Get codes.
-    code_subquery = _diagnoses(version=version, substring=substring)
+    code_subquery = _diagnoses(version=version)
 
     # Get patient diagnoses, including ICD title.
     subquery = (
         select(subquery, code_subquery.c.icd_title)
-        .join(subquery, subquery.c.icd_code == code_subquery.c.icd_code)
+        .join(subquery, subquery.c.diagnosis_code == code_subquery.c.diagnosis_code)
         .subquery()
     )
 
-    # Select those in the given ICD codes.
+    # Filter by substring.
+    if substring:
+        subquery = (
+            select(subquery)
+            .where(has_substring(subquery.c.icd_title, substring, to_str=True))
+            .subquery()
+        )
+
+    # Filter by ICD codes.
     if diagnosis_codes:
         subquery = (
             select(subquery)
-            .where(in_(subquery.c.icd_code, diagnosis_codes, to_str=True))
+            .where(in_(subquery.c.diagnosis_code, diagnosis_codes, to_str=True))
             .subquery()
         )
+
     if patients:
         return _join_with_patients(patients.query, subquery)
 
     return QueryInterface(_db, subquery)
 
 
-@debug_query_msg
-def _event_labels(
-    category: Optional[str] = None, substring: Optional[str] = None
-) -> sqlalchemy.sql.selectable.Subquery:
-    """Query MIMIC event labels.
-
-    Parameters
-    ----------
-    category : str, optional
-        If specified, restrict to this category.
-    substring: str, optional
-        If specified, filter event labels by substring.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Subquery
-        Event labels filtered based on category, or substring.
-
-    """
-    table_ = TABLE_MAP[EVENT_LABELS](_db)
-    subquery = select(table_.data).subquery()
-
-    # Filter by category.
-    if category:
-        subquery = (
-            select(subquery).where(equals(subquery.c.category, category)).subquery()
-        )
-
-    # Filter by label substring.
-    if substring:
-        subquery = (
-            select(subquery)
-            .where(has_substring(subquery.c.label, substring))
-            .subquery()
-        )
-
-    return subquery
-
-
-@debug_query_msg
 def events(
     category: Optional[str] = None,
-    itemids: Optional[List[int]] = None,
-    labels: Optional[Union[str, List[str]]] = None,
+    names: Optional[Union[str, List[str]]] = None,
     substring: Optional[str] = None,
     patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
@@ -328,12 +340,10 @@ def events(
     ----------
     category : str, optional
         If specified, restrict to this category.
-    itemids : list of int, optional
-        The itemids to take.
-    labels : str or list of str, optional
-        The labels to take.
-    substring : str, optional
-        Substring to match in an event label.
+    names : str or list of str, optional
+        The event names to filter.
+    substring: str, optional
+        Substring to search event names to filter.
     patients: QueryInterface, optional
         Patient encounters query wrapped, used to join with events.
 
@@ -344,41 +354,44 @@ def events(
 
     """
     table_ = TABLE_MAP[EVENTS](_db)
-    subquery = select(table_.data).subquery()
+    event_labels_table = TABLE_MAP[EVENT_LABELS](_db)
 
-    labels_subquery = _event_labels(category=category)
+    subquery = select(table_.data).subquery()
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
+    event_labels_subquery = select(event_labels_table.data).subquery()
+    event_labels_subquery = rename_attributes(
+        event_labels_subquery, MIMIC_COLUMN_MAP
+    ).subquery()
+
     subquery = (
-        select(subquery, labels_subquery.c.category, labels_subquery.c.label)
-        .join(labels_subquery, subquery.c.itemid == labels_subquery.c.itemid)
+        select(
+            subquery,
+            event_labels_subquery.c.category,
+            event_labels_subquery.c.event_name,
+        )
+        .join(
+            event_labels_subquery, subquery.c.itemid == event_labels_subquery.c.itemid
+        )
         .subquery()
     )
+
     # Filter by category.
     if category:
         subquery = (
             select(subquery).where(equals(subquery.c.category, category)).subquery()
         )
 
-    # Filter by itemids.
-    if itemids:
+    # Filter by event names.
+    if names:
         subquery = (
             select(subquery)
-            .where(in_(subquery.c.itemid, itemids, to_int=True))
+            .where(in_(subquery.c.event_name, to_list(names), to_str=True))
             .subquery()
         )
-
-    # Filter by labels.
-    if labels:
-        subquery = (
-            select(subquery)
-            .where(in_(subquery.c.label, labels, lower=False, strip=False))
-            .subquery()
-        )
-
-    # Filter by label substring.
     if substring:
         subquery = (
             select(subquery)
-            .where(has_substring(subquery.c.label, substring))
+            .where(has_substring(subquery.c.event_name, substring, to_str=True))
             .subquery()
         )
 

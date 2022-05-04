@@ -3,13 +3,15 @@
 import logging
 import os
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 from sqlalchemy.sql.selectable import Select, Subquery
 
 from codebase_ops import get_log_file_path
 from cyclops.orm import Database
+from cyclops.processors.column_names import RECOGNISED_QUERY_COLUMNS
+from cyclops.query.utils import filter_attributes
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -37,10 +39,47 @@ class QueryInterface:
     query: Union[Select, Subquery]
     data: Union[pd.DataFrame, None] = None
 
-    def run(self, limit: Optional[int] = None) -> None:
-        """Run the query, and fetch data."""
+    def run(
+        self,
+        limit: Optional[int] = None,
+        filter_columns: Optional[Union[str, List[str]]] = None,
+        filter_recognised: bool = False,
+    ) -> pd.DataFrame:
+        """Run the query, and fetch data.
+
+        Parameters
+        ----------
+        limit: int, optional
+            No. of rows to limit the query return.
+        filter_columns: str or list of str, optional
+            Filters specified columns from returned dataframe, if they are present.
+        filter_recognised: bool, optional
+            Filter columns that are recognised by the processor. Useful to avoid
+            increased RAM usage.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Query result dataframe.
+
+        Raises
+        ------
+        ValueError
+            When filter_columns and filter_recognised are both mistakenly used,
+            an error is raised.
+
+        """
+        if filter_columns and filter_recognised:
+            raise ValueError(
+                "Both filter_recognised and filter_columns cannot be used!"
+            )
+        if filter_columns:
+            self.query = filter_attributes(self.query, filter_columns)
+        if filter_recognised:
+            self.query = filter_attributes(self.query, RECOGNISED_QUERY_COLUMNS)
         if self.data is None:
             self.data = self._db.run_query(self.query, limit=limit)
+
         return self.data
 
     def __repr__(self) -> str:
