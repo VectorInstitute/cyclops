@@ -97,7 +97,6 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
         Output data with normalized event names.
 
     """
-    print(data[EVENT_NAME])
     data[EVENT_NAME] = data[EVENT_NAME].apply(remove_text_in_parentheses)
     data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
     log_counts_step(
@@ -125,7 +124,6 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
         Output data with normalized event values.
 
     """
-    print(data[EVENT_NAME])
     data = data.copy()
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(fix_inequalities)
     log_counts_step(
