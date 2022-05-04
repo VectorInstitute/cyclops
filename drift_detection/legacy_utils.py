@@ -1,7 +1,3 @@
-from shift_detector import *
-from shift_reductor import *
-from shift_tester import *
-from shift_experiments import *
 import re
 from collections import OrderedDict
 import numpy as np
@@ -11,7 +7,6 @@ import matplotlib.pyplot as plt
 import sqlalchemy
 from sqlalchemy import func, select, desc
 from sqlalchemy.sql.expression import and_, or_
-from shift_constants import *
 
 import sys
 from functools import reduce
@@ -46,41 +41,13 @@ from evidently.dashboard.tabs import DataQualityTab
 from evidently.model_profile import Profile
 from evidently.model_profile.sections import DataQualityProfileSection
 
-import config
-import cyclops
-from cyclops.processors.column_names import (
-    ENCOUNTER_ID,
-    HOSPITAL_ID,
-    ADMIT_TIMESTAMP,
-    DISCHARGE_TIMESTAMP,
-    DISCHARGE_DISPOSITION,
-    READMISSION,
-    AGE,
-    SEX,
-    TOTAL_COST,
-    CITY,
-    PROVINCE,
-    COUNTRY,
-    LANGUAGE,
-    LENGTH_OF_STAY_IN_ER,
-    VITAL_MEASUREMENT_NAME,
-    VITAL_MEASUREMENT_VALUE,
-    VITAL_MEASUREMENT_TIMESTAMP,
-    LAB_TEST_NAME,
-    LAB_TEST_TIMESTAMP,
-    LAB_TEST_RESULT_VALUE,
-    LAB_TEST_RESULT_UNIT,
-    REFERENCE_RANGE,
-)
-from cyclops.processors.constants import EMPTY_STRING
-from cyclops.processors.admin import AdminProcessor
-from cyclops.processors.vitals import VitalsProcessor
-from cyclops.processors.labs import LabsProcessor
-from cyclops.processors.outcomes import OutcomesProcessor
-from cyclops.processors.feature_handler import FeatureHandler
-from cyclops.orm import Database
-
-def import_dataset(outcome, features=None, shuffle=True):
+FEATURES = ['age', 'icd10_A00_B99','icd10_C00_D49', 'icd10_D50_D89', 'icd10_E00_E89', 'icd10_F01_F99',
+       'icd10_G00_G99', 'icd10_H00_H59', 'icd10_H60_H95', 'icd10_I00_I99',
+       'icd10_J00_J99', 'icd10_K00_K95', 'icd10_L00_L99', 'icd10_M00_M99',
+       'icd10_N00_N99', 'icd10_O00_O99', 'icd10_Q00_Q99', 'icd10_R00_R99', 
+       'icd10_S00_T88', 'icd10_U07_U08', 'icd10_Z00_Z99']
+    
+def import_dataset(outcome, features=FEATURES, shuffle=True):
     data = pd.read_csv('/mnt/nfs/project/delirium/data/data_2019.csv')
     data = data.loc[data['hospital_id'].isin([3])]
     data[features] = data[features].fillna(0)
@@ -99,6 +66,25 @@ def import_dataset(outcome, features=None, shuffle=True):
     orig_dims = x_train.shape[1:]
     
     return (x_train, y_train), (x_val, y_val), (x_test, y_test), orig_dims
+
+
+def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
+    x = np.append(x_train, x_test, axis=0)
+    y = np.append(y_train, y_test, axis=0)
+
+    x, y = __unison_shuffled_copies(x, y)
+
+    x_train = x[:split_index, :]
+    x_test = x[split_index:, :]
+    y_train = y[:split_index]
+    y_test = y[split_index:]
+
+    return (x_train, y_train), (x_test, y_test)
+
+def __unison_shuffled_copies(a, b):
+    assert len(a) == len(b)
+    p = np.random.permutation(len(a))
+    return a[p], b[p]
 
 def import_dataset_year(outcome, year, features=None, shuffle=True,):
     data_s = pd.read_csv('/mnt/nfs/project/delirium/data/data_2019.csv')

@@ -5,7 +5,7 @@ from torch import *
 #from torch_two_sample import *
 from scipy.stats import ks_2samp, binom_test, chisquare, chi2_contingency, anderson_ksamp
 from scipy.spatial import distance
-from alibi_detect.cd import MMDDrift, LSDDDrift, LearnedKernelDrift
+from alibi_detect.cd import MMDDrift, LSDDDrift, LearnedKernelDrift, TabularDrift, ClassifierDrift 
 from alibi_detect.cd import MMDDriftOnline, LSDDDriftOnline
 from alibi_detect.utils.pytorch.kernels import DeepKernel
 import math
@@ -32,8 +32,9 @@ class ShiftTester:
 
         p_val = None
         dist = None
+        
         if self.mt == "MMD":
-            dd = MMDDrift(X_s, backend='pytorch', p_val=.05)
+            dd = MMDDrift(X_s, backend='pytorch', n_permutations=100, p_val=.05)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
@@ -57,7 +58,28 @@ class ShiftTester:
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
-
+           
+        elif self.mt == "Classifier":
+            model = nn.Sequential(
+                nn.Linear(X_s.shape[-1], 32),
+                nn.SiLU(),
+                nn.Linear(32, 8),
+                nn.SiLU(),
+                nn.Linear(8, 2),
+            ).to(self.device)
+            dd = ClassifierDrift(X_s, model, backend='pytorch', p_val=.05, preds_type='logits')
+            preds = dd.predict(X_t, return_p_val=True, return_distance=True)
+            p_val = preds["data"]["p_val"]
+            dist = preds["data"]["distance"]
+            
+        elif self.mt == "Univariate":
+            ## change this to get appropriate column indexing for feature map
+            feature_map = {f: None for f in list(X_s.columns)}
+            dd = TabularDrift(X_s, p_val=0.05, categories_per_feature=feature_map)
+            preds = dd.predict(X_t, drift_type='batch', return_p_val=True, return_distance=True)
+            p_val = preds["data"]["p_val"]
+            dist = preds["data"]["distance"]
+            
         elif self.mt == "Energy":
             energy_test = EnergyStatistic(len(X_s), len(X_t))
             t_val, matrix = energy_test(torch.autograd.Variable(torch.tensor(X_s)),
