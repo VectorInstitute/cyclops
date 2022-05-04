@@ -15,6 +15,7 @@ PROVINCE = "province"
 COUNTRY = "country"
 LANGUAGE = "language"
 TOTAL_COST = "total_cost"
+YEAR = "year"
 
 DIAGNOSIS_CODE = "diagnosis_code"
 DIAGNOSIS_TYPE = "diagnosis_type"
@@ -29,5 +30,20 @@ EVENT_VALUE_UNIT = "event_value_unit"
 EVENT_TIMESTAMP = "event_timestamp"
 
 REFERENCE_RANGE = "reference_range"
-
 TIMESTEP = "timestep"
+
+RECOGNISED_QUERY_COLUMNS = [
+    ADMIT_TIMESTAMP,
+    DISCHARGE_TIMESTAMP,
+    ENCOUNTER_ID,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT,
+    LENGTH_OF_STAY_IN_ER,
+    SEX,
+    HOSPITAL_ID,
+    DIAGNOSIS_CODE,
+    DIAGNOSIS_TYPE,
+    YEAR,
+]

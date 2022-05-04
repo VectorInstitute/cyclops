@@ -24,14 +24,13 @@ from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
 from cyclops.query.interface import QueryInterface
 from cyclops.query.utils import (
     DBTable,
-    debug_query_msg,
     equals,
     has_substring,
     in_,
     not_equals,
-    query_params_to_type,
     rename_attributes,
     to_datetime_format,
+    to_list,
 )
 
 IP_ADMIN = "ip_admin"
@@ -41,6 +40,9 @@ LAB = "lab"
 VITALS = "vitals"
 PHARMACY = "pharmacy"
 INTERVENTION = "intervention"
+LOOKUP_IP_ADMIN = "lookup_ip_admin"
+LOOKUP_ER_ADMIN = "lookup_er_admin"
+LOOKUP_DIAGNOSIS = "lookup_diagnosis"
 
 
 _db = Database(config.read_config(GEMINI))
@@ -52,6 +54,9 @@ TABLE_MAP = {
     VITALS: lambda db: db.public.vitals,
     PHARMACY: lambda db: db.public.pharmacy,
     INTERVENTION: lambda db: db.public.intervention,
+    LOOKUP_IP_ADMIN: lambda db: db.public.lookup_ip_administrative,
+    LOOKUP_ER_ADMIN: lambda db: db.public.lookup_er_administrative,
+    LOOKUP_DIAGNOSIS: lambda db: db.public.lookup_diagnosis,
 }
 GEMINI_COLUMN_MAP = {
     "genc_id": ENCOUNTER_ID,
@@ -69,7 +74,32 @@ GEMINI_COLUMN_MAP = {
 }
 
 
-@debug_query_msg
+def get_lookup_table(table_name: str) -> QueryInterface:
+    """Get lookup table data.
+
+    Some tables are minimal reference tables that are
+    useful for reference. The entire table is wrapped as
+    a query to run.
+
+    Parameters
+    ----------
+    table_name: str
+        Name of the table.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    if table_name not in [LOOKUP_IP_ADMIN, LOOKUP_ER_ADMIN, LOOKUP_DIAGNOSIS]:
+        raise ValueError("Not a recognised lookup/dimension table!")
+
+    subquery = select(TABLE_MAP[table_name](_db).data).subquery()
+
+    return QueryInterface(_db, subquery)
+
+
 def patients(  # pylint: disable=too-many-arguments
     years: List[str] = None,
     months: List[str] = None,
@@ -155,7 +185,6 @@ def patients(  # pylint: disable=too-many-arguments
     return QueryInterface(_db, subquery)
 
 
-@query_params_to_type(Subquery)
 def _join_with_patients(
     patients_table: Union[Select, Subquery, Table, DBTable],
     table_: Union[Select, Subquery, Table, DBTable],
@@ -191,7 +220,6 @@ def _join_with_patients(
     return QueryInterface(_db, query)
 
 
-@debug_query_msg
 def diagnoses(
     diagnosis_codes: Union[List[str], str] = None,
     diagnosis_types: List[str] = None,
@@ -250,10 +278,10 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
-@debug_query_msg
 def events(
     category: str,
-    labels: Optional[Union[str, List[str]]] = None,
+    names: Optional[Union[str, List[str]]] = None,
+    substring: Optional[str] = None,
     patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
     """Query events.
@@ -262,8 +290,10 @@ def events(
     ----------
     category : str
         Category of events i.e. lab, vitals, intervention, etc.
-    labels : str or list of str, optional
-        The labels to take.
+    names : str or list of str, optional
+        The event name(s) to filter.
+    substring: str, optional
+        Substring to search event names to filter.
     patients: QueryInterface, optional
         Patient encounters query wrapped, used to join with events.
 
@@ -285,18 +315,19 @@ def events(
             .where(not_equals(subquery.c.event_name, EMPTY_STRING, to_str=True))
             .subquery()
         )
-        if labels and isinstance(labels, list):
+        if names:
             subquery = (
                 select(subquery)
-                .where(in_(subquery.c.event_name, labels, to_str=True))
+                .where(in_(subquery.c.event_name, to_list(names), to_str=True))
                 .subquery()
             )
-        if labels and isinstance(labels, str):
+        if substring:
             subquery = (
                 select(subquery)
-                .where(has_substring(subquery.c.event_name, labels, to_str=True))
+                .where(has_substring(subquery.c.event_name, substring, to_str=True))
                 .subquery()
             )
+
     if patients:
         return _join_with_patients(patients.query, subquery)
 
