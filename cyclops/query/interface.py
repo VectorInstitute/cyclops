@@ -55,7 +55,7 @@ class QueryInterface:
             Filters specified columns from returned dataframe, if they are present.
         filter_recognised: bool, optional
             Filter columns that are recognised by the processor. Useful to avoid
-            increased RAM usage.
+            increased RAM usage when running entire pipelines.
 
         Returns
         -------

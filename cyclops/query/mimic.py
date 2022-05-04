@@ -14,6 +14,7 @@ from cyclops.constants import MIMIC
 from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
+    AGE,
     DIAGNOSIS_CODE,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
@@ -44,8 +45,6 @@ DIAGNOSES = "diagnoses"
 PATIENT_DIAGNOSES = "patient_diagnoses"
 EVENT_LABELS = "event_labels"
 EVENTS = "events"
-SUBJECT_ID = "subject_id"
-
 
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {
@@ -61,8 +60,8 @@ MIMIC_COLUMN_MAP = {
     "admittime": ADMIT_TIMESTAMP,
     "dischtime": DISCHARGE_TIMESTAMP,
     "gender": SEX,
+    "anchor_age": AGE,
     "valueuom": EVENT_VALUE_UNIT,
-    "lab_test_name_mapped": EVENT_NAME,
     "label": EVENT_NAME,
     "valuenum": EVENT_VALUE,
     "charttime": EVENT_TIMESTAMP,
@@ -97,15 +96,17 @@ def get_lookup_table(table_name: str) -> QueryInterface:
 
 
 def patients(
-    years: List[str] = None, months: List[str] = None, process_anchor_year: bool = True
+    years: Optional[Union[int, List[int]]] = None,
+    months: Optional[Union[int, List[int]]] = None,
+    process_anchor_year: bool = True,
 ) -> QueryInterface:
     """Query MIMIC patient data.
 
     Parameters
     ----------
-    years: list of str, optional
+    years: int or list of int, optional
         Years for which patient encounters are to be filtered.
-    months: list of str, optional
+    months: int or list of int, optional
         Months for which patient encounters are to be filtered.
     process_anchor_year : bool, optional
         Whether to process and include the patient's anchor
@@ -154,7 +155,9 @@ def patients(
     subquery = drop_attributes(subquery, ["anchor_year_group"]).subquery()
 
     if years:
-        subquery = select(subquery).where(in_(subquery.c.year, years)).subquery()
+        subquery = (
+            select(subquery).where(in_(subquery.c.year, to_list(years))).subquery()
+        )
 
     admissions_subquery = select(admissions_table.data).subquery()
     subquery = (
@@ -166,7 +169,7 @@ def patients(
     if months:
         subquery = (
             select(subquery)
-            .where(in_(extract(MONTH, subquery.c.admittime), months))
+            .where(in_(extract(MONTH, subquery.c.admittime), to_list(months)))
             .subquery()
         )
     subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
@@ -180,7 +183,7 @@ def _join_with_patients(
 ) -> QueryInterface:
     """Join a subquery with MIMIC patient static information.
 
-    Assumes that the query has column 'subject_id'.
+    Assumes that the query has column 'encounter_id'.
 
     Parameters
     ----------
@@ -189,7 +192,7 @@ def _join_with_patients(
         Patient query table.
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        A query with column subject_id.
+        A query with column encounter_id.
 
     Returns
     -------
@@ -197,15 +200,17 @@ def _join_with_patients(
         Constructed query, wrapped in an interface object.
 
     """
-    if not hasattr(table_.c, SUBJECT_ID) or not hasattr(patients_table.c, SUBJECT_ID):
+    if not hasattr(table_.c, ENCOUNTER_ID) or not hasattr(
+        patients_table.c, ENCOUNTER_ID
+    ):
         raise ValueError(
-            "Input query table and patients table must have attribute 'subject_id'."
+            "Input query table and patients table must have attribute 'encounter_id'."
         )
 
     # Join on patients (subject column).
     subquery = (
         select(table_, patients_table)
-        .where(table_.c.subject_id == patients_table.c.subject_id)
+        .where(table_.c.encounter_id == patients_table.c.encounter_id)
         .subquery()
     )
 

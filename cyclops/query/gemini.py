@@ -101,9 +101,9 @@ def get_lookup_table(table_name: str) -> QueryInterface:
 
 
 def patients(  # pylint: disable=too-many-arguments
-    years: List[str] = None,
-    months: List[str] = None,
-    hospitals: List[str] = None,
+    years: Optional[Union[int, List[int]]] = None,
+    months: Optional[Union[int, List[int]]] = None,
+    hospitals: Optional[Union[str, List[str]]] = None,
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     delirium_cohort: Optional[bool] = False,
@@ -113,11 +113,11 @@ def patients(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    years: list of str, optional
+    years: int or list of int, optional
         Years for which patient encounters are to be filtered.
-    months: list of str, optional
+    months: int or list of int, optional
         Months for which patient encounters are to be filtered.
-    hospitals: list of str, optional
+    hospitals: str or list of str, optional
         Hospital sites from which patient encounters are to be filtered.
     from_date: str, optional
         Gather patients admitted >= from_date in YYYY-MM-DD format.
@@ -141,19 +141,19 @@ def patients(  # pylint: disable=too-many-arguments
     if years:
         subquery = (
             select(subquery)
-            .where(in_(extract(YEAR, subquery.c.admit_timestamp), years))
+            .where(in_(extract(YEAR, subquery.c.admit_timestamp), to_list(years)))
             .subquery()
         )
     if months:
         subquery = (
             select(subquery)
-            .where(in_(extract(MONTH, subquery.c.admit_timestamp), months))
+            .where(in_(extract(MONTH, subquery.c.admit_timestamp), to_list(months)))
             .subquery()
         )
     if hospitals:
         subquery = (
             select(subquery)
-            .where(in_(subquery.c.hospital_id, hospitals, to_str=True))
+            .where(in_(subquery.c.hospital_id, to_list(hospitals), to_str=True))
             .subquery()
         )
     if from_date:
