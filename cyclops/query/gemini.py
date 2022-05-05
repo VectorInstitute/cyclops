@@ -14,6 +14,7 @@ from cyclops.constants import GEMINI
 from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
+    CARE_UNIT,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     ER_ADMIT_TIMESTAMP,
@@ -33,6 +34,7 @@ from cyclops.query.util import (
     DBTable,
     equals,
     get_attribute,
+    get_attributes,
     has_substring,
     in_,
     not_equals,
@@ -412,7 +414,8 @@ def events(
     category: str,
     names: Optional[Union[str, List[str]]] = None,
     substring: Optional[str] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+    patients: Optional[QueryInterface] = None,
+    care_unit = True # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
     """Query events.
 
@@ -426,8 +429,6 @@ def events(
         Substring to search event names to filter.
     patients: QueryInterface, optional
         Patient encounters query wrapped, used to join with events.
-    care_unit: bool
-        Whether to include the care unit for each event.
 
     Returns
     -------
