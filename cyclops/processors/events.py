@@ -12,11 +12,11 @@ from cyclops.processors.constants import NEGATIVE_RESULT_TERMS, POSITIVE_RESULT_
 from cyclops.processors.string_ops import (
     fill_missing_with_nan,
     fix_inequalities,
+    none_to_empty_string,
     remove_text_in_parentheses,
     replace_if_string_match,
     strip_whitespace,
     to_lower,
-    none_to_empty_string
 )
 from cyclops.processors.utils import log_counts_step
 from cyclops.utils.log import setup_logging
