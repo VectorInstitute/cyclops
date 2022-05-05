@@ -16,6 +16,7 @@ from cyclops.processors.string_ops import (
     replace_if_string_match,
     strip_whitespace,
     to_lower,
+    none_to_empty_string
 )
 from cyclops.processors.utils import log_counts_step
 from cyclops.utils.log import setup_logging
@@ -165,6 +166,7 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
 
     """
     LOGGER.info("Cleaning units and converting to SI...")
+    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(none_to_empty_string)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(to_lower)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(strip_whitespace)
 
