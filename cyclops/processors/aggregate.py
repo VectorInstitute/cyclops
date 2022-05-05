@@ -3,7 +3,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Callable, Optional
 
 import numpy as np
 import pandas as pd
@@ -58,6 +58,33 @@ class Aggregator:
     window: int = 24
     start_at_admission: bool = False
     start_window_ts: Optional[datetime] = None
+
+
+def get_aggfunc(aggregation_strategy: str) -> Callable:
+    """Return an aggregation function corresponding to the strategy.
+
+    Parameters
+    ----------
+    strategy: str, optional
+        Strategy for aggregation, options are ['mean', 'median']
+
+    Returns
+    -------
+    Callable
+        The aggregation function.
+
+    Raises
+    ------
+    NotImplementedError
+        Asserts if supplied input strategy option is not recognised (implemented).
+
+    """
+    if aggregation_strategy == MEAN:
+        return np.mean
+    if aggregation_strategy == MEDIAN:
+        return np.median
+
+    raise NotImplementedError(f"Provided {aggregation_strategy} is not a valid one!")
 
 
 def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
@@ -166,14 +193,13 @@ def gather_events_into_single_bucket(
         Processed event features.
 
     """
-    encounters = list(data[ENCOUNTER_ID].unique())
-    event_names = list(data[EVENT_NAME].unique())
-    features = pd.DataFrame(index=encounters, columns=event_names)
-    grouped_events = data.groupby([ENCOUNTER_ID, EVENT_NAME])
-    for (encounter_id, event_name), events in tqdm(grouped_events):
-        features.loc[encounter_id, event_name] = aggregate_values_in_bucket(
-            events[EVENT_VALUE], strategy=aggregation_strategy
-        )
+    features = pd.pivot_table(
+        data,
+        values=EVENT_VALUE,
+        index=ENCOUNTER_ID,
+        columns=[EVENT_NAME],
+        aggfunc=get_aggfunc(aggregation_strategy),
+    )
 
     return features
 
@@ -197,18 +223,8 @@ def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.
     numpy.float64
         Single aggregated numerical value for the bucket.
 
-    Raises
-    ------
-    NotImplementedError
-        Asserts if supplied input strategy option is not recognised (implemented).
-
     """
-    if strategy == MEAN:
-        return values.mean()
-    if strategy == MEDIAN:
-        return values.median()
-
-    raise NotImplementedError(f"Provided {strategy} is not a valid one!")
+    return get_aggfunc(strategy)(values)
 
 
 @time_function
