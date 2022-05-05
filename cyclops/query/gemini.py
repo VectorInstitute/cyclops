@@ -11,24 +11,32 @@ from cyclops.constants import GEMINI
 from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
+    CARE_UNIT,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
+    ER_ADMIT_TIMESTAMP,
+    ER_DISCHARGE_TIMESTAMP,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
     LENGTH_OF_STAY_IN_ER,
+    SCU_ADMIT_TIMESTAMP,
+    SCU_DISCHARGE_TIMESTAMP,
     SEX,
+    
 )
 from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
     DBTable,
     equals,
+    get_attributes,
     has_substring,
     in_,
     not_equals,
     rename_attributes,
+    rga,
     to_datetime_format,
     to_list,
 )
@@ -43,7 +51,9 @@ INTERVENTION = "intervention"
 LOOKUP_IP_ADMIN = "lookup_ip_admin"
 LOOKUP_ER_ADMIN = "lookup_er_admin"
 LOOKUP_DIAGNOSIS = "lookup_diagnosis"
-
+IP_SCU = "ip_scu"
+LOOKUP_ROOM_TRANSFER = "lookup_room_transfer"
+ROOM_TRANSFER = "room_transfer"
 
 _db = Database(config.read_config(GEMINI))
 TABLE_MAP = {
@@ -57,6 +67,9 @@ TABLE_MAP = {
     LOOKUP_IP_ADMIN: lambda db: db.public.lookup_ip_administrative,
     LOOKUP_ER_ADMIN: lambda db: db.public.lookup_er_administrative,
     LOOKUP_DIAGNOSIS: lambda db: db.public.lookup_diagnosis,
+    IP_SCU: lambda db: db.public.ip_scu,
+    ROOM_TRANSFER: lambda db: db.public.ip_scu,
+    LOOKUP_ROOM_TRANSFER: lambda db: db.public.lookup_room_transfer,
 }
 GEMINI_COLUMN_MAP = {
     "genc_id": ENCOUNTER_ID,
@@ -70,7 +83,10 @@ GEMINI_COLUMN_MAP = {
     "measurement_mapped": EVENT_NAME,
     "measurement_value": EVENT_VALUE,
     "measure_date_time": EVENT_TIMESTAMP,
+    "left_er_date_time": ER_DISCHARGE_TIMESTAMP,
     "duration_er_stay_derived": LENGTH_OF_STAY_IN_ER,
+    "scu_admit_date_time": SCU_ADMIT_TIMESTAMP,
+    "scu_discharge_date_time": SCU_DISCHARGE_TIMESTAMP,
 }
 
 
@@ -268,11 +284,61 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
+def _include_careunit(events: Subquery) -> Subquery:
+    """Creates care unit column in events table.
+    
+    Parameters
+    ----------
+    events : sqlalchemy.sql.selectable.Subquery
+        The events table.
+    Returns
+    sqlalchemy.sql.selectable.Subquery
+        The events table with added attributed CARE_UNIT
+    -------
+    """
+    
+    ip_table = TABLE_MAP[IP_ADMIN](_db).data
+    ip_table = rename_attributes(ip_table, GEMINI_COLUMN_MAP)
+    ip_table = get_attributes([ENCOUNTER_ID, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP]).subquery()
+    
+    er_table = TABLE_MAP[ER_ADMIN](_db).data
+    er_table = rename_attributes(er_table, GEMINI_COLUMN_MAP)
+    er_table = get_attributes([ER_DISCHARGE_TIMESTAMP, LENGTH_OF_STAY_IN_ER])
+    er_table = select(
+        er_table,
+        (rga(er_table.c, ER_DISCHARGE_TIMESTAMP) - rga(er_table.c, LENGTH_OF_STAY_IN_ER)).label(ER_ADMIT_TIMESTAMP)
+    ).subquery()
+    
+    scu_table = TABLE_MAP[IP_SCU](_db).data
+    scu_table = rename_attributes(scu_table, GEMINI_COLUMN_MAP)  
+    scu_table = get_attributes([ENCOUNTER_ID, SCU_ADMIT_TIMESTAMP, SCU_DISCHARGE_TIMESTAMP])
+    
+    # ER = Emergency?
+    # ICU = SCU?
+    
+    rt_table = TABLE_MAP[ROOM_TRANSFER](_db).data
+    rt_table = rename_attributes(rt_table, GEMINI_COLUMN_MAP)
+    
+    lookup_rt_table = TABLE_MAP[LOOKUP_ROOM_TRANSFER](_db).data
+    lookup_rt_table = rename_attributes(lookup_rt_table, GEMINI_COLUMN_MAP)
+    
+    # Join room transfer with lookup to get description
+    rt_table = select(rga(rt_table, ENCOUNTER_ID), lookup_rt_table.description).where(
+        rt_table.medical_service == lookup_rt_table.value
+    )
+    
+    #care_unit = ... .label(CARE_UNIT)
+    #events ... join... care_unit ... on ENCOUNTER_ID
+    #return select(events, .label(CARE_UNIT)).subquery()
+    return ip_table, er_table, scu_table, rt_table
+
+
 def events(
     category: str,
     names: Optional[Union[str, List[str]]] = None,
     substring: Optional[str] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+    patients: Optional[QueryInterface] = None,
+    care_unit = True # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
     """Query events.
 
@@ -286,7 +352,8 @@ def events(
         Substring to search event names to filter.
     patients: QueryInterface, optional
         Patient encounters query wrapped, used to join with events.
-
+    care_unit: bool
+        Whether to include the care unit for each event.
     Returns
     -------
     cyclops.query.interface.QueryInterface
@@ -318,6 +385,9 @@ def events(
                 .subquery()
             )
 
+    if care_unit:
+        subquery = careunit(subquery)
+            
     if patients:
         return _join_with_patients(patients.query, subquery)
 
