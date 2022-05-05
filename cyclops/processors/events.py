@@ -12,6 +12,7 @@ from cyclops.processors.constants import NEGATIVE_RESULT_TERMS, POSITIVE_RESULT_
 from cyclops.processors.string_ops import (
     fill_missing_with_nan,
     fix_inequalities,
+    none_to_empty_string,
     remove_text_in_parentheses,
     replace_if_string_match,
     strip_whitespace,
@@ -100,7 +101,7 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
     data[EVENT_NAME] = data[EVENT_NAME].apply(remove_text_in_parentheses)
     data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
     log_counts_step(
-        data, "Remove text in parentheses and normalize lab test names...", columns=True
+        data, "Remove text in parentheses and normalize event names...", columns=True
     )
 
     return data
@@ -124,7 +125,6 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
         Output data with normalized event values.
 
     """
-    data = data.copy()
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(fix_inequalities)
     log_counts_step(
         data, "Fixing inequalities and removing outlier values...", columns=True
@@ -165,6 +165,7 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
 
     """
     LOGGER.info("Cleaning units and converting to SI...")
+    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(none_to_empty_string)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(to_lower)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(strip_whitespace)
 
@@ -186,10 +187,13 @@ def clean_events(data) -> pd.DataFrame:
         Cleaned event data.
 
     """
+    data = data.copy()
     log_counts_step(data, "Cleaning raw event data...", columns=True)
     data = normalize_names(data)
     data = drop_unsupported(data)
-    data = normalize_values(data)
+
+    if data[EVENT_VALUE].dtypes == object:
+        data = normalize_values(data)
 
     if EVENT_VALUE_UNIT in list(data.columns):
         data = normalize_units(data)

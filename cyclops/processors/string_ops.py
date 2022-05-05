@@ -117,6 +117,25 @@ def to_lower(string: str) -> str:
     return string.lower()
 
 
+def none_to_empty_string(value: Union[None, str]) -> str:
+    """Convert None to empty string.
+
+    Parameters
+    ----------
+    value: None or str
+        Input value.
+
+    Returns
+    -------
+    str
+        Empty string.
+
+    """
+    if value is None:
+        return EMPTY_STRING
+    return value
+
+
 def strip_whitespace(string: str) -> str:
     """Remove all whitespaces from string.
 

@@ -5,13 +5,21 @@
 import numpy as np
 import pytest
 
+from cyclops.processors.constants import EMPTY_STRING
 from cyclops.processors.string_ops import (
     compute_range_avg,
     convert_to_numeric,
     count_occurrences,
     is_range,
+    none_to_empty_string,
     normalize_special_characters,
 )
+
+
+def test_none_to_empty_string():
+    """Test none_to_empty_string fn."""
+    assert none_to_empty_string(None) == EMPTY_STRING
+    assert none_to_empty_string("kobe") == "kobe"
 
 
 def test_count_occurrences():
