@@ -2,15 +2,25 @@
 
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.processors.aggregate import filter_upto_window
+from cyclops.processors.aggregate import (
+    Aggregator,
+    aggregate_values_in_bucket,
+    filter_upto_window,
+    gather_event_features,
+    gather_events_into_single_bucket,
+)
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     ENCOUNTER_ID,
+    EVENT_NAME,
     EVENT_TIMESTAMP,
+    EVENT_VALUE,
 )
+from cyclops.processors.constants import MEAN, MEDIAN
 
 
 @pytest.fixture
@@ -53,6 +63,24 @@ def test_input():
     return input_
 
 
+@pytest.fixture
+def test_events_input():
+    """Create a test events input."""
+    date1 = datetime(2022, 11, 3, hour=13)
+    date2 = datetime(2022, 11, 3, hour=14)
+    date3 = datetime(2022, 11, 4, hour=3)
+    data = [
+        [1, "eventA", 10, date1, date2],
+        [2, "eventA", 11, date1, date2],
+        [2, "eventA", 12, date1, date3],
+        [2, "eventA", 16, date1, date3],
+        [2, "eventB", 13, date1, date3],
+    ]
+
+    columns = [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, ADMIT_TIMESTAMP, EVENT_TIMESTAMP]
+    return pd.DataFrame(data, columns=columns)
+
+
 def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name
     """Test filter_upto_window fn."""
     filtered_df = filter_upto_window(test_input)
@@ -69,3 +97,47 @@ def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name
             start_window_ts=datetime(2022, 11, 6, 12, 13),
             start_at_admission=True,
         )
+
+
+def test_aggregate_values_in_bucket():
+    """Test aggregate_values_in_bucket function."""
+    arr = np.array([-1, 2, 5, -20, 100])
+    series = pd.Series(arr)
+    assert aggregate_values_in_bucket(series, strategy=MEAN) == arr.mean()
+    assert aggregate_values_in_bucket(series, strategy=MEDIAN) == np.median(arr)
+
+
+def test_gather_events_into_single_bucket(
+    test_events_input,
+):  # pylint: disable=redefined-outer-name
+    """Test gather_events_into_single_bucket function."""
+    res = gather_events_into_single_bucket(test_events_input, MEAN)
+    assert res.loc[1]["eventA"] == 10.0
+    assert np.isnan(res.loc[1]["eventB"])
+    assert res.loc[2]["eventA"] == 13.0
+    assert res.loc[2]["eventB"] == 13.0
+
+    res = gather_events_into_single_bucket(test_events_input, MEDIAN)
+    assert res.loc[1]["eventA"] == 10.0
+    assert np.isnan(res.loc[1]["eventB"])
+    assert res.loc[2]["eventA"] == 12.0
+    assert res.loc[2]["eventB"] == 13.0
+
+
+def test_gather_event_features(
+    test_events_input,
+):  # pylint: disable=redefined-outer-name
+    """Test gather_event_features function."""
+    agg = Aggregator(strategy=MEAN, bucket_size=4, window=24, start_at_admission=True)
+    res = gather_event_features(test_events_input, agg)
+
+    assert res.loc[(1, 0)]["eventA"] == 10.0
+    assert np.isnan(res.loc[(1, 0)]["eventB"])
+    assert res.loc[(2, 0)]["eventA"] == 11.0
+    assert np.isnan(res.loc[(2, 0)]["eventB"])
+    assert np.isnan(res.loc[(2, 1)]["eventA"])
+    assert np.isnan(res.loc[(2, 1)]["eventB"])
+    assert np.isnan(res.loc[(2, 2)]["eventA"])
+    assert np.isnan(res.loc[(2, 2)]["eventB"])
+    assert res.loc[(2, 3)]["eventA"] == 14.0
+    assert res.loc[(2, 3)]["eventB"] == 13.0
