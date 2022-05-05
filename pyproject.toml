@@ -33,6 +33,7 @@ pyproject-flake8 = "^0.0.1-alpha.2"
 pytest-cov = "^3.0.0"
 pyarrow = "^7.0.0"
 sphinxcontrib-apidoc = "^0.3.0"
+sphinx-autodoc-typehints = "^1.18.1"
 
 [tool.poetry.dev-dependencies]
 

@@ -37,6 +37,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "numpydoc",
     "sphinx.ext.viewcode",
@@ -54,8 +55,10 @@ apidoc_output_dir = "reference/api"
 apidoc_separate_modules = True
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/", None),
+    "python": ("https://docs.python.org/3.8/", None),
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
+    "pandas": ('https://pandas.pydata.org/docs/', None),
+    "sqlalchemy": ('https://docs.sqlalchemy.org', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
