@@ -4,8 +4,7 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_array, check_random_state
 
-from fsd._deep_density_model import SingleGaussianizeStep, TorchUnitHistogram
-
+from deep_density_model import SingleGaussianizeStep, TorchUnitHistogram
 
 class GaussianDensity:
     """

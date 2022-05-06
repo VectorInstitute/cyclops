@@ -6,12 +6,10 @@ from os import path
 import numpy as np
 import pickle
 
-sys.path.append('..')
-from fsd import FeatureShiftDetector
-from fsd.divergence import ModelKS, KnnKS, FisherDivergence
-from fsd.models import GaussianDensity, Knn
-from fsd._utils import marginal_attack, create_graphical_model, sim_copula_data,\
-                       get_detection_metrics, get_localization_metrics, plot_confusion_matrix, get_confusion_tensor
+from featureshiftdetector import FeatureShiftDetector
+from divergence import ModelKS, KnnKS, FisherDivergence
+from fsd_models import GaussianDensity, Knn
+from fsd_utils import marginal_attack, create_graphical_model,get_detection_metrics, get_localization_metrics, plot_confusion_matrix, get_confusion_tensor
 
 # Experiment Parameters
 n_samples = 1000  # The number of samples in p, q (thus n_samples_total = n_samples*2)
