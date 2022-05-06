@@ -3,7 +3,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -20,6 +20,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import MEAN, MEDIAN
 from cyclops.processors.utils import log_counts_step
+from cyclops.query.utils import to_list
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -343,3 +344,44 @@ def gather_static_features(data: pd.DataFrame) -> pd.DataFrame:
             features.loc[encounter_id, col_name] = statics[col_name].unique()[0]
 
     return features
+
+
+def infer_statics(
+    data: pd.DataFrame, groupby_cols: Union[str, List[str]] = ENCOUNTER_ID
+) -> List[str]:
+    """Infer static columns using the unique values in a groupby object.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input DataFrame.
+    groupby_cols: str or list of str
+        Columns by which to group.
+
+    Returns
+    -------
+    list of string:
+        Names of the static columns.
+
+    """
+    # Process group by columns
+    groupby_cols = to_list(groupby_cols)
+    if not set(groupby_cols).issubset(set(data.columns)):
+        raise ValueError(f"{groupby_cols} must be a subset of {list(data.columns)}")
+
+    # Group by columns
+    grouped = data.groupby(groupby_cols)
+
+    # True if there is 1 unique value in a column for a given encounter ID,
+    # or 0 to account for if all of the values are NaN
+    grouped_unique_limited = grouped.apply(lambda x: x.nunique(dropna=True) <= 1)
+
+    # For each column, get the number of groups which satisfied the above condition
+    num_one_unique = grouped_unique_limited.sum()
+
+    # If all groups satisfied the condition
+    static_cols = set(num_one_unique[num_one_unique == grouped.ngroups].index)
+
+    # Return a list of the static columns (not including ENCOUNTER_ID)
+    static_cols = static_cols - set(groupby_cols)
+    return list(static_cols)
