@@ -27,7 +27,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import MONTH
 from cyclops.query.interface import QueryInterface
-from cyclops.query.utils import (
+from cyclops.query.util import (
     DBTable,
     drop_attributes,
     equals,

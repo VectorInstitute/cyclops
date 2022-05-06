@@ -22,7 +22,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
 from cyclops.query.interface import QueryInterface
-from cyclops.query.utils import (
+from cyclops.query.util import (
     DBTable,
     equals,
     has_substring,

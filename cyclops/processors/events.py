@@ -18,7 +18,7 @@ from cyclops.processors.string_ops import (
     strip_whitespace,
     to_lower,
 )
-from cyclops.processors.utils import log_counts_step
+from cyclops.processors.util import log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 

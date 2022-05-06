@@ -12,7 +12,7 @@ from cyclops.processors.column_names import (
     ENCOUNTER_ID,
 )
 from cyclops.processors.constants import EMPTY_STRING, TRAJECTORIES
-from cyclops.processors.utils import log_counts_step
+from cyclops.processors.util import log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
