@@ -333,7 +333,7 @@ def filter_attributes(
             continue
         filtered.append(table_.c[col_names.index(attr)])
 
-    return select(filtered)
+    return select(filtered).subquery()
 
 
 @query_params_to_type(Subquery)
@@ -398,7 +398,7 @@ def drop_attributes(
 
     """
     drop_cols = get_attributes(table_, drop_cols)
-    return select(*[c for c in table_.c if c not in drop_cols])
+    return select(*[c for c in table_.c if c not in drop_cols]).subquery()
 
 
 @query_params_to_type(Subquery)
@@ -429,7 +429,7 @@ def rename_attributes(
             c.label(old_new_map[c.name]) if c.name in old_new_map else c
             for c in table_.c
         ]
-    )
+    ).subquery()
 
 
 @query_params_to_type(Subquery)
@@ -481,7 +481,7 @@ def reorder_attributes(
     for col in new_order:
         new_cols.append(table_.c[old_order.index(col)])
 
-    return select(*new_cols)
+    return select(*new_cols).subquery()
 
 
 @query_params_to_type(Subquery)

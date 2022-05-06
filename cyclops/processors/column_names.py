@@ -6,7 +6,11 @@ HOSPITAL_ID = "hospital_id"
 ADMIT_TIMESTAMP = "admit_timestamp"
 DISCHARGE_TIMESTAMP = "discharge_timestamp"
 DISCHARGE_DISPOSITION = "discharge_disposition"
+CARE_UNIT = "care_unit"
 READMISSION = "readmission"
+SCU_ADMIT_TIMESTAMP = "scu_admit_timestamp"
+SCU_DISCHARGE_TIMESTAMP = "scu_discharge_timestamp"
+
 
 AGE = "age"
 SEX = "sex"
@@ -21,6 +25,8 @@ DIAGNOSIS_CODE = "diagnosis_code"
 DIAGNOSIS_TYPE = "diagnosis_type"
 DIAGNOSIS_TRAJECTORIES = "diagnosis_trajectories"
 
+ER_ADMIT_TIMESTAMP = "er_admit_timestamp"
+ER_DISCHARGE_TIMESTAMP = "er_discharge_timestamp"
 LENGTH_OF_STAY_IN_ER = "length_of_stay_in_er"
 MORTALITY_IN_HOSPITAL = "mortality_in_hospital"
 
