@@ -2,14 +2,8 @@
 
 from typing import List, Optional, Union
 
-from datetime import timedelta
-
 from sqlalchemy import extract, select
 from sqlalchemy.sql.expression import literal, union_all
-from sqlalchemy.types import Interval, String
-from sqlalchemy.sql.functions import concat, coalesce
-
-from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
@@ -18,7 +12,6 @@ from cyclops.constants import GEMINI
 from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
-    CARE_UNIT,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     ER_ADMIT_TIMESTAMP,
@@ -31,7 +24,6 @@ from cyclops.processors.column_names import (
     SCU_ADMIT_TIMESTAMP,
     SCU_DISCHARGE_TIMESTAMP,
     SEX,
-    
 )
 from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
 from cyclops.query.interface import QueryInterface
@@ -39,7 +31,6 @@ from cyclops.query.util import (
     DBTable,
     equals,
     get_attribute,
-    get_attributes,
     has_substring,
     in_,
     not_equals,
@@ -140,6 +131,55 @@ def _er_admin() -> QueryInterface:
     return QueryInterface(_db, table)
 
 
+def _map_table_attributes(table_name: str) -> Subquery:
+    """Map queried data attributes into common column names.
+
+    For unifying processing functions across datasets, data
+    attributes are currently mapped to the same name, to allow for processing
+    to recognise them.
+
+    Parameters
+    ----------
+    table_name: str
+        Name of GEMINI table.
+
+    Returns
+    -------
+    sqlalchemy.sql.selectable.Subquery
+        Query with mapped attributes.
+
+    """
+    return rename_attributes(TABLE_MAP[table_name](_db).data, GEMINI_COLUMN_MAP)
+
+
+def rename_timestamps(
+    table: Union[Select, Subquery, Table, DBTable],
+    admit_ts_col: str,
+    discharge_ts_col: str,
+    care_unit_name: str,
+) -> Select:
+    """Rename timestamp columns from different tables.
+
+    Parameters
+    ----------
+    table: sqlalchemy.sql.selectable.Select or
+    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or
+    cyclops.query.util.DBTable
+
+    Returns
+    -------
+    sqlalchemy.sql.selectable.Select
+        Query with renamed timestamp columns.
+
+    """
+    return select(
+        rga(table.c, ENCOUNTER_ID),
+        rga(table.c, admit_ts_col).label("admit"),
+        rga(table.c, discharge_ts_col).label("discharge"),
+        literal(care_unit_name).label("care_unit_name"),
+    )
+
+
 def patients(  # pylint: disable=too-many-arguments
     years: Optional[Union[int, List[int]]] = None,
     months: Optional[Union[int, List[int]]] = None,
@@ -213,8 +253,9 @@ def patients(  # pylint: disable=too-many-arguments
             select(subquery).where(equals(subquery.c.gemini_cohort, True)).subquery()
         )
     if include_er_data:
+        er_subquery = _er_admin().query
         subquery = (
-            select(subquery, _er_admin().query)
+            select(subquery, er_subquery)
             .where(subquery.c.encounter_id == er_subquery.c.encounter_id)
             .subquery()
         )
@@ -233,10 +274,11 @@ def _join_with_patients(
     Parameters
     ----------
     patients_table: sqlalchemy.sql.selectable.Select or
-    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
+    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or
+    cyclops.query.util.DBTable
         Patient query table.
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or DBTable
+    or sqlalchemy.sql.schema.Table or cyclops.query.util.DBTable
         A query table such as labs or vitals.
 
     Returns
@@ -307,56 +349,54 @@ def diagnoses(
 
 def get_careunits(encounters: list = None) -> Subquery:
     """Get care unit table within a given set of encounters.
-    
+
     Parameters
     ----------
     encounters : list
         The encounter IDs to consider. If None, consider all encounters.
+
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
         Constructed query, wrapped in an interface object.
-    
+
     """
-    pt = lambda t: rename_attributes(TABLE_MAP[t](_db).data, GEMINI_COLUMN_MAP)
-    
-    filter_encounters = lambda query, encounters: query if encounters is None else \
-        select(query).where(in_(get_attribute(query, ENCOUNTER_ID), encounters)).subquery()
-    
-    rename_timestamps = lambda table, admit, discharge, description: \
-        select(
-            rga(table.c, ENCOUNTER_ID),
-            rga(table.c, admit).label("admit"),
-            rga(table.c, discharge).label("discharge"),
-            literal(description).label("description")
-        )
-    
-    # In-patient table
-    ip_table = filter_encounters(pt(IP_ADMIN), encounters)
+    filter_encounters = (
+        lambda query, encounters: query
+        if encounters is None
+        else select(query)
+        .where(in_(get_attribute(query, ENCOUNTER_ID), encounters))
+        .subquery()
+    )
+
+    # In-patient table.
+    ip_table = filter_encounters(_map_table_attributes(IP_ADMIN), encounters)
     ip_table = rename_timestamps(ip_table, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "IP")
-    
-    # Special care unit table
-    scu_table = filter_encounters(pt(IP_SCU), encounters)
-    scu_table = rename_timestamps(scu_table, SCU_ADMIT_TIMESTAMP, SCU_DISCHARGE_TIMESTAMP, "SCU")
-    
-    # Emergency room/department table
+
+    # Special care unit table.
+    scu_table = filter_encounters(_map_table_attributes(IP_SCU), encounters)
+    scu_table = rename_timestamps(
+        scu_table, SCU_ADMIT_TIMESTAMP, SCU_DISCHARGE_TIMESTAMP, "SCU"
+    )
+
+    # Emergency room/department table.
     er_table = filter_encounters(_er_admin().query, encounters)
-    er_table = rename_timestamps(er_table, ER_ADMIT_TIMESTAMP, ER_DISCHARGE_TIMESTAMP, "ER")
-    
-    # Room transfer table
-    rt_table = filter_encounters(pt(ROOM_TRANSFER), encounters)
-    lookup_rt_table = pt(LOOKUP_ROOM_TRANSFER)
-    
-    # Join room transfer with lookup to get description
+    er_table = rename_timestamps(
+        er_table, ER_ADMIT_TIMESTAMP, ER_DISCHARGE_TIMESTAMP, "ER"
+    )
+
+    # Room transfer table.
+    rt_table = filter_encounters(_map_table_attributes(ROOM_TRANSFER), encounters)
+    lookup_rt_table = _map_table_attributes(LOOKUP_ROOM_TRANSFER)
+
+    # Join room transfer with lookup to get description.
     rt_table = select(
         rga(rt_table.c, ENCOUNTER_ID),
         rt_table.c.checkin_date_time.label("admit"),
         rt_table.c.checkout_date_time.label("discharge"),
-        lookup_rt_table.c.description
-    ).where(
-        rt_table.c.medical_service == lookup_rt_table.c.value
-    )
-    
+        lookup_rt_table.c.care_unit_name,
+    ).where(rt_table.c.medical_service == lookup_rt_table.c.value)
+
     return QueryInterface(_db, union_all(rt_table, ip_table, scu_table, er_table))
 
 
@@ -364,7 +404,7 @@ def events(
     category: str,
     names: Optional[Union[str, List[str]]] = None,
     substring: Optional[str] = None,
-    patients: Optional[QueryInterface] = None # pylint: disable=redefined-outer-name
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
     """Query events.
 
@@ -410,7 +450,7 @@ def events(
                 .where(has_substring(subquery.c.event_name, substring, to_str=True))
                 .subquery()
             )
-            
+
     if patients:
         return _join_with_patients(patients.query, subquery)
 

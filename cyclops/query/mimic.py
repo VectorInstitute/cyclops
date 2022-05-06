@@ -364,9 +364,7 @@ def events(
     subquery = select(table_.data).subquery()
     subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
     event_labels_subquery = select(event_labels_table.data).subquery()
-    event_labels_subquery = rename_attributes(
-        event_labels_subquery, MIMIC_COLUMN_MAP
-    )
+    event_labels_subquery = rename_attributes(event_labels_subquery, MIMIC_COLUMN_MAP)
 
     subquery = (
         select(
