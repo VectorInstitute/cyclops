@@ -10,16 +10,69 @@ from cyclops.processors.string_ops import (
     compute_range_avg,
     convert_to_numeric,
     count_occurrences,
+    fill_missing_with_nan,
+    is_non_empty_string,
     is_range,
     none_to_empty_string,
     normalize_special_characters,
+    remove_text_in_parentheses,
+    replace_if_string_match,
+    strip_whitespace,
+    fix_inequalities,
+    to_lower,
 )
+
+
+def test_to_lower():
+    """Test to_lower fn."""
+    assert to_lower("KoBe") == "kobe"
+
+
+def test_fix_inequalities():
+    """Test fix_inequalities fn."""
+    assert fix_inequalities("<= 10") == "10"
+    assert fix_inequalities("> 10.2") == "10.2"
+    assert fix_inequalities(">10.2") == "10.2"
+
+
+def test_fill_missing_with_nan():
+    """Test fill_missing_with_nan fn."""
+    assert np.isnan(fill_missing_with_nan(EMPTY_STRING))
+    assert fill_missing_with_nan("kobe") == "kobe"
+
+
+def test_replace_if_string_match():
+    """Test replace_if_string_match fn."""
+    assert (
+        replace_if_string_match("kobe is the greatest of all time", "greatest", "best")
+        == "best"
+    )
+    assert (
+        replace_if_string_match("kobe is awesome", "best", "best") == "kobe is awesome"
+    )
+
+
+def test_is_non_empty_string():
+    """Test is_non_empty_string fn."""
+    assert is_non_empty_string(EMPTY_STRING) is False
+    assert is_non_empty_string("kobe") is True
+
+
+def test_remove_text_in_parentheses():
+    """Test remove_text_in_parentheses fn."""
+    assert remove_text_in_parentheses("kobe (TM)") == "kobe"
+    assert remove_text_in_parentheses("(TM)") == EMPTY_STRING
 
 
 def test_none_to_empty_string():
     """Test none_to_empty_string fn."""
     assert none_to_empty_string(None) == EMPTY_STRING
     assert none_to_empty_string("kobe") == "kobe"
+
+
+def test_strip_whitespace():
+    """Test strip_whitespace fn."""
+    assert strip_whitespace(" kobe time ") == "kobetime"
 
 
 def test_count_occurrences():
