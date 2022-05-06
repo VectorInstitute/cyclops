@@ -11,6 +11,7 @@ from cyclops.processors.string_ops import (
     convert_to_numeric,
     count_occurrences,
     fill_missing_with_nan,
+    fix_inequalities,
     is_non_empty_string,
     is_range,
     none_to_empty_string,
@@ -18,7 +19,6 @@ from cyclops.processors.string_ops import (
     remove_text_in_parentheses,
     replace_if_string_match,
     strip_whitespace,
-    fix_inequalities,
     to_lower,
 )
 
