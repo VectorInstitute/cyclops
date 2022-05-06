@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from cyclops.processors.utils import (
+from cyclops.processors.util import (
     check_must_have_columns,
     gather_columns,
     is_timeseries_data,

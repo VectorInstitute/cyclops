@@ -19,7 +19,7 @@ from cyclops.processors.column_names import (
     TIMESTEP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
-from cyclops.processors.utils import log_counts_step
+from cyclops.processors.util import log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 

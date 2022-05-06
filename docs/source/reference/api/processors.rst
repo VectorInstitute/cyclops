@@ -15,7 +15,7 @@ Submodules
    processors.impute
    processors.outcomes
    processors.string_ops
-   processors.utils
+   processors.util
 
 Module contents
 ---------------

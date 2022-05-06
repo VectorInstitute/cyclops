@@ -15,7 +15,7 @@ from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import clean_events
 from cyclops.processors.impute import Imputer
 from cyclops.processors.outcomes import generate_outcomes
-from cyclops.processors.utils import check_must_have_columns, gather_columns
+from cyclops.processors.util import check_must_have_columns, gather_columns
 
 
 def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -49,17 +49,18 @@ def featurize(  # pylint: disable=too-many-arguments
 ) -> FeatureHandler:
     """Process and create features from raw queried data.
 
-    - User inputs static and temporal data in the form of raw dataframes.
-    - If diagnoses codes are present in the static data, they are processed
-    first.
-    - Static data is then processed into static features, and added to
-    the FeatureHandler container.
-    - Temporal data is then processed into temporal features, and added to
-    the FeatureHandler container. For the aggregation of temporal data,
-    the user passed in options using `cyclops.processor.Aggregator`.
-    - Imputation is called as a public method on the FeatureHandler, which then
-    applies imputation on both static and temporal features. For
-    imputation, options are passed using `cyclops.processor.Imputer`.
+    Notes
+    -----
+        - User inputs static and temporal data in the form of raw dataframes.
+        - If diagnoses codes are present in the static data, they are processed first.
+        - Static data is then processed into static features, and added to
+          the FeatureHandler container.
+        - Temporal data is then processed into temporal features, and added to
+          the FeatureHandler container. For the aggregation of temporal data,
+          the user passed in options using `cyclops.processor.Aggregator`.
+        - Imputation is called as a public method on the FeatureHandler, which then
+          applies imputation on both static and temporal features. For
+          imputation, options are passed using `cyclops.processor.Imputer`.
 
     Parameters
     ----------

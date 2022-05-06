@@ -11,7 +11,7 @@ from sqlalchemy.sql.selectable import Select, Subquery
 from codebase_ops import get_log_file_path
 from cyclops.orm import Database
 from cyclops.processors.column_names import RECOGNISED_QUERY_COLUMNS
-from cyclops.query.utils import filter_attributes
+from cyclops.query.util import filter_attributes
 from cyclops.utils.log import setup_logging
 
 # Logging.
