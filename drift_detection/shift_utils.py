@@ -69,22 +69,24 @@ from cyclops.processors.aggregate import Aggregator
 
 
 def get_data(hospital, na_cutoff):
-    EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/sprint_demo/APR-28-2022"
+    EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/drift_exp"
 
     # load admin
     admin_data = pd.read_parquet(
         os.path.join(EXTRACT_SAVE_PATH, "admin_er_2018_2020.gzip")
     )
+
     admin_columns = [
         AGE,
         SEX,
         HOSPITAL_ID,
         ENCOUNTER_ID,
         ADMIT_TIMESTAMP,
+        DISCHARGE_TIMESTAMP,
         LENGTH_OF_STAY_IN_ER,
     ]
     admin_data = admin_data[admin_columns]
-
+    
     hosp_ids = admin_data.loc[admin_data["hospital_id"].isin(hospital), "encounter_id"]
     hosp_label = "_".join(sorted(hospital, key=str.lower))
     file_name = os.path.join(EXTRACT_SAVE_PATH, "2018_2020_features.gzip")
@@ -339,7 +341,7 @@ def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
     x = np.append(x_train, x_test, axis=0)
     y = np.append(y_train, y_test, axis=0)
 
-    x, y = __unison_shuffled_copies(x, y)
+    x, y = unison_shuffled_copies(x, y)
 
     x_train = x[:split_index, :]
     x_test = x[split_index:, :]
@@ -349,7 +351,7 @@ def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
     return (x_train, y_train), (x_test, y_test)
 
 
-def __unison_shuffled_copies(a, b):
+def unison_shuffled_copies(a, b):
     assert len(a) == len(b)
     p = np.random.permutation(len(a))
     return a[p], b[p]
