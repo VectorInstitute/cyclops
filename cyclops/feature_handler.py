@@ -848,11 +848,7 @@ class FeatureHandler:
             save_file_name = file_name + "_" + TEMPORAL
             save_path = os.path.join(folder_path, save_file_name + ".gzip")
             LOGGER.info("Saving temporal features to %s", save_path)
-            self.features[STATIC].to_parquet(save_path)
-        if self.features[STATIC] is None and self.features[TEMPORAL] is None:
-            LOGGER.warning(
-                "Static and Temporal feature containers are empty, nothing to save!"
-            )
+            self.features[TEMPORAL].to_parquet(save_path)
 
     def load(self, folder_path: str, file_name: str) -> None:
         """Load features data from recognised compressed Parquet format.
