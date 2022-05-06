@@ -12,10 +12,10 @@ Submodules
    processors.constants
    processors.diagnoses
    processors.events
-   processors.feature_handler
+   processors.impute
+   processors.outcomes
    processors.string_ops
-   processors.units_conversion
-   processors.utils
+   processors.util
 
 Module contents
 ---------------

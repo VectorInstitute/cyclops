@@ -22,7 +22,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
 from cyclops.query.interface import QueryInterface
-from cyclops.query.utils import (
+from cyclops.query.util import (
     DBTable,
     equals,
     has_substring,
@@ -237,19 +237,9 @@ def diagnoses(
     patients: QueryInterface, optional
         Patient encounters query wrapped, used to join with diagnoses.
 
-    The following types of diagnoses are available:
-    - M         Most Responsible Diagnosis
-    - 1              Pre-Admit Comorbidity
-    - 2             Post-Admit Comorbidity
-    - 3                Secondary Diagnosis
-    - 4                   Morphology Codes
-    - 5                Admitting Diagnosis
-    - 6   Proxy Most Responsible Diagnosis
-    - 9      External Cause of Injury Code
-    - 0                            Newborn
-    - W   First Service Transfer Diagnosis
-    - X  Second Service Transfer Diagnosis
-    - Y   Third Service Transfer Diagnosis
+    Notes
+    -----
+        Refer to the diagnosis lookup table for descriptions for diagnosis types.
 
     Returns
     -------

@@ -105,6 +105,8 @@ def test_aggregate_values_in_bucket():
     series = pd.Series(arr)
     assert aggregate_values_in_bucket(series, strategy=MEAN) == arr.mean()
     assert aggregate_values_in_bucket(series, strategy=MEDIAN) == np.median(arr)
+    with pytest.raises(NotImplementedError):
+        aggregate_values_in_bucket(series, strategy="donkey")
 
 
 def test_gather_events_into_single_bucket(
@@ -141,3 +143,8 @@ def test_gather_event_features(
     assert np.isnan(res.loc[(2, 2)]["eventB"])
     assert res.loc[(2, 3)]["eventA"] == 14.0
     assert res.loc[(2, 3)]["eventB"] == 13.0
+
+    agg = Aggregator(strategy=MEAN, bucket_size=4, window=4)
+    res = gather_event_features(test_events_input, agg)
+    assert all(a == b for a, b in zip(list(res.index), [1, 2]))
+    assert res["eventA"].equals(pd.Series([10, 11], index=[1, 2]))

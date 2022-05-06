@@ -10,7 +10,7 @@ Submodules
    query.gemini
    query.interface
    query.mimic
-   query.utils
+   query.util
 
 Module contents
 ---------------

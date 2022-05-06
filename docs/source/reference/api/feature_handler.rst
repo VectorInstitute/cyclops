@@ -1,7 +1,7 @@
-processors.utils module
+feature\_handler module
 =======================
 
-.. automodule:: processors.utils
+.. automodule:: feature_handler
    :members:
    :undoc-members:
    :show-inheritance:

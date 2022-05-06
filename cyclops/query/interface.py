@@ -2,8 +2,8 @@
 
 import logging
 import os
-from dataclasses import dataclass
-from typing import List, Optional, Union
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 from sqlalchemy.sql.selectable import Select, Subquery
@@ -11,7 +11,7 @@ from sqlalchemy.sql.selectable import Select, Subquery
 from codebase_ops import get_log_file_path
 from cyclops.orm import Database
 from cyclops.processors.column_names import RECOGNISED_QUERY_COLUMNS
-from cyclops.query.utils import filter_attributes
+from cyclops.query.util import filter_attributes
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -25,7 +25,7 @@ class QueryInterface:
 
     Parameters
     ----------
-    _db: cyclops.orm.Database
+    database: cyclops.orm.Database
         Database object to create ORM, and query data.
     query: sqlalchemy.sql.selectable.Select or
     sqlalchemy.sql.selectable.Subquery
@@ -35,9 +35,10 @@ class QueryInterface:
 
     """
 
-    _db: Database
+    database: Database
     query: Union[Select, Subquery]
     data: Union[pd.DataFrame, None] = None
+    _run_args: Dict = field(default_factory=dict)
 
     def run(
         self,
@@ -77,8 +78,9 @@ class QueryInterface:
             self.query = filter_attributes(self.query, filter_columns)
         if filter_recognised:
             self.query = filter_attributes(self.query, RECOGNISED_QUERY_COLUMNS)
-        if self.data is None:
-            self.data = self._db.run_query(self.query, limit=limit)
+        if self.data is None or not self._run_args == locals():
+            self._run_args = locals()
+            self.data = self.database.run_query(self.query, limit=limit)
 
         return self.data
 

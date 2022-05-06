@@ -12,7 +12,7 @@ from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
 from codebase_ops import get_log_file_path
-from cyclops.query.utils import DBMetaclass, DBSchema, DBTable, query_params_to_type
+from cyclops.query.util import DBMetaclass, DBSchema, DBTable, query_params_to_type
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
