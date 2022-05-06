@@ -152,7 +152,7 @@ def patients(
         (subquery.c.year - subquery.c.anchor_year).label("anchor_year_difference"),
     ).subquery()
 
-    subquery = drop_attributes(subquery, ["anchor_year_group"]).subquery()
+    subquery = drop_attributes(subquery, ["anchor_year_group"])
 
     if years:
         subquery = (
@@ -172,7 +172,7 @@ def patients(
             .where(in_(extract(MONTH, subquery.c.admittime), to_list(months)))
             .subquery()
         )
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
 
     return QueryInterface(_db, subquery)
 
@@ -236,7 +236,7 @@ def _diagnoses(
     # Get diagnoses.
     table_ = TABLE_MAP[DIAGNOSES](_db)
     subquery = select(table_.data).subquery()
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
 
     # Filter by version.
     if version:
@@ -247,15 +247,15 @@ def _diagnoses(
         )
 
     # Trim whitespace from icd_codes.
-    subquery = trim_attributes(subquery, [DIAGNOSIS_CODE]).subquery()
+    subquery = trim_attributes(subquery, [DIAGNOSIS_CODE])
 
     # Rename long_title to icd_title.
-    subquery = rename_attributes(subquery, {"long_title": "icd_title"}).subquery()
+    subquery = rename_attributes(subquery, {"long_title": "icd_title"})
 
     # Re-order the columns nicely.
     subquery = reorder_attributes(
         subquery, [DIAGNOSIS_CODE, "icd_title", "icd_version"]
-    ).subquery()
+    )
 
     return subquery
 
@@ -288,7 +288,7 @@ def diagnoses(
     # Get patient diagnoses.
     table_ = TABLE_MAP[PATIENT_DIAGNOSES](_db)
     subquery = select(table_.data).subquery()
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
 
     # Filter by version
     if version:
@@ -299,7 +299,7 @@ def diagnoses(
         )
 
     # Trim whitespace from icd_codes.
-    subquery = trim_attributes(subquery, [DIAGNOSIS_CODE]).subquery()
+    subquery = trim_attributes(subquery, [DIAGNOSIS_CODE])
 
     # Get codes.
     code_subquery = _diagnoses(version=version)
@@ -362,11 +362,11 @@ def events(
     event_labels_table = TABLE_MAP[EVENT_LABELS](_db)
 
     subquery = select(table_.data).subquery()
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP).subquery()
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
     event_labels_subquery = select(event_labels_table.data).subquery()
     event_labels_subquery = rename_attributes(
         event_labels_subquery, MIMIC_COLUMN_MAP
-    ).subquery()
+    )
 
     subquery = (
         select(

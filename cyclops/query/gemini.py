@@ -2,7 +2,14 @@
 
 from typing import List, Optional, Union
 
+from datetime import timedelta
+
 from sqlalchemy import extract, select
+from sqlalchemy.sql.expression import literal, union_all
+from sqlalchemy.types import Interval, String
+from sqlalchemy.sql.functions import concat, coalesce
+
+from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
@@ -31,6 +38,7 @@ from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
     DBTable,
     equals,
+    get_attribute,
     get_attributes,
     has_substring,
     in_,
@@ -68,7 +76,7 @@ TABLE_MAP = {
     LOOKUP_ER_ADMIN: lambda db: db.public.lookup_er_administrative,
     LOOKUP_DIAGNOSIS: lambda db: db.public.lookup_diagnosis,
     IP_SCU: lambda db: db.public.ip_scu,
-    ROOM_TRANSFER: lambda db: db.public.ip_scu,
+    ROOM_TRANSFER: lambda db: db.public.room_transfer,
     LOOKUP_ROOM_TRANSFER: lambda db: db.public.lookup_room_transfer,
 }
 GEMINI_COLUMN_MAP = {
@@ -85,6 +93,8 @@ GEMINI_COLUMN_MAP = {
     "measure_date_time": EVENT_TIMESTAMP,
     "left_er_date_time": ER_DISCHARGE_TIMESTAMP,
     "duration_er_stay_derived": LENGTH_OF_STAY_IN_ER,
+    "triage_date_time": ER_ADMIT_TIMESTAMP,
+    "er_discharge_timestamp": ER_DISCHARGE_TIMESTAMP,
     "scu_admit_date_time": SCU_ADMIT_TIMESTAMP,
     "scu_discharge_date_time": SCU_DISCHARGE_TIMESTAMP,
 }
@@ -114,6 +124,20 @@ def get_lookup_table(table_name: str) -> QueryInterface:
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
 
     return QueryInterface(_db, subquery)
+
+
+def _er_admin() -> QueryInterface:
+    """Query emergency room administrative data.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    table = TABLE_MAP[ER_ADMIN](_db)
+    table = rename_attributes(table, GEMINI_COLUMN_MAP)
+    return QueryInterface(_db, table)
 
 
 def patients(  # pylint: disable=too-many-arguments
@@ -152,7 +176,7 @@ def patients(  # pylint: disable=too-many-arguments
     """
     table_ = TABLE_MAP[IP_ADMIN](_db)
     subquery = select(table_.data)
-    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
+    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP)
 
     if years:
         subquery = (
@@ -189,11 +213,8 @@ def patients(  # pylint: disable=too-many-arguments
             select(subquery).where(equals(subquery.c.gemini_cohort, True)).subquery()
         )
     if include_er_data:
-        er_table = TABLE_MAP[ER_ADMIN](_db)
-        er_subquery = select(er_table.data)
-        er_subquery = rename_attributes(er_subquery, GEMINI_COLUMN_MAP).subquery()
         subquery = (
-            select(subquery, er_subquery)
+            select(subquery, _er_admin().query)
             .where(subquery.c.encounter_id == er_subquery.c.encounter_id)
             .subquery()
         )
@@ -265,7 +286,7 @@ def diagnoses(
     """
     table_ = TABLE_MAP[DIAGNOSIS](_db)
     subquery = select(table_.data)
-    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
+    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP)
     if diagnosis_codes:
         subquery = (
             select(subquery)
@@ -284,61 +305,66 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
-def _include_careunit(events: Subquery) -> Subquery:
-    """Creates care unit column in events table.
+def get_careunits(encounters: list = None) -> Subquery:
+    """Get care unit table within a given set of encounters.
     
     Parameters
     ----------
-    events : sqlalchemy.sql.selectable.Subquery
-        The events table.
+    encounters : list
+        The encounter IDs to consider. If None, consider all encounters.
     Returns
-    sqlalchemy.sql.selectable.Subquery
-        The events table with added attributed CARE_UNIT
     -------
+    sqlalchemy.sql.selectable.Subquery
+        Constructed query, wrapped in an interface object.
+    
     """
+    pt = lambda t: rename_attributes(TABLE_MAP[t](_db).data, GEMINI_COLUMN_MAP)
     
-    ip_table = TABLE_MAP[IP_ADMIN](_db).data
-    ip_table = rename_attributes(ip_table, GEMINI_COLUMN_MAP)
-    ip_table = get_attributes([ENCOUNTER_ID, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP]).subquery()
+    filter_encounters = lambda query, encounters: query if encounters is None else \
+        select(query).where(in_(get_attribute(query, ENCOUNTER_ID), encounters)).subquery()
     
-    er_table = TABLE_MAP[ER_ADMIN](_db).data
-    er_table = rename_attributes(er_table, GEMINI_COLUMN_MAP)
-    er_table = get_attributes([ER_DISCHARGE_TIMESTAMP, LENGTH_OF_STAY_IN_ER])
-    er_table = select(
-        er_table,
-        (rga(er_table.c, ER_DISCHARGE_TIMESTAMP) - rga(er_table.c, LENGTH_OF_STAY_IN_ER)).label(ER_ADMIT_TIMESTAMP)
-    ).subquery()
+    rename_timestamps = lambda table, admit, discharge, description: \
+        select(
+            rga(table.c, ENCOUNTER_ID),
+            rga(table.c, admit).label("admit"),
+            rga(table.c, discharge).label("discharge"),
+            literal(description).label("description")
+        )
     
-    scu_table = TABLE_MAP[IP_SCU](_db).data
-    scu_table = rename_attributes(scu_table, GEMINI_COLUMN_MAP)  
-    scu_table = get_attributes([ENCOUNTER_ID, SCU_ADMIT_TIMESTAMP, SCU_DISCHARGE_TIMESTAMP])
+    # In-patient table
+    ip_table = filter_encounters(pt(IP_ADMIN), encounters)
+    ip_table = rename_timestamps(ip_table, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "IP")
     
-    # ER = Emergency?
-    # ICU = SCU?
+    # Special care unit table
+    scu_table = filter_encounters(pt(IP_SCU), encounters)
+    scu_table = rename_timestamps(scu_table, SCU_ADMIT_TIMESTAMP, SCU_DISCHARGE_TIMESTAMP, "SCU")
     
-    rt_table = TABLE_MAP[ROOM_TRANSFER](_db).data
-    rt_table = rename_attributes(rt_table, GEMINI_COLUMN_MAP)
+    # Emergency room/department table
+    er_table = filter_encounters(_er_admin().query, encounters)
+    er_table = rename_timestamps(er_table, ER_ADMIT_TIMESTAMP, ER_DISCHARGE_TIMESTAMP, "ER")
     
-    lookup_rt_table = TABLE_MAP[LOOKUP_ROOM_TRANSFER](_db).data
-    lookup_rt_table = rename_attributes(lookup_rt_table, GEMINI_COLUMN_MAP)
+    # Room transfer table
+    rt_table = filter_encounters(pt(ROOM_TRANSFER), encounters)
+    lookup_rt_table = pt(LOOKUP_ROOM_TRANSFER)
     
     # Join room transfer with lookup to get description
-    rt_table = select(rga(rt_table, ENCOUNTER_ID), lookup_rt_table.description).where(
-        rt_table.medical_service == lookup_rt_table.value
+    rt_table = select(
+        rga(rt_table.c, ENCOUNTER_ID),
+        rt_table.c.checkin_date_time.label("admit"),
+        rt_table.c.checkout_date_time.label("discharge"),
+        lookup_rt_table.c.description
+    ).where(
+        rt_table.c.medical_service == lookup_rt_table.c.value
     )
     
-    #care_unit = ... .label(CARE_UNIT)
-    #events ... join... care_unit ... on ENCOUNTER_ID
-    #return select(events, .label(CARE_UNIT)).subquery()
-    return ip_table, er_table, scu_table, rt_table
+    return QueryInterface(_db, union_all(rt_table, ip_table, scu_table, er_table))
 
 
 def events(
     category: str,
     names: Optional[Union[str, List[str]]] = None,
     substring: Optional[str] = None,
-    patients: Optional[QueryInterface] = None,
-    care_unit = True # pylint: disable=redefined-outer-name
+    patients: Optional[QueryInterface] = None # pylint: disable=redefined-outer-name
 ) -> QueryInterface:
     """Query events.
 
@@ -364,7 +390,7 @@ def events(
         raise ValueError("Invalid category of events specified!")
     table_ = TABLE_MAP[category](_db)
     subquery = select(table_.data)
-    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP).subquery()
+    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP)
 
     if category != INTERVENTION:
         subquery = (
@@ -384,9 +410,6 @@ def events(
                 .where(has_substring(subquery.c.event_name, substring, to_str=True))
                 .subquery()
             )
-
-    if care_unit:
-        subquery = careunit(subquery)
             
     if patients:
         return _join_with_patients(patients.query, subquery)
