@@ -2,7 +2,7 @@
 
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union
 
 import pandas as pd
@@ -38,7 +38,7 @@ class QueryInterface:
     database: Database
     query: Union[Select, Subquery]
     data: Union[pd.DataFrame, None] = None
-    _run_args: Optional[Dict] = {}
+    _run_args: Dict = field(default_factory=dict)
 
     def run(
         self,
@@ -78,7 +78,7 @@ class QueryInterface:
             self.query = filter_attributes(self.query, filter_columns)
         if filter_recognised:
             self.query = filter_attributes(self.query, RECOGNISED_QUERY_COLUMNS)
-        if self.data is None and not self._run_args == locals():
+        if self.data is None or not self._run_args == locals():
             self._run_args = locals()
             self.data = self.database.run_query(self.query, limit=limit)
 
