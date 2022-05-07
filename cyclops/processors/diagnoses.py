@@ -2,6 +2,7 @@
 
 import logging
 import re
+from typing import Dict, Optional
 
 import pandas as pd
 
@@ -24,6 +25,10 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 def insert_decimal(input_: str, index: int = 2) -> str:
     """Insert decimal at index.
 
+    Example
+    -------
+        insert_decimal("232", 1) -> "2.32"
+
     Parameters
     ----------
     input_: str
@@ -40,10 +45,12 @@ def insert_decimal(input_: str, index: int = 2) -> str:
     return input_[:index] + "." + input_[index:]
 
 
-def get_code_letter(code: str) -> str:
-    """Get the letter from diagnosis code.
+def get_alphabet(code: str) -> str:
+    """Get alphabet occurring at the beginning of alphanumeric diagnosis code.
 
-    E.g. M55 -> M
+    Example
+    -------
+        get_alphabet("M55") -> "M"
 
     Parameters
     ----------
@@ -53,16 +60,18 @@ def get_code_letter(code: str) -> str:
     Returns
     -------
     str:
-        Extracted letter.
+        Extracted alphabet.
 
     """
     return re.sub("[^a-zA-Z]", EMPTY_STRING, code).upper()
 
 
-def get_code_numerics(code: str) -> str:
-    """Get the numeric values from diagnosis code.
+def get_numeric(code: str) -> str:
+    """Get the numeric values from alphanumeric string which occur after an alphabet.
 
-    E.g. M55 -> 55
+    Example
+    -------
+        get_numeric("M55") -> "55"
 
     Parameters
     ----------
@@ -101,13 +110,13 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
 
     for _, (code_low, code_high) in trajectories.items():
         icd_category = "_".join([code_low, code_high])
-        code_letter = get_code_letter(code)
-        code_high_letter = get_code_letter(code_high)
+        code_letter = get_alphabet(code)
+        code_high_letter = get_alphabet(code_high)
         if code_letter < code_high_letter:
             return icd_category
         if (code_letter == code_high_letter) and (
-            int(float(insert_decimal(get_code_numerics(code), index=2)))
-            <= int(get_code_numerics(code_high))
+            int(float(insert_decimal(get_numeric(code), index=2)))
+            <= int(get_numeric(code_high))
         ):
             return icd_category
 
@@ -117,7 +126,9 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
 
 
 @time_function
-def group_diagnosis_codes_to_trajectories(data: pd.DataFrame) -> pd.DataFrame:
+def group_diagnosis_codes_to_trajectories(
+    data: pd.DataFrame, trajectories: Optional[Dict] = None
+) -> pd.DataFrame:
     """Process raw ICD diagnosis codes into grouped trajectories (one-hot encoded).
 
     For each encounter, a patient may have associated diagnoses information,
@@ -136,7 +147,13 @@ def group_diagnosis_codes_to_trajectories(data: pd.DataFrame) -> pd.DataFrame:
 
     """
     log_counts_step(data, "Processing raw diagnosis codes...")
-    apply_grouping_to_trajectories(data)
+    if not trajectories:
+        trajectories = TRAJECTORIES
+
+    data[DIAGNOSIS_TRAJECTORIES] = data[DIAGNOSIS_CODE].apply(
+        get_icd_category, args=(trajectories,)
+    )
+    log_counts_step(data, "Grouping ICD codes to trajectories...")
 
     encounters = list(data[ENCOUNTER_ID].unique())
     icd_trajectories = list(data[DIAGNOSIS_TRAJECTORIES].unique())
@@ -145,31 +162,8 @@ def group_diagnosis_codes_to_trajectories(data: pd.DataFrame) -> pd.DataFrame:
         len(icd_trajectories),
         len(encounters),
     )
-    features = pd.DataFrame(index=encounters, columns=icd_trajectories)
-
-    grouped_codes = data.groupby([ENCOUNTER_ID])
-    for encounter_id, codes in grouped_codes:
-        icd_trajectories_encounter = codes[DIAGNOSIS_TRAJECTORIES]
-        for icd_trajectory_encounter in icd_trajectories_encounter:
-            features.loc[encounter_id, icd_trajectory_encounter] = 1
+    features = pd.crosstab(data[ENCOUNTER_ID], data[DIAGNOSIS_TRAJECTORIES])
     features.fillna(0, inplace=True)
+    features = features.applymap(lambda x: int(x > 0))
 
     return features
-
-
-def apply_grouping_to_trajectories(data) -> None:
-    """Group ICD diagnosis codes by categorizing them into trajectories.
-
-    Applies mapping of diagnosis codes, currently only supported for ICD-10 codes,
-    to create a new column of mapped ICD trajectories.
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input data with diagnoses codes associated to patient.
-
-    """
-    data[DIAGNOSIS_TRAJECTORIES] = data[DIAGNOSIS_CODE].apply(
-        get_icd_category, args=(TRAJECTORIES,)
-    )
-    log_counts_step(data, "Grouping ICD codes to trajectories...")
