@@ -12,6 +12,7 @@ from cyclops.processors.aggregate import (
     filter_upto_window,
     gather_event_features,
     gather_events_into_single_bucket,
+    infer_statics,
 )
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
@@ -79,6 +80,30 @@ def test_events_input():
 
     columns = [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, ADMIT_TIMESTAMP, EVENT_TIMESTAMP]
     return pd.DataFrame(data, columns=columns)
+
+
+@pytest.fixture
+def test_infer_statics_input():
+    """Input dataframe to test infer_statics fn."""
+    input_ = pd.DataFrame(
+        index=list(range(4)),
+        columns=[ENCOUNTER_ID, "B", "C", "D", "E"],
+    )
+    input_.loc[0] = ["cat", 2, "0", 0, 1.9]
+    input_.loc[1] = ["cat", 2, "1", 1, 0.8]
+    input_.loc[2] = ["sheep", 6, "0", 0, 20.9]
+    input_.loc[3] = ["sheep", 6, "0", 0, 9.2]
+    input_.loc[4] = ["donkey", 3, "1", 1, 99.2]
+
+    return input_
+
+
+def test_infer_statics(
+    test_infer_statics_input,
+):  # pylint: disable=redefined-outer-name
+    """Test infer_statics fn."""
+    static_columns = infer_statics(test_infer_statics_input)
+    assert static_columns == ["B"]
 
 
 def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name

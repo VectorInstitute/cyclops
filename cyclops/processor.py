@@ -8,7 +8,7 @@ from cyclops.feature_handler import FeatureHandler
 from cyclops.processors.aggregate import (
     Aggregator,
     gather_event_features,
-    gather_static_features,
+    infer_statics,
 )
 from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
@@ -36,6 +36,7 @@ def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
     if check_must_have_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
         diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
         diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
+
     return diagnoses_features
 
 
@@ -95,8 +96,10 @@ def featurize(  # pylint: disable=too-many-arguments
                 dataframe.drop(DIAGNOSIS_CODE, axis=1, inplace=True)
                 feature_handler.add_features(diagnoses_features)
 
-            static_features = gather_static_features(dataframe)
-            feature_handler.add_features(static_features, reference_cols=reference_cols)
+            feature_handler.add_features(
+                dataframe[infer_statics(dataframe)].copy(),
+                reference_cols=reference_cols,
+            )
 
             outcomes = generate_outcomes(dataframe)
             if outcomes is not None:

@@ -533,7 +533,7 @@ def apply_to_attributes(
     subquery = drop_attributes(subquery, col_names)
 
     # Rename those temporary columns.
-    subquery = rename_attributes(subquery, name_d).subquery()
+    subquery = rename_attributes(subquery, name_d)
 
     # Re-order the columns as they were originally.
     query = reorder_attributes(subquery, org_col_names, assert_same=False)

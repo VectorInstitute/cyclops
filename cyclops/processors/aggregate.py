@@ -307,49 +307,16 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
 
 
 @time_function
-def gather_static_features(data: pd.DataFrame) -> pd.DataFrame:
-    """Gathers encounter specific static features.
-
-    Patient statics gathered into features. This function groups patient static
-    information, checks to see if there is a unique static value for that given
-    encounter, and creates a feature column with that unique value.
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input DataFrame.
-
-    Returns
-    -------
-    pandas.DataFrame:
-        Processed static features.
-
-    """
-    log_counts_step(data, "Gathering static features...", columns=True)
-    encounters = list(data[ENCOUNTER_ID].unique())
-    col_names = [col_name for col_name in data.columns if col_name != ENCOUNTER_ID]
-    features = pd.DataFrame(index=encounters, columns=col_names)
-    features.index.name = ENCOUNTER_ID
-
-    grouped = data.groupby([ENCOUNTER_ID])
-    for encounter_id, statics in grouped:
-        for col_name in col_names:
-            if statics[col_name].nunique() != 1:
-                LOGGER.warning(
-                    """None or Duplicate values encountered in patient statics,
-                    in %s column, skipped for processing!""",
-                    col_name,
-                )
-                continue
-            features.loc[encounter_id, col_name] = statics[col_name].unique()[0]
-
-    return features
-
-
 def infer_statics(
     data: pd.DataFrame, groupby_cols: Union[str, List[str]] = ENCOUNTER_ID
 ) -> List[str]:
-    """Infer static columns using the unique values in a groupby object.
+    """Infer patient static columns using the unique values in a groupby object.
+
+    Applies a groupby and counts unique values per column. If there is a single
+    unique value (discounting NaNs) across all groups, then that column is considered
+    to be a static feature column. By default, the encounter_id is used for groupby,
+    although this function can be used more generally to perform groupby on other
+    columns.
 
     Parameters
     ----------
@@ -360,28 +327,20 @@ def infer_statics(
 
     Returns
     -------
-    list of string:
+    list of str:
         Names of the static columns.
 
     """
-    # Process group by columns
+    log_counts_step(data, "Gathering static features...", columns=True)
     groupby_cols = to_list(groupby_cols)
     if not set(groupby_cols).issubset(set(data.columns)):
         raise ValueError(f"{groupby_cols} must be a subset of {list(data.columns)}")
 
-    # Group by columns
     grouped = data.groupby(groupby_cols)
-
-    # True if there is 1 unique value in a column for a given encounter ID,
-    # or 0 to account for if all of the values are NaN
     grouped_unique_limited = grouped.apply(lambda x: x.nunique(dropna=True) <= 1)
-
-    # For each column, get the number of groups which satisfied the above condition
     num_one_unique = grouped_unique_limited.sum()
-
-    # If all groups satisfied the condition
     static_cols = set(num_one_unique[num_one_unique == grouped.ngroups].index)
-
-    # Return a list of the static columns (not including ENCOUNTER_ID)
     static_cols = static_cols - set(groupby_cols)
+    LOGGER.info("Found %s static feature columns.", static_cols)
+
     return list(static_cols)
