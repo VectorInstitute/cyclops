@@ -6,7 +6,10 @@ import pandas as pd
 import pytest
 
 from cyclops.processors.column_names import ENCOUNTER_ID, TIMESTEP
+from cyclops.processors.constants import MEAN, MEDIAN
 from cyclops.processors.impute import (
+    Imputer,
+    impute_features,
     remove_encounters_if_missing,
     remove_features_if_missing,
 )
@@ -63,3 +66,26 @@ def test_remove_features_if_missing(  # pylint: disable=redefined-outer-name
     assert "B" not in features
     features = remove_features_if_missing(test_input_feature_temporal, 0.4)
     assert "B" not in features and "A" not in features
+
+
+def test_impute_features(  # pylint: disable=redefined-outer-name
+    test_input_feature_static,
+):
+    """Test impute_features fn."""
+    imputer = Imputer()
+    features = impute_features(test_input_feature_static, imputer=imputer)
+    assert features.equals(test_input_feature_static)
+
+    imputer = Imputer(strategy=MEAN)
+    features = impute_features(test_input_feature_static, imputer=imputer)
+
+    assert features["A"][1] == features["A"].mean(skipna=True)
+    assert features["B"][1] == features["B"].mean(skipna=True)
+    assert features["B"][4] == features["B"].mean(skipna=True)
+
+    imputer = Imputer(strategy=MEDIAN)
+    features = impute_features(test_input_feature_static, imputer=imputer)
+
+    assert features["A"][1] == features["A"].median(skipna=True)
+    assert features["B"][1] == features["B"].median(skipna=True)
+    assert features["B"][4] == features["B"].median(skipna=True)

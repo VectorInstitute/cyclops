@@ -146,6 +146,7 @@ def impute_features(features: pd.DataFrame, imputer: Imputer) -> pd.DataFrame:
         Features after imputation.
 
     """
+    features = features.copy()
     if imputer.encounter_missingness_threshold > 0:
         features = remove_encounters_if_missing(
             features,
@@ -159,12 +160,11 @@ def impute_features(features: pd.DataFrame, imputer: Imputer) -> pd.DataFrame:
     if not imputer.strategy:
         return features
     if imputer.strategy == MEAN:
-        per_column_impute_values = features.mean(axis=0, skipna=True, numeric_only=True)
+        per_column_impute_values = features.mean(axis=0, skipna=True)
     if imputer.strategy == MEDIAN:
-        per_column_impute_values = features.median(
-            axis=0, skipna=True, numeric_only=True
-        )
+        per_column_impute_values = features.median(axis=0, skipna=True)
 
+    print(per_column_impute_values)
     for col, per_column_impute_value in per_column_impute_values.items():
         features[[col]] = features[[col]].fillna(per_column_impute_value)
 
