@@ -90,7 +90,7 @@ def to_list(obj: Any) -> list:
         return obj
 
     if isinstance(obj, np.ndarray):
-        obj = list(obj)
+        return list(obj)
 
     return [obj]
 
