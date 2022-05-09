@@ -1,6 +1,4 @@
-"""Vitals processor module."""
-
-# mypy: ignore-errors
+"""Events processor module, applies cleaning step to event data before aggregation."""
 
 import logging
 
@@ -189,6 +187,7 @@ def clean_events(data) -> pd.DataFrame:
     """
     data = data.copy()
     log_counts_step(data, "Cleaning raw event data...", columns=True)
+    data = data.infer_objects()
     data = normalize_names(data)
     data = drop_unsupported(data)
 

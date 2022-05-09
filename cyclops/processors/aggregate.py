@@ -340,7 +340,7 @@ def infer_statics(
     grouped_unique_limited = grouped.apply(lambda x: x.nunique(dropna=True) <= 1)
     num_one_unique = grouped_unique_limited.sum()
     static_cols = set(num_one_unique[num_one_unique == grouped.ngroups].index)
-    LOGGER.info("Found %s static feature columns.", static_cols)
+    LOGGER.info("Found %s static feature columns.", static_cols - {ENCOUNTER_ID})
 
     return list(static_cols)
 
@@ -386,6 +386,6 @@ def gather_statics(
         return unique_vals[0] if len(unique_vals) == 1 else np.nan
 
     unique_statics = grouped.agg(unique_non_null)
-    unique_statics.reset_index(inplace=True)
-    unique_statics.set_index(groupby_cols, inplace=True)
+    unique_statics = unique_statics.reset_index()
+    unique_statics = unique_statics.set_index(groupby_cols)
     return unique_statics
