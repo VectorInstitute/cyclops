@@ -420,6 +420,7 @@ def events(
         Patient encounters query wrapped, used to join with events.
     care_unit: bool
         Whether to include the care unit for each event.
+
     Returns
     -------
     cyclops.query.interface.QueryInterface
