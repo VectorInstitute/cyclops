@@ -53,3 +53,7 @@ def test_group_diagnosis_codes_to_trajectories():
     trajectory_features = group_diagnosis_codes_to_trajectories(input_, trajectories)
     assert all(trajectory_features["E00_E10"] == [1, 0])
     assert all(trajectory_features["M00_M05"] == [0, 1])
+
+    trajectory_features = group_diagnosis_codes_to_trajectories(input_)
+    assert all(trajectory_features["E00_E89"] == [1, 0])
+    assert all(trajectory_features["M00_M99"] == [1, 1])
