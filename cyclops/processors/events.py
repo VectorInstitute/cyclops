@@ -1,7 +1,5 @@
 """Events processor module, applies cleaning step to event data before aggregation."""
 
-# mypy: ignore-errors
-
 import logging
 
 import pandas as pd
