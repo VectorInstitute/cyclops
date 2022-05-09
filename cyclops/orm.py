@@ -66,9 +66,15 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(SOCKET_CONNECTION_TIMEOUT)
-        is_port_open = sock.connect_ex((config.host, config.port))
+        try:
+            is_port_open = sock.connect_ex((config.host, config.port))
+        except socket.gaierror:
+            LOGGER.error("""Server name not known, cannot establish connection!""")
+            return
         if is_port_open:
-            LOGGER.error("""The DB server is not reachable, check if server is up!""")
+            LOGGER.error(
+                """Valid server host but port seems open, check if server is up!"""
+            )
             return
         self._create_engine()
 
