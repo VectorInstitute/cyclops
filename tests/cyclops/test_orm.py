@@ -1,11 +1,12 @@
 """Test ORM implementation."""
 
-import pytest
 import socket
 
+import pytest
+
 from cyclops.config import read_config
-from cyclops.orm import Database
 from cyclops.constants import GEMINI
+from cyclops.orm import Database
 
 
 def test_db_instantiation():
