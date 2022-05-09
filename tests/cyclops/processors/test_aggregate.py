@@ -99,17 +99,17 @@ def test_statics_input():
     return input_
 
 
-def test_infer_statics(
+def test_infer_statics(  # pylint: disable=redefined-outer-name
     test_statics_input,
-):  # pylint: disable=redefined-outer-name
+):
     """Test infer_statics fn."""
     static_columns = infer_statics(test_statics_input)
     assert set(static_columns) == set([ENCOUNTER_ID, "B", "E"])
 
 
-def test_gather_statics(
+def test_gather_statics(  # pylint: disable=redefined-outer-name
     test_statics_input,
-):  # pylint: disable=redefined-outer-name
+):
     """Test gather_statics function."""
     statics = gather_statics(test_statics_input)
 
