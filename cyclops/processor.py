@@ -8,7 +8,7 @@ from cyclops.feature_handler import FeatureHandler
 from cyclops.processors.aggregate import (
     Aggregator,
     gather_event_features,
-    infer_statics,
+    gather_statics,
 )
 from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
@@ -97,7 +97,7 @@ def featurize(  # pylint: disable=too-many-arguments
                 feature_handler.add_features(diagnoses_features)
 
             feature_handler.add_features(
-                dataframe[infer_statics(dataframe)].copy(),
+                gather_statics(dataframe),
                 reference_cols=reference_cols,
             )
 
