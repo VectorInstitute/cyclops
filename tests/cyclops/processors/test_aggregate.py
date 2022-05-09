@@ -12,6 +12,7 @@ from cyclops.processors.aggregate import (
     filter_upto_window,
     gather_event_features,
     gather_events_into_single_bucket,
+    gather_statics,
     infer_statics,
 )
 from cyclops.processors.column_names import (
@@ -83,27 +84,41 @@ def test_events_input():
 
 
 @pytest.fixture
-def test_infer_statics_input():
+def test_statics_input():
     """Input dataframe to test infer_statics fn."""
     input_ = pd.DataFrame(
         index=list(range(4)),
         columns=[ENCOUNTER_ID, "B", "C", "D", "E"],
     )
-    input_.loc[0] = ["cat", 2, "0", 0, 1.9]
-    input_.loc[1] = ["cat", 2, "1", 1, 0.8]
-    input_.loc[2] = ["sheep", 6, "0", 0, 20.9]
-    input_.loc[3] = ["sheep", 6, "0", 0, 9.2]
-    input_.loc[4] = ["donkey", 3, "1", 1, 99.2]
+    input_.loc[0] = ["cat", np.nan, "0", 0, "c"]
+    input_.loc[1] = ["cat", 2, "1", 1, np.nan]
+    input_.loc[2] = ["sheep", 6, "0", 0, "s"]
+    input_.loc[3] = ["sheep", np.nan, "0", 0, "s"]
+    input_.loc[4] = ["donkey", 3, "1", 1, np.nan]
 
     return input_
 
 
 def test_infer_statics(
-    test_infer_statics_input,
+    test_statics_input,
 ):  # pylint: disable=redefined-outer-name
     """Test infer_statics fn."""
-    static_columns = infer_statics(test_infer_statics_input)
-    assert static_columns == ["B"]
+    static_columns = infer_statics(test_statics_input)
+    assert set(static_columns) == set([ENCOUNTER_ID, "B", "E"])
+
+
+def test_gather_statics(
+    test_statics_input,
+):  # pylint: disable=redefined-outer-name
+    """Test gather_statics function."""
+    statics = gather_statics(test_statics_input)
+
+    assert statics["B"].loc["cat"] == 2
+    assert statics["B"].loc["donkey"] == 3
+    assert statics["B"].loc["sheep"] == 6
+    assert statics["E"].loc["cat"] == "c"
+    assert np.isnan(statics["E"].loc["donkey"])
+    assert statics["E"].loc["sheep"] == "s"
 
 
 def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name

@@ -3,7 +3,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, List, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -340,7 +340,52 @@ def infer_statics(
     grouped_unique_limited = grouped.apply(lambda x: x.nunique(dropna=True) <= 1)
     num_one_unique = grouped_unique_limited.sum()
     static_cols = set(num_one_unique[num_one_unique == grouped.ngroups].index)
-    static_cols = static_cols - set(groupby_cols)
     LOGGER.info("Found %s static feature columns.", static_cols)
 
     return list(static_cols)
+
+
+def gather_statics(
+    data: pd.DataFrame, groupby_cols: Union[str, List[str]] = ENCOUNTER_ID
+) -> List[str]:
+    """Gather unique values from static columns (see infer_statics function).
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input DataFrame.
+    groupby_cols: str or list of str
+        Columns by which to group.
+
+    Returns
+    -------
+    pandas.DataFrame:
+        Unique values of the static columns in each groupby object.
+
+    """
+    static_cols = infer_statics(data, groupby_cols)
+    statics = data[static_cols]
+    grouped = statics.groupby(groupby_cols)
+
+    def unique_non_null(series: pd.Series) -> Any:
+        """Get a non-null unique value in the series, or if none, returns np.nan.
+
+        Assumes at most one non-null unique value in the series.
+        Parameters
+        ----------
+        series: pandas.Series
+            Input Series.
+
+        Returns
+        -------
+        any:
+            Non-null unique value if it exists, otherwise np.nan
+
+        """
+        unique_vals = series.dropna().unique()
+        return unique_vals[0] if len(unique_vals) == 1 else np.nan
+
+    unique_statics = grouped.agg(unique_non_null)
+    unique_statics.reset_index(inplace=True)
+    unique_statics.set_index(groupby_cols, inplace=True)
+    return unique_statics
