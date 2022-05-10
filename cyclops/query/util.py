@@ -10,8 +10,10 @@ from typing import Any, Callable, List, Union
 
 import numpy as np
 import sqlalchemy
-from sqlalchemy import Float, Integer, String, cast, func, select
+from sqlalchemy import Float, Integer, Interval, String, cast, func, select
+from sqlalchemy.dialects.postgresql.base import TIMESTAMP
 from sqlalchemy.sql.elements import BinaryExpression
+from sqlalchemy.sql.expression import ColumnClause
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
@@ -21,6 +23,8 @@ from cyclops.utils.log import setup_logging
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
+COLUMN_TYPES = [Column, ColumnClause]
 
 
 @dataclass
@@ -284,7 +288,7 @@ def get_attribute(
     col_names = [c.name for c in table_.columns]
 
     # If a Column object.
-    if isinstance(attr, Column):
+    if type(attr) in COLUMN_TYPES:
         # Make sure the column object provided matches
         # the column in the query of the same name.
         if assert_same:
@@ -941,3 +945,159 @@ def in_(
     return process_attribute(col, lower=lower, trim=trim, **kwargs).in_(
         process_list(lst, lower=lower, trim=trim, **kwargs)
     )
+
+
+def create_interval_attribute(
+    years: Union[None, Column] = None,
+    days: Union[None, Column] = None,
+    hours: Union[None, Column] = None,
+    minutes: Union[None, Column] = None,
+    seconds: Union[None, Column] = None,
+) -> Column:
+    """Create an interval type column from a number of time columns.
+
+    Warning: Null values in each specified time column are coalesced to 0.
+
+    Parameters
+    ----------
+    years: None or sqlalchemy.sql.schema.Column
+        Years column.
+    days: None or sqlalchemy.sql.schema.Column
+        Days column.
+    hours: None or sqlalchemy.sql.schema.Column
+        Hours column.
+    minutes: None or sqlalchemy.sql.schema.Column
+        Minutes column.
+    seconds: None or sqlalchemy.sql.schema.Column
+        Seconds column.
+
+    Returns
+    -------
+    sqlalchemy.sql.schema.Column
+        Combined interval column.
+
+    """
+    time_cols = [years, days, hours, minutes, seconds]
+    names = ["YEARS", "DAYS", "HOURS", "MINUTES", "SECONDS"]
+
+    # Consider only the non-null columns
+    names = [names[i] for i in range(len(names)) if time_cols[i] is not None]
+    time_cols = [col for col in time_cols if col is not None]
+
+    if len(time_cols) == 0:
+        raise ValueError("One or more time columns must be specified.")
+
+    # Create interval columns
+    interval_cols = []
+    for i, col in enumerate(time_cols):
+        interval_cols.append(
+            func.cast(func.concat(func.coalesce(col, 0), " " + names[i]), Interval)
+        )
+
+    # Create combined interval column
+    combined_interval_col = interval_cols[0]
+    for i in range(1, len(interval_cols)):
+        combined_interval_col = combined_interval_col + interval_cols[i]
+    return combined_interval_col
+
+
+def add_interval_attribute_to_table(
+    table_: Union[Select, Subquery, Table, DBTable],
+    years: Union[None, str] = None,
+    days: Union[None, str] = None,
+    hours: Union[None, str] = None,
+    minutes: Union[None, str] = None,
+    seconds: Union[None, str] = None,
+):
+    """Create an interval type column and add this attribute to the provided table.
+
+    Parameters
+    ----------
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        The query containing the time columns.
+    years : None or str
+        Attribute name for years column in table_.
+    days : None or str
+        Attribute name for days column in table_.
+    hours : None or str
+        Attribute name for hours column in table_.
+    minutes : None or str
+        Attribute name for minutes column in table_.
+    seconds : None or str
+        Attribute name for seconds column in table_.
+
+    Returns
+    -------
+    sqlalchemy.sql.selectable.Subquery
+        The query with the interval.
+    Column
+        Interval column.
+
+    """
+    # If not None, get interval column from names
+    get_attr_or_none = lambda col: None if col is None else get_attribute(table_, col)
+
+    interval_col = create_interval_attribute(
+        years=get_attr_or_none(years),
+        days=get_attr_or_none(days),
+        hours=get_attr_or_none(hours),
+        minutes=get_attr_or_none(minutes),
+        seconds=get_attr_or_none(seconds),
+    )
+
+    query = select(table_, interval_col).subquery()
+
+    return query, interval_col
+
+
+def add_interval_to_timestamps(
+    table_: Union[Select, Subquery, Table, DBTable],
+    timestamp_cols: Union[str, List[str]],
+    years: Union[None, str] = None,
+    days: Union[None, str] = None,
+    hours: Union[None, str] = None,
+    minutes: Union[None, str] = None,
+    seconds: Union[None, str] = None,
+) -> Subquery:
+    """Create and add an interval column and adds it to a table. The individual time
+    columns are given as column names in the table.
+
+    Parameters
+    ----------
+    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        The query containing the timestamp_cols and time columns.
+    years : None or str
+        Attribute name for years column in table_.
+    days : None or str
+        Attribute name for years column in table_.
+    hours : None or str
+        Attribute name for years column in table_.
+    minutes : None or str
+        Attribute name for years column in table_.
+    seconds : None or str
+        Attribute name for years column in table_.
+
+    Returns
+    -------
+    sqlalchemy.sql.selectable.Subquery
+        The query with the modified timestamp_cols.
+
+    """
+    # Ensure timestamp columns are actually timestamps
+    for col in to_list(timestamp_cols):
+        if not isinstance(get_attribute(table_, col).type, TIMESTAMP):
+            raise ValueError(f"{col} must be a timestamp column.")
+
+    # Get combined interval column
+    _, interval_col = add_interval_attribute_to_table(
+        table_,
+        years=years,
+        days=days,
+        hours=hours,
+        minutes=minutes,
+        seconds=seconds,
+    )
+
+    return apply_to_attributes(table_, timestamp_cols, lambda x: x + interval_col)
