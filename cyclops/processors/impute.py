@@ -164,7 +164,6 @@ def impute_features(features: pd.DataFrame, imputer: Imputer) -> pd.DataFrame:
     if imputer.strategy == MEDIAN:
         per_column_impute_values = features.median(axis=0, skipna=True)
 
-    print(per_column_impute_values)
     for col, per_column_impute_value in per_column_impute_values.items():
         features[[col]] = features[[col]].fillna(per_column_impute_value)
 

@@ -222,12 +222,13 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
     return decorator
 
 
-def query_params_to_type(to_type: Any):
+def query_params_to_type(to_type: Union[Table, Select, Subquery, DBTable]) -> Callable:
     """Decorate function to convert query type params to specified type in QUERY_TYPES.
 
     Parameters
     ----------
-    to_type : any
+    to_type: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The type to which to convert.
 
     Returns
@@ -306,7 +307,7 @@ def get_attribute(
 def filter_attributes(
     table_: Union[Select, Subquery, Table, DBTable],
     attrs: Union[str, Column, List[Union[str, Column]]],
-):
+) -> Subquery:
     """Filter a number of attributes from the subquery.
 
     The attribute(s) may be a column name (string),
@@ -322,8 +323,8 @@ def filter_attributes(
 
     Returns
     -------
-    list of sqlalchemy.sql.schema.Column
-        The corresponding attributes in the query.
+    sqlalchemy.sql.selectable.Subquery
+        Filtered attributes from the query as a new subquery.
 
     """
     col_names = [c.name for c in table_.columns]
@@ -376,7 +377,7 @@ def get_attributes(
 def drop_attributes(
     table_: Union[Select, Subquery, Table, DBTable],
     drop_cols: Union[str, Column, List[Union[str, Column]]],
-) -> Select:
+) -> Subquery:
     """Drop some attribute(s) from a query.
 
     The attribute(s) given may be a column object, column name (string), or a
@@ -393,7 +394,7 @@ def drop_attributes(
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
+    sqlalchemy.sql.selectable.Subquery
         The corresponding query with attributes dropped.
 
     """
@@ -404,7 +405,7 @@ def drop_attributes(
 @query_params_to_type(Subquery)
 def rename_attributes(
     table_: Union[Select, Subquery, Table, DBTable], old_new_map: dict
-) -> Select:
+) -> Subquery:
     """Rename a query's attributes.
 
     Rename query's attributes according to a dictionary of strings,
@@ -420,7 +421,7 @@ def rename_attributes(
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
+    sqlalchemy.sql.selectable.Subquery
         The corresponding query with attributes renamed.
 
     """
@@ -437,7 +438,7 @@ def reorder_attributes(
     table_: Union[Select, Subquery, Table, DBTable],
     cols: List[Union[str, Column]],
     assert_same: bool = True,
-) -> Select:
+) -> Subquery:
     """Reorder a query's attributes.
 
     Reorder query's attributes according to a list of strings or
@@ -459,7 +460,7 @@ def reorder_attributes(
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
+    sqlalchemy.sql.selectable.Subquery
         The reordered query.
 
     """
@@ -489,7 +490,7 @@ def apply_to_attributes(
     table_: Union[Select, Subquery, Table, DBTable],
     cols: List,
     func_: Callable,
-) -> Select:
+) -> Subquery:
     """Apply a function to some attributes.
 
     Parameters
@@ -505,7 +506,7 @@ def apply_to_attributes(
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
+    sqlalchemy.sql.selectable.Subquery
         The query with function applied.
 
     """
@@ -544,7 +545,7 @@ def apply_to_attributes(
 def trim_attributes(
     table_: Union[Select, Subquery, Table, DBTable],
     cols: List[Union[str, Column]],
-):
+) -> Subquery:
     """Trim attributes and remove leading/trailing whitespace.
 
     Returns query with columns listed having their
@@ -560,7 +561,7 @@ def trim_attributes(
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Select
+    sqlalchemy.sql.selectable.Subquery
         The query with trimmed attrbutes.
 
     """
