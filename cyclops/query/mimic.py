@@ -30,15 +30,19 @@ from cyclops.processors.column_names import (
 from cyclops.processors.constants import MONTH
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
+    apply_to_attributes,
     DBTable,
     add_interval_to_timestamps,
     drop_attributes,
     equals,
+    get_attribute,
     has_substring,
     in_,
     rename_attributes,
+    replace,
     reorder_attributes,
     to_datetime_format,
+    rga,
     to_list,
     trim_attributes,
 )
@@ -55,6 +59,7 @@ DIAGNOSES = "diagnoses"
 PATIENT_DIAGNOSES = "patient_diagnoses"
 EVENT_LABELS = "event_labels"
 EVENTS = "events"
+TRANSFERS = "transfers"
 
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {
@@ -64,6 +69,7 @@ TABLE_MAP = {
     PATIENT_DIAGNOSES: lambda db: db.mimic_hosp.diagnoses_icd,
     EVENT_LABELS: lambda db: db.mimic_icu.d_items,
     EVENTS: lambda db: db.mimic_icu.chartevents,
+    TRANSFERS: lambda db: db.mimic_core.transfers,
 }
 MIMIC_COLUMN_MAP = {
     "hadm_id": ENCOUNTER_ID,
@@ -77,7 +83,61 @@ MIMIC_COLUMN_MAP = {
     "charttime": EVENT_TIMESTAMP,
     "icd_code": DIAGNOSIS_CODE,
 }
-
+CARE_UNIT_MAP = {
+    #None: ['Unknown'],
+    "observation": ['Observation', 'Psychiatry'],
+    "er": ['Emergency Department', 'Emergency Department Observation'],
+    "icu": [
+        'Surgical Intensive Care Unit (SICU)',
+        'Medical/Surgical Intensive Care Unit (MICU/SICU)',
+        'Medical Intensive Care Unit (MICU)',
+        'Trauma SICU (TSICU)',
+        'Neuro Surgical Intensive Care Unit (Neuro SICU)',
+        'Cardiac Vascular Intensive Care Unit (CVICU)'
+    ],
+    "medicine": [
+        'Medicine',
+        'Medical/Surgical (Gynecology)'
+    ],
+    "surgery": [
+        'Med/Surg',
+        'Surgery', 'Surgery/Trauma',
+        'Med/Surg/Trauma',
+        'Med/Surg/GYN',
+        'Surgery/Vascular/Intermediate',
+        'Thoracic Surgery',
+        'Transplant',
+        'Cardiac Surgery',
+        'PACU',
+        'Surgery/Pancreatic/Biliary/Bariatric'
+    ],
+    "cardiology": [
+        'Cardiology'
+        'Coronary Care Unit (CCU)',
+        'Cardiology Surgery Intermediate',
+        'Medicine/Cardiology'
+        'Medicine/Cardiology Intermediate',
+    ],
+    "vascular": [
+        'Vascular',
+        'Hematology/Oncology',
+        'Hematology/Oncology Intermediate'
+    ],
+    "neuro": [
+        'Neurology',
+        'Neuro Intermediate',
+        'Neuro Stepdown'
+    ],
+    "neonatal": [
+        'Obstetrics (Postpartum & Antepartum)',
+        'Neonatal Intensive Care Unit (NICU)',
+        'Special Care Nursery (SCN)',
+        'Nursery - Well Babies',
+        'Obstetrics Antepartum',
+        'Obstetrics Postpartum',
+        'Labor & Delivery'
+    ],
+}
 
 def get_lookup_table(table_name: str) -> QueryInterface:
     """Get lookup table data.
@@ -103,6 +163,27 @@ def get_lookup_table(table_name: str) -> QueryInterface:
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
 
     return QueryInterface(_db, subquery)
+
+
+def _map_table_attributes(table_name: str) -> Subquery:
+    """Map queried data attributes into common column names.
+
+    For unifying processing functions across datasets, data
+    attributes are currently mapped to the same name, to allow for processing
+    to recognise them.
+
+    Parameters
+    ----------
+    table_name: str
+        Name of MIMIC table.
+
+    Returns
+    -------
+    sqlalchemy.sql.selectable.Subquery
+        Query with mapped attributes.
+
+    """
+    return rename_attributes(TABLE_MAP[table_name](_db).data, MIMIC_COLUMN_MAP)
 
 
 def patients(
