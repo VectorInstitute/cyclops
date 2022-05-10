@@ -13,6 +13,7 @@ from cyclops.processors.aggregate import (
     gather_event_features,
     gather_events_into_single_bucket,
     gather_statics,
+    get_earliest_ts_encounter,
     infer_statics,
 )
 from cyclops.processors.column_names import (
@@ -149,9 +150,9 @@ def test_aggregate_values_in_bucket():
         aggregate_values_in_bucket(series, strategy="donkey")
 
 
-def test_gather_events_into_single_bucket(
+def test_gather_events_into_single_bucket(  # pylint: disable=redefined-outer-name
     test_events_input,
-):  # pylint: disable=redefined-outer-name
+):
     """Test gather_events_into_single_bucket function."""
     res = gather_events_into_single_bucket(test_events_input, MEAN)
     assert res.loc[1]["eventA"] == 10.0
@@ -166,9 +167,18 @@ def test_gather_events_into_single_bucket(
     assert res.loc[2]["eventB"] == 13.0
 
 
-def test_gather_event_features(
+def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
     test_events_input,
-):  # pylint: disable=redefined-outer-name
+):
+    """Test get_earliest_ts_encounter fn."""
+    earliest_ts = get_earliest_ts_encounter(test_events_input)
+    assert earliest_ts[1] == datetime(2022, 11, 3, hour=14)
+    assert earliest_ts[2] == datetime(2022, 11, 3, hour=14)
+
+
+def test_gather_event_features(  # pylint: disable=redefined-outer-name
+    test_events_input,
+):
     """Test gather_event_features function."""
     agg = Aggregator(strategy=MEAN, bucket_size=4, window=24, start_at_admission=True)
     res = gather_event_features(test_events_input, agg)

@@ -1,6 +1,7 @@
 """Aggregation functions."""
 
 import logging
+import math
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, List, Optional, Union
@@ -93,7 +94,7 @@ def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
 
     Given 2 columns, i.e. encounter ID, and timestamp of events,
     this function finds the timestamp of the earliest event for an
-    encounter, and returns that timestamp for all events.
+    encounter.
 
     Parameters
     ----------
@@ -106,16 +107,14 @@ def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
         A series with earliest timestamp among events for each encounter.
 
     """
-    earliest_ts_encounters = {}
-    for encounter_id, grouped_ts in timestamps.groupby(ENCOUNTER_ID):
-        earliest_ts_encounters[encounter_id] = min(grouped_ts[EVENT_TIMESTAMP])
-    earliest_ts = pd.Series(index=timestamps.index, dtype="datetime64[ns]")
-    for index, (encounter_id, _) in timestamps.iterrows():
-        earliest_ts[index] = earliest_ts_encounters[encounter_id]
+    earliest_ts = timestamps.groupby(ENCOUNTER_ID).agg({EVENT_TIMESTAMP: "min"})[
+        EVENT_TIMESTAMP
+    ]
 
     return earliest_ts
 
 
+@time_function
 def filter_upto_window(
     data: pd.DataFrame,
     window: int = 24,
@@ -158,13 +157,19 @@ def filter_upto_window(
 
     data_filtered = data.copy()
     sample_time = data_filtered[EVENT_TIMESTAMP]
-    start_time = get_earliest_ts_encounter(
-        data_filtered[[ENCOUNTER_ID, EVENT_TIMESTAMP]]
-    )
+
     if start_at_admission:
         start_time = data_filtered[ADMIT_TIMESTAMP]
     if start_window_ts:
         start_time = start_window_ts
+    else:
+        start_time = get_earliest_ts_encounter(
+            data_filtered[[ENCOUNTER_ID, EVENT_TIMESTAMP]]
+        )
+        start_time = start_time[data_filtered[ENCOUNTER_ID]].reset_index()
+        start_time = start_time[EVENT_TIMESTAMP]
+        start_time.index = sample_time.index
+
     data_filtered = data_filtered.loc[sample_time >= start_time]
     window_condition = (sample_time - start_time) / pd.Timedelta(hours=1)
     data_filtered = data_filtered.loc[window_condition <= window]
@@ -272,6 +277,8 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
     if aggregator.window == aggregator.bucket_size:
         return gather_events_into_single_bucket(data, aggregator.strategy)
 
+    num_timesteps = math.floor(aggregator.window / aggregator.bucket_size)
+
     columns = [ENCOUNTER_ID, TIMESTEP] + event_names
     features = pd.DataFrame(columns=columns)
     grouped_events = data.groupby([ENCOUNTER_ID])
@@ -282,7 +289,6 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
         ) / pd.Timedelta(hours=aggregator.bucket_size)
         events[TIMESTEP] = events[TIMESTEP].astype("int")
 
-        num_timesteps = max(events[TIMESTEP].unique())
         for timestep in range(num_timesteps + 1):
             events_values_timestep = pd.Series(
                 [np.nan for _ in range(len(event_names))], index=event_names
@@ -331,7 +337,6 @@ def infer_statics(
         Names of the static columns.
 
     """
-    log_counts_step(data, "Gathering static features...", columns=True)
     groupby_cols = to_list(groupby_cols)
     if not set(groupby_cols).issubset(set(data.columns)):
         raise ValueError(f"{groupby_cols} must be a subset of {list(data.columns)}")
@@ -345,6 +350,7 @@ def infer_statics(
     return list(static_cols)
 
 
+@time_function
 def gather_statics(
     data: pd.DataFrame, groupby_cols: Union[str, List[str]] = ENCOUNTER_ID
 ) -> List[str]:
@@ -363,6 +369,7 @@ def gather_statics(
         Unique values of the static columns in each groupby object.
 
     """
+    log_counts_step(data, "Gathering static features...", columns=True)
     static_cols = infer_statics(data, groupby_cols)
     statics = data[static_cols]
     grouped = statics.groupby(groupby_cols)
