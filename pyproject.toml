@@ -5,7 +5,7 @@ description = "Framework for ML data processing, model evaluation and drift dete
 authors = ["Vector AI Engineering <ai_engineering@vectorinstitute.ai>"]
 
 [tool.poetry.dependencies]
-python = "3.8.5"
+python = "3.9.7"
 jupyter = "^1.0.0"
 pandas = "^1.4.1"
 SQLAlchemy = "^1.4.32"
