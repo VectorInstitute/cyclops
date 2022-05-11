@@ -40,5 +40,7 @@ jobs:
       - name: Install dependencies and check code
         run: |
           poetry install
+          echo $(poetry env info --path)
+          echo $(poetry env list --full-path)
           source "$( poetry env list --full-path | grep Activated | cut -d' ' -f1 )/bin/activate"
           pre-commit run --all-files
