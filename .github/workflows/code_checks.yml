@@ -5,15 +5,21 @@ on:
     branches:
       - master
     paths:
-      - .github/workflows/static_code_analysis.yml
+      - .github/workflows/code_checks.yml
       - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
       - '**.ipynb'
   pull_request:
     branches:
       - master
     paths:
-      - .github/workflows/static_code_analysis.yml
+      - .github/workflows/code_checks.yml
       - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
       - '**.ipynb'
 
 jobs:
@@ -29,7 +35,7 @@ jobs:
         run: pipx install poetry
       - uses: actions/setup-python@v3
         with:
-          python-version: 3.8.5
+          python-version: 3.9.7
           cache: 'poetry'
       - name: Install dependencies and check code
         run: |

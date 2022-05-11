@@ -35,7 +35,7 @@ jobs:
         run: pipx install poetry
       - uses: actions/setup-python@v3
         with:
-          python-version: 3.8.5
+          python-version: 3.9.7
           cache: 'poetry'
       - name: Install dependencies, build docs and coverage report
         run: |
