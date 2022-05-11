@@ -1,5 +1,6 @@
 """GEMINI query API."""
 
+import logging
 from typing import List, Optional, Union
 
 from sqlalchemy import extract, select
@@ -7,6 +8,7 @@ from sqlalchemy.sql.expression import literal, union_all
 from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
+from codebase_ops import get_log_file_path
 from cyclops import config
 from cyclops.constants import GEMINI
 from cyclops.orm import Database
@@ -39,6 +41,12 @@ from cyclops.query.util import (
     to_datetime_format,
     to_list,
 )
+from cyclops.utils.log import setup_logging
+
+# Logging.
+LOGGER = logging.getLogger(__name__)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
 
 IP_ADMIN = "ip_admin"
 ER_ADMIN = "er_admin"
