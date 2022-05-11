@@ -125,7 +125,7 @@ pickleshare==0.7.5
 Pillow==9.1.0
 pip==22.0.4
 platformdirs==2.5.2
-plotly==5.8.0
+plotly==5.7.0
 pluggy==1.0.0
 pre-commit==2.19.0
 preshed==3.0.6
