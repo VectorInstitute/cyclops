@@ -2,13 +2,6 @@
 Developing on the GEMINI HPC
 ----------------------------
 
-Installing dependencies
-^^^^^^^^^^^^^^^^^^^^^^^
-
-On the GEMINI HPC, the
-`poetry installation method <https://vectorinstitute.github.io/cyclops/intro.html#using-poetry>`_
-is the preferred one, since the conda install is currently broken.
-
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
 
