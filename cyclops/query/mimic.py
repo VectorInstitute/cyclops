@@ -2,6 +2,7 @@
 
 # pylint: disable=duplicate-code
 
+import logging
 from typing import List, Optional, Union
 
 import sqlalchemy
@@ -9,6 +10,7 @@ from sqlalchemy import Integer, extract, func, select
 from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
+from codebase_ops import get_log_file_path
 from cyclops import config
 from cyclops.constants import MIMIC
 from cyclops.orm import Database
@@ -29,15 +31,23 @@ from cyclops.processors.constants import MONTH
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
     DBTable,
+    add_interval_to_timestamps,
     drop_attributes,
     equals,
     has_substring,
     in_,
     rename_attributes,
     reorder_attributes,
+    to_datetime_format,
     to_list,
     trim_attributes,
 )
+from cyclops.utils.log import setup_logging
+
+# Logging.
+LOGGER = logging.getLogger(__name__)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
 
 PATIENTS = "patients"
 ADMISSIONS = "admissions"
@@ -98,6 +108,8 @@ def get_lookup_table(table_name: str) -> QueryInterface:
 def patients(
     years: Optional[Union[int, List[int]]] = None,
     months: Optional[Union[int, List[int]]] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
     process_anchor_year: bool = True,
 ) -> QueryInterface:
     """Query MIMIC patient data.
@@ -108,9 +120,13 @@ def patients(
         Years for which patient encounters are to be filtered.
     months: int or list of int, optional
         Months for which patient encounters are to be filtered.
+    from_date: str, optional
+        Gather patients admitted >= from_date in YYYY-MM-DD format.
+    to_date: str, optional
+        Gather patients admitted <= to_date in YYYY-MM-DD format.
     process_anchor_year : bool, optional
         Whether to process and include the patient's anchor
-        year, i.e., year of care information.
+        year, i.e., to infer approximate year of care.
 
     Returns
     -------
@@ -122,12 +138,18 @@ def patients(
     admissions_table = TABLE_MAP[ADMISSIONS](_db)
 
     if not process_anchor_year and years:
-        raise ValueError("process_anchor_year must be set to True to use years filter!")
+        raise ValueError(
+            "process_anchor_year must be set to True to use years filter correctly!"
+        )
+    if not process_anchor_year and from_date:
+        raise ValueError("process_anchor_year not set, filtering by date won't work!")
+    if not process_anchor_year and to_date:
+        raise ValueError("process_anchor_year not set, filtering by date won't work!")
 
     if not process_anchor_year:
         return select(patients_table.data)
 
-    # Process and include patient's anchor year, i.e., year of care information.
+    # Process and include patient's anchor year.
     subquery = select(
         patients_table.data,
         (func.substr(patients_table.anchor_year_group, 1, 4).cast(Integer)).label(
@@ -137,42 +159,61 @@ def patients(
             "anchor_year_group_end"
         ),
     ).subquery()
-
     subquery = select(
         subquery,
         (
             subquery.c.anchor_year_group_start
             + (subquery.c.anchor_year_group_end - subquery.c.anchor_year_group_start)
             / 2
-        ).label(YEAR),
+        ).label("anchor_year_group_median"),
     ).subquery()
-
     subquery = select(
         subquery,
-        (subquery.c.year - subquery.c.anchor_year).label("anchor_year_difference"),
+        (subquery.c.anchor_year_group_median - subquery.c.anchor_year).label(
+            "anchor_year_difference"
+        ),
     ).subquery()
-
     subquery = drop_attributes(subquery, ["anchor_year_group"])
 
-    if years:
-        subquery = (
-            select(subquery).where(in_(subquery.c.year, to_list(years))).subquery()
-        )
-
+    # Join with admissions table and add anchor year difference.
     admissions_subquery = select(admissions_table.data).subquery()
     subquery = (
         select(subquery, admissions_subquery)
         .where(subquery.c.subject_id == admissions_subquery.c.subject_id)
         .subquery()
     )
+    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
+    subquery = add_interval_to_timestamps(
+        subquery,
+        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP],
+        years="anchor_year_difference",
+    )
 
+    # Filter based on years or months or specific date range (admission time).
+    if years:
+        subquery = (
+            select(subquery)
+            .where(in_(extract(YEAR, subquery.c.admit_timestamp), to_list(years)))
+            .subquery()
+        )
     if months:
         subquery = (
             select(subquery)
-            .where(in_(extract(MONTH, subquery.c.admittime), to_list(months)))
+            .where(in_(extract(MONTH, subquery.c.admit_timestamp), to_list(months)))
             .subquery()
         )
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
+    if from_date:
+        subquery = (
+            select(subquery)
+            .where(subquery.c.admit_timestamp >= to_datetime_format(from_date))
+            .subquery()
+        )
+    if to_date:
+        subquery = (
+            select(subquery)
+            .where(subquery.c.admit_timestamp <= to_datetime_format(to_date))
+            .subquery()
+        )
 
     return QueryInterface(_db, subquery)
 
@@ -383,7 +424,6 @@ def events(
         subquery = (
             select(subquery).where(equals(subquery.c.category, category)).subquery()
         )
-
     # Filter by event names.
     if names:
         subquery = (
@@ -391,6 +431,7 @@ def events(
             .where(in_(subquery.c.event_name, to_list(names), to_str=True))
             .subquery()
         )
+    # Filter by event substrings.
     if substring:
         subquery = (
             select(subquery)
@@ -399,6 +440,11 @@ def events(
         )
 
     if patients:
-        return _join_with_patients(patients.query, subquery)
+        subquery = _join_with_patients(patients.query, subquery).query
+        subquery = add_interval_to_timestamps(
+            subquery,
+            [EVENT_TIMESTAMP],
+            years="anchor_year_difference",
+        )
 
     return QueryInterface(_db, subquery)
