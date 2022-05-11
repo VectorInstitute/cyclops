@@ -41,6 +41,9 @@ jobs:
         run: |
           poetry install
           echo $(poetry env info --path)
+          echo "haha"
           echo $(poetry env list --full-path)
+          echo "hahah"
+          echo "$( poetry env list --full-path | grep Activated | cut -d' ' -f1 )/bin/activate"
           source "$( poetry env list --full-path | grep Activated | cut -d' ' -f1 )/bin/activate"
           pre-commit run --all-files
