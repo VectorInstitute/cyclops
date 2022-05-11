@@ -1,6 +1,7 @@
 """Utility functions for querying."""
 
 # mypy: ignore-errors
+# pylint: disable=too-many-lines
 
 import logging
 from dataclasses import dataclass
@@ -1001,7 +1002,7 @@ def create_interval_attribute(
     return combined_interval_col
 
 
-def add_interval_attribute_to_table(
+def add_interval_attribute_to_table(  # pylint:disable=too-many-arguments
     table_: Union[Select, Subquery, Table, DBTable],
     years: Union[None, str] = None,
     days: Union[None, str] = None,
@@ -1035,8 +1036,9 @@ def add_interval_attribute_to_table(
         Interval column.
 
     """
-    # If not None, get interval column from names
-    get_attr_or_none = lambda col: None if col is None else get_attribute(table_, col)
+    # If not None, get interval column from names.
+    def get_attr_or_none(col):
+        return None if col is None else get_attribute(table_, col)
 
     interval_col = create_interval_attribute(
         years=get_attr_or_none(years),
@@ -1051,7 +1053,7 @@ def add_interval_attribute_to_table(
     return query, interval_col
 
 
-def add_interval_to_timestamps(
+def add_interval_to_timestamps(  # pylint:disable=too-many-arguments
     table_: Union[Select, Subquery, Table, DBTable],
     timestamp_cols: Union[str, List[str]],
     years: Union[None, str] = None,
@@ -1060,8 +1062,9 @@ def add_interval_to_timestamps(
     minutes: Union[None, str] = None,
     seconds: Union[None, str] = None,
 ) -> Subquery:
-    """Create and add an interval column and adds it to a table. The individual time
-    columns are given as column names in the table.
+    """Create and add an interval column and adds it to a table.
+
+    The individual time columns are given as column names in the table.
 
     Parameters
     ----------
@@ -1085,12 +1088,12 @@ def add_interval_to_timestamps(
         The query with the modified timestamp_cols.
 
     """
-    # Ensure timestamp columns are actually timestamps
+    # Ensure timestamp columns are actually timestamps.
     for col in to_list(timestamp_cols):
         if not isinstance(get_attribute(table_, col).type, TIMESTAMP):
             raise ValueError(f"{col} must be a timestamp column.")
 
-    # Get combined interval column
+    # Get combined interval column.
     _, interval_col = add_interval_attribute_to_table(
         table_,
         years=years,
