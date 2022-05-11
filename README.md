@@ -12,34 +12,24 @@ in the health (or clinical) setting. It provides three high-level features:
 
 ## Getting Started
 
-### Setup Python virtual environment
+### Setup Python virtual environment and install dependencies
 
-The development environment has been tested on ``python = 3.8.5``.
-There are two ways to setup the environment and install dependencies.
+The development environment has been tested on ``python = 3.9.7``.
 
-#### Using Anaconda/Miniconda
-
-First make sure that [Anaconda](https://docs.anaconda.com/anaconda/install/index.html)
-or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is installed.
-To create and activate a ``conda`` environment, run:
-
-```bash
-conda env create -f environment.yml
-conda activate cyclops
-```
-
-#### Using poetry
-
-The python virtual environment can also be setup using
+The python virtual environment can be setup using
 [poetry](https://python-poetry.org/docs/#installation). Hence, make sure it is
 installed and then run:
 
 ```bash
 poetry install
-source $(poetry config virtualenvs.path)/<name_of_cyclops_env>/bin/activate
+source $(poetry env info --path)/bin/activate
 ```
-where ``name_of_cyclops_env`` is a folder named something like
-``cyclops-mNjqcr0k-py3.8``.
+
+> :warning: ``poetry`` is the preferred installation method since it also installs
+the ``cyclops`` package, and is tested. There is also an ``environment.yaml``
+and ``requirements.txt`` to install dependencies using
+[Miniconda](https://docs.conda.io/en/latest/miniconda.html) or
+[pip](https://pypi.org/project/pip/), however is not tested frequently.
 
 
 ## [Documentation](https://vectorinstitute.github.io/cyclops/)
