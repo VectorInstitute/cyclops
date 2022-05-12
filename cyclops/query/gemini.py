@@ -14,6 +14,7 @@ from cyclops.constants import GEMINI
 from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
+    CARE_UNIT,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     ER_ADMIT_TIMESTAMP,
@@ -184,7 +185,7 @@ def rename_timestamps(
         rga(table.c, ENCOUNTER_ID),
         rga(table.c, admit_ts_col).label("admit"),
         rga(table.c, discharge_ts_col).label("discharge"),
-        literal(care_unit_name).label("care_unit_name"),
+        literal(care_unit_name).label(CARE_UNIT),
     )
 
 
@@ -402,7 +403,7 @@ def get_careunits(encounters: list = None) -> Subquery:
         rga(rt_table.c, ENCOUNTER_ID),
         rt_table.c.checkin_date_time.label("admit"),
         rt_table.c.checkout_date_time.label("discharge"),
-        lookup_rt_table.c.care_unit_name,
+        rga(lookup_rt_table.c, CARE_UNIT),
     ).where(rt_table.c.medical_service == lookup_rt_table.c.value)
 
     return QueryInterface(_db, union_all(rt_table, ip_table, scu_table, er_table))
@@ -426,8 +427,6 @@ def events(
         Substring to search event names to filter.
     patients: QueryInterface, optional
         Patient encounters query wrapped, used to join with events.
-    care_unit: bool
-        Whether to include the care unit for each event.
 
     Returns
     -------

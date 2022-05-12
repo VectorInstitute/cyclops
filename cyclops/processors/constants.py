@@ -163,3 +163,9 @@ POSITIVE_RESULT_TERMS = [
     "reactive",
     "positive",
 ]
+
+# CARE UNIT CATEGORIES
+IP = "IP"
+ER = "ER"
+ICU = "ICU"
+SCU = "SCU"
