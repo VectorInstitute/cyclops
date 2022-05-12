@@ -546,6 +546,12 @@ class FeatureHandler:
             Parse keyword arguments for parsing feature using meta information.
 
         """
+        if series.name in self.names:
+            LOGGER.warning(
+                "Feature %s already exists, possibly rename if its a new feature!",
+                series.name,
+            )
+            return
         meta = feature_meta(**init_kwargs)
         series = meta.parse(series, **parse_kwargs)
 
@@ -840,11 +846,13 @@ class FeatureHandler:
 
         """
         if isinstance(self.features[STATIC], pd.DataFrame):
+            os.makedirs(folder_path, exist_ok=True)
             save_file_name = file_name + "_" + STATIC
             save_path = os.path.join(folder_path, save_file_name + ".gzip")
             LOGGER.info("Saving static features to %s", save_path)
             self.features[STATIC].to_parquet(save_path)
         if isinstance(self.features[TEMPORAL], pd.DataFrame):
+            os.makedirs(folder_path, exist_ok=True)
             save_file_name = file_name + "_" + TEMPORAL
             save_path = os.path.join(folder_path, save_file_name + ".gzip")
             LOGGER.info("Saving temporal features to %s", save_path)
@@ -868,10 +876,10 @@ class FeatureHandler:
         if os.path.isfile(load_path):
             LOGGER.info("Found file to load for static features...")
             LOGGER.info("Successfully loaded static features from file...")
-            self.features[STATIC] = pd.read_parquet(load_path)
+            self.add_features(pd.read_parquet(load_path))
         load_file_name = file_name + "_" + TEMPORAL
         load_path = os.path.join(folder_path, load_file_name + ".gzip")
         if os.path.isfile(load_path):
             LOGGER.info("Found file to load for temporal features...")
-            self.features[TEMPORAL] = pd.read_parquet(load_path)
+            self.add_features(pd.read_parquet(load_path))
             LOGGER.info("Successfully loaded temporal features from file...")
