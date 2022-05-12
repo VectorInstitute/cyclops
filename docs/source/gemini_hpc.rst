@@ -1,6 +1,20 @@
 
-Developing on the GEMINI HPC
-----------------------------
+Using cyclops on the GEMINI HPC
+-------------------------------
+
+Setup Python virtual environment and install dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The GEMINI HPC environment has a separate private repository to fetch and
+install python packages. Hence, add the following lines to the ``pyproject.toml``
+file before trying to setup the python virtual environment and install dependencies,
+(i.e. before running the ``poetry install`` command).
+
+.. code-block:: bash
+
+    [[tool.poetry.source]]
+    name = "gemini_repository"
+    url = "https://packages.gemini-hpc.ca/repository/pypi/simple"
+    default = true
 
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
