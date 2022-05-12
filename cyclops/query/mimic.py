@@ -27,13 +27,14 @@ from cyclops.processors.column_names import (
     SEX,
     YEAR,
 )
-from cyclops.processors.constants import MONTH
+from cyclops.processors.constants import ER, ICU, IP, MONTH, SCU
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
     DBTable,
     add_interval_to_timestamps,
     drop_attributes,
     equals,
+    get_attribute,
     has_substring,
     in_,
     rename_attributes,
@@ -55,6 +56,7 @@ DIAGNOSES = "diagnoses"
 PATIENT_DIAGNOSES = "patient_diagnoses"
 EVENT_LABELS = "event_labels"
 EVENTS = "events"
+TRANSFERS = "transfers"
 
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {
@@ -64,6 +66,7 @@ TABLE_MAP = {
     PATIENT_DIAGNOSES: lambda db: db.mimic_hosp.diagnoses_icd,
     EVENT_LABELS: lambda db: db.mimic_icu.d_items,
     EVENTS: lambda db: db.mimic_icu.chartevents,
+    TRANSFERS: lambda db: db.mimic_core.transfers,
 }
 MIMIC_COLUMN_MAP = {
     "hadm_id": ENCOUNTER_ID,
@@ -76,6 +79,73 @@ MIMIC_COLUMN_MAP = {
     "valuenum": EVENT_VALUE,
     "charttime": EVENT_TIMESTAMP,
     "icd_code": DIAGNOSIS_CODE,
+}
+CARE_UNIT_MAP = {
+    IP: {
+        "observation": ["Observation", "Psychiatry"],
+        "medicine": ["Medicine", "Medical/Surgical (Gynecology)"],
+    },
+    ER: {
+        "er": ["Emergency Department", "Emergency Department Observation"],
+    },
+    ICU: {
+        "icu": [
+            "Surgical Intensive Care Unit (SICU)",
+            "Medical/Surgical Intensive Care Unit (MICU/SICU)",
+            "Medical Intensive Care Unit (MICU)",
+            "Trauma SICU (TSICU)",
+            "Neuro Surgical Intensive Care Unit (Neuro SICU)",
+            "Cardiac Vascular Intensive Care Unit (CVICU)",
+        ],
+    },
+    SCU: {
+        "surgery": [
+            "Med/Surg",
+            "Surgery",
+            "Surgery/Trauma",
+            "Med/Surg/Trauma",
+            "Med/Surg/GYN",
+            "Surgery/Vascular/Intermediate",
+            "Thoracic Surgery",
+            "Transplant",
+            "Cardiac Surgery",
+            "PACU",
+            "Surgery/Pancreatic/Biliary/Bariatric",
+        ],
+        "cardiology": [
+            "Cardiology",
+            "Coronary Care Unit (CCU)",
+            "Cardiology Surgery Intermediate",
+            "Medicine/Cardiology",
+            "Medicine/Cardiology Intermediate",
+        ],
+        "vascular": [
+            "Vascular",
+            "Hematology/Oncology",
+            "Hematology/Oncology Intermediate",
+        ],
+        "neuro": ["Neurology", "Neuro Intermediate", "Neuro Stepdown"],
+        "neonatal": [
+            "Obstetrics (Postpartum & Antepartum)",
+            "Neonatal Intensive Care Unit (NICU)",
+            "Special Care Nursery (SCN)",
+            "Nursery - Well Babies",
+            "Obstetrics Antepartum",
+            "Obstetrics Postpartum",
+            "Labor & Delivery",
+        ],
+    },
+}
+NONSPECIFIC_CARE_UNIT_MAP = {
+    "medicine": IP,
+    "observation": IP,
+    "er": ER,
+    "icu": ICU,
+    "cardiology": SCU,
+    "neuro": SCU,
+    "neonatal": SCU,
+    "surgery": SCU,
+    "vascular": SCU,
 }
 
 
@@ -103,6 +173,27 @@ def get_lookup_table(table_name: str) -> QueryInterface:
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
 
     return QueryInterface(_db, subquery)
+
+
+def _map_table_attributes(table_name: str) -> Subquery:
+    """Map queried data attributes into common column names.
+
+    For unifying processing functions across datasets, data
+    attributes are currently mapped to the same name, to allow for processing
+    to recognise them.
+
+    Parameters
+    ----------
+    table_name: str
+        Name of MIMIC table.
+
+    Returns
+    -------
+    sqlalchemy.sql.selectable.Subquery
+        Query with mapped attributes.
+
+    """
+    return rename_attributes(TABLE_MAP[table_name](_db).data, MIMIC_COLUMN_MAP)
 
 
 def patients(
@@ -372,6 +463,32 @@ def diagnoses(
         return _join_with_patients(patients.query, subquery)
 
     return QueryInterface(_db, subquery)
+
+
+def get_transfers(encounters: list = None) -> Subquery:
+    """Get care unit table within a given set of encounters.
+
+    Parameters
+    ----------
+    encounters : list
+        The encounter IDs on which to filter. If None, consider all encounters.
+
+    Returns
+    -------
+    sqlalchemy.sql.selectable.Subquery
+        Constructed query, wrapped in an interface object.
+
+    """
+    filter_encounters = (
+        lambda query, encounters: query
+        if encounters is None
+        else select(query)
+        .where(in_(get_attribute(query, ENCOUNTER_ID), encounters))
+        .subquery()
+    )
+
+    query = filter_encounters(_map_table_attributes(TRANSFERS), encounters)
+    return QueryInterface(_db, query)
 
 
 def events(
