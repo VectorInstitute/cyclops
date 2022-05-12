@@ -27,10 +27,9 @@ from cyclops.processors.column_names import (
     SEX,
     YEAR,
 )
-from cyclops.processors.constants import MONTH
+from cyclops.processors.constants import ER, ICU, IP, MONTH, SCU
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
-    apply_to_attributes,
     DBTable,
     add_interval_to_timestamps,
     drop_attributes,
@@ -39,10 +38,8 @@ from cyclops.query.util import (
     has_substring,
     in_,
     rename_attributes,
-    replace,
     reorder_attributes,
     to_datetime_format,
-    rga,
     to_list,
     trim_attributes,
 )
@@ -84,60 +81,73 @@ MIMIC_COLUMN_MAP = {
     "icd_code": DIAGNOSIS_CODE,
 }
 CARE_UNIT_MAP = {
-    #None: ['Unknown'],
-    "observation": ['Observation', 'Psychiatry'],
-    "er": ['Emergency Department', 'Emergency Department Observation'],
-    "icu": [
-        'Surgical Intensive Care Unit (SICU)',
-        'Medical/Surgical Intensive Care Unit (MICU/SICU)',
-        'Medical Intensive Care Unit (MICU)',
-        'Trauma SICU (TSICU)',
-        'Neuro Surgical Intensive Care Unit (Neuro SICU)',
-        'Cardiac Vascular Intensive Care Unit (CVICU)'
-    ],
-    "medicine": [
-        'Medicine',
-        'Medical/Surgical (Gynecology)'
-    ],
-    "surgery": [
-        'Med/Surg',
-        'Surgery', 'Surgery/Trauma',
-        'Med/Surg/Trauma',
-        'Med/Surg/GYN',
-        'Surgery/Vascular/Intermediate',
-        'Thoracic Surgery',
-        'Transplant',
-        'Cardiac Surgery',
-        'PACU',
-        'Surgery/Pancreatic/Biliary/Bariatric'
-    ],
-    "cardiology": [
-        'Cardiology'
-        'Coronary Care Unit (CCU)',
-        'Cardiology Surgery Intermediate',
-        'Medicine/Cardiology'
-        'Medicine/Cardiology Intermediate',
-    ],
-    "vascular": [
-        'Vascular',
-        'Hematology/Oncology',
-        'Hematology/Oncology Intermediate'
-    ],
-    "neuro": [
-        'Neurology',
-        'Neuro Intermediate',
-        'Neuro Stepdown'
-    ],
-    "neonatal": [
-        'Obstetrics (Postpartum & Antepartum)',
-        'Neonatal Intensive Care Unit (NICU)',
-        'Special Care Nursery (SCN)',
-        'Nursery - Well Babies',
-        'Obstetrics Antepartum',
-        'Obstetrics Postpartum',
-        'Labor & Delivery'
-    ],
+    IP: {
+        "observation": ["Observation", "Psychiatry"],
+        "medicine": ["Medicine", "Medical/Surgical (Gynecology)"],
+    },
+    ER: {
+        "er": ["Emergency Department", "Emergency Department Observation"],
+    },
+    ICU: {
+        "icu": [
+            "Surgical Intensive Care Unit (SICU)",
+            "Medical/Surgical Intensive Care Unit (MICU/SICU)",
+            "Medical Intensive Care Unit (MICU)",
+            "Trauma SICU (TSICU)",
+            "Neuro Surgical Intensive Care Unit (Neuro SICU)",
+            "Cardiac Vascular Intensive Care Unit (CVICU)",
+        ],
+    },
+    SCU: {
+        "surgery": [
+            "Med/Surg",
+            "Surgery",
+            "Surgery/Trauma",
+            "Med/Surg/Trauma",
+            "Med/Surg/GYN",
+            "Surgery/Vascular/Intermediate",
+            "Thoracic Surgery",
+            "Transplant",
+            "Cardiac Surgery",
+            "PACU",
+            "Surgery/Pancreatic/Biliary/Bariatric",
+        ],
+        "cardiology": [
+            "Cardiology",
+            "Coronary Care Unit (CCU)",
+            "Cardiology Surgery Intermediate",
+            "Medicine/Cardiology",
+            "Medicine/Cardiology Intermediate",
+        ],
+        "vascular": [
+            "Vascular",
+            "Hematology/Oncology",
+            "Hematology/Oncology Intermediate",
+        ],
+        "neuro": ["Neurology", "Neuro Intermediate", "Neuro Stepdown"],
+        "neonatal": [
+            "Obstetrics (Postpartum & Antepartum)",
+            "Neonatal Intensive Care Unit (NICU)",
+            "Special Care Nursery (SCN)",
+            "Nursery - Well Babies",
+            "Obstetrics Antepartum",
+            "Obstetrics Postpartum",
+            "Labor & Delivery",
+        ],
+    },
 }
+NONSPECIFIC_CARE_UNIT_MAP = {
+    "medicine": IP,
+    "observation": IP,
+    "er": ER,
+    "icu": ICU,
+    "cardiology": SCU,
+    "neuro": SCU,
+    "neonatal": SCU,
+    "surgery": SCU,
+    "vascular": SCU,
+}
+
 
 def get_lookup_table(table_name: str) -> QueryInterface:
     """Get lookup table data.
@@ -453,6 +463,32 @@ def diagnoses(
         return _join_with_patients(patients.query, subquery)
 
     return QueryInterface(_db, subquery)
+
+
+def get_transfers(encounters: list = None) -> Subquery:
+    """Get care unit table within a given set of encounters.
+
+    Parameters
+    ----------
+    encounters : list
+        The encounter IDs on which to filter. If None, consider all encounters.
+
+    Returns
+    -------
+    sqlalchemy.sql.selectable.Subquery
+        Constructed query, wrapped in an interface object.
+
+    """
+    filter_encounters = (
+        lambda query, encounters: query
+        if encounters is None
+        else select(query)
+        .where(in_(get_attribute(query, ENCOUNTER_ID), encounters))
+        .subquery()
+    )
+
+    query = filter_encounters(_map_table_attributes(TRANSFERS), encounters)
+    return QueryInterface(_db, query)
 
 
 def events(
