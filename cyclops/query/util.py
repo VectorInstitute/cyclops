@@ -71,6 +71,7 @@ class DBMetaclass(type):
         """Call."""
         if cls not in cls.__instances:
             cls.__instances[cls] = super().__call__(*args, **kwargs)
+
         return cls.__instances[cls]
 
 
@@ -404,6 +405,7 @@ def drop_attributes(
 
     """
     drop_cols = get_attributes(table_, drop_cols)
+
     return select(*[c for c in table_.c if c not in drop_cols]).subquery()
 
 
@@ -950,10 +952,9 @@ def in_(
 
 def create_interval_attribute(
     years: Union[None, Column] = None,
+    months: Union[None, Column] = None,
     days: Union[None, Column] = None,
     hours: Union[None, Column] = None,
-    minutes: Union[None, Column] = None,
-    seconds: Union[None, Column] = None,
 ) -> Column:
     """Create an interval type column from a number of time columns.
 
@@ -963,14 +964,12 @@ def create_interval_attribute(
     ----------
     years: None or sqlalchemy.sql.schema.Column
         Years column.
+    months: None or sqlalchemy.sql.schema.Column
+        Months column.
     days: None or sqlalchemy.sql.schema.Column
         Days column.
     hours: None or sqlalchemy.sql.schema.Column
-        Hours column.
-    minutes: None or sqlalchemy.sql.schema.Column
-        Minutes column.
-    seconds: None or sqlalchemy.sql.schema.Column
-        Seconds column.
+        hours column.
 
     Returns
     -------
@@ -978,37 +977,37 @@ def create_interval_attribute(
         Combined interval column.
 
     """
-    time_cols = [years, days, hours, minutes, seconds]
-    names = ["YEARS", "DAYS", "HOURS", "MINUTES", "SECONDS"]
+    time_cols = [years, months, days, hours]
+    names = ["YEARS", "MONTHS", "DAYS", "HOURS"]
 
-    # Consider only the non-null columns
+    # Consider only the non-null columns.
     names = [names[i] for i in range(len(names)) if time_cols[i] is not None]
     time_cols = [col for col in time_cols if col is not None]
 
     if len(time_cols) == 0:
         raise ValueError("One or more time columns must be specified.")
 
-    # Create interval columns
+    # Create interval columns.
     interval_cols = []
     for i, col in enumerate(time_cols):
         interval_cols.append(
             func.cast(func.concat(func.coalesce(col, 0), " " + names[i]), Interval)
         )
 
-    # Create combined interval column
+    # Create combined interval column.
     combined_interval_col = interval_cols[0]
     for i in range(1, len(interval_cols)):
         combined_interval_col = combined_interval_col + interval_cols[i]
+
     return combined_interval_col
 
 
-def add_interval_attribute_to_table(  # pylint:disable=too-many-arguments
+def add_interval_attribute_to_table(
     table_: Union[Select, Subquery, Table, DBTable],
     years: Union[None, str] = None,
+    months: Union[None, str] = None,
     days: Union[None, str] = None,
     hours: Union[None, str] = None,
-    minutes: Union[None, str] = None,
-    seconds: Union[None, str] = None,
 ):
     """Create an interval type column and add this attribute to the provided table.
 
@@ -1019,14 +1018,12 @@ def add_interval_attribute_to_table(  # pylint:disable=too-many-arguments
         The query containing the time columns.
     years : None or str
         Attribute name for years column in table_.
+    months : None or str
+        Attribute name for months column in table_.
     days : None or str
         Attribute name for days column in table_.
     hours : None or str
         Attribute name for hours column in table_.
-    minutes : None or str
-        Attribute name for minutes column in table_.
-    seconds : None or str
-        Attribute name for seconds column in table_.
 
     Returns
     -------
@@ -1042,10 +1039,9 @@ def add_interval_attribute_to_table(  # pylint:disable=too-many-arguments
 
     interval_col = create_interval_attribute(
         years=get_attr_or_none(years),
+        months=get_attr_or_none(months),
         days=get_attr_or_none(days),
         hours=get_attr_or_none(hours),
-        minutes=get_attr_or_none(minutes),
-        seconds=get_attr_or_none(seconds),
     )
 
     query = select(table_, interval_col).subquery()
@@ -1057,10 +1053,9 @@ def add_interval_to_timestamps(  # pylint:disable=too-many-arguments
     table_: Union[Select, Subquery, Table, DBTable],
     timestamp_cols: Union[str, List[str]],
     years: Union[None, str] = None,
+    months: Union[None, str] = None,
     days: Union[None, str] = None,
     hours: Union[None, str] = None,
-    minutes: Union[None, str] = None,
-    seconds: Union[None, str] = None,
 ) -> Subquery:
     """Create and add an interval column and adds it to a table.
 
@@ -1073,13 +1068,11 @@ def add_interval_to_timestamps(  # pylint:disable=too-many-arguments
         The query containing the timestamp_cols and time columns.
     years : None or str
         Attribute name for years column in table_.
+    months : None or str
+        Attribute name for months column in table_.
     days : None or str
         Attribute name for years column in table_.
     hours : None or str
-        Attribute name for years column in table_.
-    minutes : None or str
-        Attribute name for years column in table_.
-    seconds : None or str
         Attribute name for years column in table_.
 
     Returns
@@ -1097,10 +1090,9 @@ def add_interval_to_timestamps(  # pylint:disable=too-many-arguments
     _, interval_col = add_interval_attribute_to_table(
         table_,
         years=years,
+        months=months,
         days=days,
         hours=hours,
-        minutes=minutes,
-        seconds=seconds,
     )
 
     return apply_to_attributes(table_, timestamp_cols, lambda x: x + interval_col)
