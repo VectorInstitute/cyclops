@@ -108,7 +108,7 @@ def featurize(  # pylint: disable=too-many-arguments
     if temporal_data:
         for dataframe in temporal_data:
             dataframe = clean_events(dataframe)
-            temporal_features, agg_info = gather_event_features(
+            temporal_features, _ = gather_event_features(
                 dataframe, aggregator=aggregator
             )
             feature_handler.add_features(temporal_features)

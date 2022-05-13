@@ -290,7 +290,7 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
         nonnull_count.reset_index(inplace=True)
         nonnull_count.rename(columns={EVENT_VALUE: "nonnull_count"}, inplace=True)
 
-        total_count = group.agg({EVENT_VALUE: lambda x: len(x)}, dropna=False)
+        total_count = group.agg({EVENT_VALUE: len}, dropna=False)
         total_count.reset_index(inplace=True)
         total_count.rename(columns={EVENT_VALUE: "count"}, inplace=True)
 
