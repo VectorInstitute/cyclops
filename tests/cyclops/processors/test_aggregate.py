@@ -8,7 +8,6 @@ import pytest
 
 from cyclops.processors.aggregate import (
     Aggregator,
-    aggregate_values_in_bucket,
     filter_upto_window,
     gather_event_features,
     gather_events_into_single_bucket,
@@ -85,6 +84,26 @@ def test_events_input():
 
 
 @pytest.fixture
+def test_gather_event_features_input():
+    """Create a test events input."""
+    date1 = datetime(2022, 11, 3, hour=13)
+    date2 = datetime(2022, 11, 3, hour=14)
+    date3 = datetime(2022, 11, 4, hour=3)
+    data = [
+        [1, "eventA", 10, date1, date2],
+        [2, "eventA", 11, date1, date2],
+        [2, "eventA", 12, date1, date3],
+        [2, "eventA", 16, date1, date3],
+        [2, "eventA", np.nan, date1, date3],
+        [2, "eventB", 13, date1, date3],
+        [2, "eventB", np.nan, date1, date3],
+    ]
+
+    columns = [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, ADMIT_TIMESTAMP, EVENT_TIMESTAMP]
+    return pd.DataFrame(data, columns=columns)
+
+
+@pytest.fixture
 def test_statics_input():
     """Input dataframe to test infer_statics fn."""
     input_ = pd.DataFrame(
@@ -140,31 +159,35 @@ def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name
         )
 
 
-def test_aggregate_values_in_bucket():
-    """Test aggregate_values_in_bucket function."""
-    arr = np.array([-1, 2, 5, -20, 100])
-    series = pd.Series(arr)
-    assert aggregate_values_in_bucket(series, strategy=MEAN) == arr.mean()
-    assert aggregate_values_in_bucket(series, strategy=MEDIAN) == np.median(arr)
-    with pytest.raises(NotImplementedError):
-        aggregate_values_in_bucket(series, strategy="donkey")
-
-
 def test_gather_events_into_single_bucket(  # pylint: disable=redefined-outer-name
     test_events_input,
 ):
     """Test gather_events_into_single_bucket function."""
-    res = gather_events_into_single_bucket(test_events_input, MEAN)
+    res, _ = gather_events_into_single_bucket(
+        test_events_input, Aggregator(aggfunc=MEAN)
+    )
     assert res.loc[1]["eventA"] == 10.0
     assert np.isnan(res.loc[1]["eventB"])
     assert res.loc[2]["eventA"] == 13.0
     assert res.loc[2]["eventB"] == 13.0
 
-    res = gather_events_into_single_bucket(test_events_input, MEDIAN)
+    res, _ = gather_events_into_single_bucket(
+        test_events_input, Aggregator(aggfunc=MEDIAN)
+    )
     assert res.loc[1]["eventA"] == 10.0
     assert np.isnan(res.loc[1]["eventB"])
     assert res.loc[2]["eventA"] == 12.0
     assert res.loc[2]["eventB"] == 13.0
+
+
+def test_gather_events_into_single_bucket2(  # pylint: disable=redefined-outer-name
+    test_gather_event_features_input,
+):
+    """Test gather_events_into_single_bucket function."""
+    agg = Aggregator(aggfunc=MEAN, bucket_size=4, window=4)
+    res, _ = gather_event_features(test_gather_event_features_input, agg)
+    assert res["eventA"].iloc[0] == 10
+    assert res["eventA"].iloc[1] == 11
 
 
 def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
@@ -177,11 +200,11 @@ def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
 
 
 def test_gather_event_features(  # pylint: disable=redefined-outer-name
-    test_events_input,
+    test_gather_event_features_input,
 ):
     """Test gather_event_features function."""
-    agg = Aggregator(strategy=MEAN, bucket_size=4, window=24, start_at_admission=True)
-    res = gather_event_features(test_events_input, agg)
+    agg = Aggregator(aggfunc=MEAN, bucket_size=4, window=20, start_at_admission=True)
+    res, _ = gather_event_features(test_gather_event_features_input, agg)
 
     assert res.loc[(1, 0)]["eventA"] == 10.0
     assert np.isnan(res.loc[(1, 0)]["eventB"])
@@ -194,7 +217,6 @@ def test_gather_event_features(  # pylint: disable=redefined-outer-name
     assert res.loc[(2, 3)]["eventA"] == 14.0
     assert res.loc[(2, 3)]["eventB"] == 13.0
 
-    agg = Aggregator(strategy=MEAN, bucket_size=4, window=4)
-    res = gather_event_features(test_events_input, agg)
-    assert all(a == b for a, b in zip(list(res.index), [1, 2]))
-    assert res["eventA"].equals(pd.Series([10, 11], index=[1, 2]))
+    # Checks padding past last event
+    assert np.isnan(res.loc[(2, 4)]["eventA"])
+    assert np.isnan(res.loc[(2, 4)]["eventB"])
