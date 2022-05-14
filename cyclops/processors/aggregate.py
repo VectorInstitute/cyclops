@@ -35,8 +35,9 @@ class Aggregator:
 
     Parameters
     ----------
-    strategy: str, optional
-        Strategy to aggregate within bucket. ['mean', 'median']
+    aggfunc: str or Callable, optional
+        Aggregation function, either passed as function or string where if
+        string, could be ['mean', 'median'].
     bucket_size: float, optional
         Size of a single step in the time-series in hours.
         For example, if 2, temporal data is aggregated into bins of 2 hrs.
@@ -203,8 +204,8 @@ def gather_events_into_single_bucket(
 
     Returns
     -------
-    pandas.DataFrame:
-        Processed event features.
+    tuple:
+        tuple with Processed event features, and None.
 
     """
     features = pd.pivot_table(
@@ -243,10 +244,9 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
 
     Returns
     -------
-    pandas.DataFrame:
-        Processed event features.
-    pandas.DataFrame:
-        Aggregation information.
+    tuple:
+        tuple with Processed event features (pandas.DataFrame) and aggregation
+        info like count of values in a bucket, fraction missing (pandas.DataFrame).
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
@@ -282,7 +282,7 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
         event_name = group[EVENT_NAME].iloc[0]
         group.drop(columns=[ENCOUNTER_ID, EVENT_NAME], axis=1)
 
-        # ADD IMPUTATION METHOD
+        # ADD IMPUTATION METHOD.
 
         group = group.groupby(TIMESTEP, dropna=False)
 
@@ -302,15 +302,13 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
         group.reset_index(inplace=True)
 
         group = fill_missing_range(group, TIMESTEP, 0, num_timesteps)
-
         group[EVENT_NAME] = event_name
-
         group = pd.merge(group, info, how="left", on=TIMESTEP)
 
         return group
 
     def process_encounter(group):
-        # Get timestep (bucket) for the timeseries events
+        # Get timestep (bucket) for the timeseries events.
         group[TIMESTEP] = (
             group[EVENT_TIMESTAMP] - min(group[EVENT_TIMESTAMP])
         ) / pd.Timedelta(hours=aggregator.bucket_size)
@@ -322,10 +320,10 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
 
         return group
 
-    # Drop unwanted columns
+    # Drop unwanted columns.
     data.drop(ADMIT_TIMESTAMP, axis=1, inplace=True)
 
-    # Group by encounters and process
+    # Group by encounters and process.
     grouped = data.groupby([ENCOUNTER_ID]).apply(process_encounter)
     grouped.reset_index(inplace=True)
     grouped.drop("level_1", axis=1, inplace=True)
@@ -427,4 +425,5 @@ def gather_statics(
     unique_statics = grouped.agg(unique_non_null)
     unique_statics = unique_statics.reset_index()
     unique_statics = unique_statics.set_index(groupby_cols)
+
     return unique_statics
