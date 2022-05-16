@@ -118,7 +118,7 @@ def get_lookup_table(table_name: str) -> QueryInterface:
         Constructed query, wrapped in an interface object.
 
     """
-    if table_name not in [LOOKUP_IP_ADMIN, LOOKUP_ER_ADMIN, LOOKUP_DIAGNOSIS]:
+    if table_name not in TABLE_MAP:
         raise ValueError("Not a recognised lookup/dimension table!")
 
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
@@ -356,7 +356,10 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
-def care_units(encounters: Optional[list] = None) -> QueryInterface:
+def care_units(
+    encounters: Optional[list] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterface:
     """Get care unit table within a given set of encounters.
 
     Parameters
@@ -394,7 +397,7 @@ def care_units(encounters: Optional[list] = None) -> QueryInterface:
         er_table, ER_ADMIT_TIMESTAMP, ER_DISCHARGE_TIMESTAMP, "ER"
     )
 
-    # Room transfer table.
+#     # Room transfer table.
     rt_table = filter_encounters(_map_table_attributes(ROOM_TRANSFER), encounters)
     lookup_rt_table = _map_table_attributes(LOOKUP_ROOM_TRANSFER)
 
@@ -403,10 +406,15 @@ def care_units(encounters: Optional[list] = None) -> QueryInterface:
         rga(rt_table.c, ENCOUNTER_ID),
         rt_table.c.checkin_date_time.label("admit"),
         rt_table.c.checkout_date_time.label("discharge"),
-        rga(lookup_rt_table.c, CARE_UNIT),
+        lookup_rt_table.c.description.label(CARE_UNIT),
     ).where(rt_table.c.medical_service == lookup_rt_table.c.value)
+    # subquery = rt_table.subquery()
+    subquery = union_all(rt_table, ip_table, scu_table, er_table).subquery()
+    
+    if patients:
+        return _join_with_patients(patients.query, subquery)
 
-    return QueryInterface(_db, union_all(rt_table, ip_table, scu_table, er_table))
+    return QueryInterface(_db, subquery)
 
 
 def events(
