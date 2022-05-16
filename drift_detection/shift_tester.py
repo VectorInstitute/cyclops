@@ -1,23 +1,26 @@
+import math
 import numpy as np
+import torch.nn as nn
+import tensorflow as tf
 import torch
 import random
-from torch import *
 #from torch_two_sample import *
 from scipy.stats import ks_2samp, binom_test, chisquare, chi2_contingency, anderson_ksamp
 from scipy.spatial import distance
-from alibi_detect.cd import MMDDrift, LSDDDrift, LearnedKernelDrift, TabularDrift, ClassifierDrift 
-from alibi_detect.cd import MMDDriftOnline, LSDDDriftOnline
+from alibi_detect.cd import MMDDrift, MMDDriftOnline, LSDDDrift, LSDDDriftOnline, LearnedKernelDrift, TabularDrift, ClassifierDrift
 from alibi_detect.utils.pytorch.kernels import DeepKernel
-import math
-import torch
-import torch.nn as nn
-import tensorflow as tf
-
-# -------------------------------------------------
-# SHIFT TESTER
-# -------------------------------------------------
 
 class ShiftTester:
+    """ShiftTester Class.
+
+    Attributes
+    ----------
+    sign_level: float
+        P-value significance level.
+    mt: String
+        Name of two sample hypothesis test. 
+
+    """
 
     def __init__(self, sign_level=0.05, mt=None):
         self.sign_level = sign_level
@@ -25,8 +28,6 @@ class ShiftTester:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')      
 
     def test_shift(self, X_s, X_t):
-    
-        # torch_two_sample somehow wants the inputs to be explicitly casted to float 32.
         X_s = X_s.astype('float32')
         X_t = X_t.astype('float32')
 

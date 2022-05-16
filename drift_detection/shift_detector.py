@@ -1,9 +1,27 @@
 from shift_tester import *
 from shift_reductor import *
-import os
 
 class ShiftDetector:
+    """ShiftDetector Class.
 
+    Attributes
+    ----------
+    dr_technique: String
+        .
+    sign_level: float
+        . 
+    red_model:
+        
+    md_test: String
+        
+    sample: int
+        
+    datset: String
+        
+    sign_level: float
+
+    """
+    
     def __init__(self, dr_technique, md_test, sign_level, red_model, sample, datset):
         self.dr_technique = dr_technique
         self.sign_level = sign_level
@@ -19,7 +37,6 @@ class ShiftDetector:
         X_t_red = shift_reductor.reduce(shift_reductor_model, X_t)
         return X_t_red
 
-    ## if BBSDh then we have to do a univariate two sample test, otherwise for BBSDs we do a multivariate test
     def detect_data_shift(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims):
                 
         val_acc = None

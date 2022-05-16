@@ -1,11 +1,9 @@
-from sklearn.neural_network import MLPClassifier as MLP
-from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier
+from sklearn.neural_network import MLPClassifier as MLP
+from sklearn.linear_model import LogisticRegression as LR
 from sklearn.ensemble import RandomForestClassifier as RF
-from sklearn.metrics import roc_auc_score
 from sklearn.gaussian_process import GaussianProcessClassifier as GPC
 from sklearn.gaussian_process.kernels import RBF, DotProduct, Matern, RationalQuadratic, WhiteKernel
-from sklearn.linear_model import LogisticRegression as LR
 from sklearn.metrics import (
     auc,
     accuracy_score,
@@ -17,12 +15,10 @@ from sklearn.metrics import (
 )
         
 def fit_gp(X, Y, Xv, Yv):
-    best_c = None
+    best_k = None
     best_score = 0
     best_model = None
-
-    #for K in [1*RBF(), 1*DotProduct(), 1*Matern(), 1*RationalQuadratic(), 1*WhiteKernel()]:
-    for K in [1*RationalQuadratic()]:
+    for K in [1*RBF(), 1*DotProduct(), 1*Matern(), 1*RationalQuadratic(), 1*WhiteKernel()]:
         m = GPC(kernel=K, n_jobs=-1)
         m.fit(X, Y)
         Pv = m.predict_proba(Xv)[:,1]
@@ -31,9 +27,9 @@ def fit_gp(X, Y, Xv, Yv):
         if score > best_score:
             best_score = score
             best_model = m
-            best_c = K
+            best_k = K
 
-    print('Best K:', best_c)
+    print('Best K:', best_k)
     return best_model
 
 def fit_rf(X, Y, Xv, Yv):
@@ -81,9 +77,8 @@ def fit_xgb(X, Y, Xv, Yv):
                     best_n = n
                     best_g = g
                     best_eta = eta
-    print("Best eta:", best_eta)
-    print("Best g:", best_g)
-    print("Best n:", best_n)
+                    
+    print("Best eta:", best_eta, "g:", best_g, "n:", best_n)
     return best_model
 
 def fit_mlp(X, Y, Xv, Yv):

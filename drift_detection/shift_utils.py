@@ -3,7 +3,6 @@ from shift_reductor import *
 from shift_tester import *
 from shift_experiments import *
 
-# from legacy_utils import *
 import re
 from collections import OrderedDict
 import numpy as np
