@@ -356,17 +356,17 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
-def get_careunits(encounters: list = None) -> Subquery:
+def care_units(encounters: Optional[list] = None) -> QueryInterface:
     """Get care unit table within a given set of encounters.
 
     Parameters
     ----------
-    encounters : list
+    encounters : list, optional
         The encounter IDs to consider. If None, consider all encounters.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Subquery
+    cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
 
     """
