@@ -397,7 +397,7 @@ def care_units(
         er_table, ER_ADMIT_TIMESTAMP, ER_DISCHARGE_TIMESTAMP, "ER"
     )
 
-#     # Room transfer table.
+    #     # Room transfer table.
     rt_table = filter_encounters(_map_table_attributes(ROOM_TRANSFER), encounters)
     lookup_rt_table = _map_table_attributes(LOOKUP_ROOM_TRANSFER)
 
@@ -410,7 +410,7 @@ def care_units(
     ).where(rt_table.c.medical_service == lookup_rt_table.c.value)
     # subquery = rt_table.subquery()
     subquery = union_all(rt_table, ip_table, scu_table, er_table).subquery()
-    
+
     if patients:
         return _join_with_patients(patients.query, subquery)
 
