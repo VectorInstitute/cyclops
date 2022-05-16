@@ -5,6 +5,18 @@ import torch
 from datetime import datetime
 
 class Optimizer:
+    """Optimizer Class.
+
+    Attributes
+    ----------
+    model: torch.nn.Module
+        Pytorch model to optimize (e.g. RNNModel, LSTMModel, GRUModel)
+    loss_fn: function
+        Loss function 
+    optimizer: torch.optim
+        Optimization algorithm (e.g. Adam)
+
+    """
     def __init__(self, model, loss_fn, optimizer):
         self.model = model
         self.loss_fn = loss_fn
@@ -33,7 +45,23 @@ class Optimizer:
         # Returns the loss
         return loss.item()
 
-    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):
+    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):  
+        """Train pytorch model.
+
+        Parameters
+        ----------
+        train_loader: DataLoader
+            Dataset object containing training set.
+        val_loader: DataLoader
+            Dataset object containing validation set.
+        batch_size: int
+            Number of samples to train before updating model parameters.
+        n_epochs: int
+            Number of complete passes through the training set.
+        n_features: int 
+            Number of features.
+
+        """ 
         model_path = f'{self.model}_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
 
         for epoch in range(1, n_epochs + 1):
@@ -66,6 +94,16 @@ class Optimizer:
         torch.save(self.model.state_dict(), model_path)
 
     def evaluate(self, test_loader, batch_size=1, n_features=1):
+        """Evaluate pytorch model.
+
+        Parameters
+        ----------
+        test_loader: DataLoader
+            Dataset object containing test set.
+        batch_size: int
+            Number of samples to evaluate at a time.
+
+        """
         with torch.no_grad():
             predictions = []
             values = []
