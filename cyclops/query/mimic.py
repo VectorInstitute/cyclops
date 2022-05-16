@@ -27,8 +27,9 @@ from cyclops.processors.column_names import (
     SEX,
     YEAR,
 )
-from cyclops.processors.constants import ER, ICU, IP, MONTH, SCU
-from cyclops.query.interface import QueryInterface
+from cyclops.processors.constants import MONTH
+from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
+from cyclops.query.process import process_mimic_care_units
 from cyclops.query.util import (
     DBTable,
     add_interval_to_timestamps,
@@ -80,73 +81,6 @@ MIMIC_COLUMN_MAP = {
     "charttime": EVENT_TIMESTAMP,
     "icd_code": DIAGNOSIS_CODE,
 }
-CARE_UNIT_MAP = {
-    IP: {
-        "observation": ["Observation", "Psychiatry"],
-        "medicine": ["Medicine", "Medical/Surgical (Gynecology)"],
-    },
-    ER: {
-        "er": ["Emergency Department", "Emergency Department Observation"],
-    },
-    ICU: {
-        "icu": [
-            "Surgical Intensive Care Unit (SICU)",
-            "Medical/Surgical Intensive Care Unit (MICU/SICU)",
-            "Medical Intensive Care Unit (MICU)",
-            "Trauma SICU (TSICU)",
-            "Neuro Surgical Intensive Care Unit (Neuro SICU)",
-            "Cardiac Vascular Intensive Care Unit (CVICU)",
-        ],
-    },
-    SCU: {
-        "surgery": [
-            "Med/Surg",
-            "Surgery",
-            "Surgery/Trauma",
-            "Med/Surg/Trauma",
-            "Med/Surg/GYN",
-            "Surgery/Vascular/Intermediate",
-            "Thoracic Surgery",
-            "Transplant",
-            "Cardiac Surgery",
-            "PACU",
-            "Surgery/Pancreatic/Biliary/Bariatric",
-        ],
-        "cardiology": [
-            "Cardiology",
-            "Coronary Care Unit (CCU)",
-            "Cardiology Surgery Intermediate",
-            "Medicine/Cardiology",
-            "Medicine/Cardiology Intermediate",
-        ],
-        "vascular": [
-            "Vascular",
-            "Hematology/Oncology",
-            "Hematology/Oncology Intermediate",
-        ],
-        "neuro": ["Neurology", "Neuro Intermediate", "Neuro Stepdown"],
-        "neonatal": [
-            "Obstetrics (Postpartum & Antepartum)",
-            "Neonatal Intensive Care Unit (NICU)",
-            "Special Care Nursery (SCN)",
-            "Nursery - Well Babies",
-            "Obstetrics Antepartum",
-            "Obstetrics Postpartum",
-            "Labor & Delivery",
-        ],
-    },
-}
-NONSPECIFIC_CARE_UNIT_MAP = {
-    "medicine": IP,
-    "observation": IP,
-    "er": ER,
-    "icu": ICU,
-    "cardiology": SCU,
-    "neuro": SCU,
-    "neonatal": SCU,
-    "surgery": SCU,
-    "vascular": SCU,
-}
 
 
 def get_lookup_table(table_name: str) -> QueryInterface:
@@ -169,7 +103,6 @@ def get_lookup_table(table_name: str) -> QueryInterface:
     """
     if table_name not in [DIAGNOSES, EVENT_LABELS]:
         raise ValueError("Not a recognised lookup/dimension table!")
-
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
 
     return QueryInterface(_db, subquery)
@@ -465,17 +398,22 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
-def get_transfers(encounters: list = None) -> Subquery:
+def care_units(
+    encounters: Optional[list] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterfaceProcessed:
     """Get care unit table within a given set of encounters.
 
     Parameters
     ----------
-    encounters : list
+    encounters : list, optional
         The encounter IDs on which to filter. If None, consider all encounters.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with events.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Subquery
+    cyclops.query.interface.QueryInterfaceProcessed
         Constructed query, wrapped in an interface object.
 
     """
@@ -487,8 +425,17 @@ def get_transfers(encounters: list = None) -> Subquery:
         .subquery()
     )
 
-    query = filter_encounters(_map_table_attributes(TRANSFERS), encounters)
-    return QueryInterface(_db, query)
+    subquery = filter_encounters(_map_table_attributes(TRANSFERS), encounters)
+
+    if patients:
+        subquery = _join_with_patients(patients.query, subquery).query
+
+    return QueryInterfaceProcessed(
+        _db,
+        subquery,
+        process_fn=process_mimic_care_units,
+        process_fn_kwargs={"specific": True},
+    )
 
 
 def events(

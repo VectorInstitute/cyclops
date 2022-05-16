@@ -73,8 +73,10 @@ def featurize(  # pylint: disable=too-many-arguments
     temporal_imputer: cyclops.processor.Imputer, optional
         Imputation options for temporal data.
     reference_cols: list, optional
-        Columns from patient static data to keep as reference columns in the
-        FeatureHandler.
+        Columns from patient statics data to use as reference columns in the
+        FeatureHandler, e.g. 'hospital_id', 'admit_timestamp'. These columns
+        will not be added as features, instead be stored in
+        feature_handler.reference.
 
     Returns
     -------
