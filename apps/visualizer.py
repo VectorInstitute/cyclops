@@ -1,31 +1,28 @@
 """Cyclops Visualizer Application."""
 
 
-import os
-import sys
 import logging
-import subprocess
 
-import numpy as np
 import dash
-from dash import html
-from dash import dcc
-from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-import flask
-from flask_caching import Cache
-
 from css import (
-    SIDEBAR_STYLE,
+    CONTENT_STYLE,
     SIDEBAR_HEADING_STYLE,
     SIDEBAR_LIST_STYLE,
-    CONTENT_STYLE,
+    SIDEBAR_STYLE,
     TEXT_ALIGN_CENTER,
 )
+from dash import dcc, html
+from flask_caching import Cache
+
+from codebase_ops import get_log_file_path
 from cyclops.utils.log import setup_logging
 
-
 CACHE_TIMEOUT = 3000
+TIME_SERIES = "time_series"
+EVALUATION = "evaluation"
+FEATURE_STORE = "feature_store"
+DIRECT_LOAD = "direct_load"
 
 
 # Initialize app.
@@ -47,28 +44,30 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-
 sidebar = html.Div(
     [
         html.H3("View Modes", className="display-6", style=SIDEBAR_HEADING_STYLE),
         dcc.RadioItems(
             id="view-mode",
             options=[
-                {"label": "Time-series", "value": SINGLE_IMAGE},
-                {"label": "Evaluation", "value": ACTIVE_LEARNING},
+                {"label": "Time-series", "value": TIME_SERIES},
+                {"label": "Evaluation", "value": EVALUATION},
             ],
-            value=SINGLE_IMAGE,
+            value=TIME_SERIES,
             labelStyle=SIDEBAR_LIST_STYLE,
         ),
         html.Br(),
         html.Br(),
         html.H3("Data Sources", className="display-6", style=SIDEBAR_HEADING_STYLE),
         html.Br(),
-        html.H3("load from file", className="display-6"),
-        dcc.Checklist(
-            id="tasks_file",
-            options=[{"value": task, "label": task} for task in TASKS],
-            value=[OBJECT_DETECTION_2D],
+        html.Br(),
+        dcc.RadioItems(
+            id="data-source",
+            options=[
+                {"label": "Feature Store", "value": FEATURE_STORE},
+                {"label": "Direct Load", "value": DIRECT_LOAD},
+            ],
+            value=TIME_SERIES,
             labelStyle=SIDEBAR_LIST_STYLE,
         ),
         html.Br(),
@@ -78,7 +77,7 @@ sidebar = html.Div(
 )
 
 
-single_image_layout = html.Div(
+timeseries_layout = html.Div(
     [
         html.Div(
             [
@@ -87,15 +86,11 @@ single_image_layout = html.Div(
                     children="",
                 ),
                 html.Br(),
-                html.Img(
-                    id="overlay",
-                ),
-                html.Br(),
                 html.Br(),
                 dcc.Slider(
                     id="single-image-slider",
                     min=0,
-                    max=(num_samples - 1),
+                    max=(100 - 1),
                     step=1,
                     value=0,
                 ),
@@ -109,8 +104,12 @@ single_image_layout = html.Div(
 app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),
+        html.Br(),
         html.Div(
-            [dcc.Markdown("""# cyclops visualizer""")],
+            [
+                html.Img(src=app.get_asset_url("vector_logo.png"), height=32),
+                dcc.Markdown("""# cyclops visualizer"""),
+            ],
             style=TEXT_ALIGN_CENTER,
         ),
         html.Hr(),
@@ -126,7 +125,7 @@ app.layout = html.Div(
                 dbc.Button("previous", id="btn-prev-image", color="secondary"),
                 dbc.Button(
                     "next",
-                    id="btn-next-image",
+                    id="btn-next-sample",
                     color="secondary",
                     style={"margin-left": "15px"},
                 ),
@@ -144,13 +143,11 @@ app.layout = html.Div(
     dash.dependencies.Input("view-mode", "value"),
 )
 def update_view(view_mode):
-    if view_mode == SINGLE_IMAGE:
-        return single_image_layout
-    elif view_mode == GRID:
-        return grid_image_layout
+    if view_mode == TIME_SERIES:
+        return timeseries_layout
+    elif view_mode == EVALUATION:
+        return timeseries_layout
 
 
 if __name__ == "__main__":
-    log.info(config)
-    app.run_server(debug=True, host="0.0.0.0", port=config.port)
-
+    app.run_server(debug=True, host="0.0.0.0", port="8504")
