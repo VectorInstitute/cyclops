@@ -1,5 +1,6 @@
 """GEMINI query API."""
 
+import logging
 from typing import List, Optional, Union
 
 from sqlalchemy import extract, select
@@ -7,11 +8,13 @@ from sqlalchemy.sql.expression import literal, union_all
 from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
+from codebase_ops import get_log_file_path
 from cyclops import config
 from cyclops.constants import GEMINI
 from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
+    CARE_UNIT,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     ER_ADMIT_TIMESTAMP,
@@ -39,6 +42,12 @@ from cyclops.query.util import (
     to_datetime_format,
     to_list,
 )
+from cyclops.utils.log import setup_logging
+
+# Logging.
+LOGGER = logging.getLogger(__name__)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
 
 IP_ADMIN = "ip_admin"
 ER_ADMIN = "er_admin"
@@ -109,7 +118,7 @@ def get_lookup_table(table_name: str) -> QueryInterface:
         Constructed query, wrapped in an interface object.
 
     """
-    if table_name not in [LOOKUP_IP_ADMIN, LOOKUP_ER_ADMIN, LOOKUP_DIAGNOSIS]:
+    if table_name not in TABLE_MAP:
         raise ValueError("Not a recognised lookup/dimension table!")
 
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
@@ -176,7 +185,7 @@ def rename_timestamps(
         rga(table.c, ENCOUNTER_ID),
         rga(table.c, admit_ts_col).label("admit"),
         rga(table.c, discharge_ts_col).label("discharge"),
-        literal(care_unit_name).label("care_unit_name"),
+        literal(care_unit_name).label(CARE_UNIT),
     )
 
 
@@ -347,17 +356,20 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
-def get_careunits(encounters: list = None) -> Subquery:
+def care_units(
+    encounters: Optional[list] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterface:
     """Get care unit table within a given set of encounters.
 
     Parameters
     ----------
-    encounters : list
+    encounters : list, optional
         The encounter IDs to consider. If None, consider all encounters.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Subquery
+    cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
 
     """
@@ -385,7 +397,7 @@ def get_careunits(encounters: list = None) -> Subquery:
         er_table, ER_ADMIT_TIMESTAMP, ER_DISCHARGE_TIMESTAMP, "ER"
     )
 
-    # Room transfer table.
+    #     # Room transfer table.
     rt_table = filter_encounters(_map_table_attributes(ROOM_TRANSFER), encounters)
     lookup_rt_table = _map_table_attributes(LOOKUP_ROOM_TRANSFER)
 
@@ -394,10 +406,15 @@ def get_careunits(encounters: list = None) -> Subquery:
         rga(rt_table.c, ENCOUNTER_ID),
         rt_table.c.checkin_date_time.label("admit"),
         rt_table.c.checkout_date_time.label("discharge"),
-        lookup_rt_table.c.care_unit_name,
+        lookup_rt_table.c.description.label(CARE_UNIT),
     ).where(rt_table.c.medical_service == lookup_rt_table.c.value)
+    # subquery = rt_table.subquery()
+    subquery = union_all(rt_table, ip_table, scu_table, er_table).subquery()
 
-    return QueryInterface(_db, union_all(rt_table, ip_table, scu_table, er_table))
+    if patients:
+        return _join_with_patients(patients.query, subquery)
+
+    return QueryInterface(_db, subquery)
 
 
 def events(
@@ -418,8 +435,6 @@ def events(
         Substring to search event names to filter.
     patients: QueryInterface, optional
         Patient encounters query wrapped, used to join with events.
-    care_unit: bool
-        Whether to include the care unit for each event.
 
     Returns
     -------

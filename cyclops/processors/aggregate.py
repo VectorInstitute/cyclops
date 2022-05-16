@@ -8,7 +8,6 @@ from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import (
@@ -36,8 +35,9 @@ class Aggregator:
 
     Parameters
     ----------
-    strategy: str, optional
-        Strategy to aggregate within bucket. ['mean', 'median']
+    aggfunc: str or Callable, optional
+        Aggregation function, either passed as function or string where if
+        string, could be ['mean', 'median'].
     bucket_size: float, optional
         Size of a single step in the time-series in hours.
         For example, if 2, temporal data is aggregated into bins of 2 hrs.
@@ -55,38 +55,47 @@ class Aggregator:
 
     """
 
-    strategy: str = MEAN
+    aggfunc: Union[str, Callable] = MEAN
     bucket_size: int = 1
     window: int = 24
     start_at_admission: bool = False
     start_window_ts: Optional[datetime] = None
 
+    def __post_init__(self):
+        """Process aggregator arguments."""
+        self.aggfunc = self._get_aggfunc()
 
-def get_aggfunc(aggregation_strategy: str) -> Callable:
-    """Return an aggregation function corresponding to the strategy.
+    def _get_aggfunc(self) -> Callable:
+        """Return an aggregation function.
 
-    Parameters
-    ----------
-    strategy: str, optional
-        Strategy for aggregation, options are ['mean', 'median']
+        Given a function or string, convert a string to an aggfunc if
+        recognized. Otherwise, simply return the same Callable object.
 
-    Returns
-    -------
-    Callable
-        The aggregation function.
+        Parameters
+        ----------
+        strategy: str, optional
+            Strategy for aggregation, options are ['mean', 'median']
 
-    Raises
-    ------
-    NotImplementedError
-        Asserts if supplied input strategy option is not recognised (implemented).
+        Returns
+        -------
+        Callable
+            The aggregation function.
 
-    """
-    if aggregation_strategy == MEAN:
-        return np.mean
-    if aggregation_strategy == MEDIAN:
-        return np.median
+        Raises
+        ------
+        NotImplementedError
+            Asserts if supplied input strategy option is not recognised (implemented).
 
-    raise NotImplementedError(f"Provided {aggregation_strategy} is not a valid one!")
+        """
+        if isinstance(self.aggfunc, str):
+            if self.aggfunc == MEAN:
+                return np.mean
+            if self.aggfunc == MEDIAN:
+                return np.median
+
+            raise NotImplementedError(f"Provided {self.aggfunc} is not a valid one!")
+
+        return self.aggfunc
 
 
 def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
@@ -178,7 +187,7 @@ def filter_upto_window(
 
 
 def gather_events_into_single_bucket(
-    data: pd.DataFrame, aggregation_strategy: str
+    data: pd.DataFrame, aggregator: Aggregator
 ) -> pd.DataFrame:
     """Gather events into single bucket.
 
@@ -195,8 +204,8 @@ def gather_events_into_single_bucket(
 
     Returns
     -------
-    pandas.DataFrame:
-        Processed event features.
+    tuple:
+        tuple with Processed event features, and None.
 
     """
     features = pd.pivot_table(
@@ -204,33 +213,11 @@ def gather_events_into_single_bucket(
         values=EVENT_VALUE,
         index=ENCOUNTER_ID,
         columns=[EVENT_NAME],
-        aggfunc=get_aggfunc(aggregation_strategy),
+        aggfunc=aggregator.aggfunc,
+        dropna=False,
     )
 
-    return features
-
-
-def aggregate_values_in_bucket(values: pd.Series, strategy: str = "mean") -> np.float64:
-    """Aggregate multiple values within a bucket into single value.
-
-    Based on the strategy, collapse multiple values into a single
-    value. For example, if strategy is 'mean', then return
-    mean of values.
-
-    Parameters
-    ----------
-    values: pandas.Series
-        List of input values that fall within the same bucket.
-    strategy: str, optional
-        Strategy for aggregation, options are ['mean', 'median']
-
-    Returns
-    -------
-    numpy.float64
-        Single aggregated numerical value for the bucket.
-
-    """
-    return get_aggfunc(strategy)(values)
+    return features, None
 
 
 @time_function
@@ -257,8 +244,9 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
 
     Returns
     -------
-    pandas.DataFrame:
-        Processed event features.
+    tuple:
+        tuple with Processed event features (pandas.DataFrame) and aggregation
+        info like count of values in a bucket, fraction missing (pandas.DataFrame).
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
@@ -271,45 +259,87 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
     )
     log_counts_step(data, "Filtering events within window...", columns=True)
 
-    event_names = list(data[EVENT_NAME].unique())
-
     # All events are placed in a single bucket, hence not a time-series.
     if aggregator.window == aggregator.bucket_size:
-        return gather_events_into_single_bucket(data, aggregator.strategy)
+        return gather_events_into_single_bucket(data, aggregator)
 
     num_timesteps = math.floor(aggregator.window / aggregator.bucket_size)
 
-    columns = [ENCOUNTER_ID, TIMESTEP] + event_names
-    features = pd.DataFrame(columns=columns)
-    grouped_events = data.groupby([ENCOUNTER_ID])
+    def fill_missing_range(data, col, range_from, range_to, fill_with=np.nan):
+        return (
+            data.merge(
+                how="right",
+                on=col,
+                right=pd.DataFrame({col: np.arange(range_from, range_to)}),
+            )
+            .sort_values(by=col)
+            .reset_index()
+            .fillna(fill_with)
+            .drop(["index"], axis=1)
+        )
 
-    for encounter_id, events in tqdm(grouped_events):
-        events[TIMESTEP] = (
-            events[EVENT_TIMESTAMP] - min(events[EVENT_TIMESTAMP])
+    def process_event(group):
+        event_name = group[EVENT_NAME].iloc[0]
+        group.drop(columns=[ENCOUNTER_ID, EVENT_NAME], axis=1)
+
+        # ADD IMPUTATION METHOD.
+
+        group = group.groupby(TIMESTEP, dropna=False)
+
+        nonnull_count = group.agg({EVENT_VALUE: lambda x: x.count()}, dropna=False)
+        nonnull_count.reset_index(inplace=True)
+        nonnull_count.rename(columns={EVENT_VALUE: "nonnull_count"}, inplace=True)
+
+        total_count = group.agg({EVENT_VALUE: len}, dropna=False)
+        total_count.reset_index(inplace=True)
+        total_count.rename(columns={EVENT_VALUE: "count"}, inplace=True)
+
+        info = pd.merge(nonnull_count, total_count, how="inner", on=TIMESTEP)
+        info["null_fraction"] = 1 - (info["nonnull_count"] / info["count"])
+        info.drop(columns=["nonnull_count"], inplace=True)
+
+        group = group.agg({EVENT_VALUE: aggregator.aggfunc})
+        group.reset_index(inplace=True)
+
+        group = fill_missing_range(group, TIMESTEP, 0, num_timesteps)
+        group[EVENT_NAME] = event_name
+        group = pd.merge(group, info, how="left", on=TIMESTEP)
+
+        return group
+
+    def process_encounter(group):
+        # Get timestep (bucket) for the timeseries events.
+        group[TIMESTEP] = (
+            group[EVENT_TIMESTAMP] - min(group[EVENT_TIMESTAMP])
         ) / pd.Timedelta(hours=aggregator.bucket_size)
-        events[TIMESTEP] = events[TIMESTEP].astype("int")
+        group[TIMESTEP] = group[TIMESTEP].astype("int")
+        group.drop(EVENT_TIMESTAMP, axis=1, inplace=True)
 
-        for timestep in range(num_timesteps + 1):
-            events_values_timestep = pd.Series(
-                [np.nan for _ in range(len(event_names))], index=event_names
-            )
-            events_timestep = events[events[TIMESTEP] == timestep]
-            grouped_events_timestep = events_timestep.groupby([EVENT_NAME])
+        group = group.groupby([EVENT_NAME]).apply(process_event)
+        group.reset_index(drop=True, inplace=True)
 
-            for event_name, event_timestep in grouped_events_timestep:
-                events_values_timestep[event_name] = aggregate_values_in_bucket(
-                    event_timestep[EVENT_VALUE], strategy=aggregator.strategy
-                )
-            events_values_timestep = pd.DataFrame(
-                [[encounter_id, timestep, *events_values_timestep]],
-                columns=columns,
-            )
-            features = pd.concat([features, events_values_timestep])
+        return group
 
-    features = features.reset_index(drop=True)
-    features = features.set_index([ENCOUNTER_ID, TIMESTEP])
+    # Drop unwanted columns.
+    data.drop(ADMIT_TIMESTAMP, axis=1, inplace=True)
 
-    return features
+    # Group by encounters and process.
+    grouped = data.groupby([ENCOUNTER_ID]).apply(process_encounter)
+    grouped.reset_index(inplace=True)
+    grouped.drop("level_1", axis=1, inplace=True)
+
+    features = pd.pivot_table(
+        grouped.drop(columns=["count", "null_fraction"]),
+        values=EVENT_VALUE,
+        index=[ENCOUNTER_ID, TIMESTEP],
+        columns=[EVENT_NAME],
+        aggfunc=aggregator.aggfunc,
+        dropna=False,
+    )
+
+    grouped.dropna(inplace=True)
+
+    return features, grouped
 
 
 @time_function
@@ -395,4 +425,5 @@ def gather_statics(
     unique_statics = grouped.agg(unique_non_null)
     unique_statics = unique_statics.reset_index()
     unique_statics = unique_statics.set_index(groupby_cols)
+
     return unique_statics
