@@ -1,20 +1,11 @@
 """Post-processing functions applied to queried MIMIC data (Pandas DataFrames)."""
 
-from typing import Union
-
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-from matplotlib.cm import get_cmap
-from matplotlib.pyplot import figure
-from pandas import Timestamp
 
 from cyclops.processors.column_names import CARE_UNIT
 from cyclops.processors.constants import ER, ICU, IP, SCU
-from cyclops.processors.util import check_must_have_columns
-from cyclops.utils.profile import time_function
-
 from cyclops.query.postprocess.util import process_care_unit_changepoints
+from cyclops.utils.profile import time_function
 
 CARE_UNIT_MAP = {
     IP: {
@@ -99,7 +90,7 @@ def process_mimic_care_unit_changepoints(data: pd.DataFrame) -> pd.DataFrame:
     data: pandas.DataFrame
         The admit, discharge, and care unit information for a single encounter.
         Expects columns "admit", "discharge", and CARE_UNIT.
-    
+
     Returns
     -------
     pandas.DataFrame

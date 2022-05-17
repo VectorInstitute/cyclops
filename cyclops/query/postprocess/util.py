@@ -10,9 +10,7 @@ from matplotlib.pyplot import figure
 from pandas import Timestamp
 
 from cyclops.processors.column_names import CARE_UNIT
-from cyclops.processors.constants import ER, ICU, IP, SCU
 from cyclops.processors.util import check_must_have_columns
-from cyclops.utils.profile import time_function
 
 
 def to_timestamp(data: Union[pd.Series, np.ndarray]) -> pd.Series:
@@ -43,7 +41,7 @@ def event_time_between(
     admit: pd.Series,
     discharge: pd.Series,
     admit_inclusive: bool = True,
-    discharge_inclusive: bool = False
+    discharge_inclusive: bool = False,
 ) -> pd.Series:
     """Return whether an event time is between some start and end time.
 
@@ -61,7 +59,7 @@ def event_time_between(
         Whether to have an inclusive inequality for the admit condition.
     discharge_inclusive: bool
         Whether to have an inclusive inequality for the discharge condition.
-    
+
     Returns
     -------
     pandas.Series
@@ -73,19 +71,17 @@ def event_time_between(
         admit_cond = event >= admit
     else:
         admit_cond = event > admit
-    
+
     if discharge_inclusive:
         discharge_cond = event <= discharge
     else:
         discharge_cond = event < discharge
-    
+
     return admit_cond & discharge_cond
 
 
 def plot_admit_discharge(
-    data: pd.DataFrame,
-    description: str = "description",
-    figsize: tuple = (10, 4)
+    data: pd.DataFrame, description: str = "description", figsize: tuple = (10, 4)
 ) -> None:
     """Plot a series of admit discharge times given a description.
 
@@ -96,9 +92,7 @@ def plot_admit_discharge(
         The admit and discharge columns must be convertable to Timestamps.
 
     """
-    check_must_have_columns(
-        data, ["admit", "discharge", description], raise_error=True
-    )
+    check_must_have_columns(data, ["admit", "discharge", description], raise_error=True)
 
     figure(figsize=figsize, dpi=80)
     colors = get_cmap("Accent").colors
@@ -120,9 +114,7 @@ def plot_admit_discharge(
         if desc in plotted:
             plt.plot([admit, discharge], [ind, ind], color=colors[ind])
         else:
-            plt.plot(
-                [admit, discharge], [ind, ind], color=colors[ind], label=desc
-            )
+            plt.plot([admit, discharge], [ind, ind], color=colors[ind], label=desc)
             plotted.append(desc)
 
     for _, row in data.iterrows():
@@ -147,7 +139,7 @@ def process_care_unit_changepoints(
         Expects columns "admit", "discharge", and CARE_UNIT.
     care_unit_hierarchy: list
         Ordered list of care units from most relevant to to least.
-    
+
     Returns
     -------
     pandas.DataFrame
@@ -158,7 +150,7 @@ def process_care_unit_changepoints(
     # Define mapping dictionaries
     hierarchy = {care_unit_hierarchy[i]: i for i in range(len(care_unit_hierarchy))}
     hierarchy_inv = {i: care_unit_hierarchy[i] for i in range(len(care_unit_hierarchy))}
-    
+
     # Create changepoints
     changepoints = pd.concat([data["admit"], data["discharge"]])
     changepoints.sort_values(inplace=True)
@@ -166,11 +158,7 @@ def process_care_unit_changepoints(
 
     # Remove the final changepoint, which is the final discharge (has no careunit)
     changepoints = changepoints[:-1]
-    
-    # FIX: Discharge is counting as a changepoint which will be included in the is_between
-    # when it shouldn't... For admit it should be ">= admit", but for discharge it should be
-    # "< discharge"
-    
+
     # Select the most relevant care unit for each changepoint
     changepoint_data = []
     for changepoint in changepoints:
@@ -179,7 +167,7 @@ def process_care_unit_changepoints(
             data["admit"],
             data["discharge"],
             admit_inclusive=True,
-            discharge_inclusive=False
+            discharge_inclusive=False,
         )
         care_units = data[is_between][CARE_UNIT].unique()
         if len(care_units) > 0:
@@ -190,59 +178,10 @@ def process_care_unit_changepoints(
         changepoint_data.append([changepoint, care_unit_selected])
 
     checkpoint_df = pd.DataFrame(changepoint_data, columns={"changepoint", "care_unit"})
-    
+
     # Remove consequtive duplicates, i.e., remove a changepoint if the
     # previous changepoint has the same care unit
-    checkpoint_df = checkpoint_df[checkpoint_df.shift(-1)["changepoint"] != checkpoint_df["changepoint"]]
-    
+    change_mask = checkpoint_df["care_unit"] != checkpoint_df["care_unit"].shift(-1)
+
+    checkpoint_df = checkpoint_df[change_mask]
     return checkpoint_df
-
-
-@time_function
-def process_care_units(
-    transfers: pd.DataFrame, specific: bool = False
-) -> pd.DataFrame:
-    """Process care unit data.
-
-    Processes the MIMIC Transfers table into a cleaned and simplified care
-    units DataFrame.
-
-    Parameters
-    ----------
-    transfers : pandas.DataFrame
-        MIMIC transfers table as a DataFrame.
-    specific : bool, optional
-        Whether care_unit_name column has specific or non-specific care units.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Processed care units for MIMIC encounters.
-
-    """
-    transfers.rename(
-        columns={
-            "intime": "admit",
-            "outtime": "discharge",
-            "careunit": CARE_UNIT,
-        },
-        inplace=True,
-    )
-
-    # Drop rows with eventtype discharge.
-    # Its admit timestamp is the discharge timestamp of eventtype admit.
-    transfers = transfers[transfers["eventtype"] != "discharge"]
-    transfers = transfers.drop("eventtype", axis=1)
-    transfers = transfers[transfers[CARE_UNIT] != "Unknown"]
-
-    # Create replacement dictionary for care unit categories depending on specificity.
-    replace_dict = {}
-    for unit, unit_dict in CARE_UNIT_MAP.items():
-        for specific_unit, unit_list in unit_dict.items():
-            value = specific_unit if specific else unit
-            replace_dict.update({elem: value for elem in unit_list})
-    transfers[CARE_UNIT].replace(replace_dict, inplace=True)
-
-    transfers.dropna(inplace=True)
-
-    return transfers

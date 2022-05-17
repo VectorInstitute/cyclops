@@ -1,34 +1,23 @@
 """Post-processing functions applied to queried GEMINI data (Pandas DataFrames)."""
 
-from typing import Union
-
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-from matplotlib.cm import get_cmap
-from matplotlib.pyplot import figure
-from pandas import Timestamp
-
-from cyclops.processors.column_names import CARE_UNIT
-from cyclops.processors.constants import ER, ICU, IP, SCU
-from cyclops.processors.util import check_must_have_columns
-from cyclops.utils.profile import time_function
 
 from cyclops.query.postprocess.util import process_care_unit_changepoints
 
 CARE_UNIT_HIERARCHY = [
-    'ER',
-    'Emergency',
-    'ICU',
-    'SCU',
-    'Peri-op',
-    'Palliative',
-    'Step-down',
-    'Rehab',
-    'Other ward',
-    'GIM ward',
-    'IP'
+    "ER",
+    "Emergency",
+    "ICU",
+    "SCU",
+    "Peri-op",
+    "Palliative",
+    "Step-down",
+    "Rehab",
+    "Other ward",
+    "GIM ward",
+    "IP",
 ]
+
 
 def process_gemini_care_unit_changepoints(data: pd.DataFrame) -> pd.DataFrame:
     """Process GEMINI changepoint care unit information in a hierarchical fashion.
@@ -45,7 +34,7 @@ def process_gemini_care_unit_changepoints(data: pd.DataFrame) -> pd.DataFrame:
         Expects columns "admit", "discharge", and CARE_UNIT.
     care_unit_hierarchy: list
         Ordered list of care units from most relevant to to least.
-    
+
     Returns
     -------
     pandas.DataFrame
@@ -53,53 +42,3 @@ def process_gemini_care_unit_changepoints(data: pd.DataFrame) -> pd.DataFrame:
 
     """
     return process_care_unit_changepoints(data, CARE_UNIT_HIERARCHY)
-
-
-@time_function
-def process_mimic_care_units(
-    transfers: pd.DataFrame, specific: bool = False
-) -> pd.DataFrame:
-    """Process care unit data.
-
-    Processes the MIMIC Transfers table into a cleaned and simplified care
-    units DataFrame.
-
-    Parameters
-    ----------
-    transfers : pandas.DataFrame
-        MIMIC transfers table as a DataFrame.
-    specific : bool, optional
-        Whether care_unit_name column has specific or non-specific care units.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Processed care units for MIMIC encounters.
-
-    """
-    transfers.rename(
-        columns={
-            "intime": "admit",
-            "outtime": "discharge",
-            "careunit": CARE_UNIT,
-        },
-        inplace=True,
-    )
-
-    # Drop rows with eventtype discharge.
-    # Its admit timestamp is the discharge timestamp of eventtype admit.
-    transfers = transfers[transfers["eventtype"] != "discharge"]
-    transfers = transfers.drop("eventtype", axis=1)
-    transfers = transfers[transfers[CARE_UNIT] != "Unknown"]
-
-    # Create replacement dictionary for care unit categories depending on specificity.
-    replace_dict = {}
-    for unit, unit_dict in CARE_UNIT_MAP.items():
-        for specific_unit, unit_list in unit_dict.items():
-            value = specific_unit if specific else unit
-            replace_dict.update({elem: value for elem in unit_list})
-    transfers[CARE_UNIT].replace(replace_dict, inplace=True)
-
-    transfers.dropna(inplace=True)
-
-    return transfers
