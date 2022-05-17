@@ -69,7 +69,7 @@ TABLE_MAP = {
     EVENT_LABELS: lambda db: db.mimic_icu.d_items,
     EVENTS: lambda db: db.mimic_icu.chartevents,
     TRANSFERS: lambda db: db.mimic_core.transfers,
-    ED_STAYS: lambda db: db.mimic_ed.edstays
+    ED_STAYS: lambda db: db.mimic_ed.edstays,
 }
 MIMIC_COLUMN_MAP = {
     "hadm_id": ENCOUNTER_ID,
