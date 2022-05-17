@@ -16,7 +16,7 @@ SIDEBAR_LIST_STYLE = {"display": "inline-block", "padding": "10px"}
 
 # Display style
 CONTENT_STYLE = {
-    "margin-left": "28rem",
+    "margin-left": "4rem",
     "margin-right": "2rem",
     "padding": "2rem 1rem",
 }
