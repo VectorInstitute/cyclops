@@ -1,4 +1,4 @@
-"""Post-processing functions applied to queried data (pandas dataframes)."""
+"""Post-processing functions applied to queried data (Pandas DataFrames)."""
 
 from typing import Union
 
@@ -13,76 +13,6 @@ from cyclops.processors.column_names import CARE_UNIT
 from cyclops.processors.constants import ER, ICU, IP, SCU
 from cyclops.processors.util import check_must_have_columns
 from cyclops.utils.profile import time_function
-
-CARE_UNIT_MAP = {
-    IP: {
-        "observation": ["Observation", "Psychiatry"],
-        "medicine": ["Medicine", "Medical/Surgical (Gynecology)"],
-    },
-    ER: {
-        "er": ["Emergency Department", "Emergency Department Observation"],
-    },
-    ICU: {
-        "icu": [
-            "Surgical Intensive Care Unit (SICU)",
-            "Medical/Surgical Intensive Care Unit (MICU/SICU)",
-            "Medical Intensive Care Unit (MICU)",
-            "Trauma SICU (TSICU)",
-            "Neuro Surgical Intensive Care Unit (Neuro SICU)",
-            "Cardiac Vascular Intensive Care Unit (CVICU)",
-        ],
-    },
-    SCU: {
-        "surgery": [
-            "Med/Surg",
-            "Surgery",
-            "Surgery/Trauma",
-            "Med/Surg/Trauma",
-            "Med/Surg/GYN",
-            "Surgery/Vascular/Intermediate",
-            "Thoracic Surgery",
-            "Transplant",
-            "Cardiac Surgery",
-            "PACU",
-            "Surgery/Pancreatic/Biliary/Bariatric",
-        ],
-        "cardiology": [
-            "Cardiology",
-            "Coronary Care Unit (CCU)",
-            "Cardiology Surgery Intermediate",
-            "Medicine/Cardiology",
-            "Medicine/Cardiology Intermediate",
-        ],
-        "vascular": [
-            "Vascular",
-            "Hematology/Oncology",
-            "Hematology/Oncology Intermediate",
-        ],
-        "neuro": ["Neurology", "Neuro Intermediate", "Neuro Stepdown"],
-        "neonatal": [
-            "Obstetrics (Postpartum & Antepartum)",
-            "Neonatal Intensive Care Unit (NICU)",
-            "Special Care Nursery (SCN)",
-            "Nursery - Well Babies",
-            "Obstetrics Antepartum",
-            "Obstetrics Postpartum",
-            "Labor & Delivery",
-        ],
-    },
-}
-NONSPECIFIC_CARE_UNIT_MAP = {
-    "medicine": IP,
-    "observation": IP,
-    "er": ER,
-    "icu": ICU,
-    "cardiology": SCU,
-    "neuro": SCU,
-    "neonatal": SCU,
-    "surgery": SCU,
-    "vascular": SCU,
-}
-CARE_UNIT_HIERARCHY = {ER: 0, ICU: 1, SCU: 2, IP: 3}
-CARE_UNIT_HIERARCHY_INV = {v: k for k, v in CARE_UNIT_HIERARCHY.items()}
 
 
 def to_timestamp(data: Union[pd.Series, np.ndarray]) -> pd.Series:
@@ -109,7 +39,11 @@ def to_timestamp(data: Union[pd.Series, np.ndarray]) -> pd.Series:
 
 
 def event_time_between(
-    event: Timestamp, start: pd.Series, end: pd.Series, inclusive: bool = True
+    event: Timestamp,
+    admit: pd.Series,
+    discharge: pd.Series,
+    admit_inclusive: bool = True,
+    discharge_inclusive: bool = False
 ) -> pd.Series:
     """Return whether an event time is between some start and end time.
 
@@ -119,11 +53,15 @@ def event_time_between(
     ----------
     event: pandas._libs.tslibs.timestamps.Timestamp
         Event time.
-    start: pandas.Series
+    admit: pandas.Series
         A series of timestamps.
-    end: pandas.Series
+    discharge: pandas.Series
         A series of timestamps.
-
+    admit_inclusive: bool
+        Whether to have an inclusive inequality for the admit condition.
+    discharge_inclusive: bool
+        Whether to have an inclusive inequality for the discharge condition.
+    
     Returns
     -------
     pandas.Series
@@ -131,23 +69,35 @@ def event_time_between(
         the start and end timestamps.
 
     """
-    if inclusive:
-        return (event >= start) & (event <= end)
-    return (event > start) & (event < end)
+    if admit_inclusive:
+        admit_cond = event >= admit
+    else:
+        admit_cond = event > admit
+    
+    if discharge_inclusive:
+        discharge_cond = event <= discharge
+    else:
+        discharge_cond = event < discharge
+    
+    return admit_cond & discharge_cond
 
 
-def plot_admit_discharge(data, figsize=(10, 4)) -> None:
+def plot_admit_discharge(
+    data: pd.DataFrame,
+    description: str = "description",
+    figsize: tuple = (10, 4)
+) -> None:
     """Plot a series of admit discharge times given a description.
 
     Parameters
     ----------
     data: pandas.DataFrame
-        DataFrame with 'admit', 'discharge', and 'description' columns.
+        DataFrame with 'admit', 'discharge', and description columns.
         The admit and discharge columns must be convertable to Timestamps.
 
     """
     check_must_have_columns(
-        data, ["admit", "discharge", "description"], raise_error=True
+        data, ["admit", "discharge", description], raise_error=True
     )
 
     figure(figsize=figsize, dpi=80)
@@ -157,7 +107,7 @@ def plot_admit_discharge(data, figsize=(10, 4)) -> None:
     data["discharge_int"] = to_timestamp(data["discharge"]).astype(int)
 
     desc_dict = {}
-    for val, key in enumerate(data["description"].unique()):
+    for val, key in enumerate(data[description].unique()):
         desc_dict[key] = val
 
     data["admit_int"] = data["admit"].astype(int)
@@ -165,56 +115,91 @@ def plot_admit_discharge(data, figsize=(10, 4)) -> None:
 
     plotted = []
 
-    def plot_timerange(admit, discharge, description):
-        ind = desc_dict[description]
-        if description in plotted:
+    def plot_timerange(admit, discharge, desc):
+        ind = desc_dict[desc]
+        if desc in plotted:
             plt.plot([admit, discharge], [ind, ind], color=colors[ind])
         else:
             plt.plot(
-                [admit, discharge], [ind, ind], color=colors[ind], label=description
+                [admit, discharge], [ind, ind], color=colors[ind], label=desc
             )
-            plotted.append(description)
+            plotted.append(desc)
 
     for _, row in data.iterrows():
-        plot_timerange(row["admit_int"], row["discharge_int"], row["description"])
+        plot_timerange(row["admit_int"], row["discharge_int"], row[description])
     plt.legend()
 
 
-def process_changepoints(data):
+def process_care_unit_changepoints(
+    data: pd.DataFrame, care_unit_hierarchy: list
+) -> pd.DataFrame:
     """Process changepoint care unit information in a hierarchical fashion.
 
     Using the admit, discharge, and care unit information, create a
     changepoint DataFrame usable for aggregation labelling purposes.
+    If a patient is in multiple care units at a changepoint, the care
+    unit highest in the hierarchy is selected.
 
     Parameters
     ----------
     data: pandas.DataFrame
         The admit, discharge, and care unit information for a single encounter.
         Expects columns "admit", "discharge", and CARE_UNIT.
-
+    care_unit_hierarchy: list
+        Ordered list of care units from most relevant to to least.
+    
     Returns
     -------
     pandas.DataFrame
-        Changepoint information with associated care unit.
+        Changepoint information with associated care unit. The care unit
+        information is relevant up until the next change point
 
     """
+    # Define mapping dictionaries
+    hierarchy = {care_unit_hierarchy[i]: i for i in range(len(care_unit_hierarchy))}
+    hierarchy_inv = {i: care_unit_hierarchy[i] for i in range(len(care_unit_hierarchy))}
+    
+    # Create changepoints
     changepoints = pd.concat([data["admit"], data["discharge"]])
     changepoints.sort_values(inplace=True)
     changepoints = changepoints.unique()
 
-    data = []
+    # Remove the final changepoint, which is the final discharge (has no careunit)
+    changepoints = changepoints[:-1]
+    
+    # FIX: Discharge is counting as a changepoint which will be included in the is_between
+    # when it shouldn't... For admit it should be ">= admit", but for discharge it should be
+    # "< discharge"
+    
+    # Select the most relevant care unit for each changepoint
+    changepoint_data = []
     for changepoint in changepoints:
-        is_between = event_time_between(changepoint, data["admit"], data["discharge"])
-        careunits = data[is_between][CARE_UNIT].unique()
-        careunit_nums = list(map(lambda x: CARE_UNIT_HIERARCHY[x], careunits))
-        careunit_selected = CARE_UNIT_HIERARCHY_INV[min(careunit_nums)]
-        data.append([changepoint, careunit_selected])
+        is_between = event_time_between(
+            changepoint,
+            data["admit"],
+            data["discharge"],
+            admit_inclusive=True,
+            discharge_inclusive=False
+        )
+        care_units = data[is_between][CARE_UNIT].unique()
+        if len(care_units) > 0:
+            care_unit_inds = list(map(lambda x: hierarchy[x], care_units))
+            care_unit_selected = hierarchy_inv[min(care_unit_inds)]
+        else:
+            care_unit_selected = np.nan
+        changepoint_data.append([changepoint, care_unit_selected])
 
-    return pd.DataFrame(data, columns={"changepoint", "care_unit"})
+    checkpoint_df = pd.DataFrame(changepoint_data, columns={"changepoint", "care_unit"})
+    
+    # Remove consequtive duplicates, i.e., remove a changepoint if the
+    # previous changepoint has the same care unit
+    checkpoint_df = checkpoint_df[checkpoint_df.shift(-1)["changepoint"] != checkpoint_df["changepoint"]]
+    
+    return checkpoint_df
 
 
 @time_function
-def process_mimic_care_units(
+def process_care_units(
     transfers: pd.DataFrame, specific: bool = False
 ) -> pd.DataFrame:
     """Process care unit data.

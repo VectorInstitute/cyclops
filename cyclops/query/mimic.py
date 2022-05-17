@@ -29,7 +29,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import MONTH
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from cyclops.query.process import process_mimic_care_units
+from cyclops.query.postprocess.mimic import process_mimic_care_units
 from cyclops.query.util import (
     DBTable,
     add_interval_to_timestamps,
