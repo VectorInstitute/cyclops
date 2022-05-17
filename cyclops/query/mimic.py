@@ -29,7 +29,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import MONTH
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from cyclops.query.process import process_mimic_care_units
+from cyclops.query.postprocess.mimic import process_mimic_care_units
 from cyclops.query.util import (
     DBTable,
     add_interval_to_timestamps,
@@ -398,7 +398,7 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
-def care_units(
+def transfers(
     encounters: Optional[list] = None,
     patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
 ) -> QueryInterfaceProcessed:
@@ -425,16 +425,43 @@ def care_units(
         .subquery()
     )
 
-    subquery = filter_encounters(_map_table_attributes(TRANSFERS), encounters)
+    subquery = _map_table_attributes(TRANSFERS)
+
+    if encounters:
+        subquery = filter_encounters(subquery, encounters)
 
     if patients:
         subquery = _join_with_patients(patients.query, subquery).query
+
+    return QueryInterface(_db, subquery)
+
+
+def care_units(
+    encounters: Optional[list] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterfaceProcessed:
+    """Get care unit table within a given set of encounters.
+
+    Parameters
+    ----------
+    encounters : list, optional
+        The encounter IDs on which to filter. If None, consider all encounters.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with events.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterfaceProcessed
+        Constructed query, wrapped in an interface object.
+
+    """
+    subquery = transfers(encounters=encounters, patients=patients).query
 
     return QueryInterfaceProcessed(
         _db,
         subquery,
         process_fn=process_mimic_care_units,
-        process_fn_kwargs={"specific": True},
+        process_fn_kwargs={"specific": False},
     )
 
 

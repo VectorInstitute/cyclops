@@ -1,9 +1,10 @@
-"""Post-processing functions applied to queried data (pandas dataframes)."""
+"""Post-processing functions applied to queried MIMIC data (Pandas DataFrames)."""
 
 import pandas as pd
 
 from cyclops.processors.column_names import CARE_UNIT
 from cyclops.processors.constants import ER, ICU, IP, SCU
+from cyclops.query.postprocess.util import process_care_unit_changepoints
 from cyclops.utils.profile import time_function
 
 CARE_UNIT_MAP = {
@@ -73,6 +74,30 @@ NONSPECIFIC_CARE_UNIT_MAP = {
     "surgery": SCU,
     "vascular": SCU,
 }
+CARE_UNIT_HIERARCHY = [ER, ICU, SCU, IP]
+
+
+def process_mimic_care_unit_changepoints(data: pd.DataFrame) -> pd.DataFrame:
+    """Process MIMIC changepoint care unit information in a hierarchical fashion.
+
+    Using the admit, discharge, and care unit information, create a
+    changepoint DataFrame usable for aggregation labelling purposes.
+    If a patient is in multiple care units at a changepoint, the care
+    unit highest in the hierarchy is selected.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        The admit, discharge, and care unit information for a single encounter.
+        Expects columns "admit", "discharge", and CARE_UNIT.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Changepoint information with associated care unit.
+
+    """
+    return process_care_unit_changepoints(data, CARE_UNIT_HIERARCHY)
 
 
 @time_function
@@ -119,5 +144,7 @@ def process_mimic_care_units(
             value = specific_unit if specific else unit
             replace_dict.update({elem: value for elem in unit_list})
     transfers[CARE_UNIT].replace(replace_dict, inplace=True)
+
+    transfers.dropna(inplace=True)
 
     return transfers

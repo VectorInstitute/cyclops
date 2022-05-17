@@ -30,24 +30,35 @@ def is_timeseries_data(data: pd.DataFrame) -> bool:
     return isinstance(data.index, pd.core.indexes.multi.MultiIndex)
 
 
-def check_must_have_columns(data: pd.DataFrame, must_have_columns: list) -> bool:
+def check_must_have_columns(
+    data: pd.DataFrame, required_columns: list, raise_error: bool = False
+) -> bool:
     """Check if data has required columns for processing.
 
     Parameters
     ----------
     data: pandas.DataFrame
         DataFrame to check.
-    must_have_columns: list
+    required_columns: list
         List of column names that must be present in data.
+    raise_error: bool
+        Whether to raise a ValueError if there are missing columns.
 
     Returns
     -------
     bool
-        True if all required columns are present, else False.
+        True if all required columns are present, otherwise False.
 
     """
-    column_names = list(data.columns)
-    return set(must_have_columns).issubset(column_names)
+    required_set = set(required_columns)
+    columns = set(data.columns)
+    present = required_set.issubset(columns)
+
+    if not present and raise_error:
+        missing = required_set - columns
+        raise ValueError(f"Missing required columns {missing}")
+
+    return present
 
 
 def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:
