@@ -58,6 +58,7 @@ PATIENT_DIAGNOSES = "patient_diagnoses"
 EVENT_LABELS = "event_labels"
 EVENTS = "events"
 TRANSFERS = "transfers"
+ED_STAYS = "ed_stays"
 
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {
@@ -68,6 +69,7 @@ TABLE_MAP = {
     EVENT_LABELS: lambda db: db.mimic_icu.d_items,
     EVENTS: lambda db: db.mimic_icu.chartevents,
     TRANSFERS: lambda db: db.mimic_core.transfers,
+    ED_STAYS: lambda db: db.mimic_ed.edstays,
 }
 MIMIC_COLUMN_MAP = {
     "hadm_id": ENCOUNTER_ID,
@@ -83,12 +85,10 @@ MIMIC_COLUMN_MAP = {
 }
 
 
-def get_lookup_table(table_name: str) -> QueryInterface:
-    """Get lookup table data.
+def get_table(table_name: str) -> QueryInterface:
+    """Get table data.
 
-    Some tables are minimal reference tables that are
-    useful for reference. The entire table is wrapped as
-    a query to run.
+    The entire table is wrapped as a query to run.
 
     Parameters
     ----------
@@ -101,8 +101,8 @@ def get_lookup_table(table_name: str) -> QueryInterface:
         Constructed query, wrapped in an interface object.
 
     """
-    if table_name not in [DIAGNOSES, EVENT_LABELS]:
-        raise ValueError("Not a recognised lookup/dimension table!")
+    if table_name not in TABLE_MAP:
+        raise ValueError("Not a recognised table!")
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
 
     return QueryInterface(_db, subquery)

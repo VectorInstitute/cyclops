@@ -100,12 +100,10 @@ GEMINI_COLUMN_MAP = {
 }
 
 
-def get_lookup_table(table_name: str) -> QueryInterface:
-    """Get lookup table data.
+def get_table(table_name: str) -> QueryInterface:
+    """Get table data.
 
-    Some tables are minimal reference tables that are
-    useful for reference. The entire table is wrapped as
-    a query to run.
+    The entire table is wrapped as a query to run.
 
     Parameters
     ----------
@@ -119,8 +117,7 @@ def get_lookup_table(table_name: str) -> QueryInterface:
 
     """
     if table_name not in TABLE_MAP:
-        raise ValueError("Not a recognised lookup/dimension table!")
-
+        raise ValueError("Not a recognised table!")
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
 
     return QueryInterface(_db, subquery)
