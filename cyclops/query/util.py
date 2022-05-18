@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
 import sqlalchemy
@@ -1004,26 +1004,26 @@ def create_interval_attribute(
 
 def add_interval_attribute_to_table(
     table_: Union[Select, Subquery, Table, DBTable],
-    years: Union[None, str] = None,
-    months: Union[None, str] = None,
-    days: Union[None, str] = None,
-    hours: Union[None, str] = None,
+    years: Optional[str] = None,
+    months: Optional[str] = None,
+    days: Optional[str] = None,
+    hours: Optional[str] = None,
 ):
-    """Create an interval type column and add this attribute to the provided table.
+    """Create an interval type column and add this attribute to the provided query.
 
     Parameters
     ----------
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query containing the time columns.
-    years : None or str
-        Attribute name for years column in table_.
-    months : None or str
-        Attribute name for months column in table_.
-    days : None or str
-        Attribute name for days column in table_.
-    hours : None or str
-        Attribute name for hours column in table_.
+    years: str, optional
+        Attribute name for years column in table.
+    months: str, optional
+        Attribute name for months column in table.
+    days: str, optional
+        Attribute name for days column in table.
+    hours: str, optional
+        Attribute name for hours column in table.
 
     Returns
     -------
@@ -1052,10 +1052,10 @@ def add_interval_attribute_to_table(
 def add_interval_to_timestamps(  # pylint:disable=too-many-arguments
     table_: Union[Select, Subquery, Table, DBTable],
     timestamp_cols: Union[str, List[str]],
-    years: Union[None, str] = None,
-    months: Union[None, str] = None,
-    days: Union[None, str] = None,
-    hours: Union[None, str] = None,
+    years: Optional[str] = None,
+    months: Optional[str] = None,
+    days: Optional[str] = None,
+    hours: Optional[str] = None,
 ) -> Subquery:
     """Create and add an interval column and adds it to a table.
 
@@ -1066,14 +1066,14 @@ def add_interval_to_timestamps(  # pylint:disable=too-many-arguments
     table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The query containing the timestamp_cols and time columns.
-    years : None or str
-        Attribute name for years column in table_.
-    months : None or str
-        Attribute name for months column in table_.
-    days : None or str
-        Attribute name for years column in table_.
-    hours : None or str
-        Attribute name for years column in table_.
+    years : str, optional
+        Attribute name for years column in table.
+    months : str, optional
+        Attribute name for months column in table.
+    days : str, optional
+        Attribute name for years column in table.
+    hours : str, optional
+        Attribute name for years column in table.
 
     Returns
     -------

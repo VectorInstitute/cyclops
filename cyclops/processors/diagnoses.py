@@ -25,9 +25,9 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 def insert_decimal(input_: str, index: int = 2) -> str:
     """Insert decimal at index.
 
-    Example
-    -------
-        insert_decimal("232", 1) -> "2.32"
+    Examples
+    --------
+    insert_decimal("232", 1) -> "2.32"
 
     Parameters
     ----------
@@ -48,9 +48,9 @@ def insert_decimal(input_: str, index: int = 2) -> str:
 def get_alphabet(code: str) -> str:
     """Get alphabet occurring at the beginning of alphanumeric diagnosis code.
 
-    Example
-    -------
-        get_alphabet("M55") -> "M"
+    Examples
+    --------
+    get_alphabet("M55") -> "M"
 
     Parameters
     ----------
@@ -69,9 +69,9 @@ def get_alphabet(code: str) -> str:
 def get_numeric(code: str) -> str:
     """Get the numeric values from alphanumeric string which occur after an alphabet.
 
-    Example
-    -------
-        get_numeric("M55") -> "55"
+    Examples
+    --------
+    get_numeric("M55") -> "55"
 
     Parameters
     ----------
