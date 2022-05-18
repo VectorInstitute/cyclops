@@ -57,7 +57,8 @@ def test_query_interface_processed(
     database, query, test_data  # pylint: disable=redefined-outer-name
 ):
     """Test QueryInterface."""
-    query_interface = QueryInterfaceProcessed(database, query)
+    # Identity fn for post-processing.
+    query_interface = QueryInterfaceProcessed(database, query, lambda x: x)
     with pytest.raises(ValueError):
         _ = query_interface.run(filter_columns=["a"], filter_recognised=True)
 
