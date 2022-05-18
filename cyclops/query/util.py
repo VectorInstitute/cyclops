@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, List, Union, Optional
+from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
 import sqlalchemy
