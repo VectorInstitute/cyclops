@@ -34,6 +34,7 @@ def save_queried_dataframe(
         Name of file. Extension will be .gzip.
 
     """
+    os.makedirs(folder_path, exist_ok=True)
     save_path = os.path.join(folder_path, file_name + ".gzip")
     if isinstance(data, pd.DataFrame):
         LOGGER.info("Saving queried data to %s", save_path)

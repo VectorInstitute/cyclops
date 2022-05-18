@@ -92,6 +92,7 @@ def plot_admit_discharge(
         The admit and discharge columns must be convertable to Timestamps.
 
     """
+    data = data.copy()
     check_must_have_columns(data, ["admit", "discharge", description], raise_error=True)
 
     figure(figsize=figsize, dpi=80)
@@ -119,6 +120,7 @@ def plot_admit_discharge(
 
     for _, row in data.iterrows():
         plot_timerange(row["admit_int"], row["discharge_int"], row[description])
+
     plt.legend()
 
 
