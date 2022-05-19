@@ -6,8 +6,6 @@ import config as config_parser
 import luigi
 from luigi.util import inherits
 
-from tasks import analysis, predict
-
 # Pipeline definition consisting of three tasks:
 # Extraction -> Prediction -> Analysis
 # Runs for a single data slice given by the time interval date_from - date_to.
@@ -70,7 +68,6 @@ class Prediction(BaseGeminiTask):
         args = config_parser.read_config(self.config_file)
         args.result_output = self.output().fn
         args.input = self.input().fn
-        predict.main(args)
 
     def output(self):
         """Save prediction output results."""
@@ -94,11 +91,9 @@ class Analysis(BaseGeminiTask):
         config.test = self.input().fn
         config.slice = ""
         config.report_full_path = self.output()[0].fn
-        analysis.main(config)
 
         config.type = "performance"
         config.report_full_path = self.output()[1].fn
-        analysis.main(config)
 
     def output(self):
         """Save output reports."""
