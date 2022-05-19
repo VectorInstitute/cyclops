@@ -49,7 +49,7 @@ def event_time_between(
 
     Parameters
     ----------
-    event: pandas._libs.tslibs.timestamps.Timestamp
+    event: pandas.Timestamp
         Event time.
     admit: pandas.Series
         A series of timestamps.
