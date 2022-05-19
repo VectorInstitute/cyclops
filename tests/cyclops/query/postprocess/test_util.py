@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from cyclops.query.postprocess.util import event_time_between, to_timestamp
 
@@ -19,6 +20,9 @@ def test_to_timestamp():
     assert timestamp[0].year == 1970
     assert timestamp[2].year == 1970
     assert timestamp[2].day == 11
+
+    with pytest.raises(ValueError):
+        to_timestamp("donkey")
 
 
 def test_event_time_between():
