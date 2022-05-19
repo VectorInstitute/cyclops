@@ -123,11 +123,6 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
         Output data with normalized event values.
 
     """
-    data[EVENT_VALUE] = data[EVENT_VALUE].apply(fix_inequalities)
-    log_counts_step(
-        data, "Fixing inequalities and removing outlier values...", columns=True
-    )
-
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(
         replace_if_string_match, args=("|".join(POSITIVE_RESULT_TERMS), "1")
     )
@@ -135,6 +130,14 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
         replace_if_string_match, args=("|".join(NEGATIVE_RESULT_TERMS), "0")
     )
     log_counts_step(data, "Convert Positive/Negative to 1/0...", columns=True)
+
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(remove_text_in_parentheses)
+    log_counts_step(data, "Remove any text in paranthesis", columns=True)
+
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(fix_inequalities)
+    log_counts_step(
+        data, "Fixing inequalities and removing outlier values...", columns=True
+    )
 
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(fill_missing_with_nan)
     log_counts_step(data, "Fill empty result string values with NaN...", columns=True)
