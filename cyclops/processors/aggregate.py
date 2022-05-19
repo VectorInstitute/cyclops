@@ -16,10 +16,15 @@ from cyclops.processors.column_names import (
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
+    RESTRICT_TIMESTAMP,
     TIMESTEP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
-from cyclops.processors.util import log_counts_step
+from cyclops.processors.util import (
+    check_must_have_columns,
+    is_timestamp_series,
+    log_counts_step,
+)
 from cyclops.query.util import to_list
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -220,8 +225,85 @@ def gather_events_into_single_bucket(
     return features, None
 
 
+# @assert_has_columns([ENCOUNTER_ID, EVENT_TIMESTAMP])
+def restrict_events_by_timestamp(
+    data: pd.DataFrame,
+    start: Union[pd.DataFrame, None] = None,
+    stop: Union[pd.DataFrame, None] = None,
+):
+    """Restrict events by the EVENT_TIMESTAMP.
+
+    Restrict events by the EVENT_TIMESTAMP where, for a given ENCOUNTER_ID, events
+    may be restricted to those only after the start timestamp and before the stop
+    timestamp.
+
+    The start/stop parameters are optionally specified depending on whether
+    these timestamp restrictions are desired.
+
+    If an ENCOUNTER_ID appears in data and not start/stop, then it will
+    not have its events restricted. Every ENCOUNTER_ID in start/stop must appear
+    in the data.
+
+    If specified, the start and stop DataFrames expect columns ENCOUNTER_ID, "time".
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input data.
+    start: pandas.DataFrame or None
+        Restrict timestamps before the start time for a given ENCOUNTER_ID.
+    stop: pandas.DataFrame or None
+        Restrict timestamps after the stop time for a given ENCOUNTER_ID.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The appropriately restricted data.
+
+    """
+    if start is None and stop is None:
+        return data
+
+    def restrict(data, restrict_df, is_start=True):
+        # Assert correct columns
+        check_must_have_columns(
+            restrict_df, [ENCOUNTER_ID, RESTRICT_TIMESTAMP], raise_error=True
+        )
+        # Assert that the encounter IDs in start/stop are a subset of those in data
+        assert restrict_df[ENCOUNTER_ID].isin(data[ENCOUNTER_ID]).all()
+        # Assert that the time columns are of type pandas.Timestamp
+        assert is_timestamp_series(restrict_df[RESTRICT_TIMESTAMP])
+
+        data = data.merge(restrict_df, on=ENCOUNTER_ID, how="left")
+
+        if is_start:
+            cond = data[EVENT_TIMESTAMP] >= data[RESTRICT_TIMESTAMP]
+        else:
+            cond = data[EVENT_TIMESTAMP] <= data[RESTRICT_TIMESTAMP]
+
+        # Keep if no match was made (i.e., no restriction performed)
+        cond = cond | (data[RESTRICT_TIMESTAMP].isnull())
+        data = data[cond]
+
+        data.drop(columns=[RESTRICT_TIMESTAMP], inplace=True)
+        return data
+
+    if start is not None:
+        data = restrict(data, start, is_start=True)
+    if stop is not None:
+        data = restrict(data, stop, is_start=False)
+
+    return data
+
+
 @time_function
-def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.DataFrame:
+# @assert_has_columns([ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP])
+def gather_event_features(
+    data: pd.DataFrame,
+    aggregator: Aggregator,
+    start: Union[pd.DataFrame, None] = None,
+    stop: Union[pd.DataFrame, None] = None,
+) -> pd.DataFrame:
     """Gather events from encounters into time-series features.
 
     All the event data is grouped based on encounters. For each
@@ -241,6 +323,10 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
         Input data.
     aggregator: cyclops.processor.Aggregator
         Aggregation options.
+    start: pandas.DataFrame or None
+        Restrict timestamps before the start time for a given ENCOUNTER_ID.
+    stop: pandas.DataFrame or None
+        Restrict timestamps after the stop time for a given ENCOUNTER_ID.
 
     Returns
     -------
@@ -250,6 +336,8 @@ def gather_event_features(data: pd.DataFrame, aggregator: Aggregator) -> pd.Data
 
     """
     log_counts_step(data, "Gathering event features...", columns=True)
+
+    data = restrict_events_by_timestamp(data, start, stop)
 
     data = filter_upto_window(
         data,
