@@ -1,6 +1,8 @@
 """Utility functions for processor API."""
 
 import logging
+from functools import wraps
+from typing import Callable
 
 import pandas as pd
 
@@ -47,7 +49,7 @@ def is_timestamp_series(series):
     return series.dtype == pd.to_datetime(["2069-03-29 02:30:00"]).dtype
 
 
-def check_must_have_columns(
+def has_columns(
     data: pd.DataFrame, required_columns: list, raise_error: bool = False
 ) -> bool:
     """Check if data has required columns for processing.
@@ -76,6 +78,59 @@ def check_must_have_columns(
         raise ValueError(f"Missing required columns {missing}")
 
     return present
+
+
+def assert_has_columns(*args, **kwargs) -> Callable:
+    """Decorate function to assert that input DataFrames have the necessary columns.
+
+    assert_has_columns(["A", "B"], None) is equivalent to assert_has_columns(["A", "B"])
+    but may be necessary when wanting to check,
+    assert_has_columns(["A"], None, ["C"])
+
+    Can also check keyword arguments, e.g., optional DataFrames,
+    assert_has_columns(["A"], optional_df=["D"])
+
+    Parameters
+    ----------
+    *args
+        Required columns of the function's ordered DataFrame arguments.
+    **kwargs
+        Keyword corresponds to the DataFrame kwargs of the function.
+        The value is this keyword argument's required columns.
+
+    Returns
+    -------
+    Callable
+        Decorator function.
+
+    """
+
+    def decorator(func_: Callable) -> Callable:
+        @wraps(func_)
+        def wrapper_func(*fn_args, **fn_kwargs) -> Callable:
+            # Check only the DataFrame arguments
+            dataframe_fn_args = [i for i in fn_args if isinstance(i, pd.DataFrame)]
+
+            assert len(args) <= len(dataframe_fn_args)
+
+            for i, arg in enumerate(args):
+                if arg is None:  # Can specify None to skip over checking a DataFrame
+                    continue
+                has_columns(dataframe_fn_args[i], arg, raise_error=True)
+
+            for key, required_cols in kwargs.items():
+                # If an optional DataFrame is not provided, it will be skipped
+                if key not in fn_kwargs:
+                    continue
+
+                assert isinstance(fn_kwargs[key], pd.DataFrame)
+                has_columns(fn_kwargs[key], required_cols, raise_error=True)
+
+            return func_(*fn_args, **fn_kwargs)
+
+        return wrapper_func
+
+    return decorator
 
 
 def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:

@@ -205,10 +205,10 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
     """
 
     def decorator(func_: Callable) -> Callable:
-        """Decorate function to convert query type parameters to Subquery type."""
+        """Decorate function to convert query type parameters to specific type."""
 
         @wraps(func_)
-        def wrapper_func(*args, **kwargs):
+        def wrapper_func(*args, **kwargs) -> Callable:
             # Convert relevant arguments.
             args = list(args)
             for i, arg in enumerate(args):

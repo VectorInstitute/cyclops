@@ -15,7 +15,7 @@ from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import clean_events
 from cyclops.processors.impute import Imputer
 from cyclops.processors.outcomes import generate_outcomes
-from cyclops.processors.util import check_must_have_columns, gather_columns
+from cyclops.processors.util import gather_columns, has_columns
 
 
 def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -33,7 +33,7 @@ def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     """
     diagnoses_features = None
-    if check_must_have_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
+    if has_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
         diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
         diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
 
