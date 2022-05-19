@@ -35,6 +35,8 @@ EVENT_VALUE = "event_value"
 EVENT_VALUE_UNIT = "event_value_unit"
 EVENT_TIMESTAMP = "event_timestamp"
 
+RESTRICT_TIMESTAMP = "restrict_timestamp"
+
 REFERENCE_RANGE = "reference_range"
 TIMESTEP = "timestep"
 

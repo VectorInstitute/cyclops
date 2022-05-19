@@ -30,6 +30,23 @@ def is_timeseries_data(data: pd.DataFrame) -> bool:
     return isinstance(data.index, pd.core.indexes.multi.MultiIndex)
 
 
+def is_timestamp_series(series):
+    """Check whether a series has the Pandas Timestamp datatype.
+
+    Parameters
+    ----------
+    series: pandas.Series
+        A series.
+
+    Returns
+    -------
+    bool
+        Whether the series has the Pandas Timestamp datatype.
+
+    """
+    return series.dtype == pd.to_datetime(["2069-03-29 02:30:00"]).dtype
+
+
 def check_must_have_columns(
     data: pd.DataFrame, required_columns: list, raise_error: bool = False
 ) -> bool:

@@ -14,6 +14,7 @@ from cyclops.processors.aggregate import (
     gather_statics,
     get_earliest_ts_encounter,
     infer_statics,
+    restrict_events_by_timestamp,
 )
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
@@ -21,6 +22,7 @@ from cyclops.processors.column_names import (
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
+    RESTRICT_TIMESTAMP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
 
@@ -117,6 +119,30 @@ def test_statics_input():
     input_.loc[4] = ["donkey", 3, "1", 1, np.nan]
 
     return input_
+
+
+@pytest.fixture
+def test_restrict_events_by_timestamp_start_input():
+    """Create a restrict_events_by_timestamp start DataFrame input."""
+    date1 = datetime(2022, 11, 3, hour=13)
+    date3 = datetime(2022, 11, 4, hour=3)
+    data = [
+        [1, date1],
+        [2, date3],
+    ]
+
+    columns = [ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+    return pd.DataFrame(data, columns=columns)
+
+
+@pytest.fixture
+def test_restrict_events_by_timestamp_stop_input():
+    """Create a restrict_events_by_timestamp stop DataFrame input."""
+    date2 = datetime(2022, 11, 3, hour=14)
+    data = [[2, date2]]
+
+    columns = [ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+    return pd.DataFrame(data, columns=columns)
 
 
 def test_infer_statics(  # pylint: disable=redefined-outer-name
@@ -220,3 +246,22 @@ def test_gather_event_features(  # pylint: disable=redefined-outer-name
     # Checks padding past last event
     assert np.isnan(res.loc[(2, 4)]["eventA"])
     assert np.isnan(res.loc[(2, 4)]["eventB"])
+
+
+def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
+    test_gather_event_features_input,
+    test_restrict_events_by_timestamp_start_input,
+    test_restrict_events_by_timestamp_stop_input,
+):
+    """Test restrict_events_by_timestamp function."""
+    res = restrict_events_by_timestamp(
+        test_gather_event_features_input,
+        start=test_restrict_events_by_timestamp_start_input,
+    )
+    assert list(res.index) == [0, 2, 3, 4, 5, 6]
+
+    res = restrict_events_by_timestamp(
+        test_gather_event_features_input,
+        stop=test_restrict_events_by_timestamp_stop_input,
+    )
+    assert list(res.index) == [0, 1]
