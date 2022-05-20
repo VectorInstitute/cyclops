@@ -10,7 +10,7 @@ from matplotlib.pyplot import figure
 from pandas import Timestamp
 
 from cyclops.processors.column_names import CARE_UNIT
-from cyclops.processors.util import check_must_have_columns
+from cyclops.processors.util import has_columns
 
 
 def to_timestamp(data: Union[pd.Series, np.ndarray]) -> pd.Series:
@@ -93,7 +93,7 @@ def plot_admit_discharge(
 
     """
     data = data.copy()
-    check_must_have_columns(data, ["admit", "discharge", description], raise_error=True)
+    has_columns(data, ["admit", "discharge", description], raise_error=True)
 
     figure(figsize=figsize, dpi=80)
     colors = get_cmap("Accent").colors

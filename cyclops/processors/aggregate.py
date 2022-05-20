@@ -21,7 +21,8 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import MEAN, MEDIAN
 from cyclops.processors.util import (
-    check_must_have_columns,
+    assert_has_columns,
+    has_columns,
     is_timestamp_series,
     log_counts_step,
 )
@@ -225,11 +226,15 @@ def gather_events_into_single_bucket(
     return features, None
 
 
-# @assert_has_columns([ENCOUNTER_ID, EVENT_TIMESTAMP])
+@assert_has_columns(
+    [ENCOUNTER_ID, EVENT_TIMESTAMP],
+    start=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+    stop=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+)
 def restrict_events_by_timestamp(
     data: pd.DataFrame,
-    start: Union[pd.DataFrame, None] = None,
-    stop: Union[pd.DataFrame, None] = None,
+    start: Optional[pd.DataFrame] = None,
+    stop: Optional[pd.DataFrame] = None,
 ):
     """Restrict events by the EVENT_TIMESTAMP.
 
@@ -266,12 +271,11 @@ def restrict_events_by_timestamp(
 
     def restrict(data, restrict_df, is_start=True):
         # Assert correct columns
-        check_must_have_columns(
-            restrict_df, [ENCOUNTER_ID, RESTRICT_TIMESTAMP], raise_error=True
-        )
+        has_columns(restrict_df, [ENCOUNTER_ID, RESTRICT_TIMESTAMP], raise_error=True)
         # Assert that the encounter IDs in start/stop are a subset of those in data
         assert restrict_df[ENCOUNTER_ID].isin(data[ENCOUNTER_ID]).all()
-        # Assert that the time columns are of type pandas.Timestamp
+
+        # Assert that the time columns are the correct datatype
         assert is_timestamp_series(restrict_df[RESTRICT_TIMESTAMP])
 
         data = data.merge(restrict_df, on=ENCOUNTER_ID, how="left")
@@ -297,12 +301,16 @@ def restrict_events_by_timestamp(
 
 
 @time_function
-# @assert_has_columns([ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP])
+@assert_has_columns(
+    [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP],
+    start=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+    stop=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+)
 def gather_event_features(
     data: pd.DataFrame,
     aggregator: Aggregator,
-    start: Union[pd.DataFrame, None] = None,
-    stop: Union[pd.DataFrame, None] = None,
+    start: Optional[pd.DataFrame] = None,
+    stop: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
     """Gather events from encounters into time-series features.
 
