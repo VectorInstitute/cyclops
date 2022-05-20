@@ -111,10 +111,6 @@ class QueryInterface:
 
         return self.data
 
-    def __repr__(self) -> str:
-        """Print SQL when printing the QueryInterface object."""
-        return str(self.query)
-
     def save(self, folder_path: str, file_name: str) -> None:
         """Save queried data in Parquet format.
 
@@ -127,6 +123,14 @@ class QueryInterface:
 
         """
         save_queried_dataframe(self.data, folder_path, file_name)
+
+    def clear_data(self) -> None:
+        """Clear data container.
+
+        Sets the data attribute to None, thus clearing the dataframe contained.
+
+        """
+        self.data = None
 
 
 @dataclass
@@ -214,10 +218,6 @@ class QueryInterfaceProcessed:
 
         return self.data
 
-    def __repr__(self) -> str:
-        """Print SQL when printing the QueryInterface object."""
-        return str(self._query)
-
     def save(self, folder_path: str, file_name: str) -> None:
         """Save queried data in Parquet format.
 
@@ -230,3 +230,11 @@ class QueryInterfaceProcessed:
 
         """
         save_queried_dataframe(self.data, folder_path, file_name)
+
+    def clear_data(self) -> None:
+        """Clear data container.
+
+        Sets the data attribute to None, thus clearing the dataframe contained.
+
+        """
+        self.data = None

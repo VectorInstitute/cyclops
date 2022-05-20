@@ -45,6 +45,8 @@ def test_query_interface(
     loaded_data = pd.read_parquet(os.path.join("test_save", "test_features.gzip"))
     assert loaded_data.equals(test_data)
     shutil.rmtree("test_save")
+    query_interface.clear_data()
+    assert not query_interface.data
 
     # Doesn't test the actual filtering of the query attributes, just the call.
     _ = query_interface.run(filter_columns=["a"])
@@ -67,6 +69,8 @@ def test_query_interface_processed(
     loaded_data = pd.read_parquet(os.path.join("test_save", "test_features.gzip"))
     assert loaded_data.equals(test_data)
     shutil.rmtree("test_save")
+    query_interface.clear_data()
+    assert not query_interface.data
 
     # Doesn't test the actual filtering of the query attributes, just the call.
     _ = query_interface.run(filter_columns=["a"])
