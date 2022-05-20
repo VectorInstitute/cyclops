@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.abspath("../../cyclops/processors"))
 sys.path.insert(0, os.path.abspath("../../cyclops/utils"))
 sys.path.insert(0, os.path.abspath("../../cyclops/query"))
 sys.path.insert(0, os.path.abspath("../../cyclops/query/postprocess"))
+sys.path.insert(0, os.path.abspath("../../cyclops/workflow"))
 
 
 # -- Project information -----------------------------------------------------
@@ -51,7 +52,7 @@ napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
 
 apidoc_module_dir = "../../cyclops"
-apidoc_excluded_paths = ["tests", "models", "*workflow"]
+apidoc_excluded_paths = ["tests", "models"]
 apidoc_output_dir = "reference/api"
 apidoc_separate_modules = True
 
