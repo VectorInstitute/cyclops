@@ -1,7 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
-
 HOSPITAL_ID = {
     "THPM": 0,
     "SBK": 1,

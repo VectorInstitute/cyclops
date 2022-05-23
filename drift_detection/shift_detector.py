@@ -7,25 +7,24 @@ class ShiftDetector:
     Attributes
     ----------
     dr_technique: String
-        .
+        name of dimensionality reduction technique to use
     sign_level: float
-        . 
+        significance level
     red_model:
-        
+        shift reductor model
     md_test: String
-        
+        name of two sample statisticaal test
     sample: int
-        
+        number of samples in test set
     datset: String
-        
-    sign_level: float
+        name of dataset
 
     """
     
     def __init__(self, dr_technique, md_test, sign_level, red_model, sample, datset):
         self.dr_technique = dr_technique
         self.sign_level = sign_level
-        self.red_model = red_model # shift reductor model
+        self.red_model = red_model 
         self.md_test = md_test
         self.sample = sample
         self.datset = datset

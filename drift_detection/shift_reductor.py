@@ -21,16 +21,23 @@ class ShiftReductor:
     Attributes
     ----------
     X: numpy.matrix
-        .
-    y: String
-        . 
-    X_t:
-    y_t:
-    dr_tech:
-    orig_dims:
-    datset:
-    mod_path:
-    
+        covariate data for source
+    y: list
+        labels for source
+    X_t: numpy.matrix
+        covariate data for target
+    y_t: list
+        labels for target
+    dr_tech: String
+        dimensionality reduction technique (e.g. PCA, BBSDs)
+    orig_dims: int
+        number of dimensions of data
+    datset: String
+        dataset name
+    dr_amount: int
+        number of components to reduce pca to, defaults to all components
+    var_ret: float
+        variation retained for pca, defaults to 0.9
 
     """
         
