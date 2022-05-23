@@ -10,7 +10,7 @@ in the health (or clinical) setting. It provides three high-level features:
 * Drift detection toolkit
 
 
-## Getting Started
+## 🐣 Getting Started
 
 ### Setup Python virtual environment and install dependencies
 
@@ -32,9 +32,9 @@ and ``requirements.txt`` to install dependencies using
 [pip](https://pypi.org/project/pip/), however is not tested frequently.
 
 
-## [Documentation](https://vectorinstitute.github.io/cyclops/)
+## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
 
-## Notebooks
+## 🎓 Notebooks
 
 To use jupyter notebooks, the python virtual environment can be installed and
 used inside an Ipython kernel. After activating the virtual environment, run:
