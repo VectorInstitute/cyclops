@@ -461,7 +461,7 @@ def care_units(
         _db,
         subquery,
         process_fn=process_mimic_care_units,
-        process_fn_kwargs={"specific": False},
+        process_fn_kwargs={"specific": False, "offset_timestamps": True},
     )
 
 
