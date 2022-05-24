@@ -2,6 +2,7 @@ from shift_tester import *
 from shift_reductor import *
 
 class ShiftDetector:
+    
     """ShiftDetector Class.
 
     Attributes
@@ -31,7 +32,7 @@ class ShiftDetector:
         self.sign_level = sign_level
     
     def classify_data(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims):
-        shift_reductor = ShiftReductor(X_s_tr, y_s_tr, X_s_val, y_s_val, "BBSDh", orig_dims, self.datset)
+        shift_reductor = ShiftReductor(X_s_tr, y_s_tr,"BBSDh", orig_dims, self.datset)
         shift_reductor_model = shift_reductor.fit_reductor()
         X_t_red = shift_reductor.reduce(shift_reductor_model, X_t)
         return X_t_red
@@ -41,15 +42,15 @@ class ShiftDetector:
         val_acc = None
         te_acc = None        
         
-    # Train or load reduction model.
-        shift_reductor = ShiftReductor(X_s_tr, y_s_tr, X_s_val, y_s_val, self.dr_technique, orig_dims, self.datset)
+        # Train or load reduction model.
+        shift_reductor = ShiftReductor(X_s_tr, y_s_tr, self.dr_technique, orig_dims, self.datset)
         shift_reductor_model = shift_reductor.fit_reductor()
         
         # Reduce test sets.
         X_s_red = shift_reductor.reduce(shift_reductor_model, X_s_val)
         X_t_red = shift_reductor.reduce(shift_reductor_model, X_t)
 
-        # Compute classification accuracy on both sets for malignancy detection.
+        # Compute classification accuracy on both sets for BBSDh malignancy detection.
         if self.dr_technique == "BBSDh":
             val_acc = np.sum(np.equal(X_s_red, y_s_val).astype(int))/X_s_red.shape[0]
             te_acc = np.sum(np.equal(X_t_red, y_t).astype(int))/X_t_red.shape[0]

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from shift_constants import *
 
+# Plotting parametersai
 linestyles = ['-', '-.', '--', ':']
 format = ['-o', '-h', '-p', '-s', '-D', '-<', '->', '-X']
 markers = ['o', 'h', 'p', 's', 'D', '<', '>', 'X']
