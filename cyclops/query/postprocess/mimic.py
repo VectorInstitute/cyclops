@@ -102,7 +102,7 @@ def process_mimic_care_unit_changepoints(data: pd.DataFrame) -> pd.DataFrame:
 
 @time_function
 def process_mimic_care_units(
-    transfers: pd.DataFrame, specific: bool = False
+    transfers: pd.DataFrame, specific: bool = False, offset_timestamps: bool = False
 ) -> pd.DataFrame:
     """Process care unit data.
 
@@ -115,6 +115,8 @@ def process_mimic_care_units(
         MIMIC transfers table as a DataFrame.
     specific : bool, optional
         Whether care_unit_name column has specific or non-specific care units.
+    offset_timestamps: bool, optional
+        Offset transfer admit and discharge timestamps with 'anchor_year_difference'.
 
     Returns
     -------
@@ -146,5 +148,13 @@ def process_mimic_care_units(
     transfers[CARE_UNIT].replace(replace_dict, inplace=True)
 
     transfers.dropna(inplace=True)
+
+    if offset_timestamps:
+        transfers["admit"] += transfers["anchor_year_difference"].astype(
+            "timedelta64[Y]"
+        )
+        transfers["discharge"] += transfers["anchor_year_difference"].astype(
+            "timedelta64[Y]"
+        )
 
     return transfers
