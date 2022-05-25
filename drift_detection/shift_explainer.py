@@ -1,5 +1,5 @@
-import shap
 import numpy as np
+import shap
 
 
 class ShiftExplainer:

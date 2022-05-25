@@ -1,14 +1,14 @@
 import math
 import random
 import sys
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from sklearn.feature_selection import SelectKBest
 
 
 def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip=True):
-    """
-    Creates gaussian noise of specificed parameters in input data
+    """Creates gaussian noise of specificed parameters in input data.
 
     Parameters
     ----------
@@ -20,6 +20,7 @@ def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip
         normalization parameter to divide noise by (e.g. 255 for images)
     delta_total: float
         fraction of data affected
+
     """
     X_df = pd.DataFrame(X)
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
@@ -44,8 +45,7 @@ def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip
 
 # Remove instances of a single class.
 def knockout_shift(X, y, cl, delta):
-    """
-    Creates class imbalance by removing a fraction of samples from a class
+    """Creates class imbalance by removing a fraction of samples from a class.
 
     Parameters
     ----------
@@ -70,8 +70,7 @@ def knockout_shift(X, y, cl, delta):
 
 
 def changepoint_shift(X_s, y_s, X_t, y_t, cl, n_shuffle=0.25, rank=False):
-    """
-    changepoint shift swaps features on a changepoint axis
+    """changepoint shift swaps features on a changepoint axis.
 
     Parameters
     ----------
@@ -89,6 +88,7 @@ def changepoint_shift(X_s, y_s, X_t, y_t, cl, n_shuffle=0.25, rank=False):
         number of features to shuffle
     rank: Bool
         should features should be ranked or not?
+
     """
     n_feats = X_s.shape[1]
     n_shuffle_feats = int(n_shuffle * n_feats)
@@ -125,8 +125,7 @@ def changepoint_shift(X_s, y_s, X_t, y_t, cl, n_shuffle=0.25, rank=False):
 def multiway_feat_association_shift(
     X_t, y_t, n_shuffle=0.25, keep_rows_constant=True, repermute_each_column=True
 ):
-    """
-    multiway_feat_association_shift swaps individuals within features
+    """multiway_feat_association_shift swaps individuals within features.
 
     Parameters
     ----------
@@ -142,6 +141,7 @@ def multiway_feat_association_shift(
         are the permutations the same across features?
     repermute_each_column:
         are the individuals selected for permutation the same across features?
+
     """
 
     n_inds = X_t.shape[0]
@@ -170,8 +170,7 @@ def multiway_feat_association_shift(
 
 
 def binary_shift(X, y, cl, delta, p_frac):
-    """
-    binary shift
+    """binary shift.
 
     Parameters
     ----------
@@ -203,8 +202,7 @@ def binary_shift(X, y, cl, delta, p_frac):
 
 
 def binary_noise_subset(X, p, delta_total=1.0):
-    """
-    Creates binary noise of specificed parameters in input data
+    """Creates binary noise of specificed parameters in input data.
 
     Parameters
     ----------
@@ -214,6 +212,7 @@ def binary_noise_subset(X, p, delta_total=1.0):
         proportion of 1s
     delta_total: float
         fraction of data affected
+
     """
     X_df = pd.DataFrame(X)
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
@@ -231,8 +230,7 @@ def binary_noise_subset(X, p, delta_total=1.0):
 
 def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
 
-    """
-    apply_shift
+    """apply_shift.
 
     Parameters
     ----------
@@ -245,7 +243,6 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
     y_te_orig: list
 
     shift: String
-
 
     """
 

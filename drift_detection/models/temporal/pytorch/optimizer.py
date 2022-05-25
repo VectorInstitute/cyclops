@@ -1,8 +1,9 @@
 import datetime
-import numpy as np
-import matplotlib.pyplot as plt
-import torch
 from datetime import datetime
+
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
 
 
 class Optimizer:

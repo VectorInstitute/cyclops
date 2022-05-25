@@ -1,9 +1,9 @@
 import numpy as np
 import torch
 from sklearn.decomposition import PCA
+from torch.distributions.independent import Independent
 from torch.distributions.multivariate_normal import MultivariateNormal
 from torch.distributions.normal import Normal
-from torch.distributions.independent import Independent
 
 
 class SingleGaussianizeStep:
@@ -131,7 +131,7 @@ class SingleGaussianizeStep:
 
 
 class TorchUnitHistogram:
-    """Assumes all data is unit norm"""
+    """Assumes all data is unit norm."""
 
     def __init__(self, n_bins, alpha):
         self.n_bins = n_bins

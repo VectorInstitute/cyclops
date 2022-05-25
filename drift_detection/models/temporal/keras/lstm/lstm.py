@@ -1,14 +1,12 @@
 # python -um mimic3models.in_hospital_mortality.main --network mimic3models/keras_models/lstm.py --dim 16 --depth 2 --batch_size 8 --dropout 0.3 --timestep 1.0 --load_state mimic3models/in_hospital_mortality/keras_states/rk_lstm.n16.d0.3.dep2.bs8.ts1.0.epoch27.test0.278806287862.state --mode test
 
 
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
-from keras.models import Model
-from keras.layers import Input, Dense, LSTM, Masking, Dropout
+from keras.layers import LSTM, Dense, Dropout, Input, Masking
 from keras.layers.wrappers import Bidirectional, TimeDistributed
-from lstm_utils import LastTimestep
-from lstm_utils import ExtendMask
+from keras.models import Model
+from lstm_utils import ExtendMask, LastTimestep
 
 
 class Network(Model):

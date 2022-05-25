@@ -1,21 +1,20 @@
+import pickle
 import sys
-from warnings import warn
-from time import time
 from os import path
+from time import time
+from warnings import warn
 
 import numpy as np
-import pickle
-
+from divergence import FisherDivergence, KnnKS, ModelKS
 from featureshiftdetector import FeatureShiftDetector
-from divergence import ModelKS, KnnKS, FisherDivergence
 from fsd_models import GaussianDensity, Knn
 from fsd_utils import (
-    marginal_attack,
     create_graphical_model,
+    get_confusion_tensor,
     get_detection_metrics,
     get_localization_metrics,
+    marginal_attack,
     plot_confusion_matrix,
-    get_confusion_tensor,
 )
 
 # Experiment Parameters

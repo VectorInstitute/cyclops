@@ -1,28 +1,29 @@
 import math
+import random
+
 import numpy as np
-import torch.nn as nn
 import tensorflow as tf
 import torch
-import random
+import torch.nn as nn
+from alibi_detect.cd import (
+    ClassifierDrift,
+    LearnedKernelDrift,
+    LSDDDrift,
+    LSDDDriftOnline,
+    MMDDrift,
+    MMDDriftOnline,
+    TabularDrift,
+)
+from alibi_detect.utils.pytorch.kernels import DeepKernel
 from scipy.spatial import distance
 
 # from torch_two_sample import *
 from scipy.stats import (
-    ks_2samp,
-    binom_test,
-    chisquare,
-    chi2_contingency,
     anderson_ksamp,
-)
-from alibi_detect.utils.pytorch.kernels import DeepKernel
-from alibi_detect.cd import (
-    MMDDrift,
-    MMDDriftOnline,
-    LSDDDrift,
-    LSDDDriftOnline,
-    LearnedKernelDrift,
-    TabularDrift,
-    ClassifierDrift,
+    binom_test,
+    chi2_contingency,
+    chisquare,
+    ks_2samp,
 )
 
 

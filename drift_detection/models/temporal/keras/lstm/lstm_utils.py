@@ -1,17 +1,14 @@
-from __future__ import absolute_import
-from __future__ import print_function
-
-import numpy as np
-from lstm_metrics import *
+from __future__ import absolute_import, print_function
 
 import keras
 import keras.backend as K
+import numpy as np
+from lstm_metrics import *
 
 if K.backend() == "tensorflow":
     import tensorflow as tf
 
 from keras.layers import Layer
-
 
 # ===================== METRICS ===================== #
 
@@ -417,11 +414,7 @@ def softmax(x, axis, mask=None):
 
 
 def _collect_attention(x, a, mask):
-    """
-    x is (B, T, D)
-    a is (B, T, 1) or (B, T)
-    mask is (B, T)
-    """
+    """x is (B, T, D) a is (B, T, 1) or (B, T) mask is (B, T)"""
     if K.ndim(a) == 2:
         a = K.expand_dims(a)
     a = softmax(a, axis=1, mask=mask)  # (B, T, 1)
@@ -429,9 +422,8 @@ def _collect_attention(x, a, mask):
 
 
 class CollectAttetion(Layer):
-    """Collect attention on 3D tensor with softmax and summation
-    Masking is disabled after this layer
-    """
+    """Collect attention on 3D tensor with softmax and summation Masking is disabled
+    after this layer."""
 
     def __init__(self, **kwargs):
         self.supports_masking = True
