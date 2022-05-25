@@ -3,8 +3,8 @@ from copy import copy
 
 # external
 import numpy as np
-from sklearn.utils import check_array, check_random_state
 from scipy.stats import ks_2samp as ks_stat
+from sklearn.utils import check_array, check_random_state
 
 
 class FisherDivergence:
@@ -87,7 +87,8 @@ class FisherDivergence:
         return feature_divergence / (self.n_expectation * 2)
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an error"""
+        """Checks if the p_hat and q_hat models have been fitted else, returns an
+        error."""
         if self.p_hat_ is not None and self.q_hat_ is not None:
             return True
         else:
@@ -100,9 +101,8 @@ class FisherDivergence:
 
 
 class ModelKS(FisherDivergence):
-    """
-    Computes the featurewise Kolmogorov-Smirnov Test between samples from two estimated densities.
-    """
+    """Computes the featurewise Kolmogorov-Smirnov Test between samples from two
+    estimated densities."""
 
     def __init__(self, density_model, n_expectation=100, n_conditional_samples=1000):
         super().__init__(density_model, n_expectation)
@@ -236,7 +236,8 @@ class KnnKS:
         return featurewise_KS_stat / (2 * self.n_expectation)
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an error"""
+        """Checks if the p_hat and q_hat models have been fitted else, returns an
+        error."""
         if self.p_hat_ is not None and self.q_hat_ is not None:
             return True
         else:

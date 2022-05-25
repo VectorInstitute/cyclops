@@ -1,45 +1,42 @@
-import re
-from collections import OrderedDict
-import numpy as np
-import pandas as pd
-import matplotlib
-import matplotlib.pyplot as plt
-import sqlalchemy
-from sqlalchemy import func, select, desc
-from sqlalchemy.sql.expression import and_, or_
-
-import sys
-from functools import reduce
 import datetime
-import joblib
-import matplotlib.pyplot as plt
 import os
 import pickle
+import re
+import sys
+from collections import OrderedDict
+from functools import reduce
+
+import joblib
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import sqlalchemy
+from sqlalchemy import desc, func, select
+from sqlalchemy.sql.expression import and_, or_
 
 sys.path.append("../..")
 
-from sklearn.metrics import (
-    auc,
-    accuracy_score,
-    confusion_matrix,
-    roc_auc_score,
-    roc_curve,
-    precision_recall_curve,
-    average_precision_score,
-)
-
-from sklearn.model_selection import GridSearchCV, train_test_split
-import pandas as pd
 import numpy as np
+import pandas as pd
 import sqlalchemy
-from sqlalchemy import select, func, extract, desc
-from sqlalchemy.sql.expression import and_
-
 from evidently import ColumnMapping
 from evidently.dashboard import Dashboard
 from evidently.dashboard.tabs import DataQualityTab
 from evidently.model_profile import Profile
 from evidently.model_profile.sections import DataQualityProfileSection
+from sklearn.metrics import (
+    accuracy_score,
+    auc,
+    average_precision_score,
+    confusion_matrix,
+    precision_recall_curve,
+    roc_auc_score,
+    roc_curve,
+)
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sqlalchemy import desc, extract, func, select
+from sqlalchemy.sql.expression import and_
 
 FEATURES = [
     "age",

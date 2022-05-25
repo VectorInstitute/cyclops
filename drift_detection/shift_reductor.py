@@ -1,19 +1,20 @@
 import os
-import pandas as pd
+
 import alibi
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
-import torch.nn as nn
-import tensorflow as tf
+import pandas as pd
 import scipy
 import scipy.stats as stats
+import tensorflow as tf
+import torch
+import torch.nn as nn
+from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
+from shift_utils import get_scaler
+from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
-from alibi_detect.cd.pytorch import preprocess_drift, HiddenOutput
-from shift_utils import get_scaler
 
 
 class ShiftReductor:

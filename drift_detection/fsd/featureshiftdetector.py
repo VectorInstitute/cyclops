@@ -124,7 +124,7 @@ class FeatureShiftDetector:
             return detection, attacked_features, scores
 
     def _simple_bootstrap(self, X_boot, Y_boot, random_state=None):
-        """Performs simple bootstrapping"""
+        """Performs simple bootstrapping."""
         rng = check_random_state(random_state)
         bootstrap_score_distribution = np.zeros(
             shape=(self.n_bootstrap_samples, X_boot.shape[1])
@@ -179,8 +179,8 @@ class FeatureShiftDetector:
         )
 
     def _time_bootstrap(self, X_boot, Y_boot, random_state=None):
-        """Performs a time aware bootstrapping -- Note: X_boot, Y_boot should be large (note: Y_boot can be none if
-        X_boot alone is the training dataset)"""
+        """Performs a time aware bootstrapping -- Note: X_boot, Y_boot should be large
+        (note: Y_boot can be none if X_boot alone is the training dataset)"""
         rng = check_random_state(random_state)
         bootstrap_score_distribution = np.zeros(
             shape=(self.n_bootstrap_samples, X_boot.shape[1])
@@ -238,7 +238,8 @@ class FeatureShiftDetector:
         )
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an error"""
+        """Checks if the p_hat and q_hat models have been fitted else, returns an
+        error."""
         if self.detection_thresholds_ is not None:
             return True
         else:

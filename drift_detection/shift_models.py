@@ -1,6 +1,3 @@
-from xgboost import XGBClassifier
-from sklearn.neural_network import MLPClassifier as MLP
-from sklearn.linear_model import LogisticRegression as LR
 from sklearn.ensemble import RandomForestClassifier as RF
 from sklearn.gaussian_process import GaussianProcessClassifier as GPC
 from sklearn.gaussian_process.kernels import (
@@ -10,15 +7,18 @@ from sklearn.gaussian_process.kernels import (
     RationalQuadratic,
     WhiteKernel,
 )
+from sklearn.linear_model import LogisticRegression as LR
 from sklearn.metrics import (
-    auc,
     accuracy_score,
+    auc,
+    average_precision_score,
     confusion_matrix,
+    precision_recall_curve,
     roc_auc_score,
     roc_curve,
-    precision_recall_curve,
-    average_precision_score,
 )
+from sklearn.neural_network import MLPClassifier as MLP
+from xgboost import XGBClassifier
 
 
 def fit_gp(X, Y, Xv, Yv):
@@ -156,9 +156,7 @@ def run_model(model_name, X, Y, Xv, Yv):
 
 
 def compute_threshold_metric(y_true, pred_prob, threshold, **kwargs):
-    """
-    Threshold metrics for binary prediction tasks
-    """
+    """Threshold metrics for binary prediction tasks."""
     y_pred = 1 * (pred_prob > threshold)
     TN, FP, FN, TP = confusion_matrix(y_true, y_pred).ravel()
 

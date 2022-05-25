@@ -1,10 +1,9 @@
 import numpy as np
 import torch
-from torch.distributions.multivariate_normal import MultivariateNormal
+from deep_density_model import SingleGaussianizeStep, TorchUnitHistogram
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_array, check_random_state
-
-from deep_density_model import SingleGaussianizeStep, TorchUnitHistogram
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 class GaussianDensity:
@@ -456,7 +455,7 @@ class Knn:
         return neighborhood_conditional_samples
 
     def _check_fitted(self, error_message=None):
-        """Checks if the estimator has been fitted"""
+        """Checks if the estimator has been fitted."""
         if self.X_train_ is None:
             if error_message is None:
                 raise ValueError("Please fit knn and try again")
