@@ -1,32 +1,37 @@
-import numpy as np
-import torch
-import random
-from torch import *
-#from torch_two_sample import *
-from scipy.stats import ks_2samp, binom_test, chisquare, chi2_contingency, anderson_ksamp
-from scipy.spatial import distance
-from alibi_detect.cd import MMDDrift, LSDDDrift, LearnedKernelDrift, TabularDrift, ClassifierDrift 
-from alibi_detect.cd import MMDDriftOnline, LSDDDriftOnline
-from alibi_detect.utils.pytorch.kernels import DeepKernel
 import math
-import torch
+import numpy as np
 import torch.nn as nn
 import tensorflow as tf
-
-# -------------------------------------------------
-# SHIFT TESTER
-# -------------------------------------------------
+import torch
+import random
+from scipy.spatial import distance
+#from torch_two_sample import *
+from scipy.stats import ks_2samp, binom_test, chisquare, chi2_contingency, anderson_ksamp
+from alibi_detect.utils.pytorch.kernels import DeepKernel
+from alibi_detect.cd import MMDDrift, MMDDriftOnline, LSDDDrift, LSDDDriftOnline, LearnedKernelDrift, TabularDrift, ClassifierDrift
 
 class ShiftTester:
+    
+    """ShiftTester Class.
 
-    def __init__(self, sign_level=0.05, mt=None):
+    Attributes
+    ----------
+    sign_level: float
+        P-value significance level.
+    mt: String
+        Name of two sample hypothesis test. 
+    mod_path: String
+        path to model (optional)
+
+    """
+
+    def __init__(self, sign_level=0.05, mt=None,mod_path=None):
         self.sign_level = sign_level
         self.mt = mt
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')      
+        self.mod_path = mod_path
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def test_shift(self, X_s, X_t):
-    
-        # torch_two_sample somehow wants the inputs to be explicitly casted to float 32.
         X_s = X_s.astype('float32')
         X_t = X_t.astype('float32')
 
@@ -45,14 +50,17 @@ class ShiftTester:
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
             
-        elif self.mt == "LK":     
-            proj = nn.Sequential(
-                nn.Linear(X_s.shape[-1], 32),
-                nn.SiLU(),
-                nn.Linear(32, 8),
-                nn.SiLU(),
-                nn.Linear(8, 1),
-            ).to(self.device)
+        elif self.mt == "LK":
+            if self.mod_path:
+                proj = load_model(self.mod_path)
+            else:
+                proj = nn.Sequential(
+                    nn.Linear(X_s.shape[-1], 32),
+                    nn.SiLU(),
+                    nn.Linear(32, 8),
+                    nn.SiLU(),
+                    nn.Linear(8, 1),
+                ).to(self.device)
             kernel = DeepKernel(proj, eps=0.01)
             dd = LearnedKernelDrift(X_s, kernel, backend='pytorch', p_val=.05, epochs=10, batch_size=32)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
@@ -60,13 +68,16 @@ class ShiftTester:
             dist = preds["data"]["distance"]
            
         elif self.mt == "Classifier":
-            model = nn.Sequential(
-                nn.Linear(X_s.shape[-1], 32),
-                nn.SiLU(),
-                nn.Linear(32, 8),
-                nn.SiLU(),
-                nn.Linear(8, 2),
-            ).to(self.device)
+            if self.mod_path:
+                model = load_model(self.mod_path)
+            else:
+                model = nn.Sequential(
+                    nn.Linear(X_s.shape[-1], 32),
+                    nn.SiLU(),
+                    nn.Linear(32, 8),
+                    nn.SiLU(),
+                    nn.Linear(8, 2),
+                ).to(self.device)
             dd = ClassifierDrift(X_s, model, backend='pytorch', p_val=.05, preds_type='logits')
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]

@@ -3,7 +3,6 @@ from shift_reductor import *
 from shift_tester import *
 from shift_experiments import *
 
-# from legacy_utils import *
 import re
 from collections import OrderedDict
 import numpy as np
@@ -67,8 +66,25 @@ from cyclops.processors.column_names import (
 from cyclops.processor import featurize
 from cyclops.processors.aggregate import Aggregator
 
+def get_scaler(scaler):
+    """Get scaler.
+
+    Parameters
+    ----------
+    scaler: string
+        String indicating which scaler to retrieve.
+
+    """ 
+    scalers = {
+        "minmax": MinMaxScaler,
+        "standard": StandardScaler,
+        "maxabs": MaxAbsScaler,
+        "robust": RobustScaler,
+    }
+    return scalers.get(scaler.lower())()
 
 def get_data(hospital, na_cutoff):
+
     EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/drift_exp"
 
     # load admin

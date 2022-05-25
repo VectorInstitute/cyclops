@@ -82,7 +82,7 @@ datset = sys.argv[1]
 dr_technique = sys.argv[3]
 
 # Define results path and create directory.
-path = './paper_results/'
+path = './results/'
 path += test_type + '/'
 path += datset + '_'
 path += sys.argv[2] + '/'
@@ -117,64 +117,53 @@ elif sys.argv[2] == 'ko_shift':
     shifts = ['ko_shift_0.1',
               'ko_shift_0.5',
               'ko_shift_1.0']
-elif sys.argv[2] == '_shift':
+elif sys.argv[2] == 'mfa_shift':
     shifts = ['mfa_shift_0.25',
               'mfa_shift_0.5',
               'mfa_shift_0.75']
-elif sys.argv[2] == '_shift':
+elif sys.argv[2] == 'cp_shift':
     shifts = ['cp_shift_0.25',
               'cp_shift_0.75']
-
-# -------------------------------------------------
-# PLOTTING HELPERS
-# -------------------------------------------------
-    
-linestyles = ['-', '-.', '--', ':']
-format = ['-o', '-h', '-p', '-s', '-D', '-<', '->', '-X']
-markers = ['o', 'h', 'p', 's', 'D', '<', '>', 'X']
-brightness = [1.5, 1.25, 1.0, 0.75, 0.5]
-colors = ['#2196f3', '#f44336', '#9c27b0', '#64dd17', '#009688', '#ff9800', '#795548', '#607d8b']
-
+elif sys.argv[2] == 'covid_shift':
+    shifts = ['precovid',
+              'covid']
+elif sys.argv[2] == 'seasonal_shift':
+    shifts = ['summer',
+              'winter',
+             'seasonal']
 
 # -------------------------------------------------
 # PARAMETERS
 # -------------------------------------------------
 
-path = "/path/"
-samples = [10, 20, 50, 100, 200, 500, 1000]
+# Output path
+PATH = "/mnt/nfs/project/delirium/drift_exp/"
+# Number of samples in the test set
+SAMPLES = [10, 20, 50, 100, 200, 500, 1000]
 # Number of random runs to average results over.
-random_runs = 5
+RANDOM_RUNS = 5
 # Significance level.
-sign_level = 0.05
+SIGN_LEVEL = 0.05
 # Whether to calculate accuracy for malignancy quantification.
-calc_acc = True
+CALC_ACC = True
 # Dimensionality Reduction Techniques
-dr_techniques = ["PCA","SRP","kPCA","Isomap","BBSDs"]
+DR_TECHNIQUES = ["NoRed", "PCA", "BBSDs_FFNN", "SRP", "Isomap","kPCA"]
 # Statistical Tests
-md_tests = ["MMD","LSDD","LK"]
+MD_TESTS = ["MMD", "LK", "LSDD"]
 
 # -------------------------------------------------
 # PIPELINE START
 # -------------------------------------------------
 
-SHIFTS = ["pre-covid", "covid","summer","winter","seasonal"]
 OUTCOMES = ["length_of_stay_in_er","mortality_in_hospital"]
 HOSPITALS = ["SMH","MSH","THPC","THPM","UHNTG", "UHNTW"]
-MODELS = ["xgb","rf"]
+MODELS = ["lr","xgb","rf"]
 NA_CUTOFF = 4000
-PATH = "/mnt/nfs/project/delirium/drift_exp/"
-DATASET = "gemini"
-SAMPLES = [10, 20, 50, 100, 200, 500, 1000, 2000]
-RANDOM_RUNS = 5
-SIGN_LEVEL = 0.05
-CALC_ACC = True
-DR_TECHNIQUES = ["NoRed", "PCA", "BBSDs_FFNN", "SRP", "Isomap","kPCA"]
-MD_TESTS = ["MMD", "LK", "LSDD"]
 
 # Run model fitting
-shift_auc = np.ones((len(SHIFTS), len(OUTCOMES), len(HOSPITALS), len(MODELS), 2)) * (-1)
-shift_pr = np.ones((len(SHIFTS), len(OUTCOMES), len(HOSPITALS), len(MODELS), 2)) * (-1)
-for si, SHIFT in enumerate(SHIFTS):
+shift_auc = np.ones((len(shifts), len(OUTCOMES), len(HOSPITALS), len(MODELS), 2)) * (-1)
+shift_pr = np.ones((len(shifts), len(OUTCOMES), len(HOSPITALS), len(MODELS), 2)) * (-1)
+for si, SHIFT in enumerate(shifts):
     for oi, OUTCOME in enumerate(OUTCOMES):
         for hi, HOSPITAL in enumerate(HOSPITALS):
             for mi, MODEL in enumerate(MODELS):
@@ -219,27 +208,27 @@ for si, SHIFT in enumerate(SHIFTS):
 auc_file = PATH + "/driftexp_auc.csv"
 auc = np.rollaxis(shift_auc, 2, 0)
 cols = pd.MultiIndex.from_product([OUTCOMES, HOSPITALS, MODELS])
-index = pd.MultiIndex.from_product([SHIFTS, ["VAL_ROC_AUC", "TEST_ROC_AUC"]])
-auc = auc.T.reshape(len(SHIFTS) * 2, len(OUTCOMES) * len(HOSPITALS) * len(MODELS))
+index = pd.MultiIndex.from_product([shifts, ["VAL_ROC_AUC", "TEST_ROC_AUC"]])
+auc = auc.T.reshape(len(shifts) * 2, len(OUTCOMES) * len(HOSPITALS) * len(MODELS))
 auc = pd.DataFrame(auc, columns=cols, index=index)
 auc.to_csv(auc_file, sep="\t")
 
 pr_file = PATH + "/driftexp_pr.csv"
 pr = np.rollaxis(shift_pr, 2, 0)
 cols = pd.MultiIndex.from_product([OUTCOMES, HOSPITALS, MODELS])
-index = pd.MultiIndex.from_product([SHIFTS, ["VAL_AVG_PR", "TEST_AVG_PR"]])
-pr = pr.T.reshape(len(SHIFTS) * 2, len(OUTCOMES) * len(HOSPITALS) * len(MODELS))
+index = pd.MultiIndex.from_product([shifts, ["VAL_AVG_PR", "TEST_AVG_PR"]])
+pr = pr.T.reshape(len(shifts) * 2, len(OUTCOMES) * len(HOSPITALS) * len(MODELS))
 pr = pd.DataFrame(pr, columns=cols, index=index)
 pr.to_csv(pr_file, sep="\t")
 
 # Run shift experiments
 mean_dr_md = np.ones(
-    (len(SHIFTS), len(HOSPITALS), len(DR_TECHNIQUES), len(MD_TESTS), len(SAMPLES))
+    (len(shifts), len(HOSPITALS), len(DR_TECHNIQUES), len(MD_TESTS), len(SAMPLES))
 ) * (-1)
 std_dr_md = np.ones(
-    (len(SHIFTS), len(HOSPITALS), len(DR_TECHNIQUES), len(MD_TESTS), len(SAMPLES))
+    (len(shifts), len(HOSPITALS), len(DR_TECHNIQUES), len(MD_TESTS), len(SAMPLES))
 ) * (-1)
-for si, SHIFT in enumerate(SHIFTS):
+for si, SHIFT in enumerate(shifts):
     for hi, HOSPITAL in enumerate(HOSPITALS):
         for di, DR_TECHNIQUE in enumerate(DR_TECHNIQUES):
             for mi, MD_TEST in enumerate(MD_TESTS):
@@ -272,9 +261,9 @@ for si, SHIFT in enumerate(SHIFTS):
 means_file = PATH + "/driftexp_means.csv"
 means = np.moveaxis(mean_dr_md, 4, 2)
 cols = pd.MultiIndex.from_product([DR_TECHNIQUES, MD_TESTS])
-index = pd.MultiIndex.from_product([SHIFTS, HOSPITALS, SAMPLES])
+index = pd.MultiIndex.from_product([shifts, HOSPITALS, SAMPLES])
 means = means.reshape(
-    len(SHIFTS) * len(HOSPITALS) * len(SAMPLES), len(DR_TECHNIQUES) * len(MD_TESTS)
+    len(shifts) * len(HOSPITALS) * len(SAMPLES), len(DR_TECHNIQUES) * len(MD_TESTS)
 )
 means = pd.DataFrame(means, columns=cols, index=index)means = pd.DataFrame(means, columns=cols, index=SAMPLES)
 means.to_csv(means_file, sep="\t")
@@ -282,7 +271,7 @@ means.to_csv(means_file, sep="\t")
 stds_file = PATH + "/driftexp_stds.csv"
 stds = np.moveaxis(std_dr_md, 4, 2)
 stds = stds.reshape(
-    len(SHIFTS) * len(HOSPITALS) * len(SAMPLES), len(DR_TECHNIQUES) * len(MD_TESTS)
+    len(shifts) * len(HOSPITALS) * len(SAMPLES), len(DR_TECHNIQUES) * len(MD_TESTS)
 )
 stds = pd.DataFrame(stds, columns=cols, index=index)
 stds.to_csv(stds_file, sep="\t")

@@ -1,50 +1,56 @@
-import pandas as pd
-import numpy as np
-import sqlalchemy
-from sqlalchemy import select, extract
-from sqlalchemy.sql.expression import and_
-from sklearn.feature_selection import SelectKBest
 import math
 import random
 import sys
+import pandas as pd
+import numpy as np
+from sklearn.feature_selection import SelectKBest
 
-
-def gaussian_noise_subset(x, noise_amt, normalization=1.0, delta_total=1.0, clip=True):
+def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip=True):
     """ 
-    gaussian_noise_subset creates gaussian noise of 
-    specificed parameters in input data
+    Creates gaussian noise of specificed parameters in input data
 
-    x: covariate data
-    noise_amt: standard deviation of gaussian noise
-    normalization: normalization parameter to divide noise by (e.g. 255 for images)
-    delta_total: fraction of data affected
+    Parameters
+    ----------  
+    X: numpy.matrix
+        covariate data
+    noise_amt: int
+        standard deviation of gaussian noise
+    normalization: int
+        normalization parameter to divide noise by (e.g. 255 for images)
+    delta_total: float
+        fraction of data affected
     """
-    x_df = pd.DataFrame(x)
-    bin_cols = x_df.loc[:, (x_df.isin([0,1])).all()].columns.values
-    c_cols = [x for x in x_df.columns if x not in bin_cols]
-    indices = np.random.choice(x.shape[0], math.ceil(x.shape[0] * delta_total), replace=False)
-    x_mod = x[np.ix_(indices,c_cols)]      
+    X_df = pd.DataFrame(X)
+    bin_cols = X_df.loc[:, (X_df.isin([0,1])).all()].columns.values
+    c_cols = [x for x in X_df.columns if x not in bin_cols]
+    indices = np.random.choice(X.shape[0], math.ceil(X.shape[0] * delta_total), replace=False)
+    X_mod = X[np.ix_(indices,c_cols)]      
     if len(c_cols) == 1:
-        noise = np.random.normal(0, noise_amt / normalization, x_mod.shape[0]) 
+        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]) 
     else:
-        noise = np.random.normal(0, noise_amt / normalization, (x_mod.shape[0], len(c_cols))) 
+        noise = np.random.normal(0, noise_amt / normalization, (X_mod.shape[0], len(c_cols))) 
     if clip:
-        x_mod = np.clip(x_mod + noise, 0., 1.)
+        X_mod = np.clip(X_mod + noise, 0., 1.)
     else:
-        x_mod = x_mod + noise
-    x[np.ix_(indices,c_cols)] = x_mod
-    return x,indices
+        X_mod = X_mod + noise
+    X[np.ix_(indices,c_cols)] = X_mod
+    return X,indices
 
 # Remove instances of a single class.
-def knockout_shift(x, y, cl, delta):
+def knockout_shift(X, y, cl, delta):
     """
-    knockout shift creates class imbalance by removing 
-    a fraction of samples from a class
+    Creates class imbalance by removing a fraction of samples from a class
     
-    x: covariate data
-    y: label data
-    cl: class (e.g. 0,1,2,3, etc.)
-    delta: fraction of samples removed
+    Parameters
+    ----------  
+    X: numpy.matrix
+        covariate data
+    y: list
+        label data
+    cl: int
+        class (e.g. 0,1,2,3, etc.)
+    delta: float
+        fraction of samples removed
     
     """
     del_indices = np.where(y == cl)[0]
@@ -52,21 +58,30 @@ def knockout_shift(x, y, cl, delta):
     if until_index % 2 != 0:
         until_index = until_index + 1
     del_indices = del_indices[:until_index]
-    x = np.delete(x, del_indices, axis=0)
+    X = np.delete(X, del_indices, axis=0)
     y = np.delete(y, del_indices, axis=0)
-    return x, y
+    return X, y
 
 def changepoint_shift(X_s, y_s, X_t,y_t,cl,n_shuffle=0.25,rank=False):
     """
     changepoint shift swaps features on a changepoint axis
 
-    X_s: source data 
-    y_s: source label
-    X_t: target data
-    y_t: target label
-    cl: class (e.g. 0,1,2,3, etc.)
-    n_shuffle: number of features to shuffle
-    rank: should features should be ranked or not? 
+    Parameters
+    ----------  
+    X_s: numpy.matrix
+        source data 
+    y_s: list
+        source label
+    X_t: numpy.matrix
+        target data
+    y_t: list
+        target label
+    cl: int
+        class (e.g. 0,1,2,3, etc.)
+    n_shuffle: float
+        number of features to shuffle
+    rank: Bool
+        should features should be ranked or not? 
     """
     n_feats = X_s.shape[1]
     n_shuffle_feats=int(n_shuffle*n_feats)
@@ -99,12 +114,20 @@ def multiway_feat_association_shift(X_t, y_t, n_shuffle=0.25, keep_rows_constant
     """
     multiway_feat_association_shift swaps individuals within features
 
-    X_t: target data
-    y_t: target label
-    cl: class (e.g. 0,1,2,3, etc.)
-    n_shuffle: number of individuals to shuffle
-    keep_rows_constant: are the permutations the same across features?
-    repermute_each_column: are the individuals selected for permutation the same across features?
+    Parameters
+    ----------  
+    X_t: numpy.matrix
+        target data
+    y_t: list
+        target label
+    cl: int
+        class (e.g. 0,1,2,3, etc.)
+    n_shuffle: floatnumpy.matrix
+        number of individuals to shuffle
+    keep_rows_constant: 
+        are the permutations the same across features?
+    repermute_each_column: 
+        are the individuals selected for permutation the same across features?
     """
         
     n_inds = X_t.shape[0]
@@ -127,53 +150,82 @@ def multiway_feat_association_shift(X_t, y_t, n_shuffle=0.25, keep_rows_constant
             
     return(X_t, y_t)    
 
-def binary_shift(x, y, cl, delta, p_frac):
+def binary_shift(X, y, cl, delta, p_frac):
     """
     binary shift 
     
-    x: covariate data
-    y: label data
-    cl: class (e.g. 0,1,2,3, etc.)
-    delta: proportion of 1:0
-    p_frac: fraction of features changed
+    Parameters
+    ----------  
+    X: numpy.matrix
+        covariate data
+    y: list
+        label data
+    cl: int
+        class (e.g. 0,1,2,3, etc.)
+    delta: float
+        proportion of 1:0
+    p_frac: float
+        fraction of features changed
     
     """
-    p=math.ceil(x.shape[1]*p_frac)
+    p=math.ceil(X.shape[1]*p_frac)
     del_indices = np.where(y == cl)[0]
     for i in range(0,p):
         i = int(i)
-        unique, counts = np.unique(x[del_indices, i],return_counts=True)
+        unique, counts = np.unique(X[del_indices, i],return_counts=True)
         if set(unique) == {0,1} or set(unique) == {0} or set(unique) == {1}:
             until_index = math.ceil(delta * len(del_indices))
             #until_index = math.ceil(delta * counts[1])
             if until_index % 2 != 0:
                 until_index = until_index + 1
-            x[del_indices[:until_index], i] = 1
-            x[del_indices[until_index:], i] = 0
-    return x, y
+            X[del_indices[:until_index], i] = 1
+            X[del_indices[until_index:], i] = 0
+    return X, y
 
-def binary_noise_subset(x, p, delta_total=1.0):
+def binary_noise_subset(X, p, delta_total=1.0):
     """ 
-    binary_noise_subset creates binary noise of 
-    specificed parameters in input data
-
-    x: covariate data
-    p: proportion of 1s
-    delta_total: fraction of data affected
+    Creates binary noise of specificed parameters in input data
+    
+    Parameters
+    ----------  
+    X: numpy.matrix
+        covariate data
+    p: float
+        proportion of 1s
+    delta_total: float
+        fraction of data affected
     """
-    x_df = pd.DataFrame(x)
-    bin_cols = x_df.loc[:, (x_df.isin([0,1])).all()].columns.values
-    indices = np.random.choice(x.shape[0], math.ceil(x.shape[0] * delta_total), replace=False)
-    x_mod = x[indices,:][:,bin_cols]
-    if x_mod.shape[1] == 1:
-        noise = np.random.binomial(1, p, x_mod.shape[0])
+    X_df = pd.DataFrame(X)
+    bin_cols = X_df.loc[:, (X_df.isin([0,1])).all()].columns.values
+    indices = np.random.choice(X.shape[0], math.ceil(X.shape[0] * delta_total), replace=False)
+    X_mod = X[indices,:][:,bin_cols]
+    if X_mod.shape[1] == 1:
+        noise = np.random.binomial(1, p, X_mod.shape[0])
     else:
-        noise = np.random.binomial(1, p, (x_mod.shape[0], x_mod.shape[1]))
-    x[np.ix_( indices, bin_cols )] = noise
-    return x,indices
+        noise = np.random.binomial(1, p, (X_mod.shape[0], X_mod.shape[1]))
+    X[np.ix_( indices, bin_cols )] = noise
+    return X,indices
 
 def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
     
+    """ 
+    apply_shift
+    
+    Parameters
+    ----------  
+    X_s_orig: numpy.matrix
+        
+    y_s_orig: list
+        
+    X_te_orig: numpy.matrix
+        
+    y_te_orig: list
+        
+    shift: String
+        
+    
+    """
+        
     X_te_1 = None
     y_te_1 = None
     
