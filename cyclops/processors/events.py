@@ -1,11 +1,18 @@
 """Events processor module, applies cleaning step to event data before aggregation."""
 
 import logging
+from typing import List, Union
 
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.column_names import EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT
+from cyclops.processors.column_names import (
+    ENCOUNTER_ID,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT,
+)
 from cyclops.processors.constants import NEGATIVE_RESULT_TERMS, POSITIVE_RESULT_TERMS
 from cyclops.processors.string_ops import (
     fill_missing_with_nan,
@@ -16,7 +23,7 @@ from cyclops.processors.string_ops import (
     strip_whitespace,
     to_lower,
 )
-from cyclops.processors.util import log_counts_step
+from cyclops.processors.util import assert_has_columns, log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -36,6 +43,89 @@ UNSUPPORTED = [
     "tsh",
     "urine osmolality",
 ]
+
+
+def combine_events(event_data: Union[pd.DataFrame, List[pd.DataFrame]]) -> pd.DataFrame:
+    """Gather event data from multiple dataframes into a single one.
+
+    Events can be in multiple raw dataframes like labs, vitals, etc. This
+    function takes in multiple dataframes and gathers all events into a single
+    dataframe.
+
+    Parameters
+    ----------
+    event_data: pandas.DataFrame or list of pandas.DataFrame
+        Raw event data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Combined event data.
+
+    """
+    must_have_cols = [ENCOUNTER_ID, EVENT_TIMESTAMP, EVENT_NAME, EVENT_VALUE]
+
+    @assert_has_columns(must_have_cols, must_have_cols)
+    def add_events(events: pd.DataFrame, events_to_add: pd.DataFrame) -> pd.DataFrame:
+        return pd.concat(
+            [
+                events,
+                events_to_add[must_have_cols],
+            ],
+            ignore_index=True,
+            axis=0,
+        )
+
+    events = pd.DataFrame(columns=must_have_cols)
+    if isinstance(event_data, pd.DataFrame):
+        event_data = [event_data]
+    for event_dataframe in event_data:
+        events = add_events(events, event_dataframe)
+
+    return events
+
+
+@assert_has_columns([ENCOUNTER_ID])
+def convert_to_events(
+    data: pd.DataFrame, event_name: str, timestamp_col: str, value_col: str = None
+) -> pd.DataFrame:
+    """Convert dataframe with just timestamps into events.
+
+    Any event like admission, discharge, transfer, etc. can be converted to the
+    common events dataframe format with 'encounter_id', 'event_name', 'event_timestamp',
+    and 'event_value' columns. The input data in this case does not have an explicit
+    event name and hence we assign it. Like for e.g. admission.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Raw data with some timestamps denoting an event.
+    event_name: str
+        Event name to give, added as a new column.
+    timestamp_col: str
+        Name of the column in the incoming dataframe that has the timestamp.
+    value_col: str, optional
+        Name of the column in the incoming dataframe that has potential event values.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Events in the converted format.
+
+    """
+    if value_col:
+        cols = [ENCOUNTER_ID, timestamp_col, value_col]
+    else:
+        cols = [ENCOUNTER_ID, timestamp_col]
+    events = data[cols].copy()
+    if EVENT_VALUE not in events:
+        events[EVENT_VALUE] = ""
+    events = events.rename(
+        columns={timestamp_col: EVENT_TIMESTAMP, value_col: EVENT_VALUE}
+    )
+    events[EVENT_NAME] = event_name
+
+    return events
 
 
 def is_supported(event_name: str) -> bool:

@@ -8,10 +8,10 @@ import pytest
 
 from cyclops.processors.aggregate import (
     Aggregator,
+    aggregate_events,
+    aggregate_events_into_single_bucket,
+    aggregate_statics,
     filter_upto_window,
-    gather_event_features,
-    gather_events_into_single_bucket,
-    gather_statics,
     get_earliest_ts_encounter,
     infer_statics,
     restrict_events_by_timestamp,
@@ -86,7 +86,7 @@ def test_events_input():
 
 
 @pytest.fixture
-def test_gather_event_features_input():
+def test_aggregate_events_input():
     """Create a test events input."""
     date1 = datetime(2022, 11, 3, hour=13)
     date2 = datetime(2022, 11, 3, hour=14)
@@ -153,11 +153,11 @@ def test_infer_statics(  # pylint: disable=redefined-outer-name
     assert set(static_columns) == set([ENCOUNTER_ID, "B", "E"])
 
 
-def test_gather_statics(  # pylint: disable=redefined-outer-name
+def test_aggregate_statics(  # pylint: disable=redefined-outer-name
     test_statics_input,
 ):
-    """Test gather_statics function."""
-    statics = gather_statics(test_statics_input)
+    """Test aggregate_statics function."""
+    statics = aggregate_statics(test_statics_input)
 
     assert statics["B"].loc["cat"] == 2
     assert statics["B"].loc["donkey"] == 3
@@ -185,11 +185,11 @@ def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name
         )
 
 
-def test_gather_events_into_single_bucket(  # pylint: disable=redefined-outer-name
+def test_aggregate_events_into_single_bucket(  # pylint: disable=redefined-outer-name
     test_events_input,
 ):
-    """Test gather_events_into_single_bucket function."""
-    res, _ = gather_events_into_single_bucket(
+    """Test aggregate_events_into_single_bucket function."""
+    res, _ = aggregate_events_into_single_bucket(
         test_events_input, Aggregator(aggfunc=MEAN)
     )
     assert res.loc[1]["eventA"] == 10.0
@@ -197,7 +197,7 @@ def test_gather_events_into_single_bucket(  # pylint: disable=redefined-outer-na
     assert res.loc[2]["eventA"] == 13.0
     assert res.loc[2]["eventB"] == 13.0
 
-    res, _ = gather_events_into_single_bucket(
+    res, _ = aggregate_events_into_single_bucket(
         test_events_input, Aggregator(aggfunc=MEDIAN)
     )
     assert res.loc[1]["eventA"] == 10.0
@@ -206,12 +206,12 @@ def test_gather_events_into_single_bucket(  # pylint: disable=redefined-outer-na
     assert res.loc[2]["eventB"] == 13.0
 
 
-def test_gather_events_into_single_bucket2(  # pylint: disable=redefined-outer-name
-    test_gather_event_features_input,
+def test_aggregate_events_single_timestep_case(  # pylint: disable=redefined-outer-name
+    test_aggregate_events_input,
 ):
-    """Test gather_events_into_single_bucket function."""
+    """Test aggregate_events function."""
     agg = Aggregator(aggfunc=MEAN, bucket_size=4, window=4)
-    res, _ = gather_event_features(test_gather_event_features_input, agg)
+    res, _ = aggregate_events(test_aggregate_events_input, agg)
     assert res["eventA"].iloc[0] == 10
     assert res["eventA"].iloc[1] == 11
 
@@ -225,12 +225,12 @@ def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
     assert earliest_ts[2] == datetime(2022, 11, 3, hour=14)
 
 
-def test_gather_event_features(  # pylint: disable=redefined-outer-name
-    test_gather_event_features_input,
+def test_aggregate_events(  # pylint: disable=redefined-outer-name
+    test_aggregate_events_input,
 ):
-    """Test gather_event_features function."""
+    """Test aggregate_events function."""
     agg = Aggregator(aggfunc=MEAN, bucket_size=4, window=20, start_at_admission=True)
-    res, _ = gather_event_features(test_gather_event_features_input, agg)
+    res, _ = aggregate_events(test_aggregate_events_input, agg)
 
     assert res.loc[(1, 0)]["eventA"] == 10.0
     assert np.isnan(res.loc[(1, 0)]["eventB"])
@@ -249,19 +249,19 @@ def test_gather_event_features(  # pylint: disable=redefined-outer-name
 
 
 def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
-    test_gather_event_features_input,
+    test_aggregate_events_input,
     test_restrict_events_by_timestamp_start_input,
     test_restrict_events_by_timestamp_stop_input,
 ):
     """Test restrict_events_by_timestamp function."""
     res = restrict_events_by_timestamp(
-        test_gather_event_features_input,
+        test_aggregate_events_input,
         start=test_restrict_events_by_timestamp_start_input,
     )
     assert list(res.index) == [0, 2, 3, 4, 5, 6]
 
     res = restrict_events_by_timestamp(
-        test_gather_event_features_input,
+        test_aggregate_events_input,
         stop=test_restrict_events_by_timestamp_stop_input,
     )
     assert list(res.index) == [0, 1]
