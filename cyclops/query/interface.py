@@ -13,6 +13,7 @@ from cyclops.processors.column_names import RECOGNISED_QUERY_COLUMNS
 from cyclops.query.util import filter_attributes
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
+from cyclops.workflow.constants import QUERY
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ class QueryInterface:
             Name of file. Extension will be .gzip.
 
         """
-        save_dataframe(self.data, folder_path, file_name, prefix="query")
+        save_dataframe(self.data, folder_path, file_name, prefix=QUERY)
 
     def clear_data(self) -> None:
         """Clear data container.
@@ -205,7 +206,7 @@ class QueryInterfaceProcessed:
             Name of file. Extension will be .gzip.
 
         """
-        save_dataframe(self.data, folder_path, file_name, prefix="query")
+        save_dataframe(self.data, folder_path, file_name, prefix=QUERY)
 
     def clear_data(self) -> None:
         """Clear data container.
