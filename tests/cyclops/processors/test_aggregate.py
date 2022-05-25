@@ -8,8 +8,8 @@ import pytest
 
 from cyclops.processors.aggregate import (
     Aggregator,
+    _aggregate_events_into_single_bucket,
     aggregate_events,
-    aggregate_events_into_single_bucket,
     aggregate_statics,
     filter_upto_window,
     get_earliest_ts_encounter,
@@ -189,7 +189,7 @@ def test_aggregate_events_into_single_bucket(  # pylint: disable=redefined-outer
     test_events_input,
 ):
     """Test aggregate_events_into_single_bucket function."""
-    res, _ = aggregate_events_into_single_bucket(
+    res, _ = _aggregate_events_into_single_bucket(
         test_events_input, Aggregator(aggfunc=MEAN)
     )
     assert res.loc[1]["eventA"] == 10.0
@@ -197,7 +197,7 @@ def test_aggregate_events_into_single_bucket(  # pylint: disable=redefined-outer
     assert res.loc[2]["eventA"] == 13.0
     assert res.loc[2]["eventB"] == 13.0
 
-    res, _ = aggregate_events_into_single_bucket(
+    res, _ = _aggregate_events_into_single_bucket(
         test_events_input, Aggregator(aggfunc=MEDIAN)
     )
     assert res.loc[1]["eventA"] == 10.0

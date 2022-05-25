@@ -1,7 +1,7 @@
 """Events processor module, applies cleaning step to event data before aggregation."""
 
 import logging
-from typing import List, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 
@@ -13,7 +13,11 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
 )
-from cyclops.processors.constants import NEGATIVE_RESULT_TERMS, POSITIVE_RESULT_TERMS
+from cyclops.processors.constants import (
+    EMPTY_STRING,
+    NEGATIVE_RESULT_TERMS,
+    POSITIVE_RESULT_TERMS,
+)
 from cyclops.processors.string_ops import (
     fill_missing_with_nan,
     fix_inequalities,
@@ -87,7 +91,10 @@ def combine_events(event_data: Union[pd.DataFrame, List[pd.DataFrame]]) -> pd.Da
 
 @assert_has_columns([ENCOUNTER_ID])
 def convert_to_events(
-    data: pd.DataFrame, event_name: str, timestamp_col: str, value_col: str = None
+    data: pd.DataFrame,
+    event_name: str,
+    timestamp_col: str,
+    value_col: Optional[str] = None,
 ) -> pd.DataFrame:
     """Convert dataframe with just timestamps into events.
 
@@ -119,7 +126,7 @@ def convert_to_events(
         cols = [ENCOUNTER_ID, timestamp_col]
     events = data[cols].copy()
     if EVENT_VALUE not in events:
-        events[EVENT_VALUE] = ""
+        events[EVENT_VALUE] = EMPTY_STRING
     events = events.rename(
         columns={timestamp_col: EVENT_TIMESTAMP, value_col: EVENT_VALUE}
     )

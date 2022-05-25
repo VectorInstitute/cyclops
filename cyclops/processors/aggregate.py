@@ -192,7 +192,7 @@ def filter_upto_window(
     return data_filtered
 
 
-def aggregate_events_into_single_bucket(
+def _aggregate_events_into_single_bucket(
     data: pd.DataFrame, aggregator: Aggregator
 ) -> pd.DataFrame:
     """Gather events into single bucket.
@@ -358,7 +358,7 @@ def aggregate_events(
 
     # All events are placed in a single bucket, hence not a time-series.
     if aggregator.window == aggregator.bucket_size:
-        return aggregate_events_into_single_bucket(data, aggregator)
+        return _aggregate_events_into_single_bucket(data, aggregator)
 
     num_timesteps = math.floor(aggregator.window / aggregator.bucket_size)
 
