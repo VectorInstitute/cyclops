@@ -12,6 +12,7 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
+    RECOGNISED_EVENT_COLUMNS,
 )
 from cyclops.processors.constants import (
     EMPTY_STRING,
@@ -27,7 +28,7 @@ from cyclops.processors.string_ops import (
     strip_whitespace,
     to_lower,
 )
-from cyclops.processors.util import assert_has_columns, log_counts_step
+from cyclops.processors.util import assert_has_columns, gather_columns, log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -155,6 +156,7 @@ def is_supported(event_name: str) -> bool:
     return event_name not in UNSUPPORTED
 
 
+@assert_has_columns([EVENT_NAME])
 def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
     """Drop events currently not supported for processing.
 
@@ -175,6 +177,7 @@ def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+@assert_has_columns([EVENT_NAME])
 def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event names.
 
@@ -202,6 +205,7 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+@assert_has_columns([EVENT_VALUE])
 def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event values.
 
@@ -245,6 +249,7 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+@assert_has_columns([EVENT_VALUE_UNIT])
 def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event value units.
 
@@ -262,7 +267,7 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
         Output data with normalized event value units.
 
     """
-    LOGGER.info("Cleaning units and converting to SI...")
+    LOGGER.info("Normalizing units...")
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(none_to_empty_string)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(to_lower)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(strip_whitespace)
@@ -271,13 +276,16 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
 
 
 @time_function
-def clean_events(data) -> pd.DataFrame:
-    """Pre-process and clean raw event data.
+def normalize_events(data, filter_recognised: bool = False) -> pd.DataFrame:
+    """Pre-process and normalize (clean) raw event data.
 
     Parameters
     ----------
     data: pandas.DataFrame
         Raw event data.
+    filter_recognised: bool, optional
+        Filter columns that are recognised by the events processing functions.
+        Useful to save disk space when running entire pipelines.
 
     Returns
     -------
@@ -285,7 +293,11 @@ def clean_events(data) -> pd.DataFrame:
         Cleaned event data.
 
     """
-    data = data.copy()
+    if filter_recognised:
+        data = gather_columns(data, RECOGNISED_EVENT_COLUMNS)
+    else:
+        data = data.copy()
+
     log_counts_step(data, "Cleaning raw event data...", columns=True)
     data = data.infer_objects()
     data = normalize_names(data)

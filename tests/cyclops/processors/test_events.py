@@ -12,7 +12,11 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
 )
-from cyclops.processors.events import clean_events, combine_events, convert_to_events
+from cyclops.processors.events import (
+    combine_events,
+    convert_to_events,
+    normalize_events,
+)
 
 
 @pytest.fixture
@@ -129,18 +133,18 @@ def test_event_data_unnormalized():
     return input_
 
 
-def test_clean_events(  # pylint: disable=redefined-outer-name
+def test_normalize_events(  # pylint: disable=redefined-outer-name
     test_event_data_unnormalized, test_event_data_normalized
 ):
-    """Test clean_events fn."""
-    cleaned_events = clean_events(test_event_data_normalized)
+    """Test normalize_events fn."""
+    normalized_events = normalize_events(test_event_data_normalized)
 
-    assert len(cleaned_events[EVENT_NAME].unique()) == 3
-    assert len(cleaned_events[EVENT_VALUE_UNIT].unique()) == 3
-    assert "test-a" in list(cleaned_events[EVENT_NAME])
-    assert "unit-a" in list(cleaned_events[EVENT_VALUE_UNIT])
+    assert len(normalized_events[EVENT_NAME].unique()) == 3
+    assert len(normalized_events[EVENT_VALUE_UNIT].unique()) == 3
+    assert "test-a" in list(normalized_events[EVENT_NAME])
+    assert "unit-a" in list(normalized_events[EVENT_VALUE_UNIT])
 
-    cleaned_events = clean_events(test_event_data_unnormalized)
-    assert cleaned_events[EVENT_VALUE][0] == 1.0
-    assert cleaned_events[EVENT_VALUE][1] == 1.4
-    assert cleaned_events[EVENT_VALUE][2] == 1.2
+    normalizeed_events = normalize_events(test_event_data_unnormalized)
+    assert normalizeed_events[EVENT_VALUE][0] == 1.0
+    assert normalizeed_events[EVENT_VALUE][1] == 1.4
+    assert normalizeed_events[EVENT_VALUE][2] == 1.2

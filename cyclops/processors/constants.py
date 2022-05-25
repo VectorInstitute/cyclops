@@ -134,6 +134,7 @@ DRUG_SCREEN = [
     "venlafaxine_metabolite",
 ]
 EMPTY_STRING = ""
+UNDERSCORE = "_"
 NEGATIVE_RESULT_TERMS = [
     "neg",
     "not det",
