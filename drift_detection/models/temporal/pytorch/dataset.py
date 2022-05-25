@@ -7,9 +7,10 @@ from tqdm import tqdm
 from dataclasses import dataclass
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
+
 class Data:
     """Data class."""
-    
+
     def __init__(self, inputs, target):
         """
         Initialization
@@ -54,8 +55,8 @@ class Data:
 
         """
         return self.inputs.size(dim=1)
-    
-    def to_loader(self,batch_size, num_workers=4, shuffle=False):
+
+    def to_loader(self, batch_size, num_workers=4, shuffle=False):
         """Create dataloader.
 
         Returns
@@ -64,7 +65,7 @@ class Data:
 
         """
         return DataLoader(
-            TensorDataset(self.inputs,self.target),
+            TensorDataset(self.inputs, self.target),
             batch_size=batch_size,
             num_workers=num_workers,
             shuffle=shuffle,

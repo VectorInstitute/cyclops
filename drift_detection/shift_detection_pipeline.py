@@ -75,17 +75,14 @@ from cyclops.processors.outcomes import OutcomesProcessor
 from cyclops.processors.feature_handler import FeatureHandler
 from cyclops.orm import Database
 
-%reload_ext autoreload
-%reload_ext nb_black
-
 datset = sys.argv[1]
 dr_technique = sys.argv[3]
 
 # Define results path and create directory.
-path = './results/'
-path += test_type + '/'
-path += datset + '_'
-path += sys.argv[2] + '/'
+path = "./results/"
+path += test_type + "/"
+path += datset + "_"
+path += sys.argv[2] + "/"
 if not os.path.exists(path):
     os.makedirs(path)
 
@@ -101,36 +98,22 @@ sign_level = 0.05
 calc_acc = True
 
 # Define shift types.
-if sys.argv[2] == 'small_gn_shift':
-    shifts = ['small_gn_shift_0.1',
-              'small_gn_shift_0.5',
-              'small_gn_shift_1.0']
-elif sys.argv[2] == 'medium_gn_shift':
-    shifts = ['medium_gn_shift_0.1',
-              'medium_gn_shift_0.5',
-              'medium_gn_shift_1.0']
-elif sys.argv[2] == 'large_gn_shift':
-    shifts = ['large_gn_shift_0.1',
-              'large_gn_shift_0.5',
-              'large_gn_shift_1.0']
-elif sys.argv[2] == 'ko_shift':
-    shifts = ['ko_shift_0.1',
-              'ko_shift_0.5',
-              'ko_shift_1.0']
-elif sys.argv[2] == 'mfa_shift':
-    shifts = ['mfa_shift_0.25',
-              'mfa_shift_0.5',
-              'mfa_shift_0.75']
-elif sys.argv[2] == 'cp_shift':
-    shifts = ['cp_shift_0.25',
-              'cp_shift_0.75']
-elif sys.argv[2] == 'covid_shift':
-    shifts = ['precovid',
-              'covid']
-elif sys.argv[2] == 'seasonal_shift':
-    shifts = ['summer',
-              'winter',
-             'seasonal']
+if sys.argv[2] == "small_gn_shift":
+    shifts = ["small_gn_shift_0.1", "small_gn_shift_0.5", "small_gn_shift_1.0"]
+elif sys.argv[2] == "medium_gn_shift":
+    shifts = ["medium_gn_shift_0.1", "medium_gn_shift_0.5", "medium_gn_shift_1.0"]
+elif sys.argv[2] == "large_gn_shift":
+    shifts = ["large_gn_shift_0.1", "large_gn_shift_0.5", "large_gn_shift_1.0"]
+elif sys.argv[2] == "ko_shift":
+    shifts = ["ko_shift_0.1", "ko_shift_0.5", "ko_shift_1.0"]
+elif sys.argv[2] == "mfa_shift":
+    shifts = ["mfa_shift_0.25", "mfa_shift_0.5", "mfa_shift_0.75"]
+elif sys.argv[2] == "cp_shift":
+    shifts = ["cp_shift_0.25", "cp_shift_0.75"]
+elif sys.argv[2] == "covid_shift":
+    shifts = ["precovid", "covid"]
+elif sys.argv[2] == "seasonal_shift":
+    shifts = ["summer", "winter", "seasonal"]
 
 # -------------------------------------------------
 # PARAMETERS
@@ -147,7 +130,7 @@ SIGN_LEVEL = 0.05
 # Whether to calculate accuracy for malignancy quantification.
 CALC_ACC = True
 # Dimensionality Reduction Techniques
-DR_TECHNIQUES = ["NoRed", "PCA", "BBSDs_FFNN", "SRP", "Isomap","kPCA"]
+DR_TECHNIQUES = ["NoRed", "PCA", "BBSDs_FFNN", "SRP", "Isomap", "kPCA"]
 # Statistical Tests
 MD_TESTS = ["MMD", "LK", "LSDD"]
 
@@ -155,9 +138,9 @@ MD_TESTS = ["MMD", "LK", "LSDD"]
 # PIPELINE START
 # -------------------------------------------------
 
-OUTCOMES = ["length_of_stay_in_er","mortality_in_hospital"]
-HOSPITALS = ["SMH","MSH","THPC","THPM","UHNTG", "UHNTW"]
-MODELS = ["lr","xgb","rf"]
+OUTCOMES = ["length_of_stay_in_er", "mortality_in_hospital"]
+HOSPITALS = ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW"]
+MODELS = ["lr", "xgb", "rf"]
 NA_CUTOFF = 4000
 
 # Run model fitting
@@ -256,8 +239,8 @@ for si, SHIFT in enumerate(shifts):
                     except ValueError as e:
                         print("Value Error")
                         pass
-         
-        
+
+
 means_file = PATH + "/driftexp_means.csv"
 means = np.moveaxis(mean_dr_md, 4, 2)
 cols = pd.MultiIndex.from_product([DR_TECHNIQUES, MD_TESTS])
@@ -265,7 +248,8 @@ index = pd.MultiIndex.from_product([shifts, HOSPITALS, SAMPLES])
 means = means.reshape(
     len(shifts) * len(HOSPITALS) * len(SAMPLES), len(DR_TECHNIQUES) * len(MD_TESTS)
 )
-means = pd.DataFrame(means, columns=cols, index=index)means = pd.DataFrame(means, columns=cols, index=SAMPLES)
+means = pd.DataFrame(means, columns=cols, index=index)
+means = pd.DataFrame(means, columns=cols, index=SAMPLES)
 means.to_csv(means_file, sep="\t")
 
 stds_file = PATH + "/driftexp_stds.csv"
@@ -275,5 +259,3 @@ stds = stds.reshape(
 )
 stds = pd.DataFrame(stds, columns=cols, index=index)
 stds.to_csv(stds_file, sep="\t")
-
-                     

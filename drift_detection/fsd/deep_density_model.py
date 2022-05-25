@@ -5,7 +5,8 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 from torch.distributions.normal import Normal
 from torch.distributions.independent import Independent
 
-class SingleGaussianizeStep():
+
+class SingleGaussianizeStep:
     def __init__(self, n_bins=10, alpha=10, lam_variance=0):
         self.n_bins = n_bins
         self.alpha = alpha
@@ -36,16 +37,21 @@ class SingleGaussianizeStep():
                 TorchUnitHistogram(n_bins=self.n_bins, alpha=self.alpha).fit(x_col)
                 for x_col in x.detach().T
             ]
-            x = torch.cat(tuple(
-                hist.cdf(x_col).reshape(-1, 1)
-                for x_col, hist in zip(x.T, histograms)
-            ), dim=1)
+            x = torch.cat(
+                tuple(
+                    hist.cdf(x_col).reshape(-1, 1)
+                    for x_col, hist in zip(x.T, histograms)
+                ),
+                dim=1,
+            )
             # all_latent.append(x.detach().numpy())
             self.histograms_ = histograms
 
         # 4. Independent inverse standard normal transform
         if True:
-            standard_normal = Normal(loc=torch.zeros_like(loc), scale=torch.ones_like(scale))
+            standard_normal = Normal(
+                loc=torch.zeros_like(loc), scale=torch.ones_like(scale)
+            )
             x = standard_normal.icdf(x)
             self.standard_normal_ = standard_normal
 
@@ -66,19 +72,32 @@ class SingleGaussianizeStep():
 
         # 3. Histogram
         if True:
-            log_prob += torch.sum(torch.cat(tuple(
-                hist.log_prob(x_col).reshape(-1, 1)
-                for x_col, hist in zip(x.T, self.histograms_)
-            ), dim=1), dim=1)
-            x = torch.cat(tuple(
-                hist.cdf(x_col).reshape(-1, 1)
-                for x_col, hist in zip(x.T, self.histograms_)
-            ), dim=1)
+            log_prob += torch.sum(
+                torch.cat(
+                    tuple(
+                        hist.log_prob(x_col).reshape(-1, 1)
+                        for x_col, hist in zip(x.T, self.histograms_)
+                    ),
+                    dim=1,
+                ),
+                dim=1,
+            )
+            x = torch.cat(
+                tuple(
+                    hist.cdf(x_col).reshape(-1, 1)
+                    for x_col, hist in zip(x.T, self.histograms_)
+                ),
+                dim=1,
+            )
 
         # 4. Inverse standard normal
         if True:
-            x = self.standard_normal_.icdf(x)  # For log prob of inverse cdf must do inverse cdf first
-            log_prob -= torch.sum(self.standard_normal_.log_prob(x), dim=1)  # Independent so sum
+            x = self.standard_normal_.icdf(
+                x
+            )  # For log prob of inverse cdf must do inverse cdf first
+            log_prob -= torch.sum(
+                self.standard_normal_.log_prob(x), dim=1
+            )  # Independent so sum
 
         if return_latent:
             return log_prob, x
@@ -88,15 +107,20 @@ class SingleGaussianizeStep():
     def inverse(self, x):
         # 4. Inverse standard normal
         if True:
-            x = self.standard_normal_.cdf(x)  # For log prob of inverse cdf must do inverse cdf first
+            x = self.standard_normal_.cdf(
+                x
+            )  # For log prob of inverse cdf must do inverse cdf first
             x = torch.clamp(x, 1e-10, 1 - 1e-10)
 
         # 3. Histogram
         if True:
-            x = torch.cat(tuple(
-                hist.icdf(x_col).reshape(-1, 1)
-                for x_col, hist in zip(x.T, self.histograms_)
-            ), dim=1)
+            x = torch.cat(
+                tuple(
+                    hist.icdf(x_col).reshape(-1, 1)
+                    for x_col, hist in zip(x.T, self.histograms_)
+                ),
+                dim=1,
+            )
 
         # 2. Ind normal
         x = self.ind_normal_.icdf(x)  # Transform
@@ -106,8 +130,8 @@ class SingleGaussianizeStep():
         return x
 
 
-class TorchUnitHistogram():
-    '''Assumes all data is unit norm'''
+class TorchUnitHistogram:
+    """Assumes all data is unit norm"""
 
     def __init__(self, n_bins, alpha):
         self.n_bins = n_bins
@@ -129,9 +153,8 @@ class TorchUnitHistogram():
 
         # Compute scale and shift for every bin
         # a = (y2-y1)/(x2-y1)
-        bin_scale = (
-                (cdf_on_edges[1:] - cdf_on_edges[:-1])
-                / (bin_edges[1:] - bin_edges[:-1])
+        bin_scale = (cdf_on_edges[1:] - cdf_on_edges[:-1]) / (
+            bin_edges[1:] - bin_edges[:-1]
         )
         # b = -a*x2 + y2
         bin_shift = -bin_scale * bin_edges[1:] + cdf_on_edges[1:]
@@ -144,13 +167,17 @@ class TorchUnitHistogram():
         return self
 
     def cdf(self, x):
-        assert torch.all(torch.logical_and(x >= 0, x <= 1)), 'All inputs should be between 0 and 1'
+        assert torch.all(
+            torch.logical_and(x >= 0, x <= 1)
+        ), "All inputs should be between 0 and 1"
         bin_idx = self._get_bin_idx(x)
         # Linear interpolate within the selected bin
         return self.bin_scale_[bin_idx] * x + self.bin_shift_[bin_idx]
 
     def icdf(self, x):
-        assert torch.all(torch.logical_and(x >= 0, x <= 1)), 'All inputs should be between 0 and 1'
+        assert torch.all(
+            torch.logical_and(x >= 0, x <= 1)
+        ), "All inputs should be between 0 and 1"
         bin_idx = self._get_inverse_bin_idx(x)
         # Linear interpolate within the selected bin
         return (x - self.bin_shift_[bin_idx]) / self.bin_scale_[bin_idx]
@@ -161,15 +188,23 @@ class TorchUnitHistogram():
         return torch.log(self.bin_scale_[bin_idx])
 
     def _get_bin_idx(self, x):
-        return torch.floor(x.detach() * self.n_bins).clamp(0, self.n_bins - 1).type(torch.long)
+        return (
+            torch.floor(x.detach() * self.n_bins)
+            .clamp(0, self.n_bins - 1)
+            .type(torch.long)
+        )
 
     def _get_inverse_bin_idx(self, x):
         bin_idx = -torch.ones_like(x, dtype=torch.long)
-        for ii, (left_edge, right_edge) in enumerate(zip(self.cdf_on_edges_[:-1], self.cdf_on_edges_[1:])):
+        for ii, (left_edge, right_edge) in enumerate(
+            zip(self.cdf_on_edges_[:-1], self.cdf_on_edges_[1:])
+        ):
             if ii == self.n_bins - 1:
                 # Include right edge
                 bin_idx[torch.logical_and(x >= left_edge, x <= right_edge)] = ii
             else:
                 bin_idx[torch.logical_and(x >= left_edge, x < right_edge)] = ii
-        assert torch.all(torch.logical_and(bin_idx >= 0, bin_idx < self.n_bins)), 'Bin indices incorrect'
+        assert torch.all(
+            torch.logical_and(bin_idx >= 0, bin_idx < self.n_bins)
+        ), "Bin indices incorrect"
         return bin_idx

@@ -1,6 +1,7 @@
 import shap
 import numpy as np
 
+
 class ShiftExplainer:
     def __init__(self, model):
         self.model = model
