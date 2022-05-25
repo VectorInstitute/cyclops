@@ -192,14 +192,15 @@ def filter_upto_window(
     return data_filtered
 
 
-def gather_events_into_single_bucket(
+def aggregate_events_into_single_bucket(
     data: pd.DataFrame, aggregator: Aggregator
 ) -> pd.DataFrame:
     """Gather events into single bucket.
 
     If aggregation window and bucket size are the same, then
     all events fall into the same bucket, and hence instead of a
-    time-series, a single feature value per event is gathered.
+    time-series, all event values are aggregated to result in a single value
+    per feature.
 
     Parameters
     ----------
@@ -306,18 +307,18 @@ def restrict_events_by_timestamp(
     start=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
     stop=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
 )
-def gather_event_features(
+def aggregate_events(
     data: pd.DataFrame,
     aggregator: Aggregator,
     start: Optional[pd.DataFrame] = None,
     stop: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
-    """Gather events from encounters into time-series features.
+    """Aggregate events into equally spaced buckets.
 
     All the event data is grouped based on encounters. For each
     encounter, the number of timesteps is determined, and the
     event value for each event belonging to a timestep
-    is gathered accordingly to create a DataFrame of features,
+    is aggregated accordingly to create a DataFrame of features,
     where the number of feature columns is equal to number of
     event names, e.g. lab tests + vital measurements. The features
     DataFrame is then indexable using encounter_id and timestep.
@@ -357,7 +358,7 @@ def gather_event_features(
 
     # All events are placed in a single bucket, hence not a time-series.
     if aggregator.window == aggregator.bucket_size:
-        return gather_events_into_single_bucket(data, aggregator)
+        return aggregate_events_into_single_bucket(data, aggregator)
 
     num_timesteps = math.floor(aggregator.window / aggregator.bucket_size)
 
@@ -477,10 +478,10 @@ def infer_statics(
 
 
 @time_function
-def gather_statics(
+def aggregate_statics(
     data: pd.DataFrame, groupby_cols: Union[str, List[str]] = ENCOUNTER_ID
 ) -> List[str]:
-    """Gather unique values from static columns (see infer_statics function).
+    """Aggregate unique values from static columns (see infer_statics function).
 
     Parameters
     ----------
