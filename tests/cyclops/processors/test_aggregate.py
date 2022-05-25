@@ -229,6 +229,13 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     test_aggregate_events_input,
 ):
     """Test aggregate_events function."""
+    # Test initializations of Aggregator.
+    with pytest.raises(NotImplementedError):
+        agg = Aggregator(
+            aggfunc="donkey", bucket_size=4, window=20, start_at_admission=True
+        )
+    agg = Aggregator(aggfunc=np.mean, bucket_size=4, window=20, start_at_admission=True)
+
     agg = Aggregator(aggfunc=MEAN, bucket_size=4, window=20, start_at_admission=True)
     res, _ = aggregate_events(test_aggregate_events_input, agg)
 

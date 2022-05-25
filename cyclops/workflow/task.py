@@ -14,11 +14,11 @@ from cyclops import config
 from cyclops.constants import MIMIC
 from cyclops.processors.column_names import EVENT_NAME, EVENT_TIMESTAMP, EVENT_VALUE
 from cyclops.processors.constants import EMPTY_STRING, UNDERSCORE
-from cyclops.processors.events import normalize_events
+from cyclops.processors.events import normalise_events
 from cyclops.processors.util import has_columns
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
-from cyclops.workflow.constants import NORMALIZE, QUERY
+from cyclops.workflow.constants import NORMALISE, QUERY
 from cyclops.workflow.queries import QUERY_CATELOG
 
 # Logging.
@@ -85,15 +85,15 @@ class QueryTask(BaseTask):
 
 @inherits(BaseTask)
 class NormalizeEventsTask(BaseTask):
-    """Clean and normalize event data task."""
+    """Clean and normalise event data task."""
 
     def requires(self) -> luigi.Task:
         """Require that some queried data through cyclops.query API is available."""
         return QueryTask(config_path=self.config_path, output_folder=self.output_folder)
 
     def run(self) -> None:
-        """Run normalize event data task."""
-        LOGGER.info("Running normalize events task!")
+        """Run normalise event data task."""
+        LOGGER.info("Running normalise events task!")
         cfg = self.read_config()
         query_output_files = glob.glob(
             os.path.join(cfg.output_folder, QUERY + UNDERSCORE + "*.gzip")
@@ -101,21 +101,21 @@ class NormalizeEventsTask(BaseTask):
         for query_output_file in query_output_files:
             dataframe = pd.read_parquet(query_output_file)
             if has_columns(dataframe, [EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP]):
-                dataframe = normalize_events(dataframe, filter_recognised=True)
+                dataframe = normalise_events(dataframe, filter_recognised=True)
                 file_name = os.path.splitext(
                     os.path.basename(query_output_file).replace(
                         QUERY + UNDERSCORE, EMPTY_STRING
                     )
                 )[0]
                 save_dataframe(
-                    dataframe, cfg.output_folder, file_name, prefix=NORMALIZE
+                    dataframe, cfg.output_folder, file_name, prefix=NORMALISE
                 )
 
     def output(self):
         """Query data saved as parquet files."""
         cfg = self.read_config()
         output_files = glob.glob(
-            os.path.join(cfg.output_folder, NORMALIZE + UNDERSCORE + "*.gzip")
+            os.path.join(cfg.output_folder, NORMALISE + UNDERSCORE + "*.gzip")
         )
 
         yield [luigi.LocalTarget(output_file) for output_file in output_files]
