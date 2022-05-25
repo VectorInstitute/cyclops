@@ -27,7 +27,7 @@ from cyclops.processors.string_ops import (
     strip_whitespace,
     to_lower,
 )
-from cyclops.processors.util import assert_has_columns, log_counts_step
+from cyclops.processors.util import assert_has_columns, gather_columns, log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -124,7 +124,7 @@ def convert_to_events(
         cols = [ENCOUNTER_ID, timestamp_col, value_col]
     else:
         cols = [ENCOUNTER_ID, timestamp_col]
-    events = data[cols].copy()
+    events = gather_columns(data, cols)
     if EVENT_VALUE not in events:
         events[EVENT_VALUE] = EMPTY_STRING
     events = events.rename(
@@ -155,6 +155,7 @@ def is_supported(event_name: str) -> bool:
     return event_name not in UNSUPPORTED
 
 
+@assert_has_columns([EVENT_NAME])
 def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
     """Drop events currently not supported for processing.
 
@@ -175,7 +176,8 @@ def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
+@assert_has_columns([EVENT_NAME])
+def normalise_names(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event names.
 
     Perform basic cleaning/house-keeping of event names.
@@ -190,19 +192,20 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalized event names.
+        Output data with normalised event names.
 
     """
     data[EVENT_NAME] = data[EVENT_NAME].apply(remove_text_in_parentheses)
     data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
     log_counts_step(
-        data, "Remove text in parentheses and normalize event names...", columns=True
+        data, "Remove text in parentheses and normalise event names...", columns=True
     )
 
     return data
 
 
-def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
+@assert_has_columns([EVENT_VALUE])
+def normalise_values(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event values.
 
     Perform basic cleaning/house-keeping of event values.
@@ -217,7 +220,7 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalized event values.
+        Output data with normalised event values.
 
     """
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(
@@ -245,7 +248,8 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
+@assert_has_columns([EVENT_VALUE_UNIT])
+def normalise_units(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event value units.
 
     Perform basic cleaning/house-keeping of event value units.
@@ -259,10 +263,10 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalized event value units.
+        Output data with normalised event value units.
 
     """
-    LOGGER.info("Cleaning units and converting to SI...")
+    LOGGER.info("Normalizing units...")
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(none_to_empty_string)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(to_lower)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(strip_whitespace)
@@ -271,8 +275,8 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
 
 
 @time_function
-def clean_events(data) -> pd.DataFrame:
-    """Pre-process and clean raw event data.
+def normalise_events(data) -> pd.DataFrame:
+    """Pre-process and normalise (clean) raw event data.
 
     Parameters
     ----------
@@ -286,15 +290,16 @@ def clean_events(data) -> pd.DataFrame:
 
     """
     data = data.copy()
+
     log_counts_step(data, "Cleaning raw event data...", columns=True)
     data = data.infer_objects()
-    data = normalize_names(data)
+    data = normalise_names(data)
     data = drop_unsupported(data)
 
     if data[EVENT_VALUE].dtypes == object:
-        data = normalize_values(data)
+        data = normalise_values(data)
 
     if EVENT_VALUE_UNIT in list(data.columns):
-        data = normalize_units(data)
+        data = normalise_units(data)
 
     return data

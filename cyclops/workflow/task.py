@@ -6,12 +6,19 @@ import logging
 import os
 
 import luigi
+import pandas as pd
 from luigi.util import inherits
 
 from codebase_ops import get_log_file_path
 from cyclops import config
 from cyclops.constants import MIMIC
+from cyclops.processors.column_names import EVENT_NAME, EVENT_TIMESTAMP, EVENT_VALUE
+from cyclops.processors.constants import EMPTY_STRING, UNDERSCORE
+from cyclops.processors.events import normalise_events
+from cyclops.processors.util import has_columns
+from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
+from cyclops.workflow.constants import NORMALISE, QUERY
 from cyclops.workflow.queries import QUERY_CATELOG
 
 # Logging.
@@ -22,15 +29,15 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 class BaseTask(luigi.Task):
     """Base task class."""
 
-    artifact_folder = luigi.Parameter()
     config_path = luigi.Parameter()
+    output_folder = luigi.Parameter(default=None)
 
-    def create_artifact_folder(self) -> None:
-        """Create folder where artifacts from running task are stored."""
-        os.makedirs(self.artifact_folder, exist_ok=True)
+    def create_output_folder(self) -> None:
+        """Create folder where output files from running task are stored."""
+        os.makedirs(self.output_folder, exist_ok=True)
 
     def read_config(self) -> argparse.Namespace:
-        """Read in config from config_path.
+        """Read in config from config_path, override params with luigi input params.
 
         Returns
         -------
@@ -38,33 +45,85 @@ class BaseTask(luigi.Task):
             Configuration stored in object.
 
         """
-        return config.read_config(self.config_path)
+        cfg = config.read_config(self.config_path)
+        if self.output_folder:
+            cfg.output_folder = self.output_folder
+
+        return cfg
 
 
 @inherits(BaseTask)
 class QueryTask(BaseTask):
     """Data querying task."""
 
-    def run(self):
+    def run(self) -> None:
         """Run querying task."""
         LOGGER.info("Running query task!")
-        self.read_config()
-        query_gen_fn = QUERY_CATELOG["example_mimic_query"]
+        cfg = self.read_config()
+
+        if cfg.query_fn:
+            query_gen_fn = QUERY_CATELOG[cfg.query_fn]
+        else:
+            # Implement QueryBuilder.
+            return None
         for query_name, query_interface in query_gen_fn():
             query_interface.run()
-            query_interface.save(folder_path=self.artifact_folder, file_name=query_name)
+            query_interface.save(folder_path=cfg.output_folder, file_name=query_name)
             query_interface.clear_data()
+
+        return None
 
     def output(self):
         """Query data saved as parquet files."""
-        output_files = glob.glob(os.path.join(self.artifact_folder, "*.gzip"))
+        cfg = self.read_config()
+        output_files = glob.glob(
+            os.path.join(cfg.output_folder, QUERY + UNDERSCORE + "*.gzip")
+        )
+
+        yield [luigi.LocalTarget(output_file) for output_file in output_files]
+
+
+@inherits(BaseTask)
+class NormalizeEventsTask(BaseTask):
+    """Clean and normalise event data task."""
+
+    def requires(self) -> luigi.Task:
+        """Require that some queried data through cyclops.query API is available."""
+        return QueryTask(config_path=self.config_path, output_folder=self.output_folder)
+
+    def run(self) -> None:
+        """Run normalise event data task."""
+        LOGGER.info("Running normalise events task!")
+        cfg = self.read_config()
+        query_output_files = glob.glob(
+            os.path.join(cfg.output_folder, QUERY + UNDERSCORE + "*.gzip")
+        )
+        for query_output_file in query_output_files:
+            dataframe = pd.read_parquet(query_output_file)
+            if has_columns(dataframe, [EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP]):
+                dataframe = normalise_events(dataframe, filter_recognised=True)
+                file_name = os.path.splitext(
+                    os.path.basename(query_output_file).replace(
+                        QUERY + UNDERSCORE, EMPTY_STRING
+                    )
+                )[0]
+                save_dataframe(
+                    dataframe, cfg.output_folder, file_name, prefix=NORMALISE
+                )
+
+    def output(self):
+        """Query data saved as parquet files."""
+        cfg = self.read_config()
+        output_files = glob.glob(
+            os.path.join(cfg.output_folder, NORMALISE + UNDERSCORE + "*.gzip")
+        )
 
         yield [luigi.LocalTarget(output_file) for output_file in output_files]
 
 
 if __name__ == "__main__":
     luigi.build(
-        [QueryTask(artifact_folder="test", config_path=MIMIC)],
+        [NormalizeEventsTask(config_path=MIMIC, output_folder="_test_workflow")],
         workers=1,
         local_scheduler=False,
     )

@@ -1,7 +1,6 @@
 """A query interface class to wrap database objects and queries."""
 
 import logging
-import os
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Union
 
@@ -12,35 +11,13 @@ from codebase_ops import get_log_file_path
 from cyclops.orm import Database
 from cyclops.processors.column_names import RECOGNISED_QUERY_COLUMNS
 from cyclops.query.util import filter_attributes
+from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
+from cyclops.workflow.constants import QUERY
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
-
-
-def save_queried_dataframe(
-    data: pd.DataFrame, folder_path: str, file_name: str
-) -> None:
-    """Save queried data in Parquet format.
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input dataframe to save.
-    folder_path: str
-        Path to directory where the file can be saved.
-    file_name: str
-        Name of file. Extension will be .gzip.
-
-    """
-    os.makedirs(folder_path, exist_ok=True)
-    save_path = os.path.join(folder_path, file_name + ".gzip")
-    if isinstance(data, pd.DataFrame):
-        LOGGER.info("Saving queried data to %s", save_path)
-        data.to_parquet(save_path)
-    elif data is None:
-        LOGGER.warning("Query not run, no data to save!")
 
 
 @dataclass
@@ -122,7 +99,7 @@ class QueryInterface:
             Name of file. Extension will be .gzip.
 
         """
-        save_queried_dataframe(self.data, folder_path, file_name)
+        save_dataframe(self.data, folder_path, file_name, prefix=QUERY)
 
     def clear_data(self) -> None:
         """Clear data container.
@@ -229,7 +206,7 @@ class QueryInterfaceProcessed:
             Name of file. Extension will be .gzip.
 
         """
-        save_queried_dataframe(self.data, folder_path, file_name)
+        save_dataframe(self.data, folder_path, file_name, prefix=QUERY)
 
     def clear_data(self) -> None:
         """Clear data container.

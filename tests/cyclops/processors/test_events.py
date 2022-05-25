@@ -12,40 +12,24 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
 )
-from cyclops.processors.events import clean_events, combine_events, convert_to_events
+from cyclops.processors.events import (
+    combine_events,
+    convert_to_events,
+    normalise_events,
+)
 
 
 @pytest.fixture
-def test_event_data_normalized():
-    """Create event data test input with normalized event values."""
+def test_event_data_normalised():
+    """Create event data test input with normalised event values."""
     input_ = pd.DataFrame(
         index=[0, 1, 2, 4],
-        columns=[ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT],
+        columns=[ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT, "dummy"],
     )
-    input_.loc[0] = [
-        "sheep",
-        "test-a",
-        0.3,
-        "unit-a",
-    ]
-    input_.loc[1] = [
-        "cat",
-        "test-b",
-        1.4,
-        "unit-b",
-    ]
-    input_.loc[2] = [
-        "cat",
-        "test-A",
-        1.2,
-        "Unit-a",
-    ]
-    input_.loc[4] = [
-        "dog",
-        "test-c",
-        0,
-        "unit-c",
-    ]
+    input_.loc[0] = ["sheep", "test-a", 0.3, "unit-a", "hi"]
+    input_.loc[1] = ["cat", "test-b", 1.4, "unit-b", "hellow"]
+    input_.loc[2] = ["cat", "test-A", 1.2, "Unit-a", "meow"]
+    input_.loc[4] = ["dog", "test-c", 0, "unit-c", "wuff"]
     return input_
 
 
@@ -66,6 +50,9 @@ def test_combine_events():
     events = combine_events([test_input1, test_input2])
     assert len(events) == 3
     assert events.loc[2][EVENT_NAME] == "eventA"
+
+    events = combine_events([test_input1])
+    assert events.equals(test_input1)
 
 
 def test_convert_to_events():
@@ -96,8 +83,8 @@ def test_convert_to_events():
 
 
 @pytest.fixture
-def test_event_data_unnormalized():
-    """Create event data test input with unnormalized event values."""
+def test_event_data_unnormalised():
+    """Create event data test input with unnormalised event values."""
     input_ = pd.DataFrame(
         index=[0, 1, 2, 4],
         columns=[ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT],
@@ -129,18 +116,18 @@ def test_event_data_unnormalized():
     return input_
 
 
-def test_clean_events(  # pylint: disable=redefined-outer-name
-    test_event_data_unnormalized, test_event_data_normalized
+def test_normalise_events(  # pylint: disable=redefined-outer-name
+    test_event_data_unnormalised, test_event_data_normalised
 ):
-    """Test clean_events fn."""
-    cleaned_events = clean_events(test_event_data_normalized)
+    """Test normalise_events fn."""
+    normalised_events = normalise_events(test_event_data_normalised)
 
-    assert len(cleaned_events[EVENT_NAME].unique()) == 3
-    assert len(cleaned_events[EVENT_VALUE_UNIT].unique()) == 3
-    assert "test-a" in list(cleaned_events[EVENT_NAME])
-    assert "unit-a" in list(cleaned_events[EVENT_VALUE_UNIT])
+    assert len(normalised_events[EVENT_NAME].unique()) == 3
+    assert len(normalised_events[EVENT_VALUE_UNIT].unique()) == 3
+    assert "test-a" in list(normalised_events[EVENT_NAME])
+    assert "unit-a" in list(normalised_events[EVENT_VALUE_UNIT])
 
-    cleaned_events = clean_events(test_event_data_unnormalized)
-    assert cleaned_events[EVENT_VALUE][0] == 1.0
-    assert cleaned_events[EVENT_VALUE][1] == 1.4
-    assert cleaned_events[EVENT_VALUE][2] == 1.2
+    normalised_events = normalise_events(test_event_data_unnormalised)
+    assert normalised_events[EVENT_VALUE][0] == 1.0
+    assert normalised_events[EVENT_VALUE][1] == 1.4
+    assert normalised_events[EVENT_VALUE][2] == 1.2
