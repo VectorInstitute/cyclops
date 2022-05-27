@@ -10,10 +10,8 @@ from cyclops.processors.aggregate import (
     Aggregator,
     _aggregate_events_into_single_bucket,
     aggregate_events,
-    aggregate_statics,
     filter_upto_window,
     get_earliest_ts_encounter,
-    infer_statics,
     restrict_events_by_timestamp,
 )
 from cyclops.processors.column_names import (
@@ -106,22 +104,6 @@ def test_aggregate_events_input():
 
 
 @pytest.fixture
-def test_statics_input():
-    """Input dataframe to test infer_statics fn."""
-    input_ = pd.DataFrame(
-        index=list(range(4)),
-        columns=[ENCOUNTER_ID, "B", "C", "D", "E"],
-    )
-    input_.loc[0] = ["cat", np.nan, "0", 0, "c"]
-    input_.loc[1] = ["cat", 2, "1", 1, np.nan]
-    input_.loc[2] = ["sheep", 6, "0", 0, "s"]
-    input_.loc[3] = ["sheep", np.nan, "0", 0, "s"]
-    input_.loc[4] = ["donkey", 3, "1", 1, np.nan]
-
-    return input_
-
-
-@pytest.fixture
 def test_restrict_events_by_timestamp_start_input():
     """Create a restrict_events_by_timestamp start DataFrame input."""
     date1 = datetime(2022, 11, 3, hour=13)
@@ -143,28 +125,6 @@ def test_restrict_events_by_timestamp_stop_input():
 
     columns = [ENCOUNTER_ID, RESTRICT_TIMESTAMP]
     return pd.DataFrame(data, columns=columns)
-
-
-def test_infer_statics(  # pylint: disable=redefined-outer-name
-    test_statics_input,
-):
-    """Test infer_statics fn."""
-    static_columns = infer_statics(test_statics_input)
-    assert set(static_columns) == set([ENCOUNTER_ID, "B", "E"])
-
-
-def test_aggregate_statics(  # pylint: disable=redefined-outer-name
-    test_statics_input,
-):
-    """Test aggregate_statics function."""
-    statics = aggregate_statics(test_statics_input)
-
-    assert statics["B"].loc["cat"] == 2
-    assert statics["B"].loc["donkey"] == 3
-    assert statics["B"].loc["sheep"] == 6
-    assert statics["E"].loc["cat"] == "c"
-    assert np.isnan(statics["E"].loc["donkey"])
-    assert statics["E"].loc["sheep"] == "s"
 
 
 def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name
