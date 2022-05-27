@@ -5,11 +5,12 @@ from typing import Optional, Union
 import pandas as pd
 
 from cyclops.feature_handler import FeatureHandler
-from cyclops.processors.aggregate import Aggregator, aggregate_events, aggregate_statics
+from cyclops.processors.aggregate import Aggregator, aggregate_events
 from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import normalise_events
 from cyclops.processors.impute import Imputer
+from cyclops.processors.statics import compute_statics
 from cyclops.processors.util import gather_columns, has_columns
 
 
@@ -94,7 +95,7 @@ def featurize(  # pylint: disable=too-many-arguments
                 feature_handler.add_features(diagnoses_features)
 
             feature_handler.add_features(
-                aggregate_statics(dataframe),
+                compute_statics(dataframe),
                 reference_cols=reference_cols,
             )
 
