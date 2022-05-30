@@ -2,9 +2,9 @@
 
 import logging
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Optional, Union
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -34,75 +34,6 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-@dataclass
-class Aggregator:
-    """Aggregation of events to create bucketed temporal data (equally spaced).
-
-    Parameters
-    ----------
-    aggfunc: str or Callable, optional
-        Aggregation function, either passed as function or string where if
-        string, could be ['mean', 'median'].
-    bucket_size: float, optional
-        Size of a single step in the time-series in hours.
-        For example, if 2, temporal data is aggregated into bins of 2 hrs.
-    window: float, optional
-        Window length in hours, to consider for creating time-series.
-        For example if its 100 hours, then all temporal data upto
-        100 hours for a given encounter is considered. The start time of
-        the time-series by default would be the earliest event recorded for that
-        encounter, for example the first lab test. It can also be the admission
-        time or a custom timestamp if provided.
-    start_at_admission: bool, optional
-        Flag to say if the window should start at the time of admission.
-    start_window_ts: datetime.datetime, optional
-        Specific time from which the window should start.
-
-    """
-
-    aggfunc: Union[str, Callable] = MEAN
-    bucket_size: int = 1
-    window: int = 24
-    start_at_admission: bool = False
-    start_window_ts: Optional[datetime] = None
-
-    def __post_init__(self):
-        """Process aggregator arguments."""
-        self.aggfunc = self._get_aggfunc()
-
-    def _get_aggfunc(self) -> Callable:
-        """Return an aggregation function.
-
-        Given a function or string, convert a string to an aggfunc if
-        recognized. Otherwise, simply return the same Callable object.
-
-        Parameters
-        ----------
-        strategy: str, optional
-            Strategy for aggregation, options are ['mean', 'median']
-
-        Returns
-        -------
-        Callable
-            The aggregation function.
-
-        Raises
-        ------
-        NotImplementedError
-            Asserts if supplied input strategy option is not recognised (implemented).
-
-        """
-        if isinstance(self.aggfunc, str):
-            if self.aggfunc == MEAN:
-                return np.mean
-            if self.aggfunc == MEDIAN:
-                return np.median
-
-            raise NotImplementedError(f"Provided {self.aggfunc} is not a valid one!")
-
-        return self.aggfunc
-
-
 @assert_has_columns([ENCOUNTER_ID, EVENT_TIMESTAMP])
 def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
     """Get the timestamp of the earliest event for an encounter.
@@ -127,105 +58,6 @@ def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
     ]
 
     return earliest_ts
-
-
-@time_function
-@assert_has_columns([EVENT_TIMESTAMP, ENCOUNTER_ID, ADMIT_TIMESTAMP])
-def filter_upto_window(
-    data: pd.DataFrame,
-    window: int = 24,
-    start_at_admission: bool = False,
-    start_window_ts: datetime = None,
-) -> pd.DataFrame:
-    """Filter data based on window value.
-
-    For e.g. if window is 24 hrs, then all data for the encounter
-    upto after 24 hrs after the first event timestamp are considered. If
-    'start_at_admission' is True, the all events before admission are dropped.
-    Optionally, a start timestamp can be provided as the starting point to the
-    window.
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Data before filtering.
-    window: int, optional
-        Window (no. of hrs) upto after admission to consider.
-    start_at_admission: bool, optional
-        Flag to say if the window should start at the time of admission.
-    start_window_ts: datetime.datetime, optional
-        Specific time from which the window should start.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Filtered data frame, with aggregates collected within window.
-
-    Raises
-    ------
-    ValueError
-        Incase user specifies both 'start_at_admission' and 'start_window_ts',
-        an error is raised.
-
-    """
-    if start_at_admission and start_window_ts:
-        raise ValueError("Can only have a unique starting point for window!")
-
-    data_filtered = data.copy()
-    sample_time = data_filtered[EVENT_TIMESTAMP]
-
-    if start_at_admission:
-        start_time = data_filtered[ADMIT_TIMESTAMP]
-    if start_window_ts:
-        start_time = start_window_ts
-    else:
-        start_time = get_earliest_ts_encounter(
-            data_filtered[[ENCOUNTER_ID, EVENT_TIMESTAMP]]
-        )
-        start_time = start_time[data_filtered[ENCOUNTER_ID]].reset_index()
-        start_time = start_time[EVENT_TIMESTAMP]
-        start_time.index = sample_time.index
-
-    data_filtered = data_filtered.loc[sample_time >= start_time]
-    window_condition = (sample_time - start_time) / pd.Timedelta(hours=1)
-    data_filtered = data_filtered.loc[window_condition <= window]
-
-    return data_filtered
-
-
-def _aggregate_events_into_single_bucket(
-    data: pd.DataFrame, aggregator: Aggregator
-) -> pd.DataFrame:
-    """Gather events into single bucket.
-
-    If aggregation window and bucket size are the same, then
-    all events fall into the same bucket, and hence instead of a
-    time-series, all event values are aggregated to result in a single value
-    per feature.
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input data.
-    aggregation_strategy: str
-        Aggregation strategy within bucket.
-
-    Returns
-    -------
-    tuple:
-        tuple with Processed event features, and None.
-
-    """
-    features = pd.pivot_table(
-        data,
-        values=EVENT_VALUE,
-        index=ENCOUNTER_ID,
-        columns=[EVENT_NAME],
-        aggfunc=aggregator.aggfunc,
-        dropna=False,
-    )
-
-    return features, None
 
 
 @assert_has_columns(
@@ -302,139 +134,316 @@ def restrict_events_by_timestamp(
     return data
 
 
-@time_function
-@assert_has_columns(
-    [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP],
-    start=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
-    stop=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
-)
-def aggregate_events(
-    data: pd.DataFrame,
-    aggregator: Aggregator,
-    start: Optional[pd.DataFrame] = None,
-    stop: Optional[pd.DataFrame] = None,
-) -> pd.DataFrame:
-    """Aggregate events into equally spaced buckets.
-
-    All the event data is grouped based on encounters. For each
-    encounter, the number of timesteps is determined, and the
-    event value for each event belonging to a timestep
-    is aggregated accordingly to create a DataFrame of features,
-    where the number of feature columns is equal to number of
-    event names, e.g. lab tests + vital measurements. The features
-    DataFrame is then indexable using encounter_id and timestep.
-    If 'aggregator.window' and 'aggregator.bucket_size' are the same,
-    a faster groupby, since the result is a single feature value (i.e. single
-    timestep) and not a time-series.
+@dataclass
+class Aggregator:
+    """Aggregation of events to create bucketed temporal data (equally spaced).
 
     Parameters
     ----------
-    data: pandas.DataFrame
-        Input data.
-    aggregator: cyclops.processor.Aggregator
-        Aggregation options.
-    start: pandas.DataFrame or None
-        Restrict timestamps before the start time for a given ENCOUNTER_ID.
-    stop: pandas.DataFrame or None
-        Restrict timestamps after the stop time for a given ENCOUNTER_ID.
-
-    Returns
-    -------
-    tuple:
-        tuple with Processed event features (pandas.DataFrame) and aggregation
-        info like count of values in a bucket, fraction missing (pandas.DataFrame).
+    aggfunc: str or Callable, optional
+        Aggregation function, either passed as function or string where if
+        string, could be ['mean', 'median'].
+    bucket_size: float, optional
+        Size of a single step in the time-series in hours.
+        For example, if 2, temporal data is aggregated into bins of 2 hrs.
+    window: float, optional
+        Window length in hours, to consider for creating time-series.
+        For example if its 100 hours, then all temporal data upto
+        100 hours for a given encounter is considered. The start time of
+        the time-series by default would be the earliest event recorded for that
+        encounter, for example the first lab test. It can also be the admission
+        time or a custom timestamp if provided.
+    start_at_admission: bool, optional
+        Flag to say if the window should start at the time of admission.
+    start_window_ts: datetime.datetime, optional
+        Specific time from which the window should start.
 
     """
-    log_counts_step(data, "Gathering event features...", columns=True)
 
-    data = restrict_events_by_timestamp(data, start, stop)
+    aggfunc: Union[str, Callable] = MEAN
+    bucket_size: int = 1
+    window: int = 24
+    start_at_admission: bool = False
+    start_window_ts: Optional[datetime] = None
+    meta: Dict[str, pd.DataFrame] = field(default_factory=dict)
 
-    data = filter_upto_window(
-        data,
-        window=aggregator.window,
-        start_at_admission=aggregator.start_at_admission,
-        start_window_ts=aggregator.start_window_ts,
-    )
-    log_counts_step(data, "Filtering events within window...", columns=True)
+    def __post_init__(self) -> None:
+        """Process aggregator arguments.
 
-    # All events are placed in a single bucket, hence not a time-series.
-    if aggregator.window == aggregator.bucket_size:
-        return _aggregate_events_into_single_bucket(data, aggregator)
+        Raises
+        ------
+        ValueError
+            Incase user specifies both 'start_at_admission' and 'start_window_ts',
+            an error is raised.
 
-    num_timesteps = math.floor(aggregator.window / aggregator.bucket_size)
+        """
+        if self.start_at_admission and self.start_window_ts:
+            raise ValueError("Can only have a unique starting point for window!")
 
-    def fill_missing_range(data, col, range_from, range_to, fill_with=np.nan):
-        return (
-            data.merge(
-                how="right",
-                on=col,
-                right=pd.DataFrame({col: np.arange(range_from, range_to)}),
+        self.aggfunc = self._get_aggfunc()
+
+    def _get_aggfunc(self) -> Callable:
+        """Return an aggregation function.
+
+        Given a function or string, convert a string to an aggfunc if
+        recognized. Otherwise, simply return the same Callable object.
+
+        Parameters
+        ----------
+        strategy: str, optional
+            Strategy for aggregation, options are ['mean', 'median']
+
+        Returns
+        -------
+        Callable
+            The aggregation function.
+
+        Raises
+        ------
+        NotImplementedError
+            Asserts if supplied input strategy option is not recognised (implemented).
+
+        """
+        if isinstance(self.aggfunc, str):
+            if self.aggfunc == MEAN:
+                return np.mean
+            if self.aggfunc == MEDIAN:
+                return np.median
+
+            raise NotImplementedError(f"Provided {self.aggfunc} is not a valid one!")
+
+        return self.aggfunc
+
+    @assert_has_columns([EVENT_TIMESTAMP, ENCOUNTER_ID, ADMIT_TIMESTAMP])
+    def filter_upto_window(
+        self,
+        data: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """Filter data based on window value.
+
+        For e.g. if window is 24 hrs, then all data for the encounter
+        upto after 24 hrs after the first event timestamp are considered. If
+        'start_at_admission' is True, the all events before admission are dropped.
+        Optionally, a start timestamp can be provided as the starting point to the
+        window.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            Data before filtering.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Filtered data frame, with aggregates collected within window.
+
+        """
+        data_filtered = data.copy()
+        sample_time = data_filtered[EVENT_TIMESTAMP]
+
+        if self.start_at_admission:
+            start_time = data_filtered[ADMIT_TIMESTAMP]
+        if self.start_window_ts:
+            start_time = self.start_window_ts
+        else:
+            start_time = get_earliest_ts_encounter(
+                data_filtered[[ENCOUNTER_ID, EVENT_TIMESTAMP]]
             )
-            .sort_values(by=col)
-            .reset_index()
-            .fillna(fill_with)
-            .drop(["index"], axis=1)
+            start_time = start_time[data_filtered[ENCOUNTER_ID]].reset_index()
+            start_time = start_time[EVENT_TIMESTAMP]
+            start_time.index = sample_time.index
+
+        data_filtered = data_filtered.loc[sample_time >= start_time]
+        window_condition = (sample_time - start_time) / pd.Timedelta(hours=1)
+        data_filtered = data_filtered.loc[window_condition <= self.window]
+
+        return data_filtered
+
+    @assert_has_columns([ENCOUNTER_ID, EVENT_VALUE, EVENT_NAME])
+    def aggregate_events_into_single_bucket(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Gather events into single bucket.
+
+        If aggregation window and bucket size are the same, then
+        all events fall into the same bucket, and hence instead of a
+        time-series, all event values are aggregated to result in a single value
+        per feature.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            Input data.
+
+        Returns
+        -------
+        tuple:
+            tuple with Processed event features, and None.
+
+        """
+        features = pd.pivot_table(
+            data,
+            values=EVENT_VALUE,
+            index=ENCOUNTER_ID,
+            columns=[EVENT_NAME],
+            aggfunc=self.aggfunc,
+            dropna=False,
         )
 
-    def process_event(group):
-        event_name = group[EVENT_NAME].iloc[0]
-        group.drop(columns=[ENCOUNTER_ID, EVENT_NAME], axis=1)
+        return features, None
 
-        # ADD IMPUTATION METHOD.
+    def aggregate_events(
+        self,
+        data: pd.DataFrame,
+        start: Optional[pd.DataFrame] = None,
+        stop: Optional[pd.DataFrame] = None,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Aggregate events into equally spaced buckets.
 
-        group = group.groupby(TIMESTEP, dropna=False)
+        All the event data is grouped based on encounters. For each
+        encounter, the number of timesteps is determined, and the
+        event value for each event belonging to a timestep
+        is aggregated accordingly to create a DataFrame of features,
+        where the number of feature columns is equal to number of
+        event names, e.g. lab tests + vital measurements. The features
+        DataFrame is then indexable using encounter_id and timestep.
+        If 'aggregator.window' and 'aggregator.bucket_size' are the same,
+        a faster groupby, since the result is a single feature value (i.e. single
+        timestep) and not a time-series.
 
-        nonnull_count = group.agg({EVENT_VALUE: lambda x: x.count()}, dropna=False)
-        nonnull_count.reset_index(inplace=True)
-        nonnull_count.rename(columns={EVENT_VALUE: "nonnull_count"}, inplace=True)
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            Input data.
+        start: pandas.DataFrame or None
+            Restrict timestamps before the start time for a given ENCOUNTER_ID.
+        stop: pandas.DataFrame or None
+            Restrict timestamps after the stop time for a given ENCOUNTER_ID.
 
-        total_count = group.agg({EVENT_VALUE: len}, dropna=False)
-        total_count.reset_index(inplace=True)
-        total_count.rename(columns={EVENT_VALUE: "count"}, inplace=True)
+        Returns
+        -------
+        tuple:
+            tuple with Processed event features (pandas.DataFrame) and aggregation
+            info like count of values in a bucket, fraction missing (pandas.DataFrame).
 
-        info = pd.merge(nonnull_count, total_count, how="inner", on=TIMESTEP)
-        info["null_fraction"] = 1 - (info["nonnull_count"] / info["count"])
-        info.drop(columns=["nonnull_count"], inplace=True)
+        """
+        log_counts_step(data, "Gathering event features...", columns=True)
 
-        group = group.agg({EVENT_VALUE: aggregator.aggfunc})
-        group.reset_index(inplace=True)
+        data = restrict_events_by_timestamp(data, start, stop)
 
-        group = fill_missing_range(group, TIMESTEP, 0, num_timesteps)
-        group[EVENT_NAME] = event_name
-        group = pd.merge(group, info, how="left", on=TIMESTEP)
+        data = self.filter_upto_window(
+            data,
+        )
+        log_counts_step(data, "Filtering events within window...", columns=True)
 
-        return group
+        # All events are placed in a single bucket, hence not a time-series.
+        if self.window == self.bucket_size:
+            return self.aggregate_events_into_single_bucket(data)
 
-    def process_encounter(group):
-        # Get timestep (bucket) for the timeseries events.
-        group[TIMESTEP] = (
-            group[EVENT_TIMESTAMP] - min(group[EVENT_TIMESTAMP])
-        ) / pd.Timedelta(hours=aggregator.bucket_size)
-        group[TIMESTEP] = group[TIMESTEP].astype("int")
-        group.drop(EVENT_TIMESTAMP, axis=1, inplace=True)
+        num_timesteps = math.floor(self.window / self.bucket_size)
 
-        group = group.groupby([EVENT_NAME]).apply(process_event)
-        group.reset_index(drop=True, inplace=True)
+        def fill_missing_range(data, col, range_from, range_to, fill_with=np.nan):
+            return (
+                data.merge(
+                    how="right",
+                    on=col,
+                    right=pd.DataFrame({col: np.arange(range_from, range_to)}),
+                )
+                .sort_values(by=col)
+                .reset_index()
+                .fillna(fill_with)
+                .drop(["index"], axis=1)
+            )
 
-        return group
+        def process_event(group):
+            event_name = group[EVENT_NAME].iloc[0]
+            group.drop(columns=[ENCOUNTER_ID, EVENT_NAME], axis=1)
 
-    # Drop unwanted columns.
-    data.drop(ADMIT_TIMESTAMP, axis=1, inplace=True)
+            # ADD IMPUTATION METHOD.
 
-    # Group by encounters and process.
-    grouped = data.groupby([ENCOUNTER_ID]).apply(process_encounter)
-    grouped.reset_index(inplace=True)
-    grouped.drop("level_1", axis=1, inplace=True)
+            group = group.groupby(TIMESTEP, dropna=False)
 
-    features = pd.pivot_table(
-        grouped.drop(columns=["count", "null_fraction"]),
-        values=EVENT_VALUE,
-        index=[ENCOUNTER_ID, TIMESTEP],
-        columns=[EVENT_NAME],
-        aggfunc=aggregator.aggfunc,
-        dropna=False,
+            nonnull_count = group.agg({EVENT_VALUE: lambda x: x.count()}, dropna=False)
+            nonnull_count.reset_index(inplace=True)
+            nonnull_count.rename(columns={EVENT_VALUE: "nonnull_count"}, inplace=True)
+
+            total_count = group.agg({EVENT_VALUE: len}, dropna=False)
+            total_count.reset_index(inplace=True)
+            total_count.rename(columns={EVENT_VALUE: "count"}, inplace=True)
+
+            info = pd.merge(nonnull_count, total_count, how="inner", on=TIMESTEP)
+            info["null_fraction"] = 1 - (info["nonnull_count"] / info["count"])
+            info.drop(columns=["nonnull_count"], inplace=True)
+
+            group = group.agg({EVENT_VALUE: self.aggfunc})
+            group.reset_index(inplace=True)
+
+            group = fill_missing_range(group, TIMESTEP, 0, num_timesteps)
+            group[EVENT_NAME] = event_name
+            group = pd.merge(group, info, how="left", on=TIMESTEP)
+
+            return group
+
+        def process_encounter(group):
+            # Get timestep (bucket) for the timeseries events.
+            group[TIMESTEP] = (
+                group[EVENT_TIMESTAMP] - min(group[EVENT_TIMESTAMP])
+            ) / pd.Timedelta(hours=self.bucket_size)
+            group[TIMESTEP] = group[TIMESTEP].astype("int")
+            group.drop(EVENT_TIMESTAMP, axis=1, inplace=True)
+
+            group = group.groupby([EVENT_NAME]).apply(process_event)
+            group.reset_index(drop=True, inplace=True)
+
+            return group
+
+        # Drop unwanted columns.
+        data.drop(ADMIT_TIMESTAMP, axis=1, inplace=True)
+
+        # Group by encounters and process.
+        grouped = data.groupby([ENCOUNTER_ID]).apply(process_encounter)
+        grouped.reset_index(inplace=True)
+        grouped.drop("level_1", axis=1, inplace=True)
+
+        features = pd.pivot_table(
+            grouped.drop(columns=["count", "null_fraction"]),
+            values=EVENT_VALUE,
+            index=[ENCOUNTER_ID, TIMESTEP],
+            columns=[EVENT_NAME],
+            aggfunc=self.aggfunc,
+            dropna=False,
+        )
+
+        grouped.dropna(inplace=True)
+
+        return features, grouped
+
+    @time_function
+    @assert_has_columns(
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP],
+        start=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+        stop=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
     )
+    def __call__(
+        self,
+        data: pd.DataFrame,
+        start: Optional[pd.DataFrame] = None,
+        stop: Optional[pd.DataFrame] = None,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Aggregate events into equally spaced buckets.
 
-    grouped.dropna(inplace=True)
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            Input data.
+        start: pandas.DataFrame or None
+            Restrict timestamps before the start time for a given ENCOUNTER_ID.
+        stop: pandas.DataFrame or None
+            Restrict timestamps after the stop time for a given ENCOUNTER_ID.
 
-    return features, grouped
+        Returns
+        -------
+        tuple:
+            tuple with Processed event features (pandas.DataFrame) and aggregation
+            info like count of values in a bucket, fraction missing (pandas.DataFrame).
+
+        """
+        return self.aggregate_events(data, start=start, stop=stop)
