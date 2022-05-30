@@ -5,7 +5,7 @@ from typing import Optional, Union
 import pandas as pd
 
 from cyclops.feature_handler import FeatureHandler
-from cyclops.processors.aggregate import Aggregator, aggregate_events
+from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import normalise_events
@@ -102,7 +102,7 @@ def featurize(  # pylint: disable=too-many-arguments
     if temporal_data:
         for dataframe in temporal_data:
             dataframe = normalise_events(dataframe)
-            temporal_features, _ = aggregate_events(dataframe, aggregator=aggregator)
+            temporal_features, _ = aggregator(dataframe)
             feature_handler.add_features(temporal_features)
 
     feature_handler.impute_features(

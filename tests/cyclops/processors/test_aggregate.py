@@ -8,9 +8,6 @@ import pytest
 
 from cyclops.processors.aggregate import (
     Aggregator,
-    _aggregate_events_into_single_bucket,
-    aggregate_events,
-    filter_upto_window,
     get_earliest_ts_encounter,
     restrict_events_by_timestamp,
 )
@@ -129,37 +126,30 @@ def test_restrict_events_by_timestamp_stop_input():
 
 def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name
     """Test filter_upto_window fn."""
-    filtered_df = filter_upto_window(test_input)
+    aggregator = Aggregator()
+    filtered_df = aggregator.filter_upto_window(test_input)
     assert "dog" not in filtered_df[ENCOUNTER_ID]
-    filtered_df = filter_upto_window(test_input, start_at_admission=True)
+    aggregator = Aggregator(start_at_admission=True)
+    filtered_df = aggregator.filter_upto_window(test_input)
     assert "dog" not in filtered_df[ENCOUNTER_ID] and "3" not in filtered_df["B"]
-    filtered_df = filter_upto_window(
-        test_input, start_window_ts=datetime(2022, 11, 6, 12, 13)
-    )
+    aggregator = Aggregator(start_window_ts=datetime(2022, 11, 6, 12, 13))
+    filtered_df = aggregator.filter_upto_window(test_input)
     assert len(filtered_df) == 1 and "dog" == filtered_df[ENCOUNTER_ID].item()
-    with pytest.raises(ValueError):
-        filtered_df = filter_upto_window(
-            test_input,
-            start_window_ts=datetime(2022, 11, 6, 12, 13),
-            start_at_admission=True,
-        )
 
 
 def test_aggregate_events_into_single_bucket(  # pylint: disable=redefined-outer-name
     test_events_input,
 ):
     """Test aggregate_events_into_single_bucket function."""
-    res, _ = _aggregate_events_into_single_bucket(
-        test_events_input, Aggregator(aggfunc=MEAN)
-    )
+    aggregator = Aggregator(aggfunc=MEAN)
+    res, _ = aggregator.aggregate_events_into_single_bucket(test_events_input)
     assert res.loc[1]["eventA"] == 10.0
     assert np.isnan(res.loc[1]["eventB"])
     assert res.loc[2]["eventA"] == 13.0
     assert res.loc[2]["eventB"] == 13.0
 
-    res, _ = _aggregate_events_into_single_bucket(
-        test_events_input, Aggregator(aggfunc=MEDIAN)
-    )
+    aggregator = Aggregator(aggfunc=MEDIAN)
+    res, _ = aggregator.aggregate_events_into_single_bucket(test_events_input)
     assert res.loc[1]["eventA"] == 10.0
     assert np.isnan(res.loc[1]["eventB"])
     assert res.loc[2]["eventA"] == 12.0
@@ -170,8 +160,8 @@ def test_aggregate_events_single_timestep_case(  # pylint: disable=redefined-out
     test_aggregate_events_input,
 ):
     """Test aggregate_events function."""
-    agg = Aggregator(aggfunc=MEAN, bucket_size=4, window=4)
-    res, _ = aggregate_events(test_aggregate_events_input, agg)
+    aggregtor = Aggregator(aggfunc=MEAN, bucket_size=4, window=4)
+    res, _ = aggregtor.aggregate_events(test_aggregate_events_input)
     assert res["eventA"].iloc[0] == 10
     assert res["eventA"].iloc[1] == 11
 
@@ -191,13 +181,20 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     """Test aggregate_events function."""
     # Test initializations of Aggregator.
     with pytest.raises(NotImplementedError):
-        agg = Aggregator(
+        _ = Aggregator(
             aggfunc="donkey", bucket_size=4, window=20, start_at_admission=True
         )
-    agg = Aggregator(aggfunc=np.mean, bucket_size=4, window=20, start_at_admission=True)
+    _ = Aggregator(aggfunc=np.mean, bucket_size=4, window=20, start_at_admission=True)
 
-    agg = Aggregator(aggfunc=MEAN, bucket_size=4, window=20, start_at_admission=True)
-    res, _ = aggregate_events(test_aggregate_events_input, agg)
+    with pytest.raises(ValueError):
+        _ = Aggregator(
+            start_window_ts=datetime(2022, 11, 6, 12, 13), start_at_admission=True
+        )
+
+    aggregator = Aggregator(
+        aggfunc=MEAN, bucket_size=4, window=20, start_at_admission=True
+    )
+    res, _ = aggregator.aggregate_events(test_aggregate_events_input)
 
     assert res.loc[(1, 0)]["eventA"] == 10.0
     assert np.isnan(res.loc[(1, 0)]["eventB"])
