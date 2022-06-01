@@ -3,12 +3,10 @@
 # pylint: disable=duplicate-code
 
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional
 
-import sqlalchemy
-from sqlalchemy import Integer, extract, func, select
-from sqlalchemy.sql.schema import Table
-from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy import Integer, func, select
+from sqlalchemy.sql.selectable import Subquery
 
 from codebase_ops import get_log_file_path
 from cyclops import config
@@ -17,7 +15,10 @@ from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
+    DATE_OF_DEATH,
     DIAGNOSIS_CODE,
+    DIAGNOSIS_TITLE,
+    DIAGNOSIS_VERSION,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     EVENT_NAME,
@@ -25,24 +26,17 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
     SEX,
-    YEAR,
+    SUBJECT_ID,
 )
-from cyclops.processors.constants import MONTH
+from cyclops.query import process as qp
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.postprocess.mimic import process_mimic_care_units
 from cyclops.query.util import (
-    DBTable,
-    add_interval_to_timestamps,
-    drop_attributes,
-    equals,
-    get_attribute,
-    has_substring,
-    in_,
-    rename_attributes,
-    reorder_attributes,
-    to_datetime_format,
-    to_list,
-    trim_attributes,
+    TableTypes,
+    _to_subquery,
+    assert_table_has_columns,
+    get_column,
+    table_params_to_type,
 )
 from cyclops.utils.log import setup_logging
 
@@ -73,6 +67,7 @@ TABLE_MAP = {
 }
 MIMIC_COLUMN_MAP = {
     "hadm_id": ENCOUNTER_ID,
+    "subject_id": SUBJECT_ID,
     "admittime": ADMIT_TIMESTAMP,
     "dischtime": DISCHARGE_TIMESTAMP,
     "gender": SEX,
@@ -82,460 +77,433 @@ MIMIC_COLUMN_MAP = {
     "valuenum": EVENT_VALUE,
     "charttime": EVENT_TIMESTAMP,
     "icd_code": DIAGNOSIS_CODE,
+    "icd_version": DIAGNOSIS_VERSION,
+    "dod": DATE_OF_DEATH,
 }
 
 
-def get_table(table_name: str) -> QueryInterface:
-    """Get table data.
+def get_table(table_name: str, rename: bool = True) -> Subquery:
+    """Get a table and possibly map columns to have standard names.
 
-    The entire table is wrapped as a query to run.
-
-    Parameters
-    ----------
-    table_name: str
-        Name of the table.
-
-    Returns
-    -------
-    cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
-
-    """
-    if table_name not in TABLE_MAP:
-        raise ValueError("Not a recognised table!")
-    subquery = select(TABLE_MAP[table_name](_db).data).subquery()
-
-    return QueryInterface(_db, subquery)
-
-
-def _map_table_attributes(table_name: str) -> Subquery:
-    """Map queried data attributes into common column names.
-
-    For unifying processing functions across datasets, data
-    attributes are currently mapped to the same name, to allow for processing
-    to recognise them.
+    Standardizing column names allows for for columns to be
+    recognized in downstream processing.
 
     Parameters
     ----------
     table_name: str
         Name of MIMIC table.
+    rename: bool, optional
+        Whether to map the column names
 
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        Query with mapped attributes.
+        Table with mapped columns.
 
     """
-    return rename_attributes(TABLE_MAP[table_name](_db).data, MIMIC_COLUMN_MAP)
+    if table_name not in TABLE_MAP:
+        raise ValueError(f"{table_name} not a recognised table.")
+
+    table = TABLE_MAP[table_name](_db).data
+
+    if rename:
+        table = qp.Rename(MIMIC_COLUMN_MAP, check_exists=False)(table)
+
+    return _to_subquery(table)
 
 
-def patients(
-    years: Optional[Union[int, List[int]]] = None,
-    months: Optional[Union[int, List[int]]] = None,
-    from_date: Optional[str] = None,
-    to_date: Optional[str] = None,
-    process_anchor_year: bool = True,
-) -> QueryInterface:
+def patients(**process_kwargs) -> QueryInterface:
     """Query MIMIC patient data.
 
-    Parameters
-    ----------
-    years: int or list of int, optional
-        Years for which patient encounters are to be filtered.
-    months: int or list of int, optional
-        Months for which patient encounters are to be filtered.
-    from_date: str, optional
-        Gather patients admitted >= from_date in YYYY-MM-DD format.
-    to_date: str, optional
-        Gather patients admitted <= to_date in YYYY-MM-DD format.
-    process_anchor_year : bool, optional
-        Whether to process and include the patient's anchor
-        year, i.e., to infer approximate year of care.
-
-    Returns
-    -------
-    cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+    Other Parameters
+    ----------------
+    sex: str or list of string, optional
+        Specify patient sex (one or multiple).
+    died: bool, optional
+        Specify True to get patients who have died, and False for those who haven't.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
-    patients_table = TABLE_MAP[PATIENTS](_db)
-    admissions_table = TABLE_MAP[ADMISSIONS](_db)
-
-    if not process_anchor_year and years:
-        raise ValueError(
-            "process_anchor_year must be set to True to use years filter correctly!"
-        )
-    if not process_anchor_year and from_date:
-        raise ValueError("process_anchor_year not set, filtering by date won't work!")
-    if not process_anchor_year and to_date:
-        raise ValueError("process_anchor_year not set, filtering by date won't work!")
-
-    if not process_anchor_year:
-        return select(patients_table.data)
+    table = get_table(PATIENTS)
 
     # Process and include patient's anchor year.
-    subquery = select(
-        patients_table.data,
-        (func.substr(patients_table.anchor_year_group, 1, 4).cast(Integer)).label(
+    table = select(
+        table,
+        (func.substr(get_column(table, "anchor_year_group"), 1, 4).cast(Integer)).label(
             "anchor_year_group_start"
         ),
-        (func.substr(patients_table.anchor_year_group, 8, 12).cast(Integer)).label(
-            "anchor_year_group_end"
-        ),
-    ).subquery()
-    subquery = select(
-        subquery,
         (
-            subquery.c.anchor_year_group_start
-            + (subquery.c.anchor_year_group_end - subquery.c.anchor_year_group_start)
+            func.substr(get_column(table, "anchor_year_group"), 8, 12).cast(Integer)
+        ).label("anchor_year_group_end"),
+    ).subquery()
+
+    # Select the middle of the anchor year group as the anchor year
+    table = select(
+        table,
+        (
+            get_column(table, "anchor_year_group_start")
+            + (
+                get_column(table, "anchor_year_group_end")
+                - get_column(table, "anchor_year_group_start")
+            )
             / 2
-        ).label("anchor_year_group_median"),
+        ).label("anchor_year_group_middle"),
     ).subquery()
-    subquery = select(
-        subquery,
-        (subquery.c.anchor_year_group_median - subquery.c.anchor_year).label(
-            "anchor_year_difference"
+
+    table = select(
+        table,
+        (
+            get_column(table, "anchor_year_group_middle")
+            - get_column(table, "anchor_year")
+        ).label("anchor_year_difference"),
+    ).subquery()
+
+    # Shift relevant columns by anchor year difference
+    table = qp.AddColumn("anchor_year", "anchor_year_difference")(table)
+    table = qp.AddDeltaColumns(DATE_OF_DEATH, years="anchor_year_difference")(table)
+
+    # Calculate approximate year of birth
+    table = qp.AddColumn(
+        "anchor_year", "age", negative=True, new_col_labels="birth_year"
+    )(table)
+
+    table = qp.Drop(
+        [
+            "age",
+            "anchor_year",
+            "anchor_year_group",
+            "anchor_year_group_start",
+            "anchor_year_group_end",
+            "anchor_year_group_middle",
+        ]
+    )(table)
+
+    # Reorder nicely.
+    table = qp.Reorder(
+        [SUBJECT_ID, SEX, "birth_year", DATE_OF_DEATH, "anchor_year_difference"]
+    )(table)
+
+    # Process optional operations
+    operations: List[tuple] = [
+        # Must convert to string since CHAR(1) type doesn't recognize equality
+        (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+        (
+            qp.ConditionEquals,
+            [DATE_OF_DEATH, None],
+            {"not_": qp.QAP("died", not_=True)},
         ),
-    ).subquery()
-    subquery = drop_attributes(subquery, ["anchor_year_group"])
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
 
-    # Join with admissions table and add anchor year difference.
-    admissions_subquery = select(admissions_table.data).subquery()
-    subquery = (
-        select(subquery, admissions_subquery)
-        .where(subquery.c.subject_id == admissions_subquery.c.subject_id)
-        .subquery()
-    )
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
-    subquery = add_interval_to_timestamps(
-        subquery,
-        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP],
-        years="anchor_year_difference",
-    )
+    table = qp.process_operations(table, operations, process_kwargs)
 
-    # Filter based on years or months or specific date range (admission time).
-    if years:
-        subquery = (
-            select(subquery)
-            .where(in_(extract(YEAR, subquery.c.admit_timestamp), to_list(years)))
-            .subquery()
-        )
-    if months:
-        subquery = (
-            select(subquery)
-            .where(in_(extract(MONTH, subquery.c.admit_timestamp), to_list(months)))
-            .subquery()
-        )
-    if from_date:
-        subquery = (
-            select(subquery)
-            .where(subquery.c.admit_timestamp >= to_datetime_format(from_date))
-            .subquery()
-        )
-    if to_date:
-        subquery = (
-            select(subquery)
-            .where(subquery.c.admit_timestamp <= to_datetime_format(to_date))
-            .subquery()
-        )
-
-    return QueryInterface(_db, subquery)
+    return QueryInterface(_db, table)
 
 
-def _join_with_patients(
-    patients_table: Union[Select, Subquery, Table, DBTable],
-    table_: Union[Select, Subquery, Table, DBTable],
-) -> QueryInterface:
-    """Join a subquery with MIMIC patient static information.
-
-    Assumes that the query has column 'encounter_id'.
-
-    Parameters
-    ----------
-    patients_table: sqlalchemy.sql.selectable.Select or
-    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or DBTable
-        Patient query table.
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        A query with column encounter_id.
+def diagnoses(**process_kwargs) -> QueryInterface:
+    """Query MIMIC diagnoses.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    diagnosis_versions: int or list of int, optional
+        Get codes having certain ICD versions.
+    diagnosis_substring : str, optional
+        Substring to match in the ICD code.
+    diagnosis_codes : str or list of str, optional
+        Get only the specified ICD codes.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
-    if not hasattr(table_.c, ENCOUNTER_ID) or not hasattr(
-        patients_table.c, ENCOUNTER_ID
-    ):
-        raise ValueError(
-            "Input query table and patients table must have attribute 'encounter_id'."
-        )
+    table = get_table(DIAGNOSES)
 
-    # Join on patients (subject column).
-    subquery = (
-        select(table_, patients_table)
-        .where(table_.c.encounter_id == patients_table.c.encounter_id)
-        .subquery()
-    )
+    # Rename long_title
+    table = qp.Rename({"long_title": DIAGNOSIS_TITLE})(table)
 
-    return QueryInterface(_db, subquery)
+    # Trim whitespace from ICD codes.
+    table = qp.Trim(DIAGNOSIS_CODE)(table)
 
+    # Process optional operations
+    operations: List[tuple] = [
+        (
+            qp.ConditionIn,
+            [DIAGNOSIS_VERSION, qp.QAP("diagnosis_versions")],
+            {"to_int": True},
+        ),
+        (qp.ConditionSubstring, [DIAGNOSIS_TITLE, qp.QAP("diagnosis_substring")], {}),
+        (qp.ConditionIn, [DIAGNOSIS_CODE, qp.QAP("diagnosis_codes")], {"to_str": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
 
-def _diagnoses(
-    version: Optional[int] = None,
-) -> sqlalchemy.sql.selectable.Subquery:
-    """Query MIMIC possible diagnoses.
+    table = qp.process_operations(table, operations, process_kwargs)
 
-    Parameters
-    ----------
-    version: int, optional
-        If specified, restrict ICD codes to this version.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Subquery
-        Constructed subquery, with matched diagnoses.
-
-    """
-    # Get diagnoses.
-    table_ = TABLE_MAP[DIAGNOSES](_db)
-    subquery = select(table_.data).subquery()
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
-
-    # Filter by version.
-    if version:
-        subquery = (
-            select(subquery)
-            .where(equals(subquery.c.icd_version, version, to_int=True))
-            .subquery()
-        )
-
-    # Trim whitespace from icd_codes.
-    subquery = trim_attributes(subquery, [DIAGNOSIS_CODE])
-
-    # Rename long_title to icd_title.
-    subquery = rename_attributes(subquery, {"long_title": "icd_title"})
-
-    # Re-order the columns nicely.
-    subquery = reorder_attributes(
-        subquery, [DIAGNOSIS_CODE, "icd_title", "icd_version"]
-    )
-
-    return subquery
+    return QueryInterface(_db, table)
 
 
-def diagnoses(
-    version: Optional[int] = None,
-    substring: Optional[str] = None,
-    diagnosis_codes: Union[str, List[str]] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patients_table=SUBJECT_ID)
+def patient_diagnoses(
+    patients_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterface:
     """Query MIMIC patient diagnoses.
 
     Parameters
     ----------
-    version : int, optional
-        If specified, restrict ICD codes to this version.
-    substring : str
-        Substring to match in an ICD code.
-    diagnosis_codes : str or list of str
-        The ICD codes to filter.
-    patients: QueryInterface, optional
-        Patient encounters query wrapped, used to join with diagnoses.
+    patients: cyclops.query.util.TableTypes, optional
+        Patient encounters query used to join.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    diagnosis_versions: int or list of int, optional
+        Get codes having certain ICD versions.
+    diagnosis_substring: str, optional
+        Substring to match in the ICD code.
+    diagnosis_codes: str or list of str, optional
+        Get only the specified ICD codes.
 
     """
     # Get patient diagnoses.
-    table_ = TABLE_MAP[PATIENT_DIAGNOSES](_db)
-    subquery = select(table_.data).subquery()
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
+    table = get_table(PATIENT_DIAGNOSES)
 
-    # Filter by version
-    if version:
-        subquery = (
-            select(subquery)
-            .where(equals(subquery.c.icd_version, version, to_int=True))
-            .subquery()
-        )
+    # Trim whitespace from ICD codes.
+    table = qp.Trim(DIAGNOSIS_CODE)(table)
 
-    # Trim whitespace from icd_codes.
-    subquery = trim_attributes(subquery, [DIAGNOSIS_CODE])
+    # If provided, join with a patients table
+    if patients_table is not None:
+        table = qp.Join(patients_table, on=SUBJECT_ID)(table)
 
-    # Get codes.
-    code_subquery = _diagnoses(version=version)
-
-    # Get patient diagnoses, including ICD title.
-    subquery = (
-        select(subquery, code_subquery.c.icd_title)
-        .join(subquery, subquery.c.diagnosis_code == code_subquery.c.diagnosis_code)
-        .subquery()
+    # Get diagnosis codes.
+    diagnoses_table = diagnoses(
+        diagnosis_versions=qp.ckwarg(process_kwargs, "diagnosis_versions"),
+        diagnosis_substring=qp.ckwarg(process_kwargs, "diagnosis_substring"),
+        diagnosis_codes=qp.ckwarg(process_kwargs, "diagnosis_codes"),
+    ).query
+    process_kwargs = qp.remove_kwargs(
+        process_kwargs, ["diagnosis_versions", "diagnosis_substring", "diagnosis_codes"]
     )
 
-    # Filter by substring.
-    if substring:
-        subquery = (
-            select(subquery)
-            .where(has_substring(subquery.c.icd_title, substring, to_str=True))
-            .subquery()
-        )
+    # Include DIAGNOSIS_TITLE in patient diagnoses.
+    table = qp.Join(
+        diagnoses_table,
+        on=[DIAGNOSIS_CODE, DIAGNOSIS_VERSION],
+        join_table_cols=DIAGNOSIS_TITLE,
+    )(table)
 
-    # Filter by ICD codes.
-    if diagnosis_codes:
-        subquery = (
-            select(subquery)
-            .where(in_(subquery.c.diagnosis_code, diagnosis_codes, to_str=True))
-            .subquery()
-        )
-
-    if patients:
-        return _join_with_patients(patients.query, subquery)
-
-    return QueryInterface(_db, subquery)
+    return QueryInterface(_db, table)
 
 
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patients_table=SUBJECT_ID)
 def transfers(
-    encounters: Optional[list] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+    patients_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterfaceProcessed:
     """Get care unit table within a given set of encounters.
 
     Parameters
     ----------
-    encounters : list, optional
-        The encounter IDs on which to filter. If None, consider all encounters.
-    patients: QueryInterface, optional
-        Patient encounters query wrapped, used to join with events.
+    patients_table: cyclops.query.util.TableTypes, optional
+        Patient encounters used to join.
 
     Returns
     -------
     cyclops.query.interface.QueryInterfaceProcessed
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    encounters : list, optional
+        The encounter IDs on which to filter. If None, consider all encounters.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
-    filter_encounters = (
-        lambda query, encounters: query
-        if encounters is None
-        else select(query)
-        .where(in_(get_attribute(query, ENCOUNTER_ID), encounters))
-        .subquery()
-    )
+    table = get_table(TRANSFERS)
 
-    subquery = _map_table_attributes(TRANSFERS)
+    if patients_table is not None:
+        table = qp.Join(patients_table, on=SUBJECT_ID)(table)
 
-    if encounters:
-        subquery = filter_encounters(subquery, encounters)
+        table = qp.AddDeltaColumns(
+            ["intime", "outtime"], years="anchor_year_difference"
+        )(table)
 
-    if patients:
-        subquery = _join_with_patients(patients.query, subquery).query
+    # Process optional operations
+    operations: List[tuple] = [
+        (qp.ConditionIn, [ENCOUNTER_ID, qp.QAP("encounters")], {"to_int": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
 
-    return QueryInterface(_db, subquery)
+    table = qp.process_operations(table, operations, process_kwargs)
+
+    return QueryInterface(_db, table)
 
 
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patients_table=SUBJECT_ID)
 def care_units(
-    encounters: Optional[list] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+    patients_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterfaceProcessed:
     """Get care unit table within a given set of encounters.
 
     Parameters
     ----------
-    encounters : list, optional
-        The encounter IDs on which to filter. If None, consider all encounters.
-    patients: QueryInterface, optional
-        Patient encounters query wrapped, used to join with events.
+    patients_table: cyclops.query.util.TableTypes, optional
+        Patient encounters to join with transfers.
 
     Returns
     -------
     cyclops.query.interface.QueryInterfaceProcessed
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    encounters : int or list of int, optional
+        Get the specific encounter IDs.
 
     """
-    subquery = transfers(encounters=encounters, patients=patients).query
+    table = transfers(
+        patients_table=patients_table,
+        encounters=qp.ckwarg(process_kwargs, "encounters"),
+    ).query
+    process_kwargs = qp.remove_kwargs(process_kwargs, "encounters")
 
     return QueryInterfaceProcessed(
         _db,
-        subquery,
+        table,
         process_fn=process_mimic_care_units,
         process_fn_kwargs={"specific": False},
     )
 
 
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patients_table=SUBJECT_ID)
+def patient_encounters(
+    patients_table: Optional[TableTypes] = None, **process_kwargs
+) -> QueryInterface:
+    """Query MIMIC patient encounters.
+
+    Parameters
+    ----------
+    patients_table: cyclops.query.util.TableTypes, optional
+        Optionally provide a patient table when getting patient encounters.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    before_date: datetime.datetime or str
+        Get patients encounters before some date.
+        If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get patients encounters after some date.
+        If a string, provide in YYYY-MM-DD format.
+    years: int or list of int, optional
+        Get patient encounters by year.
+    months: int or list of int, optional
+        Get patient encounters by month.
+
+    """
+    table = get_table(ADMISSIONS)
+
+    if patients_table is None:
+        patients_table = patients().query
+
+    # Join admissions and patient table
+    table = qp.Join(patients_table, on="subject_id")(table)
+
+    # Update timestamps with anchor year difference
+    table = qp.AddDeltaColumns(
+        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "deathtime"],
+        years="anchor_year_difference",
+    )(table)
+
+    # Extract approximate age at time of admission
+    table = qp.ExtractTimestampComponent(ADMIT_TIMESTAMP, "year", AGE)(table)
+    table = qp.AddColumn(AGE, "birth_year", negative=True)(table)
+    table = qp.ReorderAfter(AGE, SEX)(table)
+
+    # Process optional operations
+    operations: List[tuple] = [
+        (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, ["admit_timestamp", qp.QAP("years")], {}),
+        (qp.ConditionInMonths, ["admit_timestamp", qp.QAP("months")], {}),
+    ]
+
+    table = qp.process_operations(table, operations, process_kwargs)
+
+    return QueryInterface(_db, table)
+
+
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
 def events(
-    category: Optional[str] = None,
-    names: Optional[Union[str, List[str]]] = None,
-    substring: Optional[str] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+    patient_encounters_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterface:
     """Query MIMIC events.
 
     Parameters
     ----------
-    category : str, optional
-        If specified, restrict to this category.
-    names : str or list of str, optional
-        The event names to filter.
-    substring: str, optional
-        Substring to search event names to filter.
-    patients: QueryInterface, optional
-        Patient encounters query wrapped, used to join with events.
+    patient_encounters_table: cyclops.query.util.TableTypes, optional
+        Optionally provide a patient encounter table to join with events.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    categories: str or list of str, optional
+        Restrict to certain categories.
+    event_names: str or list of str, optional
+        Restrict to certain event names.
+    event_name_substring: str, optional
+        Substring to search event names to filter.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
-    table_ = TABLE_MAP[EVENTS](_db)
-    event_labels_table = TABLE_MAP[EVENT_LABELS](_db)
+    table = get_table(EVENTS)
+    event_labels = get_table(EVENT_LABELS)
 
-    subquery = select(table_.data).subquery()
-    subquery = rename_attributes(subquery, MIMIC_COLUMN_MAP)
-    event_labels_subquery = select(event_labels_table.data).subquery()
-    event_labels_subquery = rename_attributes(event_labels_subquery, MIMIC_COLUMN_MAP)
+    table = qp.Join(
+        event_labels, on="itemid", join_table_cols=["category", "event_name"]
+    )(table)
 
-    subquery = (
-        select(
-            subquery,
-            event_labels_subquery.c.category,
-            event_labels_subquery.c.event_name,
-        )
-        .join(
-            event_labels_subquery, subquery.c.itemid == event_labels_subquery.c.itemid
-        )
-        .subquery()
-    )
+    # Process optional operations
+    operations: List[tuple] = [
+        (qp.ConditionIn, ["category", qp.QAP("categories")], {}),
+        (qp.ConditionIn, ["event_name", qp.QAP("event_names")], {}),
+        (qp.ConditionSubstring, ["event_name", qp.QAP("event_name_substring")], {}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
 
-    # Filter by category.
-    if category:
-        subquery = (
-            select(subquery).where(equals(subquery.c.category, category)).subquery()
-        )
-    # Filter by event names.
-    if names:
-        subquery = (
-            select(subquery)
-            .where(in_(subquery.c.event_name, to_list(names), to_str=True))
-            .subquery()
-        )
-    # Filter by event substrings.
-    if substring:
-        subquery = (
-            select(subquery)
-            .where(has_substring(subquery.c.event_name, substring, to_str=True))
-            .subquery()
-        )
+    table = qp.process_operations(table, operations, process_kwargs)
 
-    if patients:
-        subquery = _join_with_patients(patients.query, subquery).query
-        subquery = add_interval_to_timestamps(
-            subquery,
-            [EVENT_TIMESTAMP],
-            years="anchor_year_difference",
-        )
+    # Join on patient encounters
+    if patient_encounters_table is not None:
+        table = qp.Join(
+            patient_encounters_table,
+            on=ENCOUNTER_ID,
+        )(table)
 
-    return QueryInterface(_db, subquery)
+        # Add MIMIC patient-specific time difference to event/store timestamps
+        table = qp.AddDeltaColumns(
+            [EVENT_TIMESTAMP, "storetime"], years="anchor_year_difference"
+        )(table)
+
+    return QueryInterface(_db, table)

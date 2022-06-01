@@ -51,7 +51,7 @@ def is_timestamp_series(series):
 
 
 def has_columns(
-    data: pd.DataFrame, required_columns: list, raise_error: bool = False
+    data: pd.DataFrame, cols: Union[str, List[str]], raise_error: bool = False
 ) -> bool:
     """Check if data has required columns for processing.
 
@@ -59,7 +59,7 @@ def has_columns(
     ----------
     data: pandas.DataFrame
         DataFrame to check.
-    required_columns: list
+    cols: str or list or str
         List of column names that must be present in data.
     raise_error: bool
         Whether to raise a ValueError if there are missing columns.
@@ -70,7 +70,8 @@ def has_columns(
         True if all required columns are present, otherwise False.
 
     """
-    required_set = set(required_columns)
+    cols = to_list(cols)
+    required_set = set(cols)
     columns = set(data.columns)
     present = required_set.issubset(columns)
 
@@ -110,14 +111,14 @@ def assert_has_columns(*args, **kwargs) -> Callable:
         @wraps(func_)
         def wrapper_func(*fn_args, **fn_kwargs) -> Callable:
             # Check only the DataFrame arguments
-            dataframe_fn_args = [i for i in fn_args if isinstance(i, pd.DataFrame)]
+            dataframe_args = [i for i in fn_args if isinstance(i, pd.DataFrame)]
 
-            assert len(args) <= len(dataframe_fn_args)
+            assert len(args) <= len(dataframe_args)
 
             for i, arg in enumerate(args):
                 if arg is None:  # Can specify None to skip over checking a DataFrame
                     continue
-                has_columns(dataframe_fn_args[i], arg, raise_error=True)
+                has_columns(dataframe_args[i], arg, raise_error=True)
 
             for key, required_cols in kwargs.items():
                 # If an optional DataFrame is not provided, it will be skipped

@@ -2,6 +2,7 @@
 
 
 ENCOUNTER_ID = "encounter_id"
+SUBJECT_ID = "subject_id"
 HOSPITAL_ID = "hospital_id"
 ADMIT_TIMESTAMP = "admit_timestamp"
 DISCHARGE_TIMESTAMP = "discharge_timestamp"
@@ -18,10 +19,13 @@ CITY = "city"
 PROVINCE = "province"
 COUNTRY = "country"
 LANGUAGE = "language"
+DATE_OF_DEATH = "dod"
 TOTAL_COST = "total_cost"
 YEAR = "year"
 
 DIAGNOSIS_CODE = "diagnosis_code"
+DIAGNOSIS_TITLE = "diagnosis_title"
+DIAGNOSIS_VERSION = "diagnosis_version"
 DIAGNOSIS_TYPE = "diagnosis_type"
 DIAGNOSIS_TRAJECTORIES = "diagnosis_trajectories"
 

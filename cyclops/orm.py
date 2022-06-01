@@ -3,16 +3,21 @@
 import argparse
 import logging
 import socket
-from typing import Optional, Union
+from typing import Optional
 
 import pandas as pd
 from sqlalchemy import MetaData, create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql.schema import Table
-from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy.sql.selectable import Select
 
 from codebase_ops import get_log_file_path
-from cyclops.query.util import DBMetaclass, DBSchema, DBTable, query_params_to_type
+from cyclops.query.util import (
+    DBMetaclass,
+    DBSchema,
+    DBTable,
+    TableTypes,
+    table_params_to_type,
+)
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -119,18 +124,17 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
             setattr(self, schema_name, schema)
 
     @time_function
-    @query_params_to_type(Select)
+    @table_params_to_type(Select)
     def run_query(
         self,
-        query: Union[Select, Subquery, Table, DBTable],
+        query: TableTypes,
         limit: Optional[int] = None,
     ) -> pd.DataFrame:
         """Run query.
 
         Parameters
         ----------
-        query: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or DBTable
+        query: cyclops.query.util.TableTypes
             Query to run.
         limit: Optional[int]
             Limit query result to limit.
