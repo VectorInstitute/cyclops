@@ -59,6 +59,7 @@ def test_input():
     ]
     input_[EVENT_TIMESTAMP] = pd.to_datetime(input_[EVENT_TIMESTAMP])
     input_[ADMIT_TIMESTAMP] = pd.to_datetime(input_[ADMIT_TIMESTAMP])
+
     return input_
 
 
@@ -75,8 +76,8 @@ def test_events_input():
         [2, "eventA", 16, date1, date3],
         [2, "eventB", 13, date1, date3],
     ]
-
     columns = [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, ADMIT_TIMESTAMP, EVENT_TIMESTAMP]
+
     return pd.DataFrame(data, columns=columns)
 
 
@@ -95,8 +96,8 @@ def test_aggregate_events_input():
         [2, "eventB", 13, date1, date3],
         [2, "eventB", np.nan, date1, date3],
     ]
-
     columns = [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, ADMIT_TIMESTAMP, EVENT_TIMESTAMP]
+
     return pd.DataFrame(data, columns=columns)
 
 
@@ -109,8 +110,8 @@ def test_restrict_events_by_timestamp_start_input():
         [1, date1],
         [2, date3],
     ]
-
     columns = [ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+
     return pd.DataFrame(data, columns=columns)
 
 
@@ -119,22 +120,35 @@ def test_restrict_events_by_timestamp_stop_input():
     """Create a restrict_events_by_timestamp stop DataFrame input."""
     date2 = datetime(2022, 11, 3, hour=14)
     data = [[2, date2]]
-
     columns = [ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+
     return pd.DataFrame(data, columns=columns)
 
 
-def test_filter_upto_window(test_input):  # pylint: disable=redefined-outer-name
-    """Test filter_upto_window fn."""
+def test_compute_start_of_window(test_input):  # pylint: disable=redefined-outer-name
+    """Test compute_start_of_window fn."""
     aggregator = Aggregator()
-    filtered_df = aggregator.filter_upto_window(test_input)
-    assert "dog" not in filtered_df[ENCOUNTER_ID]
+    start_time = aggregator.compute_start_of_window(test_input)
+    assert (
+        start_time.loc[start_time[ENCOUNTER_ID] == "cat"][RESTRICT_TIMESTAMP]
+        == datetime(2022, 11, 3, 8, 5)
+    ).all()
     aggregator = Aggregator(start_at_admission=True)
-    filtered_df = aggregator.filter_upto_window(test_input)
-    assert "dog" not in filtered_df[ENCOUNTER_ID] and "3" not in filtered_df["B"]
-    aggregator = Aggregator(start_window_ts=datetime(2022, 11, 6, 12, 13))
-    filtered_df = aggregator.filter_upto_window(test_input)
-    assert len(filtered_df) == 1 and "dog" == filtered_df[ENCOUNTER_ID].item()
+    start_time = aggregator.compute_start_of_window(test_input)
+    assert (
+        start_time.loc[start_time[ENCOUNTER_ID] == "cat"][RESTRICT_TIMESTAMP]
+        == datetime(2022, 11, 3, 21, 13)
+    ).all()
+    start_window_ts = pd.DataFrame(
+        [["sheep", datetime(2022, 11, 3, 12, 13)]],
+        columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+    )
+    aggregator = Aggregator(start_window_ts=start_window_ts)
+    start_time = aggregator.compute_start_of_window(test_input)
+    assert (
+        start_time.loc[start_time[ENCOUNTER_ID] == "sheep"][RESTRICT_TIMESTAMP]
+        == datetime(2022, 11, 3, 12, 13)
+    ).all()
 
 
 def test_aggregate_events_into_single_bucket(  # pylint: disable=redefined-outer-name
@@ -171,8 +185,14 @@ def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
 ):
     """Test get_earliest_ts_encounter fn."""
     earliest_ts = get_earliest_ts_encounter(test_events_input)
-    assert earliest_ts[1] == datetime(2022, 11, 3, hour=14)
-    assert earliest_ts[2] == datetime(2022, 11, 3, hour=14)
+    assert (
+        earliest_ts.loc[earliest_ts[ENCOUNTER_ID] == 1][EVENT_TIMESTAMP]
+        == datetime(2022, 11, 3, hour=14)
+    ).all()
+    assert (
+        earliest_ts.loc[earliest_ts[ENCOUNTER_ID] == 2][EVENT_TIMESTAMP]
+        == datetime(2022, 11, 3, hour=14)
+    ).all()
 
 
 def test_aggregate_events(  # pylint: disable=redefined-outer-name

@@ -3,7 +3,7 @@
 import logging
 import math
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import timedelta
 from typing import Callable, Dict, Optional, Tuple, Union
 
 import numpy as np
@@ -20,8 +20,10 @@ from cyclops.processors.column_names import (
     TIMESTEP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
+from cyclops.processors.statics import compute_statics
 from cyclops.processors.util import (
     assert_has_columns,
+    gather_columns,
     has_columns,
     is_timestamp_series,
     log_counts_step,
@@ -35,7 +37,7 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
 @assert_has_columns([ENCOUNTER_ID, EVENT_TIMESTAMP])
-def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
+def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.DataFrame:
     """Get the timestamp of the earliest event for an encounter.
 
     Given 2 columns, i.e. encounter ID, and timestamp of events,
@@ -49,13 +51,14 @@ def get_earliest_ts_encounter(timestamps: pd.DataFrame) -> pd.Series:
 
     Returns
     -------
-    pandas.Series
+    pandas.DataFrame
         A series with earliest timestamp among events for each encounter.
 
     """
     earliest_ts = timestamps.groupby(ENCOUNTER_ID).agg({EVENT_TIMESTAMP: "min"})[
         EVENT_TIMESTAMP
     ]
+    earliest_ts = earliest_ts.reset_index()
 
     return earliest_ts
 
@@ -154,9 +157,13 @@ class Aggregator:
         encounter, for example the first lab test. It can also be the admission
         time or a custom timestamp if provided.
     start_at_admission: bool, optional
-        Flag to say if the window should start at the time of admission.
-    start_window_ts: datetime.datetime, optional
-        Specific time from which the window should start.
+        Flag to say if the window should start at the time of admission. This
+        cannot be used in conjunction with 'start_at_admission'.
+    start_window_ts: pandas.DataFrame, optional
+        Specific time for each encounter from which the window should start.
+    stop_window_ts: pandas.DataFrame, optional
+        Specific time for each encounter upto which events should be considered.
+        This cannot be used in conjunction with 'window'.
 
     """
 
@@ -164,7 +171,8 @@ class Aggregator:
     bucket_size: int = 1
     window: int = 24
     start_at_admission: bool = False
-    start_window_ts: Optional[datetime] = None
+    start_window_ts: Optional[pd.DataFrame] = None
+    stop_window_ts: Optional[pd.DataFrame] = None
     meta: Dict[str, pd.DataFrame] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -179,6 +187,22 @@ class Aggregator:
         """
         if self.start_at_admission and self.start_window_ts:
             raise ValueError("Can only have a unique starting point for window!")
+        if self.stop_window_ts and self.window:
+            LOGGER.error("window and stop_window_ts are both set, set window to None!")
+            raise ValueError("Can only have unique ending point for window!")
+
+        if isinstance(self.start_window_ts, pd.DataFrame):
+            _ = has_columns(
+                self.start_window_ts,
+                [ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+                raise_error=True,
+            )
+        if isinstance(self.stop_window_ts, pd.DataFrame):
+            _ = has_columns(
+                self.stop_window_ts,
+                [ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+                raise_error=True,
+            )
 
         self.aggfunc = self._get_aggfunc()
 
@@ -214,50 +238,89 @@ class Aggregator:
 
         return self.aggfunc
 
-    @assert_has_columns([EVENT_TIMESTAMP, ENCOUNTER_ID, ADMIT_TIMESTAMP])
-    def filter_upto_window(
+    @assert_has_columns([ENCOUNTER_ID])
+    def compute_start_of_window(
         self,
         data: pd.DataFrame,
     ) -> pd.DataFrame:
-        """Filter data based on window value.
+        """Compute the start timestamp for each encounter window.
 
-        For e.g. if window is 24 hrs, then all data for the encounter
-        upto after 24 hrs after the first event timestamp are considered. If
-        'start_at_admission' is True, the all events before admission are dropped.
-        Optionally, a start timestamp can be provided as the starting point to the
-        window.
+        If 'start_at_admission' is True, then 'admit_timestamp' is returned,
+        else if a custom dataframe with start timestamps for each encounter can be
+        provided as the starting point of the window, that is used. Else by default,
+        the start timestamp is computed as the earliest event timestamp for that
+        encounter.
 
         Parameters
         ----------
         data: pandas.DataFrame
-            Data before filtering.
+            Event data before aggregation.
 
         Returns
         -------
         pandas.DataFrame
-            Filtered data frame, with aggregates collected within window.
+            Dataframe with start timestamps of windows for each encounter.
 
         """
-        data_filtered = data.copy()
-        sample_time = data_filtered[EVENT_TIMESTAMP]
-
         if self.start_at_admission:
-            start_time = data_filtered[ADMIT_TIMESTAMP]
-        if self.start_window_ts:
-            start_time = self.start_window_ts
-        else:
-            start_time = get_earliest_ts_encounter(
-                data_filtered[[ENCOUNTER_ID, EVENT_TIMESTAMP]]
+            start_time = gather_columns(data, [ENCOUNTER_ID, ADMIT_TIMESTAMP])
+            start_time = compute_statics(start_time)
+            start_time = start_time.reset_index()
+            _ = has_columns(
+                start_time, [ENCOUNTER_ID, ADMIT_TIMESTAMP], raise_error=True
             )
-            start_time = start_time[data_filtered[ENCOUNTER_ID]].reset_index()
-            start_time = start_time[EVENT_TIMESTAMP]
-            start_time.index = sample_time.index
+            start_time = start_time.rename(
+                columns={ADMIT_TIMESTAMP: RESTRICT_TIMESTAMP}
+            )
 
-        data_filtered = data_filtered.loc[sample_time >= start_time]
-        window_condition = (sample_time - start_time) / pd.Timedelta(hours=1)
-        data_filtered = data_filtered.loc[window_condition <= self.window]
+            return start_time
 
-        return data_filtered
+        if isinstance(self.start_window_ts, pd.DataFrame):
+            start_time = self.start_window_ts
+
+            return start_time
+
+        start_time = get_earliest_ts_encounter(
+            gather_columns(data, [ENCOUNTER_ID, EVENT_TIMESTAMP])
+        )
+        start_time = start_time.rename(columns={EVENT_TIMESTAMP: RESTRICT_TIMESTAMP})
+
+        return start_time
+
+    @assert_has_columns([ENCOUNTER_ID])
+    def compute_end_of_window(
+        self,
+        start_time: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """Compute the end timestamp for each encounter window.
+
+        If 'window' is provided, then end timestamp is computed as a fixed
+        window length (hours) from the start timestamp ('start_time').
+        If a custom dataframe with end timestamps for each encounter can be
+        provided as the ending point of the window, that is used.
+
+        Parameters
+        ----------
+        start_time: pandas.DataFrame
+            Start timestamp for each encounter window.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Dataframe with end timestamps of windows for each encounter.
+
+        """
+        if self.window:
+            end_time = start_time.copy()
+            _ = has_columns(
+                end_time, [ENCOUNTER_ID, RESTRICT_TIMESTAMP], raise_error=True
+            )
+            end_time[RESTRICT_TIMESTAMP] += timedelta(hours=self.window)
+
+        if isinstance(self.stop_window_ts, pd.DataFrame):
+            end_time = self.stop_window_ts
+
+        return end_time
 
     @assert_has_columns([ENCOUNTER_ID, EVENT_VALUE, EVENT_NAME])
     def aggregate_events_into_single_bucket(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -293,14 +356,14 @@ class Aggregator:
     def aggregate_events(
         self,
         data: pd.DataFrame,
-        start: Optional[pd.DataFrame] = None,
-        stop: Optional[pd.DataFrame] = None,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Aggregate events into equally spaced buckets.
 
-        All the event data is grouped based on encounters. For each
-        encounter, the number of timesteps is determined, and the
-        event value for each event belonging to a timestep
+        All the event data is grouped based on encounters. First, the event data
+        that lies within the window is restricted such that only those events are
+        considered for aggregation. Given the aggreation options, the number of
+        timesteps is determined, and the start of each timestep (timestamp) is added
+        to the meta info. The event value for each event belonging to a timestep
         is aggregated accordingly to create a DataFrame of features,
         where the number of feature columns is equal to number of
         event names, e.g. lab tests + vital measurements. The features
@@ -313,10 +376,6 @@ class Aggregator:
         ----------
         data: pandas.DataFrame
             Input data.
-        start: pandas.DataFrame or None
-            Restrict timestamps before the start time for a given ENCOUNTER_ID.
-        stop: pandas.DataFrame or None
-            Restrict timestamps after the stop time for a given ENCOUNTER_ID.
 
         Returns
         -------
@@ -326,13 +385,10 @@ class Aggregator:
 
         """
         log_counts_step(data, "Gathering event features...", columns=True)
-
-        data = restrict_events_by_timestamp(data, start, stop)
-
-        data = self.filter_upto_window(
-            data,
-        )
-        log_counts_step(data, "Filtering events within window...", columns=True)
+        start_time = self.compute_start_of_window(data)
+        end_time = self.compute_end_of_window(start_time)
+        data = restrict_events_by_timestamp(data, start_time, end_time)
+        log_counts_step(data, "Restricting events within window...", columns=True)
 
         # All events are placed in a single bucket, hence not a time-series.
         if self.window == self.bucket_size:
@@ -417,16 +473,10 @@ class Aggregator:
         return features, grouped
 
     @time_function
-    @assert_has_columns(
-        [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP],
-        start=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
-        stop=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
-    )
+    @assert_has_columns([ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP])
     def __call__(
         self,
         data: pd.DataFrame,
-        start: Optional[pd.DataFrame] = None,
-        stop: Optional[pd.DataFrame] = None,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Aggregate events into equally spaced buckets.
 
@@ -434,10 +484,6 @@ class Aggregator:
         ----------
         data: pandas.DataFrame
             Input data.
-        start: pandas.DataFrame or None
-            Restrict timestamps before the start time for a given ENCOUNTER_ID.
-        stop: pandas.DataFrame or None
-            Restrict timestamps after the stop time for a given ENCOUNTER_ID.
 
         Returns
         -------
@@ -446,4 +492,4 @@ class Aggregator:
             info like count of values in a bucket, fraction missing (pandas.DataFrame).
 
         """
-        return self.aggregate_events(data, start=start, stop=stop)
+        return self.aggregate_events(data)

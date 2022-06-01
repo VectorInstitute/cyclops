@@ -2,12 +2,13 @@
 
 import logging
 from functools import wraps
-from typing import Callable
+from typing import Callable, List, Union
 
 import pandas as pd
 
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import ENCOUNTER_ID
+from cyclops.query.util import to_list
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -133,15 +134,15 @@ def assert_has_columns(*args, **kwargs) -> Callable:
     return decorator
 
 
-def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:
+def gather_columns(data: pd.DataFrame, columns: Union[List[str], str]) -> pd.DataFrame:
     """Gather specified columns, discarding rest and return copy of columns.
 
     Parameters
     ----------
     data: pandas.DataFrame
         DataFrame to check.
-    columns: list
-        List of column names to keep in data.
+    columns: list of str or str
+        Column names to gather from dataframe.
 
     Returns
     -------
@@ -149,7 +150,7 @@ def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:
         DataFrame with required columns, other columns discarded.
 
     """
-    return data[columns].copy()
+    return data[to_list(columns)].copy()
 
 
 def log_counts_step(data, step_description: str, rows=True, columns=False) -> None:
