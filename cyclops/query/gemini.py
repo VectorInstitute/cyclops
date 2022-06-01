@@ -1,12 +1,11 @@
 """GEMINI query API."""
 
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional
 
-from sqlalchemy import extract, select
-from sqlalchemy.sql.expression import literal, union_all
-from sqlalchemy.sql.schema import Table
-from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy import select
+from sqlalchemy.sql.expression import union_all
+from sqlalchemy.sql.selectable import Subquery
 
 from codebase_ops import get_log_file_path
 from cyclops import config
@@ -16,7 +15,6 @@ from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     CARE_UNIT,
     DIAGNOSIS_CODE,
-    DIAGNOSIS_TITLE,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     ER_ADMIT_TIMESTAMP,
@@ -27,31 +25,19 @@ from cyclops.processors.column_names import (
     EVENT_VALUE_UNIT,
     HOSPITAL_ID,
     LENGTH_OF_STAY_IN_ER,
-    SUBJECT_ID,
     SCU_ADMIT_TIMESTAMP,
     SCU_DISCHARGE_TIMESTAMP,
     SEX,
+    SUBJECT_ID,
 )
+from cyclops.processors.constants import EMPTY_STRING
 from cyclops.query import process as qp
-from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
-    _to_subquery,
-    query_params_to_type,
     QueryTypes,
+    _to_subquery,
     assert_query_has_columns,
-    DBTable,
-    equals,
-    get_attribute,
-    has_substring,
-    in_,
-    not_equals,
-    process_attribute,
-    apply_to_attributes,
-    rename_attributes,
-    rga,
-    to_datetime_format,
-    to_list,
+    query_params_to_type,
 )
 from cyclops.utils.log import setup_logging
 
@@ -115,6 +101,7 @@ GEMINI_COLUMN_MAP = {
 
 EVENT_CATEGORIES = [LAB, VITALS]
 
+
 def get_table(table_name: str, rename: bool = True) -> Subquery:
     """Get a table and possibly map columns to have standard names.
 
@@ -157,21 +144,21 @@ def er_admin(**process_kwargs) -> QueryInterface:
     ----------------
     limit: int, optional
         Limit the number of rows returned.
+
     """
     table = get_table(ER_ADMIN)
-    
+
     # Process optional operations
-    operations = [(qp.Limit, [qp.QAP("limit")], {})]
+    operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
     table = qp.process_operations(table, operations, process_kwargs)
-    
+
     return QueryInterface(_db, table)
 
 
 @query_params_to_type(Subquery)
 @assert_query_has_columns(er_admin_table=ENCOUNTER_ID)
 def patient_encounters(
-    er_admin_table: Optional[QueryTypes] = None,
-    **process_kwargs
+    er_admin_table: Optional[QueryTypes] = None, **process_kwargs
 ) -> QueryInterface:
     """Query GEMINI patient encounters.
 
@@ -179,7 +166,7 @@ def patient_encounters(
     ----------
     er_admin_table: Subquery, optional
         Gather Emergency Room data recorded for the particular encounter.
-    
+
     Returns
     -------
     cyclops.query.interface.QueryInterface
@@ -194,9 +181,11 @@ def patient_encounters(
     died_binarize_col: str, optional
         Binarize the died condition and save as a column with label died_binarize_col.
     before_date: datetime.datetime or str
-        Get patients encounters before some date. If a string, provide in YYYY-MM-DD format.
+        Get patients encounters before some date.
+        If a string, provide in YYYY-MM-DD format.
     after_date: datetime.datetime or str
-        Get patients encounters after some date. If a string, provide in YYYY-MM-DD format.
+        Get patients encounters after some date.
+        If a string, provide in YYYY-MM-DD format.
     hospitals: str or list of str, optional
         Get patient encounters by hospital sites.
     years: int or list of int, optional
@@ -205,28 +194,27 @@ def patient_encounters(
         Get patient encounters by month.
     limit: int, optional
         Limit the number of rows returned.
+
     """
     table = get_table(IP_ADMIN)
 
     # Get the discharge disposition code descriptions
     lookup_table = get_table(LOOKUP_IP_ADMIN)
-    lookup_table = qp.ConditionEquals(
-        "variable", "discharge_disposition"
-    )(lookup_table)
-    
+    lookup_table = qp.ConditionEquals("variable", "discharge_disposition")(lookup_table)
+
     table = qp.Join(
         lookup_table,
         on=("discharge_disposition", "value"),
         on_to_type=int,
-        join_table_cols="description"
+        join_table_cols="description",
     )(table)
     table = qp.Rename({"description": "discharge_description"})(table)
     table = qp.Drop("value")(table)
-    
+
     # Join on ER data only if specified
     if er_admin_table is not None:
         table = qp.Join(er_admin_table, on=ENCOUNTER_ID)(table)
-    
+
     # Process optional operations
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
@@ -238,18 +226,18 @@ def patient_encounters(
         (
             qp.ConditionEquals,
             ["discharge_description", "Died"],
-            {"not_": qp.QAP("died", not_=True)}
+            {"not_": qp.QAP("died", not_=True)},
         ),
         (
             qp.ConditionEquals,
             ["discharge_description", "Died"],
-            {"binarize_col": qp.QAP("died_binarize_col")}
+            {"binarize_col": qp.QAP("died_binarize_col")},
         ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
-    
+
     table = qp.process_operations(table, operations, process_kwargs)
-    
+
     return QueryInterface(_db, table)
 
 
@@ -269,15 +257,14 @@ def diagnoses(**process_kwargs) -> QueryInterface:
         Include only those diagnoses that are of certain type.
     limit: int, optional
         Limit the number of rows returned.
+
     """
     table = get_table(DIAGNOSIS)
-    
+
     # Get diagnosis type description
     lookup_diagnosis = get_table(LOOKUP_DIAGNOSIS)
     table = qp.Join(
-        lookup_diagnosis,
-        on=("diagnosis_type", "value"),
-        join_table_cols="description"
+        lookup_diagnosis, on=("diagnosis_type", "value"), join_table_cols="description"
     )(table)
     table = qp.Drop("value")(table)
     table = qp.Rename({"description": "diagnosis_type_description"})(table)
@@ -285,11 +272,15 @@ def diagnoses(**process_kwargs) -> QueryInterface:
 
     # Trim whitespace from ICD codes.
     table = qp.Trim(DIAGNOSIS_CODE)(table)
-    
+
     # Process optional operations
-    operations = [
+    operations: List[tuple] = [
         (qp.ConditionIn, [DIAGNOSIS_CODE, qp.QAP("diagnosis_codes")], {"to_str": True}),
-        (qp.ConditionIn, ["diagnosis_type", qp.QAP("diagnosis_types")], {"to_str": True}),
+        (
+            qp.ConditionIn,
+            ["diagnosis_type", qp.QAP("diagnosis_types")],
+            {"to_str": True},
+        ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
     table = qp.process_operations(table, operations, process_kwargs)
@@ -300,12 +291,12 @@ def diagnoses(**process_kwargs) -> QueryInterface:
 @query_params_to_type(Subquery)
 @assert_query_has_columns(
     diagnoses_table=[ENCOUNTER_ID, DIAGNOSIS_CODE],
-    patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID]
+    patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID],
 )
 def patient_diagnoses(
     diagnoses_table: Optional[QueryTypes] = None,
     patient_encounters_table: Optional[QueryTypes] = None,
-    **process_kwargs
+    **process_kwargs,
 ) -> QueryInterface:
     """Query diagnosis data.
 
@@ -333,17 +324,18 @@ def patient_diagnoses(
         Include only those diagnoses that are of certain type.
     limit: int, optional
         Limit the number of rows returned.
+
     """
     # Get diagnoses
     if diagnoses_table is None:
         diagnoses_table = diagnoses(**process_kwargs).query
-    
+
     # Join on patient encounters
     if patient_encounters_table is None:
         patient_encounters_table = patient_encounters().query
-    
+
     table = qp.Join(diagnoses_table, on=ENCOUNTER_ID)(patient_encounters_table)
-    
+
     return QueryInterface(_db, table)
 
 
@@ -362,7 +354,7 @@ def room_transfers(**process_kwargs) -> QueryInterface:
 
     """
     table = get_table(ROOM_TRANSFER)
-    
+
     # Join with lookup to get transfer description.
     lookup_rt_table = get_table(LOOKUP_ROOM_TRANSFER)
     table = qp.Join(
@@ -373,11 +365,11 @@ def room_transfers(**process_kwargs) -> QueryInterface:
     table = qp.Rename({"description": "transfer_description"})(table)
 
     # Process optional operations
-    operations = [(qp.Limit, [qp.QAP("limit")], {})]
+    operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
     table = qp.process_operations(table, operations, process_kwargs)
-    
+
     return QueryInterface(_db, table)
-    
+
 
 @query_params_to_type(Subquery)
 @assert_query_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
@@ -405,46 +397,56 @@ def care_units(
         Limit the number of rows returned.
 
     """
-    filter_care_unit_cols = qp.FilterColumns([
-        ENCOUNTER_ID,
-        "admit",
-        "discharge",
-        CARE_UNIT,
-    ])
-    
+    filter_care_unit_cols = qp.FilterColumns(
+        [
+            ENCOUNTER_ID,
+            "admit",
+            "discharge",
+            CARE_UNIT,
+        ]
+    )
+
     # In-patient table.
     ip_table = get_table(IP_ADMIN)
-    ip_table = qp.Rename({
-        ADMIT_TIMESTAMP: "admit",
-        DISCHARGE_TIMESTAMP: "discharge",
-    })(ip_table)
+    ip_table = qp.Rename(
+        {
+            ADMIT_TIMESTAMP: "admit",
+            DISCHARGE_TIMESTAMP: "discharge",
+        }
+    )(ip_table)
     ip_table = qp.Literal("IP", CARE_UNIT)(ip_table)
     ip_table = filter_care_unit_cols(ip_table)
 
     # Special care unit table.
     scu_table = get_table(IP_SCU)
-    scu_table = qp.Rename({
-        SCU_ADMIT_TIMESTAMP: "admit",
-        SCU_DISCHARGE_TIMESTAMP: "discharge",
-    })(scu_table)
+    scu_table = qp.Rename(
+        {
+            SCU_ADMIT_TIMESTAMP: "admit",
+            SCU_DISCHARGE_TIMESTAMP: "discharge",
+        }
+    )(scu_table)
     scu_table = qp.Literal("SCU", CARE_UNIT)(scu_table)
     scu_table = filter_care_unit_cols(scu_table)
 
     # Emergency room/department table.
     er_table = er_admin().query
-    er_table = qp.Rename({
-        ER_ADMIT_TIMESTAMP: "admit",
-        ER_DISCHARGE_TIMESTAMP: "discharge",
-    })(er_table)
+    er_table = qp.Rename(
+        {
+            ER_ADMIT_TIMESTAMP: "admit",
+            ER_DISCHARGE_TIMESTAMP: "discharge",
+        }
+    )(er_table)
     er_table = qp.Literal("ER", CARE_UNIT)(er_table)
     er_table = filter_care_unit_cols(er_table)
-    
+
     # Room transfer table.
     rt_table = room_transfers().query
-    rt_table = qp.Rename({
-        "checkin_date_time": "admit",
-        "checkout_date_time": "discharge",
-    })(rt_table)
+    rt_table = qp.Rename(
+        {
+            "checkin_date_time": "admit",
+            "checkout_date_time": "discharge",
+        }
+    )(rt_table)
     rt_table = qp.Rename({"transfer_description": CARE_UNIT})(rt_table)
     rt_table = filter_care_unit_cols(rt_table)
 
@@ -460,9 +462,9 @@ def care_units(
         table = qp.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
 
     # Process optional operations
-    operations = [(qp.Limit, [qp.QAP("limit")], {})]
+    operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
     table = qp.process_operations(table, operations, process_kwargs)
-        
+
     return QueryInterface(_db, table)
 
 
@@ -501,29 +503,31 @@ def events(
 
     """
     if event_category not in EVENT_CATEGORIES:
-        raise ValueError(f"""Invalid event category specified.
+        raise ValueError(
+            f"""Invalid event category specified.
             Must be in {", ".join(EVENT_CATEGORIES)}"""
         )
-    
+
     table = get_table(event_category)
- 
+
     # Remove events with no recorded name.
     table = qp.ConditionEquals(EVENT_NAME, EMPTY_STRING, not_=True, to_str=True)(table)
-    
+
     # Process optional operations
     operations: List[tuple] = [
         (qp.ConditionIn, [EVENT_NAME, qp.QAP("event_names")], {"to_str": True}),
-        (qp.ConditionSubstring, [EVENT_NAME, qp.QAP("event_name_substring")], {"to_str": True}),
+        (
+            qp.ConditionSubstring,
+            [EVENT_NAME, qp.QAP("event_name_substring")],
+            {"to_str": True},
+        ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
-    
+
     table = qp.process_operations(table, operations, process_kwargs)
-    
+
     # Join on patient encounters
     if patient_encounters_table is not None:
-        table = qp.Join(
-            patient_encounters_table,
-            on=ENCOUNTER_ID
-        )(table)
-    
+        table = qp.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
+
     return QueryInterface(_db, table)

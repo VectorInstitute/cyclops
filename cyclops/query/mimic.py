@@ -131,14 +131,10 @@ def patients(**process_kwargs) -> QueryInterface:
     table = select(
         table,
         (
-            func.substr(get_attribute(table, "anchor_year_group"), 1, 4).cast(
-                Integer
-            )
+            func.substr(get_attribute(table, "anchor_year_group"), 1, 4).cast(Integer)
         ).label("anchor_year_group_start"),
         (
-            func.substr(get_attribute(table, "anchor_year_group"), 8, 12).cast(
-                Integer
-            )
+            func.substr(get_attribute(table, "anchor_year_group"), 8, 12).cast(Integer)
         ).label("anchor_year_group_end"),
     ).subquery()
 
@@ -164,12 +160,8 @@ def patients(**process_kwargs) -> QueryInterface:
     ).subquery()
 
     # Shift relevant columns by anchor year difference
-    table = qp.AddColumn("anchor_year", "anchor_year_difference")(
-        table
-    )
-    table = qp.AddDeltaColumns(DATE_OF_DEATH, years="anchor_year_difference")(
-        table
-    )
+    table = qp.AddColumn("anchor_year", "anchor_year_difference")(table)
+    table = qp.AddDeltaColumns(DATE_OF_DEATH, years="anchor_year_difference")(table)
 
     # Calculate approximate year of birth
     table = qp.AddColumn(
@@ -193,12 +185,16 @@ def patients(**process_kwargs) -> QueryInterface:
     )(table)
 
     # Process optional operations
-    operations.extend([
+    operations: List[tuple] = [
         # Must convert to string since CHAR(1) type doesn't recognize equality
         (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
-        (qp.ConditionEquals, [DATE_OF_DEATH, None], {"not_": qp.QAP(process_kwargs["died"], not_=True)})
+        (
+            qp.ConditionEquals,
+            [DATE_OF_DEATH, None],
+            {"not_": qp.QAP("died", not_=True)},
+        ),
         (qp.Limit, [qp.QAP("limit")], {}),
-    ])
+    ]
 
     table = qp.process_operations(table, operations, process_kwargs)
 
@@ -223,6 +219,7 @@ def diagnoses(**process_kwargs) -> QueryInterface:
         Get only the specified ICD codes.
     limit: int, optional
         Limit the number of rows returned.
+
     """
     table = get_table(DIAGNOSES)
 
@@ -233,7 +230,7 @@ def diagnoses(**process_kwargs) -> QueryInterface:
     table = qp.Trim(DIAGNOSIS_CODE)(table)
 
     # Process optional operations
-    operations = [
+    operations: List[tuple] = [
         (
             qp.ConditionIn,
             [DIAGNOSIS_VERSION, qp.QAP("diagnosis_versions")],
@@ -332,6 +329,7 @@ def transfers(
         The encounter IDs on which to filter. If None, consider all encounters.
     limit: int, optional
         Limit the number of rows returned.
+
     """
     table = get_table(TRANSFERS)
 
@@ -343,7 +341,7 @@ def transfers(
         )(table)
 
     # Process optional operations
-    operations = [
+    operations: List[tuple] = [
         (qp.ConditionIn, [ENCOUNTER_ID, qp.QAP("encounters")], {"to_int": True}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
@@ -414,9 +412,11 @@ def patient_encounters(
     Other Parameters
     ----------------
     before_date: datetime.datetime or str
-        Get patients encounters before some date. If a string, provide in YYYY-MM-DD format.
+        Get patients encounters before some date.
+        If a string, provide in YYYY-MM-DD format.
     after_date: datetime.datetime or str
-        Get patients encounters after some date. If a string, provide in YYYY-MM-DD format.
+        Get patients encounters after some date.
+        If a string, provide in YYYY-MM-DD format.
     years: int or list of int, optional
         Get patient encounters by year.
     months: int or list of int, optional
@@ -435,6 +435,11 @@ def patient_encounters(
     table = qp.AddDeltaColumns(
         [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], years="anchor_year_difference"
     )(table)
+
+    # Extract approximate age at time of admission
+    table = qp.ExtractTimestampComponent(ADMIT_TIMESTAMP, "year", AGE)(table)
+    table = qp.AddColumn(AGE, "birth_year", negative=True)(table)
+    table = qp.ReorderAfter(AGE, SEX)(table)
 
     # Process optional operations
     operations: List[tuple] = [

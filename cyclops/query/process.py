@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, List, Optional, Union
 
-from sqlalchemy import and_, cast, extract, select, func
+from sqlalchemy import and_, cast, extract, func, select
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select, Subquery
@@ -24,12 +24,10 @@ from cyclops.query.util import (
     filter_attributes,
     get_attribute,
     get_attribute_names,
-    get_attributes,
     get_delta_attribute,
     has_attributes,
     has_substring,
     in_,
-    not_equals,
     process_attribute,
     query_params_to_type,
     rename_attributes,
@@ -73,13 +71,28 @@ class QAP:
         return self.kwarg_name
 
     def __call__(self, kwargs):
+        """Recover the value of the placeholder argument.
+
+        Attributes
+        ----------
+        kwargs: dict
+            Dictionary containing self.kwarg_name as a key with a
+            corresponding value.
+
+        Returns
+        -------
+        any
+            Value of the placeholder argument.
+
+        """
         val = kwargs[self.kwarg_name]
         if self.not_:
             if not isinstance(val, bool):
                 raise ValueError(f"Cannot specify not_ on non-boolean QAP {str(self)}.")
             val = not val
-        
+
         return val
+
 
 def ckwarg(kwargs, kwarg):
     """Get the value of a conditional keyword argument.
@@ -155,7 +168,7 @@ def process_operations(  # pylint: disable=too-many-locals
 
     def get_required_qap(qaps):
         return [qap for qap in qaps if qap.required]
-    
+
     def get_qap_args(operation, required=False):
         qap_args = [arg for arg in operation[1] if isinstance(arg, QAP)]
         if required:
@@ -184,7 +197,7 @@ def process_operations(  # pylint: disable=too-many-locals
     qap_args = flatten_2d([get_qap_args(op) for op in operations])
     qap_kwargs = flatten_2d([get_qap_kwargs(op) for op in operations])
     kwargs_supported = [str(qap) for qap in qap_args + qap_kwargs]
-    
+
     # Ensure only supported operations are being performed
     for kwarg in user_kwargs:
         if kwarg not in kwargs_supported:
@@ -197,8 +210,9 @@ def process_operations(  # pylint: disable=too-many-locals
         process_func, args, kwargs = operation
 
         # Skip if not all the required kwargs were given
-        required = get_qap_args(operation, required=True) + \
-            get_qap_kwargs(operation, required=True)
+        required = get_qap_args(operation, required=True) + get_qap_kwargs(
+            operation, required=True
+        )
         specified = [str(r) in list(user_kwargs.keys()) for r in required]
         if not all(specified):
             # Warn if some of required are specified, but not all
@@ -214,7 +228,7 @@ def process_operations(  # pylint: disable=too-many-locals
                     f"""Process arguments {', '.join(specified_kwargs)} were partially
                     specified, but missing {', '.join(missing_kwargs)}"""
                 )
-            
+
             continue
 
         # Run the operation, replacing all the query argument placeholders with
@@ -298,7 +312,7 @@ def process_checks(
     if cols_not_in is not None:
         cols_not_in = to_list(cols_not_in)
         if has_attributes(table, cols_not_in, raise_error=False):
-            raise ValueError(f"Cannot specify columns {', '.join(cols_not_in)}.")
+            raise ValueError(f"Cannot specify columns {cols_not_in}.")
 
     if timestamp_cols is not None:
         timestamp_cols = to_list(timestamp_cols)
@@ -408,18 +422,21 @@ class Reorder:  # pylint: disable=too-few-public-methods
         return reorder_attributes(table, self.cols)
 
 
-@dataclass
 class ReorderAfter:  # pylint: disable=too-few-public-methods
     """Reorder a number of columns to come after a specified column.
-    
-    cols: str or list of str
+
+    cols: list of str
         Ordered list of column names which will come after a specified column.
     after: str
         Column name for the column after which the other columns will follow.
+
     """
-    cols: Union[str, List[str]]
-    after: str
-    
+
+    def __init__(self, cols: Union[str, List[str]], after: str):
+        """Initialize."""
+        self.cols = to_list(cols)
+        self.after = after
+
     def __call__(self, table: QueryTypes) -> Subquery:
         """Process the table.
 
@@ -442,7 +459,8 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
         name_after_ind = names.index(self.after) + 1
         new_order = names[:name_after_ind] + self.cols + names[name_after_ind:]
         return Reorder(new_order)(table)
-    
+
+
 @dataclass
 class FilterColumns:  # pylint: disable=too-few-public-methods
     """Keep only the specified columns in a table.
@@ -514,6 +532,7 @@ class Trim:  # pylint: disable=too-few-public-methods
         table = process_checks(table, cols=self.cols)
         return trim_attributes(table, self.cols, new_col_labels=self.new_col_labels)
 
+
 @dataclass
 class Literal:  # pylint: disable=too-few-public-methods
     """Add a literal column to a table.
@@ -547,6 +566,55 @@ class Literal:  # pylint: disable=too-few-public-methods
         """
         table = process_checks(table, cols_not_in=self.col)
         return select(table, literal(self.value).label(self.col)).subquery()
+
+
+@dataclass
+class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
+    """Extract a component such as year or month from a timestamp column.
+
+    Attributes
+    ----------
+    timestamp_col: str
+        Timestamp column from which to extract the time component.
+    extract_str: str
+        Information to extract, e.g., "year", "month"
+    label: str
+        Column label for the extracted column.
+
+    """
+
+    timestamp_col: str
+    extract_str: str
+    label: str
+
+    def __call__(self, table: QueryTypes) -> Subquery:
+        """Process the table.
+
+        Paramaters
+        ----------
+        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = process_checks(
+            table, timestamp_cols=self.timestamp_col, cols_not_in=self.label
+        )
+
+        table = select(
+            table,
+            extract(self.extract_str, get_attribute(table, self.timestamp_col)).label(
+                self.label
+            ),
+        )
+
+        return Cast(self.label, int)(table)
+
 
 @dataclass
 class AddNumeric:  # pylint: disable=too-few-public-methods
@@ -693,7 +761,12 @@ class AddColumn:  # pylint: disable=too-few-public-methods
         col = get_attribute(table, self.col)
 
         if self.negative:
-            col = -col
+            return apply_to_attributes(
+                table,
+                self.add_to,
+                lambda x: x - col,
+                new_col_labels=self.new_col_labels,
+            )
 
         return apply_to_attributes(
             table,
@@ -757,7 +830,12 @@ class AddDeltaColumns:  # pylint: disable=too-few-public-methods
         delta = get_delta_attribute(table, **self.delta_kwargs)
 
         if self.negative:
-            delta = -delta
+            return apply_to_attributes(
+                table,
+                self.add_to,
+                lambda x: x - delta,
+                new_col_labels=self.new_col_labels,
+            )
 
         return apply_to_attributes(
             table,
@@ -766,45 +844,61 @@ class AddDeltaColumns:  # pylint: disable=too-few-public-methods
             new_col_labels=self.new_col_labels,
         )
 
+
 @dataclass
 class Cast:
     """Cast a column to a specified type.
-    
+
     Currently supporting conversions to str, int, and float type columns.
-    
+
     Attributes
     ----------
     cols : str or list of str
         Columns to = cast.
     type_ : type
         Type to which to convert.
+
     """
+
     cols: Union[str, List[str]]
     type_: type
 
     def __call__(self, table: QueryTypes):
+        """Process the table.
+
+        Paramaters
+        ----------
+        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
         table = process_checks(table, cols=self.cols)
-        
-        CAST_TYPE_MAP = {
-            str: "to_str",
-            int: "to_int",
-            float: "to_float"
-        }
-        
+
+        cast_type_map = {str: "to_str", int: "to_int", float: "to_float"}
+
         # Assert that the type inputted is supported
-        if self.type_ not in CAST_TYPE_MAP:
-            supported_str = ', '.join([k.__name__ for k in CAST_TYPE_MAP.keys()])
+        if self.type_ not in cast_type_map:
+            supported_str = ", ".join([k.__name__ for k, _ in cast_type_map.items()])
             raise ValueError(
                 f"""Conversion to type {self.type_} not supported. Supporting
-                conversion to types {supported_str}""")
-        
+                conversion to types {supported_str}"""
+            )
+
         # Cast
-        kwargs = {CAST_TYPE_MAP[self.type_]: True}
-        
+        kwargs = {cast_type_map[self.type_]: True}
+
         return apply_to_attributes(
             table,
             self.cols,
-            lambda x: process_attribute(x, **kwargs)
+            lambda x: process_attribute(  # pylint: disable=unnecessary-lambda
+                x, **kwargs
+            ),
         )
 
 
@@ -841,7 +935,9 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
     def __init__(
         self,
         join_table: QueryTypes,
-        on: Optional[Union[str, List[str], tuple, List[tuple]]] = None,  # pylint:disable=invalid-name
+        on: Optional[  # pylint:disable=invalid-name
+            Union[str, List[str], tuple, List[tuple]]
+        ] = None,
         on_to_type: Optional[Union[type, List[type]]] = None,
         cond: Optional[BinaryExpression] = None,
         table_cols: Optional[Union[str, List[str]]] = None,
@@ -877,14 +973,20 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         # Join on the equality of values in columns of same name in both tables
         if self.on_ is not None:
             # Process on columns
-            on_table_cols = [col_obj if isinstance(col_obj, str) else col_obj[0] for col_obj in self.on_]
-            on_join_table_cols = [col_obj if isinstance(col_obj, str) else col_obj[1] for col_obj in self.on_]
-            
+            on_table_cols = [
+                col_obj if isinstance(col_obj, str) else col_obj[0]
+                for col_obj in self.on_
+            ]
+            on_join_table_cols = [
+                col_obj if isinstance(col_obj, str) else col_obj[1]
+                for col_obj in self.on_
+            ]
+
             table = process_checks(table, cols=none_add(self.table_cols, on_table_cols))
             self.join_table = process_checks(
                 self.join_table, cols=none_add(self.join_table_cols, on_join_table_cols)
             )
-            
+
             # Filter columns, keeping those being joined on
             table = append_if_missing(table, self.table_cols, on_table_cols)
             self.join_table = append_if_missing(
@@ -895,18 +997,20 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
             if self.on_to_type is not None:
                 for i, type_ in enumerate(self.on_to_type):
                     table = Cast(on_table_cols[i], type_)(table)
-                    self.join_table = Cast(on_join_table_cols[i], type_)(self.join_table)
-            
+                    self.join_table = Cast(on_join_table_cols[i], type_)(
+                        self.join_table
+                    )
+
             cond = and_(
                 *[
-                   get_attribute(table, on_table_cols[i]) == \
-                   get_attribute(self.join_table, on_join_table_cols[i])
-                   for i in range(len(on_table_cols))
+                    get_attribute(table, on_table_cols[i])
+                    == get_attribute(self.join_table, on_join_table_cols[i])
+                    for i in range(len(on_table_cols))
                 ]
             )
-            
+
             # table.c.discharge_disposition == self.join_table.c.value
-            
+
             table = select(table.join(self.join_table, cond))
 
         else:
@@ -915,7 +1019,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
                 table = FilterColumns(self.table_cols)(table)
             if self.join_table_cols is not None:
                 self.join_table = FilterColumns(self.table_cols)(self.join_table)
-            
+
             # Join on a specified condition
             if self.cond is not None:
                 table = select(table.join(self.join_table, self.cond))
@@ -949,7 +1053,14 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
 
     """
 
-    def __init__(self, col: str, value: Any, not_: bool = False, binarize_col: Optional[str] = None, **cond_kwargs):
+    def __init__(
+        self,
+        col: str,
+        value: Any,
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+        **cond_kwargs,
+    ):
         """Initialize."""
         self.col = col
         self.value = value
@@ -976,10 +1087,12 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
         cond = equals(get_attribute(table, self.col), self.value, **self.cond_kwargs)
         if self.not_:
             cond = cond._negate()
-        
+
         if self.binarize_col is not None:
-            return select(table, cast(cond, Boolean).label(self.binarize_col)).subquery()
-        
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
         return select(table).where(cond).subquery()
 
 
@@ -1001,7 +1114,14 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
 
     """
 
-    def __init__(self, col: str, values: Union[Any, List[Any]], not_: bool = False, binarize_col: Optional[str] = None, **cond_kwargs):
+    def __init__(
+        self,
+        col: str,
+        values: Union[Any, List[Any]],
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+        **cond_kwargs,
+    ):
         """Initialize."""
         self.col = col
         self.values = values
@@ -1032,10 +1152,12 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
         )
         if self.not_:
             cond = cond._negate()
-        
+
         if self.binarize_col is not None:
-            return select(table, cast(cond, Boolean).label(self.binarize_col)).subquery()
-        
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
         return select(table).where(cond).subquery()
 
 
@@ -1057,7 +1179,14 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
 
     """
 
-    def __init__(self, col: str, substring: str, not_: bool = False, binarize_col: Optional[str] = None, **cond_kwargs):
+    def __init__(
+        self,
+        col: str,
+        substring: str,
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+        **cond_kwargs,
+    ):
         """Initialize."""
         self.col = col
         self.substring = substring
@@ -1086,10 +1215,12 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
         )
         if self.not_:
             cond = cond._negate()
-        
+
         if self.binarize_col is not None:
-            return select(table, cast(cond, Boolean).label(self.binarize_col)).subquery()
-        
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
         return select(table).where(cond).subquery()
 
 
@@ -1106,9 +1237,16 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
+
     """
 
-    def __init__(self, timestamp_col: str, years: Union[int, List[int]], not_: bool = False, binarize_col: Optional[str] = None):
+    def __init__(
+        self,
+        timestamp_col: str,
+        years: Union[int, List[int]],
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+    ):
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.years = years
@@ -1130,17 +1268,21 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.timestamp_col, cols_not_in=self.binarize_col)
+        table = process_checks(
+            table, cols=self.timestamp_col, cols_not_in=self.binarize_col
+        )
         cond = in_(
             extract("year", get_attribute(table, self.timestamp_col)),
             to_list(self.years),
         )
         if self.not_:
             cond = cond._negate()
-        
+
         if self.binarize_col is not None:
-            return select(table, cast(cond, Boolean).label(self.binarize_col)).subquery()
-        
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
         return select(table).where(cond).subquery()
 
 
@@ -1157,9 +1299,16 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
+
     """
 
-    def __init__(self, timestamp_col: str, months: Union[int, List[int]], not_: bool = False, binarize_col: Optional[str] = None):
+    def __init__(
+        self,
+        timestamp_col: str,
+        months: Union[int, List[int]],
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+    ):
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.months = months
@@ -1181,17 +1330,21 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.timestamp_col, cols_not_in=self.binarize_col)
+        table = process_checks(
+            table, cols=self.timestamp_col, cols_not_in=self.binarize_col
+        )
         cond = in_(
             extract("month", get_attribute(table, self.timestamp_col)),
             to_list(self.months),
         )
         if self.not_:
             cond = cond._negate()
-        
+
         if self.binarize_col is not None:
-            return select(table, cast(cond, Boolean).label(self.binarize_col)).subquery()
-        
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
         return select(table).where(cond).subquery()
 
 
@@ -1289,13 +1442,15 @@ class ConditionAfterDate:  # pylint: disable=too-few-public-methods
 
 @dataclass
 class Limit:  # pylint: disable=too-few-public-methods
-    """Limit the number of rows returned in a query
-    
+    """Limit the number of rows returned in a query.
+
     Attributes
     ----------
     number: int
         Number of rows to return in the limit.
+
     """
+
     number: int
 
     @query_params_to_type(Select)
@@ -1316,17 +1471,18 @@ class Limit:  # pylint: disable=too-few-public-methods
         """
         return table.limit(self.number).subquery()
 
+
 @dataclass
 class RandomizeOrder:
     """Randomize order of table rows.
-    
+
     Useful when the data is ordered, so certain rows cannot
     be seen or analyzed when limited.
-    
+
     Warning: Becomes quite slow on large tables.
 
     """
-    
+
     @query_params_to_type(Subquery)
     def __call__(self, table: QueryTypes) -> Subquery:
         """Process the table.
