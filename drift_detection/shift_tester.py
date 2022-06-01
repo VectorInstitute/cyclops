@@ -26,11 +26,9 @@ from scipy.stats import (
     ks_2samp,
 )
 
-
 class ShiftTester:
 
     """ShiftTester Class.
-
     Attributes
     ----------
     sign_level: float
@@ -39,7 +37,6 @@ class ShiftTester:
         Name of two sample hypothesis test.
     mod_path: String
         path to model (optional)
-
     """
 
     def __init__(self, sign_level=0.05, mt=None, mod_path=None):

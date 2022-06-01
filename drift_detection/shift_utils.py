@@ -35,6 +35,8 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from sqlalchemy import desc, extract, func, select
 from sqlalchemy.sql.expression import and_, or_
 
+sys.path.append("..")
+
 import cyclops.config
 from cyclops.processor import featurize
 from cyclops.processors.aggregate import Aggregator
