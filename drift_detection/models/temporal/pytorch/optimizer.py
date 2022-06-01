@@ -1,10 +1,8 @@
 import datetime
-from datetime import datetime
-
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt 
 import torch
-
+from datetime import datetime
 
 class Optimizer:
     """Optimizer Class.
@@ -14,33 +12,34 @@ class Optimizer:
     model: torch.nn.Module
         Pytorch model to optimize (e.g. RNNModel, LSTMModel, GRUModel)
     loss_fn: function
-        Loss function
+        Loss function 
     optimizer: torch.optim
         Optimization algorithm (e.g. Adam)
 
     """
-
-    def __init__(self, model, loss_fn, optimizer):
+    def __init__(self, model, loss_fn, optimizer,activation):
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
+        self.activation = activation
         self.train_losses = []
         self.val_losses = []
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+        self.device = model.device
+    
     def train_step(self, x, y):
         # Sets model to train mode
-        self.model.train()
+        self.model.train(True)
 
         # Makes predictions
         yhat = self.model(x)
-
+        
         # Computes loss
         loss = self.loss_fn(y, yhat)
 
         # Computes gradients
         loss.backward()
 
+        #self.model.float()
         # Updates parameters and zeroes gradients
         self.optimizer.step()
         self.optimizer.zero_grad()
@@ -48,7 +47,7 @@ class Optimizer:
         # Returns the loss
         return loss.item()
 
-    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):
+    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):  
         """Train pytorch model.
 
         Parameters
@@ -61,10 +60,10 @@ class Optimizer:
             Number of samples to train before updating model parameters.
         n_epochs: int
             Number of complete passes through the training set.
-        n_features: int
+        n_features: int 
             Number of features.
 
-        """
+        """ 
         model_path = f'{self.model}_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
 
         for epoch in range(1, n_epochs + 1):
@@ -110,16 +109,30 @@ class Optimizer:
         with torch.no_grad():
             predictions = []
             values = []
+            tags = []
+            acc = 0
             for x_test, y_test in test_loader:
                 x_test = x_test.view([batch_size, -1, n_features]).to(self.device)
                 y_test = y_test.to(self.device)
                 self.model.eval()
                 yhat = self.model(x_test)
-                predictions.append(yhat.to(self.device).detach().numpy())
-                values.append(y_test.to(self.device).detach().numpy())
+                ## if binary apply sigmoid, if class apply softmax
+                y_pred_tags = self.activation(yhat).argmax(dim=1).cpu().detach().numpy()
+                acc += self.binary_acc(yhat, y_test)
+                predictions.append(yhat.cpu().detach().numpy())
+                values.append(y_test.cpu().detach().numpy())
+                tags.append(y_pred_tags)
+            print('Accuracy: {} %'.format(acc)) 
+            
+        return predictions, values, tags
+    
+    def binary_acc(self,y_pred, y_test):
+        y_pred_tag = torch.round(torch.sigmoid(y_pred))
 
-        return predictions, values
-
+        correct_results_sum = (y_pred_tag == y_test).sum().float()
+        acc = correct_results_sum/y_test.shape[0]
+        return acc
+    
     def plot_losses(self):
         plt.plot(self.train_losses, label="Training loss")
         plt.plot(self.val_losses, label="Validation loss")
