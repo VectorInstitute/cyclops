@@ -12,7 +12,7 @@ from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.selectable import Select, Subquery
 
 from codebase_ops import get_log_file_path
-from cyclops.query.util import DBMetaclass, DBSchema, DBTable, query_params_to_type
+from cyclops.query.util import DBMetaclass, DBSchema, DBTable, table_params_to_type
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -119,7 +119,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
             setattr(self, schema_name, schema)
 
     @time_function
-    @query_params_to_type(Select)
+    @table_params_to_type(Select)
     def run_query(
         self,
         query: Union[Select, Subquery, Table, DBTable],

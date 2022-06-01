@@ -16,26 +16,26 @@ from sqlalchemy.types import Boolean
 # Logging.
 from codebase_ops import get_log_file_path
 from cyclops.query.util import (
-    QueryTypes,
-    apply_to_attributes,
-    check_timestamp_attributes,
-    drop_attributes,
+    TableTypes,
+    apply_to_columns,
+    check_timestamp_columns,
+    drop_columns,
     equals,
-    filter_attributes,
-    get_attribute,
-    get_attribute_names,
-    get_delta_attribute,
-    has_attributes,
+    filter_columns,
+    get_column,
+    get_column_names,
+    get_delta_column,
+    has_columns,
     has_substring,
     in_,
-    process_attribute,
-    query_params_to_type,
-    rename_attributes,
-    reorder_attributes,
+    process_column,
+    rename_columns,
+    reorder_columns,
+    table_params_to_type,
     to_datetime_format,
     to_list,
     to_list_optional,
-    trim_attributes,
+    trim_columns,
 )
 from cyclops.utils.log import setup_logging
 
@@ -137,9 +137,9 @@ def remove_kwargs(process_kwargs, kwargs: Union[str, List[str]]):
     return process_kwargs
 
 
-@query_params_to_type(Subquery)
+@table_params_to_type(Subquery)
 def process_operations(  # pylint: disable=too-many-locals
-    table: QueryTypes, operations: List[tuple], user_kwargs: dict
+    table: TableTypes, operations: List[tuple], user_kwargs: dict
 ) -> Subquery:
     """Query MIMIC encounter-specific patient data.
 
@@ -282,7 +282,7 @@ def none_add(obj1, obj2):
 
 
 def process_checks(
-    table: QueryTypes,
+    table: TableTypes,
     cols: Optional[Union[str, List[str]]] = None,
     cols_not_in: Optional[Union[str, List[str]]] = None,
     timestamp_cols: Optional[Union[str, List[str]]] = None,
@@ -307,17 +307,17 @@ def process_checks(
     """
     if cols is not None:
         cols = to_list(cols)
-        has_attributes(table, cols, raise_error=True)
+        has_columns(table, cols, raise_error=True)
 
     if cols_not_in is not None:
         cols_not_in = to_list(cols_not_in)
-        if has_attributes(table, cols_not_in, raise_error=False):
+        if has_columns(table, cols_not_in, raise_error=False):
             raise ValueError(f"Cannot specify columns {cols_not_in}.")
 
     if timestamp_cols is not None:
         timestamp_cols = to_list(timestamp_cols)
-        has_attributes(table, timestamp_cols, raise_error=True)
-        check_timestamp_attributes(table, timestamp_cols, raise_error=True)
+        has_columns(table, timestamp_cols, raise_error=True)
+        check_timestamp_columns(table, timestamp_cols, raise_error=True)
 
     return table
 
@@ -335,7 +335,7 @@ class Drop:  # pylint: disable=too-few-public-methods
 
     cols: Union[str, List[str]]
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -351,7 +351,7 @@ class Drop:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.cols)
-        return drop_attributes(table, self.cols)
+        return drop_columns(table, self.cols)
 
 
 @dataclass
@@ -370,7 +370,7 @@ class Rename:  # pylint: disable=too-few-public-methods
     rename_map: dict
     check_exists: bool = True
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -387,7 +387,7 @@ class Rename:  # pylint: disable=too-few-public-methods
         """
         if self.check_exists:
             table = process_checks(table, cols=list(self.rename_map.keys()))
-        return rename_attributes(table, self.rename_map)
+        return rename_columns(table, self.rename_map)
 
 
 @dataclass
@@ -403,7 +403,7 @@ class Reorder:  # pylint: disable=too-few-public-methods
 
     cols: List[str]
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -419,7 +419,7 @@ class Reorder:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.cols)
-        return reorder_attributes(table, self.cols)
+        return reorder_columns(table, self.cols)
 
 
 class ReorderAfter:  # pylint: disable=too-few-public-methods
@@ -437,7 +437,7 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
         self.cols = to_list(cols)
         self.after = after
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -454,7 +454,7 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
         """
         self.cols = to_list(self.cols)
         table = process_checks(table, cols=self.cols + [self.after])
-        names = get_attribute_names(table)
+        names = get_column_names(table)
         names = [name for name in names if name not in self.cols]
         name_after_ind = names.index(self.after) + 1
         new_order = names[:name_after_ind] + self.cols + names[name_after_ind:]
@@ -474,7 +474,7 @@ class FilterColumns:  # pylint: disable=too-few-public-methods
 
     cols: Union[str, List[str]]
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -490,7 +490,7 @@ class FilterColumns:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.cols)
-        return filter_attributes(table, self.cols)
+        return filter_columns(table, self.cols)
 
 
 # class ApplyLambda():
@@ -514,7 +514,7 @@ class Trim:  # pylint: disable=too-few-public-methods
     cols: Union[str, List[str]]
     new_col_labels: Optional[Union[str, List[str]]] = None
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -530,7 +530,7 @@ class Trim:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.cols)
-        return trim_attributes(table, self.cols, new_col_labels=self.new_col_labels)
+        return trim_columns(table, self.cols, new_col_labels=self.new_col_labels)
 
 
 @dataclass
@@ -549,7 +549,7 @@ class Literal:  # pylint: disable=too-few-public-methods
     value: Any
     col: str
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -587,7 +587,7 @@ class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
     extract_str: str
     label: str
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -608,7 +608,7 @@ class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
 
         table = select(
             table,
-            extract(self.extract_str, get_attribute(table, self.timestamp_col)).label(
+            extract(self.extract_str, get_column(table, self.timestamp_col)).label(
                 self.label
             ),
         )
@@ -636,7 +636,7 @@ class AddNumeric:  # pylint: disable=too-few-public-methods
     num: Union[int, float]
     new_col_labels: Optional[Union[str, List[str]]] = None
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -652,7 +652,7 @@ class AddNumeric:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.add_to, cols_not_in=self.new_col_labels)
-        return apply_to_attributes(
+        return apply_to_columns(
             table,
             self.add_to,
             lambda x: x + self.num,
@@ -680,7 +680,7 @@ class AddDeltaConstant:  # pylint: disable=too-few-public-methods
     delta: timedelta
     new_col_labels: Optional[Union[str, List[str]]] = None
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -699,7 +699,7 @@ class AddDeltaConstant:  # pylint: disable=too-few-public-methods
             table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
         )
 
-        return apply_to_attributes(
+        return apply_to_columns(
             table,
             self.add_to,
             lambda x: x + self.delta,
@@ -733,7 +733,7 @@ class AddColumn:  # pylint: disable=too-few-public-methods
     negative: Optional[bool] = False
     new_col_labels: Optional[Union[str, List[str]]] = None
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -749,7 +749,7 @@ class AddColumn:  # pylint: disable=too-few-public-methods
 
         """
         # If the column being added is a timestamp column, ensure the others are too
-        if check_timestamp_attributes(table, self.col):
+        if check_timestamp_columns(table, self.col):
             table = process_checks(
                 table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
             )
@@ -758,17 +758,17 @@ class AddColumn:  # pylint: disable=too-few-public-methods
                 table, cols=self.add_to, cols_not_in=self.new_col_labels
             )
 
-        col = get_attribute(table, self.col)
+        col = get_column(table, self.col)
 
         if self.negative:
-            return apply_to_attributes(
+            return apply_to_columns(
                 table,
                 self.add_to,
                 lambda x: x - col,
                 new_col_labels=self.new_col_labels,
             )
 
-        return apply_to_attributes(
+        return apply_to_columns(
             table,
             self.add_to,
             lambda x: x + col,
@@ -808,7 +808,7 @@ class AddDeltaColumns:  # pylint: disable=too-few-public-methods
         self.new_col_labels = new_col_labels
         self.delta_kwargs = delta_kwargs
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -827,17 +827,17 @@ class AddDeltaColumns:  # pylint: disable=too-few-public-methods
             table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
         )
 
-        delta = get_delta_attribute(table, **self.delta_kwargs)
+        delta = get_delta_column(table, **self.delta_kwargs)
 
         if self.negative:
-            return apply_to_attributes(
+            return apply_to_columns(
                 table,
                 self.add_to,
                 lambda x: x - delta,
                 new_col_labels=self.new_col_labels,
             )
 
-        return apply_to_attributes(
+        return apply_to_columns(
             table,
             self.add_to,
             lambda x: x + delta,
@@ -863,7 +863,7 @@ class Cast:
     cols: Union[str, List[str]]
     type_: type
 
-    def __call__(self, table: QueryTypes):
+    def __call__(self, table: TableTypes):
         """Process the table.
 
         Paramaters
@@ -893,12 +893,10 @@ class Cast:
         # Cast
         kwargs = {cast_type_map[self.type_]: True}
 
-        return apply_to_attributes(
+        return apply_to_columns(
             table,
             self.cols,
-            lambda x: process_attribute(  # pylint: disable=unnecessary-lambda
-                x, **kwargs
-            ),
+            lambda x: process_column(x, **kwargs),  # pylint: disable=unnecessary-lambda
         )
 
 
@@ -931,10 +929,10 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
     """
 
-    @query_params_to_type(Subquery)
+    @table_params_to_type(Subquery)
     def __init__(
         self,
-        join_table: QueryTypes,
+        join_table: TableTypes,
         on: Optional[  # pylint:disable=invalid-name
             Union[str, List[str], tuple, List[tuple]]
         ] = None,
@@ -954,8 +952,8 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         self.table_cols = to_list_optional(table_cols)
         self.join_table_cols = to_list_optional(join_table_cols)
 
-    @query_params_to_type(Subquery)
-    def __call__(self, table: QueryTypes) -> Subquery:
+    @table_params_to_type(Subquery)
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1003,8 +1001,8 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
             cond = and_(
                 *[
-                    get_attribute(table, on_table_cols[i])
-                    == get_attribute(self.join_table, on_join_table_cols[i])
+                    get_column(table, on_table_cols[i])
+                    == get_column(self.join_table, on_join_table_cols[i])
                     for i in range(len(on_table_cols))
                 ]
             )
@@ -1068,7 +1066,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1084,7 +1082,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
-        cond = equals(get_attribute(table, self.col), self.value, **self.cond_kwargs)
+        cond = equals(get_column(table, self.col), self.value, **self.cond_kwargs)
         if self.not_:
             cond = cond._negate()
 
@@ -1129,7 +1127,7 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1146,7 +1144,7 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
         """
         table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = in_(
-            get_attribute(table, self.col),
+            get_column(table, self.col),
             to_list(self.values),
             **self.cond_kwargs,
         )
@@ -1194,7 +1192,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1211,7 +1209,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
         """
         table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = has_substring(
-            get_attribute(table, self.col), self.substring, **self.cond_kwargs
+            get_column(table, self.col), self.substring, **self.cond_kwargs
         )
         if self.not_:
             cond = cond._negate()
@@ -1253,7 +1251,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
         self.not_ = not_
         self.binarize_col = binarize_col
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1272,7 +1270,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
             table, cols=self.timestamp_col, cols_not_in=self.binarize_col
         )
         cond = in_(
-            extract("year", get_attribute(table, self.timestamp_col)),
+            extract("year", get_column(table, self.timestamp_col)),
             to_list(self.years),
         )
         if self.not_:
@@ -1315,7 +1313,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
         self.not_ = not_
         self.binarize_col = binarize_col
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1334,7 +1332,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
             table, cols=self.timestamp_col, cols_not_in=self.binarize_col
         )
         cond = in_(
-            extract("month", get_attribute(table, self.timestamp_col)),
+            extract("month", get_column(table, self.timestamp_col)),
             to_list(self.months),
         )
         if self.not_:
@@ -1365,7 +1363,7 @@ class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
         self.timestamp_col = timestamp_col
         self.timestamp = timestamp
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1389,7 +1387,7 @@ class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
 
         return (
             select(table)
-            .where(get_attribute(table, self.timestamp_col) <= timestamp)
+            .where(get_column(table, self.timestamp_col) <= timestamp)
             .subquery()
         )
 
@@ -1411,7 +1409,7 @@ class ConditionAfterDate:  # pylint: disable=too-few-public-methods
         self.timestamp_col = timestamp_col
         self.timestamp = timestamp
 
-    def __call__(self, table: QueryTypes) -> Subquery:
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1435,7 +1433,7 @@ class ConditionAfterDate:  # pylint: disable=too-few-public-methods
 
         return (
             select(table)
-            .where(get_attribute(table, self.timestamp_col) >= timestamp)
+            .where(get_column(table, self.timestamp_col) >= timestamp)
             .subquery()
         )
 
@@ -1453,8 +1451,8 @@ class Limit:  # pylint: disable=too-few-public-methods
 
     number: int
 
-    @query_params_to_type(Select)
-    def __call__(self, table: QueryTypes) -> Subquery:
+    @table_params_to_type(Select)
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters
@@ -1483,8 +1481,8 @@ class RandomizeOrder:
 
     """
 
-    @query_params_to_type(Subquery)
-    def __call__(self, table: QueryTypes) -> Subquery:
+    @table_params_to_type(Subquery)
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Paramaters

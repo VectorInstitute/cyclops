@@ -34,10 +34,10 @@ from cyclops.processors.constants import EMPTY_STRING
 from cyclops.query import process as qp
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
-    QueryTypes,
+    TableTypes,
     _to_subquery,
-    assert_query_has_columns,
-    query_params_to_type,
+    assert_table_has_columns,
+    table_params_to_type,
 )
 from cyclops.utils.log import setup_logging
 
@@ -118,7 +118,7 @@ def get_table(table_name: str, rename: bool = True) -> Subquery:
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        Query with mapped columns.
+        Table with mapped columns.
 
     """
     if table_name not in TABLE_MAP:
@@ -138,7 +138,7 @@ def er_admin(**process_kwargs) -> QueryInterface:
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -155,10 +155,10 @@ def er_admin(**process_kwargs) -> QueryInterface:
     return QueryInterface(_db, table)
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(er_admin_table=ENCOUNTER_ID)
+@table_params_to_type(Subquery)
+@assert_table_has_columns(er_admin_table=ENCOUNTER_ID)
 def patient_encounters(
-    er_admin_table: Optional[QueryTypes] = None, **process_kwargs
+    er_admin_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterface:
     """Query GEMINI patient encounters.
 
@@ -247,7 +247,7 @@ def diagnoses(**process_kwargs) -> QueryInterface:
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -288,14 +288,14 @@ def diagnoses(**process_kwargs) -> QueryInterface:
     return QueryInterface(_db, table)
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(
+@table_params_to_type(Subquery)
+@assert_table_has_columns(
     diagnoses_table=[ENCOUNTER_ID, DIAGNOSIS_CODE],
     patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID],
 )
 def patient_diagnoses(
-    diagnoses_table: Optional[QueryTypes] = None,
-    patient_encounters_table: Optional[QueryTypes] = None,
+    diagnoses_table: Optional[TableTypes] = None,
+    patient_encounters_table: Optional[TableTypes] = None,
     **process_kwargs,
 ) -> QueryInterface:
     """Query diagnosis data.
@@ -305,16 +305,16 @@ def patient_diagnoses(
     diagnoses_table: sqlalchemy.sql.selectable.Select
     or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
     or cyclops.query.utils.DBTable, optional
-        Diagnoses query used to join.
+        Diagnoses table used to join.
     patient_encounters_table: sqlalchemy.sql.selectable.Select
     or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
     or cyclops.query.utils.DBTable, optional
-        Patient encounters query used to join.
+        Patient encounters table used to join.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -345,7 +345,7 @@ def room_transfers(**process_kwargs) -> QueryInterface:
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -371,10 +371,10 @@ def room_transfers(**process_kwargs) -> QueryInterface:
     return QueryInterface(_db, table)
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
 def care_units(
-    patient_encounters_table: Optional[QueryTypes] = None,
+    patient_encounters_table: Optional[TableTypes] = None,
     **process_kwargs,
 ) -> QueryInterface:
     """Query care unit data.
@@ -384,12 +384,12 @@ def care_units(
     patient_encounters_table: sqlalchemy.sql.selectable.Select
     or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
     or cyclops.query.utils.DBTable, optional
-        Patient encounters query used to join.
+        Patient encounters table used to join.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -468,11 +468,11 @@ def care_units(
     return QueryInterface(_db, table)
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
 def events(
     event_category: str,
-    patient_encounters_table: Optional[QueryTypes] = None,
+    patient_encounters_table: Optional[TableTypes] = None,
     **process_kwargs,
 ) -> QueryInterface:
     """Query events.
@@ -484,12 +484,12 @@ def events(
     patient_encounters_table: sqlalchemy.sql.selectable.Select
     or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
     or cyclops.query.utils.DBTable, optional
-        Patient encounters query used to join.
+        Patient encounters table used to join.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
 
     Other Parameters

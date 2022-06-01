@@ -32,11 +32,11 @@ from cyclops.query import process as qp
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.postprocess.mimic import process_mimic_care_units
 from cyclops.query.util import (
-    QueryTypes,
+    TableTypes,
     _to_subquery,
-    assert_query_has_columns,
-    get_attribute,
-    query_params_to_type,
+    assert_table_has_columns,
+    get_column,
+    table_params_to_type,
 )
 from cyclops.utils.log import setup_logging
 
@@ -98,7 +98,7 @@ def get_table(table_name: str, rename: bool = True) -> Subquery:
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        Query with mapped columns.
+        Table with mapped columns.
 
     """
     if table_name not in TABLE_MAP:
@@ -130,11 +130,11 @@ def patients(**process_kwargs) -> QueryInterface:
     # Process and include patient's anchor year.
     table = select(
         table,
+        (func.substr(get_column(table, "anchor_year_group"), 1, 4).cast(Integer)).label(
+            "anchor_year_group_start"
+        ),
         (
-            func.substr(get_attribute(table, "anchor_year_group"), 1, 4).cast(Integer)
-        ).label("anchor_year_group_start"),
-        (
-            func.substr(get_attribute(table, "anchor_year_group"), 8, 12).cast(Integer)
+            func.substr(get_column(table, "anchor_year_group"), 8, 12).cast(Integer)
         ).label("anchor_year_group_end"),
     ).subquery()
 
@@ -142,10 +142,10 @@ def patients(**process_kwargs) -> QueryInterface:
     table = select(
         table,
         (
-            get_attribute(table, "anchor_year_group_start")
+            get_column(table, "anchor_year_group_start")
             + (
-                get_attribute(table, "anchor_year_group_end")
-                - get_attribute(table, "anchor_year_group_start")
+                get_column(table, "anchor_year_group_end")
+                - get_column(table, "anchor_year_group_start")
             )
             / 2
         ).label("anchor_year_group_middle"),
@@ -154,8 +154,8 @@ def patients(**process_kwargs) -> QueryInterface:
     table = select(
         table,
         (
-            get_attribute(table, "anchor_year_group_middle")
-            - get_attribute(table, "anchor_year")
+            get_column(table, "anchor_year_group_middle")
+            - get_column(table, "anchor_year")
         ).label("anchor_year_difference"),
     ).subquery()
 
@@ -207,7 +207,7 @@ def diagnoses(**process_kwargs) -> QueryInterface:
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -246,10 +246,10 @@ def diagnoses(**process_kwargs) -> QueryInterface:
     return QueryInterface(_db, table)
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(patients_table=SUBJECT_ID)
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patients_table=SUBJECT_ID)
 def patient_diagnoses(
-    patients_table: Optional[QueryTypes] = None, **process_kwargs
+    patients_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterface:
     """Query MIMIC patient diagnoses.
 
@@ -262,7 +262,7 @@ def patient_diagnoses(
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -304,10 +304,10 @@ def patient_diagnoses(
     return QueryInterface(_db, table)
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(patients_table=SUBJECT_ID)
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patients_table=SUBJECT_ID)
 def transfers(
-    patients_table: Optional[QueryTypes] = None, **process_kwargs
+    patients_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterfaceProcessed:
     """Get care unit table within a given set of encounters.
 
@@ -321,7 +321,7 @@ def transfers(
     Returns
     -------
     cyclops.query.interface.QueryInterfaceProcessed
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -351,10 +351,10 @@ def transfers(
     return QueryInterface(_db, table)
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(patients_table=SUBJECT_ID)
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patients_table=SUBJECT_ID)
 def care_units(
-    patients_table: Optional[QueryTypes] = None, **process_kwargs
+    patients_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterfaceProcessed:
     """Get care unit table within a given set of encounters.
 
@@ -368,7 +368,7 @@ def care_units(
     Returns
     -------
     cyclops.query.interface.QueryInterfaceProcessed
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -390,10 +390,10 @@ def care_units(
     )
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(patients_table=SUBJECT_ID)
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patients_table=SUBJECT_ID)
 def patient_encounters(
-    patients_table: Optional[QueryTypes] = None, **process_kwargs
+    patients_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterface:
     """Query MIMIC patient encounters.
 
@@ -407,7 +407,7 @@ def patient_encounters(
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------
@@ -454,10 +454,10 @@ def patient_encounters(
     return QueryInterface(_db, table)
 
 
-@query_params_to_type(Subquery)
-@assert_query_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
+@table_params_to_type(Subquery)
+@assert_table_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
 def events(
-    patient_encounters_table: Optional[QueryTypes] = None, **process_kwargs
+    patient_encounters_table: Optional[TableTypes] = None, **process_kwargs
 ) -> QueryInterface:
     """Query MIMIC events.
 
@@ -471,7 +471,7 @@ def events(
     Returns
     -------
     cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+        Constructed table, wrapped in an interface object.
 
     Other Parameters
     ----------------

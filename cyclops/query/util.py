@@ -75,8 +75,8 @@ class DBMetaclass(type):
         return cls.__instances[cls]
 
 
-QUERY_OBJECTS = [Table, Select, Subquery, DBTable]
-QueryTypes = Union[Select, Subquery, Table, DBTable]
+TABLE_OBJECTS = [Table, Select, Subquery, DBTable]
+TableTypes = Union[Select, Subquery, Table, DBTable]
 
 
 def to_list(obj: Any) -> list:
@@ -147,74 +147,74 @@ def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
     return datetime.strptime(date, fmt)
 
 
-def _to_subquery(table_: QueryTypes) -> Subquery:
-    """Convert a query from some type in QUERY_OBJECTS to Subquery type.
+def _to_subquery(table: TableTypes) -> Subquery:
+    """Convert a table from a table type object to the Subquery type.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        Query to convert.
+        Table to convert.
 
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        The converted query.
+        The converted table.
 
     """
-    if isinstance(table_, Subquery):
-        return table_
+    if isinstance(table, Subquery):
+        return table
 
-    if isinstance(table_, Select):
-        return table_.subquery()
+    if isinstance(table, Select):
+        return table.subquery()
 
-    if isinstance(table_, Table):
-        return select(table_).subquery()
+    if isinstance(table, Table):
+        return select(table).subquery()
 
-    if isinstance(table_, DBTable):
-        return select(table_.data).subquery()
+    if isinstance(table, DBTable):
+        return select(table.data).subquery()
 
     raise ValueError(
-        f"""table_ has type {type(table_)}, but must have one of the
-        following types: {", ".join(QUERY_OBJECTS)}"""
+        f"""Table has type {type(table)}, but must have one of the
+        following types: {", ".join(TABLE_OBJECTS)}"""
     )
 
 
-def _to_select(table_: QueryTypes) -> Select:
-    """Convert a query from some type in QUERY_OBJECTS to Select type.
+def _to_select(table: TableTypes) -> Select:
+    """Convert a table from a table type object to the Select type.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        Query to convert.
+        Table to convert.
 
     Returns
     -------
     sqlalchemy.sql.selectable.Select
-        The converted query.
+        The converted table.
 
     """
-    if isinstance(table_, Select):
-        return table_
+    if isinstance(table, Select):
+        return table
 
-    if isinstance(table_, Subquery):
-        return select(table_)
+    if isinstance(table, Subquery):
+        return select(table)
 
-    if isinstance(table_, Table):
-        return select(table_)
+    if isinstance(table, Table):
+        return select(table)
 
-    if isinstance(table_, DBTable):
-        return select(table_.data)
+    if isinstance(table, DBTable):
+        return select(table.data)
 
     raise ValueError(
-        f"""t has type {type(table_)}, but must have one of the
-        following types: {", ".join(QUERY_OBJECTS)}"""
+        f"""Table has type {type(table)}, but must have one of the
+        following types: {", ".join(TABLE_OBJECTS)}"""
     )
 
 
 def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Callable:
-    """Convert QueryType parameters to a specified type.
+    """Convert TableTypes parameters to a specified type.
 
     A decorator which processes a function's arguments by taking all
     parameters with type in relevant_types and converting them using
@@ -235,7 +235,7 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
     """
 
     def decorator(func_: Callable) -> Callable:
-        """Decorate function to convert QueryType parameters to a specified type."""
+        """Decorate function to convert TableTypes parameters to a specified type."""
 
         @wraps(func_)
         def wrapper_func(*args, **kwargs) -> Callable:
@@ -258,8 +258,8 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
     return decorator
 
 
-def query_params_to_type(to_type: QueryTypes) -> Callable:
-    """Decorate to convert QueryTypes params to a specified type.
+def table_params_to_type(to_type: TableTypes) -> Callable:
+    """Decorate to convert TableTypes params to a specified type.
 
     Parameters
     ----------
@@ -274,170 +274,141 @@ def query_params_to_type(to_type: QueryTypes) -> Callable:
 
     """
     # Dictionary mapping query type -> query type conversion function.
-    query_to_type_fn_map = {
+    table_to_type_fn_map = {
         Subquery: _to_subquery,
         Select: _to_select,
         Table: lambda x: x,
         DBTable: lambda x: x,
     }
-    if to_type not in QUERY_OBJECTS:
-        raise ValueError(f"to_type must be in {QUERY_OBJECTS}")
+    if to_type not in TABLE_OBJECTS:
+        raise ValueError(f"to_type must be in {TABLE_OBJECTS}")
 
-    to_type_fn = query_to_type_fn_map[to_type]
+    to_type_fn = table_to_type_fn_map[to_type]
 
-    return param_types_to_type(QUERY_OBJECTS, to_type_fn)
+    return param_types_to_type(TABLE_OBJECTS, to_type_fn)
 
 
-@query_params_to_type(Subquery)
-def has_attributes(
-    table_: QueryTypes, attrs: Union[str, List[str]], raise_error: bool = False
+@table_params_to_type(Subquery)
+def get_column(
+    table: TableTypes,
+    col: str,
 ):
-    """Check whether a table has all of the given columns.
+    """Extract a column object from a table by name.
 
     Parameters
     ----------
-    table_ : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        Table to check.
-    attrs: str or list of str
-        Required columns.
-    raise_error: bool
-        Whether to raise an error if the required columns are not found.
-
-    """
-    attrs = to_list(attrs)
-    table_cols = get_attribute_names(table_)
-    attrs_in_table = [attr in table_cols for attr in attrs]
-    if raise_error and not all(attrs_in_table):
-        missing = list(set(attrs) - set(attrs_in_table))
-        missing_str = ", ".join(missing)
-        if len(missing) == 1:
-            raise ValueError(f"Column {missing_str} is not in table.")
-        raise ValueError(f"{missing_str} columns are not in table.")
-    return all(attrs_in_table)
-
-
-@query_params_to_type(Subquery)
-def get_attribute(
-    table_: QueryTypes,
-    attr: str,
-):
-    """Extract an attribute object from the subquery.
-
-    Parameters
-    ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query with the column.
-    attr: str
-        Name of attribute to extract.
+        The table with the column.
+    col: str
+        Name of column to extract.
 
     Returns
     -------
     sqlalchemy.sql.schema.Column
-        The corresponding attribute in the query.
+        The corresponding column in the table.
 
     """
-    col_names = get_attribute_names(table_)
-    if attr not in col_names:
-        raise ValueError(f"Query does not contain column {attr}")
+    col_names = get_column_names(table)
+    if col not in col_names:
+        raise ValueError(f"Table does not contain column {col}")
 
-    return table_.c[col_names.index(attr)]
+    return table.c[col_names.index(col)]
 
 
-@query_params_to_type(Subquery)
-def filter_attributes(
-    table_: QueryTypes,
-    attrs: Union[str, List[str]],
+@table_params_to_type(Subquery)
+def filter_columns(
+    table: TableTypes,
+    cols: Union[str, List[str]],
 ) -> Subquery:
     """Filter a table, keeping only the specified columns.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query with the column.
-    attrs: str or list of str
-        Name of attribute on which to filter.
+        The table with the column.
+    cols: str or list of str
+        Name of columns to keep.
 
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        Filtered attributes from the query as a new subquery.
+        Table with only the specified columns.
 
     """
-    attrs = to_list(attrs)
-    if len(attrs) == 0:
+    cols = to_list(cols)
+    if len(cols) == 0:
         raise ValueError("Must specify at least one column to filter.")
 
-    col_names = get_attribute_names(table_)
+    col_names = get_column_names(table)
     filtered = []
-    for attr in attrs:
-        if attr not in col_names:
+    for col in cols:
+        if col not in col_names:
             continue
-        filtered.append(table_.c[col_names.index(attr)])
+        filtered.append(table.c[col_names.index(col)])
 
     return select(filtered).subquery()
 
 
-@query_params_to_type(Subquery)
-def get_attributes(
-    table_: QueryTypes,
-    attrs: Union[str, List[str]],
+@table_params_to_type(Subquery)
+def get_columns(
+    table: TableTypes,
+    cols: Union[str, List[str]],
 ):
-    """Extract a number of attributes from the subquery.
+    """Extract a number of columns from the table.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The table.
-    attrs: str or list of str
-        Names of attributes to extract.
+    cols: str or list of str
+        Names of columns to extract.
 
     Returns
     -------
     list of sqlalchemy.sql.schema.Column
-        The corresponding attributes in the query.
+        The corresponding columns in the table.
 
     """
-    return [get_attribute(table_, attr) for attr in to_list(attrs)]
+    return [get_column(table, col) for col in to_list(cols)]
 
 
-@query_params_to_type(Subquery)
-def get_attribute_names(table_: QueryTypes):
-    """Extract attribute names from a table.
+@table_params_to_type(Subquery)
+def get_column_names(table: TableTypes):
+    """Extract column names from a table.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The table.
 
     Returns
     -------
     list of str
-        The table attribute names.
+        The table column names.
 
     """
-    return [c.name for c in table_.columns]
+    return [c.name for c in table.columns]
 
 
-@query_params_to_type(Subquery)
+@table_params_to_type(Subquery)
 def has_columns(
-    table_: QueryTypes, cols: Union[str, List[str]], raise_error: bool = False
-) -> bool:
-    """Check if data has required columns for processing.
+    table: TableTypes, cols: Union[str, List[str]], raise_error: bool = False
+):
+    """Check whether a table has all of the specified columns.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The table.
+        Table to check.
     cols: str or list of str
-        List of column names that must be present in data.
+        Required columns.
     raise_error: bool
-        Whether to raise a ValueError if there are missing columns.
+        Whether to raise an error if the required columns are not found.
 
     Returns
     -------
@@ -447,7 +418,7 @@ def has_columns(
     """
     cols = to_list(cols)
     required_set = set(cols)
-    columns = set(get_attribute_names(table_))
+    columns = set(get_column_names(table))
     present = required_set.issubset(columns)
 
     if raise_error and not present:
@@ -457,24 +428,23 @@ def has_columns(
     return present
 
 
-@query_params_to_type(Subquery)
-def assert_query_has_columns(*args, **kwargs) -> Callable:
-    """Assert that QueryType params have the necessary columns.
+@table_params_to_type(Subquery)
+def assert_table_has_columns(*args, **kwargs) -> Callable:
+    """Assert that TableTypes params have the necessary columns.
 
-    assert_query_has_columns(["A", "B"], None) is equivalent to
-    assert_query_has_columns(["A", "B"]) but may be necessary when
-    wanting to check, assert_query_has_columns(["A"], None, ["C"])
+    assert_table_has_columns(["A", "B"], None) is equivalent to
+    assert_table_has_columns(["A", "B"]) but may be necessary when
+    wanting to check, assert_table_has_columns(["A"], None, ["C"])
 
     Can also check keyword arguments, e.g., optional queries,
-    assert_query_has_columns(["A"], optional_query=["D"])
+    assert_table_has_columns(["A"], kwarg_table=["D"])
 
     Parameters
     ----------
     *args
-        Required columns of the function's ordered query arguments.
+        Ordered arguments corresponding to the function's table-type args.
     **kwargs
-        Keyword corresponds to the query kwargs of the function.
-        The value is this keyword argument's required columns.
+        Keyword arguments corresponding to the function's table-type kwargs.
 
     Returns
     -------
@@ -486,18 +456,18 @@ def assert_query_has_columns(*args, **kwargs) -> Callable:
     def decorator(func_: Callable) -> Callable:
         @wraps(func_)
         def wrapper_func(*fn_args, **fn_kwargs) -> Callable:
-            # Check only the query arguments
-            query_args = [i for i in fn_args if isinstance(i, Subquery)]
+            # Check only the table arguments
+            table_args = [i for i in fn_args if isinstance(i, Subquery)]
 
-            assert len(args) <= len(query_args)
+            assert len(args) <= len(table_args)
 
             for i, arg in enumerate(args):
                 if arg is None:  # Can specify None to skip over checking a query
                     continue
-                has_columns(query_args[i], arg, raise_error=True)
+                has_columns(table_args[i], arg, raise_error=True)
 
             for key, required_cols in kwargs.items():
-                # If an optional query is not provided, or is None,
+                # If an optional table is not provided, or is None,
                 # it is skipped
                 if key not in fn_kwargs:
                     continue
@@ -515,124 +485,121 @@ def assert_query_has_columns(*args, **kwargs) -> Callable:
     return decorator
 
 
-@query_params_to_type(Subquery)
-def drop_attributes(
-    table_: QueryTypes,
+@table_params_to_type(Subquery)
+def drop_columns(
+    table: TableTypes,
     drop_cols: Union[str, List[str]],
 ) -> Subquery:
-    """Drop some attribute(s) from a query.
-
-    The attribute(s) given may be a column object, column name (string), or a
-    list of any combination of these objects.
+    """Drop, or remove, some columns from a table.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
         The table.
     col : str or list of str
-        Names of attributes to drop (remove).
+        Names of columns to drop.
 
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        The corresponding query with attributes dropped.
+        The corresponding table with columns dropped.
 
     """
-    drop_cols = get_attributes(table_, drop_cols)
+    drop_cols = get_columns(table, drop_cols)
 
-    return select(*[c for c in table_.c if c not in drop_cols]).subquery()
+    return select(*[c for c in table.c if c not in drop_cols]).subquery()
 
 
-@query_params_to_type(Subquery)
-def rename_attributes(table_: QueryTypes, rename_map: dict) -> Subquery:
-    """Rename a query's attributes.
+@table_params_to_type(Subquery)
+def rename_columns(table: TableTypes, rename_map: dict) -> Subquery:
+    """Rename a table's columns.
 
-    Rename query's attributes according to a dictionary of strings,
+    Rename the table's columns according to a dictionary of strings,
     where the key is the current name, and the value is the replacement.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query.
+        The table.
     d : dict
-        Dictionary mapping current attribute names (key) to new ones (value).
+        Dictionary mapping current column names (key) to new ones (value).
 
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        The corresponding query with attributes renamed.
+        The corresponding table with columns renamed.
 
     """
     return select(
         *[
             c.label(rename_map[c.name]) if c.name in rename_map else c
-            for c in table_.columns
+            for c in table.columns
         ]
     ).subquery()
 
 
-@query_params_to_type(Subquery)
-def reorder_attributes(table_: QueryTypes, cols: List[str]) -> Subquery:
-    """Reorder a query's attributes.
-
-    Reorder query's attributes according to a list of strings or
-    column objects in the query.
+@table_params_to_type(Subquery)
+def reorder_columns(table: TableTypes, cols: List[str]) -> Subquery:
+    """Reorder a table's columns.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query to reorder.
+        The table to reorder.
     cols : list of str
-        New attribute order.
+        New order of columns, which must include all existing columns.
 
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        The reordered query.
+        The reordered table.
 
     """
     # Get the old/new column names.
-    old_order = get_attribute_names(table_)
-    new_order = [c.name for c in get_attributes(table_, cols)]
+    old_order = get_column_names(table)
+    new_order = [c.name for c in get_columns(table, cols)]
 
     # Make sure we have exactly the same set of old/new column names.
     if not set(old_order) == set(new_order):
         old_order_print = ", ".join(old_order)
         new_order_print = ", ".join(new_order)
         raise ValueError(
-            f"""Must specify all the query's attributes {old_order_print}
+            f"""Must specify all columns {old_order_print}
             to re-order, not {new_order_print}."""
         )
 
     # Reorder the columns.
     new_cols = []
     for col in new_order:
-        new_cols.append(table_.c[old_order.index(col)])
+        new_cols.append(table.c[old_order.index(col)])
 
     return select(*new_cols).subquery()
 
 
-@query_params_to_type(Subquery)
-def apply_to_attributes(
-    table_: QueryTypes,
+@table_params_to_type(Subquery)
+def apply_to_columns(
+    table: TableTypes,
     col_names: Union[str, List[str]],
     func_: Callable,
     new_col_labels: Optional[Union[str, List[str]]] = None,
 ) -> Subquery:
-    """Apply a function to some attributes.
+    """Apply a function to some columns.
+
+    This function can change existing columns or create new
+    columns depending on whether new_col_labels is specified.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query.
+        The table.
     col_names: str or list of str
-        Attributes to which to apply the function.
+        Columns to which to apply the function.
     func_: Callable
-        Function to apply to the attributes, where it takes an attribute
+        Function to apply to the columns, where it takes an column
         as its only parameter and returns another column object.
     new_col_labels: str or list of str, optional
         If specified, create new columns with these labels. Otherwise,
@@ -641,51 +608,50 @@ def apply_to_attributes(
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        The query with function applied.
+        The table with function applied.
 
     """
     col_names = to_list(col_names)
     new_col_labels = to_list_optional(new_col_labels)
-    cols = get_attributes(table_, col_names)
+    cols = get_columns(table, col_names)
 
     if new_col_labels is None:
-        # Apply to existing attributes
-        prev_order = get_attribute_names(table_)
-        table_ = select(table_).add_columns(
+        # Apply to existing columns
+        prev_order = get_column_names(table)
+        table = select(table).add_columns(
             *[
                 func_(col).label("__" + col_names[i] + "__")
                 for i, col in enumerate(cols)
             ]
         )
         rename = {"__" + name + "__": name for name in col_names}
-        table_ = drop_attributes(table_, col_names)
-        table_ = rename_attributes(table_, rename)
-        table_ = reorder_attributes(table_, prev_order)
+        table = drop_columns(table, col_names)
+        table = rename_columns(table, rename)
+        table = reorder_columns(table, prev_order)
     else:
-        # Apply to new attributes
+        # Apply to new columns
         new_cols = [func_(col).label(new_col_labels[i]) for i, col in enumerate(cols)]
-        table_ = select(table_).add_columns(*new_cols).subquery()
+        table = select(table).add_columns(*new_cols)
 
-    return _to_subquery(table_)
+    return _to_subquery(table)
 
 
-def trim_attributes(
-    table_: QueryTypes,
+def trim_columns(
+    table: TableTypes,
     cols: Union[str, List[str]],
     new_col_labels: Optional[Union[str, List[str]]] = None,
 ) -> Subquery:
-    """Trim attributes and remove leading/trailing whitespace.
+    """Trim, or strip, specified columns.
 
-    Returns query with columns listed having their
-    leading/trailing whitespace trimmed (stripped).
+    Trimming refers to the removal of leading/trailing whitespace.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query.
+        The table.
     cols: str or list of str
-        Names of attributes to trim.
+        Names of columns to trim.
     new_col_labels: str or list of str, optional
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
@@ -693,44 +659,15 @@ def trim_attributes(
     Returns
     -------
     sqlalchemy.sql.selectable.Subquery
-        The query with trimmed attrbutes.
+        The table with the specified columns trimmed.
 
     """
-    return apply_to_attributes(
-        table_,
+    return apply_to_columns(
+        table,
         cols,
-        lambda x: process_attribute(x, to_str=True, trim=True),
+        lambda x: process_column(x, to_str=True, trim=True),
         new_col_labels=new_col_labels,
     )
-
-
-def rga(obj, *attr_args):
-    """Recursive getattr (rga): express a series of attribute accesses with strings.
-
-    E.g., obj.a.b.c == rga(obj, "a", "b", "c")
-
-    Parameters
-    ----------
-    obj: any
-        Inital object.
-    *attr_args : list of str
-        Ordered list of attributes to access.
-
-    Returns
-    -------
-    any
-        The object accessed by the final attribute.
-
-    """
-    # Get attribute.
-    next_attr = getattr(obj, attr_args[0])
-
-    # Base case.
-    if len(attr_args) == 1:
-        return next_attr
-
-    # Recurse.
-    return getattr(next_attr, attr_args[1:])
 
 
 def process_elem(elem: Any, **kwargs: bool) -> Any:
@@ -802,7 +739,7 @@ def process_list(lst: Union[Any, List[Any]], **kwargs: bool) -> List[Any]:
     return [process_elem(i, **kwargs) for i in lst]
 
 
-def process_attribute(col: Column, **kwargs: bool) -> Column:
+def process_column(col: Column, **kwargs: bool) -> Column:
     """Preprocess a Column object.
 
     Parameters
@@ -877,7 +814,7 @@ def equals(
         An expression representing where the condition was satisfied.
 
     """
-    return process_attribute(col, lower=lower, trim=trim, **kwargs) == process_elem(
+    return process_column(col, lower=lower, trim=trim, **kwargs) == process_elem(
         value, lower=lower, trim=trim, **kwargs
     )
 
@@ -911,7 +848,7 @@ def not_equals(
         An expression representing where the condition was satisfied.
 
     """
-    return process_attribute(col, lower=lower, trim=trim, **kwargs) != process_elem(
+    return process_column(col, lower=lower, trim=trim, **kwargs) != process_elem(
         value, lower=lower, trim=trim, **kwargs
     )
 
@@ -943,7 +880,7 @@ def has_string_format(
         An expression representing where the condition was satisfied.
 
     """
-    return process_attribute(col, to_str=to_str, **kwargs).like(
+    return process_column(col, to_str=to_str, **kwargs).like(
         fmt.format(process_elem(value, to_str=to_str, **kwargs))
     )
 
@@ -1072,14 +1009,14 @@ def in_(
         An expression representing where the condition was satisfied.
 
     """
-    return process_attribute(col, lower=lower, trim=trim, **kwargs).in_(
+    return process_column(col, lower=lower, trim=trim, **kwargs).in_(
         process_list(lst, lower=lower, trim=trim, **kwargs)
     )
 
 
-def check_attribute_type(
-    table_: QueryTypes,
-    attrs: Union[str, List[str]],
+def check_column_type(
+    table: TableTypes,
+    cols: Union[str, List[str]],
     types: Union[Any, List[Any]],
     raise_error=False,
 ):
@@ -1087,10 +1024,10 @@ def check_attribute_type(
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query.
-    attrs: str or list of str
+        The table.
+    cols: str or list of str
         Column names to check.
     types: any
         The allowed types for each column.
@@ -1103,36 +1040,32 @@ def check_attribute_type(
         Whether all of the columns are one of the types.
 
     """
-    attrs = to_list(attrs)
+    cols = to_list(cols)
     types = to_list(types)
     is_type = [
-        any(isinstance(get_attribute(table_, attr).type, type_) for type_ in types)
-        for attr in attrs
+        any(isinstance(get_column(table, col).type, type_) for type_ in types)
+        for col in cols
     ]
 
     if raise_error and not all(is_type):
-        incorrect_type = set(attrs) - {
-            attr for i, attr in enumerate(attrs) if is_type[i]
-        }
+        incorrect_type = set(cols) - {col for i, col in enumerate(cols) if is_type[i]}
         types_str = ", ".join([type_.__name__ for type_ in types])
-        raise ValueError(
-            f"{incorrect_type} attributes are not one of types {types_str}."
-        )
+        raise ValueError(f"{incorrect_type} columns are not one of types {types_str}.")
 
     return all(is_type)
 
 
-def check_timestamp_attributes(
-    table_: QueryTypes, attrs: Union[str, List[str]], raise_error=False
+def check_timestamp_columns(
+    table: TableTypes, cols: Union[str, List[str]], raise_error=False
 ):
     """Check whether some columns are DATE or TIMESTAMP columns.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query.
-    attrs: str or list of str
+        The table.
+    cols: str or list of str
         Column names to check.
     raise_error: bool
         Whether to raise an error if one of the columns are none of the types.
@@ -1143,31 +1076,29 @@ def check_timestamp_attributes(
         Whether all of the columns are one of the types.
 
     """
-    return check_attribute_type(
-        table_, attrs, [DATE, TIMESTAMP], raise_error=raise_error
-    )
+    return check_column_type(table, cols, [DATE, TIMESTAMP], raise_error=raise_error)
 
 
-@query_params_to_type(Subquery)
-def get_delta_attribute(
-    table_: QueryTypes,
+@table_params_to_type(Subquery)
+def get_delta_column(
+    table: TableTypes,
     years: Optional[str] = None,
     months: Optional[str] = None,
     days: Optional[str] = None,
     hours: Optional[str] = None,
 ) -> Column:
-    """Create a time delta attribute.
+    """Create a time delta column.
 
-    Create a time delta (interval) attribute from a number of
+    Create a time delta (interval) column from a number of
     numeric timestamp columns.
 
     Warning: Null values in each specified numeric time column are coalesced to 0.
 
     Parameters
     ----------
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
-        The query.
+        The table.
     years: None or str
         Years column.
     months: None or str
@@ -1184,14 +1115,14 @@ def get_delta_attribute(
 
     """
 
-    def get_attr_or_none(col):
+    def get_col_or_none(col):
         """If col is not None, get interval column from names."""
-        return None if col is None else get_attribute(table_, col)
+        return None if col is None else get_column(table, col)
 
-    years = get_attr_or_none(years)
-    months = get_attr_or_none(months)
-    days = get_attr_or_none(days)
-    hours = get_attr_or_none(hours)
+    years = get_col_or_none(years)
+    months = get_col_or_none(months)
+    days = get_col_or_none(days)
+    hours = get_col_or_none(hours)
 
     time_cols = [years, months, days, hours]
     names = ["YEARS", "MONTHS", "DAYS", "HOURS"]
@@ -1201,7 +1132,7 @@ def get_delta_attribute(
     time_cols = [col for col in time_cols if col is not None]
 
     if len(time_cols) == 0:
-        raise ValueError("One or more time interval attributes must be specified.")
+        raise ValueError("One or more time interval columns must be specified.")
 
     # Create interval columns.
     interval_cols = []
