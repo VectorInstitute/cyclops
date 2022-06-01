@@ -152,8 +152,7 @@ def _to_subquery(table: TableTypes) -> Subquery:
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         Table to convert.
 
     Returns
@@ -185,8 +184,7 @@ def _to_select(table: TableTypes) -> Select:
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         Table to convert.
 
     Returns
@@ -263,8 +261,7 @@ def table_params_to_type(to_type: TableTypes) -> Callable:
 
     Parameters
     ----------
-    to_type: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    to_type: cyclops.query.util.TableTypes
         The type to which to convert.
 
     Returns
@@ -297,8 +294,7 @@ def get_column(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table with the column.
     col: str
         Name of column to extract.
@@ -325,8 +321,7 @@ def filter_columns(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table with the column.
     cols: str or list of str
         Name of columns to keep.
@@ -360,8 +355,7 @@ def get_columns(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
     cols: str or list of str
         Names of columns to extract.
@@ -381,8 +375,7 @@ def get_column_names(table: TableTypes):
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
 
     Returns
@@ -402,8 +395,7 @@ def has_columns(
 
     Parameters
     ----------
-    table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table : cyclops.query.util.TableTypes
         Table to check.
     cols: str or list of str
         Required columns.
@@ -494,8 +486,7 @@ def drop_columns(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
     col : str or list of str
         Names of columns to drop.
@@ -520,8 +511,7 @@ def rename_columns(table: TableTypes, rename_map: dict) -> Subquery:
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
     d : dict
         Dictionary mapping current column names (key) to new ones (value).
@@ -546,8 +536,7 @@ def reorder_columns(table: TableTypes, cols: List[str]) -> Subquery:
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table to reorder.
     cols : list of str
         New order of columns, which must include all existing columns.
@@ -593,8 +582,7 @@ def apply_to_columns(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
     col_names: str or list of str
         Columns to which to apply the function.
@@ -647,8 +635,7 @@ def trim_columns(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
     cols: str or list of str
         Names of columns to trim.
@@ -1024,8 +1011,7 @@ def check_column_type(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
     cols: str or list of str
         Column names to check.
@@ -1062,8 +1048,7 @@ def check_timestamp_columns(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
     cols: str or list of str
         Column names to check.
@@ -1096,8 +1081,7 @@ def get_delta_column(
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         The table.
     years: None or str
         Years column.

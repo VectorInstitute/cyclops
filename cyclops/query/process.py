@@ -145,8 +145,7 @@ def process_operations(  # pylint: disable=too-many-locals
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table: cyclops.query.util.TableTypes
         Table to process.
     operations:
         Operations to execute, which are of the form:
@@ -291,8 +290,7 @@ def process_checks(
 
     Paramaters
     ----------
-    table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    table : cyclops.query.util.TableTypes
         Table on which to perform the operation.
     cols: str or list of str, optional
         Columns to check.
@@ -340,8 +338,7 @@ class Drop:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -408,8 +405,7 @@ class Reorder:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -442,8 +438,7 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -479,8 +474,7 @@ class FilterColumns:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -519,8 +513,7 @@ class Trim:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -554,8 +547,7 @@ class Literal:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -592,8 +584,7 @@ class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -641,8 +632,7 @@ class AddNumeric:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -685,8 +675,7 @@ class AddDeltaConstant:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -738,8 +727,7 @@ class AddColumn:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -813,8 +801,7 @@ class AddDeltaColumns:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -868,8 +855,7 @@ class Cast:
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -908,8 +894,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
     Attributes
     ----------
-    join_table: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+    join_table: cyclops.query.util.TableTypes
         Table on which to join.
     on_: list of str or tuple, optional
         A list of strings or tuples representing columns on which to join.
@@ -958,8 +943,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1071,8 +1055,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1132,8 +1115,7 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1197,8 +1179,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1256,8 +1237,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1318,8 +1298,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1368,8 +1347,7 @@ class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1414,8 +1392,7 @@ class ConditionAfterDate:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1457,8 +1434,7 @@ class Limit:  # pylint: disable=too-few-public-methods
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns
@@ -1487,8 +1463,7 @@ class RandomizeOrder:
 
         Paramaters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
 
         Returns

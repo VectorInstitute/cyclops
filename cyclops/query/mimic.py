@@ -255,8 +255,7 @@ def patient_diagnoses(
 
     Parameters
     ----------
-    patients: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable, optional
+    patients: cyclops.query.util.TableTypes, optional
         Patient encounters query used to join.
 
     Returns
@@ -313,9 +312,7 @@ def transfers(
 
     Parameters
     ----------
-    patients_table: sqlalchemy.sql.selectable.Select
-    or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
-    or cyclops.query.utils.DBTable, optional
+    patients_table: cyclops.query.util.TableTypes, optional
         Patient encounters used to join.
 
     Returns
@@ -360,9 +357,7 @@ def care_units(
 
     Parameters
     ----------
-    patients_table: sqlalchemy.sql.selectable.Select
-    or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
-    or cyclops.query.utils.DBTable, optional
+    patients_table: cyclops.query.util.TableTypes, optional
         Patient encounters to join with transfers.
 
     Returns
@@ -399,9 +394,7 @@ def patient_encounters(
 
     Parameters
     ----------
-    patients_table: sqlalchemy.sql.selectable.Select or
-    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
-    or cyclops.query.utils.DBTable, optional
+    patients_table: cyclops.query.util.TableTypes, optional
         Optionally provide a patient table when getting patient encounters.
 
     Returns
@@ -463,9 +456,7 @@ def events(
 
     Parameters
     ----------
-    patient_encounters_table: sqlalchemy.sql.selectable.Select or
-    or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
-    or cyclops.query.utils.DBTable, optional
+    patient_encounters_table: cyclops.query.util.TableTypes, optional
         Optionally provide a patient encounter table to join with events.
 
     Returns

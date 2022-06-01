@@ -6,10 +6,10 @@ from dataclasses import dataclass, field
 from typing import Callable, Dict, Optional, Union
 
 import pandas as pd
-from sqlalchemy.sql.selectable import Select, Subquery
 
 from codebase_ops import get_log_file_path
 from cyclops.orm import Database
+from cyclops.query.util import TableTypes
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -49,8 +49,7 @@ class QueryInterface:
     ----------
     database: cyclops.orm.Database
         Database object to create ORM, and query data.
-    query: sqlalchemy.sql.selectable.Select or
-    sqlalchemy.sql.selectable.Subquery
+    query: cyclops.query.util.TableTypes
         The query.
     data: pandas.DataFrame
         Data returned from executing the query, as Pandas DataFrame.
@@ -61,7 +60,7 @@ class QueryInterface:
     """
 
     database: Database
-    query: Union[Select, Subquery]
+    query: TableTypes
     data: Union[pd.DataFrame, None] = None
     _run_args: Dict = field(default_factory=dict)
 
@@ -124,8 +123,7 @@ class QueryInterfaceProcessed:
     ----------
     database: cyclops.orm.Database
         Database object to create ORM, and query data.
-    _query: sqlalchemy.sql.selectable.Select or
-    sqlalchemy.sql.selectable.Subquery
+    _query: cyclops.query.util.TableTypes
         The query.
     process_fn: Callable
         Process function to apply on the pandas dataframe returned from the query.
@@ -140,7 +138,7 @@ class QueryInterfaceProcessed:
     """
 
     database: Database
-    _query: Union[Select, Subquery]
+    _query: TableTypes
     process_fn: Callable
     data: Union[pd.DataFrame, None] = None
     process_fn_kwargs: Dict = field(default_factory=dict)
