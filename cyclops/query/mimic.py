@@ -107,7 +107,7 @@ def get_table(table_name: str, rename: bool = True) -> Subquery:
     table = TABLE_MAP[table_name](_db).data
 
     if rename:
-        table = qp.Rename(MIMIC_COLUMN_MAP, check_keys=False)(table)
+        table = qp.Rename(MIMIC_COLUMN_MAP, check_exists=False)(table)
 
     return _to_subquery(table)
 
@@ -117,64 +117,66 @@ def patients(**process_kwargs) -> QueryInterface:
 
     Other Parameters
     ----------------
-    sex: str, optional
-        Specify 'F' for female patients or 'M' for male patients.
+    sex: str or list of string, optional
+        Specify patient sex (one or multiple).
     died: bool, optional
         Specify True to get patients who have died, and False for those who haven't.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
-    patients_table = get_table(PATIENTS)
+    table = get_table(PATIENTS)
 
     # Process and include patient's anchor year.
-    patients_table = select(
-        patients_table,
+    table = select(
+        table,
         (
-            func.substr(get_attribute(patients_table, "anchor_year_group"), 1, 4).cast(
+            func.substr(get_attribute(table, "anchor_year_group"), 1, 4).cast(
                 Integer
             )
         ).label("anchor_year_group_start"),
         (
-            func.substr(get_attribute(patients_table, "anchor_year_group"), 8, 12).cast(
+            func.substr(get_attribute(table, "anchor_year_group"), 8, 12).cast(
                 Integer
             )
         ).label("anchor_year_group_end"),
     ).subquery()
 
     # Select the middle of the anchor year group as the anchor year
-    patients_table = select(
-        patients_table,
+    table = select(
+        table,
         (
-            get_attribute(patients_table, "anchor_year_group_start")
+            get_attribute(table, "anchor_year_group_start")
             + (
-                get_attribute(patients_table, "anchor_year_group_end")
-                - get_attribute(patients_table, "anchor_year_group_start")
+                get_attribute(table, "anchor_year_group_end")
+                - get_attribute(table, "anchor_year_group_start")
             )
             / 2
         ).label("anchor_year_group_middle"),
     ).subquery()
 
-    patients_table = select(
-        patients_table,
+    table = select(
+        table,
         (
-            get_attribute(patients_table, "anchor_year_group_middle")
-            - get_attribute(patients_table, "anchor_year")
+            get_attribute(table, "anchor_year_group_middle")
+            - get_attribute(table, "anchor_year")
         ).label("anchor_year_difference"),
     ).subquery()
 
     # Shift relevant columns by anchor year difference
-    patients_table = qp.AddColumn("anchor_year", "anchor_year_difference")(
-        patients_table
+    table = qp.AddColumn("anchor_year", "anchor_year_difference")(
+        table
     )
-    patients_table = qp.AddDeltaColumns(DATE_OF_DEATH, years="anchor_year_difference")(
-        patients_table
+    table = qp.AddDeltaColumns(DATE_OF_DEATH, years="anchor_year_difference")(
+        table
     )
 
     # Calculate approximate year of birth
-    patients_table = qp.AddColumn(
+    table = qp.AddColumn(
         "anchor_year", "age", negative=True, new_col_labels="birth_year"
-    )(patients_table)
+    )(table)
 
-    patients_table = qp.Drop(
+    table = qp.Drop(
         [
             "age",
             "anchor_year",
@@ -183,29 +185,24 @@ def patients(**process_kwargs) -> QueryInterface:
             "anchor_year_group_end",
             "anchor_year_group_middle",
         ]
-    )(patients_table)
+    )(table)
 
     # Reorder nicely.
-    patients_table = qp.Reorder(
+    table = qp.Reorder(
         [SUBJECT_ID, SEX, "birth_year", DATE_OF_DEATH, "anchor_year_difference"]
-    )(patients_table)
+    )(table)
 
     # Process optional operations
-    operations = [
+    operations.extend([
         # Must convert to string since CHAR(1) type doesn't recognize equality
-        (qp.ConditionEquals, [SEX, qp.QAP("sex")], {"to_str": True}),
-    ]
+        (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+        (qp.ConditionEquals, [DATE_OF_DEATH, None], {"not_": qp.QAP(process_kwargs["died"], not_=True)})
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ])
 
-    if "died" in process_kwargs:
-        if process_kwargs["died"]:
-            operations.append((qp.ConditionNotEquals, [DATE_OF_DEATH, None], {}))
-        else:
-            operations.append((qp.ConditionEquals, [DATE_OF_DEATH, None], {}))
-        del process_kwargs["died"]
+    table = qp.process_operations(table, operations, process_kwargs)
 
-    patients_table = qp.process_operations(patients_table, operations, process_kwargs)
-
-    return QueryInterface(_db, patients_table)
+    return QueryInterface(_db, table)
 
 
 def diagnoses(**process_kwargs) -> QueryInterface:
@@ -224,16 +221,16 @@ def diagnoses(**process_kwargs) -> QueryInterface:
         Substring to match in the ICD code.
     diagnosis_codes : str or list of str, optional
         Get only the specified ICD codes.
-
+    limit: int, optional
+        Limit the number of rows returned.
     """
-    diagnoses_table = get_table(DIAGNOSES)
+    table = get_table(DIAGNOSES)
 
-    # Rename long_title manually
-    # CAN WE DO IT IN THE MAP? IS long_title USED TWICE?
-    diagnoses_table = qp.Rename({"long_title": DIAGNOSIS_TITLE})(diagnoses_table)
+    # Rename long_title
+    table = qp.Rename({"long_title": DIAGNOSIS_TITLE})(table)
 
     # Trim whitespace from ICD codes.
-    diagnoses_table = qp.Trim(DIAGNOSIS_CODE)(diagnoses_table)
+    table = qp.Trim(DIAGNOSIS_CODE)(table)
 
     # Process optional operations
     operations = [
@@ -244,11 +241,12 @@ def diagnoses(**process_kwargs) -> QueryInterface:
         ),
         (qp.ConditionSubstring, [DIAGNOSIS_TITLE, qp.QAP("diagnosis_substring")], {}),
         (qp.ConditionIn, [DIAGNOSIS_CODE, qp.QAP("diagnosis_codes")], {"to_str": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
     ]
 
-    diagnoses_table = qp.process_operations(diagnoses_table, operations, process_kwargs)
+    table = qp.process_operations(table, operations, process_kwargs)
 
-    return QueryInterface(_db, diagnoses_table)
+    return QueryInterface(_db, table)
 
 
 @query_params_to_type(Subquery)
@@ -262,7 +260,7 @@ def patient_diagnoses(
     ----------
     patients: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
     or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable, optional
-        Patient encounters query wrapped, used to join with diagnoses.
+        Patient encounters query used to join.
 
     Returns
     -------
@@ -321,7 +319,7 @@ def transfers(
     patients_table: sqlalchemy.sql.selectable.Select
     or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
     or cyclops.query.utils.DBTable, optional
-        Patient encounters, used to join with events.
+        Patient encounters used to join.
 
     Returns
     -------
@@ -332,7 +330,8 @@ def transfers(
     ----------------
     encounters : list, optional
         The encounter IDs on which to filter. If None, consider all encounters.
-
+    limit: int, optional
+        Limit the number of rows returned.
     """
     table = get_table(TRANSFERS)
 
@@ -346,6 +345,7 @@ def transfers(
     # Process optional operations
     operations = [
         (qp.ConditionIn, [ENCOUNTER_ID, qp.QAP("encounters")], {"to_int": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
     ]
 
     table = qp.process_operations(table, operations, process_kwargs)
@@ -397,7 +397,7 @@ def care_units(
 def patient_encounters(
     patients_table: Optional[QueryTypes] = None, **process_kwargs
 ) -> QueryInterface:
-    """Query MIMIC encounter-specific patient data.
+    """Query MIMIC patient encounters.
 
     Parameters
     ----------
@@ -413,10 +413,10 @@ def patient_encounters(
 
     Other Parameters
     ----------------
-    before_date:
-        Get patients encounters before some date.
-    after_date:
-        Get patients encounters to be before some date.
+    before_date: datetime.datetime or str
+        Get patients encounters before some date. If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get patients encounters after some date. If a string, provide in YYYY-MM-DD format.
     years: int or list of int, optional
         Get patient encounters by year.
     months: int or list of int, optional
@@ -476,6 +476,8 @@ def events(
         Restrict to certain event names.
     event_name_substring: str, optional
         Substring to search event names to filter.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
     table = get_table(EVENTS)
@@ -490,6 +492,7 @@ def events(
         (qp.ConditionIn, ["category", qp.QAP("categories")], {}),
         (qp.ConditionIn, ["event_name", qp.QAP("event_names")], {}),
         (qp.ConditionSubstring, ["event_name", qp.QAP("event_name_substring")], {}),
+        (qp.Limit, [qp.QAP("limit")], {}),
     ]
 
     table = qp.process_operations(table, operations, process_kwargs)

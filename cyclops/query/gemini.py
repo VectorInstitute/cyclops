@@ -15,6 +15,8 @@ from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     CARE_UNIT,
+    DIAGNOSIS_CODE,
+    DIAGNOSIS_TITLE,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     ER_ADMIT_TIMESTAMP,
@@ -23,20 +25,29 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
+    HOSPITAL_ID,
     LENGTH_OF_STAY_IN_ER,
+    SUBJECT_ID,
     SCU_ADMIT_TIMESTAMP,
     SCU_DISCHARGE_TIMESTAMP,
     SEX,
 )
+from cyclops.query import process as qp
 from cyclops.processors.constants import EMPTY_STRING, MONTH, YEAR
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
+    _to_subquery,
+    query_params_to_type,
+    QueryTypes,
+    assert_query_has_columns,
     DBTable,
     equals,
     get_attribute,
     has_substring,
     in_,
     not_equals,
+    process_attribute,
+    apply_to_attributes,
     rename_attributes,
     rga,
     to_datetime_format,
@@ -97,33 +108,44 @@ GEMINI_COLUMN_MAP = {
     "er_discharge_timestamp": ER_DISCHARGE_TIMESTAMP,
     "scu_admit_date_time": SCU_ADMIT_TIMESTAMP,
     "scu_discharge_date_time": SCU_DISCHARGE_TIMESTAMP,
+    "hospital_id": HOSPITAL_ID,
+    "diagnosis_code": DIAGNOSIS_CODE,
+    "patient_id_hashed": SUBJECT_ID,
 }
 
+EVENT_CATEGORIES = [LAB, VITALS]
 
-def get_table(table_name: str) -> QueryInterface:
-    """Get table data.
+def get_table(table_name: str, rename: bool = True) -> Subquery:
+    """Get a table and possibly map columns to have standard names.
 
-    The entire table is wrapped as a query to run.
+    Standardizing column names allows for for columns to be
+    recognized in downstream processing.
 
     Parameters
     ----------
     table_name: str
-        Name of the table.
+        Name of MIMIC table.
+    rename: bool, optional
+        Whether to map the column names
 
     Returns
     -------
-    cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
+    sqlalchemy.sql.selectable.Subquery
+        Query with mapped columns.
 
     """
     if table_name not in TABLE_MAP:
-        raise ValueError("Not a recognised table!")
-    subquery = select(TABLE_MAP[table_name](_db).data).subquery()
+        raise ValueError(f"{table_name} not a recognised table.")
 
-    return QueryInterface(_db, subquery)
+    table = TABLE_MAP[table_name](_db).data
+
+    if rename:
+        table = qp.Rename(GEMINI_COLUMN_MAP, check_exists=False)(table)
+
+    return _to_subquery(table)
 
 
-def _er_admin() -> QueryInterface:
+def er_admin(**process_kwargs) -> QueryInterface:
     """Query emergency room administrative data.
 
     Returns
@@ -131,340 +153,377 @@ def _er_admin() -> QueryInterface:
     cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
 
+    Other Parameters
+    ----------------
+    limit: int, optional
+        Limit the number of rows returned.
     """
-    table = TABLE_MAP[ER_ADMIN](_db)
-    table = rename_attributes(table, GEMINI_COLUMN_MAP)
+    table = get_table(ER_ADMIN)
+    
+    # Process optional operations
+    operations = [(qp.Limit, [qp.QAP("limit")], {})]
+    table = qp.process_operations(table, operations, process_kwargs)
+    
     return QueryInterface(_db, table)
 
 
-def _map_table_attributes(table_name: str) -> Subquery:
-    """Map queried data attributes into common column names.
-
-    For unifying processing functions across datasets, data
-    attributes are currently mapped to the same name, to allow for processing
-    to recognise them.
-
-    Parameters
-    ----------
-    table_name: str
-        Name of GEMINI table.
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Subquery
-        Query with mapped attributes.
-
-    """
-    return rename_attributes(TABLE_MAP[table_name](_db).data, GEMINI_COLUMN_MAP)
-
-
-def rename_timestamps(
-    table: Union[Select, Subquery, Table, DBTable],
-    admit_ts_col: str,
-    discharge_ts_col: str,
-    care_unit_name: str,
-) -> Select:
-    """Rename timestamp columns from different tables.
-
-    Parameters
-    ----------
-    table: sqlalchemy.sql.selectable.Select or
-    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or
-    cyclops.query.util.DBTable
-
-    Returns
-    -------
-    sqlalchemy.sql.selectable.Select
-        Query with renamed timestamp columns.
-
-    """
-    return select(
-        rga(table.c, ENCOUNTER_ID),
-        rga(table.c, admit_ts_col).label("admit"),
-        rga(table.c, discharge_ts_col).label("discharge"),
-        literal(care_unit_name).label(CARE_UNIT),
-    )
-
-
-def patients(  # pylint: disable=too-many-arguments
-    years: Optional[Union[int, List[int]]] = None,
-    months: Optional[Union[int, List[int]]] = None,
-    hospitals: Optional[Union[str, List[str]]] = None,
-    from_date: Optional[str] = None,
-    to_date: Optional[str] = None,
-    delirium_cohort: Optional[bool] = False,
-    include_er_data: Optional[bool] = False,
+@query_params_to_type(Subquery)
+@assert_query_has_columns(er_admin_table=ENCOUNTER_ID)
+def patient_encounters(
+    er_admin_table: Optional[QueryTypes] = None,
+    **process_kwargs
 ) -> QueryInterface:
-    """Query patient encounters.
+    """Query GEMINI patient encounters.
 
     Parameters
     ----------
-    years: int or list of int, optional
-        Years for which patient encounters are to be filtered.
-    months: int or list of int, optional
-        Months for which patient encounters are to be filtered.
-    hospitals: str or list of str, optional
-        Hospital sites from which patient encounters are to be filtered.
-    from_date: str, optional
-        Gather patients admitted >= from_date in YYYY-MM-DD format.
-    to_date: str, optional
-        Gather patients admitted <= to_date in YYYY-MM-DD format.
-    delirium_cohort: bool, optional
-        Gather patient encounters for which delirium label is available.
-    include_er_data: bool, optional
+    er_admin_table: Subquery, optional
         Gather Emergency Room data recorded for the particular encounter.
+    
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    sex: str or list of string, optional
+        Specify patient sex (one or multiple).
+    died: bool, optional
+        Specify True to get patients who have died, and False for those who haven't.
+    died_binarize_col: str, optional
+        Binarize the died condition and save as a column with label died_binarize_col.
+    before_date: datetime.datetime or str
+        Get patients encounters before some date. If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get patients encounters after some date. If a string, provide in YYYY-MM-DD format.
+    hospitals: str or list of str, optional
+        Get patient encounters by hospital sites.
+    years: int or list of int, optional
+        Get patient encounters by year.
+    months: int or list of int, optional
+        Get patient encounters by month.
+    limit: int, optional
+        Limit the number of rows returned.
+    """
+    table = get_table(IP_ADMIN)
+
+    # Get the discharge disposition code descriptions
+    lookup_table = get_table(LOOKUP_IP_ADMIN)
+    lookup_table = qp.ConditionEquals(
+        "variable", "discharge_disposition"
+    )(lookup_table)
+    
+    table = qp.Join(
+        lookup_table,
+        on=("discharge_disposition", "value"),
+        on_to_type=int,
+        join_table_cols="description"
+    )(table)
+    table = qp.Rename({"description": "discharge_description"})(table)
+    table = qp.Drop("value")(table)
+    
+    # Join on ER data only if specified
+    if er_admin_table is not None:
+        table = qp.Join(er_admin_table, on=ENCOUNTER_ID)(table)
+    
+    # Process optional operations
+    operations: List[tuple] = [
+        (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, ["admit_timestamp", qp.QAP("years")], {}),
+        (qp.ConditionInMonths, ["admit_timestamp", qp.QAP("months")], {}),
+        (qp.ConditionIn, [HOSPITAL_ID, qp.QAP("hospitals")], {"to_str": True}),
+        (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+        (
+            qp.ConditionEquals,
+            ["discharge_description", "Died"],
+            {"not_": qp.QAP("died", not_=True)}
+        ),
+        (
+            qp.ConditionEquals,
+            ["discharge_description", "Died"],
+            {"binarize_col": qp.QAP("died_binarize_col")}
+        ),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    
+    table = qp.process_operations(table, operations, process_kwargs)
+    
+    return QueryInterface(_db, table)
+
+
+def diagnoses(**process_kwargs) -> QueryInterface:
+    """Query diagnosis data.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
 
+    Other Parameters
+    ----------------
+    diagnosis_codes: str or list of str, optional
+        Get only the specified ICD codes.
+    diagnosis_types: list of str, optional
+        Include only those diagnoses that are of certain type.
+    limit: int, optional
+        Limit the number of rows returned.
     """
-    table_ = TABLE_MAP[IP_ADMIN](_db)
-    subquery = select(table_.data)
-    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP)
+    table = get_table(DIAGNOSIS)
+    
+    # Get diagnosis type description
+    lookup_diagnosis = get_table(LOOKUP_DIAGNOSIS)
+    table = qp.Join(
+        lookup_diagnosis,
+        on=("diagnosis_type", "value"),
+        join_table_cols="description"
+    )(table)
+    table = qp.Drop("value")(table)
+    table = qp.Rename({"description": "diagnosis_type_description"})(table)
+    table = qp.ReorderAfter("diagnosis_type_description", "diagnosis_type")(table)
 
-    if years:
-        subquery = (
-            select(subquery)
-            .where(in_(extract(YEAR, subquery.c.admit_timestamp), to_list(years)))
-            .subquery()
-        )
-    if months:
-        subquery = (
-            select(subquery)
-            .where(in_(extract(MONTH, subquery.c.admit_timestamp), to_list(months)))
-            .subquery()
-        )
-    if hospitals:
-        subquery = (
-            select(subquery)
-            .where(in_(subquery.c.hospital_id, to_list(hospitals), to_str=True))
-            .subquery()
-        )
-    if from_date:
-        subquery = (
-            select(subquery)
-            .where(subquery.c.admit_timestamp >= to_datetime_format(from_date))
-            .subquery()
-        )
-    if to_date:
-        subquery = (
-            select(subquery)
-            .where(subquery.c.admit_timestamp <= to_datetime_format(to_date))
-            .subquery()
-        )
-    if delirium_cohort:
-        subquery = (
-            select(subquery).where(equals(subquery.c.gemini_cohort, True)).subquery()
-        )
-    if include_er_data:
-        er_subquery = _er_admin().query
-        subquery = (
-            select(subquery, er_subquery)
-            .where(subquery.c.encounter_id == er_subquery.c.encounter_id)
-            .subquery()
-        )
+    # Trim whitespace from ICD codes.
+    table = qp.Trim(DIAGNOSIS_CODE)(table)
+    
+    # Process optional operations
+    operations = [
+        (qp.ConditionIn, [DIAGNOSIS_CODE, qp.QAP("diagnosis_codes")], {"to_str": True}),
+        (qp.ConditionIn, ["diagnosis_type", qp.QAP("diagnosis_types")], {"to_str": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
 
-    return QueryInterface(_db, subquery)
+    return QueryInterface(_db, table)
 
 
-def _join_with_patients(
-    patients_table: Union[Select, Subquery, Table, DBTable],
-    table_: Union[Select, Subquery, Table, DBTable],
-) -> QueryInterface:
-    """Join a subquery with GEMINI patient static information.
-
-    Assumes that both query tables have "encounter_id".
-
-    Parameters
-    ----------
-    patients_table: sqlalchemy.sql.selectable.Select or
-    sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table or
-    cyclops.query.util.DBTable
-        Patient query table.
-    table_: sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-    or sqlalchemy.sql.schema.Table or cyclops.query.util.DBTable
-        A query table such as labs or vitals.
-
-    Returns
-    -------
-    cyclops.query.interface.QueryInterface
-        Constructed query, wrapped in an interface object.
-
-    """
-    if not hasattr(table_.c, ENCOUNTER_ID) or not hasattr(
-        patients_table.c, ENCOUNTER_ID
-    ):
-        raise ValueError("Input query table and patients table must have encounter_id!")
-
-    # Join on patients (encounter_id).
-    query = select(table_, patients_table).where(
-        table_.c.encounter_id == patients_table.c.encounter_id
-    )
-    return QueryInterface(_db, query)
-
-
-def diagnoses(
-    diagnosis_codes: Union[List[str], str] = None,
-    diagnosis_types: List[str] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+@query_params_to_type(Subquery)
+@assert_query_has_columns(
+    diagnoses_table=[ENCOUNTER_ID, DIAGNOSIS_CODE],
+    patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID]
+)
+def patient_diagnoses(
+    diagnoses_table: Optional[QueryTypes] = None,
+    patient_encounters_table: Optional[QueryTypes] = None,
+    **process_kwargs
 ) -> QueryInterface:
     """Query diagnosis data.
 
     Parameters
     ----------
-    diagnosis_codes: list of str or str, optional
-        Names of diagnosis codes to include, or a diagnosis code search string,
-        all diagnosis data are included if not provided.
-    diagnosis_types: list of str, optional
-        Include only those diagnoses that are of certain type.
-    patients: QueryInterface, optional
-        Patient encounters query wrapped, used to join with diagnoses.
-
-    Notes
-    -----
-        Refer to the diagnosis lookup table for descriptions for diagnosis types.
+    diagnoses_table: sqlalchemy.sql.selectable.Select
+    or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
+    or cyclops.query.utils.DBTable, optional
+        Diagnoses query used to join.
+    patient_encounters_table: sqlalchemy.sql.selectable.Select
+    or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
+    or cyclops.query.utils.DBTable, optional
+        Patient encounters query used to join.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
 
+    Other Parameters
+    ----------------
+    diagnosis_codes: str or list of str, optional
+        Get only the specified ICD codes.
+    diagnosis_types: list of str, optional
+        Include only those diagnoses that are of certain type.
+    limit: int, optional
+        Limit the number of rows returned.
     """
-    table_ = TABLE_MAP[DIAGNOSIS](_db)
-    subquery = select(table_.data)
-    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP)
-    if diagnosis_codes:
-        subquery = (
-            select(subquery)
-            .where(in_(subquery.c.diagnosis_code, diagnosis_codes, to_str=True))
-            .subquery()
-        )
-    if diagnosis_types:
-        subquery = (
-            select(subquery)
-            .where(in_(subquery.c.diagnosis_type, diagnosis_types, to_str=True))
-            .subquery()
-        )
-    if patients:
-        return _join_with_patients(patients.query, subquery)
-
-    return QueryInterface(_db, subquery)
+    # Get diagnoses
+    if diagnoses_table is None:
+        diagnoses_table = diagnoses(**process_kwargs).query
+    
+    # Join on patient encounters
+    if patient_encounters_table is None:
+        patient_encounters_table = patient_encounters().query
+    
+    table = qp.Join(diagnoses_table, on=ENCOUNTER_ID)(patient_encounters_table)
+    
+    return QueryInterface(_db, table)
 
 
+def room_transfers(**process_kwargs) -> QueryInterface:
+    """Query room transfer data.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    limit: int, optional
+        Limit the number of rows returned.
+
+    """
+    table = get_table(ROOM_TRANSFER)
+    
+    # Join with lookup to get transfer description.
+    lookup_rt_table = get_table(LOOKUP_ROOM_TRANSFER)
+    table = qp.Join(
+        lookup_rt_table,
+        on=("medical_service", "value"),
+        join_table_cols="description",
+    )(table)
+    table = qp.Rename({"description": "transfer_description"})(table)
+
+    # Process optional operations
+    operations = [(qp.Limit, [qp.QAP("limit")], {})]
+    table = qp.process_operations(table, operations, process_kwargs)
+    
+    return QueryInterface(_db, table)
+    
+
+@query_params_to_type(Subquery)
+@assert_query_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
 def care_units(
-    encounters: Optional[list] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+    patient_encounters_table: Optional[QueryTypes] = None,
+    **process_kwargs,
 ) -> QueryInterface:
-    """Get care unit table within a given set of encounters.
+    """Query care unit data.
 
     Parameters
     ----------
-    encounters : list, optional
-        The encounter IDs to consider. If None, consider all encounters.
+    patient_encounters_table: sqlalchemy.sql.selectable.Select
+    or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
+    or cyclops.query.utils.DBTable, optional
+        Patient encounters query used to join.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
 
-    """
-    filter_encounters = (
-        lambda query, encounters: query
-        if encounters is None
-        else select(query)
-        .where(in_(get_attribute(query, ENCOUNTER_ID), encounters))
-        .subquery()
-    )
+    Other Parameters
+    ----------------
+    limit: int, optional
+        Limit the number of rows returned.
 
+    """
+    filter_care_unit_cols = qp.FilterColumns([
+        ENCOUNTER_ID,
+        "admit",
+        "discharge",
+        CARE_UNIT,
+    ])
+    
     # In-patient table.
-    ip_table = filter_encounters(_map_table_attributes(IP_ADMIN), encounters)
-    ip_table = rename_timestamps(ip_table, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "IP")
+    ip_table = get_table(IP_ADMIN)
+    ip_table = qp.Rename({
+        ADMIT_TIMESTAMP: "admit",
+        DISCHARGE_TIMESTAMP: "discharge",
+    })(ip_table)
+    ip_table = qp.Literal("IP", CARE_UNIT)(ip_table)
+    ip_table = filter_care_unit_cols(ip_table)
 
     # Special care unit table.
-    scu_table = filter_encounters(_map_table_attributes(IP_SCU), encounters)
-    scu_table = rename_timestamps(
-        scu_table, SCU_ADMIT_TIMESTAMP, SCU_DISCHARGE_TIMESTAMP, "SCU"
-    )
+    scu_table = get_table(IP_SCU)
+    scu_table = qp.Rename({
+        SCU_ADMIT_TIMESTAMP: "admit",
+        SCU_DISCHARGE_TIMESTAMP: "discharge",
+    })(scu_table)
+    scu_table = qp.Literal("SCU", CARE_UNIT)(scu_table)
+    scu_table = filter_care_unit_cols(scu_table)
 
     # Emergency room/department table.
-    er_table = filter_encounters(_er_admin().query, encounters)
-    er_table = rename_timestamps(
-        er_table, ER_ADMIT_TIMESTAMP, ER_DISCHARGE_TIMESTAMP, "ER"
-    )
+    er_table = er_admin().query
+    er_table = qp.Rename({
+        ER_ADMIT_TIMESTAMP: "admit",
+        ER_DISCHARGE_TIMESTAMP: "discharge",
+    })(er_table)
+    er_table = qp.Literal("ER", CARE_UNIT)(er_table)
+    er_table = filter_care_unit_cols(er_table)
+    
+    # Room transfer table.
+    rt_table = room_transfers().query
+    rt_table = qp.Rename({
+        "checkin_date_time": "admit",
+        "checkout_date_time": "discharge",
+    })(rt_table)
+    rt_table = qp.Rename({"transfer_description": CARE_UNIT})(rt_table)
+    rt_table = filter_care_unit_cols(rt_table)
 
-    #     # Room transfer table.
-    rt_table = filter_encounters(_map_table_attributes(ROOM_TRANSFER), encounters)
-    lookup_rt_table = _map_table_attributes(LOOKUP_ROOM_TRANSFER)
+    # Combine.
+    table = union_all(
+        select(er_table),
+        select(scu_table),
+        select(ip_table),
+        select(rt_table),
+    ).subquery()
 
-    # Join room transfer with lookup to get description.
-    rt_table = select(
-        rga(rt_table.c, ENCOUNTER_ID),
-        rt_table.c.checkin_date_time.label("admit"),
-        rt_table.c.checkout_date_time.label("discharge"),
-        lookup_rt_table.c.description.label(CARE_UNIT),
-    ).where(rt_table.c.medical_service == lookup_rt_table.c.value)
-    # subquery = rt_table.subquery()
-    subquery = union_all(rt_table, ip_table, scu_table, er_table).subquery()
+    if patient_encounters_table is not None:
+        table = qp.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
 
-    if patients:
-        return _join_with_patients(patients.query, subquery)
-
-    return QueryInterface(_db, subquery)
+    # Process optional operations
+    operations = [(qp.Limit, [qp.QAP("limit")], {})]
+    table = qp.process_operations(table, operations, process_kwargs)
+        
+    return QueryInterface(_db, table)
 
 
+@query_params_to_type(Subquery)
+@assert_query_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
 def events(
-    category: str,
-    names: Optional[Union[str, List[str]]] = None,
-    substring: Optional[str] = None,
-    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+    event_category: str,
+    patient_encounters_table: Optional[QueryTypes] = None,
+    **process_kwargs,
 ) -> QueryInterface:
     """Query events.
 
     Parameters
     ----------
-    category : str
-        Category of events i.e. lab, vitals, intervention, etc.
-    names : str or list of str, optional
-        The event name(s) to filter.
-    substring: str, optional
-        Substring to search event names to filter.
-    patients: QueryInterface, optional
-        Patient encounters query wrapped, used to join with events.
+    event_category : str or list of str
+        Specify event category, e.g., lab, vitals, intervention, etc.
+    patient_encounters_table: sqlalchemy.sql.selectable.Select
+    or sqlalchemy.sql.selectable.Subquery or sqlalchemy.sql.schema.Table
+    or cyclops.query.utils.DBTable, optional
+        Patient encounters query used to join.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
         Constructed query, wrapped in an interface object.
 
+
+    Other Parameters
+    ----------------
+    event_names: str or list of str, optional
+        Get only certain event names.
+    event_name_substring: str, optional
+        Get only event names with a substring.
+    limit: int, optional
+        Limit the number of rows returned.
+
     """
-    if category not in [LAB, VITALS, INTERVENTION]:
-        raise ValueError("Invalid category of events specified!")
-    table_ = TABLE_MAP[category](_db)
-    subquery = select(table_.data)
-    subquery = rename_attributes(subquery, GEMINI_COLUMN_MAP)
-
-    if category != INTERVENTION:
-        subquery = (
-            select(subquery)
-            .where(not_equals(subquery.c.event_name, EMPTY_STRING, to_str=True))
-            .subquery()
+    if event_category not in EVENT_CATEGORIES:
+        raise ValueError(f"""Invalid event category specified.
+            Must be in {", ".join(EVENT_CATEGORIES)}"""
         )
-        if names:
-            subquery = (
-                select(subquery)
-                .where(in_(subquery.c.event_name, to_list(names), to_str=True))
-                .subquery()
-            )
-        if substring:
-            subquery = (
-                select(subquery)
-                .where(has_substring(subquery.c.event_name, substring, to_str=True))
-                .subquery()
-            )
-
-    if patients:
-        return _join_with_patients(patients.query, subquery)
-
-    return QueryInterface(_db, subquery)
+    
+    table = get_table(event_category)
+ 
+    # Remove events with no recorded name.
+    table = qp.ConditionEquals(EVENT_NAME, EMPTY_STRING, not_=True, to_str=True)(table)
+    
+    # Process optional operations
+    operations: List[tuple] = [
+        (qp.ConditionIn, [EVENT_NAME, qp.QAP("event_names")], {"to_str": True}),
+        (qp.ConditionSubstring, [EVENT_NAME, qp.QAP("event_name_substring")], {"to_str": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    
+    table = qp.process_operations(table, operations, process_kwargs)
+    
+    # Join on patient encounters
+    if patient_encounters_table is not None:
+        table = qp.Join(
+            patient_encounters_table,
+            on=ENCOUNTER_ID
+        )(table)
+    
+    return QueryInterface(_db, table)

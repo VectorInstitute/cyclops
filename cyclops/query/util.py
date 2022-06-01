@@ -452,7 +452,7 @@ def has_columns(
 
     if raise_error and not present:
         missing = required_set - columns
-        raise ValueError(f"Missing required columns {missing}")
+        raise ValueError(f"Missing required columns {', '.join(missing)}.")
 
     return present
 
