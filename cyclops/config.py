@@ -7,6 +7,7 @@ import logging
 import os
 import subprocess
 import time
+from collections import Counter
 from typing import Dict, Optional
 
 import configargparse
@@ -38,7 +39,9 @@ def _check_if_config_files_exist(config_path):
         os.path.splitext(os.path.basename(file_path))[0]
         for file_path in config_file_paths
     ]
-    if sorted(config_file_names) != ["data", "drift", "model", "workflow"]:
+    if Counter(config_file_names) != Counter(
+        ["query", "processor", "model", "workflow"]
+    ):
         return False
     return True
 
@@ -76,15 +79,7 @@ def _create_parser(
     )
 
 
-def _add_sub_task_args(parser: configargparse.ArgumentParser) -> None:
-    """Add sub-task toggle flags to argument parser."""
-    parser.add("--extract", action="store_true", help="Run data extraction")
-    parser.add("--train", action="store_true", help="Train baseline models")
-    parser.add("--predict", action="store_true", help="Run prediction")
-    parser.add("--drift", action="store_true", help="Run drift experiment")
-
-
-def _add_data_query_args(parser: configargparse.ArgumentParser) -> None:
+def _add_query_args(parser: configargparse.ArgumentParser) -> None:
     """Add data querying parameters to argument parser."""
     parser.add(
         "--user",
@@ -145,41 +140,45 @@ def _add_data_query_args(parser: configargparse.ArgumentParser) -> None:
     )
 
 
-def _add_data_process_args(parser: configargparse.ArgumentParser) -> None:
+def _add_processor_args(parser: configargparse.ArgumentParser) -> None:
     """Add data processing parameters to argument parser."""
     parser.add(
-        "--aggregation_strategy",
+        "--aggfunc",
         type=str,
-        default="static",
+        default="mean",
         required=False,
-        help="""Aggregation strategy. If 'static', then patient events from time window
-        are collapsed to statistics per encounter. If 'temporal',
-        then patient events are aggregrated into smaller time windows specified
-        by aggregation_window. 'static' processing is suitable for time-invariant
-        models, and 'temporal' for time-series or recurrent models.""",
+        help="""Aggregation function to apply to values in a bucket.""",
     )
     parser.add(
-        "--aggregation_range",
+        "--bucket_size",
         type=int,
-        default=168,
+        default=1,
         required=False,
-        help="""No. of hours after admission to consider for aggregating patient
-        events data.""",
+        help="""No. of hours in each timestep bucket.""",
     )
     parser.add(
-        "--aggregation_window",
+        "--window",
         type=int,
         default=24,
         required=False,
         help="No. of hours (window) to consider for aggregating patient events data.",
     )
     parser.add(
-        "--imputation_strategy",
-        type=str,
-        default="mean",
+        "--start_at_admission",
+        type=bool,
+        default=False,
         required=False,
-        choices=[None, "mean"],
-        help="""Imputation strategy to apply for missing values.""",
+        help="""Start gathering events from time of admission.""",
+    )
+
+
+def _add_workflow_args(parser: configargparse.ArgumentParser) -> None:
+    """Add workflow argument parameters to argument parser."""
+    parser.add(
+        "--query_fn",
+        type=str,
+        required=False,
+        help="""Production query function to use from cyclops.workflow.queries""",
     )
 
 
@@ -207,9 +206,9 @@ def read_config(config_path: Optional[str] = None) -> argparse.Namespace:
     else:
         parser = _create_parser()
 
-    _add_sub_task_args(parser)
-    _add_data_query_args(parser)
-    _add_data_process_args(parser)
+    _add_query_args(parser)
+    _add_processor_args(parser)
+    _add_workflow_args(parser)
 
     args, _ = parser.parse_known_args()
 

@@ -1,5 +1,6 @@
-import shap
 import numpy as np
+import shap
+
 
 class ShiftExplainer:
     def __init__(self, model):
@@ -14,7 +15,6 @@ class ShiftExplainer:
 
     def get_shap_values(self, X):
         shap_values = self.explainer(X, check_additivity=False)
-        # visualize the first prediction's explanation
         return shap_values
 
     def plot_dependence(self, feat, shap_values, X):

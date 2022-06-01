@@ -113,6 +113,8 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 table = DBTable(table_name, meta[schema_name].tables[table_name])
                 for column in meta[schema_name].tables[table_name].columns:
                     setattr(table, column.name, column)
+                if not isinstance(table.name, str):
+                    table.name = str(table.name)
                 setattr(schema, _get_attr_name(table.name), table)
             setattr(self, schema_name, schema)
 

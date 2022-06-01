@@ -13,3 +13,4 @@ cyclops
    processors
    query
    utils
+   workflow

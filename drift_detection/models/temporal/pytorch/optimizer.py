@@ -1,8 +1,10 @@
 import datetime
-import numpy as np
-import matplotlib.pyplot as plt 
-import torch
 from datetime import datetime
+
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+
 
 class Optimizer:
     """Optimizer Class.
@@ -12,11 +14,12 @@ class Optimizer:
     model: torch.nn.Module
         Pytorch model to optimize (e.g. RNNModel, LSTMModel, GRUModel)
     loss_fn: function
-        Loss function 
+        Loss function
     optimizer: torch.optim
         Optimization algorithm (e.g. Adam)
 
     """
+
     def __init__(self, model, loss_fn, optimizer):
         self.model = model
         self.loss_fn = loss_fn
@@ -24,7 +27,7 @@ class Optimizer:
         self.train_losses = []
         self.val_losses = []
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     def train_step(self, x, y):
         # Sets model to train mode
         self.model.train()
@@ -45,7 +48,7 @@ class Optimizer:
         # Returns the loss
         return loss.item()
 
-    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):  
+    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):
         """Train pytorch model.
 
         Parameters
@@ -58,10 +61,10 @@ class Optimizer:
             Number of samples to train before updating model parameters.
         n_epochs: int
             Number of complete passes through the training set.
-        n_features: int 
+        n_features: int
             Number of features.
 
-        """ 
+        """
         model_path = f'{self.model}_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
 
         for epoch in range(1, n_epochs + 1):
@@ -116,7 +119,7 @@ class Optimizer:
                 values.append(y_test.to(self.device).detach().numpy())
 
         return predictions, values
-    
+
     def plot_losses(self):
         plt.plot(self.train_losses, label="Training loss")
         plt.plot(self.val_losses, label="Validation loss")

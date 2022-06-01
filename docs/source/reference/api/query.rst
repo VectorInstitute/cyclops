@@ -1,6 +1,14 @@
 query package
 =============
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   query.postprocess
+
 Submodules
 ----------
 

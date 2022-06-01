@@ -35,6 +35,8 @@ EVENT_VALUE = "event_value"
 EVENT_VALUE_UNIT = "event_value_unit"
 EVENT_TIMESTAMP = "event_timestamp"
 
+RESTRICT_TIMESTAMP = "restrict_timestamp"
+
 REFERENCE_RANGE = "reference_range"
 TIMESTEP = "timestep"
 
@@ -53,4 +55,13 @@ RECOGNISED_QUERY_COLUMNS = [
     DIAGNOSIS_TYPE,
     YEAR,
     AGE,
+]
+RECOGNISED_EVENT_COLUMNS = [
+    ADMIT_TIMESTAMP,
+    DISCHARGE_TIMESTAMP,
+    ENCOUNTER_ID,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT,
 ]

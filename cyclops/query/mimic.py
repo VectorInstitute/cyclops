@@ -27,8 +27,9 @@ from cyclops.processors.column_names import (
     SEX,
     YEAR,
 )
-from cyclops.processors.constants import ER, ICU, IP, MONTH, SCU
-from cyclops.query.interface import QueryInterface
+from cyclops.processors.constants import MONTH
+from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
+from cyclops.query.postprocess.mimic import process_mimic_care_units
 from cyclops.query.util import (
     DBTable,
     add_interval_to_timestamps,
@@ -57,6 +58,7 @@ PATIENT_DIAGNOSES = "patient_diagnoses"
 EVENT_LABELS = "event_labels"
 EVENTS = "events"
 TRANSFERS = "transfers"
+ED_STAYS = "ed_stays"
 
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {
@@ -67,6 +69,7 @@ TABLE_MAP = {
     EVENT_LABELS: lambda db: db.mimic_icu.d_items,
     EVENTS: lambda db: db.mimic_icu.chartevents,
     TRANSFERS: lambda db: db.mimic_core.transfers,
+    ED_STAYS: lambda db: db.mimic_ed.edstays,
 }
 MIMIC_COLUMN_MAP = {
     "hadm_id": ENCOUNTER_ID,
@@ -80,81 +83,12 @@ MIMIC_COLUMN_MAP = {
     "charttime": EVENT_TIMESTAMP,
     "icd_code": DIAGNOSIS_CODE,
 }
-CARE_UNIT_MAP = {
-    IP: {
-        "observation": ["Observation", "Psychiatry"],
-        "medicine": ["Medicine", "Medical/Surgical (Gynecology)"],
-    },
-    ER: {
-        "er": ["Emergency Department", "Emergency Department Observation"],
-    },
-    ICU: {
-        "icu": [
-            "Surgical Intensive Care Unit (SICU)",
-            "Medical/Surgical Intensive Care Unit (MICU/SICU)",
-            "Medical Intensive Care Unit (MICU)",
-            "Trauma SICU (TSICU)",
-            "Neuro Surgical Intensive Care Unit (Neuro SICU)",
-            "Cardiac Vascular Intensive Care Unit (CVICU)",
-        ],
-    },
-    SCU: {
-        "surgery": [
-            "Med/Surg",
-            "Surgery",
-            "Surgery/Trauma",
-            "Med/Surg/Trauma",
-            "Med/Surg/GYN",
-            "Surgery/Vascular/Intermediate",
-            "Thoracic Surgery",
-            "Transplant",
-            "Cardiac Surgery",
-            "PACU",
-            "Surgery/Pancreatic/Biliary/Bariatric",
-        ],
-        "cardiology": [
-            "Cardiology",
-            "Coronary Care Unit (CCU)",
-            "Cardiology Surgery Intermediate",
-            "Medicine/Cardiology",
-            "Medicine/Cardiology Intermediate",
-        ],
-        "vascular": [
-            "Vascular",
-            "Hematology/Oncology",
-            "Hematology/Oncology Intermediate",
-        ],
-        "neuro": ["Neurology", "Neuro Intermediate", "Neuro Stepdown"],
-        "neonatal": [
-            "Obstetrics (Postpartum & Antepartum)",
-            "Neonatal Intensive Care Unit (NICU)",
-            "Special Care Nursery (SCN)",
-            "Nursery - Well Babies",
-            "Obstetrics Antepartum",
-            "Obstetrics Postpartum",
-            "Labor & Delivery",
-        ],
-    },
-}
-NONSPECIFIC_CARE_UNIT_MAP = {
-    "medicine": IP,
-    "observation": IP,
-    "er": ER,
-    "icu": ICU,
-    "cardiology": SCU,
-    "neuro": SCU,
-    "neonatal": SCU,
-    "surgery": SCU,
-    "vascular": SCU,
-}
 
 
-def get_lookup_table(table_name: str) -> QueryInterface:
-    """Get lookup table data.
+def get_table(table_name: str) -> QueryInterface:
+    """Get table data.
 
-    Some tables are minimal reference tables that are
-    useful for reference. The entire table is wrapped as
-    a query to run.
+    The entire table is wrapped as a query to run.
 
     Parameters
     ----------
@@ -167,9 +101,8 @@ def get_lookup_table(table_name: str) -> QueryInterface:
         Constructed query, wrapped in an interface object.
 
     """
-    if table_name not in [DIAGNOSES, EVENT_LABELS]:
-        raise ValueError("Not a recognised lookup/dimension table!")
-
+    if table_name not in TABLE_MAP:
+        raise ValueError("Not a recognised table!")
     subquery = select(TABLE_MAP[table_name](_db).data).subquery()
 
     return QueryInterface(_db, subquery)
@@ -465,17 +398,22 @@ def diagnoses(
     return QueryInterface(_db, subquery)
 
 
-def get_transfers(encounters: list = None) -> Subquery:
+def transfers(
+    encounters: Optional[list] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterfaceProcessed:
     """Get care unit table within a given set of encounters.
 
     Parameters
     ----------
-    encounters : list
+    encounters : list, optional
         The encounter IDs on which to filter. If None, consider all encounters.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with events.
 
     Returns
     -------
-    sqlalchemy.sql.selectable.Subquery
+    cyclops.query.interface.QueryInterfaceProcessed
         Constructed query, wrapped in an interface object.
 
     """
@@ -487,8 +425,44 @@ def get_transfers(encounters: list = None) -> Subquery:
         .subquery()
     )
 
-    query = filter_encounters(_map_table_attributes(TRANSFERS), encounters)
-    return QueryInterface(_db, query)
+    subquery = _map_table_attributes(TRANSFERS)
+
+    if encounters:
+        subquery = filter_encounters(subquery, encounters)
+
+    if patients:
+        subquery = _join_with_patients(patients.query, subquery).query
+
+    return QueryInterface(_db, subquery)
+
+
+def care_units(
+    encounters: Optional[list] = None,
+    patients: Optional[QueryInterface] = None,  # pylint: disable=redefined-outer-name
+) -> QueryInterfaceProcessed:
+    """Get care unit table within a given set of encounters.
+
+    Parameters
+    ----------
+    encounters : list, optional
+        The encounter IDs on which to filter. If None, consider all encounters.
+    patients: QueryInterface, optional
+        Patient encounters query wrapped, used to join with events.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterfaceProcessed
+        Constructed query, wrapped in an interface object.
+
+    """
+    subquery = transfers(encounters=encounters, patients=patients).query
+
+    return QueryInterfaceProcessed(
+        _db,
+        subquery,
+        process_fn=process_mimic_care_units,
+        process_fn_kwargs={"specific": False},
+    )
 
 
 def events(

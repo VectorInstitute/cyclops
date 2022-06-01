@@ -24,8 +24,17 @@ class FeatureShiftDetector:
     n_compromised: int
         The fixed budget of features which can be checked if a shift is detected. (i.e. the number of features suspected
         to have been compromised)"""
-    def __init__(self, statistic, bootstrap_method, data_transform=None, n_bootstrap_samples=500, n_window_samples=1000,
-                 n_compromised=1, significance_level=0.05):
+
+    def __init__(
+        self,
+        statistic,
+        bootstrap_method,
+        data_transform=None,
+        n_bootstrap_samples=500,
+        n_window_samples=1000,
+        n_compromised=1,
+        significance_level=0.05,
+    ):
 
         self.statistic = statistic
         self.data_transform = data_transform
@@ -33,12 +42,12 @@ class FeatureShiftDetector:
         self.n_window_samples = n_window_samples
         self.n_compromised = n_compromised
         self.significance_level = significance_level
-        if bootstrap_method == 'simple':
+        if bootstrap_method == "simple":
             self.bootstrap_method = self._simple_bootstrap
-        elif bootstrap_method == 'time':
+        elif bootstrap_method == "time":
             self.bootstrap_method = self._time_bootstrap
         else:
-            raise NotImplemented(f'{bootstrap_method} is not a valid bootstrap_method')
+            raise NotImplemented(f"{bootstrap_method} is not a valid bootstrap_method")
 
         self.localization_thresholds_ = None
         self.detection_thresholds_ = None
@@ -59,8 +68,11 @@ class FeatureShiftDetector:
         ----------
         self, (with detection_thresholds_ and localization_thresholds_ set)
         """
-        self.detection_thresholds_, self.localization_thresholds_, self.bootstrap_score_distribution_ = \
-            self.bootstrap_method(X_boot, Y_boot, random_state)
+        (
+            self.detection_thresholds_,
+            self.localization_thresholds_,
+            self.bootstrap_score_distribution_,
+        ) = self.bootstrap_method(X_boot, Y_boot, random_state)
 
         return self
 
@@ -97,10 +109,12 @@ class FeatureShiftDetector:
             detection = 1
             # since shift detection, now localize
             # first we normalize the scores, so we grab the score which has shifted the greatest from it's "null"
-            bootstrap_score_means = np.nanmean(self.bootstrap_score_distribution_, axis=0)
+            bootstrap_score_means = np.nanmean(
+                self.bootstrap_score_distribution_, axis=0
+            )
             bootstrap_score_std = np.nanstd(self.bootstrap_score_distribution_, axis=0)
             normalized_scores = (scores - bootstrap_score_means) / bootstrap_score_std
-            attacked_features = normalized_scores.argsort()[-self.n_compromised:]
+            attacked_features = normalized_scores.argsort()[-self.n_compromised :]
         else:
             detection = 0
             attacked_features = None
@@ -110,9 +124,11 @@ class FeatureShiftDetector:
             return detection, attacked_features, scores
 
     def _simple_bootstrap(self, X_boot, Y_boot, random_state=None):
-        """Performs simple bootstrapping"""
+        """Performs simple bootstrapping."""
         rng = check_random_state(random_state)
-        bootstrap_score_distribution = np.zeros(shape=(self.n_bootstrap_samples, X_boot.shape[1]))
+        bootstrap_score_distribution = np.zeros(
+            shape=(self.n_bootstrap_samples, X_boot.shape[1])
+        )
 
         if Y_boot is not None:
             # Combining X and Y distribution to approximate the null hypothesis, and bootstrapping on that.
@@ -121,74 +137,115 @@ class FeatureShiftDetector:
             # Since Y_boot is None, we are assuming X_boot holds the concatenated_distribution already
             concatenated_distribution = X_boot.copy()
         for B_idx in range(self.n_bootstrap_samples):
-            XY = concatenated_distribution[rng.choice(concatenated_distribution.shape[0],
-                                                      size=X_boot.shape[0]+Y_boot.shape[0], replace=True)]
+            XY = concatenated_distribution[
+                rng.choice(
+                    concatenated_distribution.shape[0],
+                    size=X_boot.shape[0] + Y_boot.shape[0],
+                    replace=True,
+                )
+            ]
             if self.data_transform is None:
-                X = XY[:X_boot.shape[0]]
-                Y = XY[X_boot.shape[0]:]
+                X = XY[: X_boot.shape[0]]
+                Y = XY[X_boot.shape[0] :]
             else:
                 XY = self.data_transform(XY)
                 if XY.shape[0] % 2 == 1:
                     # Some transforms can make XY have an uneven shape,
                     # and thus X,Y will be different sizes, so this ensures they will be the same size
-                    X = XY[:int(XY.shape[0]/2)]
-                    Y = XY[int(XY.shape[0]/2): XY.shape[0]-1]
+                    X = XY[: int(XY.shape[0] / 2)]
+                    Y = XY[int(XY.shape[0] / 2) : XY.shape[0] - 1]
                 else:
-                    X, Y = XY[:int(XY.shape[0]/2)], XY[int(XY.shape[0]/2):]
+                    X, Y = XY[: int(XY.shape[0] / 2)], XY[int(XY.shape[0] / 2) :]
 
-            bootstrap_score_distribution[B_idx] = self.statistic.fit(X, Y).score_features(random_state=rng)
+            bootstrap_score_distribution[B_idx] = self.statistic.fit(
+                X, Y
+            ).score_features(random_state=rng)
 
         bootstrap_score_distribution = np.sort(bootstrap_score_distribution, axis=0)
         # We use the bonferroni correction for multiple hypothesis by dividing the detection significance level by n_dim
-        detection_thresholds = \
-            bootstrap_score_distribution[int(self.n_bootstrap_samples * (1-(self.significance_level/X_boot.shape[1])))]
-        localization_thresholds = \
-            bootstrap_score_distribution[int(self.n_bootstrap_samples * (1-self.significance_level))]
-        return detection_thresholds, localization_thresholds, bootstrap_score_distribution
+        detection_thresholds = bootstrap_score_distribution[
+            int(
+                self.n_bootstrap_samples
+                * (1 - (self.significance_level / X_boot.shape[1]))
+            )
+        ]
+        localization_thresholds = bootstrap_score_distribution[
+            int(self.n_bootstrap_samples * (1 - self.significance_level))
+        ]
+        return (
+            detection_thresholds,
+            localization_thresholds,
+            bootstrap_score_distribution,
+        )
 
     def _time_bootstrap(self, X_boot, Y_boot, random_state=None):
-        """Performs a time aware bootstrapping -- Note: X_boot, Y_boot should be large (note: Y_boot can be none if
-         X_boot alone is the training dataset)"""
+        """Performs a time aware bootstrapping -- Note: X_boot, Y_boot should be large
+        (note: Y_boot can be none if X_boot alone is the training dataset)"""
         rng = check_random_state(random_state)
-        bootstrap_score_distribution = np.zeros(shape=(self.n_bootstrap_samples, X_boot.shape[1]))
+        bootstrap_score_distribution = np.zeros(
+            shape=(self.n_bootstrap_samples, X_boot.shape[1])
+        )
         if Y_boot is not None:
             # Combining X and Y distribution to approximate the null hypothesis, and bootstrapping on that.
             concatenated_distribution = np.concatenate((X_boot, Y_boot), axis=0)
         else:  # X_boot is already the concatenated_distriubtion
             concatenated_distribution = X_boot.copy()
 
-        bootstrap_split_range = [self.n_window_samples, concatenated_distribution.shape[0] - self.n_window_samples]
-        bootstrap_split_idxs = rng.randint(*bootstrap_split_range, size=self.n_bootstrap_samples)
+        bootstrap_split_range = [
+            self.n_window_samples,
+            concatenated_distribution.shape[0] - self.n_window_samples,
+        ]
+        bootstrap_split_idxs = rng.randint(
+            *bootstrap_split_range, size=self.n_bootstrap_samples
+        )
         for B_idx, bootstrap_split in enumerate(bootstrap_split_idxs):
-            XY = concatenated_distribution[bootstrap_split-self.n_window_samples: bootstrap_split+self.n_window_samples]
+            XY = concatenated_distribution[
+                bootstrap_split
+                - self.n_window_samples : bootstrap_split
+                + self.n_window_samples
+            ]
             if self.data_transform is None:
-                X, Y = XY[:self.n_window_samples], XY[self.n_window_samples:]
+                X, Y = XY[: self.n_window_samples], XY[self.n_window_samples :]
             else:
                 XY = self.data_transform(XY)
                 if XY.shape[0] % 2 == 1:
                     # Some transforms can make XY have an uneven shape,
                     # and thus X,Y will be different sizes, so this ensures they will be the same size
-                    X = XY[:int(XY.shape[0]/2)]
-                    Y = XY[int(XY.shape[0]/2): XY.shape[0]-1]
+                    X = XY[: int(XY.shape[0] / 2)]
+                    Y = XY[int(XY.shape[0] / 2) : XY.shape[0] - 1]
                 else:
-                    X, Y = XY[:self.n_window_samples], XY[self.n_window_samples:]
+                    X, Y = XY[: self.n_window_samples], XY[self.n_window_samples :]
 
-            bootstrap_score_distribution[B_idx] = self.statistic.fit(X, Y).score_features(random_state=rng)
-            
+            bootstrap_score_distribution[B_idx] = self.statistic.fit(
+                X, Y
+            ).score_features(random_state=rng)
+
         bootstrap_score_distribution = np.sort(bootstrap_score_distribution, axis=0)
         # We use the bonferroni correction for multiple hypothesis by dividing the detection significance level by n_dim
-        detection_thresholds = \
-            bootstrap_score_distribution[int(self.n_bootstrap_samples * (1-self.significance_level/X_boot.shape[1]))]
-        localization_thresholds = \
-            bootstrap_score_distribution[int(self.n_bootstrap_samples * (1-self.significance_level))]
-        return detection_thresholds, localization_thresholds, bootstrap_score_distribution
+        detection_thresholds = bootstrap_score_distribution[
+            int(
+                self.n_bootstrap_samples
+                * (1 - self.significance_level / X_boot.shape[1])
+            )
+        ]
+        localization_thresholds = bootstrap_score_distribution[
+            int(self.n_bootstrap_samples * (1 - self.significance_level))
+        ]
+        return (
+            detection_thresholds,
+            localization_thresholds,
+            bootstrap_score_distribution,
+        )
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an error"""
+        """Checks if the p_hat and q_hat models have been fitted else, returns an
+        error."""
         if self.detection_thresholds_ is not None:
             return True
         else:
             if error_message is None:
-                raise ValueError('The density has not been fitted, please fit the density and try again')
+                raise ValueError(
+                    "The density has not been fitted, please fit the density and try again"
+                )
             else:
                 raise ValueError(error_message)
