@@ -28,6 +28,7 @@ from cyclops.query.util import (
     has_columns,
     has_substring,
     in_,
+    not_equals,
     process_column,
     rename_columns,
     reorder_columns,
@@ -1473,3 +1474,38 @@ class RandomizeOrder:
 
         """
         return select(table).order_by(func.random()).subquery()
+
+
+@dataclass
+class DropNulls:
+    """Remove rows with null values in some specified columns.
+
+    Attributes
+    ----------
+    cols: str or list of str
+        Columns in which, if a value is null, the corresponding row
+        is removed.
+
+    """
+
+    cols: Union[str, List[str]]
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Paramaters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        self.cols = to_list(self.cols)
+        table = process_checks(table, cols=self.cols)
+
+        cond = and_(*[not_equals(get_column(table, col), None) for col in self.cols])
+        return select(table).where(cond)

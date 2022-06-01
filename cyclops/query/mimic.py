@@ -426,7 +426,8 @@ def patient_encounters(
 
     # Update timestamps with anchor year difference
     table = qp.AddDeltaColumns(
-        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], years="anchor_year_difference"
+        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "deathtime"],
+        years="anchor_year_difference",
     )(table)
 
     # Extract approximate age at time of admission
