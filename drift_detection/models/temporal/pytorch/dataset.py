@@ -54,8 +54,8 @@ class Data:
 
         """
         return self.inputs.size(dim=1)
-    
-    def to_loader(self,batch_size, num_workers=4, shuffle=False):
+        
+    def to_loader(self,batch_size, num_workers=0, shuffle=False, pin_memory=True):
         """Create dataloader.
 
         Returns
@@ -68,5 +68,5 @@ class Data:
             batch_size=batch_size,
             num_workers=num_workers,
             shuffle=shuffle,
-            pin_memory=True,
+            pin_memory=pin_memory,
         )
