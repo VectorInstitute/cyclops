@@ -1,3 +1,8 @@
+[[tool.poetry.source]]
+name = "gemini_repository"
+url = "https://packages.gemini-hpc.ca/repository/pypi/simple"
+default = true
+
 [tool.poetry]
 name = "cyclops"
 version = "0.1.0"
