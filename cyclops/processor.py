@@ -5,16 +5,12 @@ from typing import Optional, Union
 import pandas as pd
 
 from cyclops.feature_handler import FeatureHandler
-from cyclops.processors.aggregate import (
-    Aggregator,
-    gather_event_features,
-    gather_statics,
-)
+from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
-from cyclops.processors.events import clean_events
+from cyclops.processors.events import normalise_events
 from cyclops.processors.impute import Imputer
-from cyclops.processors.outcomes import generate_outcomes
+from cyclops.processors.statics import compute_statics
 from cyclops.processors.util import gather_columns, has_columns
 
 
@@ -99,20 +95,14 @@ def featurize(  # pylint: disable=too-many-arguments
                 feature_handler.add_features(diagnoses_features)
 
             feature_handler.add_features(
-                gather_statics(dataframe),
+                compute_statics(dataframe),
                 reference_cols=reference_cols,
             )
 
-            outcomes = generate_outcomes(dataframe)
-            if outcomes is not None:
-                feature_handler.add_features(outcomes)
-
     if temporal_data:
         for dataframe in temporal_data:
-            dataframe = clean_events(dataframe)
-            temporal_features, _ = gather_event_features(
-                dataframe, aggregator=aggregator
-            )
+            dataframe = normalise_events(dataframe)
+            temporal_features, _ = aggregator(dataframe)
             feature_handler.add_features(temporal_features)
 
     feature_handler.impute_features(

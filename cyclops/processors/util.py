@@ -135,15 +135,15 @@ def assert_has_columns(*args, **kwargs) -> Callable:
     return decorator
 
 
-def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:
+def gather_columns(data: pd.DataFrame, columns: Union[List[str], str]) -> pd.DataFrame:
     """Gather specified columns, discarding rest and return copy of columns.
 
     Parameters
     ----------
     data: pandas.DataFrame
         DataFrame to check.
-    columns: list
-        List of column names to keep in data.
+    columns: list of str or str
+        Column names to gather from dataframe.
 
     Returns
     -------
@@ -151,7 +151,7 @@ def gather_columns(data: pd.DataFrame, columns: list) -> pd.DataFrame:
         DataFrame with required columns, other columns discarded.
 
     """
-    return data[columns].copy()
+    return data[to_list(columns)].copy()
 
 
 def log_counts_step(data, step_description: str, rows=True, columns=False) -> None:

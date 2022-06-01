@@ -1,9 +1,11 @@
 # built in methods
 from copy import copy
+
 # external
 import numpy as np
-from sklearn.utils import check_array, check_random_state
 from scipy.stats import ks_2samp as ks_stat
+from sklearn.utils import check_array, check_random_state
+
 
 class FisherDivergence:
     """
@@ -21,6 +23,7 @@ class FisherDivergence:
     q_hat: density-object,
         A copy of the estimator given in density_model, which is then fit on Y (the empirical q distribution)
     """
+
     def __init__(self, density_model, n_expectation=100):
         self.density_model = density_model
         self.n_expectation = n_expectation
@@ -44,8 +47,12 @@ class FisherDivergence:
         """
         X = check_array(X)
         Y = check_array(Y)
-        self.p_hat_ = copy(self.density_model).fit(X)  # creates a copy so p_hat is not refit with q_hat
-        self.q_hat_ = copy(self.density_model).fit(Y)  # also creates a copy in case base density model is used later
+        self.p_hat_ = copy(self.density_model).fit(
+            X
+        )  # creates a copy so p_hat is not refit with q_hat
+        self.q_hat_ = copy(self.density_model).fit(
+            Y
+        )  # also creates a copy in case base density model is used later
         return self
 
     def score_features(self, random_state=None):
@@ -65,34 +72,41 @@ class FisherDivergence:
         self._check_fitted()
         rng = check_random_state(random_state)
         # creating an array of samples from both p_hat and q_hat
-        samples = np.concatenate((self.p_hat_.sample(self.n_expectation),
-                                 self.q_hat_.sample(self.n_expectation)), axis=0)
+        samples = np.concatenate(
+            (
+                self.p_hat_.sample(self.n_expectation),
+                self.q_hat_.sample(self.n_expectation),
+            ),
+            axis=0,
+        )
         # getting the gradient of the log probability of those samples under p_hat and q_hat
         p_grad_log_prob = self.p_hat_.gradient_log_prob(samples)
         q_grad_log_prob = self.q_hat_.gradient_log_prob(samples)
 
-        feature_divergence = ((p_grad_log_prob - q_grad_log_prob)**2).sum(axis=0)
+        feature_divergence = ((p_grad_log_prob - q_grad_log_prob) ** 2).sum(axis=0)
         return feature_divergence / (self.n_expectation * 2)
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an error"""
+        """Checks if the p_hat and q_hat models have been fitted else, returns an
+        error."""
         if self.p_hat_ is not None and self.q_hat_ is not None:
             return True
         else:
             if error_message is None:
-                raise ValueError('The density has not been fitted, please fit the density and try again')
+                raise ValueError(
+                    "The density has not been fitted, please fit the density and try again"
+                )
             else:
                 raise ValueError(error_message)
 
 
 class ModelKS(FisherDivergence):
-    """
-    Computes the featurewise Kolmogorov-Smirnov Test between samples from two estimated densities.
-    """
+    """Computes the featurewise Kolmogorov-Smirnov Test between samples from two
+    estimated densities."""
+
     def __init__(self, density_model, n_expectation=100, n_conditional_samples=1000):
         super().__init__(density_model, n_expectation)
         self.n_conditional_samples = n_conditional_samples
-
 
     def score_features(self, random_state=None):
         """
@@ -113,19 +127,33 @@ class ModelKS(FisherDivergence):
         """
         self._check_fitted()
         rng = check_random_state(random_state)
-        samples = np.concatenate((self.p_hat_.sample(self.n_expectation),
-                                  self.q_hat_.sample(self.n_expectation)), axis=0)
+        samples = np.concatenate(
+            (
+                self.p_hat_.sample(self.n_expectation),
+                self.q_hat_.sample(self.n_expectation),
+            ),
+            axis=0,
+        )
         running_KS_divergence = np.zeros(shape=(samples.shape[1],))
         for sample in samples:
             for j_to_condition_on in range(sample.shape[0]):
-                p_conditional_samples = self.p_hat_.conditional_sample(sample, j_to_condition_on,
-                                                                       n_samples=self.n_conditional_samples,
-                                                                       random_state=rng)
-                q_conditional_samples = self.q_hat_.conditional_sample(sample, j_to_condition_on,
-                                                                       n_samples=self.n_conditional_samples,
-                                                                       random_state=rng)
-                running_KS_divergence[j_to_condition_on] += ks_stat(p_conditional_samples, q_conditional_samples)[0]
+                p_conditional_samples = self.p_hat_.conditional_sample(
+                    sample,
+                    j_to_condition_on,
+                    n_samples=self.n_conditional_samples,
+                    random_state=rng,
+                )
+                q_conditional_samples = self.q_hat_.conditional_sample(
+                    sample,
+                    j_to_condition_on,
+                    n_samples=self.n_conditional_samples,
+                    random_state=rng,
+                )
+                running_KS_divergence[j_to_condition_on] += ks_stat(
+                    p_conditional_samples, q_conditional_samples
+                )[0]
         return running_KS_divergence / (2 * self.n_expectation)
+
 
 class KnnKS:
     """Computes featurewise Kolmogrov Smirnov two sample tests from the conditional neighborhoods of the Knn fit on X
@@ -145,6 +173,7 @@ class KnnKS:
     n_dims_ : int,
         The number of dimensions in P or Q
     """
+
     def __init__(self, knn_model, n_expectation=100):
         self.knn_model = knn_model
         self.n_expectation = n_expectation
@@ -153,7 +182,7 @@ class KnnKS:
         self.n_dims_ = None
 
     def fit(self, X, Y):
-        """"Fits the Knn neighborhood for the empirical distributions of p and q
+        """ "Fits the Knn neighborhood for the empirical distributions of p and q
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -185,25 +214,36 @@ class KnnKS:
             A vector of feature divergences"""
         self._check_fitted()
         rng = check_random_state(random_state)
-        featurewise_KS_stat = np.zeros(shape=(self.n_dims_, ))
+        featurewise_KS_stat = np.zeros(shape=(self.n_dims_,))
         # here we draw samples from the empirical distributions of X and Y
-        samples = np.concatenate((self.p_hat_.sample(n_samples=self.n_expectation, random_state=rng),
-                                  self.q_hat_.sample(n_samples=self.n_expectation, random_state=rng)))
+        samples = np.concatenate(
+            (
+                self.p_hat_.sample(n_samples=self.n_expectation, random_state=rng),
+                self.q_hat_.sample(n_samples=self.n_expectation, random_state=rng),
+            )
+        )
         for feature_idx in range(self.n_dims_):
             p_neighborhoods = self.p_hat_.conditional_sample(feature_idx, samples)
             q_neighborhoods = self.q_hat_.conditional_sample(feature_idx, samples)
             # neighborhoods are of shape (n_conditional_expectation, n_neighbors)
             # so we loop over the different neighborhoods (n_cond_expect) to approx E[\phi(p(x | x_nj), q(x | x_nj))]
-            for p_conditional_neighborhood, q_conditional_neighborhood in zip(p_neighborhoods, q_neighborhoods):
-                featurewise_KS_stat[feature_idx] += ks_stat(p_conditional_neighborhood, q_conditional_neighborhood)[0]
-        return featurewise_KS_stat / (2*self.n_expectation)
+            for p_conditional_neighborhood, q_conditional_neighborhood in zip(
+                p_neighborhoods, q_neighborhoods
+            ):
+                featurewise_KS_stat[feature_idx] += ks_stat(
+                    p_conditional_neighborhood, q_conditional_neighborhood
+                )[0]
+        return featurewise_KS_stat / (2 * self.n_expectation)
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an error"""
+        """Checks if the p_hat and q_hat models have been fitted else, returns an
+        error."""
         if self.p_hat_ is not None and self.q_hat_ is not None:
             return True
         else:
             if error_message is None:
-                raise ValueError('The density has not been fitted, please fit the density and try again')
+                raise ValueError(
+                    "The density has not been fitted, please fit the density and try again"
+                )
             else:
                 raise ValueError(error_message)
