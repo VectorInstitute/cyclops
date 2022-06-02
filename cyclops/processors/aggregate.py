@@ -17,6 +17,7 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     RESTRICT_TIMESTAMP,
     TIMESTEP,
+    WINDOW_START_TIMESTAMP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
 from cyclops.processors.statics import compute_statics
@@ -321,6 +322,7 @@ class Aggregator:
 
         return end_time
 
+    @assert_has_columns([ENCOUNTER_ID, WINDOW_START_TIMESTAMP])
     def aggregate_events(
         self,
         data: pd.DataFrame,
@@ -331,11 +333,8 @@ class Aggregator:
         that lies within the window is restricted such that only those events are
         considered for aggregation. Given the aggreation options, the number of
         timesteps is determined, and the start of each timestep (timestamp) is added
-        to the meta info. The event value for each event belonging to a timestep
-        is aggregated accordingly to create a DataFrame of features,
-        where the number of feature columns is equal to number of
-        event names, e.g. lab tests + vital measurements. The features
-        DataFrame is then indexable using encounter_id and timestep.
+        to the meta info. Event data columns are aggregated into the timestep bucket
+        based on aggregation functions passed for each column.
 
         Parameters
         ----------
@@ -355,7 +354,7 @@ class Aggregator:
             event_name = group[EVENT_NAME].iloc[0]
             group.drop(columns=[ENCOUNTER_ID, EVENT_NAME], axis=1)
 
-            # ADD IMPUTATION METHOD.
+            # Todo: Figure out how to deal with missingness inside a bucket (intra).
 
             group = group.groupby(TIMESTEP, dropna=False)
 
@@ -382,7 +381,7 @@ class Aggregator:
         def process_encounter(group):
             # Get timestep (bucket) for the timeseries events.
             group[TIMESTEP] = (
-                group[EVENT_TIMESTAMP] - min(group[EVENT_TIMESTAMP])
+                group[EVENT_TIMESTAMP] - group[WINDOW_START_TIMESTAMP]
             ) / pd.Timedelta(hours=self.bucket_size)
             group[TIMESTEP] = group[TIMESTEP].astype("int")
             group.drop(EVENT_TIMESTAMP, axis=1, inplace=True)
@@ -425,6 +424,10 @@ class Aggregator:
         start_time = self.compute_start_of_window(data)
         end_time = self.compute_end_of_window(start_time)
         data = restrict_events_by_timestamp(data, start_time, end_time)
+        start_time = start_time.rename(
+            columns={RESTRICT_TIMESTAMP: WINDOW_START_TIMESTAMP}
+        )
+        data = pd.merge(data, start_time, how="left", on=ENCOUNTER_ID)
         log_counts_step(data, "Restricting events within window...", columns=True)
 
         return self.aggregate_events(data)
