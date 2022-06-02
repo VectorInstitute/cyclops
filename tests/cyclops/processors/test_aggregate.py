@@ -180,16 +180,16 @@ def test_aggregate_events_single_timestep_case(  # pylint: disable=redefined-out
 ):
     """Test aggregate_events function for single timestep case."""
     aggregtor = Aggregator(aggfunc=MEAN, bucket_size=4, window=4)
-    res = aggregtor.aggregate_events(test_aggregate_events_input)
+    res = aggregtor(test_aggregate_events_input)
     assert res[EVENT_NAME][0] == "eventA"
-    assert res[EVENT_NAME][3] == "eventB"
-    assert res["count"][3] == 2
-    assert pytest.approx(0.33, 0.1) == res["null_fraction"][2]
+    assert res[EVENT_NAME][1] == "eventA"
+    assert res["count"][1] == 3
 
-    aggregtor = Aggregator(aggfunc=MEDIAN, bucket_size=4, window=4)
-    res = aggregtor.aggregate_events(test_aggregate_events_input)
+    aggregtor = Aggregator(aggfunc=MEDIAN, bucket_size=4, window=40)
+    res = aggregtor(test_aggregate_events_input)
     assert res[EVENT_VALUE][1] == 18
     assert res[EVENT_NAME][2] == "eventA"
+    assert res["null_fraction"][3] == 0.5
 
 
 def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
@@ -226,7 +226,7 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     aggregator = Aggregator(
         aggfunc=MEAN, bucket_size=1, window=20, start_at_admission=True
     )
-    res = aggregator.aggregate_events(test_aggregate_events_input)
+    res = aggregator(test_aggregate_events_input)
 
     assert res["timestep"][3] == 14
     assert res["event_value"][1] == 14.5
