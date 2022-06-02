@@ -5,7 +5,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from sqlalchemy import and_, cast, extract, func, select
 from sqlalchemy.sql.elements import BinaryExpression
@@ -23,12 +23,15 @@ from cyclops.query.util import (
     equals,
     filter_columns,
     get_column,
+    get_columns,
     get_column_names,
     get_delta_column,
     has_columns,
     has_substring,
     in_,
     not_equals,
+    starts_with,
+    ends_with,
     process_column,
     rename_columns,
     reorder_columns,
@@ -1204,6 +1207,130 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
+class ConditionStartsWith:  # pylint: disable=too-few-public-methods
+    """Filter rows on column starting with some string.
+
+    Attributes
+    ----------
+    col: str
+        Column name on which to condition.
+    string: any
+        String.
+    not_: bool
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+    **cond_kwargs
+        Optional keyword arguments for processing the condition.
+
+    """
+
+    def __init__(
+        self,
+        col: str,
+        string: str,
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+        **cond_kwargs,
+    ):
+        """Initialize."""
+        self.col = col
+        self.string = string
+        self.not_ = not_
+        self.binarize_col = binarize_col
+        self.cond_kwargs = cond_kwargs
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Paramaters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        cond = starts_with(
+            get_column(table, self.col), self.string, **self.cond_kwargs
+        )
+        if self.not_:
+            cond = cond._negate()
+
+        if self.binarize_col is not None:
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
+        return select(table).where(cond).subquery()
+
+
+class ConditionEndsWith:  # pylint: disable=too-few-public-methods
+    """Filter rows on column ending with some string.
+
+    Attributes
+    ----------
+    col: str
+        Column name on which to condition.
+    string: any
+        String.
+    not_: bool
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+    **cond_kwargs
+        Optional keyword arguments for processing the condition.
+
+    """
+
+    def __init__(
+        self,
+        col: str,
+        string: str,
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+        **cond_kwargs,
+    ):
+        """Initialize."""
+        self.col = col
+        self.string = string
+        self.not_ = not_
+        self.binarize_col = binarize_col
+        self.cond_kwargs = cond_kwargs
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Paramaters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        cond = ends_with(
+            get_column(table, self.col), self.string, **self.cond_kwargs
+        )
+        if self.not_:
+            cond = cond._negate()
+
+        if self.binarize_col is not None:
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
+        return select(table).where(cond).subquery()
+
+
 class ConditionInYears:  # pylint: disable=too-few-public-methods
     """Filter rows on a timestamp column being in a list of years.
 
@@ -1509,3 +1636,127 @@ class DropNulls:
 
         cond = and_(*[not_equals(get_column(table, col), None) for col in self.cols])
         return select(table).where(cond)
+
+@dataclass
+class OrderBy:
+    """Order the rows of a table by some columns.
+    
+    Attributes
+    ----------
+    cols: str or list of str
+        Columns by which to order.
+    ascending: bool or list of bool
+        Whether to order each columns by ascending (True) or descending (False).
+        If not provided, orders all by ascending.
+
+    """
+    cols: Union[str, List[str]]
+    ascending: Optional[Union[bool, List[bool]]] = None
+    
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Paramaters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        self.cols = to_list(self.cols)
+        self.ascending = to_list_optional(self.ascending)
+        table = process_checks(table, cols=self.cols)
+        
+        if self.ascending is None:
+            self.ascending = [True for _ in range(len(self.cols))]
+        else:
+            if len(self.ascending) != len(self.cols):
+                raise ValueError("If ascending is specified. Must specify for all columns.")
+        
+        order_cols = [
+            col if self.ascending[i] else col.desc() for \
+            i, col in enumerate(get_columns(table, self.cols))
+        ]
+        
+        return select(table).order_by(*order_cols).subquery()
+
+@dataclass
+class GroupByAggregate:
+    """Aggregate over a group by object.
+    
+    Attributes
+    ----------
+    groupby_cols: str or list of str
+        Columns by which to group.
+    aggfuncs: dict
+        Specify a dictionary of key-value pairs:
+        column name: aggfunc string or
+        column name: (aggfunc string, new column label)
+        This labelling allows for the aggregation of the same column with different functions.
+    """
+    
+    groupby_cols: Union[str, List[str]]
+    aggfuncs: Dict[str, Union[str]]
+    
+    
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Paramaters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        STR_TO_AGGFUNC = {
+            "sum": func.sum,
+            "average": func.avg,
+            "min": func.min,
+            "max": func.max,
+            "count": func.count,
+        }
+        
+        aggfunc_tuples = [item for item in self.aggfuncs.items()]
+        aggfunc_cols = [item[0] for item in aggfunc_tuples]
+        aggfunc_strs = [item[1] if isinstance(item[1], str) else item[1][0] for item in aggfunc_tuples]
+        
+        # If not specified, aggregate column names default to that of
+        # the column being aggregated over
+        aggfunc_names = [
+            aggfunc_cols[i] if isinstance(item[1], str) else item[1][1] \
+            for i, item in enumerate(aggfunc_tuples)
+        ]
+        
+        self.groupby_cols = to_list(self.groupby_cols)
+        table = process_checks(table, cols=self.groupby_cols + aggfunc_cols)
+        
+        for aggfunc_str in aggfunc_strs:
+            if aggfunc_str not in STR_TO_AGGFUNC:
+                allowed_strs = ', '.join(list(STR_TO_AGGFUNC.keys()))
+                raise ValueError(f"Invalid aggfuncs specified. Allowed values are {allowed_strs}.")
+        
+        groupby_cols = get_columns(table, self.groupby_cols)
+        
+        all_names = self.groupby_cols + aggfunc_names
+        if len(all_names) != len(list(set(all_names))):
+            raise ValueError(
+                """Duplicate column names were found. Try naming aggregated columns
+                to avoid this issue."""
+            )
+        
+        agg_cols = get_columns(table, aggfunc_cols)
+        agg_cols = [
+            STR_TO_AGGFUNC[aggfunc_strs[i]](col).label(aggfunc_names[i]) \
+            for i, col in enumerate(agg_cols)
+        ]
+        
+        return select(*groupby_cols, *agg_cols).group_by(*groupby_cols).subquery()
