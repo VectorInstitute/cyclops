@@ -354,7 +354,7 @@ class Aggregator:
             event_name = group[EVENT_NAME].iloc[0]
             group.drop(columns=[ENCOUNTER_ID, EVENT_NAME], axis=1)
 
-            # Todo: Figure out how to deal with missingness inside a bucket (intra).
+            # To Fix: Figure out how to deal with missingness inside a bucket (intra).
 
             group = group.groupby(TIMESTEP, dropna=False)
 
