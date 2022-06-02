@@ -53,6 +53,8 @@ def test_combine_events():
 
     events = combine_events([test_input1])
     assert events.equals(test_input1)
+    events = combine_events(test_input1)
+    assert events.equals(test_input1)
 
 
 def test_convert_to_events():
