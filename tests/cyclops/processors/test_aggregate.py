@@ -18,29 +18,9 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     RESTRICT_TIMESTAMP,
+    TIMESTEP_START_TIMESTAMP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
-
-
-@pytest.fixture
-def test_input_fill_missing_timesteps():
-    """Create a test input to test fill_missing_timesteps."""
-    input_ = pd.DataFrame(
-        index=[0, 1, 2, 4],
-        columns=[
-            ENCOUNTER_ID,
-            "timestep",
-            EVENT_NAME,
-            EVENT_VALUE,
-            "some_random_column",
-        ],
-    )
-    input_.loc[0] = ["sheep", 0, "eventA", 11.3, "holy"]
-    input_.loc[1] = ["dog", 1, "eventA", 13.3, "moly"]
-    input_.loc[2] = ["cat", 0, "eventA", 1.3, "toly"]
-    input_.loc[4] = ["cat", 2, "eventB", 3.4, "foly"]
-
-    return input_
 
 
 @pytest.fixture
@@ -233,6 +213,13 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     assert res["event_value"][2] == 19
     assert res["count"][4] == 2
     assert res["null_fraction"][4] == 0.5
+
+    assert aggregator.meta[TIMESTEP_START_TIMESTAMP][TIMESTEP_START_TIMESTAMP][1][
+        18
+    ] == datetime(2022, 11, 4, 7)
+    assert aggregator.meta[TIMESTEP_START_TIMESTAMP][TIMESTEP_START_TIMESTAMP][2][
+        4
+    ] == datetime(2022, 11, 3, 17)
 
 
 def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name

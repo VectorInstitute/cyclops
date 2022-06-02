@@ -1,6 +1,7 @@
 """Aggregation functions."""
 
 import logging
+import math
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Callable, Dict, Optional, Tuple, Union
@@ -17,6 +18,7 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     RESTRICT_TIMESTAMP,
     TIMESTEP,
+    TIMESTEP_START_TIMESTAMP,
     WINDOW_START_TIMESTAMP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
@@ -401,6 +403,34 @@ class Aggregator:
 
         return grouped
 
+    def compute_timestep_start_timestamps(
+        self, window_start_time: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Compute the start timestamp for each timestep for each encounter.
+
+        Parameters
+        ----------
+        window_start_time: pandas.DataFrame
+            Dataframe with window start timestamps for each encounter.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Dataframe with start timestamps for each timestep for each encounter.
+
+        """
+        timestep_start_times = window_start_time.copy()
+        timesteps = pd.DataFrame(
+            list(range(math.floor(self.window / self.bucket_size))), columns=[TIMESTEP]
+        )
+        timestep_start_times = timestep_start_times.merge(timesteps, how="cross")
+        timestep_start_times[TIMESTEP_START_TIMESTAMP] = timestep_start_times[
+            WINDOW_START_TIMESTAMP
+        ] + pd.to_timedelta(timestep_start_times[TIMESTEP] * self.bucket_size, unit="h")
+        timestep_start_times = timestep_start_times.set_index([ENCOUNTER_ID, TIMESTEP])
+
+        return timestep_start_times
+
     @time_function
     @assert_has_columns([ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP])
     def __call__(
@@ -421,13 +451,15 @@ class Aggregator:
             info like count of values in a bucket, fraction missing (pandas.DataFrame).
 
         """
-        start_time = self.compute_start_of_window(data)
-        end_time = self.compute_end_of_window(start_time)
-        data = restrict_events_by_timestamp(data, start_time, end_time)
-        start_time = start_time.rename(
+        window_start_time = self.compute_start_of_window(data)
+        window_end_time = self.compute_end_of_window(window_start_time)
+        data = restrict_events_by_timestamp(data, window_start_time, window_end_time)
+        window_start_time = window_start_time.rename(
             columns={RESTRICT_TIMESTAMP: WINDOW_START_TIMESTAMP}
         )
-        data = pd.merge(data, start_time, how="left", on=ENCOUNTER_ID)
+        data = pd.merge(data, window_start_time, how="left", on=ENCOUNTER_ID)
+        timestep_start_times = self.compute_timestep_start_timestamps(window_start_time)
+        self.meta[TIMESTEP_START_TIMESTAMP] = timestep_start_times
         log_counts_step(data, "Restricting events within window...", columns=True)
 
         return self.aggregate_events(data)
