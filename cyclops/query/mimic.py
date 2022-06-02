@@ -82,6 +82,23 @@ MIMIC_COLUMN_MAP = {
 }
 
 
+@table_params_to_type(Subquery)
+def get_interface(table: TableTypes) -> QueryInterface:
+    """Get a query interface for a MIMIC table.
+
+    Parameters
+    ----------
+    table: cyclops.query.util.TableTypes
+        Table to wrap in the interface.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        A query interface using the MIMIC database object.
+    """
+    return QueryInterface(_db, table)
+
+
 def get_table(table_name: str, rename: bool = True) -> Subquery:
     """Get a table and possibly map columns to have standard names.
 
