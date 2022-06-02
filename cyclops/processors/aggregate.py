@@ -1,7 +1,6 @@
 """Aggregation functions."""
 
 import logging
-import math
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Callable, Dict, Optional, Tuple, Union
@@ -322,37 +321,6 @@ class Aggregator:
 
         return end_time
 
-    @assert_has_columns([ENCOUNTER_ID, EVENT_VALUE, EVENT_NAME])
-    def aggregate_events_into_single_bucket(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Gather events into single bucket.
-
-        If aggregation window and bucket size are the same, then
-        all events fall into the same bucket, and hence instead of a
-        time-series, all event values are aggregated to result in a single value
-        per feature.
-
-        Parameters
-        ----------
-        data: pandas.DataFrame
-            Input data.
-
-        Returns
-        -------
-        tuple:
-            tuple with Processed event features, and None.
-
-        """
-        features = pd.pivot_table(
-            data,
-            values=EVENT_VALUE,
-            index=ENCOUNTER_ID,
-            columns=[EVENT_NAME],
-            aggfunc=self.aggfunc,
-            dropna=False,
-        )
-
-        return features, None
-
     def aggregate_events(
         self,
         data: pd.DataFrame,
@@ -368,9 +336,6 @@ class Aggregator:
         where the number of feature columns is equal to number of
         event names, e.g. lab tests + vital measurements. The features
         DataFrame is then indexable using encounter_id and timestep.
-        If 'aggregator.window' and 'aggregator.bucket_size' are the same,
-        a faster groupby, since the result is a single feature value (i.e. single
-        timestep) and not a time-series.
 
         Parameters
         ----------
@@ -384,30 +349,7 @@ class Aggregator:
             info like count of values in a bucket, fraction missing (pandas.DataFrame).
 
         """
-        log_counts_step(data, "Gathering event features...", columns=True)
-        start_time = self.compute_start_of_window(data)
-        end_time = self.compute_end_of_window(start_time)
-        data = restrict_events_by_timestamp(data, start_time, end_time)
-        log_counts_step(data, "Restricting events within window...", columns=True)
-
-        # All events are placed in a single bucket, hence not a time-series.
-        if self.window == self.bucket_size:
-            return self.aggregate_events_into_single_bucket(data)
-
-        num_timesteps = math.floor(self.window / self.bucket_size)
-
-        def fill_missing_range(data, col, range_from, range_to, fill_with=np.nan):
-            return (
-                data.merge(
-                    how="right",
-                    on=col,
-                    right=pd.DataFrame({col: np.arange(range_from, range_to)}),
-                )
-                .sort_values(by=col)
-                .reset_index()
-                .fillna(fill_with)
-                .drop(["index"], axis=1)
-            )
+        log_counts_step(data, "Aggregating event features...", columns=True)
 
         def process_event(group):
             event_name = group[EVENT_NAME].iloc[0]
@@ -432,7 +374,6 @@ class Aggregator:
             group = group.agg({EVENT_VALUE: self.aggfunc})
             group.reset_index(inplace=True)
 
-            group = fill_missing_range(group, TIMESTEP, 0, num_timesteps)
             group[EVENT_NAME] = event_name
             group = pd.merge(group, info, how="left", on=TIMESTEP)
 
@@ -451,26 +392,15 @@ class Aggregator:
 
             return group
 
-        # Drop unwanted columns.
-        data.drop(ADMIT_TIMESTAMP, axis=1, inplace=True)
-
         # Group by encounters and process.
         grouped = data.groupby([ENCOUNTER_ID]).apply(process_encounter)
         grouped.reset_index(inplace=True)
         grouped.drop("level_1", axis=1, inplace=True)
 
-        features = pd.pivot_table(
-            grouped.drop(columns=["count", "null_fraction"]),
-            values=EVENT_VALUE,
-            index=[ENCOUNTER_ID, TIMESTEP],
-            columns=[EVENT_NAME],
-            aggfunc=self.aggfunc,
-            dropna=False,
-        )
+        # Do we need this later?
+        # grouped.dropna(inplace=True)
 
-        grouped.dropna(inplace=True)
-
-        return features, grouped
+        return grouped
 
     @time_function
     @assert_has_columns([ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP])
@@ -478,7 +408,7 @@ class Aggregator:
         self,
         data: pd.DataFrame,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """Aggregate events into equally spaced buckets.
+        """Aggregate events based on user provided parameters.
 
         Parameters
         ----------
@@ -492,4 +422,9 @@ class Aggregator:
             info like count of values in a bucket, fraction missing (pandas.DataFrame).
 
         """
+        start_time = self.compute_start_of_window(data)
+        end_time = self.compute_end_of_window(start_time)
+        data = restrict_events_by_timestamp(data, start_time, end_time)
+        log_counts_step(data, "Restricting events within window...", columns=True)
+
         return self.aggregate_events(data)

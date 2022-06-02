@@ -23,6 +23,27 @@ from cyclops.processors.constants import MEAN, MEDIAN
 
 
 @pytest.fixture
+def test_input_fill_missing_timesteps():
+    """Create a test input to test fill_missing_timesteps."""
+    input_ = pd.DataFrame(
+        index=[0, 1, 2, 4],
+        columns=[
+            ENCOUNTER_ID,
+            "timestep",
+            EVENT_NAME,
+            EVENT_VALUE,
+            "some_random_column",
+        ],
+    )
+    input_.loc[0] = ["sheep", 0, "eventA", 11.3, "holy"]
+    input_.loc[1] = ["dog", 1, "eventA", 13.3, "moly"]
+    input_.loc[2] = ["cat", 0, "eventA", 1.3, "toly"]
+    input_.loc[4] = ["cat", 2, "eventB", 3.4, "foly"]
+
+    return input_
+
+
+@pytest.fixture
 def test_input():
     """Create a test input."""
     input_ = pd.DataFrame(
@@ -87,9 +108,12 @@ def test_aggregate_events_input():
     date1 = datetime(2022, 11, 3, hour=13)
     date2 = datetime(2022, 11, 3, hour=14)
     date3 = datetime(2022, 11, 4, hour=3)
+    date4 = datetime(2022, 11, 3, hour=13)
     data = [
         [1, "eventA", 10, date1, date2],
-        [2, "eventA", 11, date1, date2],
+        [2, "eventA", 19, date1, date2],
+        [2, "eventA", 11, date1, date4],
+        [2, "eventA", 18, date1, date4],
         [2, "eventA", 12, date1, date3],
         [2, "eventA", 16, date1, date3],
         [2, "eventA", np.nan, date1, date3],
@@ -151,33 +175,21 @@ def test_compute_start_of_window(test_input):  # pylint: disable=redefined-outer
     ).all()
 
 
-def test_aggregate_events_into_single_bucket(  # pylint: disable=redefined-outer-name
-    test_events_input,
-):
-    """Test aggregate_events_into_single_bucket function."""
-    aggregator = Aggregator(aggfunc=MEAN)
-    res, _ = aggregator.aggregate_events_into_single_bucket(test_events_input)
-    assert res.loc[1]["eventA"] == 10.0
-    assert np.isnan(res.loc[1]["eventB"])
-    assert res.loc[2]["eventA"] == 13.0
-    assert res.loc[2]["eventB"] == 13.0
-
-    aggregator = Aggregator(aggfunc=MEDIAN)
-    res, _ = aggregator.aggregate_events_into_single_bucket(test_events_input)
-    assert res.loc[1]["eventA"] == 10.0
-    assert np.isnan(res.loc[1]["eventB"])
-    assert res.loc[2]["eventA"] == 12.0
-    assert res.loc[2]["eventB"] == 13.0
-
-
 def test_aggregate_events_single_timestep_case(  # pylint: disable=redefined-outer-name
     test_aggregate_events_input,
 ):
-    """Test aggregate_events function."""
+    """Test aggregate_events function for single timestep case."""
     aggregtor = Aggregator(aggfunc=MEAN, bucket_size=4, window=4)
-    res, _ = aggregtor.aggregate_events(test_aggregate_events_input)
-    assert res["eventA"].iloc[0] == 10
-    assert res["eventA"].iloc[1] == 11
+    res = aggregtor.aggregate_events(test_aggregate_events_input)
+    assert res[EVENT_NAME][0] == "eventA"
+    assert res[EVENT_NAME][3] == "eventB"
+    assert res["count"][3] == 2
+    assert pytest.approx(0.33, 0.1) == res["null_fraction"][2]
+
+    aggregtor = Aggregator(aggfunc=MEDIAN, bucket_size=4, window=4)
+    res = aggregtor.aggregate_events(test_aggregate_events_input)
+    assert res[EVENT_VALUE][1] == 18
+    assert res[EVENT_NAME][2] == "eventA"
 
 
 def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
@@ -204,7 +216,7 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
         _ = Aggregator(
             aggfunc="donkey", bucket_size=4, window=20, start_at_admission=True
         )
-    _ = Aggregator(aggfunc=np.mean, bucket_size=4, window=20, start_at_admission=True)
+    _ = Aggregator(aggfunc=np.mean, bucket_size=2, window=20, start_at_admission=True)
 
     with pytest.raises(ValueError):
         _ = Aggregator(
@@ -212,24 +224,15 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
         )
 
     aggregator = Aggregator(
-        aggfunc=MEAN, bucket_size=4, window=20, start_at_admission=True
+        aggfunc=MEAN, bucket_size=1, window=20, start_at_admission=True
     )
-    res, _ = aggregator.aggregate_events(test_aggregate_events_input)
+    res = aggregator.aggregate_events(test_aggregate_events_input)
 
-    assert res.loc[(1, 0)]["eventA"] == 10.0
-    assert np.isnan(res.loc[(1, 0)]["eventB"])
-    assert res.loc[(2, 0)]["eventA"] == 11.0
-    assert np.isnan(res.loc[(2, 0)]["eventB"])
-    assert np.isnan(res.loc[(2, 1)]["eventA"])
-    assert np.isnan(res.loc[(2, 1)]["eventB"])
-    assert np.isnan(res.loc[(2, 2)]["eventA"])
-    assert np.isnan(res.loc[(2, 2)]["eventB"])
-    assert res.loc[(2, 3)]["eventA"] == 14.0
-    assert res.loc[(2, 3)]["eventB"] == 13.0
-
-    # Checks padding past last event
-    assert np.isnan(res.loc[(2, 4)]["eventA"])
-    assert np.isnan(res.loc[(2, 4)]["eventB"])
+    assert res["timestep"][3] == 14
+    assert res["event_value"][1] == 14.5
+    assert res["event_value"][2] == 19
+    assert res["count"][4] == 2
+    assert res["null_fraction"][4] == 0.5
 
 
 def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
@@ -242,10 +245,10 @@ def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
         test_aggregate_events_input,
         start=test_restrict_events_by_timestamp_start_input,
     )
-    assert list(res.index) == [0, 2, 3, 4, 5, 6]
+    assert list(res.index) == [0, 4, 5, 6, 7, 8]
 
     res = restrict_events_by_timestamp(
         test_aggregate_events_input,
         stop=test_restrict_events_by_timestamp_stop_input,
     )
-    assert list(res.index) == [0, 1]
+    assert list(res.index) == [0, 1, 2, 3]

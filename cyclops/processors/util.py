@@ -2,8 +2,9 @@
 
 import logging
 from functools import wraps
-from typing import Callable, List, Union
+from typing import Any, Callable, List, Union
 
+import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
@@ -14,6 +15,47 @@ from cyclops.utils.log import setup_logging
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
+
+def fill_missing_timesteps(
+    data: pd.DataFrame,
+    timestep_col: str,
+    range_from: int,
+    range_to: int,
+    fill_with: Any = np.nan,
+) -> pd.DataFrame:
+    """Fill missing time range in dataframe of aggregated events.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Dataframe with aggregated events into timesteps.
+    timestep_col: str
+        Name of timestep column with missing values in a range.
+    range_from: int
+        Start of timesteps range.
+    range_to: int
+        End of timesteps range.
+    fill_with: Any
+        Fill value for column values for the missing timesteps.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe with missing timestep aggregated values filled.
+
+    """
+    return (
+        data.merge(
+            how="right",
+            on=timestep_col,
+            right=pd.DataFrame({timestep_col: np.arange(range_from, range_to)}),
+        )
+        .sort_values(by=timestep_col)
+        .reset_index()
+        .fillna(fill_with)
+        .drop(["index"], axis=1)
+    )
 
 
 def is_timeseries_data(data: pd.DataFrame) -> bool:
