@@ -1,7 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
-
 HOSPITAL_ID = {
     "THPM": 0,
     "SBK": 1,
@@ -26,7 +22,7 @@ UNIQUE_LAB_NAMES = "unique_lab_names"
 UNIQUE_LAB_COUNTS = "unique_lab_counts"
 LAB_TEST_NAME = "lab_test_name"
 RESULT_VALUE = "result_value"
-SAMPLE_COLLECTION_DATE_TIME = 'sample_collection_date_time'
+SAMPLE_COLLECTION_DATE_TIME = "sample_collection_date_time"
 UNIQUE_VITALS_NAMES = "unique_vitals_names"
 UNIQUE_VITALS_COUNTS = "unique_vitals_counts"
 VITALS_NAME = "vitals_name"

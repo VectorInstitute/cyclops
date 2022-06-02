@@ -1,5 +1,5 @@
-from sklearn.neural_network import MLPClassifier as MLP
 from sklearn.metrics import roc_auc_score
+from sklearn.neural_network import MLPClassifier as MLP
 
 
 def fit(X, Y, Xv, Yv):

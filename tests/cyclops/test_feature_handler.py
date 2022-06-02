@@ -144,6 +144,22 @@ def test_add_features_static(  # pylint: disable=redefined-outer-name
     assert (feature_handler.static["B"].values == [10, 2, 3, 9.1]).all()
     assert (feature_handler.static["C"].values == [0, 0, 1, 0]).all()
 
+    with pytest.raises(ValueError):
+        feature_handler.add_features("donkey")
+
+    numerical_features = feature_handler.get_numerical_feature_names()
+    categorical_features = feature_handler.get_categorical_feature_names()
+    assert numerical_features[STATIC] == ["B"]
+    assert categorical_features[STATIC] == ["A-cat", "A-dog", "A-sheep", "C"]
+
+
+def test_set_targets(test_input_static):  # pylint: disable=redefined-outer-name
+    """Test set_targets method."""
+    feature_handler = FeatureHandler()
+    feature_handler.add_features(test_input_static)
+    feature_handler.set_targets("A-cat")
+    assert "A-cat" in feature_handler.targets[STATIC]
+
 
 def test_drop_features_static(  # pylint: disable=redefined-outer-name
     test_input_static,

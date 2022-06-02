@@ -2,6 +2,7 @@
 
 
 ENCOUNTER_ID = "encounter_id"
+SUBJECT_ID = "subject_id"
 HOSPITAL_ID = "hospital_id"
 ADMIT_TIMESTAMP = "admit_timestamp"
 DISCHARGE_TIMESTAMP = "discharge_timestamp"
@@ -18,10 +19,13 @@ CITY = "city"
 PROVINCE = "province"
 COUNTRY = "country"
 LANGUAGE = "language"
+DATE_OF_DEATH = "dod"
 TOTAL_COST = "total_cost"
 YEAR = "year"
 
 DIAGNOSIS_CODE = "diagnosis_code"
+DIAGNOSIS_TITLE = "diagnosis_title"
+DIAGNOSIS_VERSION = "diagnosis_version"
 DIAGNOSIS_TYPE = "diagnosis_type"
 DIAGNOSIS_TRAJECTORIES = "diagnosis_trajectories"
 
@@ -34,6 +38,8 @@ EVENT_NAME = "event_name"
 EVENT_VALUE = "event_value"
 EVENT_VALUE_UNIT = "event_value_unit"
 EVENT_TIMESTAMP = "event_timestamp"
+
+RESTRICT_TIMESTAMP = "restrict_timestamp"
 
 REFERENCE_RANGE = "reference_range"
 TIMESTEP = "timestep"
@@ -53,4 +59,13 @@ RECOGNISED_QUERY_COLUMNS = [
     DIAGNOSIS_TYPE,
     YEAR,
     AGE,
+]
+RECOGNISED_EVENT_COLUMNS = [
+    ADMIT_TIMESTAMP,
+    DISCHARGE_TIMESTAMP,
+    ENCOUNTER_ID,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT,
 ]

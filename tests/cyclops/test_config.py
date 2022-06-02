@@ -27,9 +27,9 @@ class TestConfig(unittest.TestCase):
         self.dummy_config_dir = "/tmp/config"
         os.makedirs(self.dummy_config_dir, exist_ok=True)
         dummy_cfg = {"database": "test", "years": [2020, 2019]}
-        _save_to_yaml(dummy_cfg, os.path.join(self.dummy_config_dir, "data.yaml"))
+        _save_to_yaml(dummy_cfg, os.path.join(self.dummy_config_dir, "query.yaml"))
         _save_to_yaml({}, os.path.join(self.dummy_config_dir, "model.yaml"))
-        _save_to_yaml({}, os.path.join(self.dummy_config_dir, "drift.yaml"))
+        _save_to_yaml({}, os.path.join(self.dummy_config_dir, "processor.yaml"))
         _save_to_yaml({}, os.path.join(self.dummy_config_dir, "workflow.yaml"))
 
     def tearDown(self):

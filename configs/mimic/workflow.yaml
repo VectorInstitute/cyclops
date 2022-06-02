@@ -1,2 +1,3 @@
 ---
-artifact_folder: ""
+# Production querying function to use from cyclops.workflow.queries.
+query_fn: example_mimic_query

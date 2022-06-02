@@ -1,74 +1,82 @@
-from shift_detector import *
-from shift_reductor import *
-from shift_tester import *
-from shift_experiments import *
-
-# from legacy_utils import *
-import re
-from collections import OrderedDict
-import numpy as np
-import pandas as pd
-import matplotlib
-import matplotlib.pyplot as plt
-import sqlalchemy
-from sqlalchemy import func, select, desc
-from sqlalchemy.sql.expression import and_, or_
-from shift_constants import *
-
-import sys
-from functools import reduce
 import datetime
-import joblib
-import matplotlib.pyplot as plt
 import os
 import pickle
+import re
+import sys
+from collections import OrderedDict
+from functools import reduce
 
-from sklearn.metrics import (
-    auc,
-    accuracy_score,
-    confusion_matrix,
-    roc_auc_score,
-    roc_curve,
-    precision_recall_curve,
-    average_precision_score,
-)
-
-from sklearn.model_selection import GridSearchCV, train_test_split
-import pandas as pd
+import joblib
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import sqlalchemy
-from sqlalchemy import select, func, extract, desc
-from sqlalchemy.sql.expression import and_
-
 from evidently import ColumnMapping
 from evidently.dashboard import Dashboard
 from evidently.dashboard.tabs import DataQualityTab
 from evidently.model_profile import Profile
 from evidently.model_profile.sections import DataQualityProfileSection
+from shift_constants import *
+from shift_detector import *
+from shift_experiments import *
+from shift_reductor import *
+from shift_tester import *
+from sklearn.metrics import (
+    accuracy_score,
+    auc,
+    average_precision_score,
+    confusion_matrix,
+    precision_recall_curve,
+    roc_auc_score,
+    roc_curve,
+)
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sqlalchemy import desc, extract, func, select
+from sqlalchemy.sql.expression import and_, or_
 
 import cyclops.config
-from cyclops.processors.column_names import (
-    ENCOUNTER_ID,
-    HOSPITAL_ID,
-    ADMIT_TIMESTAMP,
-    DISCHARGE_TIMESTAMP,
-    DISCHARGE_DISPOSITION,
-    READMISSION,
-    AGE,
-    SEX,
-    TOTAL_COST,
-    CITY,
-    PROVINCE,
-    COUNTRY,
-    LANGUAGE,
-    LENGTH_OF_STAY_IN_ER,
-    REFERENCE_RANGE,
-)
 from cyclops.processor import featurize
 from cyclops.processors.aggregate import Aggregator
+from cyclops.processors.column_names import (
+    ADMIT_TIMESTAMP,
+    AGE,
+    CITY,
+    COUNTRY,
+    DISCHARGE_DISPOSITION,
+    DISCHARGE_TIMESTAMP,
+    ENCOUNTER_ID,
+    HOSPITAL_ID,
+    LANGUAGE,
+    LENGTH_OF_STAY_IN_ER,
+    PROVINCE,
+    READMISSION,
+    REFERENCE_RANGE,
+    SEX,
+    TOTAL_COST,
+)
+
+
+def get_scaler(scaler):
+    """Get scaler.
+
+    Parameters
+    ----------
+    scaler: string
+        String indicating which scaler to retrieve.
+
+    """
+    scalers = {
+        "minmax": MinMaxScaler,
+        "standard": StandardScaler,
+        "maxabs": MaxAbsScaler,
+        "robust": RobustScaler,
+    }
+    return scalers.get(scaler.lower())()
 
 
 def get_data(hospital, na_cutoff):
+
     EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/drift_exp"
 
     # load admin
@@ -86,7 +94,7 @@ def get_data(hospital, na_cutoff):
         LENGTH_OF_STAY_IN_ER,
     ]
     admin_data = admin_data[admin_columns]
-    
+
     hosp_ids = admin_data.loc[admin_data["hospital_id"].isin(hospital), "encounter_id"]
     hosp_label = "_".join(sorted(hospital, key=str.lower))
     file_name = os.path.join(EXTRACT_SAVE_PATH, "2018_2020_features.gzip")

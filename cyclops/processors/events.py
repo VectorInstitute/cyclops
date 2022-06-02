@@ -1,12 +1,23 @@
 """Events processor module, applies cleaning step to event data before aggregation."""
 
 import logging
+from typing import List, Optional, Union
 
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.column_names import EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT
-from cyclops.processors.constants import NEGATIVE_RESULT_TERMS, POSITIVE_RESULT_TERMS
+from cyclops.processors.column_names import (
+    ENCOUNTER_ID,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
+    EVENT_VALUE_UNIT,
+)
+from cyclops.processors.constants import (
+    EMPTY_STRING,
+    NEGATIVE_RESULT_TERMS,
+    POSITIVE_RESULT_TERMS,
+)
 from cyclops.processors.string_ops import (
     fill_missing_with_nan,
     fix_inequalities,
@@ -16,7 +27,7 @@ from cyclops.processors.string_ops import (
     strip_whitespace,
     to_lower,
 )
-from cyclops.processors.util import log_counts_step
+from cyclops.processors.util import assert_has_columns, gather_columns, log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -36,6 +47,92 @@ UNSUPPORTED = [
     "tsh",
     "urine osmolality",
 ]
+
+
+def combine_events(event_data: Union[pd.DataFrame, List[pd.DataFrame]]) -> pd.DataFrame:
+    """Gather event data from multiple dataframes into a single one.
+
+    Events can be in multiple raw dataframes like labs, vitals, etc. This
+    function takes in multiple dataframes and gathers all events into a single
+    dataframe.
+
+    Parameters
+    ----------
+    event_data: pandas.DataFrame or list of pandas.DataFrame
+        Raw event data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Combined event data.
+
+    """
+    must_have_cols = [ENCOUNTER_ID, EVENT_TIMESTAMP, EVENT_NAME, EVENT_VALUE]
+
+    @assert_has_columns(must_have_cols, must_have_cols)
+    def add_events(events: pd.DataFrame, events_to_add: pd.DataFrame) -> pd.DataFrame:
+        return pd.concat(
+            [
+                events,
+                events_to_add[must_have_cols],
+            ],
+            ignore_index=True,
+            axis=0,
+        )
+
+    events = pd.DataFrame(columns=must_have_cols)
+    if isinstance(event_data, pd.DataFrame):
+        event_data = [event_data]
+    for event_dataframe in event_data:
+        events = add_events(events, event_dataframe)
+
+    return events
+
+
+@assert_has_columns([ENCOUNTER_ID])
+def convert_to_events(
+    data: pd.DataFrame,
+    event_name: str,
+    timestamp_col: str,
+    value_col: Optional[str] = None,
+) -> pd.DataFrame:
+    """Convert dataframe with just timestamps into events.
+
+    Any event like admission, discharge, transfer, etc. can be converted to the
+    common events dataframe format with 'encounter_id', 'event_name', 'event_timestamp',
+    and 'event_value' columns. The input data in this case does not have an explicit
+    event name and hence we assign it. Like for e.g. admission.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Raw data with some timestamps denoting an event.
+    event_name: str
+        Event name to give, added as a new column.
+    timestamp_col: str
+        Name of the column in the incoming dataframe that has the timestamp.
+    value_col: str, optional
+        Name of the column in the incoming dataframe that has potential event values.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Events in the converted format.
+
+    """
+    if value_col:
+        cols = [ENCOUNTER_ID, timestamp_col, value_col]
+    else:
+        cols = [ENCOUNTER_ID, timestamp_col]
+    events = gather_columns(data, cols)
+    if EVENT_VALUE not in events:
+        events[EVENT_VALUE] = EMPTY_STRING
+    events = events.rename(
+        columns={timestamp_col: EVENT_TIMESTAMP, value_col: EVENT_VALUE}
+    )
+    events[EVENT_NAME] = event_name
+
+    return events
 
 
 def is_supported(event_name: str) -> bool:
@@ -58,6 +155,7 @@ def is_supported(event_name: str) -> bool:
     return event_name not in UNSUPPORTED
 
 
+@assert_has_columns([EVENT_NAME])
 def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
     """Drop events currently not supported for processing.
 
@@ -78,7 +176,8 @@ def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
+@assert_has_columns([EVENT_NAME])
+def normalise_names(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event names.
 
     Perform basic cleaning/house-keeping of event names.
@@ -93,19 +192,20 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalized event names.
+        Output data with normalised event names.
 
     """
     data[EVENT_NAME] = data[EVENT_NAME].apply(remove_text_in_parentheses)
     data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
     log_counts_step(
-        data, "Remove text in parentheses and normalize event names...", columns=True
+        data, "Remove text in parentheses and normalise event names...", columns=True
     )
 
     return data
 
 
-def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
+@assert_has_columns([EVENT_VALUE])
+def normalise_values(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event values.
 
     Perform basic cleaning/house-keeping of event values.
@@ -120,14 +220,9 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalized event values.
+        Output data with normalised event values.
 
     """
-    data[EVENT_VALUE] = data[EVENT_VALUE].apply(fix_inequalities)
-    log_counts_step(
-        data, "Fixing inequalities and removing outlier values...", columns=True
-    )
-
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(
         replace_if_string_match, args=("|".join(POSITIVE_RESULT_TERMS), "1")
     )
@@ -135,6 +230,14 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
         replace_if_string_match, args=("|".join(NEGATIVE_RESULT_TERMS), "0")
     )
     log_counts_step(data, "Convert Positive/Negative to 1/0...", columns=True)
+
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(remove_text_in_parentheses)
+    log_counts_step(data, "Remove any text in paranthesis", columns=True)
+
+    data[EVENT_VALUE] = data[EVENT_VALUE].apply(fix_inequalities)
+    log_counts_step(
+        data, "Fixing inequalities and removing outlier values...", columns=True
+    )
 
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(fill_missing_with_nan)
     log_counts_step(data, "Fill empty result string values with NaN...", columns=True)
@@ -145,7 +248,8 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
+@assert_has_columns([EVENT_VALUE_UNIT])
+def normalise_units(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event value units.
 
     Perform basic cleaning/house-keeping of event value units.
@@ -159,10 +263,10 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalized event value units.
+        Output data with normalised event value units.
 
     """
-    LOGGER.info("Cleaning units and converting to SI...")
+    LOGGER.info("Normalizing units...")
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(none_to_empty_string)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(to_lower)
     data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(strip_whitespace)
@@ -171,8 +275,8 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
 
 
 @time_function
-def clean_events(data) -> pd.DataFrame:
-    """Pre-process and clean raw event data.
+def normalise_events(data) -> pd.DataFrame:
+    """Pre-process and normalise (clean) raw event data.
 
     Parameters
     ----------
@@ -186,15 +290,16 @@ def clean_events(data) -> pd.DataFrame:
 
     """
     data = data.copy()
+
     log_counts_step(data, "Cleaning raw event data...", columns=True)
     data = data.infer_objects()
-    data = normalize_names(data)
+    data = normalise_names(data)
     data = drop_unsupported(data)
 
     if data[EVENT_VALUE].dtypes == object:
-        data = normalize_values(data)
+        data = normalise_values(data)
 
     if EVENT_VALUE_UNIT in list(data.columns):
-        data = normalize_units(data)
+        data = normalise_units(data)
 
     return data
