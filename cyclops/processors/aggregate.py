@@ -145,7 +145,7 @@ class Aggregator:
 
     Parameters
     ----------
-    aggfunc: str or Callable, optional
+    aggfunc: Dict
         Aggregation function, either passed as function or string where if
         string, could be ['mean', 'median'].
     bucket_size: float, optional
@@ -169,7 +169,7 @@ class Aggregator:
 
     """
 
-    aggfunc: Union[str, Callable] = MEAN
+    aggfunc: Dict[str, Union[str, Callable]] = field(default_factory=dict)
     bucket_size: int = 1
     window: int = 24
     start_at_admission: bool = False
@@ -208,21 +208,16 @@ class Aggregator:
 
         self.aggfunc = self._get_aggfunc()
 
-    def _get_aggfunc(self) -> Callable:
-        """Return an aggregation function.
+    def _get_aggfunc(self) -> Dict[str, Union[str, Callable]]:
+        """Get aggregation function(s) for respective columns.
 
-        Given a function or string, convert a string to an aggfunc if
-        recognized. Otherwise, simply return the same Callable object.
-
-        Parameters
-        ----------
-        strategy: str, optional
-            Strategy for aggregation, options are ['mean', 'median']
+        Given a dict of functions or strings, convert a string to an aggfunc if
+        recognized. Otherwise, simply return functions.
 
         Returns
         -------
-        Callable
-            The aggregation function.
+        Dict
+            The aggregation functions for each column.
 
         Raises
         ------
@@ -230,15 +225,21 @@ class Aggregator:
             Asserts if supplied input strategy option is not recognised (implemented).
 
         """
-        if isinstance(self.aggfunc, str):
-            if self.aggfunc == MEAN:
-                return np.mean
-            if self.aggfunc == MEDIAN:
-                return np.median
+        if not bool(self.aggfunc):
+            self.aggfunc = {EVENT_VALUE: np.mean}
+        aggfunc_converted = {}
+        for agg_col, aggfunc in self.aggfunc.items():
+            if isinstance(aggfunc, str):
+                if aggfunc == MEAN:
+                    aggfunc_converted[agg_col] = np.mean
+                elif aggfunc == MEDIAN:
+                    aggfunc_converted[agg_col] = np.median
+                else:
+                    raise NotImplementedError(f"Provided {aggfunc} is not a valid one!")
+            if callable(aggfunc):
+                aggfunc_converted[agg_col] = aggfunc
 
-            raise NotImplementedError(f"Provided {self.aggfunc} is not a valid one!")
-
-        return self.aggfunc
+        return aggfunc_converted
 
     @assert_has_columns([ENCOUNTER_ID])
     def compute_start_of_window(
@@ -351,6 +352,7 @@ class Aggregator:
 
         """
         log_counts_step(data, "Aggregating event features...", columns=True)
+        _ = has_columns(data, list(self.aggfunc.keys()), raise_error=True)
 
         def process_event(group):
             event_name = group[EVENT_NAME].iloc[0]
@@ -372,7 +374,7 @@ class Aggregator:
             info["null_fraction"] = 1 - (info["nonnull_count"] / info["count"])
             info.drop(columns=["nonnull_count"], inplace=True)
 
-            group = group.agg({EVENT_VALUE: self.aggfunc})
+            group = group.agg(self.aggfunc)
             group.reset_index(inplace=True)
 
             group[EVENT_NAME] = event_name
