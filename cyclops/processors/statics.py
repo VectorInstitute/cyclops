@@ -9,7 +9,7 @@ import pandas as pd
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.processors.util import assert_has_columns, log_counts_step
-from cyclops.query.util import to_list
+from cyclops.utils.common import to_list
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
