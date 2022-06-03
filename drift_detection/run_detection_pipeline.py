@@ -18,19 +18,14 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import GridSearchCV, train_test_split
 
+from explainer import ShiftExplainer
+from experiments import *
+from utils.constants import *
+from utils.plot_utils import errorfill, plot_roc, plot_pr
+from utils.utils import import_dataset_hospital, run_shift_experiment
+from baseline_models.static.utils import run_model
+
 sys.path.append("..")
-
-from shift_constants import *
-from shift_detector import *
-from shift_experiments import *
-from shift_explainer import *
-from shift_models import *
-from shift_plot_utils import *
-from shift_reductor import *
-from shift_tester import *
-from shift_utils import *
-
-sys.path.append("../..")
 
 import config
 import sqlalchemy

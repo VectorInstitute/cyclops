@@ -1,7 +1,6 @@
 from xgboost import XGBClassifier
 
-
-def fit(X, Y, Xv, Yv):
+def fit_gbt(X, Y, Xv, Yv):
     best_n = None
     best_g = None
     best_score = 0

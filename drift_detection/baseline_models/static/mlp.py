@@ -2,7 +2,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.neural_network import MLPClassifier as MLP
 
 
-def fit(X, Y, Xv, Yv):
+def fit_mlp(X, Y, Xv, Yv):
     best_c = None
     best_score = 0
     best_model = None

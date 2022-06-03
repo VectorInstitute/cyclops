@@ -1,7 +1,6 @@
 import os
-
+import sys
 import alibi
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy
@@ -9,13 +8,11 @@ import scipy.stats as stats
 import tensorflow as tf
 import torch
 import torch.nn as nn
-from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
-from shift_utils import get_scaler
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler
 from sklearn.random_projection import SparseRandomProjection
-
+from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
 
 class ShiftReductor:
 
@@ -49,15 +46,17 @@ class ShiftReductor:
         datset,
         dr_amount=None,
         var_ret=0.9,
+        scale=True,
         scaler="standard",
-    ):
+        model=None):
         self.X = X
         self.y = y
         self.dr_tech = dr_tech
         self.orig_dims = orig_dims
         self.datset = datset
-        self.mod_path = None
-        self.scaler = get_scaler(scaler)
+        self.model = model
+        self.scale = scale
+        self.scaler = self.get_scaler(scaler)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         if dr_amount is None:
@@ -77,18 +76,37 @@ class ShiftReductor:
         elif self.dr_tech == "Isomap":
             return self.manifold_isomap()
         elif self.dr_tech == "BBSDs_FFNN":
-            self.mod_path = "./saved_models/" + self.datset + "_standard_class_model.h5"
-            ##implement load_model function
-            if os.path.exists(self.mod_path):
-                return load_model(self.mod_path)
+            if os.path.exists(self.model):
+                return self.model
             return self.neural_network_classifier()
         elif self.dr_tech == "BBSDh_FFNN":
-            self.mod_path = "./saved_models/" + self.datset + "_standard_class_model.h5"
-            if os.path.exists(self.mod_path):
-                return load_model(self.mod_path)
+            if os.path.exists(self.model):
+                return self.model
             return self.neural_network_classifier()
+        elif self.dr_tech == "BBSDs_LSTM":
+            if os.path.exists(self.model):
+                return self.model
+            return self.lstm()
         else:
             return None
+        
+    def get_scaler(self, scaler):
+        """Get scaler.
+
+        Parameters
+        ----------
+        scaler: string
+            String indicating which scaler to retrieve.
+
+        """
+        scalers = {
+            "minmax": MinMaxScaler,
+            "standard": StandardScaler,
+            "maxabs": MaxAbsScaler,
+            "robust": RobustScaler,
+        }
+        return scalers.get(scaler.lower())()
+
 
     def reduce(self, model, X, batch_size=32):
         if (
@@ -97,7 +115,8 @@ class ShiftReductor:
             or self.dr_tech == "kPCA"
             or self.dr_tech == "Isomap"
         ):
-            self.scaler.fit(X)
+            if self.scale:
+                self.scaler.fit(X)
             return model.transform(X)
         elif self.dr_tech == "NoRed":
             return X
@@ -120,13 +139,15 @@ class ShiftReductor:
             return pred
 
     def sparse_random_projection(self):
-        self.scaler(self.X)
+        if self.scale:
+            self.scaler(self.X)
         srp = SparseRandomProjection(n_components=self.dr_amount)
         srp.fit(self.X)
         return srp
 
     def principal_components_anaylsis(self):
-        self.scaler(self.X)
+        if self.scale:
+            self.scaler(self.X)
         pca = PCA(n_components=self.dr_amount)
         pca.fit(self.X)
         return pca
@@ -137,7 +158,8 @@ class ShiftReductor:
         return kpca
 
     def manifold_isomap(self):
-        self.scaler(self.X)
+        if self.scale:
+            self.scaler(self.X)
         isomap = Isomap(n_components=self.dr_amount)
         isomap.fit(self.X)
         return isomap
@@ -153,3 +175,6 @@ class ShiftReductor:
                 nn.Linear(8, 1),
             ).to(self.device)
         return ffnn
+    
+    def lstm(self):
+        raise NotImplementedError

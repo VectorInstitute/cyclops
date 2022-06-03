@@ -1,7 +1,6 @@
 import math
 import random
 import sys
-
 import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectKBest
@@ -169,38 +168,6 @@ def multiway_feat_association_shift(
     return (X_t, y_t)
 
 
-def binary_shift(X, y, cl, delta, p_frac):
-    """binary shift.
-
-    Parameters
-    ----------
-    X: numpy.matrix
-        covariate data
-    y: list
-        label data
-    cl: int
-        class (e.g. 0,1,2,3, etc.)
-    delta: float
-        proportion of 1:0
-    p_frac: float
-        fraction of features changed
-
-    """
-    p = math.ceil(X.shape[1] * p_frac)
-    del_indices = np.where(y == cl)[0]
-    for i in range(0, p):
-        i = int(i)
-        unique, counts = np.unique(X[del_indices, i], return_counts=True)
-        if set(unique) == {0, 1} or set(unique) == {0} or set(unique) == {1}:
-            until_index = math.ceil(delta * len(del_indices))
-            # until_index = math.ceil(delta * counts[1])
-            if until_index % 2 != 0:
-                until_index = until_index + 1
-            X[del_indices[:until_index], i] = 1
-            X[del_indices[until_index:], i] = 0
-    return X, y
-
-
 def binary_noise_subset(X, p, delta_total=1.0):
     """Creates binary noise of specificed parameters in input data.
 
@@ -227,6 +194,11 @@ def binary_noise_subset(X, p, delta_total=1.0):
     X[np.ix_(indices, bin_cols)] = noise
     return X, indices
 
+def age_shift(X_s, y_s, X_t, y_t, col="age"):
+    raise NotImplementedError
+    
+def sex_shift(X_s, y_s, X_t, y_t, col="sex"):
+    raise NotImplementedError 
 
 def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
 
@@ -235,15 +207,15 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
     Parameters
     ----------
     X_s_orig: numpy.matrix
-
+        source data
     y_s_orig: list
-
+        source label
     X_te_orig: numpy.matrix
-
+        target data
     y_te_orig: list
-
+        target label
     shift: String
-
+        shift type
     """
 
     X_te_1 = None
@@ -314,7 +286,7 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
         X_te_1, y_te_1 = multiway_feat_association_shift(
             X_te_orig,
             y_te_orig,
-            n_shuffle=1,
+            n_shuffle=0.75,
             keep_rows_constant=True,
             repermute_each_column=True,
         )
@@ -332,7 +304,7 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
         X_te_1, y_te_1 = multiway_feat_association_shift(
             X_te_orig,
             y_te_orig,
-            n_shuffle=0.1,
+            n_shuffle=0.25,
             keep_rows_constant=True,
             repermute_each_column=True,
         )
@@ -341,7 +313,7 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
         X_te_1, y_te_1 = multiway_feat_association_shift(
             X_te_orig,
             y_te_orig,
-            n_shuffle=1.0,
+            n_shuffle=0.75,
             keep_rows_constant=True,
             repermute_each_column=False,
         )
@@ -359,7 +331,7 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
         X_te_1, y_te_1 = multiway_feat_association_shift(
             X_te_orig,
             y_te_orig,
-            n_shuffle=0.1,
+            n_shuffle=0.25,
             keep_rows_constant=True,
             repermute_each_column=False,
         )
@@ -368,7 +340,7 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
         X_te_1, y_te_1 = multiway_feat_association_shift(
             X_te_orig,
             y_te_orig,
-            n_shuffle=1.0,
+            n_shuffle=0.75,
             keep_rows_constant=False,
             repermute_each_column=False,
         )
@@ -386,7 +358,7 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
         X_te_1, y_te_1 = multiway_feat_association_shift(
             X_te_orig,
             y_te_orig,
-            n_shuffle=0.1,
+            n_shuffle=0.25,
             keep_rows_constant=False,
             repermute_each_column=False,
         )
@@ -417,5 +389,8 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
         y_te_1 = y_te_orig.copy()
     elif shift == "small_bn_shift_0.1":
         X_te_1, _ = binary_noise_subset(X_te_orig, 0.01, 0.1)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "age_pediatric":
+        X_te_1, _ = age_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig)
         y_te_1 = y_te_orig.copy()
     return (X_te_1, y_te_1)

@@ -1,6 +1,5 @@
-from shift_reductor import *
-from shift_tester import *
-
+from .reductor import ShiftReductor
+from .tester import ShiftTester
 
 class ShiftDetector:
 

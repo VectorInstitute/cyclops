@@ -5,37 +5,20 @@ import re
 import sys
 from collections import OrderedDict
 from functools import reduce
-
-import joblib
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sqlalchemy
-from evidently import ColumnMapping
-from evidently.dashboard import Dashboard
-from evidently.dashboard.tabs import DataQualityTab
-from evidently.model_profile import Profile
-from evidently.model_profile.sections import DataQualityProfileSection
-from shift_constants import *
-from shift_detector import *
-from shift_experiments import *
-from shift_reductor import *
-from shift_tester import *
-from sklearn.metrics import (
-    accuracy_score,
-    auc,
-    average_precision_score,
-    confusion_matrix,
-    precision_recall_curve,
-    roc_auc_score,
-    roc_curve,
-)
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sqlalchemy import desc, extract, func, select
 from sqlalchemy.sql.expression import and_, or_
 
+from .constants import *
+
 sys.path.append("..")
+
+from drift_detector.detector import ShiftDetector
+
+sys.path.append("../..")
 
 import cyclops.config
 from cyclops.processor import featurize
@@ -58,28 +41,11 @@ from cyclops.processors.column_names import (
     TOTAL_COST,
 )
 
-
-def get_scaler(scaler):
-    """Get scaler.
-
-    Parameters
-    ----------
-    scaler: string
-        String indicating which scaler to retrieve.
-
-    """
-    scalers = {
-        "minmax": MinMaxScaler,
-        "standard": StandardScaler,
-        "maxabs": MaxAbsScaler,
-        "robust": RobustScaler,
-    }
-    return scalers.get(scaler.lower())()
-
-
 def get_data(hospital, na_cutoff):
 
     EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/drift_exp"
+    bucket_size = 6
+    window_size = 24
 
     # load admin
     admin_data = pd.read_parquet(
@@ -115,8 +81,8 @@ def get_data(hospital, na_cutoff):
         feature_handler = featurize(
             static_data=[admin_data],
             temporal_data=[labs, vitals],
-            aggregator=Aggregator(bucket_size=6, window=6),
-            reference_cols=[HOSPITAL_ID, ADMIT_TIMESTAMP],
+            aggregator=Aggregator(bucket_size=bucket_size, window=window),
+            reference_cols=[HOSPITAL_ID, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP],
         )
 
         # Merge static and temporal features (temporal here is actually aggregated into a single bucket!)
@@ -455,8 +421,7 @@ def run_shift_experiment(
     std_te_accs = np.std(te_accs, axis=0)
 
     return (mean_p_vals, std_p_vals)
-
-
+    
 def run_synthetic_shift_experiment(
     shift,
     outcome,

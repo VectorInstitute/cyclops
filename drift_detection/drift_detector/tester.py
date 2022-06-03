@@ -1,10 +1,19 @@
 import math
 import random
-
 import numpy as np
-import tensorflow as tf
 import torch
 import torch.nn as nn
+import tensorflow as tf
+from scipy.spatial import distance
+
+from scipy.stats import (
+    anderson_ksamp,
+    binom_test,
+    chi2_contingency,
+    chisquare,
+    ks_2samp,
+)
+
 from alibi_detect.cd import (
     ClassifierDrift,
     LearnedKernelDrift,
@@ -14,17 +23,8 @@ from alibi_detect.cd import (
     MMDDriftOnline,
     TabularDrift,
 )
-from alibi_detect.utils.pytorch.kernels import DeepKernel
-from scipy.spatial import distance
 
-# from torch_two_sample import *
-from scipy.stats import (
-    anderson_ksamp,
-    binom_test,
-    chi2_contingency,
-    chisquare,
-    ks_2samp,
-)
+from alibi_detect.utils.pytorch.kernels import DeepKernel
 
 class ShiftTester:
 
@@ -45,7 +45,7 @@ class ShiftTester:
         self.mod_path = mod_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def test_shift(self, X_s, X_t):
+    def test_shift(self, X_s, X_t, backend = "pytorch"):
         X_s = X_s.astype("float32")
         X_t = X_t.astype("float32")
 
@@ -53,13 +53,13 @@ class ShiftTester:
         dist = None
 
         if self.mt == "MMD":
-            dd = MMDDrift(X_s, backend="pytorch", n_permutations=100, p_val=0.05)
+            dd = MMDDrift(X_s, backend=backend, n_permutations=100, p_val=0.05)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
         elif self.mt == "LSDD":
-            dd = LSDDDrift(X_s, p_val=0.05, backend="pytorch")
+            dd = LSDDDrift(X_s, p_val=0.05, backend=backend)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
@@ -77,7 +77,7 @@ class ShiftTester:
                 ).to(self.device)
             kernel = DeepKernel(proj, eps=0.01)
             dd = LearnedKernelDrift(
-                X_s, kernel, backend="pytorch", p_val=0.05, epochs=10, batch_size=32
+                X_s, kernel, backend=backend, p_val=0.05, epochs=10, batch_size=32
             )
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
@@ -95,7 +95,7 @@ class ShiftTester:
                     nn.Linear(8, 2),
                 ).to(self.device)
             dd = ClassifierDrift(
-                X_s, model, backend="pytorch", p_val=0.05, preds_type="logits"
+                X_s, model, backend=backend, p_val=0.05, preds_type="logits"
             )
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
@@ -111,6 +111,7 @@ class ShiftTester:
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
+        #need torch two sample for below
         elif self.mt == "Energy":
             energy_test = EnergyStatistic(len(X_s), len(X_t))
             t_val, matrix = energy_test(
