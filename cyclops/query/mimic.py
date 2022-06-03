@@ -82,7 +82,9 @@ MIMIC_COLUMN_MAP = {
 }
 
 
-def get_table(table_name: str, rename: bool = True, return_query_interface: bool=False) -> Subquery:
+def get_table(
+    table_name: str, rename: bool = True, return_query_interface: bool = False
+) -> Subquery:
     """Get a table and possibly map columns to have standard names.
 
     Standardizing column names allows for for columns to be
@@ -110,7 +112,7 @@ def get_table(table_name: str, rename: bool = True, return_query_interface: bool
 
     if rename:
         table = qp.Rename(MIMIC_COLUMN_MAP, check_exists=False)(table)
-        
+
     if return_query_interface:
         return QueryInterface(_db, _to_subquery(table))
 
@@ -380,7 +382,7 @@ def care_units(
         patients_table=patients_table,
         encounters=qp.ckwarg(process_kwargs, "encounters"),
     ).query
-    
+
     process_kwargs = qp.remove_kwargs(process_kwargs, "encounters")
 
     return QueryInterfaceProcessed(
