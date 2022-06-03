@@ -200,7 +200,12 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
 
     with pytest.raises(ValueError):
         _ = Aggregator(
-            start_window_ts=datetime(2022, 11, 6, 12, 13), start_at_admission=True
+            start_window_ts=test_restrict_events_by_timestamp_start_input,
+            start_at_admission=True,
+        )
+    with pytest.raises(ValueError):
+        _ = Aggregator(
+            stop_window_ts=test_restrict_events_by_timestamp_stop_input, window=12
         )
 
     aggregator = Aggregator(
@@ -221,6 +226,13 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
         4
     ] == datetime(2022, 11, 3, 17)
 
+    _ = Aggregator(
+        aggfunc=MEAN,
+        bucket_size=1,
+        window=20,
+        start_window_ts=test_restrict_events_by_timestamp_start_input,
+    )
+
 
 def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
     test_aggregate_events_input,
@@ -239,3 +251,6 @@ def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
         stop=test_restrict_events_by_timestamp_stop_input,
     )
     assert list(res.index) == [0, 1, 2, 3]
+
+    res = restrict_events_by_timestamp(test_aggregate_events_input)
+    assert res.equals(test_aggregate_events_input)
