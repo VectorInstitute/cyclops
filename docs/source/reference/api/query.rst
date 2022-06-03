@@ -18,6 +18,7 @@ Submodules
    query.gemini
    query.interface
    query.mimic
+   query.process
    query.util
 
 Module contents
