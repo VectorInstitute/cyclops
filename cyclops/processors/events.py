@@ -54,7 +54,7 @@ def combine_events(event_data: Union[pd.DataFrame, List[pd.DataFrame]]) -> pd.Da
 
     Events can be in multiple raw dataframes like labs, vitals, etc. This
     function takes in multiple dataframes and gathers all events into a single
-    dataframe.
+    dataframe. If just a single dataframe is passed, it returns it back.
 
     Parameters
     ----------
