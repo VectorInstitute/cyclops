@@ -229,6 +229,7 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     _ = Aggregator(
         aggfunc=MEAN,
         bucket_size=1,
+        window=None,
         start_window_ts=test_restrict_events_by_timestamp_start_input,
         stop_window_ts=test_restrict_events_by_timestamp_stop_input,
     )
