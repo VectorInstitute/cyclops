@@ -1,5 +1,6 @@
 """Test aggregation functions."""
 
+import statistics
 from datetime import datetime
 
 import numpy as np
@@ -90,17 +91,24 @@ def test_aggregate_events_input():
     date3 = datetime(2022, 11, 4, hour=3)
     date4 = datetime(2022, 11, 3, hour=13)
     data = [
-        [1, "eventA", 10, date1, date2],
-        [2, "eventA", 19, date1, date2],
-        [2, "eventA", 11, date1, date4],
-        [2, "eventA", 18, date1, date4],
-        [2, "eventA", 12, date1, date3],
-        [2, "eventA", 16, date1, date3],
-        [2, "eventA", np.nan, date1, date3],
-        [2, "eventB", 13, date1, date3],
-        [2, "eventB", np.nan, date1, date3],
+        [1, "eventA", 10, date1, date2, "wash"],
+        [2, "eventA", 19, date1, date2, "clean"],
+        [2, "eventA", 11, date1, date4, "dog"],
+        [2, "eventA", 18, date1, date4, "pet"],
+        [2, "eventA", 12, date1, date3, "store"],
+        [2, "eventA", 16, date1, date3, "kobe"],
+        [2, "eventA", np.nan, date1, date3, "bryant"],
+        [2, "eventB", 13, date1, date3, "trump"],
+        [2, "eventB", np.nan, date1, date3, "tie"],
     ]
-    columns = [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, ADMIT_TIMESTAMP, EVENT_TIMESTAMP]
+    columns = [
+        ENCOUNTER_ID,
+        EVENT_NAME,
+        EVENT_VALUE,
+        ADMIT_TIMESTAMP,
+        EVENT_TIMESTAMP,
+        "some_str_col",
+    ]
 
     return pd.DataFrame(data, columns=columns)
 
@@ -159,13 +167,13 @@ def test_aggregate_events_single_timestep_case(  # pylint: disable=redefined-out
     test_aggregate_events_input,
 ):
     """Test aggregate_events function for single timestep case."""
-    aggregtor = Aggregator(aggfunc=MEAN, bucket_size=4, window=4)
+    aggregtor = Aggregator(bucket_size=4, window=4)
     res = aggregtor(test_aggregate_events_input)
     assert res[EVENT_NAME][0] == "eventA"
     assert res[EVENT_NAME][1] == "eventA"
     assert res["count"][1] == 3
 
-    aggregtor = Aggregator(aggfunc=MEDIAN, bucket_size=4, window=40)
+    aggregtor = Aggregator(aggfunc={EVENT_VALUE: MEDIAN}, bucket_size=4, window=40)
     res = aggregtor(test_aggregate_events_input)
     assert res[EVENT_VALUE][1] == 18
     assert res[EVENT_NAME][2] == "eventA"
@@ -192,24 +200,39 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
 ):
     """Test aggregate_events function."""
     # Test initializations of Aggregator.
+    aggfunc = {EVENT_VALUE: MEAN, "some_str_col": statistics.mode}
     with pytest.raises(NotImplementedError):
         _ = Aggregator(
-            aggfunc="donkey", bucket_size=4, window=20, start_at_admission=True
+            aggfunc={EVENT_VALUE: "donkey", "some_str_col": statistics.mode},
+            bucket_size=4,
+            window=20,
+            start_at_admission=True,
         )
-    _ = Aggregator(aggfunc=np.mean, bucket_size=2, window=20, start_at_admission=True)
+    _ = Aggregator(
+        aggfunc=aggfunc,
+        bucket_size=2,
+        window=20,
+        start_at_admission=True,
+    )
 
     with pytest.raises(ValueError):
         _ = Aggregator(
             start_window_ts=test_restrict_events_by_timestamp_start_input,
             start_at_admission=True,
+            aggfunc=aggfunc,
         )
     with pytest.raises(ValueError):
         _ = Aggregator(
-            stop_window_ts=test_restrict_events_by_timestamp_stop_input, window=12
+            stop_window_ts=test_restrict_events_by_timestamp_stop_input,
+            window=12,
+            aggfunc=aggfunc,
         )
 
     aggregator = Aggregator(
-        aggfunc=MEAN, bucket_size=1, window=20, start_at_admission=True
+        aggfunc=aggfunc,
+        bucket_size=1,
+        window=20,
+        start_at_admission=True,
     )
     res = aggregator(test_aggregate_events_input)
 
@@ -218,6 +241,7 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     assert res["event_value"][2] == 19
     assert res["count"][4] == 2
     assert res["null_fraction"][4] == 0.5
+    assert res["some_str_col"][3] == "store"
 
     assert aggregator.meta[TIMESTEP_START_TIMESTAMP][TIMESTEP_START_TIMESTAMP][1][
         18
@@ -227,7 +251,7 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     ] == datetime(2022, 11, 3, 17)
 
     _ = Aggregator(
-        aggfunc=MEAN,
+        aggfunc={EVENT_VALUE: MEAN},
         bucket_size=1,
         window=None,
         start_window_ts=test_restrict_events_by_timestamp_start_input,
