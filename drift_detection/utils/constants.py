@@ -8,7 +8,7 @@ HOSPITAL_ID = {
     "PMH": 6,
     "MSH": 7,
 }
-
+    
 GENC = "genc_id"
 PATIENT = "patient_id"
 HOSPITAL = "hospital_id"

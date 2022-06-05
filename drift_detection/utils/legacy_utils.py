@@ -63,7 +63,7 @@ FEATURES = [
 ]
 
 
-def import_dataset(outcome, features=FEATURES, shuffle=True):
+def import_dataset(outcome, features=None, shuffle=True):
     data = pd.read_csv("/mnt/nfs/project/delirium/data/data_2019.csv")
     data = data.loc[data["hospital_id"].isin([3])]
     data[features] = data[features].fillna(0)

@@ -46,7 +46,7 @@ class ShiftReductor:
         datset,
         dr_amount=None,
         var_ret=0.9,
-        scale=True,
+        scale=False,
         scaler="standard",
         model=None):
         self.X = X
@@ -56,8 +56,13 @@ class ShiftReductor:
         self.datset = datset
         self.model = model
         self.scale = scale
-        self.scaler = self.get_scaler(scaler)
+        self.scaler = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        if scale:
+            self.scaler = self.get_scaler(scaler)
+            self.scaler.fit(self.X)
+            self.X = self.scaler.transform(self.X)
 
         if dr_amount is None:
             pca = PCA(n_components=var_ret, svd_solver="full")
@@ -66,7 +71,7 @@ class ShiftReductor:
         else:
             self.dr_amount = dr_amount
 
-    def fit_reductor(self):
+    def fit_reductor(self):    
         if self.dr_tech == "PCA":
             return self.principal_components_anaylsis()
         elif self.dr_tech == "SRP":
@@ -76,15 +81,15 @@ class ShiftReductor:
         elif self.dr_tech == "Isomap":
             return self.manifold_isomap()
         elif self.dr_tech == "BBSDs_FFNN":
-            if os.path.exists(self.model):
+            if self.model:
                 return self.model
             return self.neural_network_classifier()
         elif self.dr_tech == "BBSDh_FFNN":
-            if os.path.exists(self.model):
+            if self.model:
                 return self.model
             return self.neural_network_classifier()
         elif self.dr_tech == "BBSDs_LSTM":
-            if os.path.exists(self.model):
+            if self.model:
                 return self.model
             return self.lstm()
         else:
@@ -109,14 +114,15 @@ class ShiftReductor:
 
 
     def reduce(self, model, X, batch_size=32):
+        if self.scale:
+            X = self.scaler.transform(X)
+            
         if (
             self.dr_tech == "PCA"
             or self.dr_tech == "SRP"
             or self.dr_tech == "kPCA"
             or self.dr_tech == "Isomap"
         ):
-            if self.scale:
-                self.scaler.fit(X)
             return model.transform(X)
         elif self.dr_tech == "NoRed":
             return X
@@ -139,15 +145,11 @@ class ShiftReductor:
             return pred
 
     def sparse_random_projection(self):
-        if self.scale:
-            self.scaler(self.X)
         srp = SparseRandomProjection(n_components=self.dr_amount)
         srp.fit(self.X)
         return srp
 
     def principal_components_anaylsis(self):
-        if self.scale:
-            self.scaler(self.X)
         pca = PCA(n_components=self.dr_amount)
         pca.fit(self.X)
         return pca
@@ -158,15 +160,13 @@ class ShiftReductor:
         return kpca
 
     def manifold_isomap(self):
-        if self.scale:
-            self.scaler(self.X)
         isomap = Isomap(n_components=self.dr_amount)
         isomap.fit(self.X)
         return isomap
 
     def neural_network_classifier(self):
         data_dim = self.X.shape[-1]
-        if model is None:
+        if not self.model:
             ffnn = nn.Sequential(
                 nn.Linear(data_dim, 16),
                 nn.SiLU(),

@@ -17,6 +17,8 @@ from .constants import *
 sys.path.append("..")
 
 from drift_detector.detector import ShiftDetector
+from drift_detector.reductor import ShiftReductor
+from experiments import apply_shift
 
 sys.path.append("../..")
 
@@ -41,26 +43,27 @@ from cyclops.processors.column_names import (
     TOTAL_COST,
 )
 
-def get_data(hospital, na_cutoff):
+EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/drift_exp"
 
-    EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/drift_exp"
-    bucket_size = 6
-    window_size = 24
+admin_columns = [
+    ADMIT_TIMESTAMP,
+    AGE,
+    SEX,
+    DISCHARGE_TIMESTAMP,
+    ENCOUNTER_ID,
+    HOSPITAL_ID,
+    LENGTH_OF_STAY_IN_ER,
+#    READMISSION,
+#    DISCHARGE_DISPOSITION,
+]
+
+def get_data(hospital, na_cutoff, bucket_size, window):
 
     # load admin
     admin_data = pd.read_parquet(
         os.path.join(EXTRACT_SAVE_PATH, "admin_er_2018_2020.gzip")
     )
 
-    admin_columns = [
-        AGE,
-        SEX,
-        HOSPITAL_ID,
-        ENCOUNTER_ID,
-        ADMIT_TIMESTAMP,
-        DISCHARGE_TIMESTAMP,
-        LENGTH_OF_STAY_IN_ER,
-    ]
     admin_data = admin_data[admin_columns]
 
     hosp_ids = admin_data.loc[admin_data["hospital_id"].isin(hospital), "encounter_id"]
@@ -105,10 +108,10 @@ def get_data(hospital, na_cutoff):
     return admin_data, x
 
 
-def get_dataset_hospital(datset, outcome, hospital, na_cutoff):
+def get_dataset_hospital(datset, outcome, hospital, na_cutoff, bucket_size, window):
 
     # get all data
-    (admin_data, x) = get_data(hospital, na_cutoff)
+    (admin_data, x) = get_data(hospital, na_cutoff, bucket_size, window)
 
     # process features
     x = remove_missing_feats(x, na_cutoff)
@@ -288,10 +291,10 @@ def remove_missing_feats(x, na_cutoff):
     return x
 
 
-def import_dataset_hospital(datset, outcome, hospital, na_cutoff, shuffle=True):
+def import_dataset_hospital(datset, outcome, hospital, na_cutoff, bucket_size=6, window=24, shuffle=True):
     # get source and target data
     x_source, y_source, x_test, y_test, feats = get_dataset_hospital(
-        datset, outcome, hospital, na_cutoff
+        datset, outcome, hospital, na_cutoff, bucket_size, window
     )
 
     # get train, validation and test set
@@ -346,11 +349,13 @@ def run_shift_experiment(
     na_cutoff,
     random_runs=5,
     calc_acc=True,
+    bucket_size=6, 
+    window=24
 ):
     # Stores p-values for all experiments of a shift class.
-    samples_rands = np.ones((len(samples), random_runs)) * (-1)
+    samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
+    samples_rands_dist = np.ones((len(samples), random_runs)) * (-1)
 
-    print("Shift %s" % shift)
     shift_path = path + shift + "/"
 
     if not os.path.exists(shift_path):
@@ -359,10 +364,9 @@ def run_shift_experiment(
     # Stores accuracy values for malignancy detection.
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
-    dcl_accs = np.ones((len(samples), random_runs)) * (-1)
 
     # Average over a few random runs to quantify robustness.
-    for rand_run in range(0, random_runs - 1):
+    for rand_run in range(0, random_runs):
         rand_run = int(rand_run)
         rand_run_path = shift_path + str(rand_run) + "/"
         if not os.path.exists(rand_run_path):
@@ -376,28 +380,28 @@ def run_shift_experiment(
             (X_t, y_t),
             feats,
             orig_dims,
-        ) = import_dataset_hospital(shift, outcome, hospital, na_cutoff, shuffle=True)
-
+        ) = import_dataset_hospital(shift, outcome, hospital, na_cutoff, bucket_size, window, shuffle=True)
+        
         # Run shift experiements across various sample sizes
         for si, sample in enumerate(samples):
-
-            red_model = None
-            print("Random Run %s : Sample %s" % (rand_run, sample))
+            
+            # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
 
             sample_path = rand_run_path + str(sample) + "/"
 
             if not os.path.exists(sample_path):
                 os.makedirs(sample_path)
 
+            shift_reductor = ShiftReductor(
+            X_tr, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.9, scale=False, scaler="standard", model=None
+            )
             # Detect shift.
             shift_detector = ShiftDetector(
-                dr_technique, md_test, sign_level, red_model, sample, dataset
+                dr_technique, md_test, sign_level, shift_reductor, sample, dataset
             )
             (
                 p_val,
                 dist,
-                red_dim,
-                red_model,
                 val_acc,
                 te_acc,
             ) = shift_detector.detect_data_shift(
@@ -407,12 +411,14 @@ def run_shift_experiment(
             val_accs[rand_run, si] = val_acc
             te_accs[rand_run, si] = te_acc
 
-            print("Shift p-vals: ", p_val)
-
-            samples_rands[si, rand_run] = p_val
-
-    mean_p_vals = np.mean(samples_rands, axis=1)
-    std_p_vals = np.std(samples_rands, axis=1)
+            samples_rands_pval[si, rand_run] = p_val
+            samples_rands_dist[si, rand_run] = dist
+        
+    mean_p_vals = np.mean(samples_rands_pval, axis=1)
+    std_p_vals = np.std(samples_rands_pval, axis=1)
+    
+    mean_dist = np.mean(samples_rands_dist, axis=1)
+    std_dist = np.std(samples_rands_dist, axis=1)
 
     mean_val_accs = np.mean(val_accs, axis=0)
     std_val_accs = np.std(val_accs, axis=0)
@@ -420,7 +426,7 @@ def run_shift_experiment(
     mean_te_accs = np.mean(te_accs, axis=0)
     std_te_accs = np.std(te_accs, axis=0)
 
-    return (mean_p_vals, std_p_vals)
+    return (mean_p_vals, std_p_vals, mean_dist, std_dist)
     
 def run_synthetic_shift_experiment(
     shift,
@@ -435,11 +441,13 @@ def run_synthetic_shift_experiment(
     na_cutoff,
     random_runs=5,
     calc_acc=True,
+    bucket_size=6, 
+    window=24
 ):
     # Stores p-values for all experiments of a shift class.
-    samples_rands = np.ones((len(samples), random_runs)) * (-1)
+    samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
+    samples_rands_dist = np.ones((len(samples), random_runs)) * (-1)
 
-    print("Shift %s" % shift)
     shift_path = path + shift + "/"
     if not os.path.exists(shift_path):
         os.makedirs(shift_path)
@@ -447,10 +455,9 @@ def run_synthetic_shift_experiment(
     # Stores accuracy values for malignancy detection.
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
-    dcl_accs = np.ones((len(samples), random_runs)) * (-1)
 
     # Average over a few random runs to quantify robustness.
-    for rand_run in range(0, random_runs - 1):
+    for rand_run in range(0, random_runs):
         rand_run = int(rand_run)
         rand_run_path = shift_path + str(rand_run) + "/"
         if not os.path.exists(rand_run_path):
@@ -465,30 +472,30 @@ def run_synthetic_shift_experiment(
             feats,
             orig_dims,
         ) = import_dataset_hospital(
-            "baseline", outcome, hospital, na_cutoff, shuffle=True
+            "baseline", outcome, hospital, na_cutoff, bucket_size, window, shuffle=True
         )
         X_t_1, y_t_1 = X_t.copy(), y_t.copy()
         (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
 
         for si, sample in enumerate(samples):
 
-            red_model = None
-            print("Random Run %s : Sample %s" % (rand_run, sample))
+           # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
 
             sample_path = rand_run_path + str(sample) + "/"
 
             if not os.path.exists(sample_path):
                 os.makedirs(sample_path)
 
+            shift_reductor = ShiftReductor(
+            X_tr, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.9, scale=False, scaler="standard", model=None
+            )
             # Detect shift.
             shift_detector = ShiftDetector(
-                dr_technique, md_test, sign_level, red_model, sample, dataset
+                dr_technique, md_test, sign_level, shift_reductor, sample, dataset
             )
             (
                 p_val,
                 dist,
-                red_dim,
-                red_model,
                 val_acc,
                 te_acc,
             ) = shift_detector.detect_data_shift(
@@ -498,12 +505,14 @@ def run_synthetic_shift_experiment(
             val_accs[rand_run, si] = val_acc
             te_accs[rand_run, si] = te_acc
 
-            print("Shift p-vals: ", p_val)
-
-            samples_rands[si, rand_run] = p_val
-
-    mean_p_vals = np.mean(samples_rands, axis=1)
-    std_p_vals = np.std(samples_rands, axis=1)
+            samples_rands_pval[si, rand_run] = p_val
+            samples_rands_dist[si, rand_run] = dist
+        
+    mean_p_vals = np.mean(samples_rands_pval, axis=1)
+    std_p_vals = np.std(samples_rands_pval, axis=1)
+    
+    mean_dist = np.mean(samples_rands_dist, axis=1)
+    std_dist = np.std(samples_rands_dist, axis=1)
 
     mean_val_accs = np.mean(val_accs, axis=0)
     std_val_accs = np.std(val_accs, axis=0)
@@ -511,4 +520,4 @@ def run_synthetic_shift_experiment(
     mean_te_accs = np.mean(te_accs, axis=0)
     std_te_accs = np.std(te_accs, axis=0)
 
-    return (mean_p_vals, std_p_vals)
+    return (mean_p_vals, std_p_vals, mean_dist, std_dist)

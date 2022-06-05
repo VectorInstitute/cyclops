@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectKBest
 
-
 def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip=True):
     """Creates gaussian noise of specificed parameters in input data.
 
@@ -29,7 +28,7 @@ def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip
     )
     X_mod = X[np.ix_(indices, c_cols)]
     if len(c_cols) == 1:
-        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0])
+        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(X_mod.shape[0],1)
     else:
         noise = np.random.normal(
             0, noise_amt / normalization, (X_mod.shape[0], len(c_cols))

@@ -1,4 +1,3 @@
-from .reductor import ShiftReductor
 from .tester import ShiftTester
 
 class ShiftDetector:
@@ -22,19 +21,19 @@ class ShiftDetector:
 
     """
 
-    def __init__(self, dr_technique, md_test, sign_level, red_model, sample, datset):
+    def __init__(self, dr_technique, md_test, sign_level, shift_reductor, sample, datset):
         self.dr_technique = dr_technique
         self.sign_level = sign_level
-        self.red_model = red_model
+        self.shift_reductor = shift_reductor
         self.md_test = md_test
         self.sample = sample
         self.datset = datset
         self.sign_level = sign_level
 
     def classify_data(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims):
-        shift_reductor = ShiftReductor(X_s_tr, y_s_tr, "BBSDh", orig_dims, self.datset)
-        shift_reductor_model = shift_reductor.fit_reductor()
-        X_t_red = shift_reductor.reduce(shift_reductor_model, X_t)
+        
+        shift_reductor_model = self.shift_reductor.fit_reductor()
+        X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
         return X_t_red
 
     def detect_data_shift(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims):
@@ -43,14 +42,11 @@ class ShiftDetector:
         te_acc = None
 
         # Train or load reduction model.
-        shift_reductor = ShiftReductor(
-            X_s_tr, y_s_tr, self.dr_technique, orig_dims, self.datset
-        )
-        shift_reductor_model = shift_reductor.fit_reductor()
+        shift_reductor_model = self.shift_reductor.fit_reductor()
 
         # Reduce test sets.
-        X_s_red = shift_reductor.reduce(shift_reductor_model, X_s_val)
-        X_t_red = shift_reductor.reduce(shift_reductor_model, X_t)
+        X_s_red = self.shift_reductor.reduce(shift_reductor_model, X_s_val)
+        X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
 
         # Compute classification accuracy on both sets for BBSDh malignancy detection.
         if self.dr_technique == "BBSDh":
@@ -67,4 +63,4 @@ class ShiftDetector:
         else:
             adjust_sign_level = self.sign_level
 
-        return p_val, dist, shift_reductor.dr_amount, self.red_model, val_acc, te_acc
+        return p_val, dist, val_acc, te_acc
