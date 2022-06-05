@@ -1,10 +1,44 @@
 # Drift Detection
 
+Dataset drift (aka dataset shift) occurs when the underlying distribution of the source data used to build a model differs from the distribution of the target data used to test the model during deployment. When the difference between the joint probability distribution of the source and target data is sufficient to deteriorate the model’s performance, a shift is considered malignant. A malignant shift could occur for a variety of reasons, for instance sociodemographic inequities and poor resource management. In order to prevent these malignant shifts from occurring, it is important to first characterize them and subsequently understand the circumstances under which they arise.
+
+We use multivariate tests to detect malignant shifts in the joint distribution between source and target data. Our tool will perform two key steps: 1) dimensionality reduction to obtain a latent representation of the source and target data and 2) statistical testing to identify if a malignant shift has occurred between the latent representation of the source and target data. 
 
 ## Reductor
 
+- NoRed
+- PCA
+- SRP
+- kPCA
+- Isomap
+- BBSDs_FFNN
+- BBSDh_FFNN
+
 ## Tester
 
-## Detector
+- MMD
+- LSDD
+- LK 
+- Classifier
 
 ## Experiments
+
+### Clinical Experiments
+
+We will use prior knowledge to evaluate real-life scenarios that may cause malignant shifts in healthcare data. Evaluating real-life settings that cause malignant shift can reveal sociodemographic factors that result in biases of machine learning models (e.g. demographic, gender, income, education, employment status), problems affecting care by providers (e.g. overworked, not compensated, lack of resources), and inefficiencies in the management of care that lead to poor outcomes (e.g. resource allocation, staffing). The experiments available are as follows:
+
+- Covid
+- Seasonal
+- Hospital Type (Academic vs Community)
+- Age (unsupported)
+- Sex (unsupported)
+
+### Synthetic Experiments
+
+Synthetic experiments will be performed to evaluate under what magnitudes and types (i.e. covariate, label and concept) of shift models undergo malignant shift. The experiments available are as follows:
+
+- Gaussian Noise Shift
+- Binary Noise Shift
+- Changepoint Shift
+- Multiway Feature Association Shift
+
