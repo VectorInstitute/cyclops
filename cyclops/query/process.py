@@ -1667,7 +1667,7 @@ class DropNulls:
         table = process_checks(table, cols=self.cols)
 
         cond = and_(*[not_equals(get_column(table, col), None) for col in self.cols])
-        return select(table).where(cond)
+        return select(table).where(cond).subquery()
 
 @dataclass
 class OrderBy:

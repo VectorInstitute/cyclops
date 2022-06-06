@@ -510,6 +510,7 @@ def care_units(
 def events(
     event_category: str,
     patient_encounters_table: Optional[TableTypes] = None,
+    drop_null_event_names: bool = True
     **process_kwargs,
 ) -> QueryInterface:
     """Query events.
@@ -545,8 +546,12 @@ def events(
 
     table = get_table(event_category)
 
-    # Remove events with no recorded name.
-    table = qp.ConditionEquals(EVENT_NAME, EMPTY_STRING, not_=True, to_str=True)(table)
+    # Remove null events and events with no recorded name
+    if drop_null_event_names:
+        table = qp.DropNulls(EVENT_NAME)(table)
+        table = qp.ConditionEquals(
+            EVENT_NAME, EMPTY_STRING, not_=True, to_str=True
+        )(table)
 
     # Process optional operations
     operations: List[tuple] = [
