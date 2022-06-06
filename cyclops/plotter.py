@@ -8,7 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from cyclops.query.util import to_list
+from cyclops.utils.common import to_list
 
 PLOT_HEIGHT = 520
 
