@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from sqlalchemy import and_, cast, extract, func, select
+from sqlalchemy import and_, or_, cast, extract, func, select
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select, Subquery
@@ -1022,7 +1022,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
 
 class ConditionEquals:  # pylint: disable=too-few-public-methods
-    """Filter rows on column being equal, or not equal, to some value.
+    """Filter rows based on being equal, or not equal, to some value.
 
     Attributes
     ----------
@@ -1030,7 +1030,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
         Column name on which to condition.
     value: any
         Value to equal.
-    not_: bool
+    not_: bool, default=False
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
@@ -1082,7 +1082,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
 
 
 class ConditionIn:  # pylint: disable=too-few-public-methods
-    """Filter rows on column having a value in list of values.
+    """Filter rows based on having a value in list of values.
 
     Attributes
     ----------
@@ -1090,7 +1090,7 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
         Column name on which to condition.
     values: any or list of any
         Values in which the column value must be.
-    not_: bool
+    not_: bool, default=False
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
@@ -1146,15 +1146,21 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
 
 
 class ConditionSubstring:  # pylint: disable=too-few-public-methods
-    """Filter rows on column having a substring.
+    """Filter rows on based on having substrings.
+    
+    Can be specified whether it must have any or all of the specified substrings.
+    This makes no difference when only one substring is provided
 
     Attributes
     ----------
     col: str
         Column name on which to condition.
-    substring: any
-        Substring.
-    not_: bool
+    substrings: any
+        Substrings.
+    any_: bool, default=True
+        If true, the row must have just one of the substrings. If false, it must
+        have all of the substrings.
+    not_: bool, default=False
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
@@ -1166,14 +1172,16 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         col: str,
-        substring: str,
+        substrings: Union[str, List[str]],
+        any_: bool = True,
         not_: bool = False,
         binarize_col: Optional[str] = None,
         **cond_kwargs,
     ):
         """Initialize."""
         self.col = col
-        self.substring = substring
+        self.substrings = to_list(substrings)
+        self.any_ = any_
         self.not_ = not_
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
@@ -1193,9 +1201,13 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
-        cond = has_substring(
-            get_column(table, self.col), self.substring, **self.cond_kwargs
-        )
+        conds = [has_substring(get_column(table, self.col), sub, **self.cond_kwargs) for sub in self.substrings]
+        
+        if self.any_:
+            cond = or_(*conds)
+        else:
+            cond = and_(*conds)
+        
         if self.not_:
             cond = cond._negate()
 
@@ -1206,9 +1218,8 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
 
         return select(table).where(cond).subquery()
 
-
 class ConditionStartsWith:  # pylint: disable=too-few-public-methods
-    """Filter rows on column starting with some string.
+    """Filter rows based on starting with some string.
 
     Attributes
     ----------
@@ -1216,7 +1227,7 @@ class ConditionStartsWith:  # pylint: disable=too-few-public-methods
         Column name on which to condition.
     string: any
         String.
-    not_: bool
+    not_: bool, default=False
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
@@ -1270,7 +1281,7 @@ class ConditionStartsWith:  # pylint: disable=too-few-public-methods
 
 
 class ConditionEndsWith:  # pylint: disable=too-few-public-methods
-    """Filter rows on column ending with some string.
+    """Filter rows based on ending with some string.
 
     Attributes
     ----------
@@ -1278,7 +1289,7 @@ class ConditionEndsWith:  # pylint: disable=too-few-public-methods
         Column name on which to condition.
     string: any
         String.
-    not_: bool
+    not_: bool, default=False
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
@@ -1332,7 +1343,7 @@ class ConditionEndsWith:  # pylint: disable=too-few-public-methods
 
 
 class ConditionInYears:  # pylint: disable=too-few-public-methods
-    """Filter rows on a timestamp column being in a list of years.
+    """Filter rows based on a timestamp column being in a list of years.
 
     Attributes
     ----------
@@ -1340,7 +1351,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
         Timestamp column name.
     years: int or list of int
         Years in which the timestamps must be.
-    not_: bool
+    not_: bool, default=False
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
@@ -1393,7 +1404,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
 
 
 class ConditionInMonths:  # pylint: disable=too-few-public-methods
-    """Filter rows on a timestamp column being in a list of years.
+    """Filter rows based on a timestamp being in a list of years.
 
     Attributes
     ----------
@@ -1401,7 +1412,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
         Timestamp column name.
     months: int or list of int
         Months in which the timestamps must be.
-    not_: bool
+    not_: bool, default=False
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
@@ -1454,7 +1465,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
 
 
 class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
-    """Filter rows in a timestamp column before some date.
+    """Filter rows based on a timestamp being before some date.
 
     Attributes
     ----------
@@ -1499,7 +1510,7 @@ class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
 
 
 class ConditionAfterDate:  # pylint: disable=too-few-public-methods
-    """Filter rows in a timestamp column after some date.
+    """Filter rows based on a timestamp being after some date.
 
     Attributes
     ----------
