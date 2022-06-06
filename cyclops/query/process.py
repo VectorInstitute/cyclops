@@ -226,16 +226,20 @@ def process_operations(  # pylint: disable=too-many-locals
         required = get_qap_args(operation, required=True) + get_qap_kwargs(
             operation, required=True
         )
-        specified = [str(r) in list(user_kwargs.keys()) for r in required]
+        specified_required = [str(r) in list(user_kwargs.keys()) for r in required]
         
-        if not all(specified):
-            # Warn if some of required are specified, but not all
-            if any(specified):
+        if not all(specified_required):
+            # If not all the required parameters are specified ones, warn if only
+            # some of the parameters are.
+            all_params = get_qap_args(operation, required=False) + \
+                get_qap_kwargs(operation, required=False)
+            specified_params = [str(r) in list(user_kwargs.keys()) for r in all_params]
+            if any(specified_params):
                 specified_kwargs = [
-                    str(kwarg) for i, kwarg in enumerate(required) if specified[i]
+                    str(kwarg) for i, kwarg in enumerate(all_params) if specified_params[i]
                 ]
                 missing_kwargs = [
-                    str(kwarg) for i, kwarg in enumerate(required) if not specified[i]
+                    str(kwarg) for i, kwarg in enumerate(required) if not specified_required[i]
                 ]
                 raise ValueError(
                     f"""Process arguments {', '.join(specified_kwargs)} were
