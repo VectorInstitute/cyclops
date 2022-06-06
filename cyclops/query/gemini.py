@@ -96,6 +96,7 @@ GEMINI_COLUMN_MAP = {
     "measure_date_time": EVENT_TIMESTAMP,
     "left_er_date_time": ER_DISCHARGE_TIMESTAMP,
     "duration_er_stay_derived": LENGTH_OF_STAY_IN_ER,
+    "er_admit_timestamp": ER_ADMIT_TIMESTAMP,
     "triage_date_time": ER_ADMIT_TIMESTAMP,
     "er_discharge_timestamp": ER_DISCHARGE_TIMESTAMP,
     "scu_admit_date_time": SCU_ADMIT_TIMESTAMP,
@@ -165,6 +166,18 @@ def er_admin(**process_kwargs) -> QueryInterface:
 
     Other Parameters
     ----------------
+    triage_level: int or list of int
+        Restrict to certain triage levels.
+    before_date: datetime.datetime or str
+        Get data before some date.
+        If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get data after some date.
+        If a string, provide in YYYY-MM-DD format.
+    years: int or list of int, optional
+        Get data by year.
+    months: int or list of int, optional
+        Get data by month.
     limit: int, optional
         Limit the number of rows returned.
 
@@ -172,7 +185,14 @@ def er_admin(**process_kwargs) -> QueryInterface:
     table = get_table(ER_ADMIN)
 
     # Process optional operations
-    operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
+    operations: List[tuple] = [
+        (qp.ConditionBeforeDate, [ER_ADMIT_TIMESTAMP, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [ER_ADMIT_TIMESTAMP, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [ER_ADMIT_TIMESTAMP, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [ER_ADMIT_TIMESTAMP, qp.QAP("months")], {}),
+        (qp.ConditionIn, ["triage_level", qp.QAP("triage_level")], {"to_int": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
     table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)
