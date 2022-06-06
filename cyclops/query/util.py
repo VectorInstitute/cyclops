@@ -17,6 +17,7 @@ from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import ColumnClause
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy.types import Boolean
 
 from codebase_ops import get_log_file_path
 from cyclops.utils.log import setup_logging
@@ -679,6 +680,7 @@ def process_elem(elem: Any, **kwargs: bool) -> Any:
     to_str = kwargs.get("to_str", False)
     to_int = kwargs.get("to_int", False)
     to_float = kwargs.get("to_float", False)
+    to_bool = kwargs.get("to_bool", False)
 
     # Convert to string.
     if to_str:
@@ -692,13 +694,15 @@ def process_elem(elem: Any, **kwargs: bool) -> Any:
         if trim:
             elem = elem.strip()
 
-    # Convert to int.
     if to_int:
         elem = int(elem)
 
-    # Convert to float.
     if to_float:
         elem = float(elem)
+    
+    if to_bool:
+        elem = bool(elem)
+    
 
     return elem
 
@@ -748,6 +752,9 @@ def process_column(col: Column, **kwargs: bool) -> Column:
     to_str = kwargs.get("to_str", False)
     to_int = kwargs.get("to_int", False)
     to_float = kwargs.get("to_float", False)
+    to_bool = kwargs.get("to_bool", False)
+    to_date = kwargs.get("to_date", False)
+    to_timestamp = kwargs.get("to_timestamp", False)
 
     # Convert to string.
     if to_str:
@@ -768,6 +775,15 @@ def process_column(col: Column, **kwargs: bool) -> Column:
 
     if to_float:
         col = cast(col, Float)
+    
+    if to_bool:
+        col = cast(col, Boolean)
+    
+    if to_date:
+        col = cast(col, DATE)
+    
+    if to_timestamp:
+        col = cast(col, TIMESTAMP)
 
     return col
 
@@ -1034,9 +1050,10 @@ def check_column_type(
     ]
 
     if raise_error and not all(is_type):
-        incorrect_type = set(cols) - {col for i, col in enumerate(cols) if is_type[i]}
+        incorrect_type = list(set(cols) - {col for i, col in enumerate(cols) if is_type[i]})
         types_str = ", ".join([type_.__name__ for type_ in types])
-        raise ValueError(f"{incorrect_type} columns are not one of types {types_str}.")
+        actual_types_str = [type(col).__name__ for col in incorrect_type]
+        raise ValueError(f"{incorrect_type} columns are not one of types {types_str}. They have types {actual_types_str}.")
 
     return all(is_type)
 

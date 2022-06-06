@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from sqlalchemy import and_, or_, cast, extract, func, select
+from sqlalchemy.dialects.postgresql.base import DATE, TIMESTAMP
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select, Subquery
@@ -622,7 +623,7 @@ class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
             ),
         )
 
-        return Cast(self.label, int)(table)
+        return Cast(self.label, "int")(table)
 
 
 @dataclass
@@ -852,9 +853,9 @@ class AddDeltaColumns:  # pylint: disable=too-few-public-methods
 
 @dataclass
 class Cast:
-    """Cast a column to a specified type.
+    """Cast columns to a specified type.
 
-    Currently supporting conversions to str, int, and float type columns.
+    Currently supporting conversions to str, int, float, date and timestamp.
 
     Attributes
     ----------
@@ -884,11 +885,17 @@ class Cast:
         """
         table = process_checks(table, cols=self.cols)
 
-        cast_type_map = {str: "to_str", int: "to_int", float: "to_float"}
+        cast_type_map = {
+            "str": "to_str",
+            "int": "to_int",
+            "float": "to_float",
+            "date": "to_date",
+            "timestamp": "to_timestamp"
+        }
 
         # Assert that the type inputted is supported
         if self.type_ not in cast_type_map:
-            supported_str = ", ".join([k.__name__ for k, _ in cast_type_map.items()])
+            supported_str = ", ".join([k for k in cast_type_map])
             raise ValueError(
                 f"""Conversion to type {self.type_} not supported. Supporting
                 conversion to types {supported_str}"""

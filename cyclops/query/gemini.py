@@ -60,6 +60,8 @@ IP_SCU = "ip_scu"
 LOOKUP_ROOM_TRANSFER = "lookup_room_transfer"
 ROOM_TRANSFER = "room_transfer"
 BLOOD_TRANSFUSION = "blood_transfusion"
+IMAGING = "imaging"
+LOOKUP_IMAGING = "lookup_imaging"
 
 _db = Database(config.read_config(GEMINI))
 TABLE_MAP = {
@@ -76,7 +78,9 @@ TABLE_MAP = {
     IP_SCU: lambda db: db.public.ip_scu,
     ROOM_TRANSFER: lambda db: db.public.room_transfer,
     LOOKUP_ROOM_TRANSFER: lambda db: db.public.lookup_room_transfer,
-    BLOOD_TRANSFUSION: lambda db: db.public.blood_transfusion
+    BLOOD_TRANSFUSION: lambda db: db.public.blood_transfusion,
+    IMAGING: lambda db: db.public.imaging,
+    LOOKUP_IMAGING: lambda db: db.public.lookup_imaging,
 }
 GEMINI_COLUMN_MAP = {
     "genc_id": ENCOUNTER_ID,
@@ -224,7 +228,7 @@ def patient_encounters(
     table = qp.Join(
         lookup_table,
         on=("discharge_disposition", "value"),
-        on_to_type=int,
+        on_to_type="int",
         join_table_cols="description",
     )(table)
     table = qp.Rename({"description": "discharge_description"})(table)
@@ -276,9 +280,11 @@ def diagnoses(**process_kwargs) -> QueryInterface:
     table = get_table(DIAGNOSIS)
 
     # Get diagnosis type description
-    lookup_diagnosis = get_table(LOOKUP_DIAGNOSIS)
+    lookup_table = get_table(LOOKUP_DIAGNOSIS)
+    lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(lookup_table)
+    
     table = qp.Join(
-        lookup_diagnosis, on=("diagnosis_type", "value"), join_table_cols="description"
+        lookup_table, on=("diagnosis_type", "value"), join_table_cols="description"
     )(table)
     table = qp.Drop("value")(table)
     table = qp.Rename({"description": "diagnosis_type_description"})(table)
@@ -367,9 +373,11 @@ def room_transfers(**process_kwargs) -> QueryInterface:
     table = get_table(ROOM_TRANSFER)
 
     # Join with lookup to get transfer description.
-    lookup_rt_table = get_table(LOOKUP_ROOM_TRANSFER)
+    lookup_table = get_table(LOOKUP_ROOM_TRANSFER)
+    lookup_table = qp.ConditionEquals("variable", "medical_service")(lookup_table)
+    
     table = qp.Join(
-        lookup_rt_table,
+        lookup_table,
         on=("medical_service", "value"),
         join_table_cols="description",
     )(table)
@@ -540,14 +548,14 @@ def events(
     return QueryInterface(_db, table)
 
 
-def blood_transfusions(**process_kwargs):
+def blood_transfusions(**process_kwargs) -> QueryInterface:
     """Query blood transfusion data.
     
     Returns
     -------
     cyclops.query.interface.QueryInterface
         Constructed table, wrapped in an interface object.
-    
+
     Other Parameters
     ----------------
     rbc_mapped: bool, optional
@@ -558,17 +566,89 @@ def blood_transfusions(**process_kwargs):
         Get only blood_product_raw rows with some substring(s).
     blood_product_raw_names
         Get only specified blood_product_raw rows.
+    before_date: datetime.datetime or str
+        Get tranfusions before some date.
+        If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get tranfusions after some date.
+        If a string, provide in YYYY-MM-DD format.
+    years: int or list of int, optional
+        Get tranfusions by year.
+    months: int or list of int, optional
+        Get tranfusions by month.
     limit: int, optional
         Limit the number of rows returned.
 
     """
     table = get_table(BLOOD_TRANSFUSION)
     
+    table = qp.Cast("issue_date_time", "timestamp")(table)
     
     operations: List[tuple] = [
+        (qp.ConditionBeforeDate, ["issue_date_time", qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, ["issue_date_time", qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, ["issue_date_time", qp.QAP("years")], {}),
+        (qp.ConditionInMonths, ["issue_date_time", qp.QAP("months")], {}),
         (qp.ConditionEquals, ["rbc_mapped", qp.QAP("rbc_mapped")], {}),
         (qp.ConditionSubstring, ["blood_product_raw", qp.QAP("blood_product_raw_substring")], {}),
         (qp.ConditionIn, ["blood_product_raw", qp.QAP("blood_product_raw_names")], {"to_str": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
+    
+    return QueryInterface(_db, table)
+
+
+def imaging(**process_kwargs) -> QueryInterface:
+    """Query imaging data.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    test_descriptions:
+        Get only certain tests with the specified descriptions.
+    raw_test_names: str or list of str
+        Get only certain raw test names.
+    before_date: datetime.datetime or str
+        Get tests before some date.
+        If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get tests after some date.
+        If a string, provide in YYYY-MM-DD format.
+    years: int or list of int, optional
+        Get tests by year.
+    months: int or list of int, optional
+        Get tests by month.
+    limit: int, optional
+        Limit the number of rows returned.
+    """
+    table = get_table(IMAGING)
+
+    # Get imaging test description
+    lookup_table = get_table(LOOKUP_IMAGING)
+    lookup_table = qp.ConditionEquals("variable", "imaging_test_name_mapped")(lookup_table)
+    
+    table = qp.Join(
+        lookup_table,
+        on=("imaging_test_name_mapped", "value"),
+        on_to_type="str",
+        join_table_cols="description"
+    )(table)
+    table = qp.Drop("value")(table)
+    table = qp.Rename({"description": "imaging_test_description"})(table)
+    table = qp.ReorderAfter("imaging_test_description", "imaging_test_name_mapped")(table)
+    
+    operations: List[tuple] = [
+        (qp.ConditionBeforeDate, ["performed_date_time", qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, ["performed_date_time", qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, ["performed_date_time", qp.QAP("years")], {}),
+        (qp.ConditionInMonths, ["performed_date_time", qp.QAP("months")], {}),
+        (qp.ConditionIn, ["imaging_test_description", qp.QAP("test_descriptions")], {}),
+        (qp.ConditionIn, ["imaging_test_name_raw", qp.QAP("raw_test_names")], {"to_str": True}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
     table = qp.process_operations(table, operations, process_kwargs)
