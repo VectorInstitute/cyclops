@@ -2,7 +2,7 @@
 
 Dataset drift (aka dataset shift) occurs when the underlying distribution of the source data used to build a model differs from the distribution of the target data used to test the model during deployment. When the difference between the joint probability distribution of the source and target data is sufficient to deteriorate the model’s performance, a shift is considered malignant. A malignant shift could occur for a variety of reasons, for instance sociodemographic inequities and poor resource management. In order to prevent these malignant shifts from occurring, it is important to first characterize them and subsequently understand the circumstances under which they arise.
 
-We use multivariate tests to detect malignant shifts in the joint distribution between source and target data. Our tool will perform two key steps: 1) dimensionality reduction to obtain a latent representation of the source and target data and 2) statistical testing to identify if a malignant shift has occurred between the latent representation of the source and target data. 
+We use multivariate tests to detect malignant shifts in the joint distribution between source and target data. Our tool performs: 1) dimensionality reduction to obtain a latent representation of the source and target data and 2) statistical testing to identify if a malignant shift has occurred between the latent representation of the source and target data 3) uses Shapley additive explanations (SHAP) values to obtain explanations of the features that drive patient-specific predictions.
 
 ## Reductor
 
@@ -20,6 +20,10 @@ We use multivariate tests to detect malignant shifts in the joint distribution b
 - LSDD
 - LK 
 - Classifier
+
+## Explainer
+
+- Shap
 
 ## Experiments
 
