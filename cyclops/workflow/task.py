@@ -20,6 +20,7 @@ from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
 from cyclops.workflow.constants import NORMALISE, QUERY
 from cyclops.workflow.queries import QUERY_CATELOG
+from cyclops.query.interface import QueryInterface
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -56,20 +57,25 @@ class BaseTask(luigi.Task):
 class QueryTask(BaseTask):
     """Data querying task."""
 
+    query_interface = luigi.Parameter()
+    
     def run(self) -> None:
         """Run querying task."""
         LOGGER.info("Running query task!")
         cfg = self.read_config()
 
-        if cfg.query_fn:
-            query_gen_fn = QUERY_CATELOG[cfg.query_fn]
-        else:
-            # Implement QueryBuilder.
-            return None
-        for query_name, query_interface in query_gen_fn():
-            query_interface.run()
-            query_interface.save(folder_path=cfg.output_folder, file_name=query_name)
-            query_interface.clear_data()
+        if not isinstance(self.query_interface, QueryInterface):
+            raise ValueError("Query task accepts a query interface.")
+        
+        #if cfg.query_fn:
+        #    query_gen_fn = QUERY_CATELOG[cfg.query_fn]
+        #else:
+        #    # Implement QueryBuilder.
+        #    return None
+        #for query_name, query_interface in query_gen_fn():
+        self.query_interface.run()
+        self.query_interface.save(folder_path=cfg.output_folder, file_name=query_name)
+        self.query_interface.clear_data()
 
         return None
 

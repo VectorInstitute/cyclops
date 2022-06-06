@@ -331,24 +331,25 @@ def patient_diagnoses(
 
     Other Parameters
     ----------------
-    diagnosis_codes: str or list of str, optional
-        Get only the specified ICD codes.
-    diagnosis_types: list of str, optional
-        Include only those diagnoses that are of certain type.
     limit: int, optional
         Limit the number of rows returned.
 
     """
     # Get diagnoses
     if diagnoses_table is None:
-        diagnoses_table = diagnoses(**process_kwargs).query
+        diagnoses_table = diagnoses().query
 
-    # Join on patient encounters
+    # Get patient encounters
     if patient_encounters_table is None:
         patient_encounters_table = patient_encounters().query
 
+    # Join on patient encounters
     table = qp.Join(diagnoses_table, on=ENCOUNTER_ID)(patient_encounters_table)
 
+    # Process optional operations
+    operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
+    table = qp.process_operations(table, operations, process_kwargs)
+    
     return QueryInterface(_db, table)
 
 
