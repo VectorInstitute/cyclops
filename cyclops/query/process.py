@@ -190,7 +190,17 @@ def process_operations(  # pylint: disable=too-many-locals
     def process_kwargs(kwargs):
         for key, value in kwargs.items():
             if isinstance(value, QAP):
-                kwargs[key] = value(user_kwargs)
+                # Convert if found
+                if str(value) in user_kwargs:
+                    kwargs[key] = value(user_kwargs)
+                # Otherwise, ensure it wasn't required and remove later
+                else:
+                    if value.required:
+                        raise ValueError(f"QAP {str(value)} must be specified.")
+        
+        # Remove optional kwargs which were not specified
+        kwargs = {key: value for key, value in kwargs.items() if not isinstance(value, QAP)}
+        
         return kwargs
 
     def flatten_2d(lst):
@@ -217,18 +227,18 @@ def process_operations(  # pylint: disable=too-many-locals
             operation, required=True
         )
         specified = [str(r) in list(user_kwargs.keys()) for r in required]
+        
         if not all(specified):
             # Warn if some of required are specified, but not all
             if any(specified):
-                # STILL NEED TO TEST
                 specified_kwargs = [
-                    kwarg for i, kwarg in enumerate(required) if specified[i]
+                    str(kwarg) for i, kwarg in enumerate(required) if specified[i]
                 ]
                 missing_kwargs = [
-                    kwarg for i, kwarg in enumerate(required) if specified[i]
+                    str(kwarg) for i, kwarg in enumerate(required) if not specified[i]
                 ]
                 raise ValueError(
-                    f"""Process arguments {', '.join(specified_kwargs)} were partially
+                    f"""Process arguments {', '.join(specified_kwargs)} were
                     specified, but missing {', '.join(missing_kwargs)}"""
                 )
 
