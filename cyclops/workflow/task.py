@@ -58,6 +58,7 @@ class QueryTask(BaseTask):
     """Data querying task."""
 
     query_interface = luigi.Parameter()
+    query_name = luigi.OptionalParameter(default="data")
     
     def run(self) -> None:
         """Run querying task."""
@@ -67,17 +68,10 @@ class QueryTask(BaseTask):
         if not isinstance(self.query_interface, QueryInterface):
             raise ValueError("Query task accepts a query interface.")
         
-        #if cfg.query_fn:
-        #    query_gen_fn = QUERY_CATELOG[cfg.query_fn]
-        #else:
-        #    # Implement QueryBuilder.
-        #    return None
-        #for query_name, query_interface in query_gen_fn():
         self.query_interface.run()
-        self.query_interface.save(folder_path=cfg.output_folder, file_name=query_name)
+        self.query_interface.save(folder_path=cfg.output_folder, file_name=self.query_name)
         self.query_interface.clear_data()
 
-        return None
 
     def output(self):
         """Query data saved as parquet files."""
