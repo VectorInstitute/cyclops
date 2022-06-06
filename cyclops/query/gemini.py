@@ -59,6 +59,7 @@ LOOKUP_DIAGNOSIS = "lookup_diagnosis"
 IP_SCU = "ip_scu"
 LOOKUP_ROOM_TRANSFER = "lookup_room_transfer"
 ROOM_TRANSFER = "room_transfer"
+BLOOD_TRANSFUSION = "blood_transfusion"
 
 _db = Database(config.read_config(GEMINI))
 TABLE_MAP = {
@@ -75,6 +76,7 @@ TABLE_MAP = {
     IP_SCU: lambda db: db.public.ip_scu,
     ROOM_TRANSFER: lambda db: db.public.room_transfer,
     LOOKUP_ROOM_TRANSFER: lambda db: db.public.lookup_room_transfer,
+    BLOOD_TRANSFUSION: lambda db: db.public.blood_transfusion
 }
 GEMINI_COLUMN_MAP = {
     "genc_id": ENCOUNTER_ID,
@@ -243,12 +245,7 @@ def patient_encounters(
         (
             qp.ConditionEquals,
             ["discharge_description", "Died"],
-            {"not_": qp.QAP("died", not_=True)},
-        ),
-        (
-            qp.ConditionEquals,
-            ["discharge_description", "Died"],
-            {"binarize_col": qp.QAP("died_binarize_col")},
+            {"not_": qp.QAP("died", not_=True), "binarize_col": qp.QAP("died_binarize_col", required=False)},
         ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
@@ -507,7 +504,7 @@ def events(
     event_names: str or list of str, optional
         Get only certain event names.
     event_name_substring: str, optional
-        Get only event names with a substring.
+        Get only event names with some substring(s).
     limit: int, optional
         Limit the number of rows returned.
 
@@ -540,4 +537,40 @@ def events(
     if patient_encounters_table is not None:
         table = qp.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
 
+    return QueryInterface(_db, table)
+
+
+def blood_transfusions(**process_kwargs):
+    """Query blood transfusion data.
+    
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed table, wrapped in an interface object.
+    
+    Other Parameters
+    ----------------
+    rbc_mapped: bool, optional
+        Whether the patient was transfused with Red Blood Cells.
+    rbc_mapped_binarize_col: str, optional
+        Binarize the rbc_mapped condition and save as a column with label rbc_mapped_binarize_col.
+    blood_product_raw_substring: str, optional
+        Get only blood_product_raw rows with some substring(s).
+    blood_product_raw_names
+        Get only specified blood_product_raw rows.
+    limit: int, optional
+        Limit the number of rows returned.
+
+    """
+    table = get_table(BLOOD_TRANSFUSION)
+    
+    
+    operations: List[tuple] = [
+        (qp.ConditionEquals, ["rbc_mapped", qp.QAP("rbc_mapped")], {}),
+        (qp.ConditionSubstring, ["blood_product_raw", qp.QAP("blood_product_raw_substring")], {}),
+        (qp.ConditionIn, ["blood_product_raw", qp.QAP("blood_product_raw_names")], {"to_str": True}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
+    
     return QueryInterface(_db, table)
