@@ -67,11 +67,11 @@ class QueryTask(BaseTask):
         if not isinstance(self.query_interface, QueryInterface):
             raise ValueError("Query task accepts a query interface.")
 
-        self.query_interface.run()
+        self.query_interface.run()  # pylint: disable=no-member
         self.query_interface.save(
             folder_path=cfg.output_folder, file_name=self.query_name
-        )
-        self.query_interface.clear_data()
+        )  # pylint: disable=no-member
+        self.query_interface.clear_data()  # pylint: disable=no-member
 
     def output(self):
         """Query data saved as parquet files."""
