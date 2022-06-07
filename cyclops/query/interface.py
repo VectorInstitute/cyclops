@@ -11,7 +11,6 @@ from cyclops.orm import Database
 from cyclops.query.util import TableTypes
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
-from cyclops.workflow.constants import QUERY
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -78,7 +77,7 @@ class QueryInterface:
         """
         if self.data is None:
             raise ValueError("The query interface must first be run before saving.")
-        
+
         save_dataframe(self.data, folder_path, file_name)
 
     def clear_data(self) -> None:
@@ -164,7 +163,7 @@ class QueryInterfaceProcessed:
             Name of file. Extension will be .gzip.
 
         """
-        save_dataframe(self.data, folder_path, file_name, prefix=QUERY)
+        save_dataframe(self.data, folder_path, file_name)
 
     def clear_data(self) -> None:
         """Clear data container.

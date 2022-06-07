@@ -630,10 +630,9 @@ def process_elem(elem: Any, **kwargs: bool) -> Any:
 
     if to_float:
         elem = float(elem)
-    
+
     if to_bool:
         elem = bool(elem)
-    
 
     return elem
 
@@ -706,13 +705,13 @@ def process_column(col: Column, **kwargs: bool) -> Column:
 
     if to_float:
         col = cast(col, Float)
-    
+
     if to_bool:
         col = cast(col, Boolean)
-    
+
     if to_date:
         col = cast(col, DATE)
-    
+
     if to_timestamp:
         col = cast(col, TIMESTAMP)
 
@@ -981,10 +980,15 @@ def check_column_type(
     ]
 
     if raise_error and not all(is_type):
-        incorrect_type = list(set(cols) - {col for i, col in enumerate(cols) if is_type[i]})
+        incorrect_type = list(
+            set(cols) - {col for i, col in enumerate(cols) if is_type[i]}
+        )
         types_str = ", ".join([type_.__name__ for type_ in types])
         actual_types_str = [type(col).__name__ for col in incorrect_type]
-        raise ValueError(f"{incorrect_type} columns are not one of types {types_str}. They have types {actual_types_str}.")
+        raise ValueError(
+            f"""{incorrect_type} columns are not one of types {types_str}.
+            They have types {actual_types_str}."""
+        )
 
     return all(is_type)
 
