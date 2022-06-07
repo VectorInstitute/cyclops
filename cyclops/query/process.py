@@ -1778,8 +1778,7 @@ class GroupByAggregate:
         ]
 
         groupby_names = to_list(self.groupby_cols)
-        all_names = groupby_names + aggfunc_names
-        table = process_checks(table, cols=all_names)
+        table = process_checks(table, cols=groupby_names + aggfunc_cols)
 
         # Error checking
         for aggfunc_str in aggfunc_strs:
@@ -1788,7 +1787,8 @@ class GroupByAggregate:
                 raise ValueError(
                     f"Invalid aggfuncs specified. Allowed values are {allowed_strs}."
                 )
-
+        
+        all_names = groupby_names + aggfunc_names
         if len(all_names) != len(list(set(all_names))):
             raise ValueError(
                 """Duplicate column names were found. Try naming aggregated columns
