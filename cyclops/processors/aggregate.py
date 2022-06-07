@@ -88,7 +88,8 @@ def restrict_events_by_timestamp(
     not have its events restricted. Every ENCOUNTER_ID in start/stop must appear
     in the data.
 
-    If specified, the start and stop DataFrames expect columns ENCOUNTER_ID, "time".
+    If specified, the start and stop DataFrames expect columns ENCOUNTER_ID and
+    RESTRICT_TIMESTAMP.
 
     Parameters
     ----------
@@ -109,12 +110,13 @@ def restrict_events_by_timestamp(
         return data
 
     def restrict(data, restrict_df, is_start=True):
-        # Assert correct columns
+        # Assert correct columns.
         has_columns(restrict_df, [ENCOUNTER_ID, RESTRICT_TIMESTAMP], raise_error=True)
-        # Assert that the encounter IDs in start/stop are a subset of those in data
+
+        # Assert that the encounter IDs in start/stop are a subset of those in data.
         assert restrict_df[ENCOUNTER_ID].isin(data[ENCOUNTER_ID]).all()
 
-        # Assert that the time columns are the correct datatype
+        # Assert that the time columns are the correct datatype.
         assert is_timestamp_series(restrict_df[RESTRICT_TIMESTAMP])
 
         data = data.merge(restrict_df, on=ENCOUNTER_ID, how="left")
@@ -430,6 +432,7 @@ class Aggregator:
             WINDOW_START_TIMESTAMP
         ] + pd.to_timedelta(timestep_start_times[TIMESTEP] * self.bucket_size, unit="h")
         timestep_start_times = timestep_start_times.set_index([ENCOUNTER_ID, TIMESTEP])
+        timestep_start_times = timestep_start_times.drop(columns=WINDOW_START_TIMESTAMP)
 
         return timestep_start_times
 
@@ -454,8 +457,13 @@ class Aggregator:
 
         """
         window_start_time = self.compute_start_of_window(data)
+        data = restrict_events_by_timestamp(data, start=window_start_time)
         window_end_time = self.compute_end_of_window(window_start_time)
-        data = restrict_events_by_timestamp(data, window_start_time, window_end_time)
+        # Filter out those encounters with no events after window_start_time.
+        window_end_time = window_end_time.loc[
+            window_end_time[ENCOUNTER_ID].isin(data[ENCOUNTER_ID].unique())
+        ]
+        data = restrict_events_by_timestamp(data, stop=window_end_time)
         window_start_time = window_start_time.rename(
             columns={RESTRICT_TIMESTAMP: WINDOW_START_TIMESTAMP}
         )
