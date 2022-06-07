@@ -68,9 +68,9 @@ class QueryTask(BaseTask):
             raise ValueError("Query task accepts a query interface.")
 
         self.query_interface.run()  # pylint: disable=no-member
-        self.query_interface.save(
+        self.query_interface.save(  # pylint: disable=no-member
             folder_path=cfg.output_folder, file_name=self.query_name
-        )  # pylint: disable=no-member
+        )
         self.query_interface.clear_data()  # pylint: disable=no-member
 
     def output(self):
