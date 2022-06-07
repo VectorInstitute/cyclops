@@ -95,6 +95,7 @@ def get_interface(table: TableTypes) -> QueryInterface:
     -------
     cyclops.query.interface.QueryInterface
         A query interface using the MIMIC database object.
+
     """
     return QueryInterface(_db, table)
 

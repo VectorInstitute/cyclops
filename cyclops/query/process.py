@@ -5,10 +5,9 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import and_, or_, cast, extract, func, select
-from sqlalchemy.dialects.postgresql.base import DATE, TIMESTAMP
+from sqlalchemy import and_, cast, extract, func, or_, select
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select, Subquery
@@ -21,21 +20,21 @@ from cyclops.query.util import (
     apply_to_columns,
     check_timestamp_columns,
     drop_columns,
+    ends_with,
     equals,
     filter_columns,
     get_column,
-    get_columns,
     get_column_names,
+    get_columns,
     get_delta_column,
     has_columns,
     has_substring,
     in_,
     not_equals,
-    starts_with,
-    ends_with,
     process_column,
     rename_columns,
     reorder_columns,
+    starts_with,
     table_params_to_type,
     trim_columns,
 )
@@ -196,10 +195,12 @@ def process_operations(  # pylint: disable=too-many-locals
                 else:
                     if value.required:
                         raise ValueError(f"QAP {str(value)} must be specified.")
-        
+
         # Remove optional kwargs which were not specified
-        kwargs = {key: value for key, value in kwargs.items() if not isinstance(value, QAP)}
-        
+        kwargs = {
+            key: value for key, value in kwargs.items() if not isinstance(value, QAP)
+        }
+
         return kwargs
 
     def flatten_2d(lst):
@@ -226,19 +227,24 @@ def process_operations(  # pylint: disable=too-many-locals
             operation, required=True
         )
         specified_required = [str(r) in list(user_kwargs.keys()) for r in required]
-        
+
         if not all(specified_required):
             # If not all the required parameters are specified ones, warn if only
             # some of the parameters are.
-            all_params = get_qap_args(operation, required=False) + \
-                get_qap_kwargs(operation, required=False)
+            all_params = get_qap_args(operation, required=False) + get_qap_kwargs(
+                operation, required=False
+            )
             specified_params = [str(r) in list(user_kwargs.keys()) for r in all_params]
             if any(specified_params):
                 specified_kwargs = [
-                    str(kwarg) for i, kwarg in enumerate(all_params) if specified_params[i]
+                    str(kwarg)
+                    for i, kwarg in enumerate(all_params)
+                    if specified_params[i]
                 ]
                 missing_kwargs = [
-                    str(kwarg) for i, kwarg in enumerate(required) if not specified_required[i]
+                    str(kwarg)
+                    for i, kwarg in enumerate(required)
+                    if not specified_required[i]
                 ]
                 raise ValueError(
                     f"""Process arguments {', '.join(specified_kwargs)} were
@@ -855,13 +861,13 @@ class Cast:
     ----------
     cols : str or list of str
         Columns to = cast.
-    type_ : type
-        Type to which to convert.
+    type_ : str
+        Name of type to which to convert. Must be supported.
 
     """
 
     cols: Union[str, List[str]]
-    type_: type
+    type_: str
 
     def __call__(self, table: TableTypes):
         """Process the table.
@@ -884,12 +890,12 @@ class Cast:
             "int": "to_int",
             "float": "to_float",
             "date": "to_date",
-            "timestamp": "to_timestamp"
+            "timestamp": "to_timestamp",
         }
 
         # Assert that the type inputted is supported
         if self.type_ not in cast_type_map:
-            supported_str = ", ".join([k for k in cast_type_map])
+            supported_str = ", ".join(list(cast_type_map.keys()))
             raise ValueError(
                 f"""Conversion to type {self.type_} not supported. Supporting
                 conversion to types {supported_str}"""
@@ -1162,7 +1168,7 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
 
 class ConditionSubstring:  # pylint: disable=too-few-public-methods
     """Filter rows on based on having substrings.
-    
+
     Can be specified whether it must have any or all of the specified substrings.
     This makes no difference when only one substring is provided
 
@@ -1192,7 +1198,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
         not_: bool = False,
         binarize_col: Optional[str] = None,
         **cond_kwargs,
-    ):
+    ):  # pylint: disable=too-many-arguments
         """Initialize."""
         self.col = col
         self.substrings = to_list(substrings)
@@ -1216,13 +1222,16 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
-        conds = [has_substring(get_column(table, self.col), sub, **self.cond_kwargs) for sub in self.substrings]
-        
+        conds = [
+            has_substring(get_column(table, self.col), sub, **self.cond_kwargs)
+            for sub in self.substrings
+        ]
+
         if self.any_:
             cond = or_(*conds)
         else:
             cond = and_(*conds)
-        
+
         if self.not_:
             cond = cond._negate()
 
@@ -1232,6 +1241,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
             ).subquery()
 
         return select(table).where(cond).subquery()
+
 
 class ConditionStartsWith:  # pylint: disable=too-few-public-methods
     """Filter rows based on starting with some string.
@@ -1281,9 +1291,7 @@ class ConditionStartsWith:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
-        cond = starts_with(
-            get_column(table, self.col), self.string, **self.cond_kwargs
-        )
+        cond = starts_with(get_column(table, self.col), self.string, **self.cond_kwargs)
         if self.not_:
             cond = cond._negate()
 
@@ -1343,9 +1351,7 @@ class ConditionEndsWith:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
-        cond = ends_with(
-            get_column(table, self.col), self.string, **self.cond_kwargs
-        )
+        cond = ends_with(get_column(table, self.col), self.string, **self.cond_kwargs)
         if self.not_:
             cond = cond._negate()
 
@@ -1663,10 +1669,11 @@ class DropNulls:
         cond = and_(*[not_equals(get_column(table, col), None) for col in self.cols])
         return select(table).where(cond).subquery()
 
+
 @dataclass
 class OrderBy:
     """Order the rows of a table by some columns.
-    
+
     Attributes
     ----------
     cols: str or list of str
@@ -1676,9 +1683,10 @@ class OrderBy:
         If not provided, orders all by ascending.
 
     """
+
     cols: Union[str, List[str]]
     ascending: Optional[Union[bool, List[bool]]] = None
-    
+
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
@@ -1694,26 +1702,29 @@ class OrderBy:
 
         """
         self.cols = to_list(self.cols)
-        self.ascending = to_list_optional(self.ascending)
+        ascending = to_list_optional(self.ascending)
         table = process_checks(table, cols=self.cols)
-        
-        if self.ascending is None:
-            self.ascending = [True for _ in range(len(self.cols))]
+
+        if ascending is None:
+            ascending = [True for _ in range(len(self.cols))]
         else:
-            if len(self.ascending) != len(self.cols):
-                raise ValueError("If ascending is specified. Must specify for all columns.")
-        
+            if len(ascending) != len(self.cols):
+                raise ValueError(
+                    "If ascending is specified. Must specify for all columns."
+                )
+
         order_cols = [
-            col if self.ascending[i] else col.desc() for \
-            i, col in enumerate(get_columns(table, self.cols))
+            col if ascending[i] else col.desc()
+            for i, col in enumerate(get_columns(table, self.cols))
         ]
-        
+
         return select(table).order_by(*order_cols).subquery()
+
 
 @dataclass
 class GroupByAggregate:
     """Aggregate over a group by object.
-    
+
     Attributes
     ----------
     groupby_cols: str or list of str
@@ -1722,13 +1733,14 @@ class GroupByAggregate:
         Specify a dictionary of key-value pairs:
         column name: aggfunc string or
         column name: (aggfunc string, new column label)
-        This labelling allows for the aggregation of the same column with different functions.
+        This labelling allows for the aggregation of the same column with
+        different functions.
+
     """
-    
+
     groupby_cols: Union[str, List[str]]
     aggfuncs: Dict[str, Union[str]]
-    
-    
+
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
@@ -1743,46 +1755,52 @@ class GroupByAggregate:
             Processed table.
 
         """
-        STR_TO_AGGFUNC = {
+        str_to_aggfunc = {
             "sum": func.sum,
             "average": func.avg,
             "min": func.min,
             "max": func.max,
             "count": func.count,
         }
-        
-        aggfunc_tuples = [item for item in self.aggfuncs.items()]
+
+        aggfunc_tuples = list(self.aggfuncs.items())
         aggfunc_cols = [item[0] for item in aggfunc_tuples]
-        aggfunc_strs = [item[1] if isinstance(item[1], str) else item[1][0] for item in aggfunc_tuples]
-        
+        aggfunc_strs = [
+            item[1] if isinstance(item[1], str) else item[1][0]
+            for item in aggfunc_tuples
+        ]
+
         # If not specified, aggregate column names default to that of
         # the column being aggregated over
         aggfunc_names = [
-            aggfunc_cols[i] if isinstance(item[1], str) else item[1][1] \
+            aggfunc_cols[i] if isinstance(item[1], str) else item[1][1]
             for i, item in enumerate(aggfunc_tuples)
         ]
-        
-        self.groupby_cols = to_list(self.groupby_cols)
-        table = process_checks(table, cols=self.groupby_cols + aggfunc_cols)
-        
+
+        groupby_names = to_list(self.groupby_cols)
+        all_names = groupby_names + aggfunc_names
+        table = process_checks(table, cols=all_names)
+
+        # Error checking
         for aggfunc_str in aggfunc_strs:
-            if aggfunc_str not in STR_TO_AGGFUNC:
-                allowed_strs = ', '.join(list(STR_TO_AGGFUNC.keys()))
-                raise ValueError(f"Invalid aggfuncs specified. Allowed values are {allowed_strs}.")
-        
-        groupby_cols = get_columns(table, self.groupby_cols)
-        
-        all_names = self.groupby_cols + aggfunc_names
+            if aggfunc_str not in str_to_aggfunc:
+                allowed_strs = ", ".join(list(str_to_aggfunc.keys()))
+                raise ValueError(
+                    f"Invalid aggfuncs specified. Allowed values are {allowed_strs}."
+                )
+
         if len(all_names) != len(list(set(all_names))):
             raise ValueError(
                 """Duplicate column names were found. Try naming aggregated columns
                 to avoid this issue."""
             )
-        
+
+        # Perform group by
+        groupby_cols = get_columns(table, groupby_names)
         agg_cols = get_columns(table, aggfunc_cols)
         agg_cols = [
-            STR_TO_AGGFUNC[aggfunc_strs[i]](col).label(aggfunc_names[i]) \
+            str_to_aggfunc[aggfunc_strs[i]](col).label(aggfunc_names[i])
             for i, col in enumerate(agg_cols)
         ]
-        
+
         return select(*groupby_cols, *agg_cols).group_by(*groupby_cols).subquery()

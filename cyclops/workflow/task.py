@@ -16,11 +16,10 @@ from cyclops.processors.column_names import EVENT_NAME, EVENT_TIMESTAMP, EVENT_V
 from cyclops.processors.constants import EMPTY_STRING, UNDERSCORE
 from cyclops.processors.events import normalise_events
 from cyclops.processors.util import has_columns
+from cyclops.query.interface import QueryInterface
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
 from cyclops.workflow.constants import NORMALISE, QUERY
-from cyclops.workflow.queries import QUERY_CATELOG
-from cyclops.query.interface import QueryInterface
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -59,7 +58,7 @@ class QueryTask(BaseTask):
 
     query_interface = luigi.Parameter()
     query_name = luigi.OptionalParameter(default="data")
-    
+
     def run(self) -> None:
         """Run querying task."""
         LOGGER.info("Running query task!")
@@ -67,11 +66,12 @@ class QueryTask(BaseTask):
 
         if not isinstance(self.query_interface, QueryInterface):
             raise ValueError("Query task accepts a query interface.")
-        
-        self.query_interface.run()
-        self.query_interface.save(folder_path=cfg.output_folder, file_name=self.query_name)
-        self.query_interface.clear_data()
 
+        self.query_interface.run()
+        self.query_interface.save(
+            folder_path=cfg.output_folder, file_name=self.query_name
+        )
+        self.query_interface.clear_data()
 
     def output(self):
         """Query data saved as parquet files."""
