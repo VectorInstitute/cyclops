@@ -11,7 +11,9 @@ CARE_UNIT = "care_unit"
 READMISSION = "readmission"
 SCU_ADMIT_TIMESTAMP = "scu_admit_timestamp"
 SCU_DISCHARGE_TIMESTAMP = "scu_discharge_timestamp"
-
+WINDOW_START_TIMESTAMP = "window_start_timestamp"
+WINDOW_STOP_TIMESTAMP = "window_stop_timestamp"
+TIMESTEP_START_TIMESTAMP = "timestep_start_timestamp"
 
 AGE = "age"
 SEX = "sex"

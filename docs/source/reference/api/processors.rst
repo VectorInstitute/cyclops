@@ -13,7 +13,7 @@ Submodules
    processors.diagnoses
    processors.events
    processors.impute
-   processors.outcomes
+   processors.statics
    processors.string_ops
    processors.util
 

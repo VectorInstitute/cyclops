@@ -7,6 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   workflow.constants
    workflow.queries
    workflow.task
 

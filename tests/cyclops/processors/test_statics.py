@@ -28,6 +28,8 @@ def test_infer_statics(  # pylint: disable=redefined-outer-name
     test_statics_input,
 ):
     """Test infer_statics fn."""
+    with pytest.raises(ValueError):
+        _ = infer_statics(test_statics_input, "donkey")
     static_columns = infer_statics(test_statics_input)
     assert set(static_columns) == set([ENCOUNTER_ID, "B", "E"])
 

@@ -1,5 +1,6 @@
 """Test aggregation functions."""
 
+import statistics
 from datetime import datetime
 
 import numpy as np
@@ -18,6 +19,7 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     RESTRICT_TIMESTAMP,
+    TIMESTEP_START_TIMESTAMP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
 
@@ -87,16 +89,26 @@ def test_aggregate_events_input():
     date1 = datetime(2022, 11, 3, hour=13)
     date2 = datetime(2022, 11, 3, hour=14)
     date3 = datetime(2022, 11, 4, hour=3)
+    date4 = datetime(2022, 11, 3, hour=13)
     data = [
-        [1, "eventA", 10, date1, date2],
-        [2, "eventA", 11, date1, date2],
-        [2, "eventA", 12, date1, date3],
-        [2, "eventA", 16, date1, date3],
-        [2, "eventA", np.nan, date1, date3],
-        [2, "eventB", 13, date1, date3],
-        [2, "eventB", np.nan, date1, date3],
+        [1, "eventA", 10, date1, date2, "wash"],
+        [2, "eventA", 19, date1, date2, "clean"],
+        [2, "eventA", 11, date1, date4, "dog"],
+        [2, "eventA", 18, date1, date4, "pet"],
+        [2, "eventA", 12, date1, date3, "store"],
+        [2, "eventA", 16, date1, date3, "kobe"],
+        [2, "eventA", np.nan, date1, date3, "bryant"],
+        [2, "eventB", 13, date1, date3, "trump"],
+        [2, "eventB", np.nan, date1, date3, "tie"],
     ]
-    columns = [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, ADMIT_TIMESTAMP, EVENT_TIMESTAMP]
+    columns = [
+        ENCOUNTER_ID,
+        EVENT_NAME,
+        EVENT_VALUE,
+        ADMIT_TIMESTAMP,
+        EVENT_TIMESTAMP,
+        "some_str_col",
+    ]
 
     return pd.DataFrame(data, columns=columns)
 
@@ -151,33 +163,21 @@ def test_compute_start_of_window(test_input):  # pylint: disable=redefined-outer
     ).all()
 
 
-def test_aggregate_events_into_single_bucket(  # pylint: disable=redefined-outer-name
-    test_events_input,
-):
-    """Test aggregate_events_into_single_bucket function."""
-    aggregator = Aggregator(aggfunc=MEAN)
-    res, _ = aggregator.aggregate_events_into_single_bucket(test_events_input)
-    assert res.loc[1]["eventA"] == 10.0
-    assert np.isnan(res.loc[1]["eventB"])
-    assert res.loc[2]["eventA"] == 13.0
-    assert res.loc[2]["eventB"] == 13.0
-
-    aggregator = Aggregator(aggfunc=MEDIAN)
-    res, _ = aggregator.aggregate_events_into_single_bucket(test_events_input)
-    assert res.loc[1]["eventA"] == 10.0
-    assert np.isnan(res.loc[1]["eventB"])
-    assert res.loc[2]["eventA"] == 12.0
-    assert res.loc[2]["eventB"] == 13.0
-
-
 def test_aggregate_events_single_timestep_case(  # pylint: disable=redefined-outer-name
     test_aggregate_events_input,
 ):
-    """Test aggregate_events function."""
-    aggregtor = Aggregator(aggfunc=MEAN, bucket_size=4, window=4)
-    res, _ = aggregtor.aggregate_events(test_aggregate_events_input)
-    assert res["eventA"].iloc[0] == 10
-    assert res["eventA"].iloc[1] == 11
+    """Test aggregate_events function for single timestep case."""
+    aggregtor = Aggregator(bucket_size=4, window=4)
+    res = aggregtor(test_aggregate_events_input)
+    assert res[EVENT_NAME][0] == "eventA"
+    assert res[EVENT_NAME][1] == "eventA"
+    assert res["count"][1] == 3
+
+    aggregtor = Aggregator(aggfunc={EVENT_VALUE: MEDIAN}, bucket_size=4, window=40)
+    res = aggregtor(test_aggregate_events_input)
+    assert res[EVENT_VALUE][1] == 18
+    assert res[EVENT_NAME][2] == "eventA"
+    assert res["null_fraction"][3] == 0.5
 
 
 def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
@@ -200,36 +200,63 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
 ):
     """Test aggregate_events function."""
     # Test initializations of Aggregator.
+    aggfunc = {EVENT_VALUE: MEAN, "some_str_col": statistics.mode}
     with pytest.raises(NotImplementedError):
         _ = Aggregator(
-            aggfunc="donkey", bucket_size=4, window=20, start_at_admission=True
+            aggfunc={EVENT_VALUE: "donkey", "some_str_col": statistics.mode},
+            bucket_size=4,
+            window=20,
+            start_at_admission=True,
         )
-    _ = Aggregator(aggfunc=np.mean, bucket_size=4, window=20, start_at_admission=True)
+    _ = Aggregator(
+        aggfunc=aggfunc,
+        bucket_size=2,
+        window=20,
+        start_at_admission=True,
+    )
 
     with pytest.raises(ValueError):
         _ = Aggregator(
-            start_window_ts=datetime(2022, 11, 6, 12, 13), start_at_admission=True
+            start_window_ts=test_restrict_events_by_timestamp_start_input,
+            start_at_admission=True,
+            aggfunc=aggfunc,
+        )
+    with pytest.raises(ValueError):
+        _ = Aggregator(
+            stop_window_ts=test_restrict_events_by_timestamp_stop_input,
+            window=12,
+            aggfunc=aggfunc,
         )
 
     aggregator = Aggregator(
-        aggfunc=MEAN, bucket_size=4, window=20, start_at_admission=True
+        aggfunc=aggfunc,
+        bucket_size=1,
+        window=20,
+        start_at_admission=True,
     )
-    res, _ = aggregator.aggregate_events(test_aggregate_events_input)
+    res = aggregator(test_aggregate_events_input)
 
-    assert res.loc[(1, 0)]["eventA"] == 10.0
-    assert np.isnan(res.loc[(1, 0)]["eventB"])
-    assert res.loc[(2, 0)]["eventA"] == 11.0
-    assert np.isnan(res.loc[(2, 0)]["eventB"])
-    assert np.isnan(res.loc[(2, 1)]["eventA"])
-    assert np.isnan(res.loc[(2, 1)]["eventB"])
-    assert np.isnan(res.loc[(2, 2)]["eventA"])
-    assert np.isnan(res.loc[(2, 2)]["eventB"])
-    assert res.loc[(2, 3)]["eventA"] == 14.0
-    assert res.loc[(2, 3)]["eventB"] == 13.0
+    assert res["timestep"][3] == 14
+    assert res["event_value"][1] == 14.5
+    assert res["event_value"][2] == 19
+    assert res["count"][4] == 2
+    assert res["null_fraction"][4] == 0.5
+    assert res["some_str_col"][3] == "store"
 
-    # Checks padding past last event
-    assert np.isnan(res.loc[(2, 4)]["eventA"])
-    assert np.isnan(res.loc[(2, 4)]["eventB"])
+    assert aggregator.meta[TIMESTEP_START_TIMESTAMP][TIMESTEP_START_TIMESTAMP][1][
+        18
+    ] == datetime(2022, 11, 4, 7)
+    assert aggregator.meta[TIMESTEP_START_TIMESTAMP][TIMESTEP_START_TIMESTAMP][2][
+        4
+    ] == datetime(2022, 11, 3, 17)
+
+    _ = Aggregator(
+        aggfunc={EVENT_VALUE: MEAN},
+        bucket_size=1,
+        window=None,
+        start_window_ts=test_restrict_events_by_timestamp_start_input,
+        stop_window_ts=test_restrict_events_by_timestamp_stop_input,
+    )
 
 
 def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
@@ -242,10 +269,13 @@ def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
         test_aggregate_events_input,
         start=test_restrict_events_by_timestamp_start_input,
     )
-    assert list(res.index) == [0, 2, 3, 4, 5, 6]
+    assert list(res.index) == [0, 4, 5, 6, 7, 8]
 
     res = restrict_events_by_timestamp(
         test_aggregate_events_input,
         stop=test_restrict_events_by_timestamp_stop_input,
     )
-    assert list(res.index) == [0, 1]
+    assert list(res.index) == [0, 1, 2, 3]
+
+    res = restrict_events_by_timestamp(test_aggregate_events_input)
+    assert res.equals(test_aggregate_events_input)

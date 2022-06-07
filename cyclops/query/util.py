@@ -5,11 +5,9 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, List, Optional, Union
 
-import numpy as np
 import sqlalchemy
 from sqlalchemy import Float, Integer, Interval, String, cast, func, select
 from sqlalchemy.dialects.postgresql.base import DATE, TIMESTAMP
@@ -20,6 +18,7 @@ from sqlalchemy.sql.selectable import Select, Subquery
 from sqlalchemy.types import Boolean
 
 from codebase_ops import get_log_file_path
+from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -78,74 +77,6 @@ class DBMetaclass(type):
 
 TABLE_OBJECTS = [Table, Select, Subquery, DBTable]
 TableTypes = Union[Select, Subquery, Table, DBTable]
-
-
-def to_list(obj: Any) -> list:
-    """Convert some object to a list of object(s) unless already one.
-
-    Parameters
-    ----------
-    obj : any
-        The object to convert to a list.
-
-    Returns
-    -------
-    list
-        The processed function.
-
-    """
-    if isinstance(obj, list):
-        return obj
-
-    if isinstance(obj, np.ndarray):
-        return list(obj)
-
-    return [obj]
-
-
-def to_list_optional(obj: Optional[Any]) -> Optional[list]:
-    """Convert some object to a list of object(s) unless already None or a list.
-
-    Parameters
-    ----------
-    obj : any
-        The object to convert to a list.
-
-    Returns
-    -------
-    list
-        The processed function.
-
-    """
-    if obj is None:
-        return None
-
-    if isinstance(obj, list):
-        return obj
-
-    if isinstance(obj, np.ndarray):
-        return list(obj)
-
-    return [obj]
-
-
-def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
-    """Convert string date to datetime.
-
-    Parameters
-    ----------
-    date: str
-        Input date in string format.
-    fmt: str, optional
-        Date formatting string.
-
-    Returns
-    -------
-    datetime
-        Date in datetime format.
-
-    """
-    return datetime.strptime(date, fmt)
 
 
 def _to_subquery(table: TableTypes) -> Subquery:

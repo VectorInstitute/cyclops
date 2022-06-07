@@ -37,11 +37,9 @@ from cyclops.query.util import (
     rename_columns,
     reorder_columns,
     table_params_to_type,
-    to_datetime_format,
-    to_list,
-    to_list_optional,
     trim_columns,
 )
+from cyclops.utils.common import to_datetime_format, to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
@@ -52,7 +50,7 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 class QAP:
     """Query argument placeholder (QAP) class.
 
-    Attributes
+    Parameters
     ----------
     kwarg_name: str
         Name of keyword argument for which this classs
@@ -307,7 +305,7 @@ def process_checks(
 ) -> Subquery:
     """Perform checks, and possibly alterations, on a table.
 
-    Paramaters
+    Parameters
     ----------
     table : cyclops.query.util.TableTypes
         Table on which to perform the operation.
@@ -343,7 +341,7 @@ def process_checks(
 class Drop:  # pylint: disable=too-few-public-methods
     """Drop some columns.
 
-    Attributes
+    Parameters
     ----------
     cols: str or list of str
         Columns to drop.
@@ -374,7 +372,7 @@ class Drop:  # pylint: disable=too-few-public-methods
 class Rename:  # pylint: disable=too-few-public-methods
     """Rename some columns.
 
-    Attributes
+    Parameters
     ----------
     rename_map: dict
         Map from an existing column name to another name.
@@ -410,7 +408,7 @@ class Rename:  # pylint: disable=too-few-public-methods
 class Reorder:  # pylint: disable=too-few-public-methods
     """Reorder the columns in a table.
 
-    Attributes
+    Parameters
     ----------
     cols: list of str
         Complete list of table column names in the new order.
@@ -479,7 +477,7 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
 class FilterColumns:  # pylint: disable=too-few-public-methods
     """Keep only the specified columns in a table.
 
-    Attributes
+    Parameters
     ----------
     cols: str or list of str
         The columns to keep.
@@ -506,15 +504,11 @@ class FilterColumns:  # pylint: disable=too-few-public-methods
         return filter_columns(table, self.cols)
 
 
-# class ApplyLambda():
-#    def __init__(self, func: Callable, ):
-
-
 @dataclass
 class Trim:  # pylint: disable=too-few-public-methods
     """Trim the whitespace from some string columns.
 
-    Attributes
+    Parameters
     ----------
     cols: str or list of str
         Columns to trim.
@@ -549,7 +543,7 @@ class Trim:  # pylint: disable=too-few-public-methods
 class Literal:  # pylint: disable=too-few-public-methods
     """Add a literal column to a table.
 
-    Attributes
+    Parameters
     ----------
     value: any
         Value of the literal, e.g., a string or integer.
@@ -583,7 +577,7 @@ class Literal:  # pylint: disable=too-few-public-methods
 class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
     """Extract a component such as year or month from a timestamp column.
 
-    Attributes
+    Parameters
     ----------
     timestamp_col: str
         Timestamp column from which to extract the time component.
@@ -630,7 +624,7 @@ class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
 class AddNumeric:  # pylint: disable=too-few-public-methods
     """Add a numeric value to some columns.
 
-    Attributes
+    Parameters
     ----------
     add_to: str or list of str
         Column names specifying to which columns is being added.
@@ -673,7 +667,7 @@ class AddNumeric:  # pylint: disable=too-few-public-methods
 class AddDeltaConstant:  # pylint: disable=too-few-public-methods
     """Construct and add a datetime.timedelta object to some columns.
 
-    Attributes
+    Parameters
     ----------
     add_to: str or list of str
         Column names specifying to which columns is being added.
@@ -722,7 +716,7 @@ class AddColumn:  # pylint: disable=too-few-public-methods
     Pay attention to column types. Some combinations will work,
     whereas others will not.
 
-    Attributes
+    Parameters
     ----------
     add_to: str or list of str
         Column names specifying to which columns is being added.
@@ -857,7 +851,7 @@ class Cast:
 
     Currently supporting conversions to str, int, float, date and timestamp.
 
-    Attributes
+    Parameters
     ----------
     cols : str or list of str
         Columns to = cast.
@@ -1579,7 +1573,7 @@ class ConditionAfterDate:  # pylint: disable=too-few-public-methods
 class Limit:  # pylint: disable=too-few-public-methods
     """Limit the number of rows returned in a query.
 
-    Attributes
+    Parameters
     ----------
     number: int
         Number of rows to return in the limit.
@@ -1639,7 +1633,7 @@ class RandomizeOrder:
 class DropNulls:
     """Remove rows with null values in some specified columns.
 
-    Attributes
+    Parameters
     ----------
     cols: str or list of str
         Columns in which, if a value is null, the corresponding row

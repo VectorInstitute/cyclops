@@ -9,7 +9,6 @@ from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
 from cyclops.processors.events import normalise_events
-from cyclops.processors.impute import Imputer
 from cyclops.processors.statics import compute_statics
 from cyclops.processors.util import gather_columns, has_columns
 
@@ -36,28 +35,13 @@ def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
     return diagnoses_features
 
 
-def featurize(  # pylint: disable=too-many-arguments
+def run_data_pipeline(  # pylint: disable=too-many-arguments
     static_data: Union[list, pd.DataFrame] = None,
     temporal_data: Union[list, pd.DataFrame] = None,
     aggregator: Aggregator = Aggregator(),
-    static_imputer: Imputer = Imputer(),
-    temporal_imputer: Imputer = Imputer(),
     reference_cols: Optional[list] = None,
 ) -> FeatureHandler:
-    """Process and create features from raw queried data.
-
-    Notes
-    -----
-        - User inputs static and temporal data in the form of raw dataframes.
-        - If diagnoses codes are present in the static data, they are processed first.
-        - Static data is then processed into static features, and added to
-          the FeatureHandler container.
-        - Temporal data is then processed into temporal features, and added to
-          the FeatureHandler container. For the aggregation of temporal data,
-          the user passed in options using `cyclops.processor.Aggregator`.
-        - Imputation is called as a public method on the FeatureHandler, which then
-          applies imputation on both static and temporal features. For
-          imputation, options are passed using `cyclops.processor.Imputer`.
+    """Run data pipeline in steps just for development purposes (not public API fn.).
 
     Parameters
     ----------
@@ -99,14 +83,10 @@ def featurize(  # pylint: disable=too-many-arguments
                 reference_cols=reference_cols,
             )
 
+    aggregated_events = []
     if temporal_data:
         for dataframe in temporal_data:
             dataframe = normalise_events(dataframe)
-            temporal_features, _ = aggregator(dataframe)
-            feature_handler.add_features(temporal_features)
+            aggregated_events.append(aggregator(dataframe))
 
-    feature_handler.impute_features(
-        static_imputer=static_imputer, temporal_imputer=temporal_imputer
-    )
-
-    return feature_handler
+    return feature_handler, aggregated_events
