@@ -112,7 +112,7 @@ def restrict_events_by_timestamp(
     def restrict(data, restrict_df, is_start=True):
         # Assert correct columns.
         has_columns(restrict_df, [ENCOUNTER_ID, RESTRICT_TIMESTAMP], raise_error=True)
-        
+
         # Assert that the encounter IDs in start/stop are a subset of those in data.
         assert restrict_df[ENCOUNTER_ID].isin(data[ENCOUNTER_ID]).all()
 
@@ -460,7 +460,9 @@ class Aggregator:
         data = restrict_events_by_timestamp(data, start=window_start_time)
         window_end_time = self.compute_end_of_window(window_start_time)
         # Filter out those encounters with no events after window_start_time.
-        window_end_time = window_end_time.loc[window_end_time[ENCOUNTER_ID].isin(data[ENCOUNTER_ID].unique())]
+        window_end_time = window_end_time.loc[
+            window_end_time[ENCOUNTER_ID].isin(data[ENCOUNTER_ID].unique())
+        ]
         data = restrict_events_by_timestamp(data, stop=window_end_time)
         window_start_time = window_start_time.rename(
             columns={RESTRICT_TIMESTAMP: WINDOW_START_TIMESTAMP}
