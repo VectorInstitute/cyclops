@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 from dataclasses import dataclass
+from torch.utils.data import TensorDataset, DataLoader
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
 class Data:

@@ -3,8 +3,9 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 import torch
-from dataset import Data
-from temporal_models import RNNModel, LSTMModel, GRUModel, LSTMCellModel
+from .dataset import Data
+from .models import RNNModel, LSTMModel, GRUModel
+from .metrics import *
 
 def get_device():
     if torch.cuda.is_available():
@@ -87,7 +88,7 @@ def flatten_to_sequence(X):
     """
     Turn pandas dataframe into sequence
     Inputs:
-        X (pd.DataFrame): a multiindex dataframe of MIMICIII data
+        X (pd.DataFrame): a multiindex dataframe of GEMINI data
         vect (tuple) (optional): (timesteps, non-time-varying columns, time-varying columns, vectorizer(dict)(a mapping between an item and its index))
     Returns:
         X_seq (np.ndarray): Input 3-dimensional input data with the [n_samples, n_features, n_hours]
@@ -102,32 +103,6 @@ def forward_imputer(df):
     imputed_df=df.fillna(method='ffill').unstack().fillna(0)
     imputed_df.sort_index(axis=1, inplace=True)
     return(df)
-
-def simple_imputer(df,train_subj):
-    idx = pd.IndexSlice
-    df = df.copy()
-    
-    df_out = df.loc[:, idx[:, ['mean', 'count']]]
-    icustay_means = df_out.loc[:, idx[:, 'mean']].groupby(ID_COLS).mean()
-    global_means = df_out.loc[idx[train_subj,:], idx[:, 'mean']].mean(axis=0)
-    
-    df_out.loc[:,idx[:,'mean']] = df_out.loc[:,idx[:,'mean']].groupby(ID_COLS).fillna(
-        method='ffill'
-    ).groupby(ID_COLS).fillna(icustay_means).fillna(global_means)
-    
-    df_out.loc[:, idx[:, 'count']] = (df.loc[:, idx[:, 'count']] > 0).astype(float)
-    df_out.rename(columns={'count': 'mask'}, level='Aggregation Function', inplace=True)
-    
-    is_absent = (1 - df_out.loc[:, idx[:, 'mask']])
-    hours_of_absence = is_absent.cumsum()
-    time_since_measured = hours_of_absence - hours_of_absence[is_absent==0].fillna(method='ffill')
-    time_since_measured.rename(columns={'mask': 'time_since_measured'}, level='Aggregation Function', inplace=True)
-
-    df_out = pd.concat((df_out, time_since_measured), axis=1)
-    df_out.loc[:, idx[:, 'time_since_measured']] = df_out.loc[:, idx[:, 'time_since_measured']].fillna(100)
-    
-    df_out.sort_index(axis=1, inplace=True)
-    return df_out
 
 def get_data(X,y):
     """Convert pandas dataframe to dataset.
@@ -144,22 +119,20 @@ def get_data(X,y):
     target = torch.tensor(y,dtype=torch.float32)
     return Data(inputs, target)
 
-def get_scaler(scaler):
-    """Get scaler.
+def process_outcome(outcome, static):
+    if outcome == "mortality":
+        static['mortality_derived'] = np.where(
+            static["discharge_disposition"].isin([7, 66, 72, 73]), 1, 0
+        )
+    elif outcome == "length_of_stay_in_er":
+        m1 = (static[outcome]>=0) & (static[outcome]<7)
+        m2 = (static[outcome]>=7) & (static[outcome]<14)
+        m3 = (static[outcome]>=14) & (static[outcome]<30)
 
-    Parameters
-    ----------
-    scaler: string
-        String indicating which scaler to retrieve.
-
-    """ 
-    scalers = {
-        "minmax": MinMaxScaler,
-        "standard": StandardScaler,
-        "maxabs": MaxAbsScaler,
-        "robust": RobustScaler,
-    }
-    return scalers.get(scaler.lower())()
+        vals = [1, 2, 3]
+        default = 4
+        static['los_er_derived'] = np.select([m1,m2,m3], vals, default=default)
+    return(static)
 
 def get_temporal_model(model, model_params):
     """Get temporal model.
@@ -173,18 +146,9 @@ def get_temporal_model(model, model_params):
     models = {
         "rnn": RNNModel,
         "lstm": LSTMModel,
-        "gru": GRUModel,
-        "lstmcell": LSTMCellModel
+        "gru": GRUModel
     }
     return models.get(model.lower())(**model_params)
-
-def format_predictions(predictions, values, tags, df_test):
-    vals = np.concatenate(values, axis=0).ravel()
-    preds = np.concatenate(predictions, axis=0).ravel()
-    tags = np.concatenate(tags, axis=0).ravel()
-    df_result = pd.DataFrame(data={"value": vals, "prediction": preds, "tag": tags}, index=df_test.head(len(vals)).index)
-    df_result = df_result.sort_index()
-    return df_result
 
 def impute_simple(df, time_index=None):
     """
