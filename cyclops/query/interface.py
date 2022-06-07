@@ -38,7 +38,7 @@ class QueryInterface:
 
     database: Database
     query: TableTypes
-    data: Union[pd.DataFrame, None] = None
+    data: Optional[pd.DataFrame] = None
     _run_args: Dict = field(default_factory=dict)
 
     def run(
@@ -76,7 +76,10 @@ class QueryInterface:
             Name of file. Extension will be .gzip.
 
         """
-        save_dataframe(self.data, folder_path, file_name, prefix=QUERY)
+        if self.data is None:
+            raise ValueError("The query interface must first be run before saving.")
+        
+        save_dataframe(self.data, folder_path, file_name)
 
     def clear_data(self) -> None:
         """Clear data container.
