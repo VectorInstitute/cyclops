@@ -18,7 +18,7 @@ class RNNModel(nn.Module):
         Dropout probability for dropout layer 
 
     """
-    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob):
+    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob, last_timestep_only=False):
         super(RNNModel, self).__init__()
         self.device = device
         self.hidden_dim = hidden_dim
@@ -27,11 +27,13 @@ class RNNModel(nn.Module):
             input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob
         )
         self.fc = nn.Linear(hidden_dim, output_dim)
+        self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
         h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
         out, h0 = self.rnn(x, h0.detach())
-        out = out[:, -1, :]
+        if self.last_timestep_only:
+            out = out[:, -1, :]
         out = self.fc(out)
         return out
     
@@ -52,7 +54,7 @@ class GRUModel(nn.Module):
         Dropout probability for dropout layer 
 
     """
-    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob):
+    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob,last_timestep_only=False):
         super(GRUModel, self).__init__()
         self.device = device
         self.layer_dim = layer_dim
@@ -61,11 +63,13 @@ class GRUModel(nn.Module):
             input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob
         )
         self.fc = nn.Linear(hidden_dim, output_dim)  
+        self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
         h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
         out, _ = self.gru(x, h0.detach())
-        out = out[:, -1, :]
+        if self.last_timestep_only:
+            out = out[:, -1, :]
         out = self.fc(out)
         return out
     
@@ -86,7 +90,7 @@ class LSTMModel(nn.Module):
         Dropout probability for dropout layer 
 
     """
-    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob):
+    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob, last_timestep_only=False):
         super(LSTMModel, self).__init__()
         self.device = device
         self.hidden_dim = hidden_dim
@@ -96,43 +100,13 @@ class LSTMModel(nn.Module):
         )
         self.fc = nn.Linear(hidden_dim, output_dim)       
         self.sigmoid = nn.Sigmoid()
+        self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
         h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
         c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
         out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
-        out = out[:, -1, :]
-        out = self.sigmoid(self.fc(out))
+        if self.last_timestep_only:    
+            out = out[:, -1 , :]
+        out = self.fc(out)
         return out
-    
-class LSTMCellModel(nn.Module):
-    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob):
-        super(LSTMCellModel, self).__init__()
-        self.device = device
-        self.layer_dim = layer_dim
-        self.hidden_dim = hidden_dim
-        self.lstm = nn.LSTMCell(input_size=input_dim, hidden_size=hidden_dim)
-            
-        self.dropout = nn.Dropout(p=dropout_prob)
-        self.relu = nn.ReLU()
-        self.hidden2tag = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, x, rolling=False, hn=None, cn=None):
-        rolling=0
-
-        outputs = []
-        for i in range(x.size(1)):
-            if (i==0)&(hn is None):
-                hn, cn = self.lstm(x[:, i])
-            else:
-                hn, cn = self.lstm(x[:, i], (hn, cn))
-                # print(torch.isnan(hn).sum().sum().sum())
-            out = self.relu(hn)
-            out = self.dropout(out)
-            out = self.hidden2tag(out)
-            outputs.append(out)
-
-        if rolling:
-          return torch.cat(outputs, dim=1)
-        else:
-          return outputs[-1]
