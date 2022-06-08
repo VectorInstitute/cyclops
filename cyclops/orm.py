@@ -5,6 +5,10 @@ import logging
 import socket
 from typing import Optional
 
+import os
+import csv
+import pyarrow.csv as pv
+import pyarrow.parquet as pq
 import pandas as pd
 from sqlalchemy import MetaData, create_engine, inspect
 from sqlalchemy.orm import sessionmaker
@@ -18,6 +22,7 @@ from cyclops.query.util import (
     TableTypes,
     table_params_to_type,
 )
+from cyclops.utils.file import exchange_extension, process_file_save_path
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -155,3 +160,67 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         LOGGER.info("Query returned successfully!")
         return data
+
+    @time_function
+    @table_params_to_type(Select)
+    def save_query_to_csv(
+        self,
+        query: TableTypes,
+        path: str
+    ) -> None:
+        """Save query in a .csv format.
+
+        Parameters
+        ----------
+        query: cyclops.query.util.TableTypes
+            Query to save.
+        path:
+            Save path.
+
+        Returns
+        -------
+        pd.DataFrame
+            Extracted data from query.
+
+        """
+        path = process_file_save_path(path, "csv")
+        
+        with self.session.connection():
+            result = self.engine.execute(query)
+            fh = open(path, 'w')
+            outcsv = csv.writer(fh)
+            outcsv.writerow(result.keys())
+            outcsv.writerows(result)
+            fh.close()
+
+
+    @time_function
+    @table_params_to_type(Select)
+    def save_query_to_parquet(
+        self,
+        query: TableTypes,
+        path: str
+    ) -> None:
+        """Save query in a .parquet format.
+
+        Parameters
+        ----------
+        query: cyclops.query.util.TableTypes
+            Query to save.
+        path:
+            Save path.
+
+        Returns
+        -------
+        pd.DataFrame
+            Extracted data from query.
+
+        """
+        path = process_file_save_path(path, "parquet")
+        
+        # Save to CSV, load with pyarrow, save to Parquet
+        csv_path = exchange_extension(path, "csv")
+        self.save_query_to_csv(query, csv_path)
+        table = pv.read_csv(csv_path)
+        os.remove(csv_path)
+        pq.write_table(table, path)

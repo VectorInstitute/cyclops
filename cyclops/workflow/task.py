@@ -57,8 +57,8 @@ class QueryTask(BaseTask):
     """Data querying task."""
 
     query_interface = luigi.Parameter()
-    query_name = luigi.OptionalParameter(default="data")
-
+    output_file = luigi.OptionalParameter("data.parquet")
+    
     def run(self) -> None:
         """Run querying task."""
         LOGGER.info("Running query task!")
@@ -66,21 +66,15 @@ class QueryTask(BaseTask):
 
         if not isinstance(self.query_interface, QueryInterface):
             raise ValueError("Query task accepts a query interface.")
-
-        self.query_interface.run()  # pylint: disable=no-member
-        self.query_interface.save(  # pylint: disable=no-member
-            folder_path=cfg.output_folder, file_name=self.query_name
-        )
+        
+        path = os.path.join(self.output_folder, self.output_file)
+        self.query_interface.save(path)  # pylint: disable=no-member
+        self.output()
         self.query_interface.clear_data()  # pylint: disable=no-member
 
     def output(self):
         """Query data saved as parquet files."""
-        cfg = self.read_config()
-        output_files = glob.glob(
-            os.path.join(cfg.output_folder, QUERY + UNDERSCORE + "*.gzip")
-        )
-
-        yield [luigi.LocalTarget(output_file) for output_file in output_files]
+        return luigi.LocalTarget(self.output_file)
 
 
 @inherits(BaseTask)
