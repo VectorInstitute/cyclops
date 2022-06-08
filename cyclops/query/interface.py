@@ -64,7 +64,6 @@ class QueryInterface:
 
         return self.data
 
-
     def save(self, path: str, file_format: str = "parquet") -> None:
         """Save the query.
 
@@ -80,7 +79,7 @@ class QueryInterface:
         if self.data is not None:
             save_dataframe(self.data, path, file_format=file_format)
             return
-        
+
         # Save without running
         if file_format == "csv":
             self.database.save_query_to_csv(self.query, path)
@@ -88,7 +87,6 @@ class QueryInterface:
             self.database.save_query_to_parquet(self.query, path)
         else:
             raise ValueError("Invalid file format specified.")
-
 
     def clear_data(self) -> None:
         """Clear data container.
@@ -162,18 +160,22 @@ class QueryInterfaceProcessed:
 
         return self.data
 
-    def save(self, folder_path: str, file_name: str) -> None:
-        """Save queried data in Parquet format.
+    def save(self, path: str, file_format: str = "parquet") -> None:
+        """Save the processed query.
 
         Parameters
         ----------
-        folder_path: str
-            Path to directory where the file can be saved.
-        file_name: str
-            Name of file. Extension will be .gzip.
+        save_path: str
+            Path where the file will be saved.
+        file_format: str
+            File format of the file to save.
 
         """
-        save_dataframe(self.data, folder_path, file_name)
+        # The query must be run in order to be processed.
+        if self.data is None:
+            self.run()
+
+        save_dataframe(self.data, path, file_format=file_format)
 
     def clear_data(self) -> None:
         """Clear data container.

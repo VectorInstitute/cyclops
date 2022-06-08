@@ -1,15 +1,15 @@
 """Object Relational Mapper (ORM) using sqlalchemy."""
 
 import argparse
+import csv
 import logging
+import os
 import socket
 from typing import Optional
 
-import os
-import csv
+import pandas as pd
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
-import pandas as pd
 from sqlalchemy import MetaData, create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.selectable import Select
@@ -71,7 +71,6 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         """
         self.config = config
-        self.engine = None
         self.inspector = None
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -163,11 +162,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
     @time_function
     @table_params_to_type(Select)
-    def save_query_to_csv(
-        self,
-        query: TableTypes,
-        path: str
-    ) -> None:
+    def save_query_to_csv(self, query: TableTypes, path: str) -> None:
         """Save query in a .csv format.
 
         Parameters
@@ -184,23 +179,17 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         """
         path = process_file_save_path(path, "csv")
-        
+
         with self.session.connection():
             result = self.engine.execute(query)
-            fh = open(path, 'w')
-            outcsv = csv.writer(fh)
-            outcsv.writerow(result.keys())
-            outcsv.writerows(result)
-            fh.close()
-
+            with open(path, "w", encoding="utf-8") as file_descriptor:
+                outcsv = csv.writer(file_descriptor)
+                outcsv.writerow(result.keys())
+                outcsv.writerows(result)
 
     @time_function
     @table_params_to_type(Select)
-    def save_query_to_parquet(
-        self,
-        query: TableTypes,
-        path: str
-    ) -> None:
+    def save_query_to_parquet(self, query: TableTypes, path: str) -> None:
         """Save query in a .parquet format.
 
         Parameters
@@ -217,7 +206,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         """
         path = process_file_save_path(path, "parquet")
-        
+
         # Save to CSV, load with pyarrow, save to Parquet
         csv_path = exchange_extension(path, "csv")
         self.save_query_to_csv(query, csv_path)

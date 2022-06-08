@@ -58,15 +58,14 @@ class QueryTask(BaseTask):
 
     query_interface = luigi.Parameter()
     output_file = luigi.OptionalParameter("data.parquet")
-    
+
     def run(self) -> None:
         """Run querying task."""
         LOGGER.info("Running query task!")
-        cfg = self.read_config()
 
         if not isinstance(self.query_interface, QueryInterface):
             raise ValueError("Query task accepts a query interface.")
-        
+
         path = os.path.join(self.output_folder, self.output_file)
         self.query_interface.save(path)  # pylint: disable=no-member
         self.output()
@@ -101,9 +100,9 @@ class NormalizeEventsTask(BaseTask):
                         QUERY + UNDERSCORE, EMPTY_STRING
                     )
                 )[0]
-                save_dataframe(
-                    dataframe, cfg.output_folder, file_name, prefix=NORMALISE
-                )
+
+                path = os.path.join(self.output_folder, file_name)
+                save_dataframe(dataframe, path)
 
     def output(self):
         """Query data saved as parquet files."""

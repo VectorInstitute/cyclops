@@ -26,8 +26,9 @@ def test_query_interface(
     query_interface.run()
 
     query_interface.data = test_data
-    query_interface.save("test_save", "test_features")
-    loaded_data = pd.read_parquet(os.path.join("test_save", "test_features.gzip"))
+    path = os.path.join("test_save", "test_features.parquet")
+    query_interface.save(path)
+    loaded_data = pd.read_parquet(path)
     assert loaded_data.equals(test_data)
     shutil.rmtree("test_save")
     query_interface.clear_data()
@@ -45,8 +46,9 @@ def test_query_interface_processed(
     query_interface.run()
 
     query_interface.data = test_data
-    query_interface.save("test_save", "test_features")
-    loaded_data = pd.read_parquet(os.path.join("test_save", "test_features.gzip"))
+    path = os.path.join("test_save", "test_features.parquet")
+    query_interface.save(path)
+    loaded_data = pd.read_parquet(path)
     assert loaded_data.equals(test_data)
     shutil.rmtree("test_save")
     query_interface.clear_data()

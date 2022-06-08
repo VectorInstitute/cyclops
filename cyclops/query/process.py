@@ -968,17 +968,16 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         self.table_cols = to_list_optional(table_cols)
         self.join_table_cols = to_list_optional(join_table_cols)
 
-
     def join_on(self, table: Subquery, isouter: bool) -> Select:
         """Join on the equality of values in columns of same name in both tables.
-        
+
         Parameters
         ----------
         table: sqlalchemy.sql.selectable.Subquery
             Table to join.
         isouter: bool
             Whether to join as inner or outer.
-        
+
         Returns
         -------
         sqlalchemy.sql.selectable.Select
@@ -990,12 +989,10 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
         # Process on columns
         on_table_cols = [
-            col_obj if isinstance(col_obj, str) else col_obj[0]
-            for col_obj in self.on_
+            col_obj if isinstance(col_obj, str) else col_obj[0] for col_obj in self.on_
         ]
         on_join_table_cols = [
-            col_obj if isinstance(col_obj, str) else col_obj[1]
-            for col_obj in self.on_
+            col_obj if isinstance(col_obj, str) else col_obj[1] for col_obj in self.on_
         ]
 
         table = process_checks(table, cols=none_add(self.table_cols, on_table_cols))
@@ -1013,9 +1010,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         if self.on_to_type is not None:
             for i, type_ in enumerate(self.on_to_type):
                 table = Cast(on_table_cols[i], type_)(table)
-                self.join_table = Cast(on_join_table_cols[i], type_)(
-                    self.join_table
-                )
+                self.join_table = Cast(on_join_table_cols[i], type_)(self.join_table)
 
         cond = and_(
             *[
@@ -1026,9 +1021,8 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         )
 
         table = select(table.join(self.join_table, cond, isouter=isouter))
-    
-        return table
 
+        return table
 
     @table_params_to_type(Subquery)
     def __call__(self, table: TableTypes) -> Subquery:
@@ -1051,17 +1045,18 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
                 f"""how argument {self.how} must be in the
                 supported {', '.join(supported_how)}."""
             )
-        
+
         if self.how == "cartesian":
-            if self.on is not None or self.cond is not None:
-                raise ValueError("Cannot specify on or cond arguments on a Cartesian join.")
+            if self.on_ is not None or self.cond is not None:
+                raise ValueError(
+                    "Cannot specify on or cond arguments on a Cartesian join."
+                )
         else:
             isouter = self.how == "outer"
-        
-        
+
         if self.on_ is not None:
             table = self.join_on(table, isouter)
-        
+
         else:
             # Filter columns
             if self.table_cols is not None:
@@ -1075,10 +1070,12 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
             # Join as a Cartesian product
             else:
-                if how != "cartesian":
-                    raise ValueError("""Must specify how='cartesian' to perform a Cartesian product.
-                    Otherwise, specify a condition for an inner or outer join.""")
-                
+                if self.how != "cartesian":
+                    raise ValueError(
+                        """Must specify how='cartesian' to perform a Cartesian product.
+                    Otherwise, specify a condition for an inner or outer join."""
+                    )
+
                 LOGGER.warning("A Cartesian product has been queried.")
                 table = select(table, self.join_table)
 
@@ -1833,7 +1830,7 @@ class GroupByAggregate:
                 raise ValueError(
                     f"Invalid aggfuncs specified. Allowed values are {allowed_strs}."
                 )
-        
+
         all_names = groupby_names + aggfunc_names
         if len(all_names) != len(list(set(all_names))):
             raise ValueError(

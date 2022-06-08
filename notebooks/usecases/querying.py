@@ -4,9 +4,7 @@ from typing import Optional
 
 from sqlalchemy.sql.selectable import Subquery
 
-from cyclops.query import gemini
 import cyclops.query.process as qp
-from cyclops.query.interface import QueryInterface
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
@@ -15,25 +13,25 @@ from cyclops.processors.column_names import (
     SEX,
     SUBJECT_ID,
 )
+from cyclops.query import gemini
+from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
     TableTypes,
     assert_table_has_columns,
     table_params_to_type,
 )
 
-#from constants import 
-
 
 @table_params_to_type(Subquery)
 @assert_table_has_columns([ENCOUNTER_ID, SUBJECT_ID, ADMIT_TIMESTAMP])
 def get_most_recent_encounter(table: TableTypes) -> QueryInterface:
     """Get the most recent encounter for each patient.
-    
+
     Parameters
     ----------
     table: cyclops.query.util.TableTypes
         Table for which to get the most recent encounters.
-    
+
     Returns
     -------
         The table.
@@ -60,12 +58,12 @@ def get_most_recent_encounter(table: TableTypes) -> QueryInterface:
 
 def get_encounters(limit: Optional[int] = None) -> QueryInterface:
     """Filter and get the most recent encounter for each patient.
-    
+
     Parameters
     ----------
     limit: int, optional
         Optionally limit the query for the purposes of debugging.
-    
+
     Returns
     -------
         The table.
@@ -77,37 +75,37 @@ def get_encounters(limit: Optional[int] = None) -> QueryInterface:
         died=True,
         died_binarize_col="outcome_death",
     ).query
-    
+
     # DEBUGGING
     if limit is not None:
         table = qp.Limit(limit)(table)
 
     # Do not do any further filtering before this point since
     # we count previous encounters in the below function.
-    #table = most_recent_encounter(table).query
-    
+    # table = most_recent_encounter(table).query
+
     return gemini.get_interface(table)
 
 
 def get_non_cardiac_diagnoses(limit: Optional[int] = None) -> QueryInterface:
     """Get non-cardiac diagnoses.
-    
+
     Parameters
     ----------
     limit: int, optional
         Optionally limit the query for the purposes of debugging.
-    
+
     Returns
     -------
         The table.
 
     """
     table = gemini.diagnoses(diagnosis_types="M").query
-    
+
     # DEBUGGING
     if limit is not None:
         table = qp.Limit(limit)(table)
-    
+
     table = qp.Drop(["ccsr_3", "ccsr_4", "ccsr_5"])(table)
 
     # Drop ER diagnoses
@@ -129,7 +127,7 @@ def get_cohort(limit: Optional[int] = None) -> QueryInterface:
     ----------
     limit: int, optional
         Optionally limit the query for the purposes of debugging.
-    
+
     Returns
     -------
         The table.
@@ -162,7 +160,7 @@ def get_cohort(limit: Optional[int] = None) -> QueryInterface:
 
     table = qp.ReorderAfter(ADMIT_TIMESTAMP, SUBJECT_ID)(table)
 
-    diagnoses = non_cardiac_diagnoses(limit=limit).query
+    diagnoses = get_non_cardiac_diagnoses(limit=limit).query
 
     table = qp.Join(diagnoses, on=ENCOUNTER_ID)(table)
 
