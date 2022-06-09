@@ -40,6 +40,7 @@ EVENT_NAME = "event_name"
 EVENT_VALUE = "event_value"
 EVENT_VALUE_UNIT = "event_value_unit"
 EVENT_TIMESTAMP = "event_timestamp"
+EVENT_CATEGORY = "event_category"
 
 RESTRICT_TIMESTAMP = "restrict_timestamp"
 

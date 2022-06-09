@@ -2,6 +2,7 @@
 
 
 import logging
+import os
 
 import dash
 import dash_bootstrap_components as dbc
@@ -11,20 +12,29 @@ from dash import Input, Output, State, dcc, html
 from flask_caching import Cache
 
 from codebase_ops import get_log_file_path
-from cyclops.plotter import plot_histogram, plot_temporal_features
+from cyclops.plotter import plot_histogram, plot_temporal_features, plot_timeline
+from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.processors.constants import STATIC, TEMPORAL
 from cyclops.utils.log import setup_logging
 
 CACHE_TIMEOUT = 3000
 EVALUATION = "evaluation"
+TIMELINE = "timeline"
 FEATURE_STORE = "feature_store"
 DIRECT_LOAD = "direct_load"
 
 
-temporal_features = pd.read_parquet("./test_features_temporal.gzip")
-static_features = pd.read_parquet("./test_features_static.gzip")
+dir_path = os.path.dirname(os.path.abspath(__file__))
+temporal_features = pd.read_parquet(
+    os.path.join(dir_path, "test_features_temporal.gzip")
+)
+static_features = pd.read_parquet(os.path.join(dir_path, "test_features_static.gzip"))
 encounters = temporal_features.index.get_level_values(0)
 num_encounters = len(encounters)
+
+events = pd.read_parquet(os.path.join(dir_path, "events.gzip"))
+encounters_events = list(events[ENCOUNTER_ID].unique())[0:80]
+num_encounters_events = len(encounters_events)
 
 
 # Initialize app.
@@ -58,11 +68,12 @@ sidebar = html.Div(
         dcc.RadioItems(
             id="view-mode",
             options=[
+                {"label": "Encounter Timeline", "value": TIMELINE},
                 {"label": "Static Features", "value": STATIC},
                 {"label": "Temporal Features", "value": TEMPORAL},
                 {"label": "Evaluation", "value": EVALUATION},
             ],
-            value=TEMPORAL,
+            value=TIMELINE,
             labelStyle=SIDEBAR_LIST_STYLE,
         ),
         html.Br(),
@@ -92,6 +103,7 @@ timeseries_layout = html.Div(
                     dcc.Graph(id="temporal-features"),
                     style={"overflowY": "scroll", "height": 500},
                 ),
+                html.Br(),
                 dcc.Dropdown(
                     id="temporal-features-dropdown",
                     value=temporal_features.columns[0],
@@ -102,12 +114,40 @@ timeseries_layout = html.Div(
                     multi=True,
                     searchable=True,
                 ),
+                html.Div(id="encounter-caption"),
                 dcc.Slider(
                     id="encounter-slider",
                     min=0,
                     max=(num_encounters - 1),
                     step=1,
                     value=0,
+                    marks=None,
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        )
+    ],
+    style=TEXT_ALIGN_CENTER,
+)
+
+
+timeline_layout = html.Div(
+    [
+        html.Div(
+            [
+                html.Div(
+                    dcc.Graph(id="timeline"),
+                    style={"overflowY": "scroll", "height": 500},
+                ),
+                html.Br(),
+                html.Div(id="encounter-events-caption"),
+                dcc.Slider(
+                    id="encounter-events-slider",
+                    min=0,
+                    max=(num_encounters_events - 1),
+                    step=1,
+                    value=0,
+                    marks=None,
                     tooltip={"placement": "bottom", "always_visible": True},
                 ),
             ]
@@ -215,14 +255,35 @@ def update_view(view_mode):
     if view_mode == STATIC:
         return static_layout
     if view_mode == EVALUATION:
-        return timeseries_layout
+        return timeline_layout
+    if view_mode == TIMELINE:
+        return timeline_layout
 
-    return timeseries_layout
+    return timeline_layout
+
+
+@app.callback(
+    [
+        dash.dependencies.Output("timeline", "figure"),
+        dash.dependencies.Output("encounter-events-caption", "children"),
+    ],
+    {
+        **{"index": dash.dependencies.Input("encounter-events-slider", "value")},
+    },
+)
+def update_timeline_plot(index):
+    """Update timeline plot."""
+    events_encounter = events.loc[events[ENCOUNTER_ID] == encounters_events[index]]
+    return [
+        plot_timeline(events_encounter, return_fig=True),
+        f'Encounter ID: "{encounters_events[index]}"',
+    ]
 
 
 @app.callback(
     [
         dash.dependencies.Output("temporal-features", "figure"),
+        dash.dependencies.Output("encounter-caption", "children"),
     ],
     {
         **{"index": dash.dependencies.Input("encounter-slider", "value")},
@@ -233,12 +294,14 @@ def update_view(view_mode):
         },
     },
 )
-def update_timeseries_graph(index, feature_names):
+def update_temporal_features_plot(index, feature_names):
     """Update timeseries plot."""
+    features_encounter = temporal_features.loc[encounters[index]]
     return [
         plot_temporal_features(
-            temporal_features, encounters[index], names=feature_names, return_fig=True
+            features_encounter, names=feature_names, return_fig=True
         ),
+        'Encounter ID: "{encounters[index]}"',
     ]
 
 
@@ -254,7 +317,7 @@ def update_timeseries_graph(index, feature_names):
         },
     },
 )
-def update_histogram_graph(feature_names):
+def update_histogram_plot(feature_names):
     """Update histogram plot of static features."""
     return [
         plot_histogram(static_features, name=feature_names, return_fig=True),
