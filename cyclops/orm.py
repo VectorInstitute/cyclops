@@ -71,8 +71,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         """
         self.config = config
-        self.inspector = None
-
+        
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(SOCKET_CONNECTION_TIMEOUT)
         try:
@@ -85,11 +84,15 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 """Valid server host but port seems open, check if server is up!"""
             )
             return
-        self._create_engine()
+        
+        self.engine = self._create_engine()
+        self.session = self._create_session()
+        self._setup()
+        LOGGER.info("Database setup, ready to run queries!")
 
     def _create_engine(self) -> None:
-        """Attempt to create an engine, connect to DB."""
-        self.engine = create_engine(
+        """Create an engine."""
+        engine = create_engine(
             _get_db_url(
                 self.config.dbms,
                 self.config.user,
@@ -99,15 +102,16 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 self.config.database,
             ),
         )
+        return engine
+
+    def _create_session(self) -> None:
+        """Create session."""
         self.inspector = inspect(self.engine)
 
         # Create a session for using ORM.
         session = sessionmaker(self.engine)
         session.configure(bind=self.engine)
-        self.session = session()
-
-        self._setup()
-        LOGGER.info("Database setup, ready to run queries!")
+        return session()
 
     def _setup(self):
         """Prepare ORM DB."""
@@ -174,8 +178,8 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         Returns
         -------
-        pd.DataFrame
-            Extracted data from query.
+        str
+            Processed save path for upstream use.
 
         """
         path = process_file_save_path(path, "csv")
@@ -186,6 +190,8 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 outcsv = csv.writer(file_descriptor)
                 outcsv.writerow(result.keys())
                 outcsv.writerows(result)
+        
+        return path
 
     @time_function
     @table_params_to_type(Select)
@@ -201,8 +207,8 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         Returns
         -------
-        pd.DataFrame
-            Extracted data from query.
+        str
+            Processed save path for upstream use.
 
         """
         path = process_file_save_path(path, "parquet")
@@ -213,3 +219,4 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         table = pv.read_csv(csv_path)
         os.remove(csv_path)
         pq.write_table(table, path)
+        return path

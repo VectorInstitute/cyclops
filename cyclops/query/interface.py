@@ -74,19 +74,26 @@ class QueryInterface:
         file_format: str
             File format of the file to save.
 
+        Returns
+        -------
+        str
+            Processed save path for upstream use.
+
         """
         # If the query was already run
         if self.data is not None:
-            save_dataframe(self.data, path, file_format=file_format)
-            return
+            path = save_dataframe(self.data, path, file_format=file_format)
+            return path
 
         # Save without running
         if file_format == "csv":
-            self.database.save_query_to_csv(self.query, path)
+            path = self.database.save_query_to_csv(self.query, path)
         elif file_format == "parquet":
-            self.database.save_query_to_parquet(self.query, path)
+            path = self.database.save_query_to_parquet(self.query, path)
         else:
             raise ValueError("Invalid file format specified.")
+        
+        return path
 
     def clear_data(self) -> None:
         """Clear data container.
@@ -170,12 +177,18 @@ class QueryInterfaceProcessed:
         file_format: str
             File format of the file to save.
 
+        Returns
+        -------
+        str
+            Processed save path for upstream use.
+
         """
         # The query must be run in order to be processed.
         if self.data is None:
             self.run()
 
-        save_dataframe(self.data, path, file_format=file_format)
+        path = save_dataframe(self.data, path, file_format=file_format)
+        return path
 
     def clear_data(self) -> None:
         """Clear data container.
