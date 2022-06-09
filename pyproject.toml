@@ -44,7 +44,7 @@ jupyterlab = "^3.4.2"
 luigi = "^3.0.3"
 colorama = "^0.4.4"
 diagrams = "^0.21.1"
-prefect = "^1.2.2"
+prefect = "2.0b6"
 
 [tool.poetry.dev-dependencies]
 
