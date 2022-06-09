@@ -64,7 +64,7 @@ class QueryInterface:
 
         return self.data
 
-    def save(self, path: str, file_format: str = "parquet") -> None:
+    def save(self, path: str, file_format: str = "parquet") -> str:
         """Save the query.
 
         Parameters
@@ -92,7 +92,7 @@ class QueryInterface:
             path = self.database.save_query_to_parquet(self.query, path)
         else:
             raise ValueError("Invalid file format specified.")
-        
+
         return path
 
     def clear_data(self) -> None:
@@ -167,7 +167,7 @@ class QueryInterfaceProcessed:
 
         return self.data
 
-    def save(self, path: str, file_format: str = "parquet") -> None:
+    def save(self, path: str, file_format: str = "parquet") -> str:
         """Save the processed query.
 
         Parameters

@@ -11,7 +11,9 @@ import pandas as pd
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
 from sqlalchemy import MetaData, create_engine, inspect
+from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.selectable import Select
 
 from codebase_ops import get_log_file_path
@@ -71,7 +73,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         """
         self.config = config
-        
+
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(SOCKET_CONNECTION_TIMEOUT)
         try:
@@ -84,13 +86,13 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 """Valid server host but port seems open, check if server is up!"""
             )
             return
-        
+
         self.engine = self._create_engine()
         self.session = self._create_session()
         self._setup()
         LOGGER.info("Database setup, ready to run queries!")
 
-    def _create_engine(self) -> None:
+    def _create_engine(self) -> Engine:
         """Create an engine."""
         engine = create_engine(
             _get_db_url(
@@ -104,7 +106,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         )
         return engine
 
-    def _create_session(self) -> None:
+    def _create_session(self) -> Session:
         """Create session."""
         self.inspector = inspect(self.engine)
 
@@ -166,7 +168,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
     @time_function
     @table_params_to_type(Select)
-    def save_query_to_csv(self, query: TableTypes, path: str) -> None:
+    def save_query_to_csv(self, query: TableTypes, path: str) -> str:
         """Save query in a .csv format.
 
         Parameters
@@ -190,12 +192,12 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 outcsv = csv.writer(file_descriptor)
                 outcsv.writerow(result.keys())
                 outcsv.writerows(result)
-        
+
         return path
 
     @time_function
     @table_params_to_type(Select)
-    def save_query_to_parquet(self, query: TableTypes, path: str) -> None:
+    def save_query_to_parquet(self, query: TableTypes, path: str) -> str:
         """Save query in a .parquet format.
 
         Parameters
