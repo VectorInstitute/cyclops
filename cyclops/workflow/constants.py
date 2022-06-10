@@ -3,4 +3,4 @@
 
 # Workflow stages/step names.
 QUERY = "query"
-NORMALISE = "normalise"
+NORMALIZE = "normalize"

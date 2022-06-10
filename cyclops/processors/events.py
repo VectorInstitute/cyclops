@@ -177,7 +177,7 @@ def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
 
 
 @assert_has_columns([EVENT_NAME])
-def normalise_names(data: pd.DataFrame) -> pd.DataFrame:
+def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event names.
 
     Perform basic cleaning/house-keeping of event names.
@@ -192,20 +192,20 @@ def normalise_names(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalised event names.
+        Output data with normalized event names.
 
     """
     data[EVENT_NAME] = data[EVENT_NAME].apply(remove_text_in_parentheses)
     data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
     log_counts_step(
-        data, "Remove text in parentheses and normalise event names...", columns=True
+        data, "Remove text in parentheses and normalize event names...", columns=True
     )
 
     return data
 
 
 @assert_has_columns([EVENT_VALUE])
-def normalise_values(data: pd.DataFrame) -> pd.DataFrame:
+def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event values.
 
     Perform basic cleaning/house-keeping of event values.
@@ -220,7 +220,7 @@ def normalise_values(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalised event values.
+        Output data with normalized event values.
 
     """
     data[EVENT_VALUE] = data[EVENT_VALUE].apply(
@@ -249,7 +249,7 @@ def normalise_values(data: pd.DataFrame) -> pd.DataFrame:
 
 
 @assert_has_columns([EVENT_VALUE_UNIT])
-def normalise_units(data: pd.DataFrame) -> pd.DataFrame:
+def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event value units.
 
     Perform basic cleaning/house-keeping of event value units.
@@ -263,7 +263,7 @@ def normalise_units(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalised event value units.
+        Output data with normalized event value units.
 
     """
     LOGGER.info("Normalizing units...")
@@ -275,8 +275,8 @@ def normalise_units(data: pd.DataFrame) -> pd.DataFrame:
 
 
 @time_function
-def normalise_events(data) -> pd.DataFrame:
-    """Pre-process and normalise (clean) raw event data.
+def normalize_events(data) -> pd.DataFrame:
+    """Pre-process and normalize (clean) raw event data.
 
     Parameters
     ----------
@@ -293,13 +293,13 @@ def normalise_events(data) -> pd.DataFrame:
 
     log_counts_step(data, "Cleaning raw event data...", columns=True)
     data = data.infer_objects()
-    data = normalise_names(data)
+    data = normalize_names(data)
     data = drop_unsupported(data)
 
     if data[EVENT_VALUE].dtypes == object:
-        data = normalise_values(data)
+        data = normalize_values(data)
 
     if EVENT_VALUE_UNIT in list(data.columns):
-        data = normalise_units(data)
+        data = normalize_units(data)
 
     return data

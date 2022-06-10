@@ -11,7 +11,9 @@ import pandas as pd
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
 from sqlalchemy import MetaData, create_engine, inspect
+from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.selectable import Select
 
 from codebase_ops import get_log_file_path
@@ -71,7 +73,6 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         """
         self.config = config
-        self.inspector = None
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(SOCKET_CONNECTION_TIMEOUT)
@@ -85,11 +86,15 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 """Valid server host but port seems open, check if server is up!"""
             )
             return
-        self._create_engine()
 
-    def _create_engine(self) -> None:
-        """Attempt to create an engine, connect to DB."""
-        self.engine = create_engine(
+        self.engine = self._create_engine()
+        self.session = self._create_session()
+        self._setup()
+        LOGGER.info("Database setup, ready to run queries!")
+
+    def _create_engine(self) -> Engine:
+        """Create an engine."""
+        engine = create_engine(
             _get_db_url(
                 self.config.dbms,
                 self.config.user,
@@ -99,15 +104,16 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 self.config.database,
             ),
         )
+        return engine
+
+    def _create_session(self) -> Session:
+        """Create session."""
         self.inspector = inspect(self.engine)
 
         # Create a session for using ORM.
         session = sessionmaker(self.engine)
         session.configure(bind=self.engine)
-        self.session = session()
-
-        self._setup()
-        LOGGER.info("Database setup, ready to run queries!")
+        return session()
 
     def _setup(self):
         """Prepare ORM DB."""
@@ -162,7 +168,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
     @time_function
     @table_params_to_type(Select)
-    def save_query_to_csv(self, query: TableTypes, path: str) -> None:
+    def save_query_to_csv(self, query: TableTypes, path: str) -> str:
         """Save query in a .csv format.
 
         Parameters
@@ -174,8 +180,8 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         Returns
         -------
-        pd.DataFrame
-            Extracted data from query.
+        str
+            Processed save path for upstream use.
 
         """
         path = process_file_save_path(path, "csv")
@@ -187,9 +193,11 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
                 outcsv.writerow(result.keys())
                 outcsv.writerows(result)
 
+        return path
+
     @time_function
     @table_params_to_type(Select)
-    def save_query_to_parquet(self, query: TableTypes, path: str) -> None:
+    def save_query_to_parquet(self, query: TableTypes, path: str) -> str:
         """Save query in a .parquet format.
 
         Parameters
@@ -201,8 +209,8 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
         Returns
         -------
-        pd.DataFrame
-            Extracted data from query.
+        str
+            Processed save path for upstream use.
 
         """
         path = process_file_save_path(path, "parquet")
@@ -213,3 +221,4 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         table = pv.read_csv(csv_path)
         os.remove(csv_path)
         pq.write_table(table, path)
+        return path

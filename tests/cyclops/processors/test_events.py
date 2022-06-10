@@ -15,13 +15,13 @@ from cyclops.processors.column_names import (
 from cyclops.processors.events import (
     combine_events,
     convert_to_events,
-    normalise_events,
+    normalize_events,
 )
 
 
 @pytest.fixture
-def test_event_data_normalised():
-    """Create event data test input with normalised event values."""
+def test_event_data_normalized():
+    """Create event data test input with normalized event values."""
     input_ = pd.DataFrame(
         index=[0, 1, 2, 4],
         columns=[ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT, "dummy"],
@@ -85,8 +85,8 @@ def test_convert_to_events():
 
 
 @pytest.fixture
-def test_event_data_unnormalised():
-    """Create event data test input with unnormalised event values."""
+def test_event_data_unnormalized():
+    """Create event data test input with unnormalized event values."""
     input_ = pd.DataFrame(
         index=[0, 1, 2, 4],
         columns=[ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT],
@@ -118,18 +118,18 @@ def test_event_data_unnormalised():
     return input_
 
 
-def test_normalise_events(  # pylint: disable=redefined-outer-name
-    test_event_data_unnormalised, test_event_data_normalised
+def test_normalize_events(  # pylint: disable=redefined-outer-name
+    test_event_data_unnormalized, test_event_data_normalized
 ):
-    """Test normalise_events fn."""
-    normalised_events = normalise_events(test_event_data_normalised)
+    """Test normalize_events fn."""
+    normalized_events = normalize_events(test_event_data_normalized)
 
-    assert len(normalised_events[EVENT_NAME].unique()) == 3
-    assert len(normalised_events[EVENT_VALUE_UNIT].unique()) == 3
-    assert "test-a" in list(normalised_events[EVENT_NAME])
-    assert "unit-a" in list(normalised_events[EVENT_VALUE_UNIT])
+    assert len(normalized_events[EVENT_NAME].unique()) == 3
+    assert len(normalized_events[EVENT_VALUE_UNIT].unique()) == 3
+    assert "test-a" in list(normalized_events[EVENT_NAME])
+    assert "unit-a" in list(normalized_events[EVENT_VALUE_UNIT])
 
-    normalised_events = normalise_events(test_event_data_unnormalised)
-    assert normalised_events[EVENT_VALUE][0] == 1.0
-    assert normalised_events[EVENT_VALUE][1] == 1.4
-    assert normalised_events[EVENT_VALUE][2] == 1.2
+    normalized_events = normalize_events(test_event_data_unnormalized)
+    assert normalized_events[EVENT_VALUE][0] == 1.0
+    assert normalized_events[EVENT_VALUE][1] == 1.4
+    assert normalized_events[EVENT_VALUE][2] == 1.2

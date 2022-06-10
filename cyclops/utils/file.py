@@ -81,7 +81,7 @@ def save_dataframe(
     dataframe: pd.DataFrame,
     save_path: str,
     file_format: str = "parquet",
-) -> None:
+) -> str:
     """Save a DataFrame object to file.
 
     Parameters
@@ -92,6 +92,11 @@ def save_dataframe(
         Path where the file will be saved.
     file_format: str
         File format of the file to save.
+
+    Returns
+    -------
+    str
+        Processed save path for upstream use.
 
     """
     save_path = process_file_save_path(save_path, file_format)
@@ -109,3 +114,5 @@ def save_dataframe(
         raise ValueError(
             "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
         )
+
+    return save_path

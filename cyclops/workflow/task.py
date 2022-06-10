@@ -1,122 +1,134 @@
-"""Pipeline module that defines different tasks that can be executed in a workflow."""
+"""Tasks and workflows."""
 
-import argparse
-import glob
 import logging
-import os
+from typing import Union
 
-import luigi
 import pandas as pd
-from luigi.util import inherits
+from prefect import flow, task
 
 from codebase_ops import get_log_file_path
-from cyclops import config
-from cyclops.constants import MIMIC
-from cyclops.processors.column_names import EVENT_NAME, EVENT_TIMESTAMP, EVENT_VALUE
-from cyclops.processors.constants import EMPTY_STRING, UNDERSCORE
-from cyclops.processors.events import normalise_events
-from cyclops.processors.util import has_columns
-from cyclops.query.interface import QueryInterface
-from cyclops.utils.file import save_dataframe
+from cyclops.processors.events import normalize_events
+from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.utils.log import setup_logging
-from cyclops.workflow.constants import NORMALISE, QUERY
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-class BaseTask(luigi.Task):
-    """Base task class."""
+@task
+def run_query(query_interface: Union[QueryInterface, QueryInterfaceProcessed]):
+    """Task to run a query.
 
-    config_path = luigi.Parameter()
-    output_folder = luigi.Parameter(default=None)
+    Parameters
+    ----------
+    query_interface: cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
+        Query interface.
 
-    def create_output_folder(self) -> None:
-        """Create folder where output files from running task are stored."""
-        os.makedirs(self.output_folder, exist_ok=True)
+    Returns
+    -------
+    pandas.DataFrame
+        Queried data.
 
-    def read_config(self) -> argparse.Namespace:
-        """Read in config from config_path, override params with luigi input params.
-
-        Returns
-        -------
-        argparse.Namespace
-            Configuration stored in object.
-
-        """
-        cfg = config.read_config(self.config_path)
-        if self.output_folder:
-            cfg.output_folder = self.output_folder
-
-        return cfg
+    """
+    return query_interface.run()
 
 
-@inherits(BaseTask)
-class QueryTask(BaseTask):
-    """Data querying task."""
+@task
+def save_query(
+    query_interface: Union[QueryInterface, QueryInterfaceProcessed],
+    path: str,
+    file_format: str,
+):
+    """Task to save a query.
 
-    query_interface = luigi.Parameter()
-    output_file = luigi.OptionalParameter("data.parquet")
+    Parameters
+    ----------
+    query_interface: cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
+        Query interface.
 
-    def run(self) -> None:
-        """Run querying task."""
-        LOGGER.info("Running query task!")
+    Returns
+    -------
+    str
+        Processed save path for upstream use.
 
-        if not isinstance(self.query_interface, QueryInterface):
-            raise ValueError("Query task accepts a query interface.")
-
-        path = os.path.join(self.output_folder, self.output_file)
-        self.query_interface.save(path)  # pylint: disable=no-member
-        self.output()
-        self.query_interface.clear_data()  # pylint: disable=no-member
-
-    def output(self):
-        """Query data saved as parquet files."""
-        return luigi.LocalTarget(self.output_file)
-
-
-@inherits(BaseTask)
-class NormalizeEventsTask(BaseTask):
-    """Clean and normalise event data task."""
-
-    def requires(self) -> luigi.Task:
-        """Require that some queried data through cyclops.query API is available."""
-        return QueryTask(config_path=self.config_path, output_folder=self.output_folder)
-
-    def run(self) -> None:
-        """Run normalise event data task."""
-        LOGGER.info("Running normalise events task!")
-        cfg = self.read_config()
-        query_output_files = glob.glob(
-            os.path.join(cfg.output_folder, QUERY + UNDERSCORE + "*.gzip")
-        )
-        for query_output_file in query_output_files:
-            dataframe = pd.read_parquet(query_output_file)
-            if has_columns(dataframe, [EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP]):
-                dataframe = normalise_events(dataframe, filter_recognised=True)
-                file_name = os.path.splitext(
-                    os.path.basename(query_output_file).replace(
-                        QUERY + UNDERSCORE, EMPTY_STRING
-                    )
-                )[0]
-
-                path = os.path.join(self.output_folder, file_name)
-                save_dataframe(dataframe, path)
-
-    def output(self):
-        """Query data saved as parquet files."""
-        cfg = self.read_config()
-        output_files = glob.glob(
-            os.path.join(cfg.output_folder, NORMALISE + UNDERSCORE + "*.gzip")
-        )
-
-        yield [luigi.LocalTarget(output_file) for output_file in output_files]
+    """
+    return query_interface.save(path, file_format=file_format)
 
 
-if __name__ == "__main__":
-    luigi.build(
-        [NormalizeEventsTask(config_path=MIMIC, output_folder="_test_workflow")],
-        workers=1,
-        local_scheduler=False,
+@task
+def pandas_merge(dataframe_left: pd.DataFrame, dataframe_right: pd.DataFrame, **kwargs):
+    """Task to merge two pandas DataFrames.
+
+    Parameters
+    ----------
+    dataframe_left: pandas.DataFrame
+        DataFrame acting as the 'left' table in the join.
+    dataframe_right: pandas.DataFrame
+        DataFrame acting as the 'right' table in the join.
+    **kwargs
+        Keyword arguments used in pandas.merge.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Merged data.
+
+    """
+    return pd.merge(dataframe_left, dataframe_right, **kwargs)
+
+
+@flow
+def join_queries_flow(query_interface_left, query_interface_right, **pd_merge_kwargs):
+    """Workflow to run two queries and join them.
+
+    Parameters
+    ----------
+    query_interface_left: cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
+        Query acting as the 'left' table in the join.
+    query_interface_right: cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
+        Query acting as the 'right' table in the join.
+    **pd_merge_kwargs
+        Keyword arguments used in pandas.merge.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The joined data.
+
+    """
+    # Run queries
+    query_task_left = run_query(query_interface_left)
+    query_task_right = run_query(query_interface_right)
+
+    # Join
+    join_task = pandas_merge(
+        query_task_left.result(raise_on_failure=True),
+        query_task_right.result(raise_on_failure=True),
+        wait_for=[query_task_left, query_task_right],
+        **pd_merge_kwargs
     )
+
+    return join_task.result(raise_on_failure=True)
+
+
+@flow
+def normalize_events_flow(events):
+    """Task to clean and normalize event data.
+
+    events: pandas.DataFrame
+        Events data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The normalized events data.
+
+    """
+    LOGGER.info("Running normalize events task!")
+
+    return normalize_events(events)
