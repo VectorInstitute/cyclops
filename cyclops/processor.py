@@ -8,7 +8,7 @@ from cyclops.feature_handler import FeatureHandler
 from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.column_names import DIAGNOSIS_CODE, ENCOUNTER_ID
 from cyclops.processors.diagnoses import group_diagnosis_codes_to_trajectories
-from cyclops.processors.events import normalise_events
+from cyclops.processors.events import normalize_events
 from cyclops.processors.statics import compute_statics
 from cyclops.processors.util import gather_columns, has_columns
 
@@ -86,7 +86,7 @@ def run_data_pipeline(  # pylint: disable=too-many-arguments
     aggregated_events = []
     if temporal_data:
         for dataframe in temporal_data:
-            dataframe = normalise_events(dataframe)
+            dataframe = normalize_events(dataframe)
             aggregated_events.append(aggregator(dataframe))
 
     return feature_handler, aggregated_events

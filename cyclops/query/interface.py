@@ -64,21 +64,36 @@ class QueryInterface:
 
         return self.data
 
-    def save(self, folder_path: str, file_name: str) -> None:
-        """Save queried data in Parquet format.
+    def save(self, path: str, file_format: str = "parquet") -> str:
+        """Save the query.
 
         Parameters
         ----------
-        folder_path: str
-            Path to directory where the file can be saved.
-        file_name: str
-            Name of file. Extension will be .gzip.
+        save_path: str
+            Path where the file will be saved.
+        file_format: str
+            File format of the file to save.
+
+        Returns
+        -------
+        str
+            Processed save path for upstream use.
 
         """
-        if self.data is None:
-            raise ValueError("The query interface must first be run before saving.")
+        # If the query was already run
+        if self.data is not None:
+            path = save_dataframe(self.data, path, file_format=file_format)
+            return path
 
-        save_dataframe(self.data, folder_path, file_name)
+        # Save without running
+        if file_format == "csv":
+            path = self.database.save_query_to_csv(self.query, path)
+        elif file_format == "parquet":
+            path = self.database.save_query_to_parquet(self.query, path)
+        else:
+            raise ValueError("Invalid file format specified.")
+
+        return path
 
     def clear_data(self) -> None:
         """Clear data container.
@@ -152,18 +167,28 @@ class QueryInterfaceProcessed:
 
         return self.data
 
-    def save(self, folder_path: str, file_name: str) -> None:
-        """Save queried data in Parquet format.
+    def save(self, path: str, file_format: str = "parquet") -> str:
+        """Save the processed query.
 
         Parameters
         ----------
-        folder_path: str
-            Path to directory where the file can be saved.
-        file_name: str
-            Name of file. Extension will be .gzip.
+        save_path: str
+            Path where the file will be saved.
+        file_format: str
+            File format of the file to save.
+
+        Returns
+        -------
+        str
+            Processed save path for upstream use.
 
         """
-        save_dataframe(self.data, folder_path, file_name)
+        # The query must be run in order to be processed.
+        if self.data is None:
+            self.run()
+
+        path = save_dataframe(self.data, path, file_format=file_format)
+        return path
 
     def clear_data(self) -> None:
         """Clear data container.

@@ -1,8 +1,8 @@
 import datetime
 import numpy as np
-import matplotlib.pyplot as plt 
 import torch
 from datetime import datetime
+import matplotlib.pyplot as plt 
 
 class Optimizer:
     """Optimizer Class.
@@ -47,7 +47,7 @@ class Optimizer:
         # Returns the loss
         return loss.item()
 
-    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):  
+    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1, timesteps=-1):  
         """Train pytorch model.
 
         Parameters
@@ -69,9 +69,12 @@ class Optimizer:
         for epoch in range(1, n_epochs + 1):
             batch_losses = []
             for x_batch, y_batch in train_loader:
-                x_batch = x_batch.view([batch_size, -1, n_features]).to(self.device)
+                x_batch = x_batch.view([batch_size, timesteps, n_features]).to(self.device)
                 y_batch = y_batch.to(self.device)
                 loss = self.train_step(x_batch, y_batch)
+                
+                assert not(np.isnan(loss).any())
+                
                 batch_losses.append(loss)
             training_loss = np.mean(batch_losses)
             self.train_losses.append(training_loss)
@@ -79,11 +82,14 @@ class Optimizer:
             with torch.no_grad():
                 batch_val_losses = []
                 for x_val, y_val in val_loader:
-                    x_val = x_val.view([batch_size, -1, n_features]).to(self.device)
+                    x_val = x_val.view([batch_size, timesteps, n_features]).to(self.device)
                     y_val = y_val.to(self.device)
                     self.model.eval()
                     yhat = self.model(x_val)
                     val_loss = self.loss_fn(y_val, yhat).item()
+                    
+                    assert not(np.isnan(val_loss).any())
+                    
                     batch_val_losses.append(val_loss)
                 validation_loss = np.mean(batch_val_losses)
                 self.val_losses.append(validation_loss)
@@ -95,7 +101,7 @@ class Optimizer:
 
         torch.save(self.model.state_dict(), model_path)
 
-    def evaluate(self, test_loader, batch_size=1, n_features=1):
+    def evaluate(self, test_loader, batch_size=1, n_features=1, timesteps=-1):
         """Evaluate pytorch model.
 
         Parameters
@@ -107,31 +113,21 @@ class Optimizer:
 
         """
         with torch.no_grad():
-            predictions = []
-            values = []
-            tags = []
-            acc = 0
+            y_pred_values = []
+            y_test_labels = []
+            y_pred_labels = []
             for x_test, y_test in test_loader:
-                x_test = x_test.view([batch_size, -1, n_features]).to(self.device)
+                x_test = x_test.view([batch_size, timesteps, n_features]).to(self.device)
                 y_test = y_test.to(self.device)
                 self.model.eval()
-                yhat = self.model(x_test)
-                ## if binary apply sigmoid, if class apply softmax
-                y_pred_tags = self.activation(yhat).argmax(dim=1).cpu().detach().numpy()
-                acc += self.binary_acc(yhat, y_test)
-                predictions.append(yhat.cpu().detach().numpy())
-                values.append(y_test.cpu().detach().numpy())
-                tags.append(y_pred_tags)
-            print('Accuracy: {} %'.format(acc)) 
-            
-        return predictions, values, tags
-    
-    def binary_acc(self,y_pred, y_test):
-        y_pred_tag = torch.round(torch.sigmoid(y_pred))
-
-        correct_results_sum = (y_pred_tag == y_test).sum().float()
-        acc = correct_results_sum/y_test.shape[0]
-        return acc
+                y_hat = self.activation(self.model(x_test))
+                y_pred_values.append(y_hat.cpu().detach())
+                y_test_labels.append(y_test.cpu().detach())
+                y_pred_labels.append(torch.round(y_hat).cpu().detach())
+        y_test_labels = np.concatenate(y_test_labels).flatten()
+        y_pred_labels = np.concatenate(y_pred_labels).flatten()
+        y_pred_values = np.concatenate(y_pred_values).flatten()
+        return y_test_labels, y_pred_values, y_pred_labels
     
     def plot_losses(self):
         plt.plot(self.train_losses, label="Training loss")
