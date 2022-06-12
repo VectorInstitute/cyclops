@@ -763,7 +763,7 @@ class FeatureHandler:
         """
         if aggregate_type == TEMPORAL:
             if encounter_id:
-                plot_temporal_features(self.features[TEMPORAL], encounter_id, names)
+                plot_temporal_features(self.features[TEMPORAL].loc[encounter_id], names)
         if aggregate_type == STATIC:
             plot_histogram(self.features[STATIC], names)
 

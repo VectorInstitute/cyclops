@@ -1,8 +1,9 @@
 """Plotting functions."""
 
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import pandas as pd
+import matplotlib
 import plotly
 import plotly.express as px
 import plotly.graph_objects as go
@@ -55,35 +56,45 @@ def plot_timeline(
 
 
 def plot_histogram(
-    features: pd.DataFrame, name: Optional[list] = None, return_fig: bool = False
+    features: pd.DataFrame, names: Optional[List] = None, return_fig: bool = False
 ) -> Union[plotly.graph_objs.Figure, None]:
     """Plot histogram of static features.
 
     Plots the histogram of static features over all encounters.
-    If 'name' is not specified, then all available features are
+    If 'names' is not specified, then all available features are
     plotted.
 
     Parameters
     ----------
     features: pandas.DataFrame
         Static features for multiple encounters.
-    name: str
-        Name of feature to plot over all encounters.
-
-    Raises
-    ------
-    ValueError
-        If any of the provided names is not present as a column in features data,
-        error is raised.
+    names: list, optional
+        Names of feature to plot over all encounters.
 
     """
-    if name not in features:
-        raise ValueError(f"Provided feature {name} not present in features data!")
-    fig = px.histogram(features[name], marginal="rug")
+    if names is None:
+        feature_names = list(features.columns)
+    else:
+        feature_names = names
+    for name in feature_names:
+        if name not in features:
+            raise ValueError(f"Provided feature {name} not present in features data!")
+    if feature_names:
+        num_plot_rows = len(feature_names)
+    else:
+        num_plot_rows = 1
+    fig = make_subplots(rows=num_plot_rows, cols=1)
+    
+    for idx, name in enumerate(feature_names):
+        fig.add_trace(
+            go.Histogram(x=features[name], name=name),
+            row=idx + 1,
+            col=1,
+        )
     fig.update_layout(
         title="Static Feature Visualization",
         autosize=False,
-        height=PLOT_HEIGHT,
+        height=int(PLOT_HEIGHT * len(feature_names)),
     )
     if return_fig:
         return fig
@@ -94,7 +105,7 @@ def plot_histogram(
 
 def plot_temporal_features(
     features: pd.DataFrame,
-    names: list = None,
+    names: Optional[list] = None,
     return_fig: bool = False,
 ) -> Union[plotly.graph_objs.Figure, None]:
     """Plot temporal features.
@@ -118,8 +129,9 @@ def plot_temporal_features(
 
     """
     if names is None:
-        feature_names = features.columns
-    feature_names = to_list(names)
+        feature_names = list(features.columns)
+    else:
+        feature_names = names
     for name in feature_names:
         if name not in features:
             raise ValueError(f"Provided feature {name} not present in features data!")
@@ -129,6 +141,7 @@ def plot_temporal_features(
     else:
         num_plot_rows = 1
     fig = make_subplots(rows=num_plot_rows, cols=1, x_title="timestep", y_title="value")
+    
     for idx, name in enumerate(feature_names):
         fig.add_trace(
             go.Scatter(x=features.index, y=features[name], name=name),
@@ -168,3 +181,45 @@ def plot_temporal_features(
     fig.show()
 
     return None
+
+
+def setup_plot(
+    plot_handle: matplotlib.axes.SubplotBase,
+    title: str,
+    xlabel: str,
+    ylabel: str,
+    legend: list,
+):
+    """Setup plot by adding title, labels and legend.
+
+    Parameters
+    ----------
+    plot_handle: matplotlib.axes.SubplotBase
+        Subplot handle.
+    title: str
+        Title of plot.
+    xlabel: str
+        Label for x-axis.
+    ylabel: str
+        Label for y-axis.
+    legend: list
+        Legend for different sub-groups.
+    """
+    plot_handle.title.set_text(title)
+    plot_handle.set_xlabel(xlabel, fontsize=20)
+    plot_handle.set_ylabel(ylabel, fontsize=20)
+    plot_handle.legend(legend, loc=1)
+
+
+def set_bars_color(bars: matplotlib.container.BarContainer, color: str):
+    """Set color attribute for bars in bar plots.
+
+    Parameters
+    ----------
+    bars: matplotlib.container.BarContainer
+        Bars.
+    color: str
+        Color.
+    """
+    for bar in bars:
+        bar.set_color(color)

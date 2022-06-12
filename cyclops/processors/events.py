@@ -67,20 +67,17 @@ def combine_events(event_data: Union[pd.DataFrame, List[pd.DataFrame]]) -> pd.Da
         Combined event data.
 
     """
-    must_have_cols = [ENCOUNTER_ID, EVENT_TIMESTAMP, EVENT_NAME, EVENT_VALUE]
-
-    @assert_has_columns(must_have_cols, must_have_cols)
     def add_events(events: pd.DataFrame, events_to_add: pd.DataFrame) -> pd.DataFrame:
         return pd.concat(
             [
                 events,
-                events_to_add[must_have_cols],
+                events_to_add,
             ],
             ignore_index=True,
             axis=0,
         )
 
-    events = pd.DataFrame(columns=must_have_cols)
+    events = pd.DataFrame()
     if isinstance(event_data, pd.DataFrame):
         event_data = [event_data]
     for event_dataframe in event_data:
