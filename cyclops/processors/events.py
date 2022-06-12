@@ -67,6 +67,7 @@ def combine_events(event_data: Union[pd.DataFrame, List[pd.DataFrame]]) -> pd.Da
         Combined event data.
 
     """
+
     def add_events(events: pd.DataFrame, events_to_add: pd.DataFrame) -> pd.DataFrame:
         return pd.concat(
             [

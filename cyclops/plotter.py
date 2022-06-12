@@ -1,12 +1,13 @@
 """Plotting functions."""
 
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import pandas as pd
-import matplotlib
 import plotly
 import plotly.express as px
 import plotly.graph_objects as go
+from matplotlib.axes import SubplotBase
+from matplotlib.container import BarContainer
 from plotly.subplots import make_subplots
 
 from cyclops.processors.column_names import (
@@ -15,7 +16,6 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
 )
-from cyclops.utils.common import to_list
 
 PLOT_HEIGHT = 520
 
@@ -84,7 +84,7 @@ def plot_histogram(
     else:
         num_plot_rows = 1
     fig = make_subplots(rows=num_plot_rows, cols=1)
-    
+
     for idx, name in enumerate(feature_names):
         fig.add_trace(
             go.Histogram(x=features[name], name=name),
@@ -141,7 +141,7 @@ def plot_temporal_features(
     else:
         num_plot_rows = 1
     fig = make_subplots(rows=num_plot_rows, cols=1, x_title="timestep", y_title="value")
-    
+
     for idx, name in enumerate(feature_names):
         fig.add_trace(
             go.Scatter(x=features.index, y=features[name], name=name),
@@ -184,13 +184,13 @@ def plot_temporal_features(
 
 
 def setup_plot(
-    plot_handle: matplotlib.axes.SubplotBase,
+    plot_handle: SubplotBase,
     title: str,
     xlabel: str,
     ylabel: str,
     legend: list,
 ):
-    """Setup plot by adding title, labels and legend.
+    """Set some attributes to plot e.g. title, labels and legend.
 
     Parameters
     ----------
@@ -204,6 +204,7 @@ def setup_plot(
         Label for y-axis.
     legend: list
         Legend for different sub-groups.
+
     """
     plot_handle.title.set_text(title)
     plot_handle.set_xlabel(xlabel, fontsize=20)
@@ -211,7 +212,7 @@ def setup_plot(
     plot_handle.legend(legend, loc=1)
 
 
-def set_bars_color(bars: matplotlib.container.BarContainer, color: str):
+def set_bars_color(bars: BarContainer, color: str):
     """Set color attribute for bars in bar plots.
 
     Parameters
@@ -220,6 +221,7 @@ def set_bars_color(bars: matplotlib.container.BarContainer, color: str):
         Bars.
     color: str
         Color.
+
     """
-    for bar in bars:
-        bar.set_color(color)
+    for bar_ in bars:
+        bar_.set_color(color)
