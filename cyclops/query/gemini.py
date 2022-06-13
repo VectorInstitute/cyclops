@@ -533,6 +533,7 @@ def events(
     event_category: str,
     patient_encounters_table: Optional[TableTypes] = None,
     drop_null_event_names: bool = True,
+    drop_null_event_values: bool = False,
     **process_kwargs,
 ) -> QueryInterface:
     """Query events.
@@ -543,6 +544,10 @@ def events(
         Specify event category, e.g., lab, vitals, intervention, etc.
     patient_encounters_table: cyclops.query.util.TableTypes, optional
         Patient encounters table used to join.
+    drop_null_event_names: bool, default = True
+        Whether to drop rows with null or empty event names.
+    drop_null_event_values: bool, default = False
+        Whether to drop rows with null event values.
 
     Returns
     -------
@@ -568,12 +573,16 @@ def events(
 
     table = get_table(event_category)
 
-    # Remove null events and events with no recorded name
+    # Remove rows with null events/events with no recorded name
     if drop_null_event_names:
         table = qp.DropNulls(EVENT_NAME)(table)
         table = qp.ConditionEquals(EVENT_NAME, EMPTY_STRING, not_=True, to_str=True)(
             table
         )
+    
+    # Remove rows with null event values
+    if drop_null_event_values:
+        table = qp.DropNulls(EVENT_VALUE)(table)
 
     # Process optional operations
     operations: List[tuple] = [
@@ -749,4 +758,26 @@ def derived_variables(**process_kwargs) -> QueryInterface:
     ]
     table = qp.process_operations(table, operations, process_kwargs)
 
+    return QueryInterface(_db, table)
+
+def pharmacy(**process_kwargs) -> QueryInterface:
+    """Query pharmacy data.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    limit: int, optional
+        Limit the number of rows returned.
+    """
+    table = get_table(PHARMACY)
+    
+    operations: List[tuple] = [
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
+    
     return QueryInterface(_db, table)
