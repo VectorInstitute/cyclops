@@ -225,7 +225,7 @@ def patients(**process_kwargs) -> QueryInterface:
         (
             qp.ConditionEquals,
             [DATE_OF_DEATH, None],
-            {"not_": qp.QAP("died", not_=True)},
+            {"not_": qp.QAP("died", fn=lambda x: not x)},
         ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]

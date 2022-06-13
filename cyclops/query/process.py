@@ -5,7 +5,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from sqlalchemy import and_, cast, extract, func, or_, select
 from sqlalchemy.sql.elements import BinaryExpression
@@ -54,12 +54,15 @@ class QAP:
     kwarg_name: str
         Name of keyword argument for which this classs
         acts as a placeholder.
-
+    required: bool
+        Whether the keyword argument is required to run the process.
+    fn: callable
+        A function accepting and transforming the passed in argument.
     """
 
     kwarg_name: str
-    not_: bool = False
     required: bool = True
+    fn: Optional[Callable] = None
 
     def __repr__(self):
         """Return the name of the placeholded keyword argument.
@@ -88,10 +91,8 @@ class QAP:
 
         """
         val = kwargs[self.kwarg_name]
-        if self.not_:
-            if not isinstance(val, bool):
-                raise ValueError(f"Cannot specify not_ on non-boolean QAP {str(self)}.")
-            val = not val
+        if self.fn is not None:
+            return self.fn(val)
 
         return val
 

@@ -39,6 +39,7 @@ from cyclops.query.util import (
     assert_table_has_columns,
     table_params_to_type,
 )
+from cyclops.utils.common import append_if_missing
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -62,8 +63,10 @@ ROOM_TRANSFER = "room_transfer"
 BLOOD_TRANSFUSION = "blood_transfusion"
 IMAGING = "imaging"
 LOOKUP_IMAGING = "lookup_imaging"
+DERIVED_VARIABLES = "derived_variables"
 
 _db = Database(config.read_config(GEMINI))
+
 TABLE_MAP = {
     IP_ADMIN: lambda db: db.public.ip_administrative,
     ER_ADMIN: lambda db: db.public.er_administrative,
@@ -81,6 +84,7 @@ TABLE_MAP = {
     BLOOD_TRANSFUSION: lambda db: db.public.blood_transfusion,
     IMAGING: lambda db: db.public.imaging,
     LOOKUP_IMAGING: lambda db: db.public.lookup_imaging,
+    DERIVED_VARIABLES: lambda db: db.public.derived_variables
 }
 GEMINI_COLUMN_MAP = {
     "genc_id": ENCOUNTER_ID,
@@ -285,7 +289,7 @@ def patient_encounters(
             qp.ConditionEquals,
             ["discharge_description", "Died"],
             {
-                "not_": qp.QAP("died", not_=True),
+                "not_": qp.QAP("died", fn=lambda x: not x),
                 "binarize_col": qp.QAP("died_binarize_col", required=False),
             },
         ),
@@ -661,7 +665,7 @@ def imaging(**process_kwargs) -> QueryInterface:
 
     Other Parameters
     ----------------
-    test_descriptions:
+    test_descriptions: str or list of str
         Get only certain tests with the specified descriptions.
     raw_test_names: str or list of str
         Get only certain raw test names.
@@ -710,6 +714,37 @@ def imaging(**process_kwargs) -> QueryInterface:
             ["imaging_test_name_raw", qp.QAP("raw_test_names")],
             {"to_str": True},
         ),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
+
+    return QueryInterface(_db, table)
+
+
+def derived_variables(**process_kwargs) -> QueryInterface:
+    """Query derived variable data.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    variables: str or list of str
+        Variable columns to keep.
+    limit: int, optional
+        Limit the number of rows returned.
+    """
+    table = get_table(DERIVED_VARIABLES)
+
+    operations: List[tuple] = [
+        (qp.FilterColumns, [
+            qp.QAP(
+                "variables",
+                fn = lambda x: append_if_missing(x, ENCOUNTER_ID, to_start=True)
+            )
+        ], {}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
     table = qp.process_operations(table, operations, process_kwargs)
