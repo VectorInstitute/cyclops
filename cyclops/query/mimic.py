@@ -83,21 +83,30 @@ MIMIC_COLUMN_MAP = {
 
 
 @table_params_to_type(Subquery)
-def get_interface(table: TableTypes) -> QueryInterface:
-    """Get a query interface for a MIMIC table.
+def get_interface(
+    table: TableTypes,
+    process_fn: Optional[Callable] = None,
+) -> Union[QueryInterface, QueryInterfaceProcessed]:
+    """Get a query interface for a GEMINI table.
 
     Parameters
     ----------
     table: cyclops.query.util.TableTypes
         Table to wrap in the interface.
+    process_fn: Callable
+        Process function to apply on the Pandas DataFrame returned from the query.
 
     Returns
     -------
-    cyclops.query.interface.QueryInterface
-        A query interface using the MIMIC database object.
+    cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
+        A query interface using the GEMINI database object.
 
     """
-    return QueryInterface(_db, table)
+    if process_fn is None:
+        return QueryInterface(_db, table)
+    
+    return QueryInterfaceProcessed(_db, table, process_fn)
 
 
 def get_table(

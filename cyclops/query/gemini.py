@@ -1,7 +1,7 @@
 """GEMINI query API."""
 
 import logging
-from typing import List, Optional
+from typing import Callable, List, Union, Optional
 
 from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
@@ -32,7 +32,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import EMPTY_STRING
 from cyclops.query import process as qp
-from cyclops.query.interface import QueryInterface
+from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.util import (
     TableTypes,
     _to_subquery,
@@ -110,21 +110,30 @@ EVENT_CATEGORIES = [LAB, VITALS]
 
 
 @table_params_to_type(Subquery)
-def get_interface(table: TableTypes) -> QueryInterface:
+def get_interface(
+    table: TableTypes,
+    process_fn: Optional[Callable] = None,
+) -> Union[QueryInterface, QueryInterfaceProcessed]:
     """Get a query interface for a GEMINI table.
 
     Parameters
     ----------
     table: cyclops.query.util.TableTypes
         Table to wrap in the interface.
+    process_fn: Callable
+        Process function to apply on the Pandas DataFrame returned from the query.
 
     Returns
     -------
-    cyclops.query.interface.QueryInterface
+    cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
         A query interface using the GEMINI database object.
 
     """
-    return QueryInterface(_db, table)
+    if process_fn is None:
+        return QueryInterface(_db, table)
+    
+    return QueryInterfaceProcessed(_db, table, process_fn)
 
 
 def get_table(table_name: str, rename: bool = True) -> Subquery:
@@ -184,14 +193,14 @@ def er_admin(**process_kwargs) -> QueryInterface:
 
     """
     table = get_table(ER_ADMIN)
-
+    
     # Process optional operations
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, [ER_ADMIT_TIMESTAMP, qp.QAP("before_date")], {}),
         (qp.ConditionAfterDate, [ER_ADMIT_TIMESTAMP, qp.QAP("after_date")], {}),
         (qp.ConditionInYears, [ER_ADMIT_TIMESTAMP, qp.QAP("years")], {}),
         (qp.ConditionInMonths, [ER_ADMIT_TIMESTAMP, qp.QAP("months")], {}),
-        (qp.ConditionIn, ["triage_level", qp.QAP("triage_level")], {"to_int": True}),
+        (qp.ConditionIn, ["triage_level", qp.QAP("triage_level")], {"to_str": True}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
     table = qp.process_operations(table, operations, process_kwargs)
@@ -202,7 +211,9 @@ def er_admin(**process_kwargs) -> QueryInterface:
 @table_params_to_type(Subquery)
 @assert_table_has_columns(er_admin_table=ENCOUNTER_ID)
 def patient_encounters(
-    er_admin_table: Optional[TableTypes] = None, **process_kwargs
+    er_admin_table: Optional[TableTypes] = None,
+    drop_null_subject_ids = True,
+    **process_kwargs
 ) -> QueryInterface:
     """Query GEMINI patient encounters.
 
@@ -241,6 +252,9 @@ def patient_encounters(
 
     """
     table = get_table(IP_ADMIN)
+    
+    if drop_null_subject_ids:
+        table = qp.DropNulls(SUBJECT_ID)(table)
 
     # Get the discharge disposition code descriptions
     lookup_table = get_table(LOOKUP_IP_ADMIN)
