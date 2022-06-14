@@ -708,7 +708,9 @@ class FeatureHandler:
                 min_unique = np.min(unique)
                 if type(min_unique) != str:
                     if np.isnan(min_unique):
-                        self._add_numerical(features[col], aggregate_type=aggregate_type)
+                        self._add_numerical(
+                            features[col], aggregate_type=aggregate_type
+                        )
                         continue
                 # Add as binary.
                 self._add_binary(features[col], aggregate_type=aggregate_type)

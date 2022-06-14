@@ -637,7 +637,7 @@ def blood_transfusions(**process_kwargs) -> QueryInterface:
     return QueryInterface(_db, table)
 
 
-def interventions(**process_kwargs) -> QueryInterface:
+def interventions() -> QueryInterface:
     """Query interventions data.
 
     Returns

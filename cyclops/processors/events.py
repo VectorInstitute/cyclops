@@ -8,8 +8,8 @@ import pandas as pd
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
-    EVENT_NAME,
     EVENT_CATEGORY,
+    EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
@@ -226,9 +226,7 @@ def normalize_categories(data: pd.DataFrame) -> pd.DataFrame:
 
     """
     data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
-    log_counts_step(
-        data, "Normalize event categories...", columns=True
-    )
+    log_counts_step(data, "Normalize event categories...", columns=True)
 
     return data
 
@@ -330,7 +328,7 @@ def normalize_events(data) -> pd.DataFrame:
 
     if EVENT_VALUE_UNIT in list(data.columns):
         data = normalize_units(data)
-        
+
     if EVENT_CATEGORY in list(data.columns):
         data = normalize_categories(data)
 
