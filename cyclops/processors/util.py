@@ -45,7 +45,7 @@ def create_indicator_variables(
     else:
         indicator_features = features
 
-    return features.notnull().astype(int).add_suffix("_indicator")
+    return indicator_features.notnull().astype(int).add_suffix("_indicator")
 
 
 def pivot_aggregated_events_to_features(
