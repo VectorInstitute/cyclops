@@ -207,7 +207,7 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-@assert_has_columns([EVENT_NAME])
+@assert_has_columns([EVENT_CATEGORY])
 def normalize_categories(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize event category names.
 
@@ -222,10 +222,10 @@ def normalize_categories(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Output data with normalized event names.
+        Output data with normalized event categories.
 
     """
-    data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
+    data[EVENT_CATEGORY] = data[EVENT_CATEGORY].apply(to_lower)
     log_counts_step(data, "Normalize event categories...", columns=True)
 
     return data
