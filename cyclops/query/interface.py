@@ -121,13 +121,16 @@ class QueryInterfaceProcessed:
         The query.
     process_fn: Callable
         Process function to apply on the pandas dataframe returned from the query.
-    data: pandas.DataFrame
-        Data returned from executing the query, as Pandas DataFrame.
     process_fn_kwargs: dict
         Keyword arguments for post-processing function.
+
+    Attributes
+    ----------
     _run_args: dict
         Private dictionary attribute to keep track of arguments
         passed to run() method.
+    data: pandas.DataFrame
+        Data returned from executing the query, as Pandas DataFrame.
 
     """
 
