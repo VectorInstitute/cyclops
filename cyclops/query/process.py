@@ -56,13 +56,14 @@ class QAP:
         acts as a placeholder.
     required: bool
         Whether the keyword argument is required to run the process.
-    fn: callable
+    transform_fn: callable
         A function accepting and transforming the passed in argument.
+
     """
 
     kwarg_name: str
     required: bool = True
-    fn: Optional[Callable] = None
+    transform_fn: Optional[Callable] = None
 
     def __repr__(self):
         """Return the name of the placeholded keyword argument.
@@ -91,8 +92,8 @@ class QAP:
 
         """
         val = kwargs[self.kwarg_name]
-        if self.fn is not None:
-            return self.fn(val)
+        if self.transform_fn is not None:
+            return self.transform_fn(val)
 
         return val
 
@@ -1788,7 +1789,7 @@ class GroupByAggregate:
                 raise ValueError(
                     f"Invalid aggfuncs specified. Allowed values are {allowed_strs}."
                 )
-        
+
         all_names = groupby_names + aggfunc_names
         if len(all_names) != len(list(set(all_names))):
             raise ValueError(

@@ -71,14 +71,15 @@ def append_if_missing(lst: Any, append_lst: Any, to_start: bool = False) -> List
     -------
     list of any
         The appended list.
+
     """
     lst = to_list(lst)
     append_lst = to_list(append_lst)
     extend_lst = [col for col in append_lst if col not in lst]
-    
+
     if to_start:
         return extend_lst + lst
-    
+
     return lst + extend_lst
 
 

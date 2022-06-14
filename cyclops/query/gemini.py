@@ -1,7 +1,7 @@
 """GEMINI query API."""
 
 import logging
-from typing import Callable, List, Union, Optional
+from typing import Callable, List, Optional, Union
 
 from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
@@ -84,7 +84,7 @@ TABLE_MAP = {
     BLOOD_TRANSFUSION: lambda db: db.public.blood_transfusion,
     IMAGING: lambda db: db.public.imaging,
     LOOKUP_IMAGING: lambda db: db.public.lookup_imaging,
-    DERIVED_VARIABLES: lambda db: db.public.derived_variables
+    DERIVED_VARIABLES: lambda db: db.public.derived_variables,
 }
 GEMINI_COLUMN_MAP = {
     "genc_id": ENCOUNTER_ID,
@@ -136,7 +136,7 @@ def get_interface(
     """
     if process_fn is None:
         return QueryInterface(_db, table)
-    
+
     return QueryInterfaceProcessed(_db, table, process_fn)
 
 
@@ -197,7 +197,7 @@ def er_admin(**process_kwargs) -> QueryInterface:
 
     """
     table = get_table(ER_ADMIN)
-    
+
     # Process optional operations
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, [ER_ADMIT_TIMESTAMP, qp.QAP("before_date")], {}),
@@ -216,8 +216,8 @@ def er_admin(**process_kwargs) -> QueryInterface:
 @assert_table_has_columns(er_admin_table=ENCOUNTER_ID)
 def patient_encounters(
     er_admin_table: Optional[TableTypes] = None,
-    drop_null_subject_ids = True,
-    **process_kwargs
+    drop_null_subject_ids=True,
+    **process_kwargs,
 ) -> QueryInterface:
     """Query GEMINI patient encounters.
 
@@ -256,7 +256,7 @@ def patient_encounters(
 
     """
     table = get_table(IP_ADMIN)
-    
+
     if drop_null_subject_ids:
         table = qp.DropNulls(SUBJECT_ID)(table)
 
@@ -289,7 +289,7 @@ def patient_encounters(
             qp.ConditionEquals,
             ["discharge_description", "Died"],
             {
-                "not_": qp.QAP("died", fn=lambda x: not x),
+                "not_": qp.QAP("died", transform_fn=lambda x: not x),
                 "binarize_col": qp.QAP("died_binarize_col", required=False),
             },
         ),
@@ -579,7 +579,7 @@ def events(
         table = qp.ConditionEquals(EVENT_NAME, EMPTY_STRING, not_=True, to_str=True)(
             table
         )
-    
+
     # Remove rows with null event values
     if drop_null_event_values:
         table = qp.DropNulls(EVENT_VALUE)(table)
@@ -744,21 +744,29 @@ def derived_variables(**process_kwargs) -> QueryInterface:
         Variable columns to keep.
     limit: int, optional
         Limit the number of rows returned.
+
     """
     table = get_table(DERIVED_VARIABLES)
 
     operations: List[tuple] = [
-        (qp.FilterColumns, [
-            qp.QAP(
-                "variables",
-                fn = lambda x: append_if_missing(x, ENCOUNTER_ID, to_start=True)
-            )
-        ], {}),
+        (
+            qp.FilterColumns,
+            [
+                qp.QAP(
+                    "variables",
+                    transform_fn=lambda x: append_if_missing(
+                        x, ENCOUNTER_ID, to_start=True
+                    ),
+                )
+            ],
+            {},
+        ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
     table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)
+
 
 def pharmacy(**process_kwargs) -> QueryInterface:
     """Query pharmacy data.
@@ -772,12 +780,13 @@ def pharmacy(**process_kwargs) -> QueryInterface:
     ----------------
     limit: int, optional
         Limit the number of rows returned.
+
     """
     table = get_table(PHARMACY)
-    
+
     operations: List[tuple] = [
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
     table = qp.process_operations(table, operations, process_kwargs)
-    
+
     return QueryInterface(_db, table)

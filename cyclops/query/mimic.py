@@ -3,7 +3,7 @@
 # pylint: disable=duplicate-code
 
 import logging
-from typing import List, Optional
+from typing import Callable, List, Optional, Union
 
 from sqlalchemy import Integer, func, select
 from sqlalchemy.sql.selectable import Subquery
@@ -105,7 +105,7 @@ def get_interface(
     """
     if process_fn is None:
         return QueryInterface(_db, table)
-    
+
     return QueryInterfaceProcessed(_db, table, process_fn)
 
 
@@ -225,7 +225,7 @@ def patients(**process_kwargs) -> QueryInterface:
         (
             qp.ConditionEquals,
             [DATE_OF_DEATH, None],
-            {"not_": qp.QAP("died", fn=lambda x: not x)},
+            {"not_": qp.QAP("died", transform_fn=lambda x: not x)},
         ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
@@ -415,8 +415,7 @@ def care_units(
     return QueryInterfaceProcessed(
         _db,
         table,
-        process_fn=process_mimic_care_units,
-        process_fn_kwargs={"specific": False},
+        process_fn=lambda x: process_mimic_care_units(x, specific=False),
     )
 
 
