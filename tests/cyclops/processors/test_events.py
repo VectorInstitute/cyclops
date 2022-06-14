@@ -7,6 +7,7 @@ import pytest
 
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
+    EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
@@ -63,7 +64,9 @@ def test_convert_to_events():
     test_input.loc[0] = [12, datetime(2022, 11, 3, 12, 13)]
     test_input.loc[1] = [11, datetime(2022, 11, 3, 19, 13)]
     test_input.loc[2] = [1, datetime(2022, 11, 2, 1, 1)]
-    events = convert_to_events(test_input, event_name="test", timestamp_col="test_ts")
+    events = convert_to_events(
+        test_input, event_name="test", event_category="test", timestamp_col="test_ts"
+    )
     assert len(events) == 3
     assert events.loc[2][ENCOUNTER_ID] == 1
     assert events.loc[1][EVENT_TIMESTAMP] == datetime(2022, 11, 3, 19, 13)
@@ -75,13 +78,18 @@ def test_convert_to_events():
     test_input.loc[1] = [11, datetime(2022, 11, 3, 19, 13), 2.34]
     test_input.loc[2] = [1, datetime(2022, 11, 2, 1, 1), 11]
     events = convert_to_events(
-        test_input, event_name="test", timestamp_col="test_ts", value_col="test_value"
+        test_input,
+        event_name="test",
+        event_category="test",
+        timestamp_col="test_ts",
+        value_col="test_value",
     )
     assert len(events) == 3
     assert events.loc[2][ENCOUNTER_ID] == 1
     assert events.loc[1][EVENT_TIMESTAMP] == datetime(2022, 11, 3, 19, 13)
     assert events.loc[2][EVENT_VALUE][0] == 11
     assert events.loc[2][EVENT_NAME] == "test"
+    assert events.loc[2][EVENT_CATEGORY] == "test"
 
 
 @pytest.fixture

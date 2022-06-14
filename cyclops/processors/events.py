@@ -8,6 +8,7 @@ import pandas as pd
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
+    EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
@@ -67,20 +68,18 @@ def combine_events(event_data: Union[pd.DataFrame, List[pd.DataFrame]]) -> pd.Da
         Combined event data.
 
     """
-    must_have_cols = [ENCOUNTER_ID, EVENT_TIMESTAMP, EVENT_NAME, EVENT_VALUE]
 
-    @assert_has_columns(must_have_cols, must_have_cols)
     def add_events(events: pd.DataFrame, events_to_add: pd.DataFrame) -> pd.DataFrame:
         return pd.concat(
             [
                 events,
-                events_to_add[must_have_cols],
+                events_to_add,
             ],
             ignore_index=True,
             axis=0,
         )
 
-    events = pd.DataFrame(columns=must_have_cols)
+    events = pd.DataFrame()
     if isinstance(event_data, pd.DataFrame):
         event_data = [event_data]
     for event_dataframe in event_data:
@@ -93,6 +92,7 @@ def combine_events(event_data: Union[pd.DataFrame, List[pd.DataFrame]]) -> pd.Da
 def convert_to_events(
     data: pd.DataFrame,
     event_name: str,
+    event_category: str,
     timestamp_col: str,
     value_col: Optional[str] = None,
 ) -> pd.DataFrame:
@@ -108,6 +108,8 @@ def convert_to_events(
     data: pandas.DataFrame
         Raw data with some timestamps denoting an event.
     event_name: str
+        Event name to give, added as a new column.
+    event_category: str
         Event name to give, added as a new column.
     timestamp_col: str
         Name of the column in the incoming dataframe that has the timestamp.
@@ -131,6 +133,7 @@ def convert_to_events(
         columns={timestamp_col: EVENT_TIMESTAMP, value_col: EVENT_VALUE}
     )
     events[EVENT_NAME] = event_name
+    events[EVENT_CATEGORY] = event_category
 
     return events
 
@@ -200,6 +203,30 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
     log_counts_step(
         data, "Remove text in parentheses and normalize event names...", columns=True
     )
+
+    return data
+
+
+@assert_has_columns([EVENT_CATEGORY])
+def normalize_categories(data: pd.DataFrame) -> pd.DataFrame:
+    """Normalize event category names.
+
+    Perform basic cleaning/house-keeping of event category names.
+    e.g. convert to lower-case.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Output data with normalized event categories.
+
+    """
+    data[EVENT_CATEGORY] = data[EVENT_CATEGORY].apply(to_lower)
+    log_counts_step(data, "Normalize event categories...", columns=True)
 
     return data
 
@@ -301,5 +328,8 @@ def normalize_events(data) -> pd.DataFrame:
 
     if EVENT_VALUE_UNIT in list(data.columns):
         data = normalize_units(data)
+
+    if EVENT_CATEGORY in list(data.columns):
+        data = normalize_categories(data)
 
     return data

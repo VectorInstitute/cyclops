@@ -320,7 +320,7 @@ def update_temporal_features_plot(index, feature_names):
 def update_histogram_plot(feature_names):
     """Update histogram plot of static features."""
     return [
-        plot_histogram(static_features, name=feature_names, return_fig=True),
+        plot_histogram(static_features, names=feature_names, return_fig=True),
     ]
 
 

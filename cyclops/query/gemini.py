@@ -664,6 +664,20 @@ def blood_transfusions(**process_kwargs) -> QueryInterface:
     return QueryInterface(_db, table)
 
 
+def interventions() -> QueryInterface:
+    """Query interventions data.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed table, wrapped in an interface object.
+
+    """
+    table = get_table(INTERVENTION)
+
+    return QueryInterface(_db, table)
+
+
 def imaging(**process_kwargs) -> QueryInterface:
     """Query imaging data.
 
