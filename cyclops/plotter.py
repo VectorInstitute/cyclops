@@ -40,6 +40,7 @@ def plot_timeline(
         y=EVENT_NAME,
         color=EVENT_CATEGORY,
         hover_data=[EVENT_VALUE],
+        stripmode='group'
     )
 
     fig.update_layout(
@@ -50,6 +51,10 @@ def plot_timeline(
 
     if return_fig:
         return fig
+    
+    fig = fig.update_layout(
+        width=PLOT_HEIGHT * 2
+    )
     fig.show()
 
     return None

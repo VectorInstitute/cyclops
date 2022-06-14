@@ -116,3 +116,37 @@ def save_dataframe(
         )
 
     return save_path
+
+
+def load_dataframe(
+    load_path: str,
+    file_format: str = "parquet",
+) -> str:
+    """Load a file as DataFrame object.
+
+    Parameters
+    ----------
+    load_path: str
+        Path where the file to load.
+    file_format: str
+        File format of the file to load.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Loaded data.
+
+    """
+    load_path = process_file_save_path(load_path, file_format)
+    LOGGER.info("Loading dataframe to %s", load_path)
+
+    if file_format == "parquet":
+        dataframe = pd.read_parquet(load_path)
+    elif file_format == "csv":
+        dataframe = pd.read_csv(load_path)
+    else:
+        raise ValueError(
+            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
+        )
+
+    return dataframe

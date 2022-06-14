@@ -704,6 +704,12 @@ class FeatureHandler:
             # Check if it can be represented as binary.
             # (Numeric or string alike)
             if len(unique) == 2:
+                # If one of them NaN, don't convert to binary.
+                min_unique = np.min(unique)
+                if type(min_unique) != str:
+                    if np.isnan(min_unique):
+                        self._add_numerical(features[col], aggregate_type=aggregate_type)
+                        continue
                 # Add as binary.
                 self._add_binary(features[col], aggregate_type=aggregate_type)
                 continue
