@@ -40,6 +40,11 @@ def create_indicator_variables(
         Dataframe with indicator variables as columns.
 
     """
+    if columns:
+        indicator_features = features[columns]
+    else:
+        indicator_features = features
+
     return features.notnull().astype(int).add_suffix("_indicator")
 
 

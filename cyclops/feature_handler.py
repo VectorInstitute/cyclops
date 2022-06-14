@@ -654,7 +654,7 @@ class FeatureHandler:
             self.features[aggregate_type].columns.name = FEATURES
             self.reference[aggregate_type] = pd.DataFrame(index=index)
 
-    def add_features(
+    def add_features(  # pylint: ignore=too-many-branches
         self, features: pd.DataFrame, reference_cols: Optional[list] = None
     ) -> None:
         """Add features.
@@ -706,7 +706,7 @@ class FeatureHandler:
             if len(unique) == 2:
                 # If one of them NaN, don't convert to binary.
                 min_unique = np.min(unique)
-                if type(min_unique) != str:
+                if not isinstance(min_unique, str):
                     if np.isnan(min_unique):
                         self._add_numerical(
                             features[col], aggregate_type=aggregate_type
