@@ -5,7 +5,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from sqlalchemy import and_, cast, extract, func, or_, select
 from sqlalchemy.sql.elements import BinaryExpression
@@ -54,12 +54,16 @@ class QAP:
     kwarg_name: str
         Name of keyword argument for which this classs
         acts as a placeholder.
+    required: bool
+        Whether the keyword argument is required to run the process.
+    transform_fn: callable
+        A function accepting and transforming the passed in argument.
 
     """
 
     kwarg_name: str
-    not_: bool = False
     required: bool = True
+    transform_fn: Optional[Callable] = None
 
     def __repr__(self):
         """Return the name of the placeholded keyword argument.
@@ -88,10 +92,8 @@ class QAP:
 
         """
         val = kwargs[self.kwarg_name]
-        if self.not_:
-            if not isinstance(val, bool):
-                raise ValueError(f"Cannot specify not_ on non-boolean QAP {str(self)}.")
-            val = not val
+        if self.transform_fn is not None:
+            return self.transform_fn(val)
 
         return val
 
@@ -921,10 +923,6 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
     ----------
     join_table: cyclops.query.util.TableTypes
         Table on which to join.
-    how: str
-        Specify how to join the tables. Supports default "inner" join, "outer" join,
-        which performs "table LEFT JOIN join_table" (switch the table order for a
-        'right join'), and also a "cartesian" for a cartesian product.
     on_: list of str or tuple, optional
         A list of strings or tuples representing columns on which to join.
         Strings represent columns of same name in both tables. A tuple of
@@ -947,7 +945,6 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
     def __init__(
         self,
         join_table: TableTypes,
-        how: str = "inner",
         on: Optional[  # pylint:disable=invalid-name
             Union[str, List[str], tuple, List[tuple]]
         ] = None,
@@ -961,68 +958,11 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
             raise ValueError("Cannot specify both the 'on' and 'cond' arguments.")
 
         self.join_table = join_table
-        self.how = how
+        self.cond = cond
         self.on_ = to_list_optional(on)
         self.on_to_type = to_list_optional(on_to_type)
-        self.cond = cond
         self.table_cols = to_list_optional(table_cols)
         self.join_table_cols = to_list_optional(join_table_cols)
-
-    def join_on(self, table: Subquery, isouter: bool) -> Select:
-        """Join on the equality of values in columns of same name in both tables.
-
-        Parameters
-        ----------
-        table: sqlalchemy.sql.selectable.Subquery
-            Table to join.
-        isouter: bool
-            Whether to join as inner or outer.
-
-        Returns
-        -------
-        sqlalchemy.sql.selectable.Select
-            The table.
-
-        """
-        if self.cond is not None:
-            raise ValueError("Cannot specify both on and cond.")
-
-        # Process on columns
-        on_table_cols = [
-            col_obj if isinstance(col_obj, str) else col_obj[0] for col_obj in self.on_
-        ]
-        on_join_table_cols = [
-            col_obj if isinstance(col_obj, str) else col_obj[1] for col_obj in self.on_
-        ]
-
-        table = process_checks(table, cols=none_add(self.table_cols, on_table_cols))
-        self.join_table = process_checks(
-            self.join_table, cols=none_add(self.join_table_cols, on_join_table_cols)
-        )
-
-        # Filter columns while keeping those being joined on
-        table = append_if_missing(table, self.table_cols, on_table_cols)
-        self.join_table = append_if_missing(
-            self.join_table, self.join_table_cols, on_join_table_cols
-        )
-
-        # Perform type conversions if given
-        if self.on_to_type is not None:
-            for i, type_ in enumerate(self.on_to_type):
-                table = Cast(on_table_cols[i], type_)(table)
-                self.join_table = Cast(on_join_table_cols[i], type_)(self.join_table)
-
-        cond = and_(
-            *[
-                get_column(table, on_table_cols[i])
-                == get_column(self.join_table, on_join_table_cols[i])
-                for i in range(len(on_table_cols))
-            ]
-        )
-
-        table = select(table.join(self.join_table, cond, isouter=isouter))
-
-        return table
 
     @table_params_to_type(Subquery)
     def __call__(self, table: TableTypes) -> Subquery:
@@ -1039,23 +979,48 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
             Processed table.
 
         """
-        supported_how = ["inner", "outer", "cartesian"]
-        if self.how not in supported_how:
-            raise ValueError(
-                f"""how argument {self.how} must be in the
-                supported {', '.join(supported_how)}."""
+        # Join on the equality of values in columns of same name in both tables
+        if self.on_ is not None:
+            # Process on columns
+            on_table_cols = [
+                col_obj if isinstance(col_obj, str) else col_obj[0]
+                for col_obj in self.on_
+            ]
+            on_join_table_cols = [
+                col_obj if isinstance(col_obj, str) else col_obj[1]
+                for col_obj in self.on_
+            ]
+
+            table = process_checks(table, cols=none_add(self.table_cols, on_table_cols))
+            self.join_table = process_checks(
+                self.join_table, cols=none_add(self.join_table_cols, on_join_table_cols)
             )
 
-        if self.how == "cartesian":
-            if self.on_ is not None or self.cond is not None:
-                raise ValueError(
-                    "Cannot specify on or cond arguments on a Cartesian join."
-                )
-        else:
-            isouter = self.how == "outer"
+            # Filter columns, keeping those being joined on
+            table = append_if_missing(table, self.table_cols, on_table_cols)
+            self.join_table = append_if_missing(
+                self.join_table, self.join_table_cols, on_join_table_cols
+            )
 
-        if self.on_ is not None:
-            table = self.join_on(table, isouter)
+            # Perform type conversions if given
+            if self.on_to_type is not None:
+                for i, type_ in enumerate(self.on_to_type):
+                    table = Cast(on_table_cols[i], type_)(table)
+                    self.join_table = Cast(on_join_table_cols[i], type_)(
+                        self.join_table
+                    )
+
+            cond = and_(
+                *[
+                    get_column(table, on_table_cols[i])
+                    == get_column(self.join_table, on_join_table_cols[i])
+                    for i in range(len(on_table_cols))
+                ]
+            )
+
+            # table.c.discharge_disposition == self.join_table.c.value
+
+            table = select(table.join(self.join_table, cond))
 
         else:
             # Filter columns
@@ -1066,16 +1031,10 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
             # Join on a specified condition
             if self.cond is not None:
-                table = select(table.join(self.join_table, self.cond, isouter=isouter))
+                table = select(table.join(self.join_table, self.cond))
 
-            # Join as a Cartesian product
+            # Join on no condition, i.e., a Cartesian product
             else:
-                if self.how != "cartesian":
-                    raise ValueError(
-                        """Must specify how='cartesian' to perform a Cartesian product.
-                    Otherwise, specify a condition for an inner or outer join."""
-                    )
-
                 LOGGER.warning("A Cartesian product has been queried.")
                 table = select(table, self.join_table)
 

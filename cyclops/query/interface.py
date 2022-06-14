@@ -121,8 +121,6 @@ class QueryInterfaceProcessed:
         The query.
     process_fn: Callable
         Process function to apply on the pandas dataframe returned from the query.
-    process_fn_kwargs: dict
-        Keyword arguments for post-processing function.
 
     Attributes
     ----------
@@ -138,7 +136,6 @@ class QueryInterfaceProcessed:
     _query: TableTypes
     process_fn: Callable
     data: Union[pd.DataFrame, None] = None
-    process_fn_kwargs: Dict = field(default_factory=dict)
     _run_args: Dict = field(default_factory=dict)
 
     def run(
@@ -161,12 +158,12 @@ class QueryInterfaceProcessed:
         if self.data is None or not self._run_args == locals():
             self._run_args = locals()
             self.data = self.database.run_query(self._query, limit=limit)
-            if self.process_fn:
-                LOGGER.info(
-                    "Applying post-processing fn %s to query output",
-                    self.process_fn.__name__,
-                )
-                self.data = self.process_fn(self.data, **self.process_fn_kwargs)
+
+            LOGGER.info(
+                "Applying post-processing fn %s to query output",
+                self.process_fn.__name__,
+            )
+            return self.process_fn(self.data)
 
         return self.data
 

@@ -3,7 +3,7 @@
 # pylint: disable=duplicate-code
 
 import logging
-from typing import List, Optional
+from typing import Callable, List, Optional, Union
 
 from sqlalchemy import Integer, func, select
 from sqlalchemy.sql.selectable import Subquery
@@ -83,21 +83,30 @@ MIMIC_COLUMN_MAP = {
 
 
 @table_params_to_type(Subquery)
-def get_interface(table: TableTypes) -> QueryInterface:
-    """Get a query interface for a MIMIC table.
+def get_interface(
+    table: TableTypes,
+    process_fn: Optional[Callable] = None,
+) -> Union[QueryInterface, QueryInterfaceProcessed]:
+    """Get a query interface for a GEMINI table.
 
     Parameters
     ----------
     table: cyclops.query.util.TableTypes
         Table to wrap in the interface.
+    process_fn: Callable
+        Process function to apply on the Pandas DataFrame returned from the query.
 
     Returns
     -------
-    cyclops.query.interface.QueryInterface
-        A query interface using the MIMIC database object.
+    cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
+        A query interface using the GEMINI database object.
 
     """
-    return QueryInterface(_db, table)
+    if process_fn is None:
+        return QueryInterface(_db, table)
+
+    return QueryInterfaceProcessed(_db, table, process_fn)
 
 
 def get_table(
@@ -216,7 +225,7 @@ def patients(**process_kwargs) -> QueryInterface:
         (
             qp.ConditionEquals,
             [DATE_OF_DEATH, None],
-            {"not_": qp.QAP("died", not_=True)},
+            {"not_": qp.QAP("died", transform_fn=lambda x: not x)},
         ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
@@ -406,8 +415,7 @@ def care_units(
     return QueryInterfaceProcessed(
         _db,
         table,
-        process_fn=process_mimic_care_units,
-        process_fn_kwargs={"specific": False},
+        process_fn=lambda x: process_mimic_care_units(x, specific=False),
     )
 
 
