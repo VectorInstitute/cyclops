@@ -40,3 +40,5 @@ def test_append_if_missing():
     assert out_list == ["a"]
     out_list = append_if_missing(["a", "b"], ["a", "b"])
     assert out_list == ["a", "b"]
+    out_list = append_if_missing(["b"], ["a"], to_start=True)
+    assert out_list == ["a", "b"]
