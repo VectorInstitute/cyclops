@@ -671,7 +671,7 @@ def interventions(**process_kwargs) -> QueryInterface:
     -------
     cyclops.query.interface.QueryInterface
         Constructed table, wrapped in an interface object.
-        
+
     Other Parameters
     ----------------
     limit: int, optional
@@ -681,7 +681,7 @@ def interventions(**process_kwargs) -> QueryInterface:
 
     """
     table = get_table(INTERVENTION)
-    
+
     operations: List[tuple] = [
         (qp.ConditionInYears, ["intervention_episode_start_date", qp.QAP("years")], {}),
         (qp.Limit, [qp.QAP("limit")], {}),
