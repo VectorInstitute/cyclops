@@ -27,7 +27,6 @@ from cyclops.processors.constants import (
     STATIC,
     TEMPORAL,
 )
-from cyclops.processors.impute import Imputer, impute_features
 from cyclops.processors.util import is_timeseries_data
 from cyclops.utils.log import setup_logging
 
@@ -724,26 +723,6 @@ class FeatureHandler:
                 continue
 
             LOGGER.warning("Unsure about column %s data type, will not be added", col)
-
-    def impute_features(
-        self, static_imputer: Imputer, temporal_imputer: Imputer
-    ) -> None:
-        """Impute missing values in features.
-
-        Parameters
-        ----------
-        static_imputer: Imputer
-            Imputation options for static features.
-        temporal_imputer: Imputer
-            Imputation options for temporal features.
-
-        """
-        self.features[STATIC] = impute_features(
-            self.features[STATIC], imputer=static_imputer
-        )
-        self.features[TEMPORAL] = impute_features(
-            self.features[TEMPORAL], imputer=temporal_imputer
-        )
 
     def plot_features(
         self,
