@@ -9,7 +9,7 @@ from sqlalchemy.sql.selectable import Subquery
 
 from codebase_ops import get_log_file_path
 from cyclops import config
-from cyclops.constants import GEMINI
+from cyclops.constants import GEMINI, GEMINI_OMOP
 from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
@@ -65,8 +65,7 @@ IMAGING = "imaging"
 LOOKUP_IMAGING = "lookup_imaging"
 DERIVED_VARIABLES = "derived_variables"
 
-_db = Database(config.read_config(GEMINI))
-
+_db = Database(config.read_config(GEMINI_OMOP))
 TABLE_MAP = {
     IP_ADMIN: lambda db: db.public.ip_administrative,
     ER_ADMIN: lambda db: db.public.er_administrative,
