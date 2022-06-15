@@ -1,0 +1,17 @@
+---
+# Gemini database parameters, required if running extraction from database.
+dbms: "postgresql"
+port: 5432
+host: "db.gemini-hpc.ca"
+database: "gemini_omop_beta2"
+
+output_folder: "./_extract"
+
+# Use QueryBuilder.
+# Extract data from years.
+years: []
+# Extract data from hospital sites.
+hospitals: []
+# yyyy-mm-dd. Select starting from from_date and/or to_date.
+from_date: ""
+to_date: ""
