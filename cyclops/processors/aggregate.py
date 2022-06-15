@@ -18,6 +18,7 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     RESTRICT_TIMESTAMP,
     TIMESTEP,
+    TIMESTEP_END_TIMESTAMP,
     TIMESTEP_START_TIMESTAMP,
     WINDOW_START_TIMESTAMP,
 )
@@ -407,10 +408,8 @@ class Aggregator:
 
         return grouped
 
-    def compute_timestep_start_timestamps(
-        self, window_start_time: pd.DataFrame
-    ) -> pd.DataFrame:
-        """Compute the start timestamp for each timestep for each encounter.
+    def compute_timestep_timestamps(self, window_start_time: pd.DataFrame) -> tuple:
+        """Compute the start and end timestamp for each timestep for each encounter.
 
         Parameters
         ----------
@@ -419,8 +418,9 @@ class Aggregator:
 
         Returns
         -------
-        pandas.DataFrame
-            Dataframe with start timestamps for each timestep for each encounter.
+        tuple of pandas.DataFrame
+            Dataframes with start and end timestamps for each timestep for each
+            encounter.
 
         """
         timestep_start_times = window_start_time.copy()
@@ -434,7 +434,14 @@ class Aggregator:
         timestep_start_times = timestep_start_times.set_index([ENCOUNTER_ID, TIMESTEP])
         timestep_start_times = timestep_start_times.drop(columns=WINDOW_START_TIMESTAMP)
 
-        return timestep_start_times
+        timestep_end_times = timestep_start_times + pd.to_timedelta(
+            self.bucket_size, unit="h"
+        )
+        timestep_end_times.rename(
+            columns={TIMESTEP_START_TIMESTAMP: TIMESTEP_END_TIMESTAMP}
+        )
+
+        return timestep_start_times, timestep_end_times
 
     @time_function
     @assert_has_columns([ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_TIMESTAMP])
@@ -468,8 +475,11 @@ class Aggregator:
             columns={RESTRICT_TIMESTAMP: WINDOW_START_TIMESTAMP}
         )
         data = pd.merge(data, window_start_time, how="left", on=ENCOUNTER_ID)
-        timestep_start_times = self.compute_timestep_start_timestamps(window_start_time)
+        timestep_start_times, timestep_end_times = self.compute_timestep_timestamps(
+            window_start_time
+        )
         self.meta[TIMESTEP_START_TIMESTAMP] = timestep_start_times
+        self.meta[TIMESTEP_END_TIMESTAMP] = timestep_end_times
         log_counts_step(data, "Restricting events within window...", columns=True)
 
         return self.aggregate_events(data)
