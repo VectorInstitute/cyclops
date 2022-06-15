@@ -22,6 +22,7 @@ PLOT_HEIGHT = 520
 
 def plot_timeline(
     events: pd.DataFrame,
+    timetep_timestamps: Optional[pd.Series] = None,
     return_fig: bool = False,
 ) -> Union[plotly.graph_objs.Figure, None]:
     """Plot timeline of patient events for an encounter.
@@ -30,6 +31,9 @@ def plot_timeline(
     ----------
     events: pandas.DataFrame
         Event data to plot.
+    timetep_timestamps: pandas.Series, optional
+        Timestamps of timesteps to overlay as vertical lines.
+        Useful to see aggregation buckets.
     return_fig: bool, optional
         Return fig.
 
@@ -42,12 +46,14 @@ def plot_timeline(
         hover_data=[EVENT_VALUE],
         stripmode="group",
     )
-
     fig.update_layout(
         title="Timeline Visualization",
         autosize=False,
         height=PLOT_HEIGHT,
     )
+    if timetep_timestamps:
+        for timetep_timestamp in timetep_timestamps:
+            fig.add_vline(timetep_timestamps)
 
     if return_fig:
         return fig

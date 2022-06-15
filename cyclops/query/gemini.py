@@ -664,16 +664,29 @@ def blood_transfusions(**process_kwargs) -> QueryInterface:
     return QueryInterface(_db, table)
 
 
-def interventions() -> QueryInterface:
+def interventions(**process_kwargs) -> QueryInterface:
     """Query interventions data.
 
     Returns
     -------
     cyclops.query.interface.QueryInterface
         Constructed table, wrapped in an interface object.
+        
+    Other Parameters
+    ----------------
+    limit: int, optional
+        Limit the number of rows returned.
+    years: int or list of int, optional
+        Get tests by year.
 
     """
     table = get_table(INTERVENTION)
+    
+    operations: List[tuple] = [
+        (qp.ConditionInYears, ["intervention_episode_start_date", qp.QAP("years")], {}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)
 
