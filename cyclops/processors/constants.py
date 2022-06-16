@@ -12,13 +12,13 @@ MEDIAN = "median"
 FEATURE_TYPE = "feature_type"
 NUMERIC = "numeric"
 BINARY = "binary"
-NORMALIZATION_METHOD = "normalization_method"
 GROUP = "group"
-STANDARD = "standard"
-MIN_MAX = "min-max"
 MISSING_CATEGORY = "MISSING_CATEGORY"
 STATIC = "static"
 TEMPORAL = "temporal"
+
+STANDARD = "standard"
+MIN_MAX = "min-max"
 
 # GEMINI Admin.
 THPM = "THPM"
