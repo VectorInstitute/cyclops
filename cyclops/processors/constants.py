@@ -7,18 +7,34 @@ YEAR = "year"
 MONTH = "month"
 
 # Feature handler.
-MEAN = "mean"
-MEDIAN = "median"
-FEATURE_TYPE = "feature_type"
+FEATURES = "features"
+TARGETS = "targets"
+GROUP = "group"
+
+# Feature type.
 NUMERIC = "numeric"
 BINARY = "binary"
-GROUP = "group"
-MISSING_CATEGORY = "MISSING_CATEGORY"
-STATIC = "static"
-TEMPORAL = "temporal"
+STRING = "string"
+ORDINAL = "ordinal"
+CATEGORICAL_INDICATOR = "categorical_indicator"
 
+FEATURE_TYPES = [
+    NUMERIC,
+    BINARY,
+    STRING,
+    ORDINAL,
+    CATEGORICAL_INDICATOR,
+]
+
+MISSING_CATEGORY = "missing"
+
+# Feature normalization.
 STANDARD = "standard"
 MIN_MAX = "min-max"
+
+# Imputation 
+MEAN = "mean"
+MEDIAN = "median"
 
 # GEMINI Admin.
 THPM = "THPM"

@@ -7,13 +7,15 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from cyclops.processors.constants import MIN_MAX, STANDARD
-
+from cyclops.processors.util import has_columns
 
 class SklearnNormalizer:
     """Sklearn normalizer wrapper.
 
     Attributes
     ----------
+    method: str
+        Name of normalization method.
     scaler: sklearn.preprocessing.StandardScaler or sklearn.preprocessing.MinMaxScaler
         Sklearn scaler object.
 
@@ -28,6 +30,7 @@ class SklearnNormalizer:
             String specifying the type of Sklearn scaler.
 
         """
+        self.method = method
         method_map = {STANDARD: StandardScaler, MIN_MAX: MinMaxScaler}
 
         # Raise an exception if the method string is not recognized.
@@ -85,6 +88,16 @@ class SklearnNormalizer:
             np.squeeze(self.scaler.inverse_transform(series.values.reshape(-1, 1))),
             index=series.index,
         )
+    
+    def __repr__(self):
+        """Repr method.
+        
+        Returns
+        -------
+        str
+            The normalization method name.
+        """
+        return self.method
 
 
 class GroupbyNormalizer:
@@ -99,7 +112,7 @@ class GroupbyNormalizer:
         Storing the normalizer object information, where each group has a row
         of scaling objects.
     by: str or list of str, optional
-        Columns to use in the groupby, affecting how to normalize values.
+        Columns to groupby, affecting how values are normalized.
 
     """
 
@@ -122,6 +135,7 @@ class GroupbyNormalizer:
             Data over which to fit.
 
         """
+        #has_columns(data, self.by, raise_error=True)
 
         def get_normalizer_for_group(group: pd.DataFrame):
             cols = []
@@ -168,6 +182,8 @@ class GroupbyNormalizer:
         if self.normalizers is None:
             raise ValueError("Must first fit the normalizers.")
 
+        #has_columns(data, self.by, raise_error=True)
+        
         def transform_group(group):
             for col in self.normalizer_map.keys():
                 # Get normalizer object and transform
@@ -181,6 +197,7 @@ class GroupbyNormalizer:
                 normalizer = self.normalizers.iloc[0][col]
                 data[col] = getattr(normalizer, method)(data[col])
         else:
+            data = data.reset_index()
             data.set_index(self.by, inplace=True)
             grouped = data.groupby(self.by)
             data = grouped.apply(transform_group).reset_index()
