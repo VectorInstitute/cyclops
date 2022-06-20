@@ -437,7 +437,7 @@ class Aggregator:
         timestep_end_times = timestep_start_times + pd.to_timedelta(
             self.bucket_size, unit="h"
         )
-        timestep_end_times.rename(
+        timestep_end_times = timestep_end_times.rename(
             columns={TIMESTEP_START_TIMESTAMP: TIMESTEP_END_TIMESTAMP}
         )
 
