@@ -103,8 +103,8 @@ class LSTMModel(nn.Module):
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
-        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
-        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
+        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
+        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
         out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
         if self.last_timestep_only:    
             out = out[:, -1 , :]
