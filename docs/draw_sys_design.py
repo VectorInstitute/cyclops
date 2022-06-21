@@ -6,9 +6,7 @@ from os.path import join
 
 from diagrams import Cluster, Diagram, Edge
 from diagrams.custom import Custom
-from diagrams.generic.database import SQL
 from diagrams.programming.flowchart import Database
-from diagrams.programming.language import Python
 
 ASSETS_DIR = "./assets"
 
@@ -36,7 +34,7 @@ def draw_cyclops():
         hosp_z = Custom("hospital site Z", join(ASSETS_DIR, "hospZ.png"))
         storage = Database("Retrospective data")
         with Cluster("CyclOps data pipeline", graph_attr=graph_attr):
-            prefect = Custom("", join(ASSETS_DIR, "prefect.png"))
+            _ = Custom("", join(ASSETS_DIR, "prefect.png"))
             with Cluster("CyclOps data modules", graph_attr=graph_attr):
                 query = Custom("query API", join(ASSETS_DIR, "sqlalchemy.png"))
                 process = Custom("processing API", join(ASSETS_DIR, "process.png"))
