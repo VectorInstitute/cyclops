@@ -1,4 +1,9 @@
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, MaxAbsScaler, RobustScaler
+from sklearn.preprocessing import (
+    MinMaxScaler,
+    StandardScaler,
+    MaxAbsScaler,
+    RobustScaler,
+)
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
@@ -7,13 +12,15 @@ from .dataset import Data
 from .models import RNNModel, LSTMModel, GRUModel
 from .metrics import *
 
+
 def get_device():
     if torch.cuda.is_available():
-        return torch.device('cuda')
+        return torch.device("cuda")
     else:
-        return torch.device('cpu')
-    
-def format_dataset(X, level="features",imputation_method="simple"):   
+        return torch.device("cpu")
+
+
+def format_dataset(X, level="features", imputation_method="simple"):
     """
     Clean the data into machine-learnable matrices.
     Inputs:
@@ -28,61 +35,66 @@ def format_dataset(X, level="features",imputation_method="simple"):
     scaler = None
 
     # Imputation
-    if imputation_method=='forward':
-        X_imputed=impute_forward(X,"timestep")
-    elif imputation_method=='simple':
-        X_imputed=impute_simple(X,"timestep")
+    if imputation_method == "forward":
+        X_imputed = impute_forward(X, "timestep")
+    elif imputation_method == "simple":
+        X_imputed = impute_simple(X, "timestep")
     else:
-        X_imputed=X.unstack().sort_index(axis=1).copy()
+        X_imputed = X.unstack().sort_index(axis=1).copy()
 
-    #add categorical/demographic data
-###    #make both dataframes have the same number of column levels
-###    while  len(y_df.columns.names)!=len(imputed_df.columns.names):
-###        if len(y_df.columns.names)>len(imputed_df.columns.names):
-###            y_df.columns=y_df.columns.droplevel(0)
-###        elif len(y_df.columns.names)<len(imputed_df.columns.names):
-###            raise Exception("number of y_df columns is less than the number of imputed_df columns")
-###            y_df=pd.concat([y_df], names=['Firstlevel'])
-###    # make both dataframes have the same column names
-###    y_df.columns.names=imputed_df.columns.names
+    # add categorical/demographic data
+    ###    #make both dataframes have the same number of column levels
+    ###    while  len(y_df.columns.names)!=len(imputed_df.columns.names):
+    ###        if len(y_df.columns.names)>len(imputed_df.columns.names):
+    ###            y_df.columns=y_df.columns.droplevel(0)
+    ###        elif len(y_df.columns.names)<len(imputed_df.columns.names):
+    ###            raise Exception("number of y_df columns is less than the number of imputed_df columns")
+    ###            y_df=pd.concat([y_df], names=['Firstlevel'])
+    ###    # make both dataframes have the same column names
+    ###    y_df.columns.names=imputed_df.columns.names
 
     # Stack columns
-    X_imputed=X_imputed.stack(level='timestep', dropna=False)
+    X_imputed = X_imputed.stack(level="timestep", dropna=False)
 
     # Remove columns with no variability
-    keep_cols=X_imputed.columns.tolist()
-    keep_cols=[col for col in keep_cols if len(X_imputed[col].unique())!=1]
-    X_imputed=X_imputed[keep_cols]
+    keep_cols = X_imputed.columns.tolist()
+    keep_cols = [col for col in keep_cols if len(X_imputed[col].unique()) != 1]
+    X_imputed = X_imputed[keep_cols]
 
     # Unstack the timestep and sort them to the same as the original dataframe
-    X_imputed=X_imputed.unstack()
+    X_imputed = X_imputed.unstack()
     if imputation_method:
-        X_imputed.columns=X_imputed.columns.swaplevel('timestep', 'simple_impute')
+        X_imputed.columns = X_imputed.columns.swaplevel("timestep", "simple_impute")
 
     # Scale
-    df_means=X_imputed.mean(skipna=True, axis=0)
-    df_stds=X_imputed.std(skipna=True, axis=0)
-    df_stds.loc[df_stds.values==0, :]=df_means.loc[df_stds.values==0, :] # If std dev is 0, replace with mean
-    scaler=(df_means, df_stds)  
-    X_scaled=(X_imputed[X_imputed.columns]-df_means)/df_stds
-    X_final=pd.DataFrame(X_scaled, index=X_imputed.index.tolist(), columns=X_imputed.columns.tolist())
+    df_means = X_imputed.mean(skipna=True, axis=0)
+    df_stds = X_imputed.std(skipna=True, axis=0)
+    df_stds.loc[df_stds.values == 0, :] = df_means.loc[
+        df_stds.values == 0, :
+    ]  # If std dev is 0, replace with mean
+    scaler = (df_means, df_stds)
+    X_scaled = (X_imputed[X_imputed.columns] - df_means) / df_stds
+    X_final = pd.DataFrame(
+        X_scaled, index=X_imputed.index.tolist(), columns=X_imputed.columns.tolist()
+    )
 
-    #keep this df for adding categorical data after
-###     demo_df=y_df.copy()
-###     demo_df.columns=demo_df.columns.droplevel(demo_df.columns.names.index('timestep'))
+    # keep this df for adding categorical data after
+    ###     demo_df=y_df.copy()
+    ###     demo_df.columns=demo_df.columns.droplevel(demo_df.columns.names.index('timestep'))
 
-    X_final=X_final.stack(level='timestep', dropna=False) 
-### X_final=X_final.join(demo_df.loc[:, ['M', 'F']], how='inner', on=['encounter_id'])
+    X_final = X_final.stack(level="timestep", dropna=False)
+    ### X_final=X_final.join(demo_df.loc[:, ['M', 'F']], how='inner', on=['encounter_id'])
 
-    X_final.index.names=['encounter_id', 'timestep']
-    X_final[X_final.columns]=X_final[X_final.columns].values.astype(np.float32)
-### gender=X_final.loc[(slice(None), slice(None), 0), 'F'].values.ravel()
+    X_final.index.names = ["encounter_id", "timestep"]
+    X_final[X_final.columns] = X_final[X_final.columns].values.astype(np.float32)
+    ### gender=X_final.loc[(slice(None), slice(None), 0), 'F'].values.ravel()
 
     if imputation_method:
         X_final = flatten_to_sequence(X_final)
-    
-    X_final = np.swapaxes(X_final,1,2)
-    return(X_final)
+
+    X_final = np.swapaxes(X_final, 1, 2)
+    return X_final
+
 
 def flatten_to_sequence(X):
     """
@@ -93,18 +105,22 @@ def flatten_to_sequence(X):
     Returns:
         X_seq (np.ndarray): Input 3-dimensional input data with the [n_samples, n_features, n_hours]
     """
-    timestep_in_values=X.index.get_level_values(X.index.names.index('timestep'))
+    timestep_in_values = X.index.get_level_values(X.index.names.index("timestep"))
 
-    output=np.dstack((X.loc[(slice(None), i), :].values for i in sorted(set(timestep_in_values))))
+    output = np.dstack(
+        (X.loc[(slice(None), i), :].values for i in sorted(set(timestep_in_values)))
+    )
 
     return output
 
-def forward_imputer(df):
-    imputed_df=df.fillna(method='ffill').unstack().fillna(0)
-    imputed_df.sort_index(axis=1, inplace=True)
-    return(df)
 
-def get_data(X,y):
+def forward_imputer(df):
+    imputed_df = df.fillna(method="ffill").unstack().fillna(0)
+    imputed_df.sort_index(axis=1, inplace=True)
+    return df
+
+
+def get_data(X, y):
     """Convert pandas dataframe to dataset.
 
     Parameters
@@ -115,24 +131,26 @@ def get_data(X,y):
         List of labels.
 
     """
-    inputs = torch.tensor(X,dtype=torch.float32)
-    target = torch.tensor(y,dtype=torch.float32)
+    inputs = torch.tensor(X, dtype=torch.float32)
+    target = torch.tensor(y, dtype=torch.float32)
     return Data(inputs, target)
+
 
 def process_outcome(outcome, static):
     if outcome == "mortality":
-        static['mortality_derived'] = np.where(
+        static["mortality_derived"] = np.where(
             static["discharge_disposition"].isin([7, 66, 72, 73]), 1, 0
         )
     elif outcome == "length_of_stay_in_er":
-        m1 = (static[outcome]>=0) & (static[outcome]<7)
-        m2 = (static[outcome]>=7) & (static[outcome]<14)
-        m3 = (static[outcome]>=14) & (static[outcome]<30)
+        m1 = (static[outcome] >= 0) & (static[outcome] < 7)
+        m2 = (static[outcome] >= 7) & (static[outcome] < 14)
+        m3 = (static[outcome] >= 14) & (static[outcome] < 30)
 
         vals = [1, 2, 3]
         default = 4
-        static['los_er_derived'] = np.select([m1,m2,m3], vals, default=default)
-    return(static)
+        static["los_er_derived"] = np.select([m1, m2, m3], vals, default=default)
+    return static
+
 
 def get_temporal_model(model, model_params):
     """Get temporal model.
@@ -143,12 +161,9 @@ def get_temporal_model(model, model_params):
         String with model name (e.g. rnn, lstm, gru).
 
     """
-    models = {
-        "rnn": RNNModel,
-        "lstm": LSTMModel,
-        "gru": GRUModel
-    }
+    models = {"rnn": RNNModel, "lstm": LSTMModel, "gru": GRUModel}
     return models.get(model.lower())(**model_params)
+
 
 def impute_simple(df, time_index=None):
     """
@@ -162,32 +177,36 @@ def impute_simple(df, time_index=None):
         df (pandas.DataFrame): a dataframe according to the simple impute algorithm described in the paper.
     """
 
-    ID_COLS = ['encounter_id']
-    
-    #masked data
-    masked_df=pd.isna(df)
-    masked_df=masked_df.apply(pd.to_numeric)
+    ID_COLS = ["encounter_id"]
 
-    #time since last measurement
-    index_of_time=list(df.index.names).index(time_index)
-    time_in=[item[index_of_time] for item in df.index.tolist()]
-    time_df=df.copy()
+    # masked data
+    masked_df = pd.isna(df)
+    masked_df = masked_df.apply(pd.to_numeric)
+
+    # time since last measurement
+    index_of_time = list(df.index.names).index(time_index)
+    time_in = [item[index_of_time] for item in df.index.tolist()]
+    time_df = df.copy()
     for col in time_df.columns.tolist():
-        time_df[col]=time_in
-    time_df[masked_df]=np.nan
+        time_df[col] = time_in
+    time_df[masked_df] = np.nan
 
-    #concatenate the dataframes
-    df_prime=pd.concat([df,masked_df, time_df],axis=1,keys=['measurement','mask', 'time'])
-    df_prime.columns=df_prime.columns.rename("simple_impute", level=0)#rename the column level
+    # concatenate the dataframes
+    df_prime = pd.concat(
+        [df, masked_df, time_df], axis=1, keys=["measurement", "mask", "time"]
+    )
+    df_prime.columns = df_prime.columns.rename(
+        "simple_impute", level=0
+    )  # rename the column level
 
-    #fill each dataframe using either ffill or mean
-    df_prime=df_prime.fillna(method='ffill').unstack().fillna(0)
+    # fill each dataframe using either ffill or mean
+    df_prime = df_prime.fillna(method="ffill").unstack().fillna(0)
 
-    #swap the levels so that the simple imputation feature is the lowest value
-    col_level_names=list(df_prime.columns.names)
+    # swap the levels so that the simple imputation feature is the lowest value
+    col_level_names = list(df_prime.columns.names)
     col_level_names.append(col_level_names.pop(0))
 
-    df_prime=df_prime.reorder_levels(col_level_names, axis=1)
+    df_prime = df_prime.reorder_levels(col_level_names, axis=1)
     df_prime.sort_index(axis=1, inplace=True)
 
-    return  df_prime
+    return df_prime

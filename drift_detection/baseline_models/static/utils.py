@@ -14,6 +14,7 @@ from .mlp import fit_mlp
 from .rf import fit_rf
 from .gbt import fit_gbt
 
+
 def run_model(model_name, X, Y, Xv, Yv):
     if model_name == "mlp":
         best_model = fit_mlp(X, Y, Xv, Yv)

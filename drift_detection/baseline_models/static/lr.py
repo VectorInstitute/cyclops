@@ -1,5 +1,6 @@
 from sklearn.linear_model import LogisticRegression as LR
 
+
 def fit_lr(X, Y, Xv, Yv):
     best_c = None
     best_score = 0
@@ -17,4 +18,3 @@ def fit_lr(X, Y, Xv, Yv):
 
     print("Best C:", best_c)
     return best_model
-
