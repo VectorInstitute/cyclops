@@ -26,13 +26,32 @@ FEATURE_TYPES = [
     CATEGORICAL_INDICATOR,
 ]
 
+FEATURE_TYPE_ATTR = "type_"
+FEATURE_TARGET_ATTR = "target"
+FEATURE_INDICATOR_ATTR = "indicator_of"
+FEATURE_MAPPING_ATTR = "mapping"
+
+FEATURE_META_ATTRS = [
+    FEATURE_TYPE_ATTR,
+    FEATURE_TARGET_ATTR,
+    FEATURE_INDICATOR_ATTR,
+    FEATURE_MAPPING_ATTR,
+]
+
+FEATURE_META_ATTR_DEFAULTS = {
+    FEATURE_TARGET_ATTR: False,
+    FEATURE_INDICATOR_ATTR: None,
+    FEATURE_MAPPING_ATTR: None,
+}
+
+
 MISSING_CATEGORY = "missing"
 
 # Feature normalization.
 STANDARD = "standard"
 MIN_MAX = "min-max"
 
-# Imputation 
+# Imputation
 MEAN = "mean"
 MEDIAN = "median"
 

@@ -1,76 +1,33 @@
 """Feature handling for automatic feature creation from processed data."""
-
-"""
-Still need to do imputation...
-
-DON'T FORGET TO REMOVE ORIGINAL COLUMN AFTER CREATING CATEGORICAL INDICATORS
-
-No longer storing all features as a single object, as this didn't make sense.
-Temporal/tabular features go through different parts of the pipeline anyway,
-and this should be done asynchronously in separate object instances
-
-No more loading directly into the object. You have to load the data and then create the object again.
-This makes more sense, because there's too much other information that needs to be specified, not just the data.
-
-There also might be different temporal features you might want to process separately, e.g., two TemporalFeatures
-
-Columns we want to group by during processing is probably not the same as what we want to groupby during something like normalization
-E.g., for temporal
-Processing: ENCOUNTER_ID, EVENT_NAME, TIMESTEP
-Normalization: EVENT_NAME
-
-It is the exact same deal for the type checking. I feel like we actually want to do it over all encounters,
-which means we need to remove the encounters from the groupby
-
-We won't have performed aggregation by this point, so it should just be ENCOUNTERS, EVENT NAMES in the by argument, whereas we just want EVENT NAMES
-
-
-# INCORPORATE encounter_id FILTERING into plot_features in TemporalFeatures
-
-
-# NO MORE "ADDING" OR REMOVING OF FEATURES
-# If need be, we can create a merge in Features with another Features object,
-# but this limits all of the feature handling to be in the init
-
-# MAKE SURE THAT A TARGET CATEGORICAL TURNED DUMMY INDICATORS
-# MAKE SURE THE INDICATORS ARE TARGETS
-
-"""
 import logging
-from typing import Any, Dict, List, Optional, Union
-import os
+from typing import Dict, List, Optional, Union
 
-import collections.abc
-
-import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.constants import FEATURES
 from cyclops.plotter import plot_histogram, plot_temporal_features
-
-from cyclops.utils.file import save_dataframe
-
 from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.constants import (
-    GROUP,
-    MIN_MAX,
-    MISSING_CATEGORY,
-    STANDARD,
+    CATEGORICAL_INDICATOR,
+    FEATURE_INDICATOR_ATTR,
+    FEATURE_MAPPING_ATTR,
+    FEATURE_META_ATTR_DEFAULTS,
+    FEATURE_META_ATTRS,
+    FEATURE_TARGET_ATTR,
+    FEATURE_TYPE_ATTR,
+    FEATURE_TYPES,
     NUMERIC,
-    FEATURE_TYPES
 )
 from cyclops.processors.feature.normalization import GroupbyNormalizer
-from cyclops.processors.impute import Imputer, impute_features
-from cyclops.processors.util import is_timeseries_data, has_columns
-from cyclops.utils.common import to_list
-from cyclops.utils.log import setup_logging
 from cyclops.processors.feature.type_handling import (
-    normalize_types,
-    detect_types,
     infer_types,
+    normalize_data,
     to_types,
 )
+from cyclops.processors.util import has_columns
+from cyclops.utils.common import to_list, to_list_optional
+from cyclops.utils.file import save_dataframe
+from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -87,49 +44,87 @@ class FeatureMeta:
     target: bool, default = False
         Is the feature a target variable, True if yes, else False.
     indicator_of: str, optional
-        If not None, indicates the original column from which this indicator was created.
+        If not None, the column from which this indicator was generated.
     allowed_values: numpy.ndarray, optional
         The feature values allowed. If None, allow any values.
+
     """
-    def __init__(self,
-        type_: str,
-        target: bool = False,
-        indicator_of: Optional[str] = None,
-    ):
+
+    def __init__(self, **kwargs) -> None:
         """Initialize."""
-        if type_ not in FEATURE_TYPES:
+        # Feature type checking
+        if FEATURE_TYPE_ATTR not in kwargs:
+            raise ValueError("Must specify feature type.")
+
+        if kwargs[FEATURE_TYPE_ATTR] not in FEATURE_TYPES:
             raise ValueError(
-                f"Feature type '{type_}' not in {', '.join(FEATURE_TYPES)}."
+                f"""Feature type '{kwargs[FEATURE_TYPE_ATTR]}'
+                not in {', '.join(FEATURE_TYPES)}."""
             )
-        
-        self.type_ = type_
-        self.target = target
-        self.indicator_of = indicator_of
-            
-    
+
+        # Set attributes
+        for attr in FEATURE_META_ATTRS:
+            if attr in kwargs:
+                setattr(self, attr, kwargs[attr])
+            else:
+                setattr(self, attr, FEATURE_META_ATTR_DEFAULTS[attr])
+
+        # Check for invalid parameters
+        invalid_params = [kwarg for kwarg in kwargs if kwarg not in FEATURE_META_ATTRS]
+        if len(invalid_params) > 0:
+            raise ValueError(
+                f"Invalid feature meta parameters {', '.join(invalid_params)}."
+            )
+
     def get_type(self) -> str:
-        """Return the feature type.
-        
+        """Get the feature type.
+
         Returns
         -------
         str
             Feature type.
+
         """
-        return self.type_
+        return getattr(self, FEATURE_TYPE_ATTR)
 
     def is_target(self) -> bool:
-        """Return whether the feature is a target.
-        
+        """Get whether the feature is a target.
+
         Returns
         -------
         bool
             Whether the feature is a target.
-        """
-        return self.target
 
-    def _update(self, meta: List[tuple]) -> None:
-        """Updates meta attributes.
-        
+        """
+        return getattr(self, FEATURE_TARGET_ATTR)
+
+    def indicator_of(self) -> Optional[str]:
+        """Get the name of an indicator's original categorical column.
+
+        Returns
+        -------
+        str or None
+            The categorical column from which an indicator was generated, or None if
+            not a categorical indicator.
+
+        """
+        return getattr(self, FEATURE_INDICATOR_ATTR)
+
+    def get_mapping(self) -> Optional[dict]:
+        """Get the mapping binary and ordinal categories.
+
+        Returns
+        -------
+        int or None
+            A mapping from the integer categories to the original values, or None if
+            there is no mapping.
+
+        """
+        return getattr(self, FEATURE_MAPPING_ATTR)
+
+    def update(self, meta: List[tuple]) -> None:
+        """Update meta attributes.
+
         Parameters
         ----------
         meta: list of tuple
@@ -142,59 +137,65 @@ class FeatureMeta:
 
 class Features:
     """Features.
-    
+
     Attributes
     ----------
     data: pandas.DataFrame
         Features data.
-    by: str or list of str
+    features: list of str
+        List of feature columns. The remaining columns are treated as metadata.
+    by: list of str
         Columns to groupby during processing, affecting how the features are treated.
-    targets: str or list of str
+    targets: list of str
         Column names to specify as target features.
     meta: dict
         Feature metadata.
+    normalizers: dict
+        Organize normalization objects with different keys, e.g.,
+        having separate normalizers for "features" and "targets".
+
     """
-    def __init__(
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         data: pd.DataFrame,
-        by: Union[str, List[str]],
-        targets: Union[str, List[str]] = [],
-        infer_feature_types: bool = True,
-        allow_categorical: bool = True,
+        features: Union[str, List[str]],
+        by: Optional[Union[str, List[str]]],  # pylint: disable=invalid-name
+        targets: Optional[Union[str, List[str]]] = None,
+        strong_type_infer: bool = True,
+        allow_indicators: bool = True,
     ):
-        """Initalize."""
+        """Init."""
         # Check data
         if not isinstance(data, pd.DataFrame):
             raise ValueError("Feature data must be a pandas.DataFrame.")
-        
-        has_columns(data, by, raise_error=True)
-        has_columns(data, targets, raise_error=True)
 
-        
-        # Type checking and conversions
-        data = normalize_types(data)
-        types = detect_types(data)
-        
-        if infer_feature_types:
-            data, types = infer_types(data, types, allow_categorical=allow_categorical)
-        
-        self.data = data.set_index(by)
-        self.by = to_list(by)
-        
-        # Create metadata
-        self.meta = {}
-        for col in data:
-            self.meta[col] = FeatureMeta(
-                types[col],
-                target=col in targets,
-                indicator_of=None
-            )
-        
-        self.normalizers = {}
+        self.features = to_list(features)
+        target_list = to_list_optional(targets, none_to_empty=True)
+
+        has_columns(data, self.features, raise_error=True)
+        has_columns(data, by, raise_error=True)
+        has_columns(data, target_list, raise_error=True)
+
+        # Type checking and inference
+        data = normalize_data(data, self.features)
+        self.data = data
+        self.meta: Dict[str, FeatureMeta] = {}
+        self.infer_feature_types(
+            strong=strong_type_infer, allow_indicators=allow_indicators
+        )
+
+        self.data = self.data.set_index(by)
+        self.by = to_list(by)  # pylint: disable=invalid-name
+
+        print(self.meta.keys())
+        print(self.meta)
+
+        self.normalizers: Dict[str, GroupbyNormalizer] = {}
 
     @property
-    def names(self) -> List[str]:
-        """Access as attribute, feature names.
+    def columns(self) -> List[str]:
+        """Access as attribute, data columns.
 
         Returns
         -------
@@ -203,6 +204,18 @@ class Features:
 
         """
         return self.data.columns
+
+    @property
+    def feature_names(self) -> List[str]:
+        """Access as attribute, feature names.
+
+        Returns
+        -------
+        list
+            List of all feature names.
+
+        """
+        return self.features
 
     @property
     def types(self) -> dict:
@@ -228,48 +241,75 @@ class Features:
             Names of target features.
 
         """
-        return [col for col in self.meta if self.meta[col].is_target()],
+        return [col for col, meta in self.meta.items() if meta.is_target()]
 
     def _update_meta(self, meta_update: dict) -> None:
         """Update feature metadata.
-        
+
         Parameters
         ----------
         meta_update: dict
             A dictionary in which the values will add/update
             the existing feature metadata dictionary.
 
-        """        
+        """
         for col, info in meta_update.items():
-            self.meta[col]._update(list(info.items()))
+            if col in self.meta:
+                self.meta[col].update(list(info.items()))
+            else:
+                self.meta[col] = FeatureMeta(**info)
 
-    def to_feature_types(self, types: dict) -> None:
+    def to_feature_types(self, new_types: dict) -> None:
         """Manually convert feature types.
-        
+
         Parameters
         ----------
         types: dict
             A map from the column name to the feature type.
 
         """
-        self.data, updated_meta = to_types(self.data, types)
-        self._update_meta(updated_meta)
-    
-    def infer_feature_types(self):
-        """Infer feature types.
-        
-        """
-        self.data, updated_meta = infer_types(self.data, self.types)
-        self._update_meta(updated_meta)
-    
+        # Check that we aren't converting any categorical indicators to other things
+        for col, new_type in new_types.items():
+            if col in self.meta:
+                if self.meta[col].get_type() == CATEGORICAL_INDICATOR:
+                    raise ValueError(
+                        "Categorical indicators cannot be converted to other types."
+                    )
+
+                # Remove original category column if converting to indicators
+                if new_type == CATEGORICAL_INDICATOR:
+                    del self.meta[col]
+
+            # Remove original category column if converting to indicators
+            if new_type == CATEGORICAL_INDICATOR:
+                self.features.remove(col)
+
+        print("HAPPENED")
+        data, meta = to_types(self.data, new_types)
+
+        # Append any new indicator features
+        for col, fmeta in meta.items():
+            if FEATURE_INDICATOR_ATTR in fmeta:
+                self.features.append(col)
+
+        self.data = data
+        self._update_meta(meta)
+
+    def infer_feature_types(self, strong: bool = True, allow_indicators: bool = True):
+        """Infer feature types."""
+        new_types = infer_types(
+            self.data, self.features, strong=strong, allow_indicators=allow_indicators
+        )
+        self.to_feature_types(new_types)
+
     def create_normalizer(
         self,
         key: str,
         normalizer_map: dict,
-        by: Optional[Union[str, List[str]]] = None
+        by: Optional[Union[str, List[str]]] = None,  # pylint: disable=invalid-name
     ) -> None:
         """Create and store a normalization object.
-        
+
         Parameters
         ----------
         key: str
@@ -282,19 +322,25 @@ class Features:
 
         """
         if key in self.normalizers:
-            raise ValueError("A normalizer with this key already exists. Consider first removing it.")
-        
-        is_numeric = [self.meta[col].get_type() == NUMERIC for col in normalizer_map.keys()]
+            raise ValueError(
+                "A normalizer with this key already exists. Consider first removing it."
+            )
+
+        is_numeric = [
+            self.meta[col].get_type() == NUMERIC for col in normalizer_map.keys()
+        ]
         if not all(is_numeric):
-            raise ValueError("Only numeric features may be normalized. Check the feature types.")
-        
+            raise ValueError(
+                "Only numeric features may be normalized. Check the feature types."
+            )
+
         gbn = GroupbyNormalizer(normalizer_map, by)
         gbn.fit(self.data)
         self.normalizers[key] = gbn
-    
+
     def remove_normalizer(self, key: str) -> None:
         """Remove a normalization object.
-        
+
         Parameters
         ----------
         key: str
@@ -303,23 +349,19 @@ class Features:
         """
         if key not in self.normalizers:
             raise ValueError("No normalizer with this key exists.")
-        
+
         del self.normalizers[key]
 
-    def normalize(
-        self,
-        key: str,
-        inplace: bool = True
-    ) -> Optional[pd.DataFrame]:
+    def normalize(self, key: str, inplace: bool = True) -> pd.DataFrame:
         """Normalize.
-        
+
         Parameters
         ----------
         key: str
             Unique name of the normalizer.
         inplace: bool
             Whether to perform in-place, or to return the DataFrame.
-        
+
         Returns
         -------
         pandas.DataFrame or None
@@ -328,45 +370,42 @@ class Features:
         """
         gbn = self.normalizers[key]
         data = gbn.transform(self.data)
-        
+
         if inplace:
             self.data = data
-        else:
-            return data
-    
+
+        return data
+
     def inverse_normalize(
         self,
         key: str,
-        inplace: bool = True
+        inplace: bool = True,
     ) -> Optional[pd.DataFrame]:
         """Inverse normalize.
-        
+
         Parameters
         ----------
         key: str
             Unique name of the normalizer.
         inplace: bool
             Whether to perform in-place, or to return the DataFrame.
-        
+
         Returns
         -------
         pandas.DataFrame or None
             If inplace is True, returns the inverse normalized data.
+
         """
-        data = gbn.transform(self.data)
-        
+        gbn = self.normalizers[key]
+        data = gbn.inverse_transform(self.data)
+
         if inplace:
             self.data = data
-        else:
-            return data
 
-    def save(
-        self,
-        save_path: str,
-        file_format: str = "parquet"
-    ) -> None:
+        return data
+
+    def save(self, save_path: str, file_format: str = "parquet") -> None:
         """Save feature data to file.
-
 
         Parameters
         ----------
@@ -388,20 +427,30 @@ class Features:
 
 class TabularFeatures(Features):
     """Tabular features."""
-    def __init__(
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         data: pd.DataFrame,
+        features: Union[str, List[str]],
         by: Optional[str] = None,
-        targets: Union[str, List[str]] = [],
-        infer_feature_types: bool = True,
+        targets: Optional[Union[str, List[str]]] = None,
+        strong_type_infer: bool = True,
+        allow_indicators: bool = True,
     ):
         """Initialize."""
         if by is not None and not isinstance(by, str):
             raise ValueError(
                 "Tabular features must have just one index (must input as string)."
             )
-        
-        super().__init__(data, by, targets=targets, infer_feature_types=infer_feature_types)
+
+        super().__init__(
+            data,
+            features,
+            by,
+            targets=targets,
+            strong_type_infer=strong_type_infer,
+            allow_indicators=allow_indicators,
+        )
 
     def plot_features(
         self,
@@ -418,29 +467,38 @@ class TabularFeatures(Features):
 
         """
         if features is None:
-            plot_histogram(self.data, self.names)
+            plot_histogram(self.data, self.feature_names)
         else:
             plot_histogram(self.data, features)
-        
+
 
 class TemporalFeatures(Features):
     """Temporal features."""
-    def __init__(
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         data: pd.DataFrame,
+        features: Union[str, List[str]],
         by: Union[str, List[str]],
+        targets: Optional[Union[str, List[str]]] = None,
+        strong_type_infer: bool = True,
+        allow_indicators: bool = True,
         aggregator: Optional[Aggregator] = None,
-        targets: Union[str, List[str]] = [],
-        infer_feature_types: bool = True,
     ):
         """Initialize."""
-        super().__init__(data, by, targets=targets, infer_feature_types=infer_feature_types)
+        super().__init__(
+            data,
+            features,
+            by,
+            targets=targets,
+            strong_type_infer=strong_type_infer,
+            allow_indicators=allow_indicators,
+        )
 
         self.aggregator = aggregator
-    
+
     def plot_features(
         self,
-        encounter_id: int = None,
         features: Optional[Union[str, list]] = None,
     ) -> None:
         """Plot features.
@@ -449,13 +507,11 @@ class TemporalFeatures(Features):
 
         Parameters
         ----------
-        encounter_id: int, optional
-            Encounter ID.
-        names: list or str, optional
+        features: list or str, optional
             Names of features to plot.
 
         """
         if features is None:
-            plot_temporal_features(self.data, self.names)
+            plot_temporal_features(self.data, self.feature_names)
         else:
             plot_temporal_features(self.data, features)

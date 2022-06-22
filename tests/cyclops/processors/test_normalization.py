@@ -168,6 +168,9 @@ def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-n
         np.abs(normalized.groupby(EVENT_NAME)[EVENT_VALUE].apply("mean").values) < 1e-07
     ).all()
 
+    if "level_0" in normalized.columns:
+        normalized = normalized.drop(["level_0"], axis=1)
+
     denormalized = gbn.inverse_transform(normalized)
     denormalized.sort_values("index", inplace=True)
 

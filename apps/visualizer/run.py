@@ -14,8 +14,10 @@ from flask_caching import Cache
 from codebase_ops import get_log_file_path
 from cyclops.plotter import plot_histogram, plot_temporal_features, plot_timeline
 from cyclops.processors.column_names import ENCOUNTER_ID
-from cyclops.processors.constants import STATIC, TEMPORAL
 from cyclops.utils.log import setup_logging
+
+STATIC = "static"
+TEMPORAL = "temporal"
 
 CACHE_TIMEOUT = 3000
 EVALUATION = "evaluation"

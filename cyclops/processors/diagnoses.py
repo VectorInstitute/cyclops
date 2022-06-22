@@ -13,7 +13,7 @@ from cyclops.processors.column_names import (
     ENCOUNTER_ID,
 )
 from cyclops.processors.constants import EMPTY_STRING, TRAJECTORIES
-from cyclops.processors.util import log_counts_step
+from cyclops.processors.util import gather_columns, has_columns, log_counts_step
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -123,6 +123,28 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
     if raise_err:
         raise Exception(f"Code cannot be converted: {code}")
     return EMPTY_STRING
+
+
+def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """Process diagnoses data (codes) into trajectories, and create features.
+
+    Parameters
+    ----------
+    dataframe: pd.DataFrame
+        Input DataFrame with diagnoses code data.
+
+    Returns
+    -------
+    pd.DataFrame
+        Diagnoses codes processed into trajectory features.
+
+    """
+    diagnoses_features = None
+    if has_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
+        diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
+        diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
+
+    return diagnoses_features
 
 
 @time_function
