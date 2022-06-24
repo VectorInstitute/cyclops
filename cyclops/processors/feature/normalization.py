@@ -170,7 +170,6 @@ class GroupbyNormalizer:
             Data over which to fit.
 
         """
-        
         if not has_range_index(data):
             raise ValueError(
                 "DataFrame required to have a range index. Try resetting the index."
@@ -226,7 +225,7 @@ class GroupbyNormalizer:
             raise ValueError(
                 "DataFrame required to have a range index. Try resetting the index."
             )
-        
+
         def transform_group(group):
             for col in self.normalizer_map.keys():
                 # Get normalizer object and transform
@@ -246,8 +245,8 @@ class GroupbyNormalizer:
             data.set_index(self.by, inplace=True)
             grouped = data.groupby(self.by)
             data = grouped.apply(transform_group).reset_index()
-            data.sort_values("index", inplace=True)
-            data.drop("index", axis=1, inplace=True)
+            data = data.set_index("index")
+            data = data.sort_index()
 
         return data
 

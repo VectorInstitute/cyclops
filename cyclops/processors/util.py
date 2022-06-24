@@ -2,7 +2,7 @@
 
 import logging
 from functools import wraps
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, List, Union
 
 import numpy as np
 import pandas as pd
@@ -212,41 +212,43 @@ def assert_has_columns(*args, **kwargs) -> Callable:
 
 def has_range_index(data: pd.DataFrame) -> bool:
     """Check whether a DataFrame has a range index.
-    
+
     Parameters
     ----------
     data: pandas.DataFrame
         Data.
-    
+
     Returns
     -------
     bool
         Whether the data has a range index.
+
     """
     return (data.index == pd.RangeIndex(stop=len(data))).all()
 
 
 def to_range_index(data: pd.DataFrame) -> pd.DataFrame:
     """Force a DataFrame to have a range index.
-    
+
     Parameters
     ----------
     data: pandas.DataFrame
         Data.
-    
+
     Returns
     -------
     pandas.DataFrame
         Data with a range index.
+
     """
     if has_range_index(data):
         return data
-    
+
     name = data.index.name
     data = data.reset_index()
     if name == "index":
         data = data.drop("index", axis=1)
-    
+
     return data
 
 
