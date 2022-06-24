@@ -22,32 +22,6 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-def create_indicator_variables(
-    features: pd.DataFrame, columns: Optional[List] = None
-) -> pd.DataFrame:
-    """Create binary indicator variable for each column (or specified).
-
-    Parameters
-    ----------
-    features: pandas.DataFrame
-        Input features with missing values.
-    columns: list, optional
-        Columns to create variables, all if not specified.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Dataframe with indicator variables as columns.
-
-    """
-    if columns:
-        indicator_features = features[columns]
-    else:
-        indicator_features = features
-
-    return indicator_features.notnull().astype(int).add_suffix("_indicator")
-
-
 def pivot_aggregated_events_to_features(
     aggregated_events: pd.DataFrame, aggfunc: Callable
 ) -> pd.DataFrame:
@@ -234,6 +208,46 @@ def assert_has_columns(*args, **kwargs) -> Callable:
         return wrapper_func
 
     return decorator
+
+
+def has_range_index(data: pd.DataFrame) -> bool:
+    """Check whether a DataFrame has a range index.
+    
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Data.
+    
+    Returns
+    -------
+    bool
+        Whether the data has a range index.
+    """
+    return (data.index == pd.RangeIndex(stop=len(data))).all()
+
+
+def to_range_index(data: pd.DataFrame) -> pd.DataFrame:
+    """Force a DataFrame to have a range index.
+    
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Data.
+    
+    Returns
+    -------
+    pandas.DataFrame
+        Data with a range index.
+    """
+    if has_range_index(data):
+        return data
+    
+    name = data.index.name
+    data = data.reset_index()
+    if name == "index":
+        data = data.drop("index", axis=1)
+    
+    return data
 
 
 def gather_columns(data: pd.DataFrame, columns: Union[List[str], str]) -> pd.DataFrame:

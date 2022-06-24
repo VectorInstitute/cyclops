@@ -143,4 +143,4 @@ def process_diagnoses(
     series = series.apply(get_icd_category, args=(trajectories,))
     series = series.rename(DIAGNOSIS_TRAJECTORY)
 
-    return trajectories
+    return series
