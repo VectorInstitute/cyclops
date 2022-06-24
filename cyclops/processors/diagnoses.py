@@ -7,15 +7,9 @@ from typing import Dict, Optional
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.column_names import (
-    DIAGNOSIS_CODE,
-    DIAGNOSIS_TRAJECTORY,
-    ENCOUNTER_ID,
-)
+from cyclops.processors.column_names import DIAGNOSIS_TRAJECTORY
 from cyclops.processors.constants import EMPTY_STRING, TRAJECTORIES
-from cyclops.processors.util import gather_columns, has_columns, log_counts_step, assert_has_columns
 from cyclops.utils.log import setup_logging
-from cyclops.utils.profile import time_function
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -125,26 +119,28 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
     return EMPTY_STRING
 
 
-def process_diagnoses(series: pd.Series, trajectories: Optional[Dict] = None) -> pd.Series:
-    """Process diagnoses data (codes) into trajectories, and create features.
+def process_diagnoses(
+    series: pd.Series, trajectories: Optional[Dict] = None
+) -> pd.Series:
+    """Process diagnoses data (codes) into trajectories.
 
     Parameters
     ----------
-    data: pd.DataFrame
-        Input DataFrame with diagnoses code data.
+    series: pd.Series
+        Diagnosis code data.
+    trajectories: dict, optional
+        Mapping from code to trajectory.
 
     Returns
     -------
-    pd.DataFrame
-        Diagnoses codes processed into trajectory features.
+    pd.Series
+        Diagnoses trajectories.
 
     """
     if trajectories is None:
         trajectories = TRAJECTORIES
 
-    trajectories = series.apply(
-        get_icd_category, args=(trajectories,)
-    )
-    trajectories = trajectories.rename(DIAGNOSIS_TRAJECTORY)
+    series = series.apply(get_icd_category, args=(trajectories,))
+    series = series.rename(DIAGNOSIS_TRAJECTORY)
 
     return trajectories

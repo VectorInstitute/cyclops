@@ -484,7 +484,7 @@ def get_labs(cohort: pd.DataFrame) -> pd.DataFrame:
     table = gemini.events(
         "lab", drop_null_event_names=True, drop_null_event_values=True
     ).query
-    
+
     table = qp.Limit(1000)(table)
 
     table = qp.FilterColumns(
@@ -514,7 +514,7 @@ def main(drop_admin_cols=True):
     # Get cohort
     cohort = get_cohort()
 
-    """
+    ignore = """
     # Get ER data for the cohort
     cohort = get_er_for_cohort(cohort)
 
@@ -530,14 +530,14 @@ def main(drop_admin_cols=True):
     # Get pulmonary edema indicator for the cohort
     cohort = get_pulmonary_edema_for_cohort(cohort)
     """
-    
+    print(ignore[0])
+
     if drop_admin_cols:
         cohort = cohort.drop(
             ["ccsr_default", "ccsr_1", "ccsr_2"],
             axis=1,
         )
-    
-    
+
     # Get labs data
     labs = get_labs(cohort)
 

@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import (
     is_bool_dtype,
+    is_integer_dtype,
     is_numeric_dtype,
     is_string_dtype,
-    is_integer_dtype,
 )
 
 from cyclops.processors.constants import (
@@ -257,7 +257,7 @@ def _valid_numeric(
 def _convertible_to_numeric(
     series: pd.Series,
     unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
-    raise_error: bool = False
+    raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type numeric.
 
@@ -279,7 +279,7 @@ def _convertible_to_numeric(
     if raise_error:
         pd.to_numeric(series)
         return True
-    
+
     try:
         pd.to_numeric(series)
         can_convert = True
@@ -348,11 +348,11 @@ def _convertible_to_categorical(  # pylint: disable=too-many-arguments
     # If numeric, only allow conversion if an integer type
     if is_numeric_dtype(series) and not is_integer_dtype(series):
         return False
-    
+
     unique = get_unique(series, unique=unique)
     nonnull_unique = unique[~pd.isnull(unique)]
     nunique = len(nonnull_unique)
-    
+
     if category_min is None:
         min_cond = True
     else:
@@ -561,7 +561,7 @@ def _convertible_to_binary(
     """
     if is_bool_dtype(series):
         return True
-    
+
     return _convertible_to_categorical(
         series,
         category_min=2,
@@ -595,7 +595,7 @@ def _to_binary(
             FEATURE_MAPPING_ATTR: {False: False, True: True},
         }
         return to_dtype(series, BINARY), meta
-    
+
     series, meta = _numeric_categorical_mapping(series, unique=unique)
     meta[FEATURE_TYPE_ATTR] = BINARY
     return to_dtype(series, BINARY), meta
@@ -982,7 +982,6 @@ def infer_types(
         and metadata respectively.
 
     """
-
     new_types = {}
     for col in features:
         new_types[col] = _infer_type(data[col], to_indicators=to_indicators)

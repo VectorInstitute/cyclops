@@ -174,27 +174,25 @@ class Features:
             raise ValueError("Feature data must be a pandas.DataFrame.")
 
         self.by = to_list_optional(by)  # pylint: disable=invalid-name
-        
+
         if self.by is not None:
             has_columns(data, self.by, raise_error=True)
-        
+
         feature_list = to_list(features)
         target_list = to_list_optional(targets, none_to_empty=True)
-        
+
         has_columns(data, feature_list, raise_error=True)
         has_columns(data, target_list, raise_error=True)
-        
+
         # Add targets to the list of features if they were not included
         self.features = list(set(feature_list + target_list))
 
         # Type checking and inference
         data = normalize_data(data, self.features)
-        
+
         self.data = data
         self.meta: Dict[str, FeatureMeta] = {}
-        self._infer_feature_types(
-            to_indicators=to_indicators, force_types=force_types
-        )
+        self._infer_feature_types(to_indicators=to_indicators, force_types=force_types)
 
         self.normalizers: Dict[str, GroupbyNormalizer] = {}
         self.normalized: Dict[str, bool] = {}
@@ -291,7 +289,7 @@ class Features:
             # Remove any existing metadata
             if col in self.meta:
                 del self.meta[col]
-            
+
             # Remove original category column if converting to indicators
             if new_type == CATEGORICAL_INDICATOR:
                 self.features.remove(col)
@@ -312,19 +310,17 @@ class Features:
         force_types: Optional[dict] = None,
     ):
         """Infer feature types."""
-        new_types = infer_types(
-            self.data, self.features, to_indicators=to_indicators
-        )
-        
+        new_types = infer_types(self.data, self.features, to_indicators=to_indicators)
+
         # Force certain features to be specific types
         if force_types is not None:
             invalid = set(force_types.keys()) - set(self.features)
             if len(invalid) > 0:
                 raise ValueError(f"Unrecognized features: {', '.join(invalid)}")
-            
+
             for feature, type_ in force_types.items():
                 new_types[feature] = type_
-        
+
         self._to_feature_types(new_types)
 
     def add_normalizer(
@@ -350,37 +346,36 @@ class Features:
                 "A normalizer with this key already exists. Consider first removing it."
             )
 
-        by = normalizer.get_by()
+        by = normalizer.get_by()  # pylint: disable=invalid-name
         if by is not None:
             has_columns(self.data, by, raise_error=True)
-        
-        
+
         normalizer_map = normalizer.get_map()
         features = set(normalizer_map.keys())
-        
+
         # Check to make sure none of the feature exist in another normalizer
-        for key, norm in self.normalizers.items():
+        for norm_key, norm in self.normalizers.items():
             norm_set = set(norm.keys())
             intersect = norm_set.intersection(features)
             if len(intersect) != 0:
                 raise ValueError(
-                    f"Features {', '.join(intersect)} exist in another normalizer."
+                    f"Features {', '.join(intersect)} exist in normalizer {norm_key}."
                 )
-        
+
         # Check for non-existent columns in the map
         nonexistent = set(normalizer_map.keys()) - set(self.features)
         if len(nonexistent) > 0:
             raise ValueError(
                 f"The following columns are not features: {', '.join(nonexistent)}."
             )
-        
+
         # Check for invalid non-numeric columns
         is_numeric = [
             self.meta[col].get_type() == NUMERIC for col in normalizer_map.keys()
         ]
         if not all(is_numeric):
             raise ValueError(
-                "Only numeric features may be normalized. Confirm feature choice and type."
+                "Only numeric features may be normalized. Confirm feature choice/type."
             )
 
         gbn = GroupbyNormalizer(normalizer_map, by)
@@ -420,7 +415,7 @@ class Features:
         """
         if self.normalized[key]:
             raise ValueError(f"Cannot normalize {key}. It has already been normalized.")
-        
+
         gbn = self.normalizers[key]
         data = gbn.transform(self.data)
 
@@ -450,7 +445,7 @@ class Features:
             raise ValueError(
                 f"Cannot inverse normalize {key}. It has not been normalized."
             )
-        
+
         gbn = self.normalizers[key]
         data = gbn.inverse_transform(self.data)
 
@@ -461,33 +456,34 @@ class Features:
         return data
 
     def ordinal_to_categorical(
-        self,
-        features: Optional[Union[str, List[str]]] = None
+        self, features: Optional[Union[str, List[str]]] = None
     ) -> None:
         """Convert ordinal features to binary categorical indicators.
-        
+
         Parameters
         ----------
         feautres: str or list of str, optional
             Ordinal features to convert. If not provided, convert all ordinal features.
-        
+
         """
         features = to_list_optional(features)
-        
+
         if features is None:
             features = [f for f in self.features if self.meta[f].get_type() == ORDINAL]
-        
+
         for feat in features:
-            if not feat in self.features:
+            if feat not in self.features:
                 raise ValueError(f"Feature {feat} does not exist.")
-            
+
             if self.meta[feat].get_type() != ORDINAL:
                 raise ValueError(f"{feat} is not an ordinal feature.")
-        
+
         # Map back to original values
         for feat in features:
-            self.data[feat] = self.data[feat].astype(int).replace(self.meta[feat].get_mapping())
-        
+            self.data[feat] = (
+                self.data[feat].astype(int).replace(self.meta[feat].get_mapping())
+            )
+
         self._to_feature_types({feat: CATEGORICAL_INDICATOR for feat in features})
 
     def save(self, save_path: str, file_format: str = "parquet") -> None:
