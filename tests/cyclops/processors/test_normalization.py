@@ -155,7 +155,6 @@ def test_nongrouped_normalization(test_input):  # pylint: disable=redefined-oute
 
 def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-name
     """Test normalization using a groupby."""
-    test_input.reset_index(inplace=True)
     gbn = GroupbyNormalizer(
         {SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD}, by=[EVENT_NAME]
     )
@@ -172,8 +171,12 @@ def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-n
         normalized = normalized.drop(["level_0"], axis=1)
 
     denormalized = gbn.inverse_transform(normalized)
-    denormalized.sort_values("index", inplace=True)
-
+    
+    print("\n")
+    print(test_input)
+    
+    print(denormalized)
+    
     assert np.allclose(
         denormalized[SUBJECT_ID].values, test_input[SUBJECT_ID].values, atol=1e-07
     )
