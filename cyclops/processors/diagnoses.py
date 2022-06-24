@@ -9,11 +9,11 @@ import pandas as pd
 from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import (
     DIAGNOSIS_CODE,
-    DIAGNOSIS_TRAJECTORIES,
+    DIAGNOSIS_TRAJECTORY,
     ENCOUNTER_ID,
 )
 from cyclops.processors.constants import EMPTY_STRING, TRAJECTORIES
-from cyclops.processors.util import gather_columns, has_columns, log_counts_step
+from cyclops.processors.util import gather_columns, has_columns, log_counts_step, assert_has_columns
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -125,12 +125,12 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
     return EMPTY_STRING
 
 
-def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
+def process_diagnoses(series: pd.Series, trajectories: Optional[Dict] = None) -> pd.Series:
     """Process diagnoses data (codes) into trajectories, and create features.
 
     Parameters
     ----------
-    dataframe: pd.DataFrame
+    data: pd.DataFrame
         Input DataFrame with diagnoses code data.
 
     Returns
@@ -139,53 +139,12 @@ def process_diagnoses(dataframe: pd.DataFrame) -> pd.DataFrame:
         Diagnoses codes processed into trajectory features.
 
     """
-    diagnoses_features = None
-    if has_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE]):
-        diagnoses_data = gather_columns(dataframe, [ENCOUNTER_ID, DIAGNOSIS_CODE])
-        diagnoses_features = group_diagnosis_codes_to_trajectories(diagnoses_data)
-
-    return diagnoses_features
-
-
-@time_function
-def group_diagnosis_codes_to_trajectories(
-    data: pd.DataFrame, trajectories: Optional[Dict] = None
-) -> pd.DataFrame:
-    """Process raw ICD diagnosis codes into grouped trajectories (one-hot encoded).
-
-    For each encounter, a patient may have associated diagnoses information,
-    and these codes can be grouped into ICD trajectories which allows them to
-    be used as features or targets.
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input data with diagnoses codes associated to patient.
-
-    Returns
-    -------
-    pandas.DataFrame:
-        One-hot encoded binary ICD features.
-
-    """
-    log_counts_step(data, "Processing raw diagnosis codes...")
-    if not trajectories:
+    if trajectories is None:
         trajectories = TRAJECTORIES
 
-    data[DIAGNOSIS_TRAJECTORIES] = data[DIAGNOSIS_CODE].apply(
+    trajectories = series.apply(
         get_icd_category, args=(trajectories,)
     )
-    log_counts_step(data, "Grouping ICD codes to trajectories...")
+    trajectories = trajectories.rename(DIAGNOSIS_TRAJECTORY)
 
-    encounters = list(data[ENCOUNTER_ID].unique())
-    icd_trajectories = list(data[DIAGNOSIS_TRAJECTORIES].unique())
-    LOGGER.info(
-        "# diagnosis features: %d, # encounters: %d",
-        len(icd_trajectories),
-        len(encounters),
-    )
-    features = pd.crosstab(data[ENCOUNTER_ID], data[DIAGNOSIS_TRAJECTORIES])
-    features.fillna(0, inplace=True)
-    features = features.applymap(lambda x: int(x > 0))
-
-    return features
+    return trajectories

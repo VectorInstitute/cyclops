@@ -6,7 +6,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_numeric_dtype, is_string_dtype
+from pandas.api.types import (
+    is_bool_dtype,
+    is_numeric_dtype,
+    is_string_dtype,
+    is_integer_dtype,
+)
 
 from cyclops.processors.constants import (
     BINARY,
@@ -252,6 +257,7 @@ def _valid_numeric(
 def _convertible_to_numeric(
     series: pd.Series,
     unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    raise_error: bool = False
 ) -> bool:
     """Check whether a feature can be converted to type numeric.
 
@@ -261,6 +267,8 @@ def _convertible_to_numeric(
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
+    raise_error: bool, default = False
+        Whether to raise an error if the type cannot be converted.
 
     Returns
     -------
@@ -268,6 +276,10 @@ def _convertible_to_numeric(
         Whether the feature can be converted.
 
     """
+    if raise_error:
+        pd.to_numeric(series)
+        return True
+    
     try:
         pd.to_numeric(series)
         can_convert = True
@@ -333,19 +345,23 @@ def _convertible_to_categorical(  # pylint: disable=too-many-arguments
         Whether the feature can be converted.
 
     """
+    # If numeric, only allow conversion if an integer type
+    if is_numeric_dtype(series) and not is_integer_dtype(series):
+        return False
+    
     unique = get_unique(series, unique=unique)
     nonnull_unique = unique[~pd.isnull(unique)]
     nunique = len(nonnull_unique)
-
+    
     if category_min is None:
         min_cond = True
     else:
-        min_cond = nunique > category_min
+        min_cond = nunique >= category_min
 
     if category_max is None:
         max_cond = True
     else:
-        max_cond = nunique < category_max
+        max_cond = nunique <= category_max
 
     # Convertible
     if min_cond and max_cond:
@@ -403,7 +419,7 @@ def _valid_ordinal(
 def _convertible_to_ordinal(
     series: pd.Series,
     unique: Optional[np.ndarray] = None,
-    category_max: int = 100,
+    category_max: int = 20,
     raise_error_over_max: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type ordinal.
@@ -543,6 +559,9 @@ def _convertible_to_binary(
         Whether the feature can be converted.
 
     """
+    if is_bool_dtype(series):
+        return True
+    
     return _convertible_to_categorical(
         series,
         category_min=2,
@@ -570,6 +589,13 @@ def _to_binary(
         and metadata respectively.
 
     """
+    if is_bool_dtype(series):
+        meta = {
+            FEATURE_TYPE_ATTR: BINARY,
+            FEATURE_MAPPING_ATTR: {False: False, True: True},
+        }
+        return to_dtype(series, BINARY), meta
+    
     series, meta = _numeric_categorical_mapping(series, unique=unique)
     meta[FEATURE_TYPE_ATTR] = BINARY
     return to_dtype(series, BINARY), meta
@@ -611,7 +637,7 @@ def _valid_categorical_indicator(
 def _convertible_to_categorical_indicators(
     series: pd.Series,
     unique: Optional[np.ndarray] = None,
-    category_max: int = 100,
+    category_max: int = 20,
     raise_error_over_max: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to categorical indicators.
@@ -886,44 +912,9 @@ def to_types(
     return data, meta
 
 
-def _infer_type_weak(
+def _infer_type(
     series: pd.Series,
-    allow_indicators: bool = True,  # pylint: disable=unused-argument
-    unique: Optional[np.ndarray] = None,
-) -> str:
-    """Detect feature type.
-
-    Parameters
-    ----------
-    series: pandas.Series
-        Feature data.
-    unique: numpy.ndarray, optional
-        Unique values which can be optionally specified.
-
-    Returns
-    -------
-    str
-        Feature type.
-
-    """
-    unique = get_unique(series, unique=unique)
-
-    # Check whether all values are NaN
-    if np.array_equal(unique, [np.nan]):
-        raise ValueError(f"Cannot detect data type of all null series '{series.name}'.")
-
-    if is_valid(series, STRING, unique=unique):
-        return STRING
-
-    if is_valid(series, NUMERIC, unique=unique):
-        return NUMERIC
-
-    raise ValueError(f"Cannot not infer type of series '{series.name}'.")
-
-
-def _infer_type_strong(
-    series: pd.Series,
-    allow_indicators: bool = True,
+    to_indicators: bool = False,
     unique: Optional[np.ndarray] = None,
 ) -> str:
     """Infer intended feature type and perform the relevant conversion.
@@ -934,7 +925,7 @@ def _infer_type_strong(
         Features data.
     col: str
         Name of feature column to infer.
-    allow_indicators:
+    to_indicators:
         Allow conversion to categorical indicators. Otherwise, categorical
         features will be inferred as ordinal.
 
@@ -949,7 +940,7 @@ def _infer_type_strong(
     if convertible_to_type(series, BINARY, unique=unique):
         return BINARY
 
-    if allow_indicators:
+    if to_indicators:
         if convertible_to_type(
             series, CATEGORICAL_INDICATOR, unique=unique, raise_error=False
         ):
@@ -970,8 +961,7 @@ def _infer_type_strong(
 def infer_types(
     data: pd.DataFrame,
     features: List[str],
-    strong: bool = True,
-    allow_indicators: bool = True,
+    to_indicators: bool = False,
 ) -> Dict[str, str]:
     """Infer intended feature types and perform the relevant conversions.
 
@@ -981,7 +971,7 @@ def infer_types(
         Feature data.
     features: list of str
         Features to consider.
-    allow_indicators: bool, default = True
+    to_indicators: bool, default = True
         Allow conversion to categorical indicators. Otherwise, categorical
         features will be inferred as ordinal.
 
@@ -992,13 +982,9 @@ def infer_types(
         and metadata respectively.
 
     """
-    if strong:
-        infer_fn = _infer_type_strong
-    else:
-        infer_fn = _infer_type_weak
 
     new_types = {}
     for col in features:
-        new_types[col] = infer_fn(data[col], allow_indicators=allow_indicators)
+        new_types[col] = _infer_type(data[col], to_indicators=to_indicators)
 
     return new_types

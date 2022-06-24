@@ -17,6 +17,7 @@ from cyclops.processors.constants import (
     FEATURE_TYPE_ATTR,
     FEATURE_TYPES,
     NUMERIC,
+    ORDINAL,
 )
 from cyclops.processors.feature.normalization import GroupbyNormalizer
 from cyclops.processors.feature.type_handling import (
@@ -153,6 +154,8 @@ class Features:
     normalizers: dict
         Organize normalization objects with different keys, e.g.,
         having separate normalizers for "features" and "targets".
+    normalized: dict
+        Track for each normalizer whether normalization has been performed.
 
     """
 
@@ -162,36 +165,39 @@ class Features:
         features: Union[str, List[str]],
         by: Optional[Union[str, List[str]]],  # pylint: disable=invalid-name
         targets: Optional[Union[str, List[str]]] = None,
-        strong_type_infer: bool = True,
-        allow_indicators: bool = True,
+        to_indicators: bool = False,
+        force_types: Optional[dict] = None,
     ):
         """Init."""
         # Check data
         if not isinstance(data, pd.DataFrame):
             raise ValueError("Feature data must be a pandas.DataFrame.")
 
-        self.features = to_list(features)
+        self.by = to_list_optional(by)  # pylint: disable=invalid-name
+        
+        if self.by is not None:
+            has_columns(data, self.by, raise_error=True)
+        
+        feature_list = to_list(features)
         target_list = to_list_optional(targets, none_to_empty=True)
-
-        has_columns(data, self.features, raise_error=True)
-        has_columns(data, by, raise_error=True)
+        
+        has_columns(data, feature_list, raise_error=True)
         has_columns(data, target_list, raise_error=True)
+        
+        # Add targets to the list of features if they were not included
+        self.features = list(set(feature_list + target_list))
 
         # Type checking and inference
         data = normalize_data(data, self.features)
+        
         self.data = data
         self.meta: Dict[str, FeatureMeta] = {}
-        self.infer_feature_types(
-            strong=strong_type_infer, allow_indicators=allow_indicators
+        self._infer_feature_types(
+            to_indicators=to_indicators, force_types=force_types
         )
 
-        self.data = self.data.set_index(by)
-        self.by = to_list(by)  # pylint: disable=invalid-name
-
-        print(self.meta.keys())
-        print(self.meta)
-
         self.normalizers: Dict[str, GroupbyNormalizer] = {}
+        self.normalized: Dict[str, bool] = {}
 
     @property
     def columns(self) -> List[str]:
@@ -259,7 +265,7 @@ class Features:
             else:
                 self.meta[col] = FeatureMeta(**info)
 
-    def to_feature_types(self, new_types: dict) -> None:
+    def _to_feature_types(self, new_types: dict) -> None:
         """Manually convert feature types.
 
         Parameters
@@ -280,11 +286,16 @@ class Features:
                 if new_type == CATEGORICAL_INDICATOR:
                     del self.meta[col]
 
+        # Edit existing data
+        for col, new_type in new_types.items():
+            # Remove any existing metadata
+            if col in self.meta:
+                del self.meta[col]
+            
             # Remove original category column if converting to indicators
             if new_type == CATEGORICAL_INDICATOR:
                 self.features.remove(col)
 
-        print("HAPPENED")
         data, meta = to_types(self.data, new_types)
 
         # Append any new indicator features
@@ -295,18 +306,31 @@ class Features:
         self.data = data
         self._update_meta(meta)
 
-    def infer_feature_types(self, strong: bool = True, allow_indicators: bool = True):
+    def _infer_feature_types(
+        self,
+        to_indicators: bool = True,
+        force_types: Optional[dict] = None,
+    ):
         """Infer feature types."""
         new_types = infer_types(
-            self.data, self.features, strong=strong, allow_indicators=allow_indicators
+            self.data, self.features, to_indicators=to_indicators
         )
-        self.to_feature_types(new_types)
+        
+        # Force certain features to be specific types
+        if force_types is not None:
+            invalid = set(force_types.keys()) - set(self.features)
+            if len(invalid) > 0:
+                raise ValueError(f"Unrecognized features: {', '.join(invalid)}")
+            
+            for feature, type_ in force_types.items():
+                new_types[feature] = type_
+        
+        self._to_feature_types(new_types)
 
-    def create_normalizer(
+    def add_normalizer(
         self,
         key: str,
-        normalizer_map: dict,
-        by: Optional[Union[str, List[str]]] = None,  # pylint: disable=invalid-name
+        normalizer: GroupbyNormalizer,
     ) -> None:
         """Create and store a normalization object.
 
@@ -326,17 +350,43 @@ class Features:
                 "A normalizer with this key already exists. Consider first removing it."
             )
 
+        by = normalizer.get_by()
+        if by is not None:
+            has_columns(self.data, by, raise_error=True)
+        
+        
+        normalizer_map = normalizer.get_map()
+        features = set(normalizer_map.keys())
+        
+        # Check to make sure none of the feature exist in another normalizer
+        for key, norm in self.normalizers.items():
+            norm_set = set(norm.keys())
+            intersect = norm_set.intersection(features)
+            if len(intersect) != 0:
+                raise ValueError(
+                    f"Features {', '.join(intersect)} exist in another normalizer."
+                )
+        
+        # Check for non-existent columns in the map
+        nonexistent = set(normalizer_map.keys()) - set(self.features)
+        if len(nonexistent) > 0:
+            raise ValueError(
+                f"The following columns are not features: {', '.join(nonexistent)}."
+            )
+        
+        # Check for invalid non-numeric columns
         is_numeric = [
             self.meta[col].get_type() == NUMERIC for col in normalizer_map.keys()
         ]
         if not all(is_numeric):
             raise ValueError(
-                "Only numeric features may be normalized. Check the feature types."
+                "Only numeric features may be normalized. Confirm feature choice and type."
             )
 
         gbn = GroupbyNormalizer(normalizer_map, by)
         gbn.fit(self.data)
         self.normalizers[key] = gbn
+        self.normalized[key] = False
 
     def remove_normalizer(self, key: str) -> None:
         """Remove a normalization object.
@@ -368,19 +418,19 @@ class Features:
             If inplace is True, returns the normalized data.
 
         """
+        if self.normalized[key]:
+            raise ValueError(f"Cannot normalize {key}. It has already been normalized.")
+        
         gbn = self.normalizers[key]
         data = gbn.transform(self.data)
 
         if inplace:
             self.data = data
+            self.normalized[key] = True
 
         return data
 
-    def inverse_normalize(
-        self,
-        key: str,
-        inplace: bool = True,
-    ) -> Optional[pd.DataFrame]:
+    def inverse_normalize(self, key: str, inplace: bool = True) -> pd.DataFrame:
         """Inverse normalize.
 
         Parameters
@@ -396,13 +446,49 @@ class Features:
             If inplace is True, returns the inverse normalized data.
 
         """
+        if not self.normalized[key]:
+            raise ValueError(
+                f"Cannot inverse normalize {key}. It has not been normalized."
+            )
+        
         gbn = self.normalizers[key]
         data = gbn.inverse_transform(self.data)
 
         if inplace:
             self.data = data
+            self.normalized[key] = False
 
         return data
+
+    def ordinal_to_categorical(
+        self,
+        features: Optional[Union[str, List[str]]] = None
+    ) -> None:
+        """Convert ordinal features to binary categorical indicators.
+        
+        Parameters
+        ----------
+        feautres: str or list of str, optional
+            Ordinal features to convert. If not provided, convert all ordinal features.
+        
+        """
+        features = to_list_optional(features)
+        
+        if features is None:
+            features = [f for f in self.features if self.meta[f].get_type() == ORDINAL]
+        
+        for feat in features:
+            if not feat in self.features:
+                raise ValueError(f"Feature {feat} does not exist.")
+            
+            if self.meta[feat].get_type() != ORDINAL:
+                raise ValueError(f"{feat} is not an ordinal feature.")
+        
+        # Map back to original values
+        for feat in features:
+            self.data[feat] = self.data[feat].astype(int).replace(self.meta[feat].get_mapping())
+        
+        self._to_feature_types({feat: CATEGORICAL_INDICATOR for feat in features})
 
     def save(self, save_path: str, file_format: str = "parquet") -> None:
         """Save feature data to file.
@@ -434,13 +520,13 @@ class TabularFeatures(Features):
         features: Union[str, List[str]],
         by: Optional[str] = None,
         targets: Optional[Union[str, List[str]]] = None,
-        strong_type_infer: bool = True,
-        allow_indicators: bool = True,
+        to_indicators: bool = False,
+        force_types: Optional[dict] = None,
     ):
         """Initialize."""
         if by is not None and not isinstance(by, str):
             raise ValueError(
-                "Tabular features must have just one index (must input as string)."
+                "Tabular features must have no index, or one index input as a string."
             )
 
         super().__init__(
@@ -448,8 +534,8 @@ class TabularFeatures(Features):
             features,
             by,
             targets=targets,
-            strong_type_infer=strong_type_infer,
-            allow_indicators=allow_indicators,
+            to_indicators=to_indicators,
+            force_types=force_types,
         )
 
     def plot_features(
@@ -481,8 +567,8 @@ class TemporalFeatures(Features):
         features: Union[str, List[str]],
         by: Union[str, List[str]],
         targets: Optional[Union[str, List[str]]] = None,
-        strong_type_infer: bool = True,
-        allow_indicators: bool = True,
+        to_indicators: bool = False,
+        force_types: Optional[dict] = None,
         aggregator: Optional[Aggregator] = None,
     ):
         """Initialize."""
@@ -491,8 +577,8 @@ class TemporalFeatures(Features):
             features,
             by,
             targets=targets,
-            strong_type_infer=strong_type_infer,
-            allow_indicators=allow_indicators,
+            to_indicators=to_indicators,
+            force_types=force_types,
         )
 
         self.aggregator = aggregator

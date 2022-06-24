@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from cyclops.processors.constants import MIN_MAX, STANDARD
-
+from cyclops.utils.common import to_list_optional
 
 class SklearnNormalizer:
     """Sklearn normalizer wrapper.
@@ -123,10 +123,23 @@ class GroupbyNormalizer:
         by: Optional[Union[str, List[str]]] = None,  # pylint: disable=invalid-name
     ) -> None:
         """Initialize."""
+        
+        features = set(normalizer_map.keys())
+        
+        # Check for duplicated occurences of features in the map.
+        if len(list(normalizer_map.keys())) != len(features):
+            raise ValueError("Cannot specify the same feature more than once.")
+        
         self.normalizer_map = normalizer_map
-        self.by = by  # pylint: disable=invalid-name
+        self.by = to_list_optional(by)  # pylint: disable=invalid-name
         self.normalizers = None
-
+    
+    def get_map(self) -> dict:
+        return self.normalizer_map
+    
+    def get_by(self) -> Optional[List]:
+        return self.by
+    
     def fit(self, data: pd.DataFrame) -> None:
         """Fit the normalizing objects.
 

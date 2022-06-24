@@ -30,7 +30,7 @@ DIAGNOSIS_CODE = "diagnosis_code"
 DIAGNOSIS_TITLE = "diagnosis_title"
 DIAGNOSIS_VERSION = "diagnosis_version"
 DIAGNOSIS_TYPE = "diagnosis_type"
-DIAGNOSIS_TRAJECTORIES = "diagnosis_trajectories"
+DIAGNOSIS_TRAJECTORY = "diagnosis_trajectory"
 
 ER_ADMIT_TIMESTAMP = "er_admit_timestamp"
 ER_DISCHARGE_TIMESTAMP = "er_discharge_timestamp"
