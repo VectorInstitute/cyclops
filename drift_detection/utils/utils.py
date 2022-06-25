@@ -22,99 +22,177 @@ from experiments import apply_shift
 
 sys.path.append("../..")
 
-import cyclops.config
-from cyclops.processor import featurize
+from cyclops.feature_handler import FeatureHandler
+from cyclops.plotter import plot_timeline, set_bars_color, setup_plot
+from cyclops.processor import run_data_pipeline
 from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
-    CITY,
-    COUNTRY,
+    DIAGNOSIS_CODE,
     DISCHARGE_DISPOSITION,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
+    EVENT_CATEGORY,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
     HOSPITAL_ID,
-    LANGUAGE,
     LENGTH_OF_STAY_IN_ER,
-    PROVINCE,
-    READMISSION,
-    REFERENCE_RANGE,
+    RESTRICT_TIMESTAMP,
     SEX,
-    TOTAL_COST,
+    TIMESTEP,
+    TRIAGE_LEVEL,
+    WINDOW_START_TIMESTAMP,
 )
+from cyclops.processors.constants import SMH
+from cyclops.processors.events import (
+    combine_events,
+    convert_to_events,
+    normalize_events,
+)
+from cyclops.processors.impute import Imputer
+from cyclops.processors.statics import compute_statics
+from cyclops.processors.string_ops import replace_if_string_match, to_lower
+from cyclops.processors.util import (
+    create_indicator_variables,
+    fill_missing_timesteps,
+    gather_columns,
+    pivot_aggregated_events_to_features,
+)
+from cyclops.query import gemini
+from cyclops.utils.file import load_dataframe, save_dataframe
 
-EXTRACT_SAVE_PATH = "/mnt/nfs/project/delirium/drift_exp"
 
-admin_columns = [
-    ADMIT_TIMESTAMP,
-    AGE,
-    SEX,
-    DISCHARGE_TIMESTAMP,
-    ENCOUNTER_ID,
-    HOSPITAL_ID,
-    LENGTH_OF_STAY_IN_ER,
-#    READMISSION,
-#    DISCHARGE_DISPOSITION,
-]
+BASE_DATA_PATH = "/mnt/nfs/project/delirium/drift_exp/risk_of_mortality"
 
-def get_data(hospital, na_cutoff, bucket_size, window):
+def get_data(hospital):
 
-    # load admin
-    admin_data = pd.read_parquet(
-        os.path.join(EXTRACT_SAVE_PATH, "admin_er_2018_2020.gzip")
-    )
-
-    admin_data = admin_data[admin_columns]
-
-    hosp_ids = admin_data.loc[admin_data["hospital_id"].isin(hospital), "encounter_id"]
     hosp_label = "_".join(sorted(hospital, key=str.lower))
-    file_name = os.path.join(EXTRACT_SAVE_PATH, "2018_2020_features.gzip")
+    file_name = os.path.join(BASE_DATA_PATH + "_" + hosp_label+ "_features.npy")
 
     if os.path.exists(file_name):
-        x = pd.read_parquet(file_name)
+        x = np.load(file_name)
     else:
-        # load labs
-        labs = pd.read_parquet(os.path.join(EXTRACT_SAVE_PATH, "labs_2018_2020.gzip"))
+        ##### add code to get data ######
+        print("Load data from feature handler")
+        # Declare feature handler
+        feature_handler = FeatureHandler()
+        feature_handler.load(BASE_DATA_PATH, "features")
+        
+        # Get static and temporal data
+        static = feature_handler.features["static"]
+        temporal = feature_handler.features["temporal"]
 
-        # load vitals
-        vitals = pd.read_parquet(
-            os.path.join(EXTRACT_SAVE_PATH, "vitals_2018_2020.gzip")
-        )
+         # Get types of columns
+        numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
+        cat_cols = feature_handler.get_categorical_feature_names()["temporal"]
+        
+        ## Impute numerical columns
+        temporal[numerical_cols] = temporal[numerical_cols].ffill().bfill()
 
-        feature_handler = featurize(
-            static_data=[admin_data],
-            temporal_data=[labs, vitals],
-            aggregator=Aggregator(bucket_size=bucket_size, window=window),
-            reference_cols=[HOSPITAL_ID, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP],
-        )
+        # Check no more missingness!
+        assert not temporal.isna().sum().sum() and not static.isna().sum().sum()
+        
+        # Combine static and temporal
+        merged_static_temporal = temporal.combine_first(static)
+        numerical_cols += ["age"]
+        
+        # Filter based on Hospital
+        x = encounters[ENCOUNTER_ID].loc[
+            encounters[HOSPITAL_ID].isin(hospital)
+        ]
+        
+        np.save(filename, x)
+        
+    return x
 
-        # Merge static and temporal features (temporal here is actually aggregated into a single bucket!)
-        static_features = feature_handler.features["static"]
-        temporal_features = feature_handler.features["temporal"]
-        merged_features = static_features.join(temporal_features)
+def get_temporal_features(feature_handler):
+    temporal_features = load_dataframe(os.path.join(BASE_DATA_PATH, "temporal_features"))
+    feature_handler.add_features(temporal_features)
+    feature_handler.drop_features(["death"])
 
-        x = merged_features
-        x.to_parquet(file_name)
+    already_indicators = [
+            "ct",
+            "dialysis_mapped",
+            "echo",
+            "endoscopy_mapped",
+            "interventional",
+            "inv_mech_vent_mapped",
+            "mri",
+            "non-rbc",
+            "other",
+            "rbc",
+            "surgery_mapped",
+            "ultrasound",
+            "unmapped_intervention",
+            "x-ray",
+    ]
 
-    # Filter based on Hospital
-    x = x.loc[x.index.isin(hosp_ids)]
+    temporal_features = feature_handler.features["temporal"]
+    indicators = create_indicator_variables(
+        temporal_features[
+            [col for col in temporal_features if col not in already_indicators]
+        ]
+    )
+    feature_handler.add_features(indicators)
+    feature_handler.features["temporal"].columns
+        
+def get_static_features(feature_handler):
+    static_features = load_dataframe(os.path.join(BASE_DATA_PATH, "static_features"))
+    feature_handler.add_features(
+        static_features, reference_cols=[HOSPITAL_ID, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP]
+    )
+    feature_handler.save(BASE_DATA_PATH, "features")
 
-    # features to create indicator features for temporal features.
-    ind_cols = [col for col in x if col not in admin_columns]
+def create_mortality_labels(merged_static_temporal):
+    num_timesteps = int(AGGREGATION_WINDOW / AGGREGATION_BUCKET_SIZE)
+    encounter_ids = list(merged_static_temporal.index.get_level_values(0).unique())
+    num_encounters = len(encounter_ids)
 
-    # Create indicator features
-    x = get_indicators(x, ind_cols)
+    # All zeroes.
+    labels = np.zeros((num_encounters, num_timesteps))
 
-    return admin_data, x
+    # Set mortality within timeframe encounters to all 1s.
+    labels[
+        [
+            encounter_ids.index(enc_id)
+            for enc_id in list(encounters_mortality_within_risk_timeframe[ENCOUNTER_ID])
+        ]
+    ] = 1
+
+    # Get which timestep death occurs and set those and following timesteps label values to be -1.
+    aggregated_mortality_events = aggregated_events.loc[
+        aggregated_events[EVENT_NAME] == "death"
+    ]
+    for enc_id in list(aggregated_mortality_events[ENCOUNTER_ID]):
+        timestep_death = aggregated_mortality_events.loc[
+            aggregated_mortality_events[ENCOUNTER_ID] == enc_id
+        ]["timestep"]
+        labels[encounter_ids.index(enc_id)][int(timestep_death) + 1 :] = -1
+
+    # Lookahead for each timestep, and see if death occurs in risk timeframe.
+    for enc_id in list(encounters_mortality_within_risk_timeframe[ENCOUNTER_ID]):
+        mortality_encounter = mortality_events.loc[mortality_events[ENCOUNTER_ID] == enc_id]
+        ts_ends = timestep_end_timestamps.loc[enc_id]["timestep_end_timestamp"]
+        mortality_ts = mortality_encounter["event_timestamp"]
+        for ts_idx, ts_end in enumerate(ts_ends):
+            if not (
+                mortality_ts <= ts_end + pd.to_timedelta(timeframe * 24, unit="h")
+            ).all():
+                labels[encounter_ids.index(enc_id)][ts_idx] = 0
 
 
-def get_dataset_hospital(datset, outcome, hospital, na_cutoff, bucket_size, window):
+    mortality_risk_targets = labels
+    return(mortality_risk_targets)
+
+def get_dataset_hospital(datset, outcome, hospital):
 
     # get all data
-    (admin_data, x) = get_data(hospital, na_cutoff, bucket_size, window)
+    (admin_data, x) = get_data(hospital)
 
     # process features
-    x = remove_missing_feats(x, na_cutoff)
+    
 
     # only get encounters with length of stay in er
     if outcome == "length_of_stay_in_er":
@@ -291,10 +369,10 @@ def remove_missing_feats(x, na_cutoff):
     return x
 
 
-def import_dataset_hospital(datset, outcome, hospital, na_cutoff, bucket_size=6, window=24, shuffle=True):
+def import_dataset_hospital(datset, outcome, hospital, shuffle=True):
     # get source and target data
     x_source, y_source, x_test, y_test, feats = get_dataset_hospital(
-        datset, outcome, hospital, na_cutoff, bucket_size, window
+        datset, outcome, hospital
     )
 
     # get train, validation and test set
@@ -335,11 +413,7 @@ def unison_shuffled_copies(a, b):
     p = np.random.permutation(len(a))
     return a[p], b[p]
 
-
-def run_shift_experiment(
-    shift,
-    outcome,
-    hospital,
+def run_pipeline(
     path,
     dr_technique,
     md_test,
@@ -349,8 +423,6 @@ def run_shift_experiment(
     na_cutoff,
     random_runs=5,
     calc_acc=True,
-    bucket_size=6, 
-    window=24
 ):
     # Stores p-values for all experiments of a shift class.
     samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
@@ -380,7 +452,96 @@ def run_shift_experiment(
             (X_t, y_t),
             feats,
             orig_dims,
-        ) = import_dataset_hospital(shift, outcome, hospital, na_cutoff, bucket_size, window, shuffle=True)
+        ) = import_dataset_hospital(shift, outcome, hospital, shuffle=True)
+        
+        # Run shift experiments across various sample sizes
+        for si, sample in enumerate(samples):
+            
+            # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
+
+            sample_path = rand_run_path + str(sample) + "/"
+
+            if not os.path.exists(sample_path):
+                os.makedirs(sample_path)
+
+            shift_reductor = ShiftReductor(
+            X_tr, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.9, scale=False, scaler="standard", model=None
+            )
+            # Detect shift.
+            shift_detector = ShiftDetector(
+                dr_technique, md_test, sign_level, shift_reductor, sample, dataset
+            )
+            (
+                p_val,
+                dist,
+                val_acc,
+                te_acc,
+            ) = shift_detector.detect_data_shift(
+                X_tr, y_tr, X_val, y_val, X_t[:sample, :], y_t[:sample], orig_dims
+            )
+
+            val_accs[rand_run, si] = val_acc
+            te_accs[rand_run, si] = te_acc
+
+            samples_rands_pval[si, rand_run] = p_val
+            samples_rands_dist[si, rand_run] = dist
+        
+    mean_p_vals = np.mean(samples_rands_pval, axis=1)
+    std_p_vals = np.std(samples_rands_pval, axis=1)
+    
+    mean_dist = np.mean(samples_rands_dist, axis=1)
+    std_dist = np.std(samples_rands_dist, axis=1)
+
+    mean_val_accs = np.mean(val_accs, axis=0)
+    std_val_accs = np.std(val_accs, axis=0)
+
+    mean_te_accs = np.mean(te_accs, axis=0)
+    std_te_accs = np.std(te_accs, axis=0)
+
+    return (mean_p_vals, std_p_vals, mean_dist, std_dist)
+
+def run_shift_experiment(
+    shift,
+    outcome,
+    hospital,
+    path,
+    dr_technique,
+    md_test,
+    samples,
+    dataset,
+    sign_level,
+    random_runs=5,
+    calc_acc=True
+):
+    # Stores p-values for all experiments of a shift class.
+    samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
+    samples_rands_dist = np.ones((len(samples), random_runs)) * (-1)
+
+    shift_path = path + shift + "/"
+
+    if not os.path.exists(shift_path):
+        os.makedirs(shift_path)
+
+    # Stores accuracy values for malignancy detection.
+    val_accs = np.ones((random_runs, len(samples))) * (-1)
+    te_accs = np.ones((random_runs, len(samples))) * (-1)
+
+    # Average over a few random runs to quantify robustness.
+    for rand_run in range(0, random_runs):
+        rand_run = int(rand_run)
+        rand_run_path = shift_path + str(rand_run) + "/"
+        if not os.path.exists(rand_run_path):
+            os.makedirs(rand_run_path)
+
+        np.random.seed(rand_run)
+
+        (
+            (X_tr, y_tr),
+            (X_val, y_val),
+            (X_t, y_t),
+            feats,
+            orig_dims,
+        ) = import_dataset_hospital(shift, outcome, hospital, shuffle=True)
         
         # Run shift experiements across various sample sizes
         for si, sample in enumerate(samples):
