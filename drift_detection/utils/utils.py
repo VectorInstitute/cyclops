@@ -63,96 +63,113 @@ from cyclops.processors.util import (
 from cyclops.query import gemini
 from cyclops.utils.file import load_dataframe, save_dataframe
 
+MORTALITY = "mortality"
+LOS = "los"
+AGGREGATION_WINDOW = 144
+AGGREGATION_BUCKET_SIZE = 24
 
-BASE_DATA_PATH = "/mnt/nfs/project/delirium/drift_exp/risk_of_mortality"
+def get_merged_data(BASE_DATA_PATH):
 
-def get_data(hospital):
-
-    hosp_label = "_".join(sorted(hospital, key=str.lower))
-    file_name = os.path.join(BASE_DATA_PATH + "_" + hosp_label+ "_features.npy")
-
-    if os.path.exists(file_name):
-        x = np.load(file_name)
-    else:
-        ##### add code to get data ######
-        print("Load data from feature handler")
-        # Declare feature handler
-        feature_handler = FeatureHandler()
-        feature_handler.load(BASE_DATA_PATH, "features")
+    print("Load data from feature handler...")
+    # Declare feature handler
+    feature_handler = FeatureHandler()
+    feature_handler.load(BASE_DATA_PATH, "features")
         
-        # Get static and temporal data
-        static = feature_handler.features["static"]
-        temporal = feature_handler.features["temporal"]
+    # Get static and temporal data
+    static = feature_handler.features["static"]
+    temporal = feature_handler.features["temporal"]
 
-         # Get types of columns
-        numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
-        cat_cols = feature_handler.get_categorical_feature_names()["temporal"]
+    # Get types of columns
+    numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
+    cat_cols = feature_handler.get_categorical_feature_names()["temporal"]
         
-        ## Impute numerical columns
-        temporal[numerical_cols] = temporal[numerical_cols].ffill().bfill()
+    ## Impute numerical columns
+    temporal[numerical_cols] = temporal[numerical_cols].ffill().bfill()
 
-        # Check no more missingness!
-        assert not temporal.isna().sum().sum() and not static.isna().sum().sum()
+    # Check no more missingness!
+    assert not temporal.isna().sum().sum() and not static.isna().sum().sum()
         
-        # Combine static and temporal
-        merged_static_temporal = temporal.combine_first(static)
-        numerical_cols += ["age"]
+    # Combine static and temporal
+    merged_static_temporal = temporal.combine_first(static)
+    numerical_cols += ["age"]
         
-        # Filter based on Hospital
-        x = encounters[ENCOUNTER_ID].loc[
-            encounters[HOSPITAL_ID].isin(hospital)
-        ]
-        
-        np.save(filename, x)
-        
-    return x
+    return merged_static_temporal, temporal, static
 
-def get_temporal_features(feature_handler):
-    temporal_features = load_dataframe(os.path.join(BASE_DATA_PATH, "temporal_features"))
-    feature_handler.add_features(temporal_features)
-    feature_handler.drop_features(["death"])
+def get_aggregated_events(BASE_DATA_PATH):
+    ## Aggregated events
+    aggregated_events = load_dataframe(os.path.join(BASE_DATA_PATH, "aggregated_events"))
+    timestep_start_timestamps = load_dataframe(
+        os.path.join(BASE_DATA_PATH, "aggmeta_start_ts")
+    )
+    aggregated_events.loc[aggregated_events["timestep"] == 6]["event_name"].value_counts()
+    aggregated_events = aggregated_events.loc[aggregated_events["timestep"] != 6]
+    return(aggregated_events)
 
-    already_indicators = [
-            "ct",
-            "dialysis_mapped",
-            "echo",
-            "endoscopy_mapped",
-            "interventional",
-            "inv_mech_vent_mapped",
-            "mri",
-            "non-rbc",
-            "other",
-            "rbc",
-            "surgery_mapped",
-            "ultrasound",
-            "unmapped_intervention",
-            "x-ray",
+def get_encounters(BASE_DATA_PATH):
+    encounters_data = pd.read_parquet(os.path.join(BASE_DATA_PATH, "admin_er.parquet"))
+    encounters_data[LOS] = (
+    encounters_data[DISCHARGE_TIMESTAMP] - encounters_data[ADMIT_TIMESTAMP]
+    )
+    encounters_data_atleast_los_24_hrs = encounters_data.loc[
+        encounters_data[LOS] >= pd.to_timedelta(24, unit="h")
     ]
-
-    temporal_features = feature_handler.features["temporal"]
-    indicators = create_indicator_variables(
-        temporal_features[
-            [col for col in temporal_features if col not in already_indicators]
+    return(encounters_data_atleast_los_24_hrs)
+    
+def get_gemini_data(BASE_DATA_PATH):  
+    # Get aggregated events
+    aggregated_events = get_aggregated_events(BASE_DATA_PATH)
+    # Get merged static + temporal data
+    merged_static_temporal, temporal, static = get_merged_data(BASE_DATA_PATH)
+    # Get encounters > 24hr los
+    encounters_data_atleast_los_24_hrs = get_encounters(BASE_DATA_PATH)
+    # Get mortality events
+    encounters_mortality = encounters_data_atleast_los_24_hrs.loc[
+        encounters_data_atleast_los_24_hrs[MORTALITY] == True
+    ]
+    # Get non-mortality events
+    encounters_not_mortality = encounters_data_atleast_los_24_hrs.loc[
+        encounters_data_atleast_los_24_hrs[MORTALITY] == False
+    ]
+    num_encounters_not_mortality = len(encounters_mortality)
+    encounters_not_mortality_subset = encounters_not_mortality[
+        0:num_encounters_not_mortality
+    ]  
+    # Combine mortality + non-mortality events
+    encounters_train_val_test = pd.concat(
+        [encounters_mortality, encounters_not_mortality_subset], ignore_index=True
+    )
+    # Get events the result in mortality within 2 weeks
+    timeframe = 14  # days
+    encounters_mortality_within_risk_timeframe = encounters_mortality.loc[
+        encounters_mortality[LOS]
+        <= pd.to_timedelta(timeframe * 24 + AGGREGATION_WINDOW, unit="h")
+    ]
+    mortality_events = convert_to_events(
+        encounters_mortality_within_risk_timeframe,
+        event_name=f"death",
+        event_category="general",
+        timestamp_col=DISCHARGE_TIMESTAMP,
+    )
+    mortality_events = pd.merge(
+        mortality_events, encounters_mortality, on=ENCOUNTER_ID, how="inner"
+    )
+    mortality_events = mortality_events[
+        [
+            ENCOUNTER_ID,
+            EVENT_NAME,
+            EVENT_TIMESTAMP,
+            ADMIT_TIMESTAMP,
+            EVENT_VALUE,
+            EVENT_CATEGORY,
         ]
-    )
-    feature_handler.add_features(indicators)
-    feature_handler.features["temporal"].columns
-        
-def get_static_features(feature_handler):
-    static_features = load_dataframe(os.path.join(BASE_DATA_PATH, "static_features"))
-    feature_handler.add_features(
-        static_features, reference_cols=[HOSPITAL_ID, ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP]
-    )
-    feature_handler.save(BASE_DATA_PATH, "features")
-
-def create_mortality_labels(merged_static_temporal):
+    ]
+    mortality_events[EVENT_VALUE] = 1
+    # Get mortality labels
     num_timesteps = int(AGGREGATION_WINDOW / AGGREGATION_BUCKET_SIZE)
     encounter_ids = list(merged_static_temporal.index.get_level_values(0).unique())
     num_encounters = len(encounter_ids)
-
     # All zeroes.
     labels = np.zeros((num_encounters, num_timesteps))
-
     # Set mortality within timeframe encounters to all 1s.
     labels[
         [
@@ -160,7 +177,6 @@ def create_mortality_labels(merged_static_temporal):
             for enc_id in list(encounters_mortality_within_risk_timeframe[ENCOUNTER_ID])
         ]
     ] = 1
-
     # Get which timestep death occurs and set those and following timesteps label values to be -1.
     aggregated_mortality_events = aggregated_events.loc[
         aggregated_events[EVENT_NAME] == "death"
@@ -170,7 +186,7 @@ def create_mortality_labels(merged_static_temporal):
             aggregated_mortality_events[ENCOUNTER_ID] == enc_id
         ]["timestep"]
         labels[encounter_ids.index(enc_id)][int(timestep_death) + 1 :] = -1
-
+    timestep_end_timestamps = load_dataframe(os.path.join(BASE_DATA_PATH, "aggmeta_end_ts"))
     # Lookahead for each timestep, and see if death occurs in risk timeframe.
     for enc_id in list(encounters_mortality_within_risk_timeframe[ENCOUNTER_ID]):
         mortality_encounter = mortality_events.loc[mortality_events[ENCOUNTER_ID] == enc_id]
@@ -181,24 +197,26 @@ def create_mortality_labels(merged_static_temporal):
                 mortality_ts <= ts_end + pd.to_timedelta(timeframe * 24, unit="h")
             ).all():
                 labels[encounter_ids.index(enc_id)][ts_idx] = 0
-
-
     mortality_risk_targets = labels
-    return(mortality_risk_targets)
+    
+    X = merged_static_temporal[
+        np.in1d(temporal.index.get_level_values(0), static.index.get_level_values(0))
+    ]
 
-def get_dataset_hospital(datset, outcome, hospital):
+    return encounters_train_val_test, X, mortality_risk_targets
+
+def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
 
     # get all data
-    (admin_data, x) = get_data(hospital)
-
-    # process features
+    admin_data, x, y = get_gemini_data(BASE_DATA_PATH)
     
-
-    # only get encounters with length of stay in er
-    if outcome == "length_of_stay_in_er":
-        x = x[x[outcome].notna()]
-        x[outcome] = np.where(x[outcome] > 7, 1, 0)
-
+    # filter hospital
+    admin_data = admin_data.loc[
+            admin_data[HOSPITAL_ID].isin(hospital)
+    ]
+    encounter_ids = list(x.index.get_level_values(0).unique())
+    x = x[np.in1d(x.index.get_level_values(0),admin_data[ENCOUNTER_ID])]
+    
     # get source and target data
     x_s = None
     y_s = None
@@ -206,82 +224,75 @@ def get_dataset_hospital(datset, outcome, hospital):
     y_t = None
 
     # get experimental dataset
-    if datset == "covid":
-        ids_precovid = admin_data.loc[
+    if dataset == "covid":
+        ids_source = admin_data.loc[
             admin_data["admit_timestamp"].dt.date < datetime.date(2020, 3, 1),
             "encounter_id",
         ]
-        ids_covid = admin_data.loc[
+        ids_target = admin_data.loc[
             admin_data["admit_timestamp"].dt.date > datetime.date(2020, 2, 28),
             "encounter_id",
         ]
-        x_s = x.loc[x.index.isin(ids_precovid)]
-        x_t = x.loc[x.index.isin(ids_covid)]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
 
-    elif datset == "pre-covid":
-        ids_precovid = admin_data.loc[
+    elif dataset == "pre-covid":
+        ids_source = admin_data.loc[
             admin_data["admit_timestamp"].dt.date < datetime.date(2020, 3, 1),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(ids_precovid)]
+        x = x.loc[x.index.isin(ids_source)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0]
         x_t = x_spl[1]
 
-    elif datset == "seasonal":
-        ids_summer = admin_data.loc[
-            (
-                admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
-            ),
-            "encounter_id",
-        ]
-        ids_winter = admin_data.loc[
+    elif dataset == "seasonal":
+        ids_source = admin_data.loc[
             (
                 admin_data["admit_timestamp"].dt.month.isin([12, 1, 2])
                 & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
             ),
             "encounter_id",
         ]
-        x_s = x.loc[x.index.isin(ids_winter)]
-        x_t = x.loc[x.index.isin(ids_summer)]
-
-    elif datset == "summer":
-        ids_summer = admin_data.loc[
+        ids_target = admin_data.loc[
             (
                 admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
                 & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(ids_summer)]
+
+        x_s = x.loc[x.index.isin(ids_source)]
+        x_t = x.loc[x.index.isin(ids_target)]
+
+    elif dataset == "summer":
+        ids_source = admin_data.loc[
+            (
+                admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
+                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
+            ),
+            "encounter_id",
+        ]
+        x = x.loc[x.index.isin(ids_source)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0]
         x_t = x_spl[1]
 
-    elif datset == "winter":
-        ids_winter = admin_data.loc[
+    elif dataset == "winter":
+        ids_source = admin_data.loc[
             (
                 admin_data["admit_timestamp"].dt.month.isin([12, 1, 2])
                 & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(ids_winter)]
+        x = x.loc[x.index.isin(ids_source)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0]
         x_t = x_spl[1]
 
-    elif datset == "hosp_type":
-        ids_community = admin_data.loc[
-            (
-                admin_data["hospital_id"].isin(["THPC", "THPM"])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
-                & admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
-            ),
-            "encounter_id",
-        ]
-        ids_academic = admin_data.loc[
+    elif dataset == "hosp_type":
+        ids_source = admin_data.loc[
             (
                 admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW"])
                 & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
@@ -289,25 +300,7 @@ def get_dataset_hospital(datset, outcome, hospital):
             ),
             "encounter_id",
         ]
-        x_s = x.loc[x.index.isin(ids_community)]
-        x_t = x.loc[x.index.isin(ids_academic)]
-
-    elif datset == "academic":
-        ids_academic = admin_data.loc[
-            (
-                admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW"])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
-                & admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
-            ),
-            "encounter_id",
-        ]
-        x = x.loc[x.index.isin(ids_academic)]
-        x_spl = np.array_split(x, 2)
-        x_s = x_spl[0]
-        x_t = x_spl[1]
-
-    elif datset == "community":
-        ids_community = admin_data.loc[
+        ids_target = admin_data.loc[
             (
                 admin_data["hospital_id"].isin(["THPC", "THPM"])
                 & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
@@ -315,35 +308,57 @@ def get_dataset_hospital(datset, outcome, hospital):
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(ids_community)]
+        x_s = x.loc[x.index.isin(ids_source)]
+        x_t = x.loc[x.index.isin(ids_target)]
+
+    elif dataset == "academic":
+        ids_source = admin_data.loc[
+            (
+                admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW"])
+                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
+                & admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
+            ),
+            "encounter_id",
+        ]
+        x = x.loc[x.index.isin(ids_source)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0]
         x_t = x_spl[1]
 
-    elif datset == "baseline":
-        ids_baseline = admin_data.loc[
+    elif dataset == "community":
+        ids_source = admin_data.loc[
+            (
+                admin_data["hospital_id"].isin(["THPC", "THPM"])
+                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
+                & admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
+            ),
+            "encounter_id",
+        ]
+        x = x.loc[x.index.isin(ids_source)]
+        x_spl = np.array_split(x, 2)
+        x_s = x_spl[0]
+        x_t = x_spl[1]
+
+    elif dataset == "baseline":
+        ids_source = admin_data.loc[
             (
                 admin_data["admit_timestamp"].dt.month.isin([3, 4, 5, 6, 7, 8])
                 & admin_data["admit_timestamp"].dt.year.isin([2019])
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(ids_baseline)]
+        x = x.loc[x.index.isin(ids_source)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0]
         x_t = x_spl[1]
-
-    # outcome can be "mortality_in_hospital" or "length_of_stay_in_er"
-    y_s = x_s[outcome]
-    y_t = x_t[outcome]
-
-    # outcomes = ["mortality_in_hospital", "length_of_stay_in_er"]
-    outcomes = ["length_of_stay_in_er"]
-    x_s = x_s.drop(columns=outcomes)
-    x_t = x_t.drop(columns=outcomes)
-
+    
+    y_s = y[np.in1d(encounter_ids, ids_source)]
+    y_t = y[np.in1d(encounter_ids, ids_target)]
+    
+    assert len(x_s.index.get_level_values(0).unique()) == len(y_s)
+    assert len(x_t.index.get_level_values(0).unique()) == len(y_t)
+    
     return (x_s, y_s, x_t, y_t, x_s.columns)
-
 
 def get_indicators(x, ind_cols):
     x_ind = x[ind_cols].isnull().astype(int).add_suffix("_indicator")
@@ -368,13 +383,16 @@ def remove_missing_feats(x, na_cutoff):
     x = x.fillna(x.mean())
     return x
 
-
-def import_dataset_hospital(datset, outcome, hospital, shuffle=True):
+def import_dataset_hospital(BASE_DATA_PATH, dataset, hospital, shuffle=True):
     # get source and target data
     x_source, y_source, x_test, y_test, feats = get_dataset_hospital(
-        datset, outcome, hospital
+        BASE_DATA_PATH, dataset,  hospital
     )
 
+    encounter_ids = list(x_source[ENCOUNTER_ID].unique())
+    random.shuffle(encounter_ids)
+    num_train = int(fractions[0] * len(encounter_ids))
+    
     # get train, validation and test set
     x_train, x_val, y_train, y_val = train_test_split(
         x_source, y_source, train_size=0.67
@@ -406,7 +424,6 @@ def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
     y_test = y[split_index:]
 
     return (x_train, y_train), (x_test, y_test)
-
 
 def unison_shuffled_copies(a, b):
     assert len(a) == len(b)
