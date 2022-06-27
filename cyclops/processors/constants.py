@@ -23,7 +23,7 @@ FEATURE_TYPES = [
     BINARY,
     STRING,
     ORDINAL,
-    CATEGORICAL_INDICATOR,
+    #CATEGORICAL_INDICATOR,
 ]
 
 FEATURE_TYPE_ATTR = "type_"
@@ -45,7 +45,7 @@ FEATURE_META_ATTR_DEFAULTS = {
 }
 
 
-MISSING_CATEGORY = "missing"
+MISSING_CATEGORY = "null_category"
 
 # Feature normalization.
 STANDARD = "standard"

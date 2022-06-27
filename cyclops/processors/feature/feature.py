@@ -214,6 +214,8 @@ class Features:
             Features data.
 
         """
+        to_indicators = to_list_optional(to_indicators)
+        
         if to_indicators is not None:
             return self._ordinal_to_indicators(to_indicators, inplace=False)
 
@@ -301,36 +303,32 @@ class Features:
             The features data with the relevant conversions.
 
         """
-        # Check that we aren't converting any categorical indicators to other things
+        invalid = set(new_types.keys()) - set(self.features)
+        if len(invalid) > 0:
+            raise ValueError(f"Unrecognized features: {', '.join(invalid)}")
+        
         for col, new_type in new_types.items():
+            # Check that we aren't converting any categorical indicators to other things
             if col in self.meta:
                 if self.meta[col].get_type() == CATEGORICAL_INDICATOR:
                     raise ValueError(
                         "Categorical indicators cannot be converted to other types."
                     )
-
-                # Remove original category column if converting to indicators
-                if new_type == CATEGORICAL_INDICATOR:
-                    del self.meta[col]
-
-        # Edit existing data
-        for col, new_type in new_types.items():
-            # Remove any existing metadata
-            if col in self.meta:
-                del self.meta[col]
-
-            # Remove original category column if converting to indicators
-            if new_type == CATEGORICAL_INDICATOR:
-                self.features.remove(col)
-
+                
+                if inplace:
+                    # Remove original category column if converting to indicators
+                    if new_type == CATEGORICAL_INDICATOR:
+                        del self.meta[col]
+                        self.features.remove(col)
+        
         data, meta = to_types(self._data, new_types)
 
-        # Append any new indicator features
-        for col, fmeta in meta.items():
-            if FEATURE_INDICATOR_ATTR in fmeta:
-                self.features.append(col)
-
         if inplace:
+            # Append any new indicator features
+            for col, fmeta in meta.items():
+                if FEATURE_INDICATOR_ATTR in fmeta:
+                    self.features.append(col)
+            
             self._data = data
             self._update_meta(meta)
 
@@ -358,10 +356,6 @@ class Features:
 
         # Force certain features to be specific types
         if force_types is not None:
-            invalid = set(force_types.keys()) - set(self.features)
-            if len(invalid) > 0:
-                raise ValueError(f"Unrecognized features: {', '.join(invalid)}")
-
             for feature, type_ in force_types.items():
                 new_types[feature] = type_
 
@@ -613,6 +607,7 @@ class TemporalFeatures(Features):
         targets: Optional[Union[str, List[str]]] = None,
         force_types: Optional[dict] = None,
         aggregator: Optional[Aggregator] = None,
+        imputer: Optional[Imputer] = None,
     ):
         """Init."""
         super().__init__(
@@ -645,5 +640,7 @@ class TemporalFeatures(Features):
         else:
             plot_temporal_features(self._data, features)
 
-    # def aggregate():
-    #    self.by = self.by +
+    def aggregate():
+        #self.by = self.by +
+        
+        Aggregator
