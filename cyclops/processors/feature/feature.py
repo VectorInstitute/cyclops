@@ -1,4 +1,5 @@
-"""Feature handling for automatic feature creation from processed data."""
+"""Feature processing."""
+
 import logging
 from typing import Dict, List, Optional, Union
 
@@ -42,17 +43,15 @@ class FeatureMeta:
     ----------
     feature_type: str
         Feature type.
-    target: bool, default = False
-        Is the feature a target variable, True if yes, else False.
+    target: bool
+        Whether the feature a target variable.
     indicator_of: str, optional
-        If not None, the column from which this indicator was generated.
-    allowed_values: numpy.ndarray, optional
-        The feature values allowed. If None, allow any values.
+        If not None, the feature from which this indicator was generated.
 
     """
 
     def __init__(self, **kwargs) -> None:
-        """Initialize."""
+        """Init."""
         # Feature type checking
         if FEATURE_TYPE_ATTR not in kwargs:
             raise ValueError("Must specify feature type.")
@@ -100,11 +99,11 @@ class FeatureMeta:
         return getattr(self, FEATURE_TARGET_ATTR)
 
     def indicator_of(self) -> Optional[str]:
-        """Get the name of an indicator's original categorical column.
+        """Get the name of an indicator's original categorical feature.
 
         Returns
         -------
-        str or None
+        str, optional
             The categorical column from which an indicator was generated, or None if
             not a categorical indicator.
 
@@ -112,11 +111,11 @@ class FeatureMeta:
         return getattr(self, FEATURE_INDICATOR_ATTR)
 
     def get_mapping(self) -> Optional[dict]:
-        """Get the mapping binary and ordinal categories.
+        """Get the category value map for binary and ordinal categories.
 
         Returns
         -------
-        int or None
+        dict, optional
             A mapping from the integer categories to the original values, or None if
             there is no mapping.
 
@@ -153,7 +152,7 @@ class Features:
         Feature metadata.
     normalizers: dict
         Organize normalization objects with different keys, e.g.,
-        having separate normalizers for "features" and "targets".
+        having separate normalizers for keys "features" and "targets".
     normalized: dict
         Track for each normalizer whether normalization has been performed.
 
@@ -165,7 +164,6 @@ class Features:
         features: Union[str, List[str]],
         by: Optional[Union[str, List[str]]],  # pylint: disable=invalid-name
         targets: Optional[Union[str, List[str]]] = None,
-        to_indicators: bool = False,
         force_types: Optional[dict] = None,
     ):
         """Init."""
@@ -193,12 +191,33 @@ class Features:
         # Type checking and inference
         data = normalize_data(data, self.features)
 
-        self.data = data
+        self._data = data
         self.meta: Dict[str, FeatureMeta] = {}
-        self._infer_feature_types(to_indicators=to_indicators, force_types=force_types)
+        self._infer_feature_types(force_types=force_types)
 
         self.normalizers: Dict[str, GroupbyNormalizer] = {}
         self.normalized: Dict[str, bool] = {}
+
+    def get_data(
+        self, to_indicators: Optional[Union[str, List[str]]] = None
+    ) -> pd.DataFrame:
+        """Get the features data.
+
+        Parameters
+        ----------
+        to_indicators: str or list of str, optional
+            Ordinal features to convert to categorical indicators.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Features data.
+
+        """
+        if to_indicators is not None:
+            return self._ordinal_to_indicators(to_indicators, inplace=False)
+
+        return self._data
 
     @property
     def columns(self) -> List[str]:
@@ -206,11 +225,11 @@ class Features:
 
         Returns
         -------
-        list
-            List of all feature names.
+        list of str
+            List of all column names.
 
         """
-        return self.data.columns
+        return self._data.columns
 
     @property
     def feature_names(self) -> List[str]:
@@ -218,7 +237,7 @@ class Features:
 
         Returns
         -------
-        list
+        list of str
             List of all feature names.
 
         """
@@ -228,7 +247,7 @@ class Features:
     def types(self) -> dict:
         """Access as attribute, feature type names.
 
-        Note: These are built-in feature names.
+        Note: These are framework-specific feature names.
 
         Returns
         -------
@@ -266,13 +285,20 @@ class Features:
             else:
                 self.meta[col] = FeatureMeta(**info)
 
-    def _to_feature_types(self, new_types: dict) -> None:
-        """Manually convert feature types.
+    def _to_feature_types(self, new_types: dict, inplace: bool = True) -> pd.DataFrame:
+        """Convert feature types.
 
         Parameters
         ----------
-        types: dict
-            A map from the column name to the feature type.
+        new_types: dict
+            A map from the feature name to the new feature type.
+        inplace: bool
+            Whether to perform in-place, or to simply return the DataFrame.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The features data with the relevant conversions.
 
         """
         # Check that we aren't converting any categorical indicators to other things
@@ -297,23 +323,38 @@ class Features:
             if new_type == CATEGORICAL_INDICATOR:
                 self.features.remove(col)
 
-        data, meta = to_types(self.data, new_types)
+        data, meta = to_types(self._data, new_types)
 
         # Append any new indicator features
         for col, fmeta in meta.items():
             if FEATURE_INDICATOR_ATTR in fmeta:
                 self.features.append(col)
 
-        self.data = data
-        self._update_meta(meta)
+        if inplace:
+            self._data = data
+            self._update_meta(meta)
+
+        return data
 
     def _infer_feature_types(
         self,
-        to_indicators: bool = True,
         force_types: Optional[dict] = None,
     ):
-        """Infer feature types."""
-        new_types = infer_types(self.data, self.features, to_indicators=to_indicators)
+        """Infer feature types.
+
+        Can optionally force certain types on specified features.
+
+        Parameters
+        ----------
+        force_types: dict
+            A map from the feature name to the forced feature type.
+
+        """
+        infer_features = set(self.features) - set(
+            to_list_optional(force_types, none_to_empty=True)
+        )
+
+        new_types = infer_types(self._data, infer_features)
 
         # Force certain features to be specific types
         if force_types is not None:
@@ -331,17 +372,14 @@ class Features:
         key: str,
         normalizer: GroupbyNormalizer,
     ) -> None:
-        """Create and store a normalization object.
+        """Add a normalization object.
 
         Parameters
         ----------
         key: str
             Unique name of the normalizer.
-        normalizer_map: dict
-            A map from the column name to the type of normalization, e.g.,
-            "event_values": "standard"
-        by: str or list of str, optional
-            Columns to use in the groupby, affecting how values are normalized.
+        normalizer: GroupbyNormalizer
+            Normalization object.
 
         """
         if key in self.normalizers:
@@ -351,7 +389,7 @@ class Features:
 
         by = normalizer.get_by()  # pylint: disable=invalid-name
         if by is not None:
-            has_columns(self.data, by, raise_error=True)
+            has_columns(self._data, by, raise_error=True)
 
         normalizer_map = normalizer.get_map()
         features = set(normalizer_map.keys())
@@ -382,7 +420,7 @@ class Features:
             )
 
         gbn = GroupbyNormalizer(normalizer_map, by)
-        gbn.fit(self.data)
+        gbn.fit(self._data)
         self.normalizers[key] = gbn
         self.normalized[key] = False
 
@@ -408,22 +446,22 @@ class Features:
         key: str
             Unique name of the normalizer.
         inplace: bool
-            Whether to perform in-place, or to return the DataFrame.
+            Whether to perform in-place, or to simply return the DataFrame.
 
         Returns
         -------
-        pandas.DataFrame or None
-            If inplace is True, returns the normalized data.
+        pandas.DataFrame
+            The normalized features data.
 
         """
         if self.normalized[key]:
             raise ValueError(f"Cannot normalize {key}. It has already been normalized.")
 
         gbn = self.normalizers[key]
-        data = gbn.transform(self.data)
+        data = gbn.transform(self._data)
 
         if inplace:
-            self.data = data
+            self._data = data
             self.normalized[key] = True
 
         return data
@@ -436,12 +474,12 @@ class Features:
         key: str
             Unique name of the normalizer.
         inplace: bool
-            Whether to perform in-place, or to return the DataFrame.
+            Whether to perform in-place, or to simply return the DataFrame.
 
         Returns
         -------
-        pandas.DataFrame or None
-            If inplace is True, returns the inverse normalized data.
+        pandas.DataFrame
+            The inversely normalized data.
 
         """
         if not self.normalized[key]:
@@ -450,44 +488,52 @@ class Features:
             )
 
         gbn = self.normalizers[key]
-        data = gbn.inverse_transform(self.data)
+        data = gbn.inverse_transform(self._data)
 
         if inplace:
-            self.data = data
+            self._data = data
             self.normalized[key] = False
 
         return data
 
-    def ordinal_to_categorical(
-        self, features: Optional[Union[str, List[str]]] = None
-    ) -> None:
+    def _ordinal_to_indicators(
+        self,
+        features: Union[str, List[str]],
+        inplace: bool = True,
+    ) -> pd.DataFrame:
         """Convert ordinal features to binary categorical indicators.
 
         Parameters
         ----------
         feautres: str or list of str, optional
             Ordinal features to convert. If not provided, convert all ordinal features.
+        inplace: bool
+            Whether to perform in-place, or to simply return the DataFrame.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Features data with the relevant conversions.
 
         """
-        features = to_list_optional(features)
-
-        if features is None:
-            features = [f for f in self.features if self.meta[f].get_type() == ORDINAL]
-
         for feat in features:
             if feat not in self.features:
                 raise ValueError(f"Feature {feat} does not exist.")
 
             if self.meta[feat].get_type() != ORDINAL:
-                raise ValueError(f"{feat} is not an ordinal feature.")
+                raise ValueError(
+                    f"{feat} must be an ordinal feature to convert to indicators."
+                )
 
         # Map back to original values
         for feat in features:
-            self.data[feat] = (
-                self.data[feat].astype(int).replace(self.meta[feat].get_mapping())
+            self._data[feat] = (
+                self._data[feat].astype(int).replace(self.meta[feat].get_mapping())
             )
 
-        self._to_feature_types({feat: CATEGORICAL_INDICATOR for feat in features})
+        return self._to_feature_types(
+            {feat: CATEGORICAL_INDICATOR for feat in features}, inplace=inplace
+        )
 
     def save(self, save_path: str, file_format: str = "parquet") -> None:
         """Save feature data to file.
@@ -507,7 +553,7 @@ class Features:
             Processed save path for upstream use.
 
         """
-        return save_dataframe(self.data, save_path, file_format)
+        return save_dataframe(self._data, save_path, file_format)
 
 
 class TabularFeatures(Features):
@@ -519,10 +565,9 @@ class TabularFeatures(Features):
         features: Union[str, List[str]],
         by: Optional[str] = None,
         targets: Optional[Union[str, List[str]]] = None,
-        to_indicators: bool = False,
         force_types: Optional[dict] = None,
     ):
-        """Initialize."""
+        """Init."""
         if by is not None and not isinstance(by, str):
             raise ValueError(
                 "Tabular features must have no index, or one index input as a string."
@@ -533,7 +578,6 @@ class TabularFeatures(Features):
             features,
             by,
             targets=targets,
-            to_indicators=to_indicators,
             force_types=force_types,
         )
 
@@ -552,9 +596,9 @@ class TabularFeatures(Features):
 
         """
         if features is None:
-            plot_histogram(self.data, self.feature_names)
+            plot_histogram(self._data, self.feature_names)
         else:
-            plot_histogram(self.data, features)
+            plot_histogram(self._data, features)
 
 
 class TemporalFeatures(Features):
@@ -565,21 +609,21 @@ class TemporalFeatures(Features):
         data: pd.DataFrame,
         features: Union[str, List[str]],
         by: Union[str, List[str]],
+        temporal_col: str,
         targets: Optional[Union[str, List[str]]] = None,
-        to_indicators: bool = False,
         force_types: Optional[dict] = None,
         aggregator: Optional[Aggregator] = None,
     ):
-        """Initialize."""
+        """Init."""
         super().__init__(
             data,
             features,
             by,
             targets=targets,
-            to_indicators=to_indicators,
             force_types=force_types,
         )
 
+        self.temporal_col = temporal_col
         self.aggregator = aggregator
 
     def plot_features(
@@ -597,6 +641,9 @@ class TemporalFeatures(Features):
 
         """
         if features is None:
-            plot_temporal_features(self.data, self.feature_names)
+            plot_temporal_features(self._data, self.feature_names)
         else:
-            plot_temporal_features(self.data, features)
+            plot_temporal_features(self._data, features)
+
+    # def aggregate():
+    #    self.by = self.by +
