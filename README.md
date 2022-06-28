@@ -2,7 +2,7 @@
 # cyclops
 ---------
 
-[![Code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml) 
+[![Code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml)
 [![Documentation and Coverage Report](https://github.com/VectorInstitute/cyclops/actions/workflows/docs.yaml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs.yaml)
 
 cyclops is a framework for facilitating research and deployment of ML models
