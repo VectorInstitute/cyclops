@@ -13,7 +13,7 @@ from cyclops.processors.column_names import (
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
 )
-from cyclops.processors.events import (
+from cyclops.processors.cleaning import (
     combine_events,
     convert_to_events,
     normalize_events,

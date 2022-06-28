@@ -215,7 +215,7 @@ class Features:
 
         """
         to_indicators = to_list_optional(to_indicators)
-        
+
         if to_indicators is not None:
             return self._ordinal_to_indicators(to_indicators, inplace=False)
 
@@ -253,15 +253,16 @@ class Features:
             List of the desired feature names.
 
         """
-        
         features = self.features
-        
+
         if feature_type is not None:
-            features = [col for col in features if self.meta[col].get_type() == feature_type]
-        
+            features = [
+                col for col in features if self.meta[col].get_type() == feature_type
+            ]
+
         if target is not None:
             features = [col for col in features if self.meta[col].is_target()]
-        
+
         return features
 
     @property
@@ -325,7 +326,7 @@ class Features:
         invalid = set(new_types.keys()) - set(self.features)
         if len(invalid) > 0:
             raise ValueError(f"Unrecognized features: {', '.join(invalid)}")
-        
+
         for col, new_type in new_types.items():
             # Check that we aren't converting any categorical indicators to other things
             if col in self.meta:
@@ -333,13 +334,13 @@ class Features:
                     raise ValueError(
                         "Categorical indicators cannot be converted to other types."
                     )
-                
+
                 if inplace:
                     # Remove original category column if converting to indicators
                     if new_type == CATEGORICAL_INDICATOR:
                         del self.meta[col]
                         self.features.remove(col)
-        
+
         data, meta = to_types(self._data, new_types)
 
         if inplace:
@@ -347,7 +348,7 @@ class Features:
             for col, fmeta in meta.items():
                 if FEATURE_INDICATOR_ATTR in fmeta:
                     self.features.append(col)
-            
+
             self._data = data
             self._update_meta(meta)
 
@@ -639,13 +640,12 @@ class TemporalFeatures(Features):
         self.timestamp_col = timestamp_col
         self.aggregator = aggregator
         self._check_aggregator()
-    
+
     def _check_aggregator(self):
         if self.aggregator.get_timestamp_col() != self.timestamp_col:
             raise ValueError(
                 "Features and aggregator timestamp columns must be the same."
             )
-            
 
     def plot_features(
         self,
@@ -666,17 +666,27 @@ class TemporalFeatures(Features):
         else:
             plot_temporal_features(self._data, features)
 
-    def aggregate(self):
-        #self.by = self.by +
-        
+    def aggregate(self) -> pd.DataFrame:
+        """Aggregate the data.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Aggregated data.
+
+        """
+        if self.aggregator is None:
+            raise ValueError(
+                "Must pass an aggregator when creating features to aggregate."
+            )
+
         agg_features = self.aggregator.get_aggfuncs().keys()
-        
+
         # Check for non-existent columns in the map
         nonexistent = set(agg_features) - set(self.features)
         if len(nonexistent) > 0:
             raise ValueError(
                 f"The following columns are not features: {', '.join(nonexistent)}."
             )
-        
-        #self._data = self.aggregator(self._data)
+
         return self.aggregator(self._data)

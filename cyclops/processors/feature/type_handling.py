@@ -987,10 +987,10 @@ def infer_types(
 
 def collect_indicators(
     data: pd.DataFrame,
-    categorical: Union[str or List[str]],
+    categorical: Union[str, List[str]],
 ) -> pd.DataFrame:
     """Infer and collect indicator features into ordinal categorical features.
-    
+
     Parameters
     ----------
     data: pandas.DataFrame
@@ -998,36 +998,38 @@ def collect_indicators(
     categorical: str or list of str
         Names of categorical features. E.g., "hospital" for indicators
         "hospital_A", "hospital_B"
-    
+
     """
     categorical = to_list(categorical)
-    
+
     meta = {}
     for cat in categorical:
         indicators = [
-            name for name in data.columns if name.startswith(cat + "_") \
-            and _valid_binary(data[name])
+            name
+            for name in data.columns
+            if name.startswith(cat + "_") and _valid_binary(data[name])
         ]
-        
+
         if len(indicators) < 2:
             raise ValueError("Not enough indicators to convert to ordinal.")
-        
+
         if not (data[indicators].sum(axis=1).values == 1).all():
             raise ValueError("Indicators be converted into ordinal.")
-        
+
         # Get categories
         data[cat] = np.argmax(data[indicators].values, axis=1)
-        indicator_names = [indicator[len(cat) + 1:] for indicator in indicators]
+        indicator_names = [indicator[len(cat) + 1 :] for indicator in indicators]
         map_dict = {
-            i: (name if name != MISSING_CATEGORY else np.nan) for i, name in enumerate(indicator_names)
+            i: (name if name != MISSING_CATEGORY else np.nan)
+            for i, name in enumerate(indicator_names)
         }
 
         data[cat] = data[cat].replace(map_dict)
         data = data.drop(indicators, axis=1)
-        
+
         # Convert to ordinal
         unique = np.array(list(map_dict.values()))
         data[cat], fmeta = _to_ordinal(data[cat], unique=unique)
         meta[cat] = fmeta
-    
+
     return data, meta

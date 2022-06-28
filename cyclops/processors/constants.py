@@ -23,7 +23,7 @@ FEATURE_TYPES = [
     BINARY,
     STRING,
     ORDINAL,
-    #CATEGORICAL_INDICATOR,
+    # CATEGORICAL_INDICATOR,
 ]
 
 FEATURE_TYPE_ATTR = "type_"
@@ -55,10 +55,7 @@ MIN_MAX = "min-max"
 MEAN = "mean"
 MEDIAN = "median"
 
-AGGFUNCS = [
-    MEAN,
-    MEDIAN
-]
+AGGFUNCS = [MEAN, MEDIAN]
 
 # GEMINI Admin.
 THPM = "THPM"
