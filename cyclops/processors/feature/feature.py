@@ -233,17 +233,36 @@ class Features:
         """
         return self._data.columns
 
-    @property
-    def feature_names(self) -> List[str]:
+    def feature_names(
+        self,
+        feature_type: Optional[str] = None,
+        target: Optional[bool] = None,
+    ) -> List[str]:
         """Access as attribute, feature names.
+
+        Parameters
+        ----------
+        feature_type: str, optional
+            Filter by feature type.
+        target: bool, optional
+            Filter by whether the feature is a target.
 
         Returns
         -------
         list of str
-            List of all feature names.
+            List of the desired feature names.
 
         """
-        return self.features
+        
+        features = self.features
+        
+        if feature_type is not None:
+            features = [col for col in features if self.meta[col].get_type() == feature_type]
+        
+        if target is not None:
+            features = [col for col in features if self.meta[col].is_target()]
+        
+        return features
 
     @property
     def types(self) -> dict:
@@ -603,11 +622,10 @@ class TemporalFeatures(Features):
         data: pd.DataFrame,
         features: Union[str, List[str]],
         by: Union[str, List[str]],
-        temporal_col: str,
+        timestamp_col: str,
         targets: Optional[Union[str, List[str]]] = None,
         force_types: Optional[dict] = None,
         aggregator: Optional[Aggregator] = None,
-        imputer: Optional[Imputer] = None,
     ):
         """Init."""
         super().__init__(
@@ -618,8 +636,16 @@ class TemporalFeatures(Features):
             force_types=force_types,
         )
 
-        self.temporal_col = temporal_col
+        self.timestamp_col = timestamp_col
         self.aggregator = aggregator
+        self._check_aggregator()
+    
+    def _check_aggregator(self):
+        if self.aggregator.get_timestamp_col() != self.timestamp_col:
+            raise ValueError(
+                "Features and aggregator timestamp columns must be the same."
+            )
+            
 
     def plot_features(
         self,
@@ -640,7 +666,17 @@ class TemporalFeatures(Features):
         else:
             plot_temporal_features(self._data, features)
 
-    def aggregate():
+    def aggregate(self):
         #self.by = self.by +
         
-        Aggregator
+        agg_features = self.aggregator.get_aggfuncs().keys()
+        
+        # Check for non-existent columns in the map
+        nonexistent = set(agg_features) - set(self.features)
+        if len(nonexistent) > 0:
+            raise ValueError(
+                f"The following columns are not features: {', '.join(nonexistent)}."
+            )
+        
+        #self._data = self.aggregator(self._data)
+        return self.aggregator(self._data)

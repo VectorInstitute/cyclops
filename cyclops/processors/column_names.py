@@ -43,7 +43,11 @@ EVENT_VALUE_UNIT = "event_value_unit"
 EVENT_TIMESTAMP = "event_timestamp"
 EVENT_CATEGORY = "event_category"
 
-RESTRICT_TIMESTAMP = "restrict_timestamp"
+# Aggregation.
+START_TIMESTAMP = "start"
+STOP_TIMESTAMP = "stop"
+DURATION = "duration"
+START_TIMESTEP = "timestep_start"
 
 REFERENCE_RANGE = "reference_range"
 TIMESTEP = "timestep"

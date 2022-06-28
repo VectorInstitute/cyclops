@@ -51,9 +51,14 @@ MISSING_CATEGORY = "null_category"
 STANDARD = "standard"
 MIN_MAX = "min-max"
 
-# Imputation
+# Aggregation / Imputation.
 MEAN = "mean"
 MEDIAN = "median"
+
+AGGFUNCS = [
+    MEAN,
+    MEDIAN
+]
 
 # GEMINI Admin.
 THPM = "THPM"

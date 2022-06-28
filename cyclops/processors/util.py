@@ -91,24 +91,7 @@ def fill_missing_timesteps(
     )
 
 
-def is_timeseries_data(data: pd.DataFrame) -> bool:
-    """Check if input data is time-series dataframe (multi-index).
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input dataframe.
-
-    Returns
-    -------
-    bool
-        Yes if dataframe has multi-index (timeseries), No otherwise.
-
-    """
-    return isinstance(data.index, pd.core.indexes.multi.MultiIndex)
-
-
-def is_timestamp_series(series):
+def is_timestamp_series(series, raise_error: bool = False):
     """Check whether a series has the Pandas Timestamp datatype.
 
     Parameters
@@ -122,11 +105,19 @@ def is_timestamp_series(series):
         Whether the series has the Pandas Timestamp datatype.
 
     """
-    return series.dtype == pd.to_datetime(["2069-03-29 02:30:00"]).dtype
+    is_timestamp = series.dtype == pd.to_datetime(["2069-03-29 02:30:00"]).dtype
+    
+    if not is_timestamp and raise_error:
+        raise ValueError(f"{series.name} must be a timestamp Series.")
+    
+    return is_timestamp
 
 
 def has_columns(
-    data: pd.DataFrame, cols: Union[str, List[str]], raise_error: bool = False
+    data: pd.DataFrame,
+    cols: Union[str, List[str]],
+    exactly: bool = False,
+    raise_error: bool = False
 ) -> bool:
     """Check if data has required columns for processing.
 
@@ -152,8 +143,13 @@ def has_columns(
 
     if not present and raise_error:
         missing = required_set - columns
-        raise ValueError(f"Missing required columns {missing}")
-
+        raise ValueError(f"Missing required columns: {', '.join(missing)}.")
+    
+    if exactly:
+        exact = present and len(data.columns) == len(cols)
+        if not exact and raise_error:
+            raise ValueError(f"Must have exactly the columns: {', '.join(cols)}.")
+    
     return present
 
 

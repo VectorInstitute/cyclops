@@ -333,3 +333,34 @@ def normalize_events(data) -> pd.DataFrame:
         data = normalize_categories(data)
 
     return data
+
+
+def dropna_rows(data: pd.DataFrame, cols: Union[str, List[str]]) -> pd.DataFrame:
+    """Drop null values in some specific columns.
+    
+    Part of the utility of this function lies in its logging.
+    
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Data.
+    cols: str or list of str
+        Columns over which to drop null values. 
+    
+    Returns
+    -------
+    pandas.DataFrame
+        Data with corresponding null rows dropped.
+
+    """
+    length = len(data)
+    data = data.dropna(subset=cols)
+    new_length = len(data)
+    
+    if new_length != length:
+        num = length - new_length
+        LOGGER.info(
+            f"Dropped nulls over columns: {''.join(cols)}. Removed {num} rows."
+        )
+    
+    return data
