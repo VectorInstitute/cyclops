@@ -2,6 +2,8 @@
 # cyclops
 ---------
 
+[![Documentation and Coverage Report](https://github.com/VectorInstitute/cyclops/actions/workflows/docs.yaml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs.yaml)
+
 cyclops is a framework for facilitating research and deployment of ML models
 in the health (or clinical) setting. It provides three high-level features:
 
