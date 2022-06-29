@@ -2,6 +2,8 @@
 
 # pylint: disable=line-too-long
 
+import numpy as np
+
 # Generic.
 YEAR = "year"
 MONTH = "month"
@@ -54,8 +56,7 @@ MIN_MAX = "min-max"
 # Aggregation / Imputation.
 MEAN = "mean"
 MEDIAN = "median"
-
-AGGFUNCS = [MEAN, MEDIAN]
+AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
 
 # GEMINI Admin.
 THPM = "THPM"

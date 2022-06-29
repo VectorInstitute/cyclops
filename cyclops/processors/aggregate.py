@@ -4,19 +4,18 @@ import logging
 from datetime import timedelta
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
 from cyclops.processors.cleaning import dropna_rows
 from cyclops.processors.column_names import (
-    DURATION,
+    RESTRICT_TIMESTAMP,
     START_TIMESTAMP,
     START_TIMESTEP,
     STOP_TIMESTAMP,
     TIMESTEP,
 )
-from cyclops.processors.constants import AGGFUNCS, MEAN, MEDIAN
+from cyclops.processors.constants import AGGFUNCS
 from cyclops.processors.util import has_columns, is_timestamp_series
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
@@ -28,34 +27,30 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
 class Aggregator:  # pylint: disable=too-many-instance-attributes
-    """Equally-spaced aggregation, or bucketing, of temporal data.
+    """Equal-spaced aggregation, or binning, of temporal data.
 
-    Parameters
+    Computing aggregation metadata is expensive and should be done sparingly.
+
+    Attributes
     ----------
     aggfuncs: dict
         Aggregation functions mapped from column to aggregation type.
-        Each value is either function or string. If a string, e.g., ['mean', 'median'].
+        Each value is either function or string, e.g., {col_name: MEAN}.
         If a function, it should accept a series and return a single value.
-    bucket_size: float, optional
-        Size of a single step in the time-series in hours.
-        For example, if 2, temporal data is aggregated into bins of 2 hrs.
-    window_duration: float, optional
-        Window duration in hours, to consider for creating time-series.
-        For example if its 100 hours, then all temporal data upto
-        100 hours for a given encounter is considered. The start time of
-        the time-series by default would be the earliest event recorded for that
-        encounter, for example the first lab test. It can also be the admission
-        time or a custom timestamp if provided.
-    start_at_admission: bool, optional
-        Flag to say if the window should start at the time of admission. This
-        cannot be used in conjunction with 'start_at_admission'.
-    start_window_ts: pandas.DataFrame
-        Specific time for each encounter from which the window should start.
-    stop_window_ts: pandas.DataFrame
-        Specific time for each encounter upto which events should be considered.
-        This cannot be used in conjunction with 'window'.
-    agg_meta_for: list of str
+    timestamp_col: str
+        Name of the timestamp column in the data provided.
+    time_by: list of str
+        Name of columns by which to group to determine the bucket times.
+    agg_by: list of str
+        Name of columns by which to group to perform aggregation.
+    timestep_size: float
+        Time in hours for a single timestep, or bin.
+    window_duration: float or None
+        Time duration to consider after the start of a timestep.
+    agg_meta_for: list of str or None
         Columns for which to compute aggregation metadata.
+    window_times: pd.DataFrame or None
+        The start/stop time windows used to aggregate the data.
 
     """
 
@@ -65,7 +60,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         timestamp_col: str,
         time_by: Union[str, List[str]],
         agg_by: Union[str, List[str]],
-        bucket_size: int = 1,
+        timestep_size: int,
         window_duration: Optional[int] = None,
         agg_meta_for: Optional[List[str]] = None,
     ):
@@ -77,11 +72,12 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         self.timestamp_col = timestamp_col
         self.time_by = to_list(time_by)
         self.agg_by = to_list(agg_by)
-        self.bucket_size = bucket_size
+        self.timestep_size = timestep_size
         self.window_duration = window_duration
         self.agg_meta_for = to_list_optional(agg_meta_for)
         self.window_times = pd.DataFrame()  # Calculated when given the data
 
+        # Parameter checking
         if self.agg_meta_for is not None:
             if not set(self.agg_meta_for).issubset(set(list(self.aggfuncs))):
                 raise ValueError(
@@ -89,7 +85,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
                 )
 
         if self.window_duration is not None:
-            num = self.window_duration / self.bucket_size
+            num = self.window_duration / self.timestep_size
             if num != int(num):
                 LOGGER.warning(
                     "Suggested that window duration be divisible by bucket size."
@@ -128,25 +124,18 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
         Returns
         -------
-        Dict
-            The processed aggregation functions.
-
-        Raises
-        ------
-        NotImplementedError
-            Asserts if supplied input strategy option is not recognized.
+        dict
+            The processed aggregation function dictionary.
 
         """
         for col, aggfunc in aggfuncs.items():
             if isinstance(aggfunc, str):
-                if aggfunc == MEAN:
-                    aggfuncs[col] = np.mean
-                elif aggfunc == MEDIAN:
-                    aggfuncs[col] = np.median
-                else:
-                    raise NotImplementedError(
-                        f"{aggfunc} is invalid. Supporting: {','.join(AGGFUNCS)}"
+                if aggfunc not in AGGFUNCS:
+                    raise ValueError(
+                        f"""Aggfunc string {aggfunc} not supported.
+                        Supporting: {','.join(AGGFUNCS)}"""
                     )
+                aggfuncs[col] = AGGFUNCS[aggfunc]
             elif callable(aggfunc):
                 pass
             else:
@@ -154,39 +143,31 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
         return aggfuncs
 
-    def _check_start_stop_window_ts(self, window_ts) -> None:
+    def _check_start_stop_window_ts(self, window_time: pd.DataFrame) -> None:
+        """Check whether a window start/stop time have the correct format.
+
+        Parameters
+        ----------
+        pandas.DataFrame
+            Window start/stop time.
+
+        """
+        if not window_time.index.names == self.time_by:
+            raise ValueError(f"Window start/stop times must have index: {self.time_by}")
         has_columns(
-            window_ts,
-            self.time_by + [self.timestamp_col],
+            window_time,
+            [RESTRICT_TIMESTAMP],
             exactly=True,
             raise_error=True,
         )
 
     def _restrict_by_timestamp(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Restrict events by the EVENT_TIMESTAMP.
-
-        Restrict events by the EVENT_TIMESTAMP where, for a given ENCOUNTER_ID, events
-        may be restricted to those only after the start timestamp and before the stop
-        timestamp.
-
-        The start/stop parameters are optionally specified depending on whether
-        these timestamp restrictions are desired.
-
-        If an ENCOUNTER_ID appears in data and not start/stop, then it will
-        not have its events restricted. Every ENCOUNTER_ID in start/stop must appear
-        in the data.
-
-        If specified, the start and stop DataFrames expect columns ENCOUNTER_ID and
-        RESTRICT_TIMESTAMP.
+        """Restrict events by the window start/stop times.
 
         Parameters
         ----------
         data: pandas.DataFrame
             Input data.
-        start: pandas.DataFrame or None
-            Restrict timestamps before the start time for a given ENCOUNTER_ID.
-        stop: pandas.DataFrame or None
-            Restrict timestamps after the stop time for a given ENCOUNTER_ID.
 
         Returns
         -------
@@ -205,45 +186,85 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         data = data[cond]
         return data
 
+    def _use_provided_window(
+        self, window_time: pd.DataFrame, default_time: pd.DataFrame, warning_args: Tuple
+    ) -> pd.DataFrame:
+        """Process a window start/stop time.
+
+        Parameters
+        ----------
+        window_time: pandas.DataFrame
+            The provided window start/stop time.
+        default_time: pandas.DataFrame
+            A default window start/stop time if the provided version is missing values.
+        warning_args: tuple
+            Tuple of strings used to format a warning message.
+
+        Returns
+        -------
+            The processed provided window start/stop time.
+
+        """
+        self._check_start_stop_window_ts(window_time)
+        index_missing = default_time.index.difference(window_time.index)
+        if len(index_missing) > 0:
+            LOGGER.warning(
+                (
+                    "Not all time_by groups have a specified window %s time. "
+                    "Defaulting missing to %s time."
+                ),
+                *warning_args,
+            )
+
+            # Default non-existent to earliest time.
+            window_time = default_time.join(window_time)
+            inds = window_time[RESTRICT_TIMESTAMP].isna()
+            window_time[RESTRICT_TIMESTAMP][inds] = window_time[self.timestamp_col][
+                inds
+            ]
+            window_time = window_time.drop(self.timestamp_col, axis=1)
+        return window_time
+
     def _compute_window_start(
         self,
         data: pd.DataFrame,
         window_start_time: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
-        """Compute the start timestamp for each encounter window.
-
-        If 'start_at_admission' is True, then 'admit_timestamp' is returned,
-        else if a custom dataframe with start timestamps for each encounter can be
-        provided as the starting point of the window, that is used. Else by default,
-        the start timestamp is computed as the earliest event timestamp for that
-        encounter.
+        """Compute the start timestamp for each time_by window.
 
         Parameters
         ----------
         data: pandas.DataFrame
-            Event data before aggregation.
+            Data before aggregation.
+        window_start_time: pd.DataFrame, optional
+            An optionally provided window start time.
 
         Returns
         -------
         pandas.DataFrame
-            Dataframe with start timestamps of windows for each encounter.
+            Start timestamps for each time_by window.
 
         """
-        relevant_cols = self.time_by + [self.timestamp_col]
-
-        # Use provided start
-        if window_start_time is not None:
-            self._check_start_stop_window_ts(window_start_time)
-
         # Take the earliest timestamp for each time_by group
+        earliest_time = (
+            data[self.time_by + [self.timestamp_col]]
+            .groupby(self.time_by, sort=False)
+            .agg({self.timestamp_col: "min"})
+        )
+
+        if window_start_time is None:
+            # Use earliest times
+            earliest_time = earliest_time.rename(
+                {self.timestamp_col: RESTRICT_TIMESTAMP}, axis=1
+            )
+            window_start_time = earliest_time
         else:
-            has_columns(data, relevant_cols, raise_error=True)
-            window_start_time = (
-                data[relevant_cols]
-                .groupby(self.time_by)
-                .agg({self.timestamp_col: "min"})
+            # Use provided start - with earliest times acting as default
+            window_start_time = self._use_provided_window(
+                window_start_time, earliest_time, ("start", "earliest")
             )
 
+        self._check_start_stop_window_ts(window_start_time)
         return window_start_time
 
     def _compute_window_stop(
@@ -252,51 +273,58 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         window_start_time: pd.DataFrame,
         window_stop_time: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
-        """Compute the end timestamp for each encounter window.
-
-        If 'window' is provided, then end timestamp is computed as a fixed
-        window length (hours) from the start timestamp ('start_time').
-        If a custom dataframe with end timestamps for each encounter can be
-        provided as the ending point of the window, that is used.
+        """Compute the stop timestamp for each time_by window.
 
         Parameters
         ----------
-        start_window_ts: pandas.DataFrame
-            Start timestamp for each encounter window.
+        data: pandas.DataFrame
+            Data before aggregation.
+        window_start_time: pd.DataFrame
+            The window start time, which is necessary to compute the
+            stop time when window_duration is set.
+        window_stop_time: pd.DataFrame, optional
+            An optionally provided window stop time.
 
         Returns
         -------
         pandas.DataFrame
-            Dataframe with end timestamps of windows for each encounter.
+            Stop timestamps for each time_by group.
 
         """
-        relevant_cols = self.time_by + [self.timestamp_col]
-
         # Use provided stop
-        if window_stop_time is not None:
-            self._check_start_stop_window_ts(window_stop_time)
-            if self.window_duration is not None:
-                raise ValueError(
-                    "Cannot provide window_stop_time if window_duration was set."
-                )
+        if window_stop_time is not None and self.window_duration is not None:
+            raise ValueError(
+                "Cannot provide window_stop_time if window_duration was set."
+            )
 
-        # Use window duration to compute the stop times for each group
-        elif self.window_duration is not None:
+        if self.window_duration is not None:
+            # Use window duration to compute the stop times for each group
             window_stop_time = window_start_time.copy()
-            window_stop_time[self.timestamp_col] += timedelta(
+            window_stop_time[RESTRICT_TIMESTAMP] += timedelta(
                 hours=self.window_duration
             )
 
-        # Take the latest timestamp for each time_by group
         else:
-            relevant_cols = self.time_by + [self.timestamp_col]
-            has_columns(data, relevant_cols, raise_error=True)
-            window_stop_time = (
-                data[relevant_cols]
-                .groupby(self.time_by)
+            # Take the latest timestamp for each time_by group
+            latest_time = (
+                data[self.time_by + [self.timestamp_col]]
+                .groupby(self.time_by, sort=False)
                 .agg({self.timestamp_col: "max"})
             )
 
+            if window_stop_time is None:
+                # Use latest times
+                latest_time = latest_time.rename(
+                    {self.timestamp_col: RESTRICT_TIMESTAMP}, axis=1
+                )
+                window_stop_time = latest_time
+            else:
+                # Use provided stop - with latest times acting as default
+                window_stop_time = self._use_provided_window(
+                    window_stop_time, latest_time, ("stop", "latest")
+                )
+
+        self._check_start_stop_window_ts(window_stop_time)
         return window_stop_time
 
     def _compute_window_times(
@@ -305,6 +333,23 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         window_start_time: Optional[pd.DataFrame] = None,
         window_stop_time: Optional[pd.DataFrame] = None,
     ):
+        """Compute the start/stop timestamps for each time_by window.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            Data before aggregation.
+        window_start_time: pd.DataFrame, optional
+            An optionally provided window start time.
+        window_stop_time: pd.DataFrame, optional
+            An optionally provided window stop time.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The start/stop timestamps for each time_by window.
+
+        """
         # Compute window start time
         window_start_time = self._compute_window_start(
             data, window_start_time=window_start_time
@@ -317,78 +362,121 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
         # Combine and compute additional information
         window_start_time = window_start_time.rename(
-            {self.timestamp_col: START_TIMESTAMP}, axis=1
+            {RESTRICT_TIMESTAMP: START_TIMESTAMP}, axis=1
         )
         window_stop_time = window_stop_time.rename(
-            {self.timestamp_col: STOP_TIMESTAMP}, axis=1
+            {RESTRICT_TIMESTAMP: STOP_TIMESTAMP}, axis=1
         )
         window_times = window_start_time.join(window_stop_time)
-        window_times[DURATION] = (
-            window_times[STOP_TIMESTAMP] - window_times[START_TIMESTAMP]
-        ) / np.timedelta64(1, "h")
 
         return window_times
 
-    def _aggregate(self, data, include_timestep_start: bool = True):
-        def compute_agg_meta(group):
-            # Note: .counts() returns the number of non-null values in the Series.
-            meta = group.agg(
-                {col: [lambda x: x.count(), len] for col in self.agg_meta_for},
-                dropna=False,
+    def _compute_timestep(self, group: pd.DataFrame) -> pd.DataFrame:
+        """Compute which timestep, or bin, each occurence falls into.
+
+        Parameters
+        ----------
+        group: pandas.DataFrame
+            A time_by group.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The inputted group with an additional TIMESTEP column.
+
+        """
+        loc = tuple(group[self.time_by].values[0])
+        start = self.window_times.loc[loc][START_TIMESTAMP]
+        group[TIMESTEP] = (group[self.timestamp_col] - start) / pd.Timedelta(
+            hours=self.timestep_size
+        )
+        group[TIMESTEP] = group[TIMESTEP].astype("int")
+
+        return group
+
+    def _compute_agg_meta(self, group: pd.DataFrame) -> pd.DataFrame:
+        """Compute the aggregation metadata for an agg_by group.
+
+        Parameters
+        ----------
+        group: pandas.DataFrame
+            An agg_by group.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The aggergation metadata information.
+
+        """
+        # Note: .counts() returns the number of non-null values in the Series.
+        meta = group.agg(
+            {col: [lambda x: x.count(), len] for col in self.agg_meta_for},
+            dropna=False,
+        )
+
+        keep = []
+        for col in self.agg_meta_for:
+            meta[col + "_count"] = meta[(col, "len")]
+            meta[col + "_null_fraction"] = 1 - (
+                meta[(col, "<lambda_0>")] / meta[(col, "len")]
             )
+            keep.extend([col + "_count", col + "_null_fraction"])
 
-            keep = []
-            for col in self.agg_meta_for:
-                meta[col + "_count"] = meta[(col, "len")]
-                meta[col + "_null_fraction"] = 1 - (
-                    meta[(col, "<lambda_0>")] / meta[(col, "len")]
-                )
-                keep.extend([col + "_count", col + "_null_fraction"])
+        meta = meta[keep]
+        meta.columns = meta.columns.droplevel(1)
+        return meta
 
-            meta = meta[keep]
-            meta.columns = meta.columns.droplevel(1)
-            return meta
+    def _compute_aggregation(self, group: pd.DataFrame) -> pd.DataFrame:
+        """Compute the aggregation for an agg_by group by timestep.
 
-        def compute_aggregation(group):
-            group = group.groupby(TIMESTEP, dropna=False)
+        Parameters
+        ----------
+        group: pandas.DataFrame
+            An agg_by group.
 
-            # Compute aggregation meta
-            if self.agg_meta_for is not None:
-                agg_meta = compute_agg_meta(group)
-            else:
-                agg_meta = None
+        Returns
+        -------
+        pandas.DataFrame
+            The aggregated group.
 
-            # DO: Add intra imputation here.
+        """
+        group = group.groupby(TIMESTEP, sort=False, dropna=False)
 
-            group = group.agg(self.aggfuncs)
+        # Compute aggregation meta
+        if self.agg_meta_for is not None:
+            agg_meta = self._compute_agg_meta(group)
+        else:
+            agg_meta = None
 
-            # Include aggregation meta
-            if agg_meta is not None:
-                group = group.join(agg_meta)
+        # DO: Add intra imputation here.
 
-            return group
+        group = group.agg(self.aggfuncs)
 
-        def compute_timestep(group):
-            loc = tuple(group[self.time_by].values[0])
-            start = self.window_times.loc[loc][START_TIMESTAMP]
-            group[TIMESTEP] = (group[self.timestamp_col] - start) / pd.Timedelta(
-                hours=self.bucket_size
-            )
-            group[TIMESTEP] = group[TIMESTEP].astype("int")
+        # Include aggregation meta
+        if agg_meta is not None:
+            group = group.join(agg_meta)
 
-            return group
+        return group
 
-        data_with_timesteps = data.groupby(self.time_by).apply(compute_timestep)
-        aggregated = data_with_timesteps.groupby(self.agg_by).apply(compute_aggregation)
+    def _aggregate(
+        self, data: pd.DataFrame, include_timestep_start: bool = True
+    ) -> pd.DataFrame:
+        data_with_timesteps = data.groupby(self.time_by, sort=False).apply(
+            self._compute_timestep
+        )
+        aggregated = data_with_timesteps.groupby(self.agg_by, sort=False).apply(
+            self._compute_aggregation
+        )
 
         if not include_timestep_start:
             return aggregated
 
-        # Compute the start timestamp for each bucket
+        # Compute the start timestamp for each timestep
         aggregated = aggregated.reset_index().set_index(self.time_by)
+
         aggregated = aggregated.join(self.window_times[START_TIMESTAMP])
         aggregated[START_TIMESTEP] = aggregated[START_TIMESTAMP] + pd.to_timedelta(
-            aggregated[TIMESTEP] * self.bucket_size, unit="h"
+            aggregated[TIMESTEP] * self.timestep_size, unit="h"
         )
         aggregated = aggregated.drop(START_TIMESTAMP, axis=1)
         aggregated = aggregated.reset_index().set_index(self.agg_by + [TIMESTEP])
@@ -404,28 +492,45 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Aggregate.
 
+        The window start and stop times can be used to cut short the timeseries.
+
+        By default, the start time of a time_by group will be the earliest
+        recorded timestamp in said group. Otherwise, a window_start_time
+        can be provided by the user to override this default.
+
+        The end time of a time_by group work similarly, but with the additional
+        option of specifying a window_duration.
+
         Parameters
         ----------
         data: pandas.DataFrame
             Input data.
-        window_start_time: pandas.DataFrame, optional
-            TODO.
-        window_stop_time: pandas.DataFrame, optional
-            TODO.
+        window_start_time: pd.DataFrame, optional
+            An optionally provided window start time.
+        window_stop_time: pd.DataFrame, optional
+            An optionally provided window stop time. This cannot be provided if
+            window_duration was set.
         include_timestep_start: bool, default = True
-            TODO
+            Whether to include the window start timestamps for each timestep.
 
         Returns
         -------
         pandas.DataFrame
-            Aggregated data.
+            The aggregated data.
 
         """
+        # Parameter checking
+        if not isinstance(data, pd.DataFrame):
+            raise ValueError("Data to aggregate must be a pandas.DataFrame.")
+
         has_columns(
             data,
             list(set([self.timestamp_col] + self.time_by + self.agg_by)),
             raise_error=True,
         )
+
+        if has_columns(data, TIMESTEP):
+            raise ValueError(f"Inputted data cannot have a column called {TIMESTEP}.")
 
         # Ensure the timestamp column is a timestamp. Drop null times (NaT).
         is_timestamp_series(data[self.timestamp_col], raise_error=True)
