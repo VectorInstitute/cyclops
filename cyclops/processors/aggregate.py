@@ -1,9 +1,12 @@
 """Aggregation functions."""
 
 import logging
+from collections import OrderedDict
 from datetime import timedelta
+from itertools import product
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
@@ -16,7 +19,11 @@ from cyclops.processors.column_names import (
     TIMESTEP,
 )
 from cyclops.processors.constants import AGGFUNCS
-from cyclops.processors.util import has_columns, is_timestamp_series
+from cyclops.processors.util import (
+    fill_missing_timesteps,
+    has_columns,
+    is_timestamp_series,
+)
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -85,11 +92,9 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
                 )
 
         if self.window_duration is not None:
-            num = self.window_duration / self.timestep_size
-            if num != int(num):
-                LOGGER.warning(
-                    "Suggested that window duration be divisible by bucket size."
-                )
+            divided = self.window_duration / self.timestep_size
+            if divided != int(divided):
+                raise ValueError("Window duration be divisible by bucket size.")
 
     def get_timestamp_col(self) -> str:
         """Get timestamp column.
@@ -141,7 +146,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             else:
                 raise ValueError("Aggfunc must be a string or callable.")
 
-        return aggfuncs
+        return OrderedDict(aggfuncs)
 
     def _check_start_stop_window_ts(self, window_time: pd.DataFrame) -> None:
         """Check whether a window start/stop time have the correct format.
@@ -545,3 +550,60 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         data = self._restrict_by_timestamp(data)
 
         return self._aggregate(data, include_timestep_start=include_timestep_start)
+
+    def vectorize(self, aggregated: pd.DataFrame) -> np.ndarray:
+        """Vectorize aggregated data.
+
+        Parameters
+        ----------
+        aggregated: pandas.DataFrame
+            Aggregated data.
+
+        Returns
+        -------
+        numpy.ndarray
+            Vectorized aggregated data of shape:
+            (# of aggfuncs, *# of unique in each agg_by, window_duration/timestep_size)
+
+        """
+        if self.window_duration is None:
+            raise NotImplementedError(
+                "Cannot currently vectorize data aggregated with no window duration."
+            )
+
+        # Parameter checking
+        has_columns(aggregated, list(self.aggfuncs.keys()), raise_error=True)
+        if not aggregated.index.names == self.agg_by + [TIMESTEP]:
+            raise ValueError(f"Index must be: {self.agg_by + [TIMESTEP]}.")
+
+        def fill_agg_by_group_timesteps(group):
+            group = fill_missing_timesteps(
+                group, TIMESTEP, 0, self.window_duration / self.timestep_size
+            )
+            group = group.drop(TIMESTEP, axis=1)
+            return group
+
+        # Add missing agg_by groups
+        aggregated = aggregated.reset_index()
+        aggregated = aggregated[self.agg_by + [TIMESTEP] + list(self.aggfuncs.keys())]
+
+        unique_individuals = [list(pd.unique(aggregated[col])) for col in self.agg_by]
+        aggregated = aggregated.set_index(self.agg_by)
+        existing_groups = set(aggregated.index.unique().values)
+        all_groups = set(product(*unique_individuals))
+        missing_groups = all_groups - existing_groups
+        missing = pd.DataFrame(list(missing_groups), columns=self.agg_by)
+        missing = missing.set_index(self.agg_by)
+        aggregated = pd.concat([aggregated, missing])
+
+        # Add missing timesteps
+        vectorized = aggregated.groupby(self.agg_by).apply(fill_agg_by_group_timesteps)
+
+        # ADD INTER IMPUTATION
+
+        # Turn into numpy array and reshape accordingly
+        unique_lens = [len(unique) for unique in unique_individuals]
+        shape = unique_lens + [int(self.window_duration / self.timestep_size)]
+        return np.stack(
+            [vectorized[aggfunc].values.reshape(shape) for aggfunc in self.aggfuncs]
+        ), list(self.aggfuncs.keys())
