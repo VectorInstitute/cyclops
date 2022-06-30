@@ -2,7 +2,7 @@
 
 import logging
 from functools import wraps
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -20,6 +20,32 @@ from cyclops.utils.log import setup_logging
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
+
+def create_indicator_variables(
+    features: pd.DataFrame, columns: Optional[List] = None
+) -> pd.DataFrame:
+    """Create binary indicator variable for each column (or specified).
+
+    Parameters
+    ----------
+    features: pandas.DataFrame
+        Input features with missing values.
+    columns: list, optional
+        Columns to create variables, all if not specified.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe with indicator variables as columns.
+
+    """
+    if columns:
+        indicator_features = features[columns]
+    else:
+        indicator_features = features
+
+    return indicator_features.notnull().astype(int).add_suffix("_indicator")
 
 
 def pivot_aggregated_events_to_features(
@@ -89,6 +115,23 @@ def fill_missing_timesteps(
         .fillna(fill_with)
         .drop(["index"], axis=1)
     )
+
+
+def is_timeseries_data(data: pd.DataFrame) -> bool:
+    """Check if input data is time-series dataframe (multi-index).
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Input dataframe.
+
+    Returns
+    -------
+    bool
+        Yes if dataframe has multi-index (timeseries), No otherwise.
+
+    """
+    return isinstance(data.index, pd.core.indexes.multi.MultiIndex)
 
 
 def is_timestamp_series(series, raise_error: bool = False):
