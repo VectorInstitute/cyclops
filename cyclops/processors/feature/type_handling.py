@@ -1,4 +1,4 @@
-"""Detect and convert feature types."""
+"""Handling feature types."""
 
 # pylint: disable=too-many-lines
 
@@ -6,7 +6,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_numeric_dtype, is_string_dtype
+from pandas.api.types import (
+    is_bool_dtype,
+    is_integer_dtype,
+    is_numeric_dtype,
+    is_string_dtype,
+)
 
 from cyclops.processors.constants import (
     BINARY,
@@ -20,6 +25,7 @@ from cyclops.processors.constants import (
     ORDINAL,
     STRING,
 )
+from cyclops.utils.common import to_list
 
 
 def get_unique(
@@ -30,7 +36,7 @@ def get_unique(
 
     The utility of this function comes from checking whether the
     unique values have already been calculated. This function
-    assumes that if unique is passed in, it is correct.
+    assumes that if the unique values are passed, they are correct.
 
     Parameters
     ----------
@@ -52,14 +58,14 @@ def get_unique(
 
 
 def valid_feature_type(type_: str, raise_error: bool = True) -> bool:
-    """Check whether a feature type name is a valid type.
+    """Check whether a feature type name is valid.
 
     Parameters
     ----------
     type_: str
         Feature type name.
     raise_error: bool, default = True
-        Whether to raise an error is the type is not valid.
+        Whether to raise an error is the type is invalid.
 
     Returns
     -------
@@ -77,20 +83,18 @@ def valid_feature_type(type_: str, raise_error: bool = True) -> bool:
 
 
 def _type_to_dtype(type_: str) -> Optional[Union[type, str]]:
-    """Determine the datatype for each feature type.
-
-    Can optionally specify the feature data for more specific
-    datatype selection.
+    """Get the Pandas datatype for a feature type name.
 
     Parameters
     ----------
     type_: str
-        Feature type.
+        Feature type name.
 
     Returns
     -------
     type or str or None
-        The feature's datatype, or None if no data type conversion is desired.
+        The feature's Pandas datatype, or None if no data type
+        conversion is desired.
 
     """
     if type_ == STRING:
@@ -122,17 +126,18 @@ def to_dtype(series: pd.Series, type_: str) -> pd.Series:
     Parameters
     ----------
     type_: str
-        Feature type.
+        Feature type name.
     series: pandas.Series, default = None
         Feature data.
 
     Returns
     -------
     pandas.Series
-        The feature with a proper datatype.
+        The feature with the corresponding datatype.
 
     """
     dtype = _type_to_dtype(type_)
+
     if dtype is None:
         return series
 
@@ -156,7 +161,7 @@ def _valid_string(
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
     raise_error: bool, default = False
-        Whether to raise an error if not valid.
+        Whether to raise an error if invalid.
 
     Returns
     -------
@@ -175,6 +180,7 @@ def _valid_string(
 def _convertible_to_string(
     series: pd.Series,  # pylint: disable=unused-argument
     unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    raise_error: bool = False,  # pylint: disable=unused-argument
 ) -> bool:
     """Check whether a feature can be converted to type string.
 
@@ -184,6 +190,8 @@ def _convertible_to_string(
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
+    raise_error: bool, default = False
+        Whether to raise an error if the type cannot be converted.
 
     Returns
     -------
@@ -202,7 +210,7 @@ def _to_string(
 
     Parameters
     ----------
-    data: pandas.Series
+    series: pandas.Series
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
@@ -232,12 +240,12 @@ def _valid_numeric(
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
     raise_error: bool, default = False
-        Whether to raise an error if not valid.
+        Whether to raise an error if invalid.
 
     Returns
     -------
     bool
-        Whether a feature is a valid type.
+        Whether the feature is a valid type.
 
     """
     if is_numeric_dtype(series):
@@ -252,6 +260,7 @@ def _valid_numeric(
 def _convertible_to_numeric(
     series: pd.Series,
     unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type numeric.
 
@@ -261,6 +270,8 @@ def _convertible_to_numeric(
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
+    raise_error: bool, default = False
+        Whether to raise an error if the type cannot be converted.
 
     Returns
     -------
@@ -268,6 +279,10 @@ def _convertible_to_numeric(
         Whether the feature can be converted.
 
     """
+    if raise_error:
+        pd.to_numeric(series)
+        return True
+
     try:
         pd.to_numeric(series)
         can_convert = True
@@ -285,7 +300,7 @@ def _to_numeric(
 
     Parameters
     ----------
-    data: pandas.Series
+    series: pandas.Series
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
@@ -333,6 +348,10 @@ def _convertible_to_categorical(  # pylint: disable=too-many-arguments
         Whether the feature can be converted.
 
     """
+    # If numeric, only allow conversion if an integer type
+    if is_numeric_dtype(series) and not is_integer_dtype(series):
+        return False
+
     unique = get_unique(series, unique=unique)
     nonnull_unique = unique[~pd.isnull(unique)]
     nunique = len(nonnull_unique)
@@ -340,12 +359,12 @@ def _convertible_to_categorical(  # pylint: disable=too-many-arguments
     if category_min is None:
         min_cond = True
     else:
-        min_cond = nunique > category_min
+        min_cond = nunique >= category_min
 
     if category_max is None:
         max_cond = True
     else:
-        max_cond = nunique < category_max
+        max_cond = nunique <= category_max
 
     # Convertible
     if min_cond and max_cond:
@@ -379,12 +398,12 @@ def _valid_ordinal(
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
     raise_error: bool, default = False
-        Whether to raise an error if not valid.
+        Whether to raise an error if invalid.
 
     Returns
     -------
     bool
-        Whether a feature is a valid type.
+        Whether the feature is a valid type.
 
     """
     unique = get_unique(series, unique=unique)
@@ -403,7 +422,7 @@ def _valid_ordinal(
 def _convertible_to_ordinal(
     series: pd.Series,
     unique: Optional[np.ndarray] = None,
-    category_max: int = 100,
+    category_max: int = 20,
     raise_error_over_max: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type ordinal.
@@ -414,6 +433,10 @@ def _convertible_to_ordinal(
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
+    category_max: int, optional
+        The number of categories above which the feature is not considered ordinal.
+    raise_error_over_max: bool, default = False
+        Whether to raise an error if there are more categories than max.
 
     Returns
     -------
@@ -438,7 +461,7 @@ def _numeric_categorical_mapping(
 
     Parameters
     ----------
-    data: pandas.Series
+    series: pandas.Series
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
@@ -473,7 +496,7 @@ def _to_ordinal(
 
     Parameters
     ----------
-    data: pandas.Series
+    series: pandas.Series
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
@@ -504,16 +527,17 @@ def _valid_binary(
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
     raise_error: bool, default = False
-        Whether to raise an error if not valid.
+        Whether to raise an error if invalid.
 
     Returns
     -------
     bool
-        Whether a feature is a valid type.
+        Whether the feature is a valid type.
 
     """
     unique = get_unique(series, unique=unique)
-    valid = set(unique) == set([0, 1])
+    nonnull_unique = unique[~pd.isnull(unique)]
+    valid = set(nonnull_unique) == set([0, 1])
 
     if valid:
         return True
@@ -543,6 +567,9 @@ def _convertible_to_binary(
         Whether the feature can be converted.
 
     """
+    if is_bool_dtype(series):
+        return True
+
     return _convertible_to_categorical(
         series,
         category_min=2,
@@ -558,7 +585,7 @@ def _to_binary(
 
     Parameters
     ----------
-    data: pandas.Series
+    series: pandas.Series
         Feature data.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
@@ -570,6 +597,13 @@ def _to_binary(
         and metadata respectively.
 
     """
+    if is_bool_dtype(series):
+        meta = {
+            FEATURE_TYPE_ATTR: BINARY,
+            FEATURE_MAPPING_ATTR: {False: False, True: True},
+        }
+        return to_dtype(series, BINARY), meta
+
     series, meta = _numeric_categorical_mapping(series, unique=unique)
     meta[FEATURE_TYPE_ATTR] = BINARY
     return to_dtype(series, BINARY), meta
@@ -589,12 +623,12 @@ def _valid_categorical_indicator(
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
     raise_error: bool, default = False
-        Whether to raise an error if not valid.
+        Whether to raise an error if invalid.
 
     Returns
     -------
     bool
-        Whether a feature is a valid type.
+        Whether the feature is a valid type.
 
     """
     valid = is_valid(series, CATEGORICAL_INDICATOR, unique=unique)
@@ -611,7 +645,7 @@ def _valid_categorical_indicator(
 def _convertible_to_categorical_indicators(
     series: pd.Series,
     unique: Optional[np.ndarray] = None,
-    category_max: int = 100,
+    category_max: int = 20,
     raise_error_over_max: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to categorical indicators.
@@ -645,7 +679,7 @@ def _to_categorical_indicators(
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Convert type to binary categorical indicators.
 
-    This is equivalent to one-hot encoding.
+    This performs the Pandas equivalent of one-hot encoding.
 
     Parameters
     ----------
@@ -700,6 +734,8 @@ def convertible_to_type(
     ----------
     series: pandas.Series
         Feature data.
+    type_: str
+        Feature type name to check for conversion.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
 
@@ -747,7 +783,7 @@ def is_valid(
     series: pandas.Series
         Feature.
     type_: str
-        Feature type.
+        Feature type name.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
 
@@ -782,7 +818,7 @@ def normalize_data(data: pd.DataFrame, features: List[str]) -> pd.DataFrame:
     data: pandas.DataFrame
         Features data.
     features: list of str
-        Features to consider.
+        Features to normalize.
 
     Returns
     -------
@@ -816,7 +852,7 @@ def _to_type(
     col: str
         Column name for the feature being converted.
     new_type: str
-        Type to which to convert the feature.
+        Feature type name of type to which to convert.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
 
@@ -886,12 +922,11 @@ def to_types(
     return data, meta
 
 
-def _infer_type_weak(
+def _infer_type(
     series: pd.Series,
-    allow_indicators: bool = True,  # pylint: disable=unused-argument
     unique: Optional[np.ndarray] = None,
 ) -> str:
-    """Detect feature type.
+    """Infer intended feature type and perform the relevant conversion.
 
     Parameters
     ----------
@@ -903,57 +938,13 @@ def _infer_type_weak(
     Returns
     -------
     str
-        Feature type.
-
-    """
-    unique = get_unique(series, unique=unique)
-
-    # Check whether all values are NaN
-    if np.array_equal(unique, [np.nan]):
-        raise ValueError(f"Cannot detect data type of all null series '{series.name}'.")
-
-    if is_valid(series, STRING, unique=unique):
-        return STRING
-
-    if is_valid(series, NUMERIC, unique=unique):
-        return NUMERIC
-
-    raise ValueError(f"Cannot not infer type of series '{series.name}'.")
-
-
-def _infer_type_strong(
-    series: pd.Series,
-    allow_indicators: bool = True,
-    unique: Optional[np.ndarray] = None,
-) -> str:
-    """Infer intended feature type and perform the relevant conversion.
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Features data.
-    col: str
-        Name of feature column to infer.
-    allow_indicators:
-        Allow conversion to categorical indicators. Otherwise, categorical
-        features will be inferred as ordinal.
-
-    Returns
-    -------
-    str
-        Feature type.
+        Feature type name.
 
     """
     unique = get_unique(series, unique=unique)
 
     if convertible_to_type(series, BINARY, unique=unique):
         return BINARY
-
-    if allow_indicators:
-        if convertible_to_type(
-            series, CATEGORICAL_INDICATOR, unique=unique, raise_error=False
-        ):
-            return CATEGORICAL_INDICATOR
 
     if convertible_to_type(series, ORDINAL, unique=unique):
         return ORDINAL
@@ -970,8 +961,6 @@ def _infer_type_strong(
 def infer_types(
     data: pd.DataFrame,
     features: List[str],
-    strong: bool = True,
-    allow_indicators: bool = True,
 ) -> Dict[str, str]:
     """Infer intended feature types and perform the relevant conversions.
 
@@ -981,9 +970,6 @@ def infer_types(
         Feature data.
     features: list of str
         Features to consider.
-    allow_indicators: bool, default = True
-        Allow conversion to categorical indicators. Otherwise, categorical
-        features will be inferred as ordinal.
 
     Returns
     -------
@@ -992,13 +978,60 @@ def infer_types(
         and metadata respectively.
 
     """
-    if strong:
-        infer_fn = _infer_type_strong
-    else:
-        infer_fn = _infer_type_weak
-
     new_types = {}
     for col in features:
-        new_types[col] = infer_fn(data[col], allow_indicators=allow_indicators)
+        new_types[col] = _infer_type(data[col])
 
     return new_types
+
+
+def collect_indicators(
+    data: pd.DataFrame,
+    categorical: Union[str, List[str]],
+) -> pd.DataFrame:
+    """Infer and collect indicator features into ordinal categorical features.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Features data.
+    categorical: str or list of str
+        Names of categorical features. E.g., "hospital" for indicators
+        "hospital_A", "hospital_B"
+
+    """
+    categorical = to_list(categorical)
+
+    meta = {}
+    for cat in categorical:
+        indicators = [
+            name
+            for name in data.columns
+            if name.startswith(cat + "_") and _valid_binary(data[name])
+        ]
+
+        if len(indicators) < 2:
+            raise ValueError("Not enough indicators to convert to ordinal.")
+
+        if not (data[indicators].sum(axis=1).values == 1).all():
+            raise ValueError("Indicators be converted into ordinal.")
+
+        # Get categories
+        data[cat] = np.argmax(data[indicators].values, axis=1)
+        indicator_names = [
+            indicator[len(cat) + 1 :] for indicator in indicators  # noqa: E203
+        ]
+        map_dict = {
+            i: (name if name != MISSING_CATEGORY else np.nan)
+            for i, name in enumerate(indicator_names)
+        }
+
+        data[cat] = data[cat].replace(map_dict)
+        data = data.drop(indicators, axis=1)
+
+        # Convert to ordinal
+        unique = np.array(list(map_dict.values()))
+        data[cat], fmeta = _to_ordinal(data[cat], unique=unique)
+        meta[cat] = fmeta
+
+    return data, meta

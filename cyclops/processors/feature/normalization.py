@@ -7,6 +7,8 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from cyclops.processors.constants import MIN_MAX, STANDARD
+from cyclops.processors.util import has_columns, has_range_index
+from cyclops.utils.common import to_list_optional
 
 
 class SklearnNormalizer:
@@ -36,7 +38,9 @@ class SklearnNormalizer:
         # Raise an exception if the method string is not recognized.
         if method not in method_map:
             options = ", ".join(["'" + k + "'" for k in method_map])
-            raise ValueError(f"'{method}' is invalid, must be in None, {options}")
+            raise ValueError(
+                f"Method '{method}' is invalid, must be in: {', '.join(options)}."
+            )
 
         self.scaler = method_map[method]()
 
@@ -52,7 +56,7 @@ class SklearnNormalizer:
         self.scaler.fit(series.values.reshape(-1, 1))
 
     def transform(self, series: pd.Series) -> pd.Series:
-        """Apply normalization, or scaling.
+        """Apply normalization.
 
         Parameters
         ----------
@@ -62,7 +66,7 @@ class SklearnNormalizer:
         Returns
         -------
         pandas.Series
-            Scaled series.
+            Normalized series.
 
         """
         return pd.Series(
@@ -71,7 +75,7 @@ class SklearnNormalizer:
         )
 
     def inverse_transform(self, series: pd.Series) -> pd.Series:
-        """Apply inverse normalization, or scaling.
+        """Apply inverse normalization.
 
         Parameters
         ----------
@@ -81,7 +85,7 @@ class SklearnNormalizer:
         Returns
         -------
         pandas.Series
-            Scaled series.
+            Inversely normalized series.
 
         """
         return pd.Series(
@@ -102,18 +106,20 @@ class SklearnNormalizer:
 
 
 class GroupbyNormalizer:
-    """Perform normalization over a DataFrame, possibly over specific groups.
+    """Perform normalization over a DataFrame.
+
+    Optionally normalize over specified groups rather than directly over columns.
 
     Attributes
     ----------
     normalizer_map: dict
         A map from the column name to the type of normalization, e.g.,
-        "event_values": "standard"
-    normalizers: pandas.DataFrame
-        Storing the normalizer object information, where each group has a row
-        of scaling objects.
+        {"event_values": "standard"}
     by: str or list of str, optional
-        Columns to groupby, affecting how values are normalized.
+        Columns to groupby, which affects how values are normalized.
+    normalizers: pandas.DataFrame
+        The normalizer object information, where each column/group has a row
+        with a normalization object.
 
     """
 
@@ -123,9 +129,37 @@ class GroupbyNormalizer:
         by: Optional[Union[str, List[str]]] = None,  # pylint: disable=invalid-name
     ) -> None:
         """Initialize."""
+        features = set(normalizer_map.keys())
+
+        # Check for duplicated occurences of features in the map.
+        if len(list(normalizer_map.keys())) != len(features):
+            raise ValueError("Cannot specify the same feature more than once.")
+
         self.normalizer_map = normalizer_map
-        self.by = by  # pylint: disable=invalid-name
+        self.by = to_list_optional(by)  # pylint: disable=invalid-name
         self.normalizers = None
+
+    def get_map(self) -> dict:
+        """Get normalization mapping from features to type.
+
+        Returns
+        -------
+        dict
+            Normalization map.
+
+        """
+        return self.normalizer_map
+
+    def get_by(self) -> Optional[List]:
+        """Get groupby columns.
+
+        Returns
+        -------
+        dict
+            Groupby columns.
+
+        """
+        return self.by
 
     def fit(self, data: pd.DataFrame) -> None:
         """Fit the normalizing objects.
@@ -136,7 +170,10 @@ class GroupbyNormalizer:
             Data over which to fit.
 
         """
-        # has_columns(data, self.by, raise_error=True)
+        if not has_range_index(data):
+            raise ValueError(
+                "DataFrame required to have a range index. Try resetting the index."
+            )
 
         def get_normalizer_for_group(group: pd.DataFrame):
             cols = []
@@ -159,6 +196,7 @@ class GroupbyNormalizer:
         if self.by is None:
             self.normalizers = get_normalizer_for_group(data)
         else:
+            has_columns(data, self.by, raise_error=True)
             grouped = data.groupby(self.by)
             self.normalizers = grouped.apply(get_normalizer_for_group).droplevel(
                 level=-1
@@ -183,7 +221,10 @@ class GroupbyNormalizer:
         if self.normalizers is None:
             raise ValueError("Must first fit the normalizers.")
 
-        # has_columns(data, self.by, raise_error=True)
+        if not has_range_index(data):
+            raise ValueError(
+                "DataFrame required to have a range index. Try resetting the index."
+            )
 
         def transform_group(group):
             for col in self.normalizer_map.keys():
@@ -193,15 +234,19 @@ class GroupbyNormalizer:
 
             return group
 
+        # Over columns
         if self.by is None:
             for col in self.normalizer_map.keys():
                 normalizer = self.normalizers.iloc[0][col]
                 data[col] = getattr(normalizer, method)(data[col])
+        # Over groups
         else:
             data = data.reset_index()
             data.set_index(self.by, inplace=True)
             grouped = data.groupby(self.by)
             data = grouped.apply(transform_group).reset_index()
+            data = data.set_index("index")
+            data = data.sort_index()
 
         return data
 
@@ -222,7 +267,7 @@ class GroupbyNormalizer:
         return self._transform_by_method(data, "transform")
 
     def inverse_transform(self, data: pd.DataFrame):
-        """Inverse normalize the data.
+        """Inversely normalize the data.
 
         Parameters
         ----------
@@ -232,7 +277,7 @@ class GroupbyNormalizer:
         Returns
         -------
         pandas.DataFrame
-            The inverse normalized data.
+            The inversely normalized data.
 
         """
         return self._transform_by_method(data, "inverse_transform")

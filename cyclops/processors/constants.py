@@ -2,6 +2,8 @@
 
 # pylint: disable=line-too-long
 
+import numpy as np
+
 # Generic.
 YEAR = "year"
 MONTH = "month"
@@ -23,7 +25,7 @@ FEATURE_TYPES = [
     BINARY,
     STRING,
     ORDINAL,
-    CATEGORICAL_INDICATOR,
+    # CATEGORICAL_INDICATOR,
 ]
 
 FEATURE_TYPE_ATTR = "type_"
@@ -45,15 +47,16 @@ FEATURE_META_ATTR_DEFAULTS = {
 }
 
 
-MISSING_CATEGORY = "missing"
+MISSING_CATEGORY = "null_category"
 
 # Feature normalization.
 STANDARD = "standard"
 MIN_MAX = "min-max"
 
-# Imputation
+# Aggregation / Imputation.
 MEAN = "mean"
 MEDIAN = "median"
+AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
 
 # GEMINI Admin.
 THPM = "THPM"

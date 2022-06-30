@@ -2,7 +2,7 @@
 
 import logging
 from functools import wraps
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, List, Union
 
 import numpy as np
 import pandas as pd
@@ -20,32 +20,6 @@ from cyclops.utils.log import setup_logging
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
-
-
-def create_indicator_variables(
-    features: pd.DataFrame, columns: Optional[List] = None
-) -> pd.DataFrame:
-    """Create binary indicator variable for each column (or specified).
-
-    Parameters
-    ----------
-    features: pandas.DataFrame
-        Input features with missing values.
-    columns: list, optional
-        Columns to create variables, all if not specified.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Dataframe with indicator variables as columns.
-
-    """
-    if columns:
-        indicator_features = features[columns]
-    else:
-        indicator_features = features
-
-    return indicator_features.notnull().astype(int).add_suffix("_indicator")
 
 
 def pivot_aggregated_events_to_features(
@@ -117,24 +91,7 @@ def fill_missing_timesteps(
     )
 
 
-def is_timeseries_data(data: pd.DataFrame) -> bool:
-    """Check if input data is time-series dataframe (multi-index).
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input dataframe.
-
-    Returns
-    -------
-    bool
-        Yes if dataframe has multi-index (timeseries), No otherwise.
-
-    """
-    return isinstance(data.index, pd.core.indexes.multi.MultiIndex)
-
-
-def is_timestamp_series(series):
+def is_timestamp_series(series, raise_error: bool = False):
     """Check whether a series has the Pandas Timestamp datatype.
 
     Parameters
@@ -148,11 +105,19 @@ def is_timestamp_series(series):
         Whether the series has the Pandas Timestamp datatype.
 
     """
-    return series.dtype == pd.to_datetime(["2069-03-29 02:30:00"]).dtype
+    is_timestamp = series.dtype == pd.to_datetime(["2069-03-29 02:30:00"]).dtype
+
+    if not is_timestamp and raise_error:
+        raise ValueError(f"{series.name} must be a timestamp Series.")
+
+    return is_timestamp
 
 
 def has_columns(
-    data: pd.DataFrame, cols: Union[str, List[str]], raise_error: bool = False
+    data: pd.DataFrame,
+    cols: Union[str, List[str]],
+    exactly: bool = False,
+    raise_error: bool = False,
 ) -> bool:
     """Check if data has required columns for processing.
 
@@ -178,7 +143,12 @@ def has_columns(
 
     if not present and raise_error:
         missing = required_set - columns
-        raise ValueError(f"Missing required columns {missing}")
+        raise ValueError(f"Missing required columns: {', '.join(missing)}.")
+
+    if exactly:
+        exact = present and len(data.columns) == len(cols)
+        if not exact and raise_error:
+            raise ValueError(f"Must have exactly the columns: {', '.join(cols)}.")
 
     return present
 
@@ -234,6 +204,48 @@ def assert_has_columns(*args, **kwargs) -> Callable:
         return wrapper_func
 
     return decorator
+
+
+def has_range_index(data: pd.DataFrame) -> bool:
+    """Check whether a DataFrame has a range index.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Data.
+
+    Returns
+    -------
+    bool
+        Whether the data has a range index.
+
+    """
+    return (data.index == pd.RangeIndex(stop=len(data))).all()
+
+
+def to_range_index(data: pd.DataFrame) -> pd.DataFrame:
+    """Force a DataFrame to have a range index.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Data with a range index.
+
+    """
+    if has_range_index(data):
+        return data
+
+    name = data.index.name
+    data = data.reset_index()
+    if name == "index":
+        data = data.drop("index", axis=1)
+
+    return data
 
 
 def gather_columns(data: pd.DataFrame, columns: Union[List[str], str]) -> pd.DataFrame:

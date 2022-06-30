@@ -124,8 +124,8 @@ def test_input():
         ["Access Pressure", 10449408, 22698294, -77.0, "mmHg"],
         ["Phosphorous", 10449408, 22698294, 3.4, "mg/dL"],
     ]
-
-    return pd.DataFrame(data, columns=cols)
+    data = pd.DataFrame(data, columns=cols)
+    return data
 
 
 def test_nongrouped_normalization(test_input):  # pylint: disable=redefined-outer-name
@@ -155,11 +155,11 @@ def test_nongrouped_normalization(test_input):  # pylint: disable=redefined-oute
 
 def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-name
     """Test normalization using a groupby."""
-    test_input.reset_index(inplace=True)
     gbn = GroupbyNormalizer(
         {SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD}, by=[EVENT_NAME]
     )
     gbn.fit(test_input)
+
     normalized = gbn.transform(test_input)
 
     assert normalized[SUBJECT_ID].max() <= 1
@@ -168,11 +168,7 @@ def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-n
         np.abs(normalized.groupby(EVENT_NAME)[EVENT_VALUE].apply("mean").values) < 1e-07
     ).all()
 
-    if "level_0" in normalized.columns:
-        normalized = normalized.drop(["level_0"], axis=1)
-
     denormalized = gbn.inverse_transform(normalized)
-    denormalized.sort_values("index", inplace=True)
 
     assert np.allclose(
         denormalized[SUBJECT_ID].values, test_input[SUBJECT_ID].values, atol=1e-07
