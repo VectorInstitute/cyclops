@@ -4,21 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-from cyclops.processors.util import (
-    assert_has_columns,
-    gather_columns,
-    has_columns,
-    is_timeseries_data,
-)
-
-
-def test_is_timeseries_data():
-    """Test is_timeseries_data fn."""
-    test_input = pd.DataFrame(index=[0, 1])
-    assert is_timeseries_data(test_input) is False
-
-    test_input = pd.DataFrame(index=pd.MultiIndex.from_product([[0, 1], range(2)]))
-    assert is_timeseries_data(test_input) is True
+from cyclops.processors.util import assert_has_columns, gather_columns, has_columns
 
 
 def test_has_columns():

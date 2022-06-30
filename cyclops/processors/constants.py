@@ -2,23 +2,61 @@
 
 # pylint: disable=line-too-long
 
+import numpy as np
+
 # Generic.
 YEAR = "year"
 MONTH = "month"
 
 # Feature handler.
-MEAN = "mean"
-MEDIAN = "median"
-FEATURE_TYPE = "feature_type"
+FEATURES = "features"
+TARGETS = "targets"
+GROUP = "group"
+
+# Feature type.
 NUMERIC = "numeric"
 BINARY = "binary"
-NORMALIZATION_METHOD = "normalization_method"
-GROUP = "group"
+STRING = "string"
+ORDINAL = "ordinal"
+CATEGORICAL_INDICATOR = "categorical_indicator"
+
+FEATURE_TYPES = [
+    NUMERIC,
+    BINARY,
+    STRING,
+    ORDINAL,
+    # CATEGORICAL_INDICATOR,
+]
+
+FEATURE_TYPE_ATTR = "type_"
+FEATURE_TARGET_ATTR = "target"
+FEATURE_INDICATOR_ATTR = "indicator_of"
+FEATURE_MAPPING_ATTR = "mapping"
+
+FEATURE_META_ATTRS = [
+    FEATURE_TYPE_ATTR,
+    FEATURE_TARGET_ATTR,
+    FEATURE_INDICATOR_ATTR,
+    FEATURE_MAPPING_ATTR,
+]
+
+FEATURE_META_ATTR_DEFAULTS = {
+    FEATURE_TARGET_ATTR: False,
+    FEATURE_INDICATOR_ATTR: None,
+    FEATURE_MAPPING_ATTR: None,
+}
+
+
+MISSING_CATEGORY = "null_category"
+
+# Feature normalization.
 STANDARD = "standard"
 MIN_MAX = "min-max"
-MISSING_CATEGORY = "MISSING_CATEGORY"
-STATIC = "static"
-TEMPORAL = "temporal"
+
+# Aggregation / Imputation.
+MEAN = "mean"
+MEDIAN = "median"
+AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
 
 # GEMINI Admin.
 THPM = "THPM"
