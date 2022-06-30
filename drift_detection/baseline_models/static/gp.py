@@ -8,12 +8,19 @@ from sklearn.gaussian_process.kernels import (
 )
 from sklearn.metrics import roc_auc_score
 
+
 def fit_gp(X, Y, Xv, Yv):
     best_c = None
     best_score = 0
     best_model = None
 
-    for K in [1*RBF(), 1*DotProduct(), 1*Matern(), 1*RationalQuadratic(), 1*WhiteKernel()]:
+    for K in [
+        1 * RBF(),
+        1 * DotProduct(),
+        1 * Matern(),
+        1 * RationalQuadratic(),
+        1 * WhiteKernel(),
+    ]:
         m = GPC(kernel=K, n_jobs=-1)
         m.fit(X, Y)
         Pv = m.predict_proba(Xv)[:, 1]

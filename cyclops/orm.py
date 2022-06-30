@@ -167,6 +167,31 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         return data
 
     @time_function
+    def run_sql_string(
+        self,
+        query: str,
+    ) -> pd.DataFrame:
+        """Run query from SQL raw SQL string.
+
+        Parameters
+        ----------
+        query: str
+            Raw SQL query string.
+
+        Returns
+        -------
+        pd.DataFrame
+            Extracted data from query.
+
+        """
+        # Run the query and return the results
+        with self.session.connection():
+            data = pd.read_sql_query(query, self.engine)
+
+        LOGGER.info("Query returned successfully!")
+        return data
+
+    @time_function
     @table_params_to_type(Select)
     def save_query_to_csv(self, query: TableTypes, path: str) -> str:
         """Save query in a .csv format.

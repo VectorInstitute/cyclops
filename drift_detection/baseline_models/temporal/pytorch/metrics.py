@@ -2,14 +2,25 @@ from sklearn import metrics
 import numpy as np
 import pandas as pd
 
-def format_predictions(y_pred_values, y_test_labels, y_pred_tags, X_test, last_timestep_only):
+
+def format_predictions(
+    y_pred_values, y_test_labels, y_pred_tags, X_test, last_timestep_only
+):
     if last_timestep_only:
-        index=X_test.index.unique(level=0)
+        index = X_test.index.unique(level=0)
     else:
-        index=X_test.index
-    df_result = pd.DataFrame(data={"y_pred_values": y_pred_values , "y_test_labels": y_test_labels, "y_pred_labels": y_pred_tags}, index=index)
+        index = X_test.index
+    df_result = pd.DataFrame(
+        data={
+            "y_pred_values": y_pred_values,
+            "y_test_labels": y_test_labels,
+            "y_pred_labels": y_pred_tags,
+        },
+        index=index,
+    )
     df_result = df_result.sort_index()
     return df_result
+
 
 def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
     cf = metrics.confusion_matrix(y_test_labels, y_pred_labels)
