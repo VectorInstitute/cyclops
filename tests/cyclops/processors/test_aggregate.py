@@ -19,7 +19,7 @@ from cyclops.processors.column_names import (
     STOP_TIMESTAMP,
     TIMESTEP,
 )
-from cyclops.processors.constants import AGGFUNCS, MEAN
+from cyclops.processors.constants import AGGFUNCS, MEAN, MEDIAN
 
 DATE1 = datetime(2022, 11, 3, hour=13)
 DATE2 = datetime(2022, 11, 3, hour=14)
@@ -293,7 +293,52 @@ def test_aggregate_one_group_outlier():
         timestep_size=1,
     )
 
-    aggregated = data.groupby(aggregator.agg_by, sort=False).apply(
+    _ = data.groupby(aggregator.agg_by, sort=False).apply(
         aggregator._compute_aggregation  # pylint: disable=protected-access
     )
+
+
+def test_vectorization(  # pylint: disable=redefined-outer-name
+    test_input,
+):
+    """Test vectorization of aggregated data."""
+    data, _, _ = test_input
+
+    data["event_value2"] = 2 * data[EVENT_VALUE]
+    data["event_value3"] = 3 * data[EVENT_VALUE]
+
+    aggregator = Aggregator(
+        aggfuncs={
+            EVENT_VALUE: MEAN,
+            "event_value2": MEAN,
+            "event_value3": MEDIAN,
+        },
+        timestamp_col=EVENT_TIMESTAMP,
+        time_by=ENCOUNTER_ID,
+        agg_by=[ENCOUNTER_ID, EVENT_NAME],
+        timestep_size=1,
+        window_duration=15,
+    )
+
+    aggregated = aggregator(data)
+
+    print("\n\n\nAGGREGATED")
     print(aggregated)
+    print("\n" * 3)
+
+    vectorized, aggfunc_order = aggregator.vectorize(aggregated)
+
+    print("\n\n\nVECTORIZED")
+    with pd.option_context(
+        "display.max_rows", None, "display.max_columns", None
+    ):  # more options can be specified also
+        print(vectorized)
+    print(vectorized.shape)
+
+    ev1_ind = aggfunc_order.index(EVENT_VALUE)
+    ev2_ind = aggfunc_order.index("event_value2")
+    ev3_ind = aggfunc_order.index("event_value3")
+
+    assert vectorized.shape == (3, 2, 2, 15)
+    assert np.array_equal(vectorized[ev1_ind] * 2, vectorized[ev2_ind], equal_nan=True)
+    assert np.array_equal(vectorized[ev1_ind] * 3, vectorized[ev3_ind], equal_nan=True)
