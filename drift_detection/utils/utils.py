@@ -12,6 +12,7 @@ import sqlalchemy
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sqlalchemy import desc, extract, func, select
 from sqlalchemy.sql.expression import and_, or_
+from sklearn.preprocessing import StandardScaler
 
 from .constants import *
 
@@ -208,14 +209,11 @@ def get_gemini_data(BASE_DATA_PATH):
 
     return encounters_train_val_test, X, mortality_risk_targets
 
-def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
-
-    # get all data
-    admin_data, x, y = get_gemini_data(BASE_DATA_PATH)
+def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
     
     # filter hospital
     admin_data = admin_data.loc[
-            admin_data[HOSPITAL_ID].isin(hospital)
+            admin_data['hospital_id'].isin(hospitals)
     ]
     encounter_ids = list(x.index.get_level_values(0).unique())
     x = x[np.in1d(x.index.get_level_values(0),admin_data[ENCOUNTER_ID])]
@@ -228,8 +226,11 @@ def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
 
     # get experimental dataset
     if dataset == "covid":
+
         ids_source = admin_data.loc[
-            admin_data["admit_timestamp"].dt.date < datetime.date(2020, 3, 1),
+            ((admin_data["admit_timestamp"].dt.date > datetime.date(2019, 2, 28)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 8, 1)),
+            ),
             "encounter_id",
         ]
         ids_target = admin_data.loc[
@@ -241,10 +242,13 @@ def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
 
     elif dataset == "pre-covid":
         dataset_ids = admin_data.loc[
-            admin_data["admit_timestamp"].dt.date < datetime.date(2020, 3, 1),
+            (
+                (admin_data["admit_timestamp"].dt.date > datetime.date(2019, 2, 28)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 8, 1)),
+            ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(dataset_ids)]
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0] ; ids_source = list(x_s.index.get_level_values(0).unique())
         x_t = x_spl[1] ; ids_target = list(x_t.index.get_level_values(0).unique())
@@ -252,30 +256,30 @@ def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
     elif dataset == "seasonal":
         ids_source = admin_data.loc[
             (
-                admin_data["admit_timestamp"].dt.month.isin([12, 1, 2])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
+                (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
             ),
             "encounter_id",
         ]
         ids_target = admin_data.loc[
             (
-                admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
+                (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
             ),
             "encounter_id",
         ]
-        x_s = x.loc[x.index.isin(ids_source)]
-        x_t = x.loc[x.index.isin(ids_target)]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
 
     elif dataset == "summer":
         dataset_ids = admin_data.loc[
             (
-                admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
+                (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(dataset_ids)]
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0] ; ids_source = list(x_s.index.get_level_values(0).unique())
         x_t = x_spl[1] ; ids_target = list(x_t.index.get_level_values(0).unique())
@@ -283,12 +287,12 @@ def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
     elif dataset == "winter":
         dataset_ids = admin_data.loc[
             (
-                admin_data["admit_timestamp"].dt.month.isin([12, 1, 2])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
+                (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(dataset_ids)]
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0] ; ids_source = list(x_s.index.get_level_values(0).unique())
         x_t = x_spl[1] ; ids_target = list(x_t.index.get_level_values(0).unique())
@@ -296,33 +300,33 @@ def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
     elif dataset == "hosp_type":
         ids_source = admin_data.loc[
             (
-                admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW"])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
-                & admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
+                (admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW"]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
+                & (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
             ),
             "encounter_id",
         ]
         ids_target = admin_data.loc[
             (
-                admin_data["hospital_id"].isin(["THPC", "THPM"])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
-                & admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
+                (admin_data["hospital_id"].isin(["THPC", "THPM"]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
+                & (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
             ),
             "encounter_id",
         ]
-        x_s = x.loc[x.index.isin(ids_source)]
-        x_t = x.loc[x.index.isin(ids_target)]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
 
     elif dataset == "academic":
         dataset_ids = admin_data.loc[
             (
-                admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW"])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
-                & admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
+                (admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW"]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
+                & (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(dataset_ids)]
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0] ; ids_source = list(x_s.index.get_level_values(0).unique())
         x_t = x_spl[1] ; ids_target = list(x_t.index.get_level_values(0).unique())
@@ -330,13 +334,13 @@ def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
     elif dataset == "community":
         dataset_ids = admin_data.loc[
             (
-                admin_data["hospital_id"].isin(["THPC", "THPM"])
-                & admin_data["admit_timestamp"].dt.year.isin([2018, 2019])
-                & admin_data["admit_timestamp"].dt.month.isin([6, 7, 8])
+                (admin_data["hospital_id"].isin(["THPC", "THPM"]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
+                & (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(dataset_ids)]
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0] ; ids_source = list(x_s.index.get_level_values(0).unique())
         x_t = x_spl[1] ; ids_target = list(x_t.index.get_level_values(0).unique())
@@ -344,12 +348,12 @@ def get_dataset_hospital(BASE_DATA_PATH, dataset, hospital):
     elif dataset == "baseline":
         dataset_ids = admin_data.loc[
             (
-                admin_data["admit_timestamp"].dt.month.isin([3, 4, 5, 6, 7, 8])
-                & admin_data["admit_timestamp"].dt.year.isin([2019])
+                (admin_data["admit_timestamp"].dt.month.isin([3, 4, 5, 6, 7, 8]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2019]))
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.isin(dataset_ids)]
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
         x_spl = np.array_split(x, 2)
         x_s = x_spl[0] ; ids_source = list(x_s.index.get_level_values(0).unique())
         x_t = x_spl[1] ; ids_target = list(x_t.index.get_level_values(0).unique())
@@ -396,10 +400,10 @@ def reshape_inputs(inputs, num_timesteps):
     inputs = inputs.values.reshape((num_encounters, num_timesteps, -1))
     return inputs
 
-def import_dataset_hospital(BASE_DATA_PATH, dataset, hospital, seed=1, shuffle=True):
+def import_dataset_hospital(admin_data, x, y, dataset, outcome, hospital, seed=1, shuffle=True):
     # get source and target data
     x_source, y_source, x_test, y_test, feats, admin_data = get_dataset_hospital(
-        BASE_DATA_PATH, dataset,  hospital
+        admin_data, x, y, dataset,  outcome, hospital
     )
 
     # get train, validation and test set
@@ -428,15 +432,18 @@ def import_dataset_hospital(BASE_DATA_PATH, dataset, hospital, seed=1, shuffle=T
 
 def run_pipeline(
     path,
+    admin_data,
+    x, 
+    y,
     dr_technique,
     md_test,
     samples,
     dataset,
     sign_level,
-    na_cutoff,
+    timesteps,
     random_runs=5,
-    calc_acc=True,
-):
+    calc_acc=True):
+    
     # Stores p-values for all experiments of a shift class.
     samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
     samples_rands_dist = np.ones((len(samples), random_runs)) * (-1)
@@ -449,7 +456,7 @@ def run_pipeline(
     # Stores accuracy values for malignancy detection.
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
-
+    
     # Average over a few random runs to quantify robustness.
     for rand_run in range(0, random_runs):
         rand_run = int(rand_run)
@@ -459,13 +466,7 @@ def run_pipeline(
 
         np.random.seed(rand_run)
 
-        (
-            (X_tr, y_tr),
-            (X_val, y_val),
-            (X_t, y_t),
-            feats,
-            orig_dims,
-        ) = import_dataset_hospital(path, shift, outcome, hospital, rand_run, shuffle=True)
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data,x,y, shift, outcome, hospital, rand_run, shuffle=True)
         
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
@@ -490,7 +491,7 @@ def run_pipeline(
                 val_acc,
                 te_acc,
             ) = shift_detector.detect_data_shift(
-                X_tr, y_tr, X_val, y_val, X_t[:sample, :], y_t[:sample], orig_dims
+                X_tr, y_tr, X_val, y_val, X_t[:sample,], y_t[:sample], orig_dims
             )
 
             val_accs[rand_run, si] = val_acc
@@ -515,14 +516,20 @@ def run_pipeline(
 
 def run_shift_experiment(
     shift,
+    admin_data,
+    x, 
+    y,
     outcome,
     hospital,
     path,
+    aggregation_type,
+    scale,
     dr_technique,
     md_test,
     samples,
     dataset,
     sign_level,
+    timesteps,
     random_runs=5,
     calc_acc=True
 ):
@@ -539,6 +546,11 @@ def run_shift_experiment(
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
 
+    feature_handler = FeatureHandler()
+    feature_handler.load(path, "features")
+    numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
+    numerical_cols += ["age"]
+        
     # Average over a few random runs to quantify robustness.
     for rand_run in range(0, random_runs):
         rand_run = int(rand_run)
@@ -547,15 +559,49 @@ def run_shift_experiment(
             os.makedirs(rand_run_path)
 
         np.random.seed(rand_run)
-
-        (
-            (X_tr, y_tr),
-            (X_val, y_val),
-            (X_t, y_t),
-            feats,
-            orig_dims,
-        ) = import_dataset_hospital(path, shift, outcome, hospital, rand_run, shuffle=True)
         
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
+        
+        if aggregation_type == "mean":
+            X_tr_normalized = X_tr.groupby(level=[0]).mean()
+            X_val_normalized = X_val.groupby(level=[0]).mean()
+            X_t_normalized = X_t.groupby(level=[0]).mean()
+            
+        if aggregation_type == "first":
+            X_tr_normalized = X_tr.groupby(level=[0]).first()
+            X_val_normalized = X_val.groupby(level=[0]).first()
+            X_t_normalized = X_t.groupby(level=[0]).first()
+            
+        if aggregation_type == "all":
+            X_tr_normalized = X_tr.copy()
+            X_val_normalized = X_val.copy()
+            X_t_normalized = X_t.copy()
+
+        if scale:
+            for col in numerical_cols:
+                scaler = StandardScaler().fit(X_tr_normalized[col].values.reshape(-1, 1))
+                X_tr_normalized[col] = pd.Series(
+                    np.squeeze(scaler.transform(X_tr_normalized[col].values.reshape(-1, 1))),
+                    index=X_tr_normalized[col].index,
+                )
+                X_val_normalized[col] = pd.Series(
+                    np.squeeze(scaler.transform(X_val_normalized[col].values.reshape(-1, 1))),
+                    index=X_val_normalized[col].index,
+                )
+                X_t_normalized[col] = pd.Series(
+                    np.squeeze(scaler.transform(X_t_normalized[col].values.reshape(-1, 1))),
+                    index=X_t_normalized[col].index,
+                )
+
+        if aggregation_type == "all":
+            X_tr_final = X_tr_normalized.unstack(1).dropna().to_numpy()
+            X_val_final = X_val_normalized.unstack(1).dropna().to_numpy()
+            X_t_final = X_t_normalized.unstack(1).dropna().to_numpy()
+        else:
+            X_tr_final = X_tr_normalized.dropna().to_numpy()
+            X_val_final = X_val_normalized.dropna().to_numpy()
+            X_t_final = X_t_normalized.dropna().to_numpy()        
+
         # Run shift experiements across various sample sizes
         for si, sample in enumerate(samples):
             
@@ -567,19 +613,20 @@ def run_shift_experiment(
                 os.makedirs(sample_path)
 
             shift_reductor = ShiftReductor(
-            X_tr, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.9, scale=False, scaler="standard", model=None
+            X_tr_final, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.9, scale=False, scaler="standard", model=None
             )
             # Detect shift.
             shift_detector = ShiftDetector(
                 dr_technique, md_test, sign_level, shift_reductor, sample, dataset
             )
+            
             (
                 p_val,
                 dist,
                 val_acc,
                 te_acc,
             ) = shift_detector.detect_data_shift(
-                X_tr, y_tr, X_val, y_val, X_t[:sample, :], y_t[:sample], orig_dims
+                X_tr_final, y_tr, X_val_final, y_val, X_t_final[:sample,:], y_t[:sample], orig_dims
             )
 
             val_accs[rand_run, si] = val_acc
@@ -604,6 +651,9 @@ def run_shift_experiment(
     
 def run_synthetic_shift_experiment(
     shift,
+    admin_data,
+    x, 
+    y,
     outcome,
     hospital,
     path,
@@ -612,11 +662,9 @@ def run_synthetic_shift_experiment(
     samples,
     dataset,
     sign_level,
-    na_cutoff,
+    timesteps,
     random_runs=5,
-    calc_acc=True,
-    bucket_size=6, 
-    window=24
+    calc_acc=True
 ):
     # Stores p-values for all experiments of a shift class.
     samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
@@ -639,14 +687,8 @@ def run_synthetic_shift_experiment(
 
         np.random.seed(rand_run)
 
-        (
-            (X_tr, y_tr),
-            (X_val, y_val),
-            (X_t, y_t),
-            feats,
-            orig_dims,
-        ) = import_dataset_hospital(
-            "baseline", outcome, hospital, na_cutoff, bucket_size, window, shuffle=True
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(
+            admin_data, x, y, "baseline", outcome, hospital, shuffle=True
         )
         X_t_1, y_t_1 = X_t.copy(), y_t.copy()
         (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
@@ -673,7 +715,7 @@ def run_synthetic_shift_experiment(
                 val_acc,
                 te_acc,
             ) = shift_detector.detect_data_shift(
-                X_tr, y_tr, X_val, y_val, X_t_1[:sample, :], y_t_1[:sample], orig_dims
+                X_tr, y_tr, X_val, y_val, X_t_1[:sample,], y_t_1[:sample], orig_dims
             )
 
             val_accs[rand_run, si] = val_acc

@@ -22,6 +22,7 @@ from alibi_detect.cd import (
     MMDDrift,
     MMDDriftOnline,
     TabularDrift,
+    ContextMMDDrift
 )
 
 from alibi_detect.utils.pytorch.kernels import DeepKernel
@@ -44,6 +45,13 @@ class ShiftTester:
         self.mt = mt
         self.mod_path = mod_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def context(model, x):
+        """ Condition on classifier prediction probabilities. """
+        model.eval()
+        with torch.no_grad():
+            logits = model(torch.from_numpy(x).to(device)).cpu().numpy()
+        return softmax(logits, -1)
 
     def test_shift(self, X_s, X_t, backend = "pytorch"):
         X_s = X_s.astype("float32")
@@ -98,6 +106,28 @@ class ShiftTester:
                 X_s, model, backend=backend, p_val=0.05, preds_type="logits"
             )
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
+            p_val = preds["data"]["p_val"]
+            dist = preds["data"]["distance"]
+            
+        elif self.mt == "Spot-the-diff":
+            dd = SpotTheDiffDrift(
+                X_s,
+                backend=backend,
+                p_val=.05,
+                n_diffs=1,
+                l1_reg=1e-3,
+                epochs=10,
+                batch_size=32
+            )
+            preds = dd.predict(X_t)
+            p_val = preds["data"]["p_val"]
+            dist = preds["data"]["distance"]
+
+        elif self.mt == "Context-Aware MMD":
+            C_s = self.context(X_s)
+            C_t = self.context(X_t)
+            dd = ContextMMDDrift(X_s, C_s, backend=backend, n_permutations=100, p_val=0.05)
+            preds = dd.predict(X_t, C_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 

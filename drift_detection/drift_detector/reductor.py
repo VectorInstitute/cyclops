@@ -49,6 +49,7 @@ class ShiftReductor:
         scale=False,
         scaler="standard",
         model=None):
+        
         self.X = X
         self.y = y
         self.dr_tech = dr_tech

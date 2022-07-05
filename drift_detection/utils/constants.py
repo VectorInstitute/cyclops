@@ -1,4 +1,4 @@
-HOSPITAL_ID = {
+HOSPITAL_MAP = {
     "THPM": 0,
     "SBK": 1,
     "UHNTG": 2,
@@ -9,6 +9,7 @@ HOSPITAL_ID = {
     "MSH": 7,
 }
     
+HOSPITAL_ID = 'hospital_id'
 GENC = "genc_id"
 PATIENT = "patient_id"
 HOSPITAL = "hospital_id"
