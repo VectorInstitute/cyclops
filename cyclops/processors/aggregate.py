@@ -2,7 +2,6 @@
 
 import logging
 from collections import OrderedDict
-from datetime import timedelta
 from itertools import product
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -18,7 +17,8 @@ from cyclops.processors.column_names import (
     STOP_TIMESTAMP,
     TIMESTEP,
 )
-from cyclops.processors.constants import AGGFUNCS
+from cyclops.processors.constants import MEAN, MEDIAN
+from cyclops.processors.impute import AggregatedImputer
 from cyclops.processors.util import (
     fill_missing_timesteps,
     has_columns,
@@ -31,6 +31,9 @@ from cyclops.utils.profile import time_function
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
+
+AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
 
 
 class Aggregator:  # pylint: disable=too-many-instance-attributes
@@ -58,6 +61,8 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         Columns for which to compute aggregation metadata.
     window_times: pd.DataFrame or None
         The start/stop time windows used to aggregate the data.
+    imputer: AggregatedImputer or None
+        An imputer to perform aggregation.
 
     """
 
@@ -69,6 +74,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         agg_by: Union[str, List[str]],
         timestep_size: int,
         window_duration: Optional[int] = None,
+        imputer: Optional[AggregatedImputer] = None,
         agg_meta_for: Optional[List[str]] = None,
     ):
         """Init."""
@@ -83,6 +89,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         self.window_duration = window_duration
         self.agg_meta_for = to_list_optional(agg_meta_for)
         self.window_times = pd.DataFrame()  # Calculated when given the data
+        self.imputer = imputer
 
         # Parameter checking
         if self.agg_meta_for is not None:
@@ -305,7 +312,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         if self.window_duration is not None:
             # Use window duration to compute the stop times for each group
             window_stop_time = window_start_time.copy()
-            window_stop_time[RESTRICT_TIMESTAMP] += timedelta(
+            window_stop_time[RESTRICT_TIMESTAMP] += pd.Timedelta(
                 hours=self.window_duration
             )
 
@@ -453,7 +460,11 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         else:
             agg_meta = None
 
-        # DO: Add intra imputation here.
+        if self.imputer is not None:
+            if self.imputer.intra is not None:
+                group = self.imputer.intra(group)
+
+        AggregatedImputer(group)
 
         group = group.agg(self.aggfuncs)
 
@@ -476,7 +487,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         if not include_timestep_start:
             return aggregated
 
-        # Compute the start timestamp for each timestep
+        # Get the start timestamp for each timestep
         aggregated = aggregated.reset_index().set_index(self.time_by)
 
         aggregated = aggregated.join(self.window_times[START_TIMESTAMP])
@@ -484,7 +495,16 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             aggregated[TIMESTEP] * self.timestep_size, unit="h"
         )
         aggregated = aggregated.drop(START_TIMESTAMP, axis=1)
-        aggregated = aggregated.reset_index().set_index(self.agg_by + [TIMESTEP])
+        aggregated = aggregated.reset_index()
+
+        if self.imputer is not None:
+            if self.imputer.inter is not None:
+                # aggregated = aggregated.set_index(self.agg_by)
+                aggregated = aggregated.groupby(self.agg_by).apply(self.imputer.inter)
+            # aggregated = aggregated.reset_index()
+
+        aggregated = aggregated.set_index(self.agg_by + [TIMESTEP])
+
         return aggregated
 
     @time_function
@@ -599,7 +619,9 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         # Add missing timesteps
         vectorized = aggregated.groupby(self.agg_by).apply(fill_agg_by_group_timesteps)
 
-        # ADD INTER IMPUTATION
+        # ADD EXTRA IMPUTATION
+        # if self.imputer is not None:
+        #    if self.imputer.extra is not None:
 
         # Turn into numpy array and reshape accordingly
         unique_lens = [len(unique) for unique in unique_individuals]

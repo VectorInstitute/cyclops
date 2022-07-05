@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from pandas import Timestamp
 
-from cyclops.processors.aggregate import Aggregator
+from cyclops.processors.aggregate import AGGFUNCS, Aggregator
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
     EVENT_NAME,
@@ -19,7 +19,7 @@ from cyclops.processors.column_names import (
     STOP_TIMESTAMP,
     TIMESTEP,
 )
-from cyclops.processors.constants import AGGFUNCS, MEAN, MEDIAN
+from cyclops.processors.constants import MEAN, MEDIAN
 
 DATE1 = datetime(2022, 11, 3, hour=13)
 DATE2 = datetime(2022, 11, 3, hour=14)
