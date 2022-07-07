@@ -13,6 +13,12 @@ from sklearn.manifold import Isomap
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler
 from sklearn.random_projection import SparseRandomProjection
 from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
+#from pyts.decomposition import SingularSpectrumAnalysis
+
+sys.path.append("..")
+
+from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
+from drift_detection.baseline_models.temporal.pytorch.utils import *
 
 class ShiftReductor:
 
@@ -44,10 +50,7 @@ class ShiftReductor:
         dr_tech,
         orig_dims,
         datset,
-        dr_amount=None,
-        var_ret=0.9,
-        scale=False,
-        scaler="standard",
+        var_ret=0.8,
         model=None):
         
         self.X = X
@@ -56,21 +59,13 @@ class ShiftReductor:
         self.orig_dims = orig_dims
         self.datset = datset
         self.model = model
-        self.scale = scale
-        self.scaler = None
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.var_ret = var_ret
+        self.device = get_device()
         
-        if scale:
-            self.scaler = self.get_scaler(scaler)
-            self.scaler.fit(self.X)
-            self.X = self.scaler.transform(self.X)
-
-        if dr_amount is None:
-            pca = PCA(n_components=var_ret, svd_solver="full")
-            pca.fit(X)
-            self.dr_amount = pca.n_components_
-        else:
-            self.dr_amount = dr_amount
+    def get_dr_amount(self):
+        pca = PCA(n_components=self.var_ret, svd_solver="full")
+        pca.fit(X)
+        return(pca.n_components_)
 
     def fit_reductor(self):    
         if self.dr_tech == "PCA":
@@ -95,29 +90,8 @@ class ShiftReductor:
             return self.lstm()
         else:
             return None
-        
-    def get_scaler(self, scaler):
-        """Get scaler.
 
-        Parameters
-        ----------
-        scaler: string
-            String indicating which scaler to retrieve.
-
-        """
-        scalers = {
-            "minmax": MinMaxScaler,
-            "standard": StandardScaler,
-            "maxabs": MaxAbsScaler,
-            "robust": RobustScaler,
-        }
-        return scalers.get(scaler.lower())()
-
-
-    def reduce(self, model, X, batch_size=32):
-        if self.scale:
-            X = self.scaler.transform(X)
-            
+    def reduce(self, model, X, batch_size=32):          
         if (
             self.dr_tech == "PCA"
             or self.dr_tech == "SRP"
@@ -144,23 +118,44 @@ class ShiftReductor:
             )
             pred = np.argmax(pred, axis=1)
             return pred
+        elif self.dr_tech == "BBSDs_LSTM":
+            pred = preprocess_drift(
+                x=X.astype("float32"),
+                model=model,
+                device=self.device,
+                batch_size=batch_size,
+            )
+            return pred
+        elif self.dr_tech == "BBSDh_LSTM":
+            pred = preprocess_drift(
+                x=X.astype("float32"),
+                model=model,
+                device=self.device,
+                batch_size=batch_size,
+            )
+            pred = np.argmax(pred, axis=1)
+            return pred
 
     def sparse_random_projection(self):
+        n_components = self.get_dr_amount()
         srp = SparseRandomProjection(n_components=self.dr_amount)
         srp.fit(self.X)
         return srp
 
     def principal_components_anaylsis(self):
+        n_components = self.get_dr_amount()
         pca = PCA(n_components=self.dr_amount)
         pca.fit(self.X)
         return pca
 
     def kernel_principal_components_anaylsis(self, kernel="rbf"):
+        n_components = self.get_dr_amount()
         kpca = KernelPCA(n_components=self.dr_amount, kernel=kernel)
         kpca.fit(self.X)
         return kpca
 
     def manifold_isomap(self):
+        n_components = self.get_dr_amount()
         isomap = Isomap(n_components=self.dr_amount)
         isomap.fit(self.X)
         return isomap
@@ -177,5 +172,16 @@ class ShiftReductor:
             ).to(self.device)
         return ffnn
     
-    def lstm(self):
-        raise NotImplementedError
+    def lstm(self, hidden_dim = 128, layer_dim = 2, dropout = 0.25, output_dim = 1, last_timestep_only = False):
+        input_dim = self.X.shape[2]
+        model_params = {
+            "device": self.device,
+            "input_dim": input_dim,
+            "hidden_dim": hidden_dim,
+            "layer_dim": layer_dim,
+            "output_dim": output_dim,
+            "dropout_prob": dropout,
+            "last_timestep_only": last_timestep_only,
+        }
+        model = get_temporal_model("lstm", model_params).to(self.device)
+        return model

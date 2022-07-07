@@ -228,13 +228,15 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
     if dataset == "covid":
 
         ids_source = admin_data.loc[
-            ((admin_data["admit_timestamp"].dt.date > datetime.date(2019, 2, 28)) 
-                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 8, 1)),
+            ((admin_data["admit_timestamp"].dt.date > datetime.date(2019, 1, 1)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 2, 28)),
             ),
             "encounter_id",
         ]
         ids_target = admin_data.loc[
-            admin_data["admit_timestamp"].dt.date > datetime.date(2020, 2, 28),
+            ((admin_data["admit_timestamp"].dt.date > datetime.date(2020, 2, 28)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 7, 31)),
+            ),
             "encounter_id",
         ]
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
@@ -243,8 +245,8 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
     elif dataset == "pre-covid":
         dataset_ids = admin_data.loc[
             (
-                (admin_data["admit_timestamp"].dt.date > datetime.date(2019, 2, 28)) 
-                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 8, 1)),
+                (admin_data["admit_timestamp"].dt.date > datetime.date(2019, 1, 1)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 2, 28)),
             ),
             "encounter_id",
         ]
@@ -257,14 +259,14 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
         ids_source = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
-                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
+#                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
             ),
             "encounter_id",
         ]
         ids_target = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8]))
-                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
+#                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
             ),
             "encounter_id",
         ]
@@ -275,7 +277,7 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
         dataset_ids = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8]))
-                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
+#                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
             ),
             "encounter_id",
         ]
@@ -288,7 +290,7 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
         dataset_ids = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
-                & (admin_data["admit_timestamp"].dt.year.isin([2016, 2017, 2018, 2019]))
+#                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
             ),
             "encounter_id",
         ]
@@ -430,90 +432,6 @@ def import_dataset_hospital(admin_data, x, y, dataset, outcome, hospital, seed=1
 
     return (x_train, y_train), (x_val, y_val), (x_test, y_test), feats, orig_dims, admin_data
 
-def run_pipeline(
-    path,
-    admin_data,
-    x, 
-    y,
-    dr_technique,
-    md_test,
-    samples,
-    dataset,
-    sign_level,
-    timesteps,
-    random_runs=5,
-    calc_acc=True):
-    
-    # Stores p-values for all experiments of a shift class.
-    samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
-    samples_rands_dist = np.ones((len(samples), random_runs)) * (-1)
-
-    shift_path = path + shift + "/"
-
-    if not os.path.exists(shift_path):
-        os.makedirs(shift_path)
-
-    # Stores accuracy values for malignancy detection.
-    val_accs = np.ones((random_runs, len(samples))) * (-1)
-    te_accs = np.ones((random_runs, len(samples))) * (-1)
-    
-    # Average over a few random runs to quantify robustness.
-    for rand_run in range(0, random_runs):
-        rand_run = int(rand_run)
-        rand_run_path = shift_path + str(rand_run) + "/"
-        if not os.path.exists(rand_run_path):
-            os.makedirs(rand_run_path)
-
-        np.random.seed(rand_run)
-
-        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data,x,y, shift, outcome, hospital, rand_run, shuffle=True)
-        
-        # Run shift experiments across various sample sizes
-        for si, sample in enumerate(samples):
-            
-            # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
-
-            sample_path = rand_run_path + str(sample) + "/"
-
-            if not os.path.exists(sample_path):
-                os.makedirs(sample_path)
-
-            shift_reductor = ShiftReductor(
-            X_tr, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.9, scale=False, scaler="standard", model=None
-            )
-            # Detect shift.
-            shift_detector = ShiftDetector(
-                dr_technique, md_test, sign_level, shift_reductor, sample, dataset
-            )
-            (
-                p_val,
-                dist,
-                val_acc,
-                te_acc,
-            ) = shift_detector.detect_data_shift(
-                X_tr, y_tr, X_val, y_val, X_t[:sample,], y_t[:sample], orig_dims
-            )
-
-            val_accs[rand_run, si] = val_acc
-            te_accs[rand_run, si] = te_acc
-
-            samples_rands_pval[si, rand_run] = p_val
-            samples_rands_dist[si, rand_run] = dist
-        
-    mean_p_vals = np.mean(samples_rands_pval, axis=1)
-    std_p_vals = np.std(samples_rands_pval, axis=1)
-    
-    mean_dist = np.mean(samples_rands_dist, axis=1)
-    std_dist = np.std(samples_rands_dist, axis=1)
-
-    mean_val_accs = np.mean(val_accs, axis=0)
-    std_val_accs = np.std(val_accs, axis=0)
-
-    mean_te_accs = np.mean(te_accs, axis=0)
-    std_te_accs = np.std(te_accs, axis=0)
-
-    return (mean_p_vals, std_p_vals, mean_dist, std_dist)
-
 def run_shift_experiment(
     shift,
     admin_data,
@@ -565,17 +483,21 @@ def run_shift_experiment(
         if aggregation_type == "mean":
             X_tr_normalized = X_tr.groupby(level=[0]).mean()
             X_val_normalized = X_val.groupby(level=[0]).mean()
-            X_t_normalized = X_t.groupby(level=[0]).mean()
-            
-        if aggregation_type == "first":
+            X_t_normalized = X_t.groupby(level=[0]).mean()     
+        elif aggregation_type == "first":
             X_tr_normalized = X_tr.groupby(level=[0]).first()
             X_val_normalized = X_val.groupby(level=[0]).first()
-            X_t_normalized = X_t.groupby(level=[0]).first()
-            
-        if aggregation_type == "all":
+            X_t_normalized = X_t.groupby(level=[0]).first()    
+        elif aggregation_type == "last":
+            X_tr_normalized = X_tr.groupby(level=[0]).last()
+            X_val_normalized = X_val.groupby(level=[0]).last()
+            X_t_normalized = X_t.groupby(level=[0]).last()   
+        elif aggregation_type == "time_flatten" or aggregation_type == "time":
             X_tr_normalized = X_tr.copy()
             X_val_normalized = X_val.copy()
             X_t_normalized = X_t.copy()
+        else:
+            raise ValueError("Incorrect Aggregation Type")
 
         if scale:
             for col in numerical_cols:
@@ -593,16 +515,24 @@ def run_shift_experiment(
                     index=X_t_normalized[col].index,
                 )
 
-        if aggregation_type == "all":
-            X_tr_final = X_tr_normalized.unstack(1).dropna().to_numpy()
-            X_val_final = X_val_normalized.unstack(1).dropna().to_numpy()
-            X_t_final = X_t_normalized.unstack(1).dropna().to_numpy()
+        if aggregation_type == "time_flatten":
+            X_tr_input = X_tr_normalized.unstack(1).dropna().to_numpy()
+            X_val_input = X_val_normalized.unstack(1).dropna().to_numpy()
+            X_t_input = X_t_normalized.unstack(1).dropna().to_numpy()
+        elif aggregation_type == "time":
+            X_tr_input = reshape_inputs(X_tr_normalized, timesteps)
+            X_val_input = reshape_inputs(X_val_normalized, timesteps)
+            X_t_input = reshape_inputs(X_t_normalized, timesteps)
         else:
-            X_tr_final = X_tr_normalized.dropna().to_numpy()
-            X_val_final = X_val_normalized.dropna().to_numpy()
-            X_t_final = X_t_normalized.dropna().to_numpy()        
+            X_tr_input = X_tr_normalized.dropna().to_numpy()
+            X_val_input = X_val_normalized.dropna().to_numpy()
+            X_t_input = X_t_normalized.dropna().to_numpy()
 
-        # Run shift experiements across various sample sizes
+        X_tr_final = X_tr_input.copy()
+        X_val_final = X_val_input.copy()
+        X_t_final = X_t_input.copy()
+        
+        # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
             
             # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
@@ -613,11 +543,11 @@ def run_shift_experiment(
                 os.makedirs(sample_path)
 
             shift_reductor = ShiftReductor(
-            X_tr_final, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.9, scale=False, scaler="standard", model=None
+            X_tr_final, y_tr, dr_technique, orig_dims, dataset, var_ret=0.8, model=None
             )
             # Detect shift.
             shift_detector = ShiftDetector(
-                dr_technique, md_test, sign_level, shift_reductor, sample, dataset
+                dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats,
             )
             
             (
@@ -716,6 +646,90 @@ def run_synthetic_shift_experiment(
                 te_acc,
             ) = shift_detector.detect_data_shift(
                 X_tr, y_tr, X_val, y_val, X_t_1[:sample,], y_t_1[:sample], orig_dims
+            )
+
+            val_accs[rand_run, si] = val_acc
+            te_accs[rand_run, si] = te_acc
+
+            samples_rands_pval[si, rand_run] = p_val
+            samples_rands_dist[si, rand_run] = dist
+        
+    mean_p_vals = np.mean(samples_rands_pval, axis=1)
+    std_p_vals = np.std(samples_rands_pval, axis=1)
+    
+    mean_dist = np.mean(samples_rands_dist, axis=1)
+    std_dist = np.std(samples_rands_dist, axis=1)
+
+    mean_val_accs = np.mean(val_accs, axis=0)
+    std_val_accs = np.std(val_accs, axis=0)
+
+    mean_te_accs = np.mean(te_accs, axis=0)
+    std_te_accs = np.std(te_accs, axis=0)
+
+    return (mean_p_vals, std_p_vals, mean_dist, std_dist)
+
+def run_pipeline(
+    path,
+    admin_data,
+    x, 
+    y,
+    dr_technique,
+    md_test,
+    samples,
+    dataset,
+    sign_level,
+    timesteps,
+    random_runs=5,
+    calc_acc=True):
+    
+    # Stores p-values for all experiments of a shift class.
+    samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
+    samples_rands_dist = np.ones((len(samples), random_runs)) * (-1)
+
+    shift_path = path + shift + "/"
+
+    if not os.path.exists(shift_path):
+        os.makedirs(shift_path)
+
+    # Stores accuracy values for malignancy detection.
+    val_accs = np.ones((random_runs, len(samples))) * (-1)
+    te_accs = np.ones((random_runs, len(samples))) * (-1)
+    
+    # Average over a few random runs to quantify robustness.
+    for rand_run in range(0, random_runs):
+        rand_run = int(rand_run)
+        rand_run_path = shift_path + str(rand_run) + "/"
+        if not os.path.exists(rand_run_path):
+            os.makedirs(rand_run_path)
+
+        np.random.seed(rand_run)
+
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data,x,y, shift, outcome, hospital, rand_run, shuffle=True)
+        
+        # Run shift experiments across various sample sizes
+        for si, sample in enumerate(samples):
+            
+            # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
+
+            sample_path = rand_run_path + str(sample) + "/"
+
+            if not os.path.exists(sample_path):
+                os.makedirs(sample_path)
+
+            shift_reductor = ShiftReductor(
+            X_tr, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.8, scale=False, scaler="standard", model=None
+            )
+            # Detect shift.
+            shift_detector = ShiftDetector(
+                dr_technique, md_test, sign_level, shift_reductor, sample, dataset
+            )
+            (
+                p_val,
+                dist,
+                val_acc,
+                te_acc,
+            ) = shift_detector.detect_data_shift(
+                X_tr, y_tr, X_val, y_val, X_t[:sample,], y_t[:sample], orig_dims
             )
 
             val_accs[rand_run, si] = val_acc

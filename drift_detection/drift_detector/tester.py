@@ -40,13 +40,14 @@ class ShiftTester:
         path to model (optional)
     """
 
-    def __init__(self, sign_level=0.05, mt=None, mod_path=None):
+    def __init__(self, sign_level=0.05, mt=None, mod_path=None, features=None):
         self.sign_level = sign_level
         self.mt = mt
         self.mod_path = mod_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.features = features
 
-    def context(model, x):
+    def context(self, model, x):
         """ Condition on classifier prediction probabilities. """
         model.eval()
         with torch.no_grad():
@@ -100,7 +101,7 @@ class ShiftTester:
                     nn.SiLU(),
                     nn.Linear(32, 8),
                     nn.SiLU(),
-                    nn.Linear(8, 2),
+                    nn.Linear(8, 1),
                 ).to(self.device)
             dd = ClassifierDrift(
                 X_s, model, backend=backend, p_val=0.05, preds_type="logits"
@@ -133,7 +134,7 @@ class ShiftTester:
 
         elif self.mt == "Univariate":
             ## change this to get appropriate column indexing for feature map
-            feature_map = {f: None for f in list(X_s.columns)}
+            feature_map = {f: None for f in list(self.features)}
             dd = TabularDrift(X_s, p_val=0.05, categories_per_feature=feature_map)
             preds = dd.predict(
                 X_t, drift_type="batch", return_p_val=True, return_distance=True

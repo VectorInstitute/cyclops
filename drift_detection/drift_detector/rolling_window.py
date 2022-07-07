@@ -29,20 +29,15 @@ def rolling_window(shift_detector, sample, stat_window, lookup_window, stride, n
         
         if next.shape[0]<=2 or prev.shape[0]<=2:
             break
-            
-        ## run distribution shift check here
-        cd = MMDDrift(prev, backend='pytorch', p_val=.05)
-        preds = cd.predict(next, return_p_val=True, return_distance=True)
-        p_val = preds['data']['p_val']
         
-#        (p_val, dist, val_acc, te_acc) = shift_detector.detect_data_shift(X_tr, 
-#                                                                          y_tr, 
-#                                                                          X_val, 
-#                                                                          y_val, 
-#                                                                          X_t[:sample, :], 
-#                                                                          y_t[:sample], 
-#                                                                          orig_dims
-#        )
+        (p_val, dist, val_acc, te_acc) = shift_detector.detect_data_shift(X_tr, 
+                                                                          y_tr, 
+                                                                          X_val, 
+                                                                          y_val, 
+                                                                          X_t[:sample, :], 
+                                                                          y_t[:sample], 
+                                                                          orig_dims
+        )
             
         if p_val < threshold:
             print("P-value below threshold.")
