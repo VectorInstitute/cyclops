@@ -234,8 +234,8 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
             "encounter_id",
         ]
         ids_target = admin_data.loc[
-            ((admin_data["admit_timestamp"].dt.date > datetime.date(2020, 2, 28)) 
-                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 7, 31)),
+            ((admin_data["admit_timestamp"].dt.date > datetime.date(2020, 4, 1)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 6, 1)),
             ),
             "encounter_id",
         ]
@@ -259,14 +259,14 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
         ids_source = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
-#                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
             ),
             "encounter_id",
         ]
         ids_target = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8]))
-#                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
             ),
             "encounter_id",
         ]
@@ -277,7 +277,7 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
         dataset_ids = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8]))
-#                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
             ),
             "encounter_id",
         ]
@@ -290,7 +290,7 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
         dataset_ids = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
-#                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
+                & (admin_data["admit_timestamp"].dt.year.isin([2018, 2019]))
             ),
             "encounter_id",
         ]
@@ -365,6 +365,15 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals):
         x_s = x_spl[0] ; ids_source = list(x_s.index.get_level_values(0).unique())
         x_t = x_spl[1] ; ids_target = list(x_t.index.get_level_values(0).unique())
     
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
+        x_spl = np.array_split(list(x.index.get_level_values(0).unique()),2)
+        
+        x_s = x[np.in1d(x.index.get_level_values(0),x_spl[0])]
+        ids_source = list(x_s.index.get_level_values(0).unique())
+        x_t =  x[np.in1d(x.index.get_level_values(0),x_spl[1])]
+        ids_target = list(x_t.index.get_level_values(0).unique())
+
+        
     y_s = y[np.in1d(encounter_ids, ids_source)]
     y_t = y[np.in1d(encounter_ids, ids_target)]
     

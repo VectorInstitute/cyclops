@@ -62,7 +62,7 @@ class ShiftTester:
         dist = None
 
         if self.mt == "MMD":
-            dd = MMDDrift(X_s, backend=backend, n_permutations=100, p_val=0.05)
+            dd = MMDDrift(X_s, backend=backend, p_val=0.05)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
