@@ -179,8 +179,7 @@ def drop_unsupported(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-@assert_has_columns([EVENT_NAME])
-def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
+def normalize_names(names: pd.Series) -> pd.Series:
     """Normalize event names.
 
     Perform basic cleaning/house-keeping of event names.
@@ -189,26 +188,22 @@ def normalize_names(data: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    data: pandas.DataFrame
-        Input data.
+    names: pandas.Series
+        Event names.
 
     Returns
     -------
     pandas.DataFrame
-        Output data with normalized event names.
+        Normalized event names.
 
     """
-    data[EVENT_NAME] = data[EVENT_NAME].apply(remove_text_in_parentheses)
-    data[EVENT_NAME] = data[EVENT_NAME].apply(to_lower)
-    log_counts_step(
-        data, "Remove text in parentheses and normalize event names...", columns=True
-    )
-
-    return data
+    names = names.apply(to_lower)
+    names = names.apply(remove_text_in_parentheses)
+    names = names.str.strip()
+    return names
 
 
-@assert_has_columns([EVENT_CATEGORY])
-def normalize_categories(data: pd.DataFrame) -> pd.DataFrame:
+def normalize_categories(categories: pd.Series) -> pd.Series:
     """Normalize event category names.
 
     Perform basic cleaning/house-keeping of event category names.
@@ -216,23 +211,21 @@ def normalize_categories(data: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    data: pandas.DataFrame
-        Input data.
+    categories: pandas.Series
+        Categories.
 
     Returns
     -------
-    pandas.DataFrame
-        Output data with normalized event categories.
+    pandas.Series
+        Normalized event categories.
 
     """
-    data[EVENT_CATEGORY] = data[EVENT_CATEGORY].apply(to_lower)
-    log_counts_step(data, "Normalize event categories...", columns=True)
+    categories = categories.apply(to_lower)
+    categories = categories.str.strip()
+    return categories
 
-    return data
 
-
-@assert_has_columns([EVENT_VALUE])
-def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
+def normalize_values(values: pd.Series) -> pd.Series:
     """Normalize event values.
 
     Perform basic cleaning/house-keeping of event values.
@@ -241,42 +234,41 @@ def normalize_values(data: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    data: pandas.DataFrame
-        Input data.
+    values: pandas.Series
+        Event values.
 
     Returns
     -------
-    pandas.DataFrame
-        Output data with normalized event values.
+    pandas.Series
+        Normalized event values.
 
     """
-    data[EVENT_VALUE] = data[EVENT_VALUE].apply(
+    values = values.apply(
         replace_if_string_match, args=("|".join(POSITIVE_RESULT_TERMS), "1")
     )
-    data[EVENT_VALUE] = data[EVENT_VALUE].apply(
+    values = values.apply(
         replace_if_string_match, args=("|".join(NEGATIVE_RESULT_TERMS), "0")
     )
-    log_counts_step(data, "Convert Positive/Negative to 1/0...", columns=True)
+    # log_counts_step(data, "Convert Positive/Negative to 1/0...", columns=True)
 
-    data[EVENT_VALUE] = data[EVENT_VALUE].apply(remove_text_in_parentheses)
-    log_counts_step(data, "Remove any text in paranthesis", columns=True)
+    values = values.apply(remove_text_in_parentheses)
+    # log_counts_step(data, "Remove any text in paranthesis", columns=True)
 
-    data[EVENT_VALUE] = data[EVENT_VALUE].apply(fix_inequalities)
-    log_counts_step(
-        data, "Fixing inequalities and removing outlier values...", columns=True
-    )
+    values = values.apply(fix_inequalities)
+    # log_counts_step(
+    #    data, "Fixing inequalities and removing outlier values...", columns=True
+    # )
 
-    data[EVENT_VALUE] = data[EVENT_VALUE].apply(fill_missing_with_nan)
-    log_counts_step(data, "Fill empty result string values with NaN...", columns=True)
+    values = values.apply(fill_missing_with_nan)
+    # log_counts_step(data, "Fill empty result string values with NaN...", columns=True)
 
-    data[EVENT_VALUE] = data[EVENT_VALUE].astype("float")
-    LOGGER.info("Converting string result values to numeric...")
+    values = values.astype("float")
+    # LOGGER.info("Converting string result values to numeric...")
 
-    return data
+    return values
 
 
-@assert_has_columns([EVENT_VALUE_UNIT])
-def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
+def normalize_units(units: pd.Series) -> pd.Series:
     """Normalize event value units.
 
     Perform basic cleaning/house-keeping of event value units.
@@ -284,21 +276,21 @@ def normalize_units(data: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    data: pandas.DataFrame
-        Input data.
+    data: pandas.Series
+        Units.
 
     Returns
     -------
-    pandas.DataFrame
-        Output data with normalized event value units.
+    pandas.Series
+        Normalized units.
 
     """
     LOGGER.info("Normalizing units...")
-    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(none_to_empty_string)
-    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(to_lower)
-    data[EVENT_VALUE_UNIT] = data[EVENT_VALUE_UNIT].apply(strip_whitespace)
+    units = units.apply(none_to_empty_string)
+    units = units.apply(to_lower)
+    units = units.apply(strip_whitespace)
 
-    return data
+    return units
 
 
 @time_function
@@ -320,17 +312,17 @@ def normalize_events(data) -> pd.DataFrame:
 
     log_counts_step(data, "Cleaning raw event data...", columns=True)
     data = data.infer_objects()
-    data = normalize_names(data)
+    data[EVENT_NAME] = normalize_names(data[EVENT_NAME])
     data = drop_unsupported(data)
 
     if data[EVENT_VALUE].dtypes == object:
-        data = normalize_values(data)
+        data[EVENT_VALUE] = normalize_values(data[EVENT_VALUE])
 
     if EVENT_VALUE_UNIT in list(data.columns):
-        data = normalize_units(data)
+        data[EVENT_VALUE_UNIT] = normalize_units(data[EVENT_VALUE_UNIT])
 
     if EVENT_CATEGORY in list(data.columns):
-        data = normalize_categories(data)
+        data[EVENT_CATEGORY] = normalize_categories(data[EVENT_CATEGORY])
 
     return data
 

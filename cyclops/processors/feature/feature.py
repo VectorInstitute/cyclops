@@ -26,7 +26,7 @@ from cyclops.processors.feature.type_handling import (
     normalize_data,
     to_types,
 )
-from cyclops.processors.util import has_columns, to_range_index
+from cyclops.processors.util import has_columns, has_range_index, to_range_index
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
@@ -170,6 +170,11 @@ class Features:
         # Check data
         if not isinstance(data, pd.DataFrame):
             raise ValueError("Feature data must be a pandas.DataFrame.")
+
+        if not has_range_index(data):
+            raise ValueError(
+                "Data required to have a range index. Try resetting the index."
+            )
 
         # Force a range index
         data = to_range_index(data)

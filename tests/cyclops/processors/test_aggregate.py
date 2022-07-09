@@ -326,7 +326,7 @@ def test_vectorization(  # pylint: disable=redefined-outer-name
     print(aggregated)
     print("\n" * 3)
 
-    vectorized, aggfunc_order = aggregator.vectorize(aggregated)
+    vectorized, group_indices = aggregator.vectorize(aggregated)
 
     print("\n\n\nVECTORIZED")
     with pd.option_context(
@@ -335,10 +335,19 @@ def test_vectorization(  # pylint: disable=redefined-outer-name
         print(vectorized)
     print(vectorized.shape)
 
-    ev1_ind = aggfunc_order.index(EVENT_VALUE)
-    ev2_ind = aggfunc_order.index("event_value2")
-    ev3_ind = aggfunc_order.index("event_value3")
+    agg_col_map, encounter_id_map, event_name_map = group_indices
+
+    assert set(list(encounter_id_map.keys())) == set([1, 2])
+    assert set(list(event_name_map.keys())) == set(["eventA", "eventB"])
 
     assert vectorized.shape == (3, 2, 2, 15)
-    assert np.array_equal(vectorized[ev1_ind] * 2, vectorized[ev2_ind], equal_nan=True)
-    assert np.array_equal(vectorized[ev1_ind] * 3, vectorized[ev3_ind], equal_nan=True)
+    assert np.array_equal(
+        vectorized[agg_col_map[EVENT_VALUE]] * 2,
+        vectorized[agg_col_map["event_value2"]],
+        equal_nan=True,
+    )
+    assert np.array_equal(
+        vectorized[agg_col_map[EVENT_VALUE]] * 3,
+        vectorized[agg_col_map["event_value3"]],
+        equal_nan=True,
+    )

@@ -617,7 +617,19 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         aggregated = pd.concat([aggregated, missing])
 
         # Add missing timesteps
-        vectorized = aggregated.groupby(self.agg_by).apply(fill_agg_by_group_timesteps)
+        grouped = aggregated.groupby(self.agg_by)
+
+        # Create a map from an index to part of the group name
+        group_indices = [
+            list(dict.fromkeys(lst)) for lst in zip(*grouped.groups.keys())
+        ]
+        group_indices.insert(0, list(self.aggfuncs.keys()))
+        group_indices = [
+            {elem: i for i, elem in enumerate(lst)}  # type: ignore
+            for lst in group_indices
+        ]
+
+        vectorized = grouped.apply(fill_agg_by_group_timesteps)
 
         # ADD EXTRA IMPUTATION
         # if self.imputer is not None:
@@ -626,6 +638,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         # Turn into numpy array and reshape accordingly
         unique_lens = [len(unique) for unique in unique_individuals]
         shape = unique_lens + [int(self.window_duration / self.timestep_size)]
+
         return np.stack(
             [vectorized[aggfunc].values.reshape(shape) for aggfunc in self.aggfuncs]
-        ), list(self.aggfuncs.keys())
+        ), tuple(group_indices)
