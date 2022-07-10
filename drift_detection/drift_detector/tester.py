@@ -1,10 +1,17 @@
+import sys
 import math
 import random
 import numpy as np
 import torch
-import torch.nn as nn
+from scipy.special import softmax
 import tensorflow as tf
 from scipy.spatial import distance
+from sklearn.mixture import GaussianMixture
+
+sys.path.append("..")
+
+from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
+from drift_detection.baseline_models.temporal.pytorch.utils import *
 
 from scipy.stats import (
     anderson_ksamp,
@@ -40,21 +47,40 @@ class ShiftTester:
         path to model (optional)
     """
 
-    def __init__(self, sign_level=0.05, mt=None, mod_path=None, features=None):
+    def __init__(self, sign_level=0.05, mt=None, model_path=None, features=None):
         self.sign_level = sign_level
         self.mt = mt
-        self.mod_path = mod_path
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model_path = model_path
+        self.device = get_device()
         self.features = features
 
-    def context(self, model, x):
-        """ Condition on classifier prediction probabilities. """
-        model.eval()
-        with torch.no_grad():
-            logits = model(torch.from_numpy(x).to(device)).cpu().numpy()
-        return softmax(logits, -1)
+    def get_timeseries_model(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
+        model_params = {
+            "device": self.device,
+            "input_dim": input_dim,
+            "hidden_dim": hidden_dim,
+            "layer_dim": layer_dim,
+            "output_dim": output_dim,
+            "dropout_prob": dropout,
+            "last_timestep_only": last_timestep_only,
+        }
+        model = get_temporal_model(model_name, model_params).to(self.device)
+        return model
+    
+    def context(self, x, context_type="prediction probabilities", model_name="lstm"):
+        if context_type == "prediction probabilities":
+            model = self.get_timeseries_model(model_name, x.shape[2])
+            model.load_state_dict(torch.load(self.model_path))
+            model.eval()
+            with torch.no_grad():
+                logits = model(torch.from_numpy(x).to(self.device)).cpu().numpy()
+            return softmax(logits)
+        if context_type == "cluster membership":
+            n_clusters = 2 
+            gmm = GaussianMixture(n_components=n_clusters, covariance_type='full', random_state=2022)
+            gmm.fit(x_train)
 
-    def test_shift(self, X_s, X_t, backend = "pytorch"):
+    def test_shift(self, X_s, X_t, backend = "pytorch", C_s=None, C_t=None):
         X_s = X_s.astype("float32")
         X_t = X_t.astype("float32")
 
@@ -62,20 +88,21 @@ class ShiftTester:
         dist = None
 
         if self.mt == "MMD":
-            dd = MMDDrift(X_s, backend=backend, p_val=0.05)
+            dd = MMDDrift(X_s, backend=backend, n_permutations=1000, p_val=0.05)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
         elif self.mt == "LSDD":
-            dd = LSDDDrift(X_s, p_val=0.05, backend=backend)
+            dd = LSDDDrift(X_s, p_val=0.05, n_permutations=1000, backend=backend)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
         elif self.mt == "LK":
-            if self.mod_path:
-                proj = load_model(self.mod_path)
+            if self.model_path:
+                proj = self.lstm(X_s.shape[2])
+                proj.load_state_dict(torch.load(self.model_path))
             else:
                 proj = nn.Sequential(
                     nn.Linear(X_s.shape[-1], 32),
@@ -93,8 +120,9 @@ class ShiftTester:
             dist = preds["data"]["distance"]
 
         elif self.mt == "Classifier":
-            if self.mod_path:
-                model = load_model(self.mod_path)
+            if self.model_path:
+                model = self.lstm(X_s.shape[2])
+                model.load_state_dict(torch.load(self.model_path))
             else:
                 model = nn.Sequential(
                     nn.Linear(X_s.shape[-1], 32),
@@ -127,7 +155,7 @@ class ShiftTester:
         elif self.mt == "Context-Aware MMD":
             C_s = self.context(X_s)
             C_t = self.context(X_t)
-            dd = ContextMMDDrift(X_s, C_s, backend=backend, n_permutations=100, p_val=0.05)
+            dd = ContextMMDDrift(X_s, C_s, backend=backend, n_permutations=1000, p_val=0.05)
             preds = dd.predict(X_t, C_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]

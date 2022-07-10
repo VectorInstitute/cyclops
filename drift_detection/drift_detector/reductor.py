@@ -51,20 +51,20 @@ class ShiftReductor:
         orig_dims,
         datset,
         var_ret=0.8,
-        model=None):
+        model_path=None):
         
         self.X = X
         self.y = y
         self.dr_tech = dr_tech
         self.orig_dims = orig_dims
         self.datset = datset
-        self.model = model
+        self.model_path = model_path
         self.var_ret = var_ret
         self.device = get_device()
         
     def get_dr_amount(self):
         pca = PCA(n_components=self.var_ret, svd_solver="full")
-        pca.fit(X)
+        pca.fit(self.X)
         return(pca.n_components_)
 
     def fit_reductor(self):    
@@ -76,18 +76,20 @@ class ShiftReductor:
             return self.kernel_principal_components_anaylsis()
         elif self.dr_tech == "Isomap":
             return self.manifold_isomap()
-        elif self.dr_tech == "BBSDs_FFNN":
-            if self.model:
-                return self.model
+        elif self.dr_tech == "BBSDs_untrained_FFNN":
             return self.neural_network_classifier()
-        elif self.dr_tech == "BBSDh_FFNN":
-            if self.model:
-                return self.model
+        elif self.dr_tech == "BBSDh_untrained_FFNN":
             return self.neural_network_classifier()
-        elif self.dr_tech == "BBSDs_LSTM":
-            if self.model:
-                return self.model
-            return self.lstm()
+        elif self.dr_tech == "BBSDs_untrained_LSTM":
+            return self.get_timeseries_model("lstm", self.X.shape[2])
+        elif self.dr_tech == "BBSDs_trained_LSTM":
+            model = self.get_timeseries_model("lstm",self.X.shape[2])
+            model.load_state_dict(torch.load(self.model_path))
+            return model
+        elif self.dr_tech == "BBSDh_trained_LSTM":
+            model = self.get_timeseries_model("lstm", self.X.shape[2])
+            model.load_state_dict(torch.load(self.model_path))
+            return model
         else:
             return None
 
@@ -101,7 +103,7 @@ class ShiftReductor:
             return model.transform(X)
         elif self.dr_tech == "NoRed":
             return X
-        elif self.dr_tech == "BBSDs_FFNN":
+        elif "BBSDs" in self.dr_tech:
             pred = preprocess_drift(
                 x=X.astype("float32"),
                 model=model,
@@ -109,24 +111,7 @@ class ShiftReductor:
                 batch_size=batch_size,
             )
             return pred
-        elif self.dr_tech == "BBSDh_FFNN":
-            pred = preprocess_drift(
-                x=X.astype("float32"),
-                model=model,
-                device=self.device,
-                batch_size=batch_size,
-            )
-            pred = np.argmax(pred, axis=1)
-            return pred
-        elif self.dr_tech == "BBSDs_LSTM":
-            pred = preprocess_drift(
-                x=X.astype("float32"),
-                model=model,
-                device=self.device,
-                batch_size=batch_size,
-            )
-            return pred
-        elif self.dr_tech == "BBSDh_LSTM":
+        elif "BBSDh" in self.dr_tech:
             pred = preprocess_drift(
                 x=X.astype("float32"),
                 model=model,
@@ -134,7 +119,7 @@ class ShiftReductor:
                 batch_size=batch_size,
             )
             pred = np.argmax(pred, axis=1)
-            return pred
+            return pred  
 
     def sparse_random_projection(self):
         n_components = self.get_dr_amount()
@@ -162,18 +147,16 @@ class ShiftReductor:
 
     def neural_network_classifier(self):
         data_dim = self.X.shape[-1]
-        if not self.model:
-            ffnn = nn.Sequential(
+        ffnn = nn.Sequential(
                 nn.Linear(data_dim, 16),
                 nn.SiLU(),
                 nn.Linear(16, 8),
                 nn.SiLU(),
                 nn.Linear(8, 1),
-            ).to(self.device)
+        ).to(self.device)
         return ffnn
     
-    def lstm(self, hidden_dim = 128, layer_dim = 2, dropout = 0.25, output_dim = 1, last_timestep_only = False):
-        input_dim = self.X.shape[2]
+    def get_timeseries_model(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
         model_params = {
             "device": self.device,
             "input_dim": input_dim,
@@ -183,5 +166,5 @@ class ShiftReductor:
             "dropout_prob": dropout,
             "last_timestep_only": last_timestep_only,
         }
-        model = get_temporal_model("lstm", model_params).to(self.device)
+        model = get_temporal_model(model_name, model_params).to(self.device)
         return model

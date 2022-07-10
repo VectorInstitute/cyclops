@@ -21,7 +21,7 @@ class ShiftDetector:
 
     """
 
-    def __init__(self, dr_technique, md_test, sign_level, shift_reductor, sample, datset, features):
+    def __init__(self, dr_technique, md_test, sign_level, shift_reductor, sample, datset, features, model_path):
         self.dr_technique = dr_technique
         self.sign_level = sign_level
         self.shift_reductor = shift_reductor
@@ -30,6 +30,7 @@ class ShiftDetector:
         self.datset = datset
         self.sign_level = sign_level
         self.features = features
+        self.model_path = model_path
 
     def classify_data(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims):
         
@@ -55,7 +56,7 @@ class ShiftDetector:
             te_acc = np.sum(np.equal(X_t_red, y_t).astype(int)) / X_t_red.shape[0]
 
         # Perform statistical test
-        shift_tester = ShiftTester(sign_level=self.sign_level, mt=self.md_test, features=self.features)
+        shift_tester = ShiftTester(sign_level=self.sign_level, mt=self.md_test, model_path=self.model_path, features=self.features)
         p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red)
 
         if self.dr_technique != "BBSDh":
