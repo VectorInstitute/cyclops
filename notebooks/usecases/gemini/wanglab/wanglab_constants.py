@@ -16,6 +16,8 @@ DERIVED_VARIABLES = ["ip_charlson_derived"]
 EDEMA_IMAGING_SUBSTRINGS = ["pulmonary", "edema"]
 EDEMA_PHARMA_SUBSTRINGS = ["lasix", "furosemide"]
 
+PRESCRIPTION_AFTER_IMAGING_DAYS = 1
+
 IMAGING_KEYWORDS = {
     "head": [
         "head",

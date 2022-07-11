@@ -9,6 +9,7 @@ from codebase_ops import get_log_file_path
 from cyclops.plotter import plot_histogram, plot_temporal_features
 from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.constants import (
+    BINARY,
     CATEGORICAL_INDICATOR,
     FEATURE_INDICATOR_ATTR,
     FEATURE_MAPPING_ATTR,
@@ -204,12 +205,16 @@ class Features:
         self.normalized: Dict[str, bool] = {}
 
     def get_data(
-        self, to_indicators: Optional[Union[str, List[str]]] = None
+        self,
+        features_only: bool = False,
+        to_binary_indicators: Optional[Union[str, List[str]]] = None
     ) -> pd.DataFrame:
         """Get the features data.
 
         Parameters
         ----------
+        features_only: bool, default = False
+            Whether to return only the by and feature columns.
         to_indicators: str or list of str, optional
             Ordinal features to convert to categorical indicators.
 
@@ -219,12 +224,22 @@ class Features:
             Features data.
 
         """
-        to_indicators = to_list_optional(to_indicators)
+        data = self._data
+        
+        # Take only the feature columns
+        if features_only:
+            data = data[self.features + to_list_optional(self.by, none_to_empty=True)]
+        
+        # Convert to binary categorical indicators
+        if to_binary_indicators is not None:
+            data = self._ordinal_to_indicators(data, to_list(to_binary_indicators))
+        
+        # Convert binary columns from boolean to integer
+        binary_cols = [col for col, value in self.types.items() if value == BINARY]
+        for col in binary_cols:
+            data[col] = data[col].astype(int)
 
-        if to_indicators is not None:
-            return self._ordinal_to_indicators(to_indicators, inplace=False)
-
-        return self._data
+        return data
 
     @property
     def columns(self) -> List[str]:
@@ -312,11 +327,18 @@ class Features:
             else:
                 self.meta[col] = FeatureMeta(**info)
 
-    def _to_feature_types(self, new_types: dict, inplace: bool = True) -> pd.DataFrame:
+    def _to_feature_types(
+        self,
+        data: pd.DataFrame,
+        new_types: dict,
+        inplace: bool = True,
+    ) -> pd.DataFrame:
         """Convert feature types.
 
         Parameters
         ----------
+        data: pandas.DataFrame
+            Features data.
         new_types: dict
             A map from the feature name to the new feature type.
         inplace: bool
@@ -333,20 +355,18 @@ class Features:
             raise ValueError(f"Unrecognized features: {', '.join(invalid)}")
 
         for col, new_type in new_types.items():
-            # Check that we aren't converting any categorical indicators to other things
             if col in self.meta:
+                # Check that we aren't converting any categorical indicators to other things
                 if self.meta[col].get_type() == CATEGORICAL_INDICATOR:
                     raise ValueError(
                         "Categorical indicators cannot be converted to other types."
                     )
+                
+                # Do not allow converting to categorical indicators inplace
+                if inplace and new_type == CATEGORICAL_INDICATOR:
+                    raise ValueError(f"Cannot convert {col} to binary categorical indicators.")
 
-                if inplace:
-                    # Remove original category column if converting to indicators
-                    if new_type == CATEGORICAL_INDICATOR:
-                        del self.meta[col]
-                        self.features.remove(col)
-
-        data, meta = to_types(self._data, new_types)
+        data, meta = to_types(data, new_types)
 
         if inplace:
             # Append any new indicator features
@@ -384,7 +404,7 @@ class Features:
             for feature, type_ in force_types.items():
                 new_types[feature] = type_
 
-        self._to_feature_types(new_types)
+        self._to_feature_types(self._data, new_types)
 
     def add_normalizer(
         self,
@@ -517,17 +537,17 @@ class Features:
 
     def _ordinal_to_indicators(
         self,
+        data: pd.DataFrame,
         features: Union[str, List[str]],
-        inplace: bool = True,
     ) -> pd.DataFrame:
         """Convert ordinal features to binary categorical indicators.
 
         Parameters
         ----------
-        feautres: str or list of str, optional
+        data: pandas.DataFrame
+            Features data.
+        features: str or list of str, optional
             Ordinal features to convert. If not provided, convert all ordinal features.
-        inplace: bool
-            Whether to perform in-place, or to simply return the DataFrame.
 
         Returns
         -------
@@ -546,12 +566,13 @@ class Features:
 
         # Map back to original values
         for feat in features:
-            self._data[feat] = (
-                self._data[feat].astype(int).replace(self.meta[feat].get_mapping())
+            data[feat] = (
+                data[feat].astype(int).replace(self.meta[feat].get_mapping())
             )
 
+        # Convert to binary categorical indicators
         return self._to_feature_types(
-            {feat: CATEGORICAL_INDICATOR for feat in features}, inplace=inplace
+            data, {feat: CATEGORICAL_INDICATOR for feat in features}, inplace=False
         )
 
     def save(self, save_path: str, file_format: str = "parquet") -> None:

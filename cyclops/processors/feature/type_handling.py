@@ -703,7 +703,7 @@ def _to_categorical_indicators(
     series = data[col]
     unique = get_unique(series, unique=unique)
 
-    series = series.fillna(MISSING_CATEGORY)
+    #series = series.fillna(MISSING_CATEGORY)
 
     dummies = pd.get_dummies(series, prefix=series.name)
 
