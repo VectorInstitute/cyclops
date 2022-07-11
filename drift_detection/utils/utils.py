@@ -406,29 +406,6 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals,train_fra
     
     return (x_s, y_s, x_t, y_t, x_s.columns, admin_data)
 
-def get_indicators(x, ind_cols):
-    x_ind = x[ind_cols].isnull().astype(int).add_suffix("_indicator")
-    X = pd.concat([x, x_ind], axis=1)
-    return X
-
-
-def remove_missing_feats(x, na_cutoff):
-    # drop rows with more than a quarter of features missing
-    thres = x.shape[1] * 0.25
-    x = x[x.isnull().sum(axis=1) < thres]
-
-    # get number of nas per feature
-    feat = x.isnull().sum(axis=0).sort_values(ascending=False)
-
-    # remove nas based on cutoff
-    feat_cutoff = x.shape[0] * na_cutoff
-    feat_remov = feat[feat > feat_cutoff].index
-    x = x.drop(feat_remov, axis=1)
-
-    # fill nas with mean
-    x = x.fillna(x.mean())
-    return x
-
 def reshape_inputs(inputs, num_timesteps):
     inputs = inputs.unstack()
     num_encounters = inputs.shape[0]
@@ -584,25 +561,28 @@ def run_shift_experiment(
             shift_detector = ShiftDetector(
                 dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path 
             )
-            
-            try:
+
+            if True:
+#            try:
                 (
                     p_val,
                     dist,
                     val_acc,
                     te_acc,
                 ) = shift_detector.detect_data_shift(
-                    X_tr_final, y_tr, X_val_final[:sample,:], y_val[:sample], X_t_final[:sample,:], y_t[:sample], orig_dims, context_type
+                    X_tr_final, y_tr, X_val_final, y_val, X_t_final[:sample,:], y_t[:sample], orig_dims, context_type
                 )
-            except ValueError as e:
-                print("Value Error")
-                pass
                 
-            val_accs[rand_run, si] = val_acc
-            te_accs[rand_run, si] = te_acc
+                val_accs[rand_run, si] = val_acc
+                te_accs[rand_run, si] = te_acc
 
-            samples_rands_pval[si, rand_run] = p_val
-            samples_rands_dist[si, rand_run] = dist
+                samples_rands_pval[si, rand_run] = p_val
+                samples_rands_dist[si, rand_run] = dist
+            
+#            except ValueError as e:
+#                print("Value Error")
+#                pass
+            
         
     mean_p_vals = np.mean(samples_rands_pval, axis=1)
     std_p_vals = np.std(samples_rands_pval, axis=1)

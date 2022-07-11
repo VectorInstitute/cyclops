@@ -84,7 +84,7 @@ class ShiftTester:
                 c_gmm_proba = gmm.predict_proba(x) 
                 return c_gmm_proba
             else: 
-                return context(x, "lstm")
+                return self.context(x, "lstm")
 
     def gaussian_mixture_model(self, n_clusters=2):
         gmm=None

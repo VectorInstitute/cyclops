@@ -58,7 +58,7 @@ class ShiftReductor:
         self.y = y
         self.dr_tech = dr_tech
         self.orig_dims = orig_dims
-        self.datset = datset
+        self.dataset = datset
         self.model_path = model_path
         self.var_ret = var_ret
         self.device = get_device()
@@ -121,7 +121,7 @@ class ShiftReductor:
             )
             pred = np.argmax(pred, axis=1)
             return pred  
-        elif self.dr_technique == "GMM":           
+        elif self.dr_tech == "GMM":           
             gmm = self.gaussian_mixture_model(n_clusters)
             # compute all contexts
             return gmm.predict_proba(X) 
@@ -149,6 +149,11 @@ class ShiftReductor:
         isomap = Isomap(n_components=self.dr_amount)
         isomap.fit(self.X)
         return isomap
+    
+    def static_model(self,model_name):
+        raise NotImplementedError
+        #optimised_model = run_model(model_name, X_tr, y_tr, X_val, y_val)
+        #y_pred_prob = optimised_model.predict_proba(X_val)[:, 1]
 
     def neural_network_classifier(self):
         data_dim = self.X.shape[-1]
