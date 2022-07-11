@@ -474,6 +474,9 @@ def _numeric_categorical_mapping(
 
     """
     unique = get_unique(series, unique=unique)
+    if unique.dtype.name == "object":
+        unique = unique.astype(str)
+
     unique.sort()
 
     map_dict: dict = {}
@@ -833,6 +836,14 @@ def normalize_data(data: pd.DataFrame, features: List[str]) -> pd.DataFrame:
         col: NUMERIC for col in features if convertible_to_type(data[col], NUMERIC)
     }
     data, _ = to_types(data, numeric_map)
+
+    for col in data:
+        if is_string_dtype(data[col]):
+            data[col] = data[col].astype(str)
+            data[col] = data[col].replace("None", np.nan)
+            # NAN_SUBSTITUTION_VALUE
+            # data[col] = data[col].str.encode('utf-8').astype('|S')
+            # .astype('|S')
 
     return data
 

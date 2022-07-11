@@ -19,11 +19,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import MEAN, MEDIAN
 from cyclops.processors.impute import AggregatedImputer
-from cyclops.processors.util import (
-    fill_missing_timesteps,
-    has_columns,
-    is_timestamp_series,
-)
+from cyclops.processors.util import has_columns, is_timestamp_series
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -571,6 +567,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
         return self._aggregate(data, include_timestep_start=include_timestep_start)
 
+    @time_function
     def vectorize(self, aggregated: pd.DataFrame) -> np.ndarray:
         """Vectorize aggregated data.
 
@@ -596,13 +593,6 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         if not aggregated.index.names == self.agg_by + [TIMESTEP]:
             raise ValueError(f"Index must be: {self.agg_by + [TIMESTEP]}.")
 
-        def fill_agg_by_group_timesteps(group):
-            group = fill_missing_timesteps(
-                group, TIMESTEP, 0, self.window_duration / self.timestep_size
-            )
-            group = group.drop(TIMESTEP, axis=1)
-            return group
-
         # Add missing agg_by groups
         aggregated = aggregated.reset_index()
         aggregated = aggregated[self.agg_by + [TIMESTEP] + list(self.aggfuncs.keys())]
@@ -616,16 +606,38 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         missing = missing.set_index(self.agg_by)
         aggregated = pd.concat([aggregated, missing])
 
-        # Add missing timesteps
-        vectorized = aggregated.groupby(self.agg_by).apply(fill_agg_by_group_timesteps)
+        # Create a map from an index to part of the group name
+        grouped = aggregated.groupby(self.agg_by)
+        group_indices = [
+            list(dict.fromkeys(lst)) for lst in zip(*grouped.groups.keys())
+        ]
+        group_indices.insert(0, list(self.aggfuncs.keys()))
+        group_indices = [
+            {elem: i for i, elem in enumerate(lst)}  # type: ignore
+            for lst in group_indices
+        ]
 
-        # ADD EXTRA IMPUTATION
+        # Add missing timesteps
+        num_timesteps = int(self.window_duration / self.timestep_size)
+        index = self.agg_by + [TIMESTEP]
+        aggregated = aggregated.reset_index().set_index(index)
+        idx = pd.MultiIndex.from_product(
+            [aggregated.index.levels[i] for i in range(len(self.agg_by))]
+            + [range(num_timesteps)],
+            names=index,
+        )
+        vectorized = aggregated.reindex(idx)
+
+        # ADD EXTRA IMPUTATION HERE?
         # if self.imputer is not None:
         #    if self.imputer.extra is not None:
 
         # Turn into numpy array and reshape accordingly
         unique_lens = [len(unique) for unique in unique_individuals]
         shape = unique_lens + [int(self.window_duration / self.timestep_size)]
-        return np.stack(
+
+        vectorized = np.stack(
             [vectorized[aggfunc].values.reshape(shape) for aggfunc in self.aggfuncs]
-        ), list(self.aggfuncs.keys())
+        )
+
+        return vectorized, tuple(group_indices)

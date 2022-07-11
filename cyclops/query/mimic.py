@@ -21,6 +21,7 @@ from cyclops.processors.column_names import (
     DIAGNOSIS_VERSION,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
+    EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
@@ -438,6 +439,12 @@ def patient_encounters(
 
     Other Parameters
     ----------------
+    sex: str or list of string, optional
+        Specify patient sex (one or multiple).
+    died: bool, optional
+        Specify True to get patients who have died, and False for those who haven't.
+    died_binarize_col: str, optional
+        Binarize the died condition and save as a column with label died_binarize_col.
     before_date: datetime.datetime or str
         Get patients encounters before some date.
         If a string, provide in YYYY-MM-DD format.
@@ -448,6 +455,8 @@ def patient_encounters(
         Get patient encounters by year.
     months: int or list of int, optional
         Get patient encounters by month.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
     table = get_table(ADMISSIONS)
@@ -470,11 +479,24 @@ def patient_encounters(
     table = qp.ReorderAfter(AGE, SEX)(table)
 
     # Process optional operations
+    if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
+        process_kwargs["died"] = True
+
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
         (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),
         (qp.ConditionInYears, ["admit_timestamp", qp.QAP("years")], {}),
         (qp.ConditionInMonths, ["admit_timestamp", qp.QAP("months")], {}),
+        (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+        (
+            qp.ConditionEquals,
+            ["discharge_location", "DIED"],
+            {
+                "not_": qp.QAP("died", transform_fn=lambda x: not x),
+                "binarize_col": qp.QAP("died_binarize_col", required=False),
+            },
+        ),
+        (qp.Limit, [qp.QAP("limit")], {}),
     ]
 
     table = qp.process_operations(table, operations, process_kwargs)
@@ -517,6 +539,8 @@ def events(
     table = qp.Join(
         event_labels, on="itemid", join_table_cols=["category", "event_name"]
     )(table)
+
+    table = qp.Rename({"category": EVENT_CATEGORY})(table)
 
     # Process optional operations
     operations: List[tuple] = [

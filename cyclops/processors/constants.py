@@ -11,6 +11,8 @@ FEATURES = "features"
 TARGETS = "targets"
 GROUP = "group"
 
+NAN_SUBSTITUTION_VALUE = "nan"
+
 # Feature type.
 NUMERIC = "numeric"
 BINARY = "binary"

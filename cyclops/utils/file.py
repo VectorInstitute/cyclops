@@ -138,7 +138,7 @@ def load_dataframe(
 
     """
     load_path = process_file_save_path(load_path, file_format)
-    LOGGER.info("Loading dataframe to %s", load_path)
+    LOGGER.info("Loading dataframe from %s", load_path)
 
     if file_format == "parquet":
         dataframe = pd.read_parquet(load_path)

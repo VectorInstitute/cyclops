@@ -1,0 +1,150 @@
+"""datasetset splits."""
+
+from typing import List, Optional, Tuple, Union
+
+import numpy as np
+
+from cyclops.utils.common import to_list
+
+
+def fractions_to_split(
+    fractions: Union[float, List[float]],
+    data_len: int,
+) -> np.ndarray:
+    """Turn a number of fractions into a dividing list of lengths at which to split.
+
+    Parameters
+    ----------
+    fractions: float or list of float
+        Fraction(s) of samples between 0 and 1 to use for each split.
+    data_len: int
+        The total number of samples in the data being split.
+
+    """
+    if isinstance(fractions, float):
+        frac_list = to_list(fractions)
+    elif isinstance(fractions, list):
+        frac_list = fractions
+    else:
+        raise ValueError("fractions must be a float or a list of floats.")
+
+    # Element checking
+    is_float = [isinstance(elem, float) for elem in frac_list]
+    if not all(is_float):
+        raise ValueError("fractions must be floats.")
+
+    invalid = [frac <= 0 or frac >= 1 for frac in frac_list]
+    if any(invalid):
+        raise ValueError("fractions must be between 0 and 1.")
+
+    if sum(frac_list) != 1:
+        if sum(frac_list) < 1:
+            frac_list.append(1 - sum(frac_list))
+        else:
+            raise ValueError("fractions must sum to 1.")
+
+    # Turn into dividing list of lengths to split and return
+    for i in range(1, len(frac_list)):
+        frac_list[i] += frac_list[i - 1]
+
+    assert frac_list[-1] == 1
+
+    return np.round(np.array(frac_list[:-1]) * data_len).astype(int)
+
+
+def split_idx(
+    fractions: Union[float, List[float]],
+    data_len: int,
+    randomize: bool = True,
+    seed: int = None,
+) -> tuple:
+    """Split encounters into train/test.
+
+    Parameters
+    ----------
+    data: numpy.ndarray
+        Data.
+    fractions: list, optional
+        Fraction(s) of samples between 0 and 1 to use for each split.
+    randomize: bool, default = True
+        Whether to randomize the data in the splits.
+    seed: int, optional
+        Seed for random number generator.
+
+    Returns
+    -------
+    tuple
+        A tuple of the split numpy.ndarray.
+
+    """
+    split = fractions_to_split(fractions, data_len)
+    idx = np.arange(data_len)
+
+    if seed is not None:
+        np.random.seed(seed)
+    if randomize:
+        np.random.shuffle(idx)
+
+    return tuple(np.split(idx, split))
+
+
+def split_data(
+    datasets: Union[np.ndarray, List[np.ndarray]],
+    fractions: Union[float, List[float]],
+    axes: Optional[Union[int, List[int]]] = None,
+    randomize: bool = True,
+    seed: int = None,
+) -> Tuple:
+    """Split a dataset into a number of datasets.
+
+    Parameters
+    ----------
+    datasets: np.ndarray or list of np.ndarray
+        Datasets, or a dataset, to split.
+    axes: int or list of int
+        Axes, or axis, along which to split the data.
+    fractions: float or list of float
+        Fraction(s) of samples between 0 and 1 to use for each split.
+
+    Returns
+    -------
+    tuple
+        A tuple of splits if a single dataset is given. Otherwise, a tuple of
+        datasets of splits. All splits are also numpy.ndarray.
+
+    """
+    if isinstance(datasets, np.ndarray):
+        datasets = [datasets]
+
+    if axes is None:
+        axes_list = [0] * len(datasets)
+    else:
+        axes_list = to_list(axes)
+
+    sizes = [np.size(data, axes_list[i]) for i, data in enumerate(datasets)]
+
+    # Make sure sizes along the specified axes are all the same
+    if not sizes.count(sizes[0]) == len(sizes):
+        raise ValueError("datasets must have the same sizes along the given axes.")
+
+    idx_splits = split_idx(fractions, sizes[0], randomize=randomize, seed=seed)
+
+    splits = []  # type: ignore
+    # For each dataset
+    for i, data in enumerate(datasets):
+        splits.append([])
+        # For each split
+        for idx in idx_splits:
+            # Reshape idx to have same number of dimensions as the data
+            shape = [1] * len(data.shape)
+            shape[axes_list[i]] = len(idx)
+            idx = idx.reshape(shape)
+
+            # Sample new dataset split
+            splits[-1].append(np.take_along_axis(data, idx, axis=axes_list[i]))
+        splits[-1] = tuple(splits[-1])
+
+    if len(splits) == 1:
+        return splits[0]
+
+    return tuple(splits)
