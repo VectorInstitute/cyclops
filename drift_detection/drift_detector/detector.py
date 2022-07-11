@@ -27,7 +27,7 @@ class ShiftDetector:
         self.shift_reductor = shift_reductor
         self.md_test = md_test
         self.sample = sample
-        self.datset = datset
+        self.dataset = datset
         self.sign_level = sign_level
         self.features = features
         self.model_path = model_path
@@ -38,7 +38,7 @@ class ShiftDetector:
         X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
         return X_t_red
 
-    def detect_data_shift(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims):
+    def detect_data_shift(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims, context_type):
 
         val_acc = None
         te_acc = None
@@ -56,8 +56,13 @@ class ShiftDetector:
             te_acc = np.sum(np.equal(X_t_red, y_t).astype(int)) / X_t_red.shape[0]
 
         # Perform statistical test
-        shift_tester = ShiftTester(sign_level=self.sign_level, mt=self.md_test, model_path=self.model_path, features=self.features)
-        p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red)
+        shift_tester = ShiftTester(sign_level=self.sign_level, 
+                                   mt=self.md_test, 
+                                   model_path=self.model_path, 
+                                   features=self.features, 
+                                   dataset=self.dataset)
+        
+        p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red, context_type)
 
         if self.dr_technique != "BBSDh":
             # Lower the significance level for all tests (Bonferroni) besides BBSDh, which needs no correction.

@@ -13,6 +13,7 @@ from sklearn.manifold import Isomap
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler
 from sklearn.random_projection import SparseRandomProjection
 from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
+from sklearn.mixture import GaussianMixture
 #from pyts.decomposition import SingularSpectrumAnalysis
 
 sys.path.append("..")
@@ -81,19 +82,19 @@ class ShiftReductor:
         elif self.dr_tech == "BBSDh_untrained_FFNN":
             return self.neural_network_classifier()
         elif self.dr_tech == "BBSDs_untrained_LSTM":
-            return self.get_timeseries_model("lstm", self.X.shape[2])
+            return self.recurrent_neural_network("lstm", self.X.shape[2])
         elif self.dr_tech == "BBSDs_trained_LSTM":
-            model = self.get_timeseries_model("lstm",self.X.shape[2])
+            model = self.recurrent_neural_network("lstm",self.X.shape[2])
             model.load_state_dict(torch.load(self.model_path))
             return model
         elif self.dr_tech == "BBSDh_trained_LSTM":
-            model = self.get_timeseries_model("lstm", self.X.shape[2])
+            model = self.recurrent_neural_network("lstm", self.X.shape[2])
             model.load_state_dict(torch.load(self.model_path))
             return model
         else:
             return None
 
-    def reduce(self, model, X, batch_size=32):          
+    def reduce(self, model, X, batch_size=32, n_clusters=2):          
         if (
             self.dr_tech == "PCA"
             or self.dr_tech == "SRP"
@@ -120,6 +121,10 @@ class ShiftReductor:
             )
             pred = np.argmax(pred, axis=1)
             return pred  
+        elif self.dr_technique == "GMM":           
+            gmm = self.gaussian_mixture_model(n_clusters)
+            # compute all contexts
+            return gmm.predict_proba(X) 
 
     def sparse_random_projection(self):
         n_components = self.get_dr_amount()
@@ -156,7 +161,7 @@ class ShiftReductor:
         ).to(self.device)
         return ffnn
     
-    def get_timeseries_model(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
+    def recurrent_neural_network(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
         model_params = {
             "device": self.device,
             "input_dim": input_dim,
@@ -168,3 +173,23 @@ class ShiftReductor:
         }
         model = get_temporal_model(model_name, model_params).to(self.device)
         return model
+
+    def gaussian_mixture_model(self, n_clusters=2):
+        if os.path.exists(self.dataset + '_' + str(n_clusters) + '_means.npy'):
+            n_clusters=str(n_clusters)
+            means = np.load(self.dataset + '_' + n_clusters + '_means.npy')
+            covar = np.load(self.dataset + '_' + n_clusters + '_covariances.npy')
+            gmm = GaussianMixture(n_components = len(means), covariance_type='full')
+            gmm.precisions_cholesky_ = np.linalg.cholesky(np.linalg.inv(covar))
+            gmm.weights_ = np.load(self.dataset + '_' + n_clusters + '_weights.npy')
+            gmm.means_ = means
+            gmm.covariances_ = covar  
+        else:
+            gmm = GaussianMixture(n_components=n_clusters, covariance_type='full', random_state=2022)
+            gmm.fit(self.X)
+            n_clusters=str(n_clusters)
+            np.save(self.dataset + '_' + n_clusters + '_weights', gmm.weights_, allow_pickle=False)
+            np.save(self.dataset + '_' + n_clusters + '_means', gmm.means_, allow_pickle=False)
+            np.save(self.dataset + '_' + n_clusters + '_covariances', gmm.covariances_, allow_pickle=False)
+        return gmm
+        

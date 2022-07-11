@@ -1,3 +1,4 @@
+import os
 import sys
 import math
 import random
@@ -47,12 +48,13 @@ class ShiftTester:
         path to model (optional)
     """
 
-    def __init__(self, sign_level=0.05, mt=None, model_path=None, features=None):
+    def __init__(self, sign_level=0.05, mt=None, model_path=None, features=None, dataset=None):
         self.sign_level = sign_level
         self.mt = mt
         self.model_path = model_path
         self.device = get_device()
         self.features = features
+        self.dataset = dataset
 
     def get_timeseries_model(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
         model_params = {
@@ -67,20 +69,37 @@ class ShiftTester:
         model = get_temporal_model(model_name, model_params).to(self.device)
         return model
     
-    def context(self, x, context_type="prediction probabilities", model_name="lstm"):
-        if context_type == "prediction probabilities":
-            model = self.get_timeseries_model(model_name, x.shape[2])
+    def context(self, x, context_type="lstm", n_clusters=2):
+        if context_type == "lstm":
+            model = self.get_timeseries_model(context_type, x.shape[2])
             model.load_state_dict(torch.load(self.model_path))
             model.eval()
             with torch.no_grad():
                 logits = model(torch.from_numpy(x).to(self.device)).cpu().numpy()
-            return softmax(logits)
-        if context_type == "cluster membership":
-            n_clusters = 2 
-            gmm = GaussianMixture(n_components=n_clusters, covariance_type='full', random_state=2022)
-            gmm.fit(x_train)
+            return softmax(logits, -1)
+        if context_type == "gmm":
+            gmm = self.gaussian_mixture_model(n_clusters)
+            if gmm is not None:
+                # compute all contexts
+                c_gmm_proba = gmm.predict_proba(x) 
+                return c_gmm_proba
+            else: 
+                return context(x, "lstm")
 
-    def test_shift(self, X_s, X_t, backend = "pytorch", C_s=None, C_t=None):
+    def gaussian_mixture_model(self, n_clusters=2):
+        gmm=None
+        if os.path.exists(self.dataset + '_' + str(n_clusters) + '_means.npy'):
+            n_clusters=str(n_clusters)
+            means = np.load(self.dataset + '_' + n_clusters + '_means.npy')
+            covar = np.load(self.dataset + '_' + n_clusters + '_covariances.npy')
+            gmm = GaussianMixture(n_components = len(means), covariance_type='full')
+            gmm.precisions_cholesky_ = np.linalg.cholesky(np.linalg.inv(covar))
+            gmm.weights_ = np.load(self.dataset + '_' + n_clusters + '_weights.npy')
+            gmm.means_ = means
+            gmm.covariances_ = covar
+        return gmm
+    
+    def test_shift(self, X_s, X_t, context_type, backend = "pytorch"):
         X_s = X_s.astype("float32")
         X_t = X_t.astype("float32")
 
@@ -88,13 +107,13 @@ class ShiftTester:
         dist = None
 
         if self.mt == "MMD":
-            dd = MMDDrift(X_s, backend=backend, n_permutations=1000, p_val=0.05)
+            dd = MMDDrift(X_s, backend=backend, n_permutations=100, p_val=0.05)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
         elif self.mt == "LSDD":
-            dd = LSDDDrift(X_s, p_val=0.05, n_permutations=1000, backend=backend)
+            dd = LSDDDrift(X_s, p_val=0.05, n_permutations=100, backend=backend)
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
@@ -113,7 +132,7 @@ class ShiftTester:
                 ).to(self.device)
             kernel = DeepKernel(proj, eps=0.01)
             dd = LearnedKernelDrift(
-                X_s, kernel, backend=backend, p_val=0.05, epochs=10, batch_size=32
+                X_s, kernel, backend=backend, p_val=0.05, epochs=100, batch_size=32
             )
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
@@ -153,9 +172,9 @@ class ShiftTester:
             dist = preds["data"]["distance"]
 
         elif self.mt == "Context-Aware MMD":
-            C_s = self.context(X_s)
-            C_t = self.context(X_t)
-            dd = ContextMMDDrift(X_s, C_s, backend=backend, n_permutations=1000, p_val=0.05)
+            C_s = self.context(X_s, context_type)
+            C_t = self.context(X_t, context_type)
+            dd = ContextMMDDrift(X_s, C_s, backend=backend, n_permutations=100, p_val=0.05)
             preds = dd.predict(X_t, C_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
