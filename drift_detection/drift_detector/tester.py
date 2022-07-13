@@ -88,6 +88,9 @@ class ShiftTester:
             else: 
                 return self.context(x, "lstm")
 
+    def encode(X):
+        raise notImplementedError 
+        
     def gaussian_mixture_model(self, n_clusters=2):
         gmm=None
         if os.path.exists(self.dataset + '_' + str(n_clusters) + '_means.npy'):
@@ -101,7 +104,7 @@ class ShiftTester:
             gmm.covariances_ = covar
         return gmm
     
-    def test_shift(self, X_s, X_t, context_type, backend = "pytorch"):
+    def test_shift(self, X_s, X_t, context_type, representation = None, backend = "pytorch"):
         X_s = X_s.astype("float32")
         X_t = X_t.astype("float32")
 
@@ -121,18 +124,33 @@ class ShiftTester:
             dist = preds["data"]["distance"]
 
         elif self.mt == "LK":
-            if self.model_path:
+            if representation == "lstm":
                 proj = self.lstm(X_s.shape[2])
-                proj.load_state_dict(torch.load(self.model_path))
-            else:
+                if self.model_path is not None:   
+                    proj.load_state_dict(torch.load(self.model_path))
+                    
+            elif representation "cnn":             
+                # define the projection phi
+                proj = nn.Sequential(
+                    nn.Conv2d(3, 8, 4, stride=2, padding=0),
+                    nn.ReLU(),
+                    nn.Conv2d(8, 16, 4, stride=2, padding=0),
+                    nn.ReLU(),
+                    nn.Conv2d(16, 32, 4, stride=2, padding=0),
+                    nn.ReLU(),
+                    nn.Flatten(),
+                ).to(self.device)
+                
+            elif representation == "ffnn":
                 proj = nn.Sequential(
                     nn.Linear(X_s.shape[-1], 32),
                     nn.SiLU(),
                     nn.Linear(32, 8),
                     nn.SiLU(),
                     nn.Linear(8, 1),
-                ).to(self.device)
+                ).to(self.device) 
             kernel = DeepKernel(proj, eps=0.01)
+            
             dd = LearnedKernelDrift(
                 X_s, kernel, backend=backend, p_val=0.05, epochs=100, batch_size=32
             )
@@ -140,12 +158,34 @@ class ShiftTester:
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
-        elif self.mt == "GB Classifier":
-            model = GradientBoostingClassifier()
+        elif self.mt == "Classifier":
+            if representation == "gb":
+                model = GradientBoostingClassifier()
+                backend='sklearn'
+                
+            elif representation == "rf":
+                model = RandomForestClassifier()
+                backend='sklearn'
+                
+            elif representation == "lstm"
+                model = self.lstm(X_s.shape[2])
+                if self.model_pathis not None:
+                    model.load_state_dict(torch.load(self.model_path))
+                backend='pytorch'
+                
+            elif representation == "ffnn":
+                model = nn.Sequential(
+                        nn.Linear(X_s.shape[-1], 32),
+                        nn.SiLU(),
+                        nn.Linear(32, 8),
+                        nn.SiLU(),
+                        nn.Linear(8, 1),
+                ).to(self.device)
+                
             dd = ClassifierDrift(
                     X_s, 
                     model, 
-                    backend='sklearn', 
+                    backend=backend, 
                     p_val=0.05, 
                     preds_type='scores', 
                     binarize_preds=False,
@@ -155,40 +195,6 @@ class ShiftTester:
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
-        elif self.mt == "RF Classifier":
-            print(X_s.shape)
-            model = RandomForestClassifier()
-            dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend='sklearn', 
-                    p_val=0.05, 
-                    binarize_preds=True, 
-                    n_folds=2
-            )
-            preds = dd.predict(X_t, return_p_val=True, return_distance=True)
-            p_val = preds["data"]["p_val"]
-            dist = preds["data"]["distance"]
-            
-        elif self.mt == "NNet Classifier":
-            if self.model_path:
-                model = self.lstm(X_s.shape[2])
-                model.load_state_dict(torch.load(self.model_path))
-            else:
-                model = nn.Sequential(
-                        nn.Linear(X_s.shape[-1], 32),
-                        nn.SiLU(),
-                        nn.Linear(32, 8),
-                        nn.SiLU(),
-                        nn.Linear(8, 1),
-                    ).to(self.device)
-            dd = ClassifierDrift(
-                X_s, model, backend=backend, p_val=0.05, preds_type="logits"
-            )
-            preds = dd.predict(X_t, return_p_val=True, return_distance=True)
-            p_val = preds["data"]["p_val"]
-            dist = preds["data"]["distance"] 
-     
         elif self.mt == "Spot-the-diff":
             dd = SpotTheDiffDrift(
                 X_s,
@@ -197,7 +203,7 @@ class ShiftTester:
                 n_diffs=1,
                 l1_reg=1e-3,
                 epochs=100,
-                batch_size=32
+                batch_size=1
             )
             preds = dd.predict(X_t)
             p_val = preds["data"]["p_val"]

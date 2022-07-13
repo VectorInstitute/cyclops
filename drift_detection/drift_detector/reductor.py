@@ -9,12 +9,12 @@ import tensorflow as tf
 import torch
 import torch.nn as nn
 from scipy.special import softmax
-from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler
+from sklearn.mixture import GaussianMixture
+from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
 from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
-from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler
 #from pyts.decomposition import SingularSpectrumAnalysis
 
 sys.path.append("..")

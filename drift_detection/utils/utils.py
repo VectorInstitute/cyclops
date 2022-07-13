@@ -470,7 +470,7 @@ def get_timeseries_last(X_tr, X_val, X_t):
     X_t_normalized = X_t.groupby(level=[0]).last()
     return X_tr_normalized, X_val_normalized, X_t_normalized
   
-def get_numerical_cols():
+def get_numerical_cols(path):
     feature_handler = FeatureHandler()
     feature_handler.load(path, "features")
     numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
@@ -500,10 +500,10 @@ def flatten(X_tr_normalized, X_val_normalized, X_t_normalized):
     X_t_flattened = X_t_normalized.unstack(1).dropna().to_numpy()
     return X_tr_flattened, X_val_flattened, X_t_flattened
  
-def normalize_data(X_tr, y_tr),(X_val, y_val), (X_t, y_t):
+def normalize_data(aggregation_type, admin_data, timesteps, X_tr, y_tr, X_val, y_val, X_t, y_t):
     if aggregation_type == "mean":
         X_tr_normalized, X_val_normalized, X_t_normalized = get_timeseries_mean(X_tr, X_val, X_t)       
-        y_tr, y_val, y_t = get_mortality_all(X_tr, X_val, X_t, admin)
+        y_tr, y_val, y_t = get_mortality_all(X_tr, X_val, X_t, admin_data)
             
     elif aggregation_type == "first":
         X_tr_normalized, X_val_normalized, X_t_normalized = get_timeseries_first(X_tr, X_val, X_t)
@@ -517,13 +517,13 @@ def normalize_data(X_tr, y_tr),(X_val, y_val), (X_t, y_t):
         y_val = y_val[:,(timesteps-1)]
         y_t = y_t[:,(timesteps-1)]
         
-    elif aggregation_time == "time_flatten":
+    elif aggregation_type == "time_flatten":
         X_tr_normalized = X_tr.copy()
         X_val_normalized = X_val.copy()
         X_t_normalized = X_t.copy()
-        y_tr, y_val, y_t = get_mortality(X_tr, X_val, X_t, admin)
+        y_tr, y_val, y_t = get_mortality_all(X_tr, X_val, X_t, admin_data)
                         
-    elif aggregation_time == "time:
+    elif aggregation_type == "time":
         X_tr_normalized = X_tr.copy()
         X_val_normalized = X_val.copy()
         X_t_normalized = X_t.copy()    
@@ -531,7 +531,7 @@ def normalize_data(X_tr, y_tr),(X_val, y_val), (X_t, y_t):
         raise ValueError("Incorrect Aggregation Type")
     return (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t)
   
-def process_data(X_tr_normalized, X_val_normalized, X_t_normalized):
+def process_data(aggregation_type, timesteps, X_tr_normalized, X_val_normalized, X_t_normalized):
     if aggregation_type == "time_flatten":                    
         X_tr_input, X_val_input, X_t_input = flatten(X_tr_normalized, X_val_normalized, X_t_normalized)
     elif aggregation_type == "time":      
@@ -579,7 +579,7 @@ def run_shift_experiment(
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
     
-    numerical_cols = get_numerical_cols()
+    numerical_cols = get_numerical_cols(path)
         
     # Average over a few random runs to quantify robustness.
     for rand_run in range(0, random_runs):
@@ -594,13 +594,13 @@ def run_shift_experiment(
         (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
         
         # Normalize data
-        (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(X_tr, y_tr),(X_val, y_val), (X_t, y_t)
+        (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(aggregation_type, admin_data, timesteps, X_tr, y_tr, X_val, y_val, X_t, y_t)
         # Scale data
         if scale:
             X_tr_normalized, X_val_normalized, X_t_normalized = scale_data(numerical_cols, X_tr_normalized, X_val_normalized, X_t_normalized)
 
         # Process data
-        X_tr_final, X_val_final, X_t_final = process_data(X_tr_normalized, X_val_normalized, X_t_normalized)
+        X_tr_final, X_val_final, X_t_final = process_data(aggregation_type, timesteps, X_tr_normalized, X_val_normalized, X_t_normalized)
          
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
@@ -689,7 +689,7 @@ def run_synthetic_shift_experiment(
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
 
-    numerical_cols = get_numerical_cols()
+    numerical_cols = get_numerical_cols(path)
         
     # Average over a few random runs to quantify robustness.
     for rand_run in range(0, random_runs):
@@ -710,13 +710,13 @@ def run_synthetic_shift_experiment(
         (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
         
         # Normalize data
-        (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(X_tr, y_tr),(X_val, y_val), (X_t, y_t)
+        (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(aggregation_type, admin_data, timesteps, X_tr, y_tr, X_val, y_val, X_t, y_t)
         # Scale data
         if scale:
             X_tr_normalized, X_val_normalized, X_t_normalized = scale_data(numerical_cols, X_tr_normalized, X_val_normalized, X_t_normalized)
 
         # Process data
-        X_tr_final, X_val_final, X_t_final = process_data(X_tr_normalized, X_val_normalized, X_t_normalized)
+        X_tr_final, X_val_final, X_t_final = process_data(aggregation_type, timesteps, X_tr_normalized, X_val_normalized, X_t_normalized)
         
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
