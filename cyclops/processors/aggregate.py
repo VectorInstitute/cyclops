@@ -612,10 +612,6 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             list(dict.fromkeys(lst)) for lst in zip(*grouped.groups.keys())
         ]
         group_indices.insert(0, list(self.aggfuncs.keys()))
-        group_indices = [
-            {elem: i for i, elem in enumerate(lst)}  # type: ignore
-            for lst in group_indices
-        ]
 
         # Add missing timesteps
         num_timesteps = int(self.window_duration / self.timestep_size)

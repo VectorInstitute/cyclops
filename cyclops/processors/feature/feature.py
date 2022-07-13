@@ -1,9 +1,11 @@
 """Feature processing."""
 
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 
+import numpy as np
 import pandas as pd
+import copy
 
 from codebase_ops import get_log_file_path
 from cyclops.plotter import plot_histogram, plot_temporal_features
@@ -22,11 +24,13 @@ from cyclops.processors.constants import (
     ORDINAL,
 )
 from cyclops.processors.feature.normalization import GroupbyNormalizer
+from cyclops.processors.feature.split import split_idx, intersect_datasets
 from cyclops.processors.feature.type_handling import (
     infer_types,
     normalize_data,
     to_types,
 )
+from cyclops.processors.feature.vectorize import Vectorized
 from cyclops.processors.util import has_columns, has_range_index, to_range_index
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.file import save_dataframe
@@ -166,6 +170,7 @@ class Features:
         by: Optional[Union[str, List[str]]],  # pylint: disable=invalid-name
         targets: Optional[Union[str, List[str]]] = None,
         force_types: Optional[dict] = None,
+        normalizers: Optional[Dict[str, GroupbyNormalizer]] = None,
     ):
         """Init."""
         # Check data
@@ -180,40 +185,51 @@ class Features:
         # Force a range index
         data = to_range_index(data)
 
-        self.by = to_list_optional(by)  # pylint: disable=invalid-name
-
-        if self.by is not None:
-            has_columns(data, self.by, raise_error=True)
-
         feature_list = to_list(features)
         target_list = to_list_optional(targets, none_to_empty=True)
+        
+        if len(feature_list) == 0:
+            raise ValueError("Must specify at least one feature.")
 
         has_columns(data, feature_list, raise_error=True)
         has_columns(data, target_list, raise_error=True)
 
+        self.by = to_list_optional(by)  # pylint: disable=invalid-name
+
+        if self.by is not None:
+            has_columns(data, self.by, raise_error=True)
+            
+            if len(set(self.by).intersection(set(feature_list))) != 0:
+                raise ValueError("Columns in 'by' cannot be considered features.")
+        
         # Add targets to the list of features if they were not included
         self.features = list(set(feature_list + target_list))
 
         # Type checking and inference
         data = normalize_data(data, self.features)
 
-        self._data = data
+        self.data = data
         self.meta: Dict[str, FeatureMeta] = {}
         self._infer_feature_types(force_types=force_types)
-
+        
+        
         self.normalizers: Dict[str, GroupbyNormalizer] = {}
         self.normalized: Dict[str, bool] = {}
+        if normalizers is not None:
+            for key, normalizer in normalizers:
+                self._add_normalizer(key, normalizer)
+            
 
     def get_data(
         self,
-        features_only: bool = False,
-        to_binary_indicators: Optional[Union[str, List[str]]] = None
+        features_only: bool = True,
+        to_binary_indicators: Optional[Union[str, List[str]]] = None,
     ) -> pd.DataFrame:
         """Get the features data.
 
         Parameters
         ----------
-        features_only: bool, default = False
+        features_only: bool, default = True
             Whether to return only the by and feature columns.
         to_indicators: str or list of str, optional
             Ordinal features to convert to categorical indicators.
@@ -224,7 +240,7 @@ class Features:
             Features data.
 
         """
-        data = self._data
+        data = self.data
         
         # Take only the feature columns
         if features_only:
@@ -251,7 +267,7 @@ class Features:
             List of all column names.
 
         """
-        return self._data.columns
+        return self.data.columns
 
     def feature_names(
         self,
@@ -310,7 +326,54 @@ class Features:
 
         """
         return [col for col, meta in self.meta.items() if meta.is_target()]
-
+    
+    def split_by_values(self, value_splits: List[np.ndarray]):
+        on = self.by[0]
+        unique = self.data[on].unique()
+        unique.sort()
+        
+        all_vals = np.concatenate(value_splits)
+        all_vals.sort()
+        
+        if not np.array_equal(unique, all_vals):
+            raise ValueError("Invalid split values.")
+        
+        datas = []
+        for split in value_splits:
+            data_copy = self.data.copy()
+            datas.append(data_copy[data_copy[on].isin(split)])
+        
+        save_data = self.data
+        self.data = None
+        splits = [copy.deepcopy(self) for i in range(len(value_splits))]
+        for i, split in enumerate(splits):
+            split.data = datas[i]
+        self.data = save_data
+        
+        return tuple(splits)
+    
+    def split(
+        self,
+        fractions: Optional[Union[float, List[float]]] = None,
+        randomize: bool = True,
+        seed: int = None,
+    ):  
+        value_splits = self._compute_value_splits(fractions, randomize, seed)
+        return self.split_by_values(value_splits)
+    
+    def compute_value_splits(
+        self,
+        fractions: Optional[Union[float, List[float]]] = None,
+        randomize: bool = True,
+        seed: int = None,
+    ):  
+        on = self.by[0]
+        unique = self.data[on].unique()
+        unique.sort()
+        idx_splits = list(split_idx(fractions, len(unique), randomize=randomize, seed=seed))
+        value_splits = [np.take(unique, split) for split in idx_splits]
+        return value_splits
+    
     def _update_meta(self, meta_update: dict) -> None:
         """Update feature metadata.
 
@@ -374,7 +437,7 @@ class Features:
                 if FEATURE_INDICATOR_ATTR in fmeta:
                     self.features.append(col)
 
-            self._data = data
+            self.data = data
             self._update_meta(meta)
 
         return data
@@ -397,16 +460,16 @@ class Features:
             to_list_optional(force_types, none_to_empty=True)
         )
 
-        new_types = infer_types(self._data, infer_features)
+        new_types = infer_types(self.data, infer_features)
 
         # Force certain features to be specific types
         if force_types is not None:
             for feature, type_ in force_types.items():
                 new_types[feature] = type_
 
-        self._to_feature_types(self._data, new_types)
+        self._to_feature_types(self.data, new_types)
 
-    def add_normalizer(
+    def _add_normalizer(
         self,
         key: str,
         normalizer: GroupbyNormalizer,
@@ -428,7 +491,7 @@ class Features:
 
         by = normalizer.get_by()  # pylint: disable=invalid-name
         if by is not None:
-            has_columns(self._data, by, raise_error=True)
+            has_columns(self.data, by, raise_error=True)
 
         normalizer_map = normalizer.get_map()
         features = set(normalizer_map.keys())
@@ -459,7 +522,7 @@ class Features:
             )
 
         gbn = GroupbyNormalizer(normalizer_map, by)
-        gbn.fit(self._data)
+        gbn.fit(self.data)
         self.normalizers[key] = gbn
         self.normalized[key] = False
 
@@ -497,10 +560,10 @@ class Features:
             raise ValueError(f"Cannot normalize {key}. It has already been normalized.")
 
         gbn = self.normalizers[key]
-        data = gbn.transform(self._data)
+        data = gbn.transform(self.data)
 
         if inplace:
-            self._data = data
+            self.data = data
             self.normalized[key] = True
 
         return data
@@ -527,10 +590,10 @@ class Features:
             )
 
         gbn = self.normalizers[key]
-        data = gbn.inverse_transform(self._data)
+        data = gbn.inverse_transform(self.data)
 
         if inplace:
-            self._data = data
+            self.data = data
             self.normalized[key] = False
 
         return data
@@ -593,7 +656,7 @@ class Features:
             Processed save path for upstream use.
 
         """
-        return save_dataframe(self._data, save_path, file_format)
+        return save_dataframe(self.data, save_path, file_format)
 
 
 class TabularFeatures(Features):
@@ -603,14 +666,14 @@ class TabularFeatures(Features):
         self,
         data: pd.DataFrame,
         features: Union[str, List[str]],
-        by: Optional[str] = None,
+        by: str,
         targets: Optional[Union[str, List[str]]] = None,
         force_types: Optional[dict] = None,
     ):
         """Init."""
-        if by is not None and not isinstance(by, str):
+        if not isinstance(by, str):
             raise ValueError(
-                "Tabular features must have no index, or one index input as a string."
+                "Tabular features index input as a string representing a column."
             )
 
         super().__init__(
@@ -620,6 +683,36 @@ class TabularFeatures(Features):
             targets=targets,
             force_types=force_types,
         )
+    
+    def vectorize(self, **get_data_kwargs) -> Tuple:
+        """
+        
+        Parameters
+        ----------
+        **get_data_kwargs
+            Keyword arguments to be fed to get_data.
+        
+        Returns
+        -------
+        tuple
+            (data, by_map, feat_map), (pandas.DataFrame, dict, dict)
+            feat_map is the feature order and by_map is the order of
+            the by column, or None if no by was provided.
+        """
+        if "features_only" in get_data_kwargs:
+            raise ValueError(
+                "Cannot specify 'features_only'. It will be set to True by default."
+            )
+        
+        get_data_kwargs["features_only"] = True
+        
+        data = self.get_data(**get_data_kwargs)
+        
+        by_map = list(data[self.by[0]].values)
+        data = data.drop(self.by, axis=1)
+        feat_map = list(data.columns)
+        
+        return Vectorized(data.values, indexes=[by_map, feat_map])
 
     def plot_features(
         self,
@@ -636,9 +729,9 @@ class TabularFeatures(Features):
 
         """
         if features is None:
-            plot_histogram(self._data, self.feature_names)
+            plot_histogram(self.data, self.feature_names)
         else:
-            plot_histogram(self._data, features)
+            plot_histogram(self.data, features)
 
 
 class TemporalFeatures(Features):
@@ -688,9 +781,9 @@ class TemporalFeatures(Features):
 
         """
         if features is None:
-            plot_temporal_features(self._data, self.feature_names)
+            plot_temporal_features(self.data, self.feature_names)
         else:
-            plot_temporal_features(self._data, features)
+            plot_temporal_features(self.data, features)
 
     def aggregate(self) -> pd.DataFrame:
         """Aggregate the data.
@@ -715,4 +808,15 @@ class TemporalFeatures(Features):
                 f"The following columns are not features: {', '.join(nonexistent)}."
             )
 
-        return self.aggregator(self._data)
+        return self.aggregator(self.data)
+
+
+def split_features(
+    features: List[Union[Features, TabularFeatures, TemporalFeatures]],
+    fractions: Optional[Union[float, List[float]]] = None,
+    randomize: bool = True,
+    seed: int = None,
+) -> None:    
+    value_splits = features[0].compute_value_splits(fractions, randomize=randomize, seed=seed)
+    features = [feat.split_by_values(value_splits) for feat in features]
+    return tuple(features)
