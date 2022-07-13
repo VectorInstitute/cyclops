@@ -40,8 +40,8 @@ class Vectorized:
             if len(index) != data.shape[i]:
                 raise ValueError(
                     (
-                        f"Axis {i} index has {len(index)} elements,",
-                        "but the axis itself has length {data.shape[i]}.",
+                        f"Axis {i} index has {len(index)} elements, "
+                        f"but the axis itself has length {data.shape[i]}."
                     )
                 )
 
@@ -72,12 +72,14 @@ class Vectorized:
         """
         return self.data
 
-    def get_by_index(self, indexes: List[Optional[List[int]]]) -> np.ndarray:
+    def get_by_index(
+        self, indexes: List[Optional[Union[List[int], np.ndarray]]]
+    ) -> np.ndarray:
         """Get data by indexing each axis.
 
         Parameters
         ----------
-        *indexes
+        indexes
             E.g., ([None, [1, 2, 3], None, [20]]), where each element can be
             None, a list, or a numpy.ndarray.
 
@@ -103,12 +105,14 @@ class Vectorized:
 
         return Vectorized(data, new_indexes)
 
-    def get_by_value(self, indexes: List[List[Any]]) -> np.ndarray:
+    def get_by_value(
+        self, indexes: List[Optional[Union[List[Any], np.ndarray]]]
+    ) -> np.ndarray:
         """Get data by indexing using the indexes values for each axis.
 
         Parameters
         ----------
-        indexes: list of list of any
+        indexes
             Length of indexes must equal the number of axes in the data.
             E.g., for array (2, 3, 5), we might specify
             get_by_value([None, ["A", "B"], None]).
@@ -129,7 +133,17 @@ class Vectorized:
             if index is None:
                 continue
 
+            if not isinstance(index, list) and not isinstance(index, np.ndarray):
+                raise ValueError(
+                    "Each index must either be None, a list or a NumPy array."
+                )
+
             # Map values to indices
+            is_in = [val in self.index_maps[i] for val in index]
+            if not all(is_in):
+                missing = [val for j, val in enumerate(index) if not is_in[j]]
+                print("missing", missing)
+                raise ValueError(f"Index {i} does not have values {', '.join(missing)}")
             indexes[i] = [self.index_maps[i][val] for val in index]
 
-        return self.get_by_index(*indexes)
+        return self.get_by_index(indexes)

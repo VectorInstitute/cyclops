@@ -33,7 +33,7 @@ def index_axis(ind: int, axis: int, shape: Tuple) -> Tuple:
 
 def take_indices(
     data: np.ndarray,
-    indexes: List[Optional[List[int]]],
+    indexes: List[Optional[Union[List[int], np.ndarray]]],
 ) -> np.ndarray:
     """Index array by specifying the indices to take on each axis.
 
@@ -54,6 +54,9 @@ def take_indices(
     for i, index in enumerate(indexes):
         if index is None:
             continue
+
+        if not isinstance(index, list) and not isinstance(index, np.ndarray):
+            raise ValueError("Each index must either be None, a list or a NumPy array.")
 
         # Reshape idx to have same number of dimensions as the data
         np_index = np.array(index)
