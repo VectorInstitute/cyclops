@@ -13,10 +13,10 @@ from wanglab_constants import (
     EDEMA_PHARMA_SUBSTRINGS,
     IMAGING_DESCRIPTIONS,
     IMAGING_KEYWORDS,
+    PRESCRIPTION_AFTER_IMAGING_DAYS,
     READMISSION_MAP,
     SEXES,
     TRIAGE_LEVEL_MAP,
-    PRESCRIPTION_AFTER_IMAGING_DAYS,
 )
 
 import cyclops.query.process as qp
@@ -173,11 +173,11 @@ def get_cohort() -> pd.DataFrame:
     encounters = get_most_recent_encounters()
     diagnoses = get_non_cardiac_diagnoses()
     cohort = pd.merge(encounters, diagnoses, on=ENCOUNTER_ID)
-    
+
     # Include diagnosis code groupings (trajectories)
     trajectory = process_diagnoses(cohort[DIAGNOSIS_CODE])
     cohort[trajectory.name] = trajectory
-    
+
     return cohort
 
 
@@ -380,7 +380,7 @@ def get_derived_variables_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
     return cohort
 
 
-#@assert_has_columns(ENCOUNTER_ID)
+# @assert_has_columns(ENCOUNTER_ID)
 def get_pulmonary_edema_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
     """Get pulmonary edema indicator for the cohort using imaging and pharmacy data.
 
@@ -398,22 +398,15 @@ def get_pulmonary_edema_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
     imaging = gemini.imaging().query
 
     # Note: Imaging results must include all of the substrings.
-    imaging = qp.FilterColumns(
-        [ENCOUNTER_ID, "test_result", "performed_date_time"]
-    )(imaging)
+    imaging = qp.FilterColumns([ENCOUNTER_ID, "test_result", "performed_date_time"])(
+        imaging
+    )
     imaging = qp.ConditionSubstring(
         "test_result",
         EDEMA_IMAGING_SUBSTRINGS,
         any_=False,
-        #binarize_col="edema_imaging",
     )(imaging)
-    #imaging = qp.Cast("edema_imaging", "int")(imaging)
-    #imaging = qp.GroupByAggregate(ENCOUNTER_ID, {"edema_imaging": "sum"})(imaging)
     imaging = get_interface(imaging).run()
-    
-    # Merge with cohort
-    #cohort = cohort.merge(table, how="left", on=ENCOUNTER_ID)
-    #cohort["edema_imaging"] = cohort["edema_imaging"].fillna(0).astype(int)
 
     # Pharmacy data
     pharma = gemini.pharmacy().query
@@ -425,29 +418,21 @@ def get_pulmonary_edema_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
     pharma = qp.ConditionSubstring(
         "med_id_generic_name_raw",
         EDEMA_PHARMA_SUBSTRINGS,
-        #binarize_col="edema_pharma",
+        # binarize_col="edema_pharma",
     )(pharma)
-    #pharma = qp.Cast("edema_pharma", "int")(pharma)
-    #table = qp.GroupByAggregate(ENCOUNTER_ID, {"edema_pharma": "sum"})(table)
     pharma = get_interface(pharma).run()
 
-    # Merge with cohort
-    #cohort = cohort.merge(table, how="left", on=ENCOUNTER_ID)
-    #cohort["edema_pharma"] = cohort["edema_pharma"].fillna(0).astype(int)
-
-    # Create the pulmonary edema indicator when an imaging test is performed with the proper
-    # substrings, and then a certain medication is prescribed within a certain period of time
+    # Create the pulmonary edema indicator when an imaging test is performed
+    # with the proper substrings, and then a certain medication is prescribed
+    # within a certain period of time
     imaging_pharma = imaging.merge(pharma, on=ENCOUNTER_ID)
 
     imaging_pharma["prescribed_after"] = pd.to_datetime(
         imaging_pharma["med_order_start_date_time"], errors="coerce"
-    ) - pd.to_datetime(
-        imaging_pharma["performed_date_time"], errors="coerce"
-    )
+    ) - pd.to_datetime(imaging_pharma["performed_date_time"], errors="coerce")
     imaging_pharma["outcome_edema"] = (
-        (imaging_pharma["prescribed_after"].dt.days >= 0) & \
-        (imaging_pharma["prescribed_after"].dt.days <= PRESCRIPTION_AFTER_IMAGING_DAYS)
-    )
+        imaging_pharma["prescribed_after"].dt.days >= 0
+    ) & (imaging_pharma["prescribed_after"].dt.days <= PRESCRIPTION_AFTER_IMAGING_DAYS)
     imaging_pharma = imaging_pharma[imaging_pharma["outcome_edema"]]
 
     imaging_pharma = imaging_pharma[[ENCOUNTER_ID, "outcome_edema"]].drop_duplicates()
@@ -475,7 +460,7 @@ def get_labs(cohort: pd.DataFrame) -> pd.DataFrame:
         "lab", drop_null_event_names=True, drop_null_event_values=True
     ).query
 
-    #table = qp.Limit(1000)(table)
+    # table = qp.Limit(1000)(table)
 
     table = qp.FilterColumns(
         [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT, EVENT_TIMESTAMP]
@@ -503,7 +488,7 @@ def main(drop_admin_cols=True):
     """
     # Get cohort
     cohort = get_cohort()
-    
+
     # Get ER data for the cohort
     cohort = get_er_for_cohort(cohort)
 
@@ -515,7 +500,7 @@ def main(drop_admin_cols=True):
 
     # Get derived variables for the cohort
     cohort = get_derived_variables_for_cohort(cohort)
-    
+
     # Get pulmonary edema indicator for the cohort
     cohort = get_pulmonary_edema_for_cohort(cohort)
 

@@ -2,7 +2,11 @@
 
 import numpy as np
 
-from cyclops.processors.split import fractions_to_split, split_data, split_idx
+from cyclops.processors.feature.split import (
+    fractions_to_split,
+    split_datasets,
+    split_idx,
+)
 
 
 def test_fractions_to_split():
@@ -18,11 +22,11 @@ def test_split_idx():
     assert np.array_equal(split1[1], split2[1])
 
 
-def test_split_data():
-    """Test split_data function."""
+def test_split_datasets():
+    """Test split_datasets function."""
     data = np.array([6, 3, 3, 54, 6, 3, 8, 6, 2, 1, 1, 9])
     labels = data.copy()
-    splits = split_data([data, labels], 0.8)
+    splits = split_datasets([data, labels], 0.8)
     train_data, val_data = splits[0]
     train_labels, val_labels = splits[1]
     assert np.array_equal(train_data, train_labels)
@@ -31,7 +35,7 @@ def test_split_data():
     labels = np.array([1])
 
     try:
-        split_data([data, labels], 0.8)
+        split_datasets([data, labels], 0.8)
         raise ValueError(
             (
                 "An error should have been thrown since data/labels have a different",

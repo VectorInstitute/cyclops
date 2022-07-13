@@ -1,4 +1,4 @@
-"""datasetset splits."""
+"""Dataset split processing."""
 
 from typing import List, Optional, Tuple, Union
 
@@ -10,23 +10,23 @@ from cyclops.utils.common import to_list
 
 def intersect_datasets(
     datas: List[pd.DataFrame],
-    on: str,
+    on_col: str,
     sort: bool = True,
 ) -> Tuple:
     """Perform an intersection across datasets over a column.
-    
+
     This can be used to align dataset samples e.g., aligning encounters for a tabular
     and temporal dataset.
-    
+
     Parameters
     ----------
     datas: list of pandas.DataFrame
         List of datasets.
-    on: str
+    on_col: str
         The column on which to perform the intersection.
     sort: bool, default = True
         Whether to sort the values in each dataset by the on column.
-    
+
     Returns
     -------
     tuple
@@ -35,8 +35,7 @@ def intersect_datasets(
     """
     # Concatenate the unique values in each dataset and count how many of each
     unique, counts = np.unique(
-        np.concatenate([data[on].unique() for data in datas]),
-        return_counts=True
+        np.concatenate([data[on_col].unique() for data in datas]), return_counts=True
     )
 
     # If a count is equal to the length of datasets, it must exist in every dataset
@@ -44,12 +43,12 @@ def intersect_datasets(
 
     # Intersect on these unique values
     for i, data in enumerate(datas):
-        data = data[data[on].isin(intersect)]
+        data = data[data[on_col].isin(intersect)]
         if sort:
-            data = data.sort_values(on)
+            data = data.sort_values(on_col)
         datas[i] = data
 
-    return datas
+    return tuple(datas)
 
 
 def fractions_to_split(
@@ -138,6 +137,27 @@ def split_datasets_by_idx(
     idx_splits: Tuple,
     axes: Optional[Union[int, List[int]]] = None,
 ):
+    """Split datasets by index over given axes.
+
+    Parameters
+    ----------
+    datasets: numpy.ndarray or list of numpy.ndarray
+        Datasets to split in the same manner.
+    idx_splits: tuple
+        A tuple of the indices belonging to each individual split.
+    axes: int or list of int, optional
+        The axes along which to split each of the datasets.
+        If not specified, defaults to the axis = 0 for all datasets.
+
+    Returns
+    -------
+    tuple
+        A tuple of the dataset splits, where each contains a tuple of splits.
+        e.g., split1, split2 = split_features([features1, features2], 0.5)
+        train1, test1 = split1
+        train2, test2 = split2
+
+    """
     if isinstance(datasets, np.ndarray):
         datasets = [datasets]
 
@@ -145,7 +165,7 @@ def split_datasets_by_idx(
         axes_list = [0] * len(datasets)
     else:
         axes_list = to_list(axes)
-    
+
     splits = []  # type: ignore
     # For each dataset
     for i, data in enumerate(datasets):
