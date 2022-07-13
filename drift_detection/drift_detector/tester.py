@@ -8,6 +8,7 @@ from scipy.special import softmax
 import tensorflow as tf
 from scipy.spatial import distance
 from sklearn.mixture import GaussianMixture
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 sys.path.append("..")
 
@@ -30,7 +31,8 @@ from alibi_detect.cd import (
     MMDDrift,
     MMDDriftOnline,
     TabularDrift,
-    ContextMMDDrift
+    ContextMMDDrift,
+    ChiSquareDrift
 )
 
 from alibi_detect.utils.pytorch.kernels import DeepKernel
@@ -56,7 +58,7 @@ class ShiftTester:
         self.features = features
         self.dataset = dataset
 
-    def get_timeseries_model(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
+    def recurrent_neural_network(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
         model_params = {
             "device": self.device,
             "input_dim": input_dim,
@@ -71,7 +73,7 @@ class ShiftTester:
     
     def context(self, x, context_type="lstm", n_clusters=2):
         if context_type == "lstm":
-            model = self.get_timeseries_model(context_type, x.shape[2])
+            model = self.recurrent_neural_network(context_type, x.shape[2])
             model.load_state_dict(torch.load(self.model_path))
             model.eval()
             with torch.no_grad():
@@ -138,25 +140,55 @@ class ShiftTester:
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
-        elif self.mt == "Classifier":
-            if self.model_path:
-                model = self.lstm(X_s.shape[2])
-                model.load_state_dict(torch.load(self.model_path))
-            else:
-                model = nn.Sequential(
-                    nn.Linear(X_s.shape[-1], 32),
-                    nn.SiLU(),
-                    nn.Linear(32, 8),
-                    nn.SiLU(),
-                    nn.Linear(8, 1),
-                ).to(self.device)
+        elif self.mt == "GB Classifier":
+            model = GradientBoostingClassifier()
             dd = ClassifierDrift(
-                X_s, model, backend=backend, p_val=0.05, preds_type="logits"
+                    X_s, 
+                    model, 
+                    backend='sklearn', 
+                    p_val=0.05, 
+                    preds_type='scores', 
+                    binarize_preds=False,
+                    n_folds=2
+            )
+            preds = dd.predict(X_t, return_p_val=True, return_distance=True)
+            p_val = preds["data"]["p_val"]
+            dist = preds["data"]["distance"]
+
+        elif self.mt == "RF Classifier":
+            print(X_s.shape)
+            model = RandomForestClassifier()
+            dd = ClassifierDrift(
+                    X_s, 
+                    model, 
+                    backend='sklearn', 
+                    p_val=0.05, 
+                    binarize_preds=True, 
+                    n_folds=2
             )
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
             
+        elif self.mt == "NNet Classifier":
+            if self.model_path:
+                model = self.lstm(X_s.shape[2])
+                model.load_state_dict(torch.load(self.model_path))
+            else:
+                model = nn.Sequential(
+                        nn.Linear(X_s.shape[-1], 32),
+                        nn.SiLU(),
+                        nn.Linear(32, 8),
+                        nn.SiLU(),
+                        nn.Linear(8, 1),
+                    ).to(self.device)
+            dd = ClassifierDrift(
+                X_s, model, backend=backend, p_val=0.05, preds_type="logits"
+            )
+            preds = dd.predict(X_t, return_p_val=True, return_distance=True)
+            p_val = preds["data"]["p_val"]
+            dist = preds["data"]["distance"] 
+     
         elif self.mt == "Spot-the-diff":
             dd = SpotTheDiffDrift(
                 X_s,
@@ -164,7 +196,7 @@ class ShiftTester:
                 p_val=.05,
                 n_diffs=1,
                 l1_reg=1e-3,
-                epochs=10,
+                epochs=100,
                 batch_size=32
             )
             preds = dd.predict(X_t)
@@ -180,9 +212,18 @@ class ShiftTester:
             dist = preds["data"]["distance"]
 
         elif self.mt == "Univariate":
-            ## change this to get appropriate column indexing for feature map
-            feature_map = {f: None for f in list(self.features)}
-            dd = TabularDrift(X_s, p_val=0.05, categories_per_feature=feature_map)
+            ## add feature map
+            dd = TabularDrift(X_s, correction = "bonferroni", p_val=0.05)
+            preds = dd.predict(
+                X_t, drift_type="batch", return_p_val=True, return_distance=True
+            )
+            p_val = preds["data"]["p_val"]
+            dist = preds["data"]["distance"]
+            threshold = preds['data']['threshold']
+            
+        elif self.mt == "Chi-Squared":
+            ## add feature map
+            dd = ChiSquareDrift(X_s, correction = "bonferroni", p_val=0.05)
             preds = dd.predict(
                 X_t, drift_type="batch", return_p_val=True, return_distance=True
             )

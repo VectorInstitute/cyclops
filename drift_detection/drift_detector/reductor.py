@@ -8,6 +8,7 @@ import scipy.stats as stats
 import tensorflow as tf
 import torch
 import torch.nn as nn
+from scipy.special import softmax
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler
@@ -20,6 +21,8 @@ sys.path.append("..")
 
 from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
 from drift_detection.baseline_models.temporal.pytorch.utils import *
+
+np.set_printoptions(precision=5)
 
 class ShiftReductor:
 
@@ -94,7 +97,7 @@ class ShiftReductor:
         else:
             return None
 
-    def reduce(self, model, X, batch_size=32, n_clusters=2):          
+    def reduce(self, model, X, batch_size=1, n_clusters=2):          
         if (
             self.dr_tech == "PCA"
             or self.dr_tech == "SRP"
@@ -111,6 +114,7 @@ class ShiftReductor:
                 device=self.device,
                 batch_size=batch_size,
             )
+            pred = softmax(pred,0)
             return pred
         elif "BBSDh" in self.dr_tech:
             pred = preprocess_drift(
@@ -119,6 +123,7 @@ class ShiftReductor:
                 device=self.device,
                 batch_size=batch_size,
             )
+            pred = softmax(pred,0)
             pred = np.argmax(pred, axis=1)
             return pred  
         elif self.dr_tech == "GMM":           
@@ -134,7 +139,7 @@ class ShiftReductor:
 
     def principal_components_anaylsis(self):
         n_components = self.get_dr_amount()
-        pca = PCA(n_components=self.dr_amount)
+        pca = PCA(n_components=n_components)
         pca.fit(self.X)
         return pca
 
