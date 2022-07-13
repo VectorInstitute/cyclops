@@ -4,8 +4,8 @@ import math
 import random
 import numpy as np
 import torch
-from scipy.special import softmax
 import tensorflow as tf
+from scipy.special import softmax
 from scipy.spatial import distance
 from sklearn.mixture import GaussianMixture
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -217,12 +217,11 @@ class ShiftTester:
             preds = dd.predict(
                 X_t, drift_type="batch", return_p_val=True, return_distance=True
             )
-            p_val = preds["data"]["p_val"]
-            dist = preds["data"]["distance"]
+            p_val = min(np.min(preds["data"]["p_val"]),1.0)
+            dist = np.mean(preds["data"]["distance"])
             threshold = preds['data']['threshold']
             
         elif self.mt == "Chi-Squared":
-            ## add feature map
             dd = ChiSquareDrift(X_s, correction = "bonferroni", p_val=0.05)
             preds = dd.predict(
                 X_t, drift_type="batch", return_p_val=True, return_distance=True

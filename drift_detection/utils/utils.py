@@ -20,7 +20,7 @@ sys.path.append("..")
 
 from drift_detector.detector import ShiftDetector
 from drift_detector.reductor import ShiftReductor
-from experiments import apply_shift
+from drift_detector.experiments import apply_shift
 
 sys.path.append("../..")
 
@@ -470,7 +470,14 @@ def get_timeseries_last(X_tr, X_val, X_t):
     X_t_normalized = X_t.groupby(level=[0]).last()
     return X_tr_normalized, X_val_normalized, X_t_normalized
   
-def scale_data(X_tr_normalized, X_val_normalized, X_t_normalized):
+def get_numerical_cols():
+    feature_handler = FeatureHandler()
+    feature_handler.load(path, "features")
+    numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
+    numerical_cols += ["age"]
+    return numerical_cols
+    
+def scale_data(numerical_cols, X_tr_normalized, X_val_normalized, X_t_normalized):
     for col in numerical_cols:
         scaler = StandardScaler().fit(X_tr_normalized[col].values.reshape(-1, 1))
         X_tr_normalized[col] = pd.Series(
@@ -486,13 +493,58 @@ def scale_data(X_tr_normalized, X_val_normalized, X_t_normalized):
             index=X_t_normalized[col].index,
         )
     return X_tr_normalized, X_val_normalized, X_t_normalized
-        
+  
 def flatten(X_tr_normalized, X_val_normalized, X_t_normalized):
     X_tr_flattened = X_tr_normalized.unstack(1).dropna().to_numpy()
     X_val_flattened = X_val_normalized.unstack(1).dropna().to_numpy()
     X_t_flattened = X_t_normalized.unstack(1).dropna().to_numpy()
     return X_tr_flattened, X_val_flattened, X_t_flattened
+ 
+def normalize_data(X_tr, y_tr),(X_val, y_val), (X_t, y_t):
+    if aggregation_type == "mean":
+        X_tr_normalized, X_val_normalized, X_t_normalized = get_timeseries_mean(X_tr, X_val, X_t)       
+        y_tr, y_val, y_t = get_mortality_all(X_tr, X_val, X_t, admin)
             
+    elif aggregation_type == "first":
+        X_tr_normalized, X_val_normalized, X_t_normalized = get_timeseries_first(X_tr, X_val, X_t)
+        y_tr = y_tr[:,0]
+        y_val = y_val[:,0]
+        y_t = y_t[:,0]
+            
+    elif aggregation_type == "last":
+        X_tr_normalized, X_val_normalized, X_t_normalized = get_timeseries_last(X_tr, X_val, X_t)   
+        y_tr = y_tr[:,(timesteps-1)]
+        y_val = y_val[:,(timesteps-1)]
+        y_t = y_t[:,(timesteps-1)]
+        
+    elif aggregation_time == "time_flatten":
+        X_tr_normalized = X_tr.copy()
+        X_val_normalized = X_val.copy()
+        X_t_normalized = X_t.copy()
+        y_tr, y_val, y_t = get_mortality(X_tr, X_val, X_t, admin)
+                        
+    elif aggregation_time == "time:
+        X_tr_normalized = X_tr.copy()
+        X_val_normalized = X_val.copy()
+        X_t_normalized = X_t.copy()    
+    else:
+        raise ValueError("Incorrect Aggregation Type")
+    return (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t)
+  
+def process_data(X_tr_normalized, X_val_normalized, X_t_normalized):
+    if aggregation_type == "time_flatten":                    
+        X_tr_input, X_val_input, X_t_input = flatten(X_tr_normalized, X_val_normalized, X_t_normalized)
+    elif aggregation_type == "time":      
+        X_tr_input = reshape_inputs(X_tr_normalized, timesteps)
+        X_val_input = reshape_inputs(X_val_normalized, timesteps)
+        X_t_input = reshape_inputs(X_t_normalized, timesteps)
+    else:
+        X_tr_input = X_tr_normalized.dropna().to_numpy()
+        X_val_input = X_val_normalized.dropna().to_numpy()
+        X_t_input = X_t_normalized.dropna().to_numpy()
+        
+    return X_tr_input, X_val_input, X_t_input
+
 def run_shift_experiment(
     shift,
     admin_data,
@@ -526,11 +578,8 @@ def run_shift_experiment(
     # Stores accuracy values for malignancy detection.
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
-
-    feature_handler = FeatureHandler()
-    feature_handler.load(path, "features")
-    numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
-    numerical_cols += ["age"]
+    
+    numerical_cols = get_numerical_cols()
         
     # Average over a few random runs to quantify robustness.
     for rand_run in range(0, random_runs):
@@ -541,63 +590,18 @@ def run_shift_experiment(
 
         np.random.seed(rand_run)
         
+        # Query data
         (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
         
-        if aggregation_type == "mean":
-            X_tr_normalized, X_val_normalized, X_t_normalized = get_timeseries_mean(X_tr, X_val, X_t)
-        
-            y_tr, y_val, y_t = get_mortality_all(X_tr, X_val, X_t, admin)
-            
-        elif aggregation_type == "first":
-            X_tr_normalized, X_val_normalized, X_t_normalized = get_timeseries_first(X_tr, X_val, X_t)
-            
-            y_tr = y_tr[:,0]
-            y_val = y_val[:,0]
-            y_t = y_t[:,0]
-            
-        elif aggregation_type == "last":
-            
-            X_tr_normalized, X_val_normalized, X_t_normalized = get_timeseries_last(X_tr, X_val, X_t)   
-            
-            y_tr = y_tr[:,(timesteps-1)]
-            y_val = y_val[:,(timesteps-1)]
-            y_t = y_t[:,(timesteps-1)]
-                        
-        else:
-            raise ValueError("Incorrect Aggregation Type")
-
+        # Normalize data
+        (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(X_tr, y_tr),(X_val, y_val), (X_t, y_t)
+        # Scale data
         if scale:
-            X_tr_normalized, X_val_normalized, X_t_normalized = scale_data(X_tr_normalized, X_val_normalized, X_t_normalized)
+            X_tr_normalized, X_val_normalized, X_t_normalized = scale_data(numerical_cols, X_tr_normalized, X_val_normalized, X_t_normalized)
 
-        if aggregation_type == "time_flatten":
-            
-            X_tr_normalized = X_tr.copy()
-            X_val_normalized = X_val.copy()
-            X_t_normalized = X_t.copy()            
-            
-            X_tr_input, X_val_input, X_t_input = flatten(X_tr_normalized, X_val_normalized, X_t_normalized)
-                                                         
-            y_tr, y_val, y_t = get_mortality(X_tr, X_val, X_t)
-            
-        elif aggregation_type == "time":
-            
-            X_tr_normalized = X_tr.copy()
-            X_val_normalized = X_val.copy()
-            X_t_normalized = X_t.copy()
-            
-            X_tr_input = reshape_inputs(X_tr_normalized, timesteps)
-            X_val_input = reshape_inputs(X_val_normalized, timesteps)
-            X_t_input = reshape_inputs(X_t_normalized, timesteps)
-
-        else:
-            X_tr_input = X_tr_normalized.dropna().to_numpy()
-            X_val_input = X_val_normalized.dropna().to_numpy()
-            X_t_input = X_t_normalized.dropna().to_numpy()
-
-        X_tr_final = X_tr_input.copy()
-        X_val_final = X_val_input.copy()
-        X_t_final = X_t_input.copy()
-        
+        # Process data
+        X_tr_final, X_val_final, X_t_final = process_data(X_tr_normalized, X_val_normalized, X_t_normalized)
+         
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
             
@@ -637,7 +641,6 @@ def run_shift_experiment(
 #                print("Value Error")
 #                pass
             
-        
     mean_p_vals = np.mean(samples_rands_pval, axis=1)
     std_p_vals = np.std(samples_rands_pval, axis=1)
     
@@ -686,10 +689,7 @@ def run_synthetic_shift_experiment(
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
 
-    feature_handler = FeatureHandler()
-    feature_handler.load(path, "features")
-    numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
-    numerical_cols += ["age"]
+    numerical_cols = get_numerical_cols()
         
     # Average over a few random runs to quantify robustness.
     for rand_run in range(0, random_runs):
@@ -706,57 +706,17 @@ def run_synthetic_shift_experiment(
         X_t_1, y_t_1 = X_t.copy(), y_t.copy()
         (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
         
-        if aggregation_type == "mean":
-            X_tr_normalized = X_tr.groupby(level=[0]).mean()
-            X_val_normalized = X_val.groupby(level=[0]).mean()
-            X_t_normalized = X_t_1.groupby(level=[0]).mean()     
-        elif aggregation_type == "first":
-            X_tr_normalized = X_tr.groupby(level=[0]).first()
-            X_val_normalized = X_val.groupby(level=[0]).first()
-            X_t_normalized = X_t_1.groupby(level=[0]).first()    
-        elif aggregation_type == "last":
-            X_tr_normalized = X_tr.groupby(level=[0]).last()
-            X_val_normalized = X_val.groupby(level=[0]).last()
-            X_t_normalized = X_t_1.groupby(level=[0]).last()   
-        elif aggregation_type == "time_flatten" or aggregation_type == "time":
-            X_tr_normalized = X_tr.copy()
-            X_val_normalized = X_val.copy()
-            X_t_normalized = X_t_1.copy()
-        else:
-            raise ValueError("Incorrect Aggregation Type")
-
+        # Query data
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
+        
+        # Normalize data
+        (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(X_tr, y_tr),(X_val, y_val), (X_t, y_t)
+        # Scale data
         if scale:
-            for col in numerical_cols:
-                scaler = StandardScaler().fit(X_tr_normalized[col].values.reshape(-1, 1))
-                X_tr_normalized[col] = pd.Series(
-                    np.squeeze(scaler.transform(X_tr_normalized[col].values.reshape(-1, 1))),
-                    index=X_tr_normalized[col].index,
-                )
-                X_val_normalized[col] = pd.Series(
-                    np.squeeze(scaler.transform(X_val_normalized[col].values.reshape(-1, 1))),
-                    index=X_val_normalized[col].index,
-                )
-                X_t_normalized[col] = pd.Series(
-                    np.squeeze(scaler.transform(X_t_normalized[col].values.reshape(-1, 1))),
-                    index=X_t_normalized[col].index,
-                )
+            X_tr_normalized, X_val_normalized, X_t_normalized = scale_data(numerical_cols, X_tr_normalized, X_val_normalized, X_t_normalized)
 
-        if aggregation_type == "time_flatten":
-            X_tr_input = X_tr_normalized.unstack(1).dropna().to_numpy()
-            X_val_input = X_val_normalized.unstack(1).dropna().to_numpy()
-            X_t_input = X_t_normalized.unstack(1).dropna().to_numpy()
-        elif aggregation_type == "time":
-            X_tr_input = reshape_inputs(X_tr_normalized, timesteps)
-            X_val_input = reshape_inputs(X_val_normalized, timesteps)
-            X_t_input = reshape_inputs(X_t_normalized, timesteps)
-        else:
-            X_tr_input = X_tr_normalized.dropna().to_numpy()
-            X_val_input = X_val_normalized.dropna().to_numpy()
-            X_t_input = X_t_normalized.dropna().to_numpy()
-
-        X_tr_final = X_tr_input.copy()
-        X_val_final = X_val_input.copy()
-        X_t_final = X_t_input.copy()
+        # Process data
+        X_tr_final, X_val_final, X_t_final = process_data(X_tr_normalized, X_val_normalized, X_t_normalized)
         
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
@@ -768,14 +728,16 @@ def run_synthetic_shift_experiment(
             if not os.path.exists(sample_path):
                 os.makedirs(sample_path)
 
+            # Get data representation
             shift_reductor = ShiftReductor(
-            X_tr_final, y_tr, dr_technique, orig_dims, dataset, var_ret=0.8, model_path=model_path,
+                X_tr_final, y_tr, dr_technique, orig_dims, dataset, var_ret=0.8, model_path=model_path,
             )
-            # Detect shift.
+            # Get shift detector
             shift_detector = ShiftDetector(
                 dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path 
             )
 
+            # Detect shift
             try:
                 (
                     p_val,
