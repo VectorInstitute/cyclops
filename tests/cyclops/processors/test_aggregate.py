@@ -322,23 +322,25 @@ def test_vectorization(  # pylint: disable=redefined-outer-name
 
     aggregated = aggregator(data)
 
-    print("\n\n\nAGGREGATED")
-    print(aggregated)
-    print("\n" * 3)
+    # print("\n\n\nAGGREGATED")
+    # print(aggregated)
+    # print("\n" * 3)
 
-    vectorized, indexes = aggregator.vectorize(aggregated)
+    vectorized_obj = aggregator.vectorize(aggregated)
+    vectorized, indexes = vectorized_obj.data, vectorized_obj.indexes
 
-    print("\n\n\nVECTORIZED")
-    with pd.option_context(
-        "display.max_rows", None, "display.max_columns", None
-    ):  # more options can be specified also
-        print(vectorized)
-    print(vectorized.shape)
+    # print("\n\n\nVECTORIZED")
+    # with pd.option_context(
+    #    "display.max_rows", None, "display.max_columns", None
+    # ):  # more options can be specified also
+    #    print(vectorized)
+    # print(vectorized.shape)
 
-    agg_col_index, encounter_id_index, event_name_index = indexes
+    agg_col_index, encounter_id_index, event_name_index, timestep_index = indexes
 
     assert set(list(encounter_id_index)) == set([1, 2])
     assert set(list(event_name_index)) == set(["eventA", "eventB"])
+    assert set(list(timestep_index)) == set(range(15))
 
     assert vectorized.shape == (3, 2, 2, 15)
     assert np.array_equal(

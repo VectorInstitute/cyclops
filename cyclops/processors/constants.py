@@ -10,6 +10,7 @@ MONTH = "month"
 FEATURES = "features"
 TARGETS = "targets"
 GROUP = "group"
+BY = "by"
 
 NAN_SUBSTITUTION_VALUE = "nan"
 

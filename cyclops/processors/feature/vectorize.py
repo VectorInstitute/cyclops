@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 
+from cyclops.utils.common import to_list_optional
 from cyclops.utils.indexing import take_indices
 
 
@@ -12,8 +13,14 @@ class Vectorized:
 
     Attributes
     ----------
+    data: numpy.ndarray
+        Data.
     indexes: list of numpy.ndarray
         AAA.
+    index_maps: dict
+        Name to index.
+    axis_names: list of str, optional
+        Axis names.
 
     """
 
@@ -21,15 +28,23 @@ class Vectorized:
         self,
         data: np.ndarray,
         indexes: List[Union[List, np.ndarray]],
+        axis_names: Optional[List[str]] = None,
     ) -> None:
         """Init."""
         if not isinstance(data, np.ndarray):
             raise ValueError("Data must be a numpy.ndarray.")
 
-        if not len(data.shape) == len(indexes):
+        if data.ndim != len(indexes):
             raise ValueError(
                 "Number of array axes and the number of indexes do not match."
             )
+
+        axis_names_list = to_list_optional(axis_names)
+        if axis_names_list is not None:
+            if data.ndim != len(axis_names_list):
+                raise ValueError(
+                    "Number of array axes and the number of axis names do not match."
+                )
 
         for i, index in enumerate(indexes):
             if not isinstance(index, list) and not isinstance(index, np.ndarray):
@@ -57,9 +72,8 @@ class Vectorized:
         self.index_maps: List[Dict[str, int]] = [
             {val: i for i, val in enumerate(index)} for index in indexes
         ]
-        self.index_maps_inv: List[Dict[int, str]] = [
-            {v: k for k, v in index.items()} for index in self.index_maps
-        ]
+
+        self.axis_names: Optional[List[str]] = axis_names_list
 
     def get_data(self) -> np.ndarray:
         """Get the vectorized data.
@@ -99,9 +113,7 @@ class Vectorized:
                 new_indexes.append(self.indexes[i])
                 continue
 
-            new_indexes.append(
-                [self.index_maps_inv[i][val] for val in index]  # type: ignore
-            )
+            new_indexes.append([self.indexes[i][ind] for ind in index])  # type: ignore
 
         return Vectorized(data, new_indexes)
 
@@ -142,8 +154,43 @@ class Vectorized:
             is_in = [val in self.index_maps[i] for val in index]
             if not all(is_in):
                 missing = [val for j, val in enumerate(index) if not is_in[j]]
-                print("missing", missing)
                 raise ValueError(f"Index {i} does not have values {', '.join(missing)}")
             indexes[i] = [self.index_maps[i][val] for val in index]
 
         return self.get_by_index(indexes)
+
+    def _get_axis(self, axis: Union[int, str]) -> int:
+        """Get an array axis by index or by name.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis index or name.
+
+        Returns
+        -------
+        int
+            Axis index.
+
+        """
+        # If an index was given
+        if isinstance(axis, int):
+            if axis >= len(self.indexes) or axis < 0:
+                raise ValueError("Axis out of bounds.")
+            return axis
+
+        # If an axis name was given
+        if isinstance(axis, str):
+            if self.axis_names is None:
+                raise ValueError(
+                    "Axis cannot be a string unless axis_names were specified."
+                )
+            if axis not in self.axis_names:
+                raise ValueError(
+                    f"Axis {axis} does not exist in: {', '.join(self.axis_names)}"
+                )
+            return self.axis_names.index(axis)
+
+        raise ValueError("Axis is an invalid type. Must be an int or string.")
+
+    # def reorder_axes(Union[List[int], List[str]]):

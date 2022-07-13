@@ -12,6 +12,7 @@ from cyclops.plotter import plot_histogram, plot_temporal_features
 from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.constants import (
     BINARY,
+    BY,
     CATEGORICAL_INDICATOR,
     FEATURE_INDICATOR_ATTR,
     FEATURE_MAPPING_ATTR,
@@ -20,6 +21,7 @@ from cyclops.processors.constants import (
     FEATURE_TARGET_ATTR,
     FEATURE_TYPE_ATTR,
     FEATURE_TYPES,
+    FEATURES,
     NUMERIC,
     ORDINAL,
 )
@@ -216,7 +218,7 @@ class Features:
         self.normalized: Dict[str, bool] = {}
         if normalizers is not None:
             for key, normalizer in normalizers.items():
-                self._add_normalizer(key, normalizer)
+                self.add_normalizer(key, normalizer)
 
     def get_data(
         self,
@@ -516,7 +518,7 @@ class Features:
 
         self._to_feature_types(self.data, new_types)
 
-    def _add_normalizer(
+    def add_normalizer(
         self,
         key: str,
         normalizer: GroupbyNormalizer,
@@ -757,8 +759,9 @@ class TabularFeatures(Features):
         by_map = list(data[self.by[0]].values)
         data = data.drop(self.by, axis=1)
         feat_map = list(data.columns)
-
-        return Vectorized(data.values, indexes=[by_map, feat_map])
+        return Vectorized(
+            data.values, indexes=[by_map, feat_map], axis_names=[BY, FEATURES]
+        )
 
     def plot_features(
         self,

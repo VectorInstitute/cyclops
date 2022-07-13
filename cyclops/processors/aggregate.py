@@ -18,6 +18,7 @@ from cyclops.processors.column_names import (
     TIMESTEP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
+from cyclops.processors.feature.vectorize import Vectorized
 from cyclops.processors.impute import AggregatedImputer
 from cyclops.processors.util import has_columns, is_timestamp_series
 from cyclops.utils.common import to_list, to_list_optional
@@ -572,7 +573,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         """Vectorize aggregated data.
 
         Parameters
-        ----------
+        ----------indexes
         aggregated: pandas.DataFrame
             Aggregated data.
 
@@ -587,6 +588,8 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError(
                 "Cannot currently vectorize data aggregated with no window duration."
             )
+
+        num_timesteps = int(self.window_duration / self.timestep_size)
 
         # Parameter checking
         has_columns(aggregated, list(self.aggfuncs.keys()), raise_error=True)
@@ -608,13 +611,11 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
         # Create a map from an index to part of the group name
         grouped = aggregated.groupby(self.agg_by)
-        group_indices = [
-            list(dict.fromkeys(lst)) for lst in zip(*grouped.groups.keys())
-        ]
-        group_indices.insert(0, list(self.aggfuncs.keys()))
+        indexes = [list(dict.fromkeys(lst)) for lst in zip(*grouped.groups.keys())]
+        indexes.insert(0, list(self.aggfuncs.keys()))
+        indexes.insert(len(indexes), list(range(num_timesteps)))
 
         # Add missing timesteps
-        num_timesteps = int(self.window_duration / self.timestep_size)
         index = self.agg_by + [TIMESTEP]
         aggregated = aggregated.reset_index().set_index(index)
         idx = pd.MultiIndex.from_product(
@@ -636,4 +637,6 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             [vectorized[aggfunc].values.reshape(shape) for aggfunc in self.aggfuncs]
         )
 
-        return vectorized, tuple(group_indices)
+        return Vectorized(
+            vectorized, indexes, axis_names=["aggfuncs"] + self.agg_by + ["timesteps"]
+        )
