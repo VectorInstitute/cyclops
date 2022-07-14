@@ -117,8 +117,8 @@ def split_idx(
 
     Returns
     -------
-    tuple
-        A tuple of the split numpy.ndarray.
+    tuple of numpy.ndarray
+        Splits with indices of each split.
 
     """
     split = fractions_to_split(fractions, data_len)
@@ -204,6 +204,11 @@ def split_datasets(
         Axes, or axis, along which to split the data.
     fractions: float or list of float
         Fraction(s) of samples between 0 and 1 to use for each split.
+    randomize: bool, default = True
+        Whether to randomize the samples in the splits. Otherwise it splits
+        the samples in the current order.
+    seed: int, optional
+        A seed for the randomization.
 
     Returns
     -------
