@@ -638,5 +638,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         )
 
         return Vectorized(
-            vectorized, indexes, axis_names=["aggfuncs"] + self.agg_by + ["timesteps"]
+            data=vectorized,
+            indexes=indexes,
+            axis_names=["aggfuncs"] + self.agg_by + ["timesteps"],
         )

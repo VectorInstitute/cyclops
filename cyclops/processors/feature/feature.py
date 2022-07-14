@@ -329,6 +329,22 @@ class Features:
         """
         return [col for col, meta in self.meta.items() if meta.is_target()]
 
+    def features_by_type(self, type_: str) -> List[str]:
+        """Get feature names of a given type.
+
+        Parameters
+        ----------
+        type_: str
+            Feature type.
+
+        Returns
+        -------
+        list of str
+            Names of all features with the given type.
+
+        """
+        return [name for name, ftype in self.types.items() if ftype == type_]
+
     def split_by_values(self, value_splits: List[np.ndarray]) -> Tuple:
         """Split the data into multiple datasets by values.
 
@@ -678,7 +694,7 @@ class Features:
 
         # Map back to original values
         for feat in features:
-            data[feat] = data[feat].astype(int).replace(self.meta[feat].get_mapping())
+            data[feat] = data[feat].replace(self.meta[feat].get_mapping())
 
         # Convert to binary categorical indicators
         return self._to_feature_types(

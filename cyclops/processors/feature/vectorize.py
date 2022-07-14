@@ -203,6 +203,22 @@ class Vectorized:
 
         raise ValueError("Axis is an invalid type. Must be an int or string.")
 
+    def get_index(self, axis: Union[int, str]) -> np.ndarray:
+        """Get an axis index by index or by name.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis index or name.
+
+        Returns
+        -------
+        numpy.ndarray
+            Axis index.
+
+        """
+        return self.indexes[self.get_axis(axis)]
+
     def split_by_index(
         self,
         axis: Union[str, int],
@@ -335,6 +351,34 @@ class Vectorized:
         return self.split_by_index(
             axis=axis_index,
             indices=indices,
+            allow_drops=False,
+        )
+
+    def split_out(
+        self,
+        axis: Union[str, int],
+        index_names: Union[List[Any], np.ndarray],
+    ):
+        """Split out some indexes by name.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis index or name.
+        index_names: list of numpy.ndarray or list of any
+            A list of the index names in each split.
+        allow_drops:
+            If True and certain indices or index names do not appear in any of the
+            splits, then drop any which do not appear. Otherwise, raises an error.
+
+        """
+        axis_index = self.get_axis(axis)
+        index_names = np.array(index_names)
+        remaining = np.setdiff1d(self.indexes[axis_index], index_names)
+
+        return self.split_by_index_name(
+            axis=axis_index,
+            index_names=[remaining, index_names],
             allow_drops=False,
         )
 
