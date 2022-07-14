@@ -1,11 +1,13 @@
 """Vectorized data processing."""
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 
 from cyclops.processors.feature.split import split_idx
-from cyclops.utils.indexing import take_indices
+from cyclops.utils.indexing import take_indices_over_axis
 
 
 class Vectorized:
@@ -96,16 +98,17 @@ class Vectorized:
         """
         return self.data
 
-    def get_by_index(
-        self, indexes: List[Optional[Union[List[int], np.ndarray]]]
-    ) -> np.ndarray:
-        """Get data by indexing each axis.
+    def take_with_indices(
+        self, axis: Union[str, int], indices: Union[List[int], np.ndarray]
+    ) -> Vectorized:
+        """Get data by indexing an axis.
 
         Parameters
         ----------
-        indexes
-            E.g., ([None, [1, 2, 3], None, [20]]), where each element can be
-            None, a list, or a numpy.ndarray.
+        axis: int or str
+            Axis index or name.
+        indices
+            Array/list of indices to take along the axis.
 
         Returns
         -------
@@ -113,32 +116,28 @@ class Vectorized:
             Indexed data.
 
         """
+        axis_index = self.get_axis(axis)
+
         # Index the data accordingly
-        data = take_indices(self.data, indexes)
+        data = take_indices_over_axis(self.data, axis, indices)
 
         # Create the corresponding indexes
-        new_indexes = []
-        for i, index in enumerate(indexes):
-            if index is None:
-                new_indexes.append(self.indexes[i])
-                continue
-
-            new_indexes.append([self.indexes[i][ind] for ind in index])  # type: ignore
+        new_indexes = list(self.indexes)
+        new_indexes[axis_index] = [self.indexes[axis_index][ind] for ind in indices]
 
         return Vectorized(data, new_indexes, self.axis_names)
 
-    def get_by_value(
-        self, indexes: List[Optional[Union[List[Any], np.ndarray]]]
-    ) -> np.ndarray:
-        """Get data by indexing using the indexes values for each axis.
+    def take_with_index(
+        self, axis: Union[str, int], index: Union[List[Any], np.ndarray]
+    ) -> Vectorized:
+        """Get data by indexing an axis using its index.
 
         Parameters
         ----------
-        indexes
-            Length of indexes must equal the number of axes in the data.
-            E.g., for array (2, 3, 5), we might specify
-            get_by_value([None, ["A", "B"], None]).
-            A None value will take all values along an axis
+        axis: int or str
+            Axis index or name.
+        index: numpy.ndarray or list of any
+            Array/list of index values to take along the axis.
 
         Returns
         -------
@@ -146,28 +145,20 @@ class Vectorized:
             Indexed data.
 
         """
-        if len(indexes) != len(self.data.shape):
-            raise ValueError(
-                "Must have the same number of parameters as axes in the data."
-            )
+        axis_index = self.get_axis(axis)
+        index_map = self.index_maps[axis_index]
 
-        for i, index in enumerate(indexes):
-            if index is None:
-                continue
+        if not isinstance(index, list) and not isinstance(index, np.ndarray):
+            raise ValueError("Index must either be a list or a NumPy array.")
 
-            if not isinstance(index, list) and not isinstance(index, np.ndarray):
-                raise ValueError(
-                    "Each index must either be None, a list or a NumPy array."
-                )
+        # Map values to indices
+        missing = [val for val in index if val not in index_map]
+        if len(missing) > 0:
+            raise ValueError(f"Index does not have values {', '.join(missing)}.")
 
-            # Map values to indices
-            is_in = [val in self.index_maps[i] for val in index]
-            if not all(is_in):
-                missing = [val for j, val in enumerate(index) if not is_in[j]]
-                raise ValueError(f"Index {i} does not have values {', '.join(missing)}")
-            indexes[i] = [self.index_maps[i][val] for val in index]
+        indices = [index_map[val] for val in index]
 
-        return self.get_by_index(indexes)
+        return self.take_with_indices(axis_index, indices)
 
     def get_axis(self, axis: Union[int, str]) -> int:
         """Get an array axis by index or by name.
@@ -219,7 +210,7 @@ class Vectorized:
         """
         return self.indexes[self.get_axis(axis)]
 
-    def split_by_index(
+    def split_by_indices(
         self,
         axis: Union[str, int],
         indices: List[Union[List[int], np.ndarray]],
@@ -259,15 +250,13 @@ class Vectorized:
             if len(diff) > 0:
                 raise ValueError("Not allowing dropping and missing certain values.")
 
-        get_index: List[Union[int, np.ndarray]] = [None] * len(self.data.shape)
         splits = []
         for split_indices in indices:
-            get_index[axis_index] = split_indices
-            splits.append(self.get_by_index(get_index))
+            splits.append(self.take_with_indices(axis_index, split_indices))
 
         return tuple(splits)
 
-    def split_by_index_name(
+    def split_by_index(
         self,
         axis: Union[str, int],
         index_names: List[Union[List[Any], np.ndarray]],
@@ -306,7 +295,7 @@ class Vectorized:
                 indices[-1].append(index_map[name])
             indices[-1] = np.array(indices[-1])
 
-        return self.split_by_index(
+        return self.split_by_indices(
             axis=axis_index,
             indices=indices,
             allow_drops=allow_drops,
@@ -348,7 +337,7 @@ class Vectorized:
             seed=seed,
         )
 
-        return self.split_by_index(
+        return self.split_by_indices(
             axis=axis_index,
             indices=indices,
             allow_drops=False,
@@ -376,10 +365,24 @@ class Vectorized:
         index_names = np.array(index_names)
         remaining = np.setdiff1d(self.indexes[axis_index], index_names)
 
-        return self.split_by_index_name(
+        return self.split_by_index(
             axis=axis_index,
             index_names=[remaining, index_names],
             allow_drops=False,
         )
 
-    # def reorder_axes(Union[List[int], List[str]]):
+
+#     def reorder_axes(axes_order: List[Union[int, str]]) -> None:
+#         """
+#         Parameters
+#         ----------
+#         axes_order: list of int or str
+#             List of new axes order.
+
+#         """
+#         data
+#         indexes
+#         index_maps
+#         axis_names
+
+#     def rename_axis():

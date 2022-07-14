@@ -65,3 +65,25 @@ def take_indices(
         data = np.take_along_axis(data, np_index.reshape(shape), axis=i)
 
     return data
+
+
+def take_indices_over_axis(
+    data: np.ndarray,
+    axis: int,
+    index: Union[np.ndarray, List[int]],
+):
+    """Take indices along an axis.
+
+    Parameters
+    ----------
+    data: numpy.ndarray
+        Data from which to take.
+    axis: int
+        Axis from which to take.
+    index: numpy.ndarray or list of int
+        Array/list of indices to take along the axis.
+
+    """
+    indexes: List[Union[None, np.ndarray]] = [None] * len(data.shape)
+    indexes[axis] = np.array(index)
+    return take_indices(data, indexes)

@@ -12,7 +12,6 @@ from cyclops.plotter import plot_histogram, plot_temporal_features
 from cyclops.processors.aggregate import Aggregator
 from cyclops.processors.constants import (
     BINARY,
-    BY,
     CATEGORICAL_INDICATOR,
     FEATURE_INDICATOR_ATTR,
     FEATURE_MAPPING_ATTR,
@@ -776,7 +775,7 @@ class TabularFeatures(Features):
         data = data.drop(self.by, axis=1)
         feat_map = list(data.columns)
         return Vectorized(
-            data.values, indexes=[by_map, feat_map], axis_names=[BY, FEATURES]
+            data.values, indexes=[by_map, feat_map], axis_names=[self.by[0], FEATURES]
         )
 
     def plot_features(
