@@ -1,5 +1,5 @@
 from sklearn.linear_model import LogisticRegression as LR
-
+from sklearn.metrics import roc_auc_score
 
 def fit_lr(X, Y, Xv, Yv):
     best_c = None

@@ -4,10 +4,12 @@ import math
 import random
 import numpy as np
 import torch
+import torch.nn as nn
 import tensorflow as tf
 from scipy.special import softmax
 from scipy.spatial import distance
 from sklearn.mixture import GaussianMixture
+from alibi_detect.utils.pytorch.kernels import DeepKernel
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 sys.path.append("..")
@@ -34,8 +36,6 @@ from alibi_detect.cd import (
     ContextMMDDrift,
     ChiSquareDrift
 )
-
-from alibi_detect.utils.pytorch.kernels import DeepKernel
 
 class ShiftTester:
 
@@ -87,9 +87,6 @@ class ShiftTester:
                 return c_gmm_proba
             else: 
                 return self.context(x, "lstm")
-
-    def encode(X):
-        raise notImplementedError 
         
     def gaussian_mixture_model(self, n_clusters=2):
         gmm=None
@@ -129,7 +126,7 @@ class ShiftTester:
                 if self.model_path is not None:   
                     proj.load_state_dict(torch.load(self.model_path))
                     
-            elif representation "cnn":             
+            elif representation == "cnn":             
                 # define the projection phi
                 proj = nn.Sequential(
                     nn.Conv2d(3, 8, 4, stride=2, padding=0),
@@ -139,7 +136,7 @@ class ShiftTester:
                     nn.Conv2d(16, 32, 4, stride=2, padding=0),
                     nn.ReLU(),
                     nn.Flatten(),
-                ).to(self.device)
+                ).to(self.device).eval()
                 
             elif representation == "ffnn":
                 proj = nn.Sequential(
@@ -148,7 +145,10 @@ class ShiftTester:
                     nn.Linear(32, 8),
                     nn.SiLU(),
                     nn.Linear(8, 1),
-                ).to(self.device) 
+                ).to(self.device).eval()
+            else:
+                raise ValueError("Incorrect Representation Option")
+                
             kernel = DeepKernel(proj, eps=0.01)
             
             dd = LearnedKernelDrift(
@@ -160,18 +160,41 @@ class ShiftTester:
 
         elif self.mt == "Classifier":
             if representation == "gb":
+                X_s = X_s.reshape(X_s.shape[0],X_s.shape[1])
+                X_t = X_t.reshape(X_t.shape[0],X_t.shape[1])
                 model = GradientBoostingClassifier()
                 backend='sklearn'
-                
+                dd = ClassifierDrift(
+                    X_s, 
+                    model, 
+                    backend=backend, 
+                    p_val=0.05, 
+                    preds_type='scores', 
+                    binarize_preds=False,
+                    n_folds=5
+                )        
             elif representation == "rf":
+                X_s = X_s.reshape(X_s.shape[0],X_s.shape[1])
+                X_t = X_t.reshape(X_t.shape[0],X_t.shape[1])
                 model = RandomForestClassifier()
                 backend='sklearn'
-                
-            elif representation == "lstm"
+                dd = ClassifierDrift(
+                    X_s, 
+                    model, 
+                    backend=backend, 
+                    p_val=0.05, 
+                    binarize_preds=False,
+                    n_folds=5
+                )             
+            elif representation == "lstm":
                 model = self.lstm(X_s.shape[2])
-                if self.model_pathis not None:
-                    model.load_state_dict(torch.load(self.model_path))
                 backend='pytorch'
+                dd = ClassifierDrift(
+                    X_s, 
+                    model, 
+                    backend=backend, 
+                    p_val=0.05
+                ) 
                 
             elif representation == "ffnn":
                 model = nn.Sequential(
@@ -181,16 +204,15 @@ class ShiftTester:
                         nn.SiLU(),
                         nn.Linear(8, 1),
                 ).to(self.device)
-                
-            dd = ClassifierDrift(
+                dd = ClassifierDrift(
                     X_s, 
                     model, 
                     backend=backend, 
-                    p_val=0.05, 
-                    preds_type='scores', 
-                    binarize_preds=False,
-                    n_folds=2
-            )
+                    p_val=0.05
+                ) 
+            else:
+                raise ValueError("Incorrect Representation Option")
+                
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
@@ -218,6 +240,8 @@ class ShiftTester:
             dist = preds["data"]["distance"]
 
         elif self.mt == "Univariate":
+            X_s = X_s.reshape(X_s.shape[0],X_s.shape[1])
+            X_t = X_t.reshape(X_t.shape[0],X_t.shape[1])
             ## add feature map
             dd = TabularDrift(X_s, correction = "bonferroni", p_val=0.05)
             preds = dd.predict(
@@ -264,5 +288,9 @@ class ShiftTester:
                 ret_matrix=True,
             )
             p_val = knn_test.pval(matrix)
-
+            
+        else:
+            raise ValueError("Incorrect Representation Option")
+                
         return p_val, dist
+    

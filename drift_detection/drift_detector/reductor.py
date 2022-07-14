@@ -14,7 +14,6 @@ from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
 from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler
 #from pyts.decomposition import SingularSpectrumAnalysis
 
 sys.path.append("..")
@@ -81,10 +80,16 @@ class ShiftReductor:
         elif self.dr_tech == "Isomap":
             return self.manifold_isomap()
         elif self.dr_tech == "BBSDs_untrained_FFNN":
-            return self.neural_network_classifier()
+            return self.feed_foward_neural_network()
         elif self.dr_tech == "BBSDh_untrained_FFNN":
-            return self.neural_network_classifier()
+            return self.feed_foward_neural_network()
+        elif self.dr_tech == "BBSDs_untrained_CNN":
+            return self.convolutional_neural_network()
+        elif self.dr_tech == "BBSDh_untrained_CNN":
+            return self.convolutional_neural_network()
         elif self.dr_tech == "BBSDs_untrained_LSTM":
+            return self.recurrent_neural_network("lstm", self.X.shape[2])
+        elif self.dr_tech == "BBSDh_untrained_LSTM":
             return self.recurrent_neural_network("lstm", self.X.shape[2])
         elif self.dr_tech == "BBSDs_trained_LSTM":
             model = self.recurrent_neural_network("lstm",self.X.shape[2])
@@ -154,13 +159,8 @@ class ShiftReductor:
         isomap = Isomap(n_components=self.dr_amount)
         isomap.fit(self.X)
         return isomap
-    
-    def static_model(self,model_name):
-        raise NotImplementedError
-        #optimised_model = run_model(model_name, X_tr, y_tr, X_val, y_val)
-        #y_pred_prob = optimised_model.predict_proba(X_val)[:, 1]
 
-    def neural_network_classifier(self):
+    def feed_foward_neural_network(self):
         data_dim = self.X.shape[-1]
         ffnn = nn.Sequential(
                 nn.Linear(data_dim, 16),
@@ -168,9 +168,21 @@ class ShiftReductor:
                 nn.Linear(16, 8),
                 nn.SiLU(),
                 nn.Linear(8, 1),
-        ).to(self.device)
+        ).to(self.device).eval()
         return ffnn
     
+    def convolutional_neural_network(self):
+        cnn = nn.Sequential(
+                nn.Conv2d(3, 8, 4, stride=2, padding=0),
+                nn.ReLU(),
+                nn.Conv2d(8, 16, 4, stride=2, padding=0),
+                nn.ReLU(),
+                nn.Conv2d(16, 32, 4, stride=2, padding=0),
+                nn.ReLU(),
+                nn.Flatten(),
+        ).to(self.device).eval()
+        return cnn
+        
     def recurrent_neural_network(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
         model_params = {
             "device": self.device,
@@ -181,7 +193,7 @@ class ShiftReductor:
             "dropout_prob": dropout,
             "last_timestep_only": last_timestep_only,
         }
-        model = get_temporal_model(model_name, model_params).to(self.device)
+        model = get_temporal_model(model_name, model_params).to(self.device).eval()
         return model
 
     def gaussian_mixture_model(self, n_clusters=2):

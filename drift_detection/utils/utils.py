@@ -446,7 +446,7 @@ def get_label(admin_data, X, label):
     y = X_admin_data["mortality"].astype(int)
     return y
     
-def get_mortality_all(X_tr, X_val, X_t, admin):           
+def get_mortality_all(X_tr, X_val, X_t, admin_data):           
     y_tr = get_label(admin_data, X_tr, "mortality")
     y_val = get_label(admin_data, X_val, "mortality")
     y_t = get_label(admin_data, X_t, "mortality")
@@ -559,6 +559,7 @@ def run_shift_experiment(
     model_path,
     md_test,
     context_type,
+    representation,
     samples,
     dataset,
     sign_level,
@@ -628,7 +629,7 @@ def run_shift_experiment(
                     val_acc,
                     te_acc,
                 ) = shift_detector.detect_data_shift(
-                    X_tr_final, y_tr, X_val_final[:1000,:], y_val[:1000], X_t_final[:sample,:], y_t[:sample], orig_dims, context_type
+                    X_tr_final, X_val_final[:1000,:], X_t_final[:sample,:], orig_dims, context_type, representation 
                 )
                 
                 val_accs[rand_run, si] = val_acc
@@ -745,7 +746,7 @@ def run_synthetic_shift_experiment(
                     val_acc,
                     te_acc,
                 ) = shift_detector.detect_data_shift(
-                    X_tr_final, y_tr, X_val_final, y_val, X_t_final[:sample,:], y_t[:sample], orig_dims, context_type
+                    X_tr_final, X_val_final, X_t_final[:sample,:], orig_dims, context_type
                 )
                 
                 val_accs[rand_run, si] = val_acc

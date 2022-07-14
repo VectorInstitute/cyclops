@@ -32,13 +32,13 @@ class ShiftDetector:
         self.features = features
         self.model_path = model_path
 
-    def classify_data(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims):
+    def classify_data(self, X_s_tr, X_s_val, X_t, orig_dims):
         
         shift_reductor_model = self.shift_reductor.fit_reductor()
         X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
         return X_t_red
 
-    def detect_data_shift(self, X_s_tr, y_s_tr, X_s_val, y_s_val, X_t, y_t, orig_dims, context_type):
+    def detect_data_shift(self, X_s_tr, X_s_val, X_t, orig_dims, context_type, representation):
 
         val_acc = None
         te_acc = None
@@ -50,11 +50,6 @@ class ShiftDetector:
         X_s_red = self.shift_reductor.reduce(shift_reductor_model, X_s_val)
         X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
 
-        # Compute classification accuracy on both sets for BBSDh malignancy detection.
-        if self.dr_technique == "BBSDh":
-            val_acc = np.sum(np.equal(X_s_red, y_s_val).astype(int)) / X_s_red.shape[0]
-            te_acc = np.sum(np.equal(X_t_red, y_t).astype(int)) / X_t_red.shape[0]
-
         # Perform statistical test
         shift_tester = ShiftTester(sign_level=self.sign_level, 
                                    mt=self.md_test, 
@@ -62,7 +57,7 @@ class ShiftDetector:
                                    features=self.features, 
                                    dataset=self.dataset)
         
-        p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red, context_type)
+        p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red, context_type, representation)
 
         if self.dr_technique != "BBSDh":
             # Lower the significance level for all tests (Bonferroni) besides BBSDh, which needs no correction.
