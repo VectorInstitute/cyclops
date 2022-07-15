@@ -5,6 +5,8 @@
 import numpy as np
 import pytest
 
+from cyclops.processors.constants import STANDARD
+from cyclops.processors.feature.normalization import VectorizedNormalizer
 from cyclops.processors.feature.vectorize import Vectorized
 
 
@@ -157,3 +159,22 @@ def test_split_by_fraction(  # pylint: disable=redefined-outer-name
     vectorized0, vectorized1 = vectorized.split_by_fraction(0, 0.5, randomize=False)
     assert (vectorized.data[0, :, :] == vectorized0.data).all()
     assert (vectorized.data[1, :, :] == vectorized1.data).all()
+
+
+def test_normalization(  # pylint: disable=redefined-outer-name
+    input_data,
+):
+    """Test normalization."""
+    data, indexes = input_data
+    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+
+    normalizer = VectorizedNormalizer(
+        vectorized.get_axis("B"),
+        normalization_method=STANDARD,
+    )
+    vectorized.add_normalizer(normalizer)
+    vectorized.normalize()
+
+    for index_name in vectorized.get_index("B"):
+        val_sum = np.nansum(vectorized.take_with_index("B", [index_name]).data)
+        assert np.isclose(val_sum, 0)

@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple, Union
+import logging
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
+from codebase_ops import get_log_file_path
+from cyclops.processors.feature.normalization import VectorizedNormalizer
 from cyclops.processors.feature.split import split_idx
 from cyclops.utils.indexing import take_indices_over_axis
+from cyclops.utils.log import setup_logging
+
+# Logging.
+LOGGER = logging.getLogger(__name__)
+setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
 class Vectorized:
@@ -24,14 +32,18 @@ class Vectorized:
         A name to index map in each dimension.
     axis_names: list of str
         Axis names.
+    normalizer: VectorizedNormalizer, optional
+        Normalizer.
 
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         data: np.ndarray,
         indexes: List[Union[List, np.ndarray]],
         axis_names: List[str],
+        normalizer: Optional[VectorizedNormalizer] = None,
+        is_normalized: bool = False,
     ) -> None:
         """Init."""
         if not isinstance(data, np.ndarray):
@@ -75,6 +87,14 @@ class Vectorized:
         ]
         self.axis_names: List[str] = axis_names
 
+        self.normalizer: Optional[VectorizedNormalizer]
+        if normalizer is not None:
+            self.add_normalizer(normalizer)
+        else:
+            self.normalizer = None
+
+        self.is_normalized = is_normalized
+
     @property
     def shape(self) -> Tuple:
         """Get data shape, as an attribute.
@@ -98,6 +118,57 @@ class Vectorized:
         """
         return self.data
 
+    def add_normalizer(self, normalizer: VectorizedNormalizer) -> None:
+        """Add a normalizer.
+
+        Parameters
+        ----------
+        normalizer: VectorizedNormalizer
+            Normalizer to add.
+
+        """
+        if not isinstance(normalizer, VectorizedNormalizer):
+            raise ValueError("Normalizer must be a VectorizedNormalizer.")
+
+        if self.normalizer is not None:
+            LOGGER.warning("Replacing an existing normalizer.")
+
+        index_map = self.index_maps[normalizer.axis]
+        normalizer.fit(self.data, index_map)
+        self.normalizer = normalizer
+
+    def normalize(self) -> None:
+        """Normalize.
+
+        Requires a normalizer to be added and that the data is not already normalized.
+
+        """
+        if self.normalizer is None:
+            raise ValueError("No normalizer was added.")
+
+        if self.is_normalized:
+            raise ValueError("Data normalized. Cannot normalize.")
+
+        index_map = self.index_maps[self.normalizer.axis]
+        self.normalizer.transform(self.data, index_map)
+        self.is_normalized = True
+
+    def inverse_normalize(self) -> None:
+        """Inverse normalize.
+
+        Requires a normalizer to be added and that the data is already normalized.
+
+        """
+        if self.normalizer is None:
+            raise ValueError("No normalizer was added.")
+
+        if not self.is_normalized:
+            raise ValueError("Data not normalized. Cannot inverse normalize.")
+
+        index_map = self.index_maps[self.normalizer.axis]
+        self.normalizer.inverse_transform(self.data, index_map)
+        self.is_normalized = False
+
     def take_with_indices(
         self, axis: Union[str, int], indices: Union[List[int], np.ndarray]
     ) -> Vectorized:
@@ -119,7 +190,7 @@ class Vectorized:
         axis_index = self.get_axis(axis)
 
         # Index the data accordingly
-        data = take_indices_over_axis(self.data, axis, indices)
+        data = take_indices_over_axis(self.data, axis_index, indices)
 
         # Create the corresponding indexes
         new_indexes = list(self.indexes)

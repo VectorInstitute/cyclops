@@ -46,6 +46,17 @@ class SklearnNormalizer:
 
         self.scaler = METHOD_MAP[method]()
 
+    def __repr__(self):
+        """Repr method.
+
+        Returns
+        -------
+        str
+            The normalization method name.
+
+        """
+        return self.method
+
     def fit(self, data: Union[np.ndarray, pd.Series]) -> None:
         """Fit the scaler.
 
@@ -55,15 +66,75 @@ class SklearnNormalizer:
             Data over which to fit.
 
         """
-        # Series
+        # Ignore errors encountered when with null values
+        # Save previous settings to later reset
+        old_settings = np.seterr(divide="ignore", invalid="ignore")
+
         if isinstance(data, pd.Series):
             self.scaler.fit(data.values.reshape(-1, 1))
-            return
 
-        # Array
-        if len(data.shape) != 1:
-            raise ValueError("Data must be a 1D array.")
-        self.scaler.fit(data.reshape(-1, 1))
+        elif isinstance(data, np.ndarray):
+            if len(data.shape) != 1:
+                raise ValueError("Data must be a 1D array.")
+
+            self.scaler.fit(data.reshape(-1, 1))
+
+        else:
+            raise ValueError(
+                "Data must be a pandas.Series or 1-dimensional numpy.ndarray"
+            )
+
+        # Reset to old settings
+        np.seterr(**old_settings)
+
+    def _transform_by_method(
+        self,
+        data: Union[np.ndarray, pd.Series],
+        method: str,
+    ) -> Union[np.ndarray, pd.Series]:
+        """Apply a method on the scaler.
+
+        If a numpy.ndarray is given, a numpy.ndarray is returned. Similarly, if a
+        pandas.Series is given, a pandas.Series is returned.
+
+        Parameters
+        ----------
+        data: numpy.ndarray or pandas.Series
+            Input data.
+        method: str
+            Name of the method to apply.
+
+        Returns
+        -------
+        numpy.ndarray or pandas.Series
+            Transformed data.
+
+        """
+        method_fn = getattr(self.scaler, method)
+        # Ignore errors encountered when with null values
+        # Save previous settings to later reset
+        old_settings = np.seterr(divide="ignore", invalid="ignore")
+
+        if isinstance(data, pd.Series):
+            transformed = pd.Series(
+                np.squeeze(method_fn(data.values.reshape(-1, 1))),
+                index=data.index,
+            )
+        elif isinstance(data, np.ndarray):
+            if len(data.shape) != 1:
+                raise ValueError("Data must be a 1D array.")
+
+            transformed = np.squeeze(method_fn(data.reshape(-1, 1)))
+
+        else:
+            raise ValueError(
+                "Data must be a pandas.Series or 1-dimensional numpy.ndarray"
+            )
+
+        # Reset to old settings
+        np.seterr(**old_settings)
+
+        return transformed
 
     def transform(
         self, data: Union[np.ndarray, pd.Series]
@@ -84,18 +155,7 @@ class SklearnNormalizer:
             Normalized data.
 
         """
-        # Series
-        if isinstance(data, pd.Series):
-            return pd.Series(
-                np.squeeze(self.scaler.transform(data.values.reshape(-1, 1))),
-                index=data.index,
-            )
-
-        # Array
-        # if len(data.shape) != 1:
-        #    raise ValueError("Data must be a 1D array.")
-
-        return np.squeeze(self.scaler.transform(data.reshape(-1, 1)))
+        return self._transform_by_method(data, "transform")
 
     def inverse_transform(
         self, data: Union[np.ndarray, pd.Series]
@@ -116,29 +176,7 @@ class SklearnNormalizer:
             Inversely normalized data.
 
         """
-        # Series
-        if isinstance(data, pd.Series):
-            return pd.Series(
-                np.squeeze(self.scaler.inverse_transform(data.values.reshape(-1, 1))),
-                index=data.index,
-            )
-
-        # Array
-        # if len(data.shape) != 1:
-        #    raise ValueError("Data must be a 1D array.")
-
-        return np.squeeze(self.scaler.transform(data.reshape(-1, 1)))
-
-    def __repr__(self):
-        """Repr method.
-
-        Returns
-        -------
-        str
-            The normalization method name.
-
-        """
-        return self.method
+        return self._transform_by_method(data, "inverse_transform")
 
 
 class GroupbyNormalizer:
@@ -420,9 +458,7 @@ class VectorizedNormalizer:
 
             ind = feat_map[feat]
             values = data[index_axis(ind, self.axis, data.shape)]
-            print("values", values)
             values = values.flatten()
-            print("values.shape", values.shape)
             normalizer.fit(values)
             self.normalizers[feat] = normalizer
 
@@ -456,13 +492,10 @@ class VectorizedNormalizer:
             data_indexing = index_axis(ind, self.axis, data.shape)
             values = data[data_indexing]
             prev_shape = values.shape
-            print("feat\n", feat)
-            print("values\n", values)
             values = values.flatten()
             normalized = getattr(normalizer, method)(values).reshape(prev_shape)
-            print("normalized\n", normalized)
             data[data_indexing] = normalized
-            print("\n")
+
         return data
 
     def transform(self, data: np.ndarray, feat_map: Dict[str, int]):
