@@ -3,6 +3,7 @@
 import logging
 import os
 
+import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
@@ -78,15 +79,15 @@ def process_file_save_path(
 
 
 def save_dataframe(
-    dataframe: pd.DataFrame,
+    data: pd.DataFrame,
     save_path: str,
     file_format: str = "parquet",
 ) -> str:
-    """Save a DataFrame object to file.
+    """Save a pandas.DataFrame object to file.
 
     Parameters
     ----------
-    dataframe: pandas.DataFrame
+    data: pandas.DataFrame
         Dataframe to save.
     save_path: str
         Path where the file will be saved.
@@ -101,15 +102,15 @@ def save_dataframe(
     """
     save_path = process_file_save_path(save_path, file_format)
 
-    if not isinstance(dataframe, pd.DataFrame):
+    if not isinstance(data, pd.DataFrame):
         raise ValueError("Input data is not a DataFrame.")
 
     LOGGER.info("Saving dataframe to %s", save_path)
 
     if file_format == "parquet":
-        dataframe.to_parquet(save_path)
+        data.to_parquet(save_path)
     elif file_format == "csv":
-        dataframe.to_csv(save_path)
+        data.to_csv(save_path)
     else:
         raise ValueError(
             "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
@@ -121,8 +122,8 @@ def save_dataframe(
 def load_dataframe(
     load_path: str,
     file_format: str = "parquet",
-) -> str:
-    """Load a file as DataFrame object.
+) -> pd.DataFrame:
+    """Load file to a pandas.DataFrame object.
 
     Parameters
     ----------
@@ -138,15 +139,82 @@ def load_dataframe(
 
     """
     load_path = process_file_save_path(load_path, file_format)
-    LOGGER.info("Loading dataframe from %s", load_path)
+    LOGGER.info("Loading DataFrame from %s", load_path)
 
     if file_format == "parquet":
-        dataframe = pd.read_parquet(load_path)
+        data = pd.read_parquet(load_path)
     elif file_format == "csv":
-        dataframe = pd.read_csv(load_path)
+        data = pd.read_csv(load_path)
     else:
         raise ValueError(
             "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
         )
 
-    return dataframe
+    return data
+
+
+def save_array(
+    data: np.ndarray,
+    save_path: str,
+    file_format: str = "npy",
+) -> str:
+    """Save a numpy.ndarray object to file.
+
+    Parameters
+    ----------
+    data: numpy.ndarray
+        Array to save.
+    save_path: str
+        Path where the file will be saved.
+    file_format: str
+        File format of the file to save.
+
+    Returns
+    -------
+    str
+        Processed save path for upstream use.
+
+    """
+    save_path = process_file_save_path(save_path, file_format)
+
+    if not isinstance(data, np.ndarray):
+        raise ValueError("Input data is not an array.")
+
+    LOGGER.info("Saving array to %s", save_path)
+
+    if file_format == "npy":
+        np.save(save_path, data)
+    else:
+        raise ValueError("Invalid file formated provided. Currently supporting 'npy'.")
+
+    return save_path
+
+
+def load_array(
+    load_path: str,
+    file_format: str = "npy",
+) -> np.ndarray:
+    """Load file to a numpy.ndarray object.
+
+    Parameters
+    ----------
+    load_path: str
+        Path where the file to load.
+    file_format: str
+        File format of the file to load.
+
+    Returns
+    -------
+    numpy.ndarray
+        Loaded data.
+
+    """
+    load_path = process_file_save_path(load_path, file_format)
+    LOGGER.info("Loading array from %s", load_path)
+
+    if file_format == "npy":
+        data = np.load(load_path)
+    else:
+        raise ValueError("Invalid file formated provided. Currently supporting 'npy'.")
+
+    return data

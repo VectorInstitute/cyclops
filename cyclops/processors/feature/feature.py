@@ -701,12 +701,10 @@ class Features:
         )
 
     def save(self, save_path: str, file_format: str = "parquet") -> None:
-        """Save feature data to file.
+        """Save data to file.
 
         Parameters
         ----------
-        dataframe: pandas.DataFrame
-            Dataframe to save.
         save_path: str
             Path where the file will be saved.
         file_format: str
@@ -718,7 +716,7 @@ class Features:
             Processed save path for upstream use.
 
         """
-        return save_dataframe(self.data, save_path, file_format)
+        return save_dataframe(self.data, save_path, file_format=file_format)
 
 
 class TabularFeatures(Features):

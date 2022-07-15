@@ -10,6 +10,7 @@ import numpy as np
 from codebase_ops import get_log_file_path
 from cyclops.processors.feature.normalization import VectorizedNormalizer
 from cyclops.processors.feature.split import split_idx
+from cyclops.utils.file import save_array
 from cyclops.utils.indexing import take_indices_over_axis
 from cyclops.utils.log import setup_logging
 
@@ -168,6 +169,24 @@ class Vectorized:
         index_map = self.index_maps[self.normalizer.axis]
         self.normalizer.inverse_transform(self.data, index_map)
         self.is_normalized = False
+
+    def save(self, save_path: str, file_format: str = "npy") -> None:
+        """Save data to file.
+
+        Parameters
+        ----------
+        save_path: str
+            Path where the file will be saved.
+        file_format: str
+            File format of the file to save.
+
+        Returns
+        -------
+        str
+            Processed save path for upstream use.
+
+        """
+        return save_array(self.data, save_path, file_format=file_format)
 
     def take_with_indices(
         self, axis: Union[str, int], indices: Union[List[int], np.ndarray]
