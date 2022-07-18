@@ -251,7 +251,7 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals,train_fra
             "encounter_id",
         ]
         x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
-        num_train = int(0.8*len(dataset_ids))
+        num_train = int(train_frac*len(dataset_ids))
         ids_source = dataset_ids[0:num_train]
         ids_target = dataset_ids[num_train:]
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
@@ -377,29 +377,16 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals,train_fra
         ids_target = dataset_ids[num_train:]
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
         x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
-
-    elif dataset == "baseline":
-        dataset_ids = admin_data.loc[
-            (
-                (admin_data["admit_timestamp"].dt.month.isin([3, 4, 5, 6, 7, 8]))
-                & (admin_data["admit_timestamp"].dt.year.isin([2019]))
-            ),
-            "encounter_id",
-        ]
-        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
-        x_spl = np.array_split(x, 2)
-        x_s = x_spl[0] ; ids_source = list(x_s.index.get_level_values(0).unique())
-        x_t = x_spl[1] ; ids_target = list(x_t.index.get_level_values(0).unique())
         
-    elif dataset == "all":
+    elif dataset == "random":
         num_train = int(train_frac*len(encounter_ids))
         ids_source = encounter_ids[0:num_train]
         ids_target = encounter_ids[num_train:]
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
         x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
         
-    y_s = y[np.in1d(encounter_ids, ids_source)]
-    y_t = y[np.in1d(encounter_ids, ids_target)]
+    y_s = y[np.in1d(encounter_ids, x_s.index.get_level_values(0).unique())]
+    y_t = y[np.in1d(encounter_ids, x_t.index.get_level_values(0).unique())]
     
     assert len(x_s.index.get_level_values(0).unique()) == len(y_s)
     assert len(x_t.index.get_level_values(0).unique()) == len(y_t)
@@ -605,8 +592,6 @@ def run_shift_experiment(
          
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
-            
-            # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
 
             sample_path = rand_run_path + str(sample) + "/"
 
@@ -618,9 +603,21 @@ def run_shift_experiment(
             )
             # Detect shift.
             shift_detector = ShiftDetector(
-                dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path 
+                dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path, context_type, representation,
             )
 
+<<<<<<< HEAD
+            (
+                p_val,
+                dist,
+                val_acc,
+                te_acc,
+            ) = shift_detector.detect_data_shift(
+                X_tr_final, X_val_final[:1000,:], X_t_final[:sample,:], orig_dims 
+            )
+            
+            print("Shift %s | Random Run %s | Sample %s | P-Value %s" % (shift, rand_run, sample, p_val))
+=======
             if True:
 #            try:
                 (
@@ -631,16 +628,13 @@ def run_shift_experiment(
                 ) = shift_detector.detect_data_shift(
                     X_tr_final, X_val_final[:1000,:], X_t_final[:sample,:], orig_dims, context_type, representation 
                 )
+>>>>>>> a2a74ebb2f19e4b2f89c58830922144dc06b8bfa
                 
-                val_accs[rand_run, si] = val_acc
-                te_accs[rand_run, si] = te_acc
+            val_accs[rand_run, si] = val_acc
+            te_accs[rand_run, si] = te_acc
 
-                samples_rands_pval[si, rand_run] = p_val
-                samples_rands_dist[si, rand_run] = dist
-            
-#            except ValueError as e:
-#                print("Value Error")
-#                pass
+            samples_rands_pval[si, rand_run] = p_val
+            samples_rands_dist[si, rand_run] = dist
             
     mean_p_vals = np.mean(samples_rands_pval, axis=1)
     std_p_vals = np.std(samples_rands_pval, axis=1)
@@ -670,6 +664,7 @@ def run_synthetic_shift_experiment(
     model_path,
     md_test,
     context_type,
+    representation,
     samples,
     dataset,
     sign_level,
@@ -689,7 +684,11 @@ def run_synthetic_shift_experiment(
     # Stores accuracy values for malignancy detection.
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
+<<<<<<< Updated upstream
 
+=======
+    
+>>>>>>> Stashed changes
     numerical_cols = get_numerical_cols(path)
         
     # Average over a few random runs to quantify robustness.
@@ -701,15 +700,8 @@ def run_synthetic_shift_experiment(
 
         np.random.seed(rand_run)
         
-        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(
-            admin_data, x, y, "baseline", outcome, hospital, rand_run, shuffle=True
-        )
-        X_t_1, y_t_1 = X_t.copy(), y_t.copy()
-        (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
-        
         # Query data
-        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
-        
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, "random", outcome, hospital, rand_run, shuffle=True)
         # Normalize data
         (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(aggregation_type, admin_data, timesteps, X_tr, y_tr, X_val, y_val, X_t, y_t)
         # Scale data
@@ -719,25 +711,36 @@ def run_synthetic_shift_experiment(
         # Process data
         X_tr_final, X_val_final, X_t_final = process_data(aggregation_type, timesteps, X_tr_normalized, X_val_normalized, X_t_normalized)
         
+        X_t_1, y_t_1 = X_t_final.copy(), y_t.copy()
+        (X_t_1, y_t_1) = apply_shift(X_tr_final, y_tr, X_t_1, y_t_1, shift)
+        
+         
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
-            
-            # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
 
             sample_path = rand_run_path + str(sample) + "/"
 
             if not os.path.exists(sample_path):
                 os.makedirs(sample_path)
 
-            # Get data representation
             shift_reductor = ShiftReductor(
-                X_tr_final, y_tr, dr_technique, orig_dims, dataset, var_ret=0.8, model_path=model_path,
+            X_tr_final, y_tr, dr_technique, orig_dims, dataset, var_ret=0.8, model_path=model_path,
             )
-            # Get shift detector
+            # Detect shift.
             shift_detector = ShiftDetector(
-                dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path 
+                dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path, context_type, representation, 
             )
 
+<<<<<<< HEAD
+            (
+                p_val,
+                dist,
+                val_acc,
+                te_acc,
+            ) = shift_detector.detect_data_shift(
+                X_tr_final, X_val_final[:1000,:], X_t_final[:sample,:], orig_dims,
+            )
+=======
             # Detect shift
             try:
                 (
@@ -748,18 +751,16 @@ def run_synthetic_shift_experiment(
                 ) = shift_detector.detect_data_shift(
                     X_tr_final, X_val_final, X_t_final[:sample,:], orig_dims, context_type
                 )
+>>>>>>> a2a74ebb2f19e4b2f89c58830922144dc06b8bfa
                 
-                val_accs[rand_run, si] = val_acc
-                te_accs[rand_run, si] = te_acc
+            print("Shift %s | Random Run %s | Sample %s | P-Value %s" % (shift, rand_run, sample, p_val))
+            
+            val_accs[rand_run, si] = val_acc
+            te_accs[rand_run, si] = te_acc
 
-                samples_rands_pval[si, rand_run] = p_val
-                samples_rands_dist[si, rand_run] = dist
+            samples_rands_pval[si, rand_run] = p_val
+            samples_rands_dist[si, rand_run] = dist
             
-            except ValueError as e:
-                print("Value Error")
-                pass
-            
-        
     mean_p_vals = np.mean(samples_rands_pval, axis=1)
     std_p_vals = np.std(samples_rands_pval, axis=1)
     
@@ -810,7 +811,7 @@ def run_pipeline(
 
         np.random.seed(rand_run)
 
-        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data,x,y, shift, outcome, hospital, rand_run, shuffle=True)
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
         
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):

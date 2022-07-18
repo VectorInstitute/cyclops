@@ -21,7 +21,7 @@ class ShiftDetector:
 
     """
 
-    def __init__(self, dr_technique, md_test, sign_level, shift_reductor, sample, datset, features, model_path):
+    def __init__(self, dr_technique, md_test, sign_level, shift_reductor, sample, datset, features, model_path, context_type, representation):
         self.dr_technique = dr_technique
         self.sign_level = sign_level
         self.shift_reductor = shift_reductor
@@ -31,9 +31,17 @@ class ShiftDetector:
         self.sign_level = sign_level
         self.features = features
         self.model_path = model_path
+        self.context_type = context_type
+        self.representation = representation
 
     def classify_data(self, X_s_tr, X_s_val, X_t, orig_dims):
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
         
+>>>>>>> a2a74ebb2f19e4b2f89c58830922144dc06b8bfa
         shift_reductor_model = self.shift_reductor.fit_reductor()
         X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
         return X_t_red
@@ -57,7 +65,15 @@ class ShiftDetector:
                                    features=self.features, 
                                    dataset=self.dataset)
         
+<<<<<<< Updated upstream
         p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red, context_type, representation)
+=======
+<<<<<<< HEAD
+        p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red, self.context_type, self.representation)
+=======
+        p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red, context_type, representation)
+>>>>>>> a2a74ebb2f19e4b2f89c58830922144dc06b8bfa
+>>>>>>> Stashed changes
 
         if self.dr_technique != "BBSDh":
             # Lower the significance level for all tests (Bonferroni) besides BBSDh, which needs no correction.

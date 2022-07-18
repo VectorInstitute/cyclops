@@ -4,7 +4,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+import numpy as np
 
+def plot_pretty_confusion_matrix(confusion_matrix):
+    sns.set(style='white')
+    fig, ax = plt.subplots(figsize=(9, 6))
+    sns.heatmap(np.eye(2), annot=confusion_matrix, fmt='g', annot_kws={'size': 50},
+                cmap=sns.color_palette(['tomato', 'palegreen'], as_cmap=True), cbar=False,
+                yticklabels=['True', 'False'], xticklabels=['True', 'False'], ax=ax)
+    ax.xaxis.tick_top()
+    ax.xaxis.set_label_position('top')
+    ax.tick_params(labelsize=20, length=0)
+
+    ax.set_title('Confusion Matrix for Test Set', size=24, pad=20)
+    ax.set_xlabel('Predicted Values', size=20)
+    ax.set_ylabel('Actual Values', size=20)
+
+    additional_texts = ['(True Positive)', '(False Negative)', '(False Positive)', '(True Negative)']
+    for text_elt, additional_text in zip(ax.texts, additional_texts):
+        ax.text(*text_elt.get_position(), '\n' + additional_text, color=text_elt.get_color(),
+                ha='center', va='top', size=24)
+    plt.tight_layout()
+    plt.show()
 
 def plot_confusion_matrix(confusion_matrix, class_names):
     confusion_matrix = (

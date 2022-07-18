@@ -20,13 +20,22 @@ def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip
         fraction of data affected
 
     """
+    num_timesteps = 1
+    
+    if len(X.shape) > 2:
+        num_encounters = X.shape[0]
+        num_timesteps = X.shape[1]
+        X = X.reshape(num_encounters,-1)
+        
     X_df = pd.DataFrame(X)
+    
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
     c_cols = [x for x in X_df.columns if x not in bin_cols]
     indices = np.random.choice(
         X.shape[0], math.ceil(X.shape[0] * delta_total), replace=False
     )
     X_mod = X[np.ix_(indices, c_cols)]
+    
     if len(c_cols) == 1:
         noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(X_mod.shape[0],1)
     else:
@@ -37,9 +46,13 @@ def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip
         X_mod = np.clip(X_mod + noise, 0.0, 1.0)
     else:
         X_mod = X_mod + noise
+        
     X[np.ix_(indices, c_cols)] = X_mod
+    
+    if num_timesteps > 1:
+        X = X.reshape(num_encounters,num_timesteps, -1)
+        
     return X, indices
-
 
 # Remove instances of a single class.
 def knockout_shift(X, y, cl, delta):
@@ -121,7 +134,7 @@ def changepoint_shift(X_s, y_s, X_t, y_t, cl, n_shuffle=0.25, rank=False):
 
 
 def multiway_feat_association_shift(
-    X_t, y_t, n_shuffle=0.25, keep_rows_constant=True, repermute_each_column=True
+    X, y, n_shuffle=0.25, keep_rows_constant=True, repermute_each_column=True
 ):
     """multiway_feat_association_shift swaps individuals within features.
 
@@ -142,19 +155,18 @@ def multiway_feat_association_shift(
 
     """
 
-    n_inds = X_t.shape[0]
+    n_inds = X.shape[0]
     n_shuffle_inds = int(n_shuffle * n_inds)
     shuffle_start = np.random.randint(n_inds - n_shuffle_inds)
     shuffle_end = shuffle_start + n_shuffle_inds
     shuffle_list = np.random.permutation(range(shuffle_start, shuffle_end))
-    for i in range(X_t.shape[1]):
+    for i in range(X.shape[1]):
         rng = np.random.default_rng(i)
+        rng.random(1)
         if repermute_each_column:
-            rng.random(1)
             shuffle_start = np.random.randint(n_inds - n_shuffle_inds)
             shuffle_end = shuffle_start + n_shuffle_inds
         if not keep_rows_constant:
-            rng.random(1)
             shuffle_list = np.random.permutation(range(shuffle_start, shuffle_end))
         indices = (
             list(range(0, shuffle_start))
@@ -162,7 +174,7 @@ def multiway_feat_association_shift(
             + list(range(shuffle_end, n_inds))
         )
         # Implement so that it changes only for a specific class
-        X_t[:, i] = X_t[indices, i]
+        X[:, i] = X[indices, i]
 
     return (X_t, y_t)
 
@@ -180,17 +192,30 @@ def binary_noise_subset(X, p, delta_total=1.0):
         fraction of data affected
 
     """
+    num_timesteps = 1
+    
+    if len(X.shape) > 2:
+        num_encounters = X.shape[0]
+        num_timesteps = X.shape[1]
+        X = X.reshape(num_encounters,-1)
+        
     X_df = pd.DataFrame(X)
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
     indices = np.random.choice(
         X.shape[0], math.ceil(X.shape[0] * delta_total), replace=False
     )
     X_mod = X[indices, :][:, bin_cols]
+    
     if X_mod.shape[1] == 1:
         noise = np.random.binomial(1, p, X_mod.shape[0])
     else:
         noise = np.random.binomial(1, p, (X_mod.shape[0], X_mod.shape[1]))
+        
     X[np.ix_(indices, bin_cols)] = noise
+    
+    if num_timesteps > 1:
+        X = X.reshape(num_encounters,num_timesteps, -1)
+        
     return X, indices
 
 def age_shift(X_s, y_s, X_t, y_t, col="age"):
@@ -222,47 +247,47 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
 
     if shift == "large_gn_shift_1.0":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 100.0, normalization=1.0, delta_total=1.0, clip=False
+            X_te_orig, 10.0, normalization=1.0, delta_total=1.0, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "medium_gn_shift_1.0":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 10.0, normalization=1.0, delta_total=1.0, clip=False
+            X_te_orig, 1.0, normalization=1.0, delta_total=1.0, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "small_gn_shift_1.0":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 1.0, normalization=1.0, delta_total=1.0, clip=False
+            X_te_orig, 0.1, normalization=1.0, delta_total=1.0, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "large_gn_shift_0.5":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 100.0, normalization=1.0, delta_total=0.5, clip=False
+            X_te_orig, 10.0, normalization=1.0, delta_total=0.5, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "medium_gn_shift_0.5":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 10.0, normalization=1.0, delta_total=0.5, clip=False
+            X_te_orig, 1.0, normalization=1.0, delta_total=0.5, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "small_gn_shift_0.5":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 1.0, normalization=1.0, delta_total=0.5, clip=False
+            X_te_orig, 0.1, normalization=1.0, delta_total=0.5, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "large_gn_shift_0.1":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 100.0, normalization=1.0, delta_total=0.1, clip=False
+            X_te_orig, 10.0, normalization=1.0, delta_total=0.1, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "medium_gn_shift_0.1":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 10.0, normalization=1.0, delta_total=0.1, clip=False
+            X_te_orig, 1.0, normalization=1.0, delta_total=0.1, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "small_gn_shift_0.1":
         X_te_1, _ = gaussian_noise_subset(
-            X_te_orig, 1.0, normalization=1.0, delta_total=0.1, clip=False
+            X_te_orig, 0.1, normalization=1.0, delta_total=0.1, clip=False
         )
         y_te_1 = y_te_orig.copy()
     elif shift == "ko_shift_0.1":
