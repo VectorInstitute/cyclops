@@ -605,8 +605,7 @@ def run_shift_experiment(
             shift_detector = ShiftDetector(
                 dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path, context_type, representation,
             )
-
-<<<<<<< HEAD
+            
             (
                 p_val,
                 dist,
@@ -617,18 +616,6 @@ def run_shift_experiment(
             )
             
             print("Shift %s | Random Run %s | Sample %s | P-Value %s" % (shift, rand_run, sample, p_val))
-=======
-            if True:
-#            try:
-                (
-                    p_val,
-                    dist,
-                    val_acc,
-                    te_acc,
-                ) = shift_detector.detect_data_shift(
-                    X_tr_final, X_val_final[:1000,:], X_t_final[:sample,:], orig_dims, context_type, representation 
-                )
->>>>>>> a2a74ebb2f19e4b2f89c58830922144dc06b8bfa
                 
             val_accs[rand_run, si] = val_acc
             te_accs[rand_run, si] = te_acc
@@ -684,11 +671,7 @@ def run_synthetic_shift_experiment(
     # Stores accuracy values for malignancy detection.
     val_accs = np.ones((random_runs, len(samples))) * (-1)
     te_accs = np.ones((random_runs, len(samples))) * (-1)
-<<<<<<< Updated upstream
 
-=======
-    
->>>>>>> Stashed changes
     numerical_cols = get_numerical_cols(path)
         
     # Average over a few random runs to quantify robustness.
@@ -711,10 +694,9 @@ def run_synthetic_shift_experiment(
         # Process data
         X_tr_final, X_val_final, X_t_final = process_data(aggregation_type, timesteps, X_tr_normalized, X_val_normalized, X_t_normalized)
         
-        X_t_1, y_t_1 = X_t_final.copy(), y_t.copy()
+        X_t_1, y_t_1 = X_tr_final.copy(), y_t.copy()
         (X_t_1, y_t_1) = apply_shift(X_tr_final, y_tr, X_t_1, y_t_1, shift)
         
-         
         # Run shift experiments across various sample sizes
         for si, sample in enumerate(samples):
 
@@ -730,28 +712,15 @@ def run_synthetic_shift_experiment(
             shift_detector = ShiftDetector(
                 dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path, context_type, representation, 
             )
-
-<<<<<<< HEAD
+            
             (
                 p_val,
                 dist,
                 val_acc,
                 te_acc,
             ) = shift_detector.detect_data_shift(
-                X_tr_final, X_val_final[:1000,:], X_t_final[:sample,:], orig_dims,
+                X_tr_final, X_val_final[:1000,:], X_t_1[:sample,:], orig_dims,
             )
-=======
-            # Detect shift
-            try:
-                (
-                    p_val,
-                    dist,
-                    val_acc,
-                    te_acc,
-                ) = shift_detector.detect_data_shift(
-                    X_tr_final, X_val_final, X_t_final[:sample,:], orig_dims, context_type
-                )
->>>>>>> a2a74ebb2f19e4b2f89c58830922144dc06b8bfa
                 
             print("Shift %s | Random Run %s | Sample %s | P-Value %s" % (shift, rand_run, sample, p_val))
             
@@ -775,86 +744,3 @@ def run_synthetic_shift_experiment(
 
     return (mean_p_vals, std_p_vals, mean_dist, std_dist)
     
-def run_pipeline(
-    path,
-    admin_data,
-    x, 
-    y,
-    dr_technique,
-    md_test,
-    samples,
-    dataset,
-    sign_level,
-    timesteps,
-    random_runs=5,
-    calc_acc=True):
-    
-    # Stores p-values for all experiments of a shift class.
-    samples_rands_pval = np.ones((len(samples), random_runs)) * (-1)
-    samples_rands_dist = np.ones((len(samples), random_runs)) * (-1)
-
-    shift_path = path + shift + "/"
-
-    if not os.path.exists(shift_path):
-        os.makedirs(shift_path)
-
-    # Stores accuracy values for malignancy detection.
-    val_accs = np.ones((random_runs, len(samples))) * (-1)
-    te_accs = np.ones((random_runs, len(samples))) * (-1)
-    
-    # Average over a few random runs to quantify robustness.
-    for rand_run in range(0, random_runs):
-        rand_run = int(rand_run)
-        rand_run_path = shift_path + str(rand_run) + "/"
-        if not os.path.exists(rand_run_path):
-            os.makedirs(rand_run_path)
-
-        np.random.seed(rand_run)
-
-        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
-        
-        # Run shift experiments across various sample sizes
-        for si, sample in enumerate(samples):
-            
-            # print("Shift %s: Random Run %s : Sample %s" % (shift, rand_run, sample))
-
-            sample_path = rand_run_path + str(sample) + "/"
-
-            if not os.path.exists(sample_path):
-                os.makedirs(sample_path)
-
-            shift_reductor = ShiftReductor(
-            X_tr, y_tr, dr_technique, orig_dims, dataset, dr_amount=None, var_ret=0.8, scale=False, scaler="standard", model=None
-            )
-            # Detect shift.
-            shift_detector = ShiftDetector(
-                dr_technique, md_test, sign_level, shift_reductor, sample, dataset
-            )
-            (
-                p_val,
-                dist,
-                val_acc,
-                te_acc,
-            ) = shift_detector.detect_data_shift(
-                X_tr, y_tr, X_val, y_val, X_t[:sample,], y_t[:sample], orig_dims
-            )
-
-            val_accs[rand_run, si] = val_acc
-            te_accs[rand_run, si] = te_acc
-
-            samples_rands_pval[si, rand_run] = p_val
-            samples_rands_dist[si, rand_run] = dist
-        
-    mean_p_vals = np.mean(samples_rands_pval, axis=1)
-    std_p_vals = np.std(samples_rands_pval, axis=1)
-    
-    mean_dist = np.mean(samples_rands_dist, axis=1)
-    std_dist = np.std(samples_rands_dist, axis=1)
-
-    mean_val_accs = np.mean(val_accs, axis=0)
-    std_val_accs = np.std(val_accs, axis=0)
-
-    mean_te_accs = np.mean(te_accs, axis=0)
-    std_te_accs = np.std(te_accs, axis=0)
-
-    return (mean_p_vals, std_p_vals, mean_dist, std_dist)
