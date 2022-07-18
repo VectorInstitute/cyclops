@@ -1,6 +1,6 @@
 """Feature normalization."""
 
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,9 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from cyclops.processors.constants import MIN_MAX, STANDARD
 from cyclops.processors.util import has_columns, has_range_index
 from cyclops.utils.common import to_list_optional
+from cyclops.utils.indexing import index_axis
+
+METHOD_MAP = {STANDARD: StandardScaler, MIN_MAX: MinMaxScaler}
 
 
 class SklearnNormalizer:
@@ -33,65 +36,15 @@ class SklearnNormalizer:
 
         """
         self.method = method
-        method_map = {STANDARD: StandardScaler, MIN_MAX: MinMaxScaler}
 
         # Raise an exception if the method string is not recognized.
-        if method not in method_map:
-            options = ", ".join(["'" + k + "'" for k in method_map])
+        if method not in METHOD_MAP:
+            options = ", ".join(["'" + k + "'" for k in METHOD_MAP])
             raise ValueError(
                 f"Method '{method}' is invalid, must be in: {', '.join(options)}."
             )
 
-        self.scaler = method_map[method]()
-
-    def fit(self, series: pd.Series) -> None:
-        """Fit the scaler.
-
-        Parameters
-        ----------
-        series: pandas.Series
-            Series with values over which to fit.
-
-        """
-        self.scaler.fit(series.values.reshape(-1, 1))
-
-    def transform(self, series: pd.Series) -> pd.Series:
-        """Apply normalization.
-
-        Parameters
-        ----------
-        series: pandas.Series
-            Input series
-
-        Returns
-        -------
-        pandas.Series
-            Normalized series.
-
-        """
-        return pd.Series(
-            np.squeeze(self.scaler.transform(series.values.reshape(-1, 1))),
-            index=series.index,
-        )
-
-    def inverse_transform(self, series: pd.Series) -> pd.Series:
-        """Apply inverse normalization.
-
-        Parameters
-        ----------
-        series: pandas.Series
-            Input series
-
-        Returns
-        -------
-        pandas.Series
-            Inversely normalized series.
-
-        """
-        return pd.Series(
-            np.squeeze(self.scaler.inverse_transform(series.values.reshape(-1, 1))),
-            index=series.index,
-        )
+        self.scaler = METHOD_MAP[method]()
 
     def __repr__(self):
         """Repr method.
@@ -103,6 +56,127 @@ class SklearnNormalizer:
 
         """
         return self.method
+
+    def fit(self, data: Union[np.ndarray, pd.Series]) -> None:
+        """Fit the scaler.
+
+        Parameters
+        ----------
+        data: numpy.ndarray or pandas.Series
+            Data over which to fit.
+
+        """
+        # Ignore errors encountered when with null values
+        # Save previous settings to later reset
+        old_settings = np.seterr(divide="ignore", invalid="ignore")
+
+        if isinstance(data, pd.Series):
+            self.scaler.fit(data.values.reshape(-1, 1))
+
+        elif isinstance(data, np.ndarray):
+            if len(data.shape) != 1:
+                raise ValueError("Data must be a 1D array.")
+
+            self.scaler.fit(data.reshape(-1, 1))
+
+        else:
+            raise ValueError(
+                "Data must be a pandas.Series or 1-dimensional numpy.ndarray"
+            )
+
+        # Reset to old settings
+        np.seterr(**old_settings)
+
+    def _transform_by_method(
+        self,
+        data: Union[np.ndarray, pd.Series],
+        method: str,
+    ) -> Union[np.ndarray, pd.Series]:
+        """Apply a method on the scaler.
+
+        If a numpy.ndarray is given, a numpy.ndarray is returned. Similarly, if a
+        pandas.Series is given, a pandas.Series is returned.
+
+        Parameters
+        ----------
+        data: numpy.ndarray or pandas.Series
+            Input data.
+        method: str
+            Name of the method to apply.
+
+        Returns
+        -------
+        numpy.ndarray or pandas.Series
+            Transformed data.
+
+        """
+        method_fn = getattr(self.scaler, method)
+        # Ignore errors encountered when with null values
+        # Save previous settings to later reset
+        old_settings = np.seterr(divide="ignore", invalid="ignore")
+
+        if isinstance(data, pd.Series):
+            transformed = pd.Series(
+                np.squeeze(method_fn(data.values.reshape(-1, 1))),
+                index=data.index,
+            )
+        elif isinstance(data, np.ndarray):
+            if len(data.shape) != 1:
+                raise ValueError("Data must be a 1D array.")
+
+            transformed = np.squeeze(method_fn(data.reshape(-1, 1)))
+
+        else:
+            raise ValueError(
+                "Data must be a pandas.Series or 1-dimensional numpy.ndarray"
+            )
+
+        # Reset to old settings
+        np.seterr(**old_settings)
+
+        return transformed
+
+    def transform(
+        self, data: Union[np.ndarray, pd.Series]
+    ) -> Union[np.ndarray, pd.Series]:
+        """Apply normalization.
+
+        If a numpy.ndarray is given, a numpy.ndarray is returned. Similarly, if a
+        pandas.Series is given, a pandas.Series is returned.
+
+        Parameters
+        ----------
+        data: numpy.ndarray or pandas.Series
+            Input data.
+
+        Returns
+        -------
+        numpy.ndarray or pandas.Series
+            Normalized data.
+
+        """
+        return self._transform_by_method(data, "transform")
+
+    def inverse_transform(
+        self, data: Union[np.ndarray, pd.Series]
+    ) -> Union[np.ndarray, pd.Series]:
+        """Apply inverse normalization.
+
+        If a numpy.ndarray is given, a numpy.ndarray is returned. Similarly, if a
+        pandas.Series is given, a pandas.Series is returned.
+
+        Parameters
+        ----------
+        data: numpy.ndarray or pandas.Series
+            Input data.
+
+        Returns
+        -------
+        numpy.ndarray or pandas.Series
+            Inversely normalized data.
+
+        """
+        return self._transform_by_method(data, "inverse_transform")
 
 
 class GroupbyNormalizer:
@@ -231,8 +305,7 @@ class GroupbyNormalizer:
                 # Get normalizer object and transform
                 normalizer = self.normalizers.loc[group.index.values[0]][col]
                 group[col] = getattr(normalizer, method)(group[col])
-
-            return group
+            return group.reset_index()
 
         # Over columns
         if self.by is None:
@@ -241,10 +314,16 @@ class GroupbyNormalizer:
                 data[col] = getattr(normalizer, method)(data[col])
         # Over groups
         else:
+            # WARNING: The indexing here is very confusing, where if not done properly
+            # the function will hang without explanation... devs be warned!
+            assert data.index.name is None or data.index.name == "index"
+            assert "index" not in data.columns
             data = data.reset_index()
+
             data.set_index(self.by, inplace=True)
-            grouped = data.groupby(self.by)
-            data = grouped.apply(transform_group).reset_index()
+            grouped = data.groupby(self.by, as_index=False, sort=False)
+            data = grouped.apply(transform_group)
+            data = data.reset_index(drop=True)
             data = data.set_index("index")
             data = data.sort_index()
 
@@ -281,3 +360,176 @@ class GroupbyNormalizer:
 
         """
         return self._transform_by_method(data, "inverse_transform")
+
+
+class VectorizedNormalizer:
+    """Perform normalization over a NumPy array.
+
+    Attributes
+    ----------
+    normalizer_map: dict
+        A map from the column name to the type of normalization, e.g.,
+        {"event_values": "standard"}
+    normalizers: pandas.DataFrame
+        The normalizer object information, where each column/group has a row
+        with a normalization object.
+
+    """
+
+    def __init__(
+        self,
+        axis: int,
+        normalization_method: Optional[str] = None,
+        normalizer_map: Optional[dict] = None,
+    ) -> None:
+        """Initialize."""
+        if normalization_method is None and normalizer_map is None:
+            raise ValueError(
+                (
+                    "Must specify normalization_method to normalize all features "
+                    "with the same method, or normalization_map to map specific "
+                    "indices to normalization methods."
+                )
+            )
+        if normalization_method is not None and normalizer_map is not None:
+            raise ValueError(
+                "Cannot specify both normalization_method and normalization_map."
+            )
+
+        self.axis = axis
+        self.normalization_method = normalization_method
+        self.normalizer_map = normalizer_map
+        self.normalizers: Dict[str, SklearnNormalizer] = {}
+
+    def get_map(self) -> Optional[dict]:
+        """Get normalization mapping from features to type.
+
+        Returns
+        -------
+        dict
+            Normalization map.
+
+        """
+        return self.normalizer_map
+
+    def _check_missing(self, feat_map: Dict[str, int]) -> None:
+        """Check if any of the normalizer_map features are missing a given feat_map.
+
+        Parameters
+        ----------
+        feat_map: dict
+            Map from feature name to index in the normalizer's given axis.
+
+        """
+        if self.normalizer_map is None:
+            raise ValueError("normalizer_map is not set. Cannot check missing.")
+
+        missing = set(self.normalizer_map.keys()) - set(feat_map.keys())
+        if len(missing) != 0:
+            raise ValueError(f"Missing features {', '.join(missing)} in the data.")
+
+    def fit(self, data: np.ndarray, feat_map: Dict[str, int]) -> None:
+        """Fit the normalizing objects.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            Data over which to fit.
+        feat_map: dict
+            Map from feature name to index in the normalizer's given axis.
+
+        """
+        if self.normalizer_map is None:
+            # Use the same normalization method for all features
+            self.normalizer_map = {
+                feat: self.normalization_method for feat in feat_map.keys()
+            }
+        else:
+            self._check_missing(feat_map)
+
+        for feat, method in self.normalizer_map.items():
+            if isinstance(method, str):
+                normalizer = SklearnNormalizer(method)
+            else:
+                raise ValueError(
+                    """Must specify a string for the normalizer type.
+                    Passing normalizer objects not yet supported."""
+                )
+
+            ind = feat_map[feat]
+            values = data[index_axis(ind, self.axis, data.shape)]
+            values = values.flatten()
+            normalizer.fit(values)
+            self.normalizers[feat] = normalizer
+
+    def _transform_by_method(
+        self, data: np.ndarray, feat_map: Dict[str, int], method: str
+    ) -> np.ndarray:
+        """Apply a method from the normalizer object to the data.
+
+        Parameters
+        ----------
+        data: numpy.ndarray
+            Data to transform.
+        feat_map: dict
+            Map from feature name to index in the normalizer's given axis.
+        method: str
+            Name of normalizer method to apply.
+
+        Returns
+        -------
+        numpy.ndarray
+            The data with the method applied.
+
+        """
+        if not self.normalizers:
+            raise ValueError("Must first fit the normalizers.")
+
+        self._check_missing(feat_map)
+
+        for feat, normalizer in self.normalizers.items():
+            ind = feat_map[feat]
+            data_indexing = index_axis(ind, self.axis, data.shape)
+            values = data[data_indexing]
+            prev_shape = values.shape
+            values = values.flatten()
+            normalized = getattr(normalizer, method)(values).reshape(prev_shape)
+            data[data_indexing] = normalized
+
+        return data
+
+    def transform(self, data: np.ndarray, feat_map: Dict[str, int]):
+        """Normalize the data.
+
+        Parameters
+        ----------
+        data: numpy.ndarray
+            Data to transform.
+        feat_map: dict
+            Map from feature name to index in the normalizer's given axis.
+
+        Returns
+        -------
+        numpy.ndarray
+            The normalized data.
+
+        """
+        return self._transform_by_method(data, feat_map, "transform")
+
+    def inverse_transform(self, data: np.ndarray, feat_map: Dict[str, int]):
+        """Inversely normalize the data.
+
+        Parameters
+        ----------
+        data: numpy.ndarray
+            Data to transform.
+        feat_map: dict
+            Map from feature name to index in the normalizer's given axis.
+
+        Returns
+        -------
+        numpy.ndarray
+            The inversely normalized data.
+
+        """
+        return self._transform_by_method(data, feat_map, "inverse_transform")

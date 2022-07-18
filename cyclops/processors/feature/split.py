@@ -1,10 +1,54 @@
-"""datasetset splits."""
+"""Dataset split processing."""
 
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
+import pandas as pd
 
 from cyclops.utils.common import to_list
+
+
+def intersect_datasets(
+    datas: List[pd.DataFrame],
+    on_col: str,
+    sort: bool = True,
+) -> Tuple:
+    """Perform an intersection across datasets over a column.
+
+    This can be used to align dataset samples e.g., aligning encounters for a tabular
+    and temporal dataset.
+
+    Parameters
+    ----------
+    datas: list of pandas.DataFrame
+        List of datasets.
+    on_col: str
+        The column on which to perform the intersection.
+    sort: bool, default = True
+        Whether to sort the values in each dataset by the on column.
+
+    Returns
+    -------
+    tuple
+        A tuple of the processed datasets.
+
+    """
+    # Concatenate the unique values in each dataset and count how many of each
+    unique, counts = np.unique(
+        np.concatenate([data[on_col].unique() for data in datas]), return_counts=True
+    )
+
+    # If a count is equal to the length of datasets, it must exist in every dataset
+    intersect = unique[counts == len(datas)]
+
+    # Intersect on these unique values
+    for i, data in enumerate(datas):
+        data = data[data[on_col].isin(intersect)]
+        if sort:
+            data = data.sort_values(on_col)
+        datas[i] = data
+
+    return tuple(datas)
 
 
 def fractions_to_split(
@@ -73,8 +117,8 @@ def split_idx(
 
     Returns
     -------
-    tuple
-        A tuple of the split numpy.ndarray.
+    tuple of numpy.ndarray
+        Splits with indices of each split.
 
     """
     split = fractions_to_split(fractions, data_len)
@@ -88,7 +132,62 @@ def split_idx(
     return tuple(np.split(idx, split))
 
 
-def split_data(
+def split_datasets_by_idx(
+    datasets: Union[np.ndarray, List[np.ndarray]],
+    idx_splits: Tuple,
+    axes: Optional[Union[int, List[int]]] = None,
+):
+    """Split datasets by index over given axes.
+
+    Parameters
+    ----------
+    datasets: numpy.ndarray or list of numpy.ndarray
+        Datasets to split in the same manner.
+    idx_splits: tuple
+        A tuple of the indices belonging to each individual split.
+    axes: int or list of int, optional
+        The axes along which to split each of the datasets.
+        If not specified, defaults to the axis = 0 for all datasets.
+
+    Returns
+    -------
+    tuple
+        A tuple of the dataset splits, where each contains a tuple of splits.
+        e.g., split1, split2 = split_features([features1, features2], 0.5)
+        train1, test1 = split1
+        train2, test2 = split2
+
+    """
+    if isinstance(datasets, np.ndarray):
+        datasets = [datasets]
+
+    if axes is None:
+        axes_list = [0] * len(datasets)
+    else:
+        axes_list = to_list(axes)
+
+    splits = []  # type: ignore
+    # For each dataset
+    for i, data in enumerate(datasets):
+        splits.append([])
+        # For each split
+        for idx in idx_splits:
+            # Reshape idx to have same number of dimensions as the data
+            shape = [1] * len(data.shape)
+            shape[axes_list[i]] = len(idx)
+            idx = idx.reshape(shape)
+
+            # Sample new dataset split
+            splits[-1].append(np.take_along_axis(data, idx, axis=axes_list[i]))
+        splits[-1] = tuple(splits[-1])
+
+    if len(splits) == 1:
+        return splits[0]
+
+    return tuple(splits)
+
+
+def split_datasets(
     datasets: Union[np.ndarray, List[np.ndarray]],
     fractions: Union[float, List[float]],
     axes: Optional[Union[int, List[int]]] = None,
@@ -105,6 +204,11 @@ def split_data(
         Axes, or axis, along which to split the data.
     fractions: float or list of float
         Fraction(s) of samples between 0 and 1 to use for each split.
+    randomize: bool, default = True
+        Whether to randomize the samples in the splits. Otherwise it splits
+        the samples in the current order.
+    seed: int, optional
+        A seed for the randomization.
 
     Returns
     -------
@@ -129,22 +233,4 @@ def split_data(
 
     idx_splits = split_idx(fractions, sizes[0], randomize=randomize, seed=seed)
 
-    splits = []  # type: ignore
-    # For each dataset
-    for i, data in enumerate(datasets):
-        splits.append([])
-        # For each split
-        for idx in idx_splits:
-            # Reshape idx to have same number of dimensions as the data
-            shape = [1] * len(data.shape)
-            shape[axes_list[i]] = len(idx)
-            idx = idx.reshape(shape)
-
-            # Sample new dataset split
-            splits[-1].append(np.take_along_axis(data, idx, axis=axes_list[i]))
-        splits[-1] = tuple(splits[-1])
-
-    if len(splits) == 1:
-        return splits[0]
-
-    return tuple(splits)
+    return split_datasets_by_idx(datasets, idx_splits)

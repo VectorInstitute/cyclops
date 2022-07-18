@@ -53,6 +53,27 @@ def to_list_optional(obj: Optional[Any], none_to_empty: bool = False) -> Optiona
     return to_list(obj)
 
 
+def print_dict(dictionary: dict, limit: int = None) -> None:
+    """Print a dictionary with the option to limit the number of items.
+
+    Parameters
+    ----------
+    dictionary: dict
+        Dictionary to print.
+    limit: int, optional
+        Item limit to print.
+
+    """
+    if limit is None:
+        print(dictionary)
+        return
+
+    if limit < 0:
+        raise ValueError("Limit must be greater than 0.")
+
+    print(dict(list(dictionary.items())[0:10]))
+
+
 def append_if_missing(lst: Any, append_lst: Any, to_start: bool = False) -> List[Any]:
     """Append objects in append_lst to lst if not already there.
 

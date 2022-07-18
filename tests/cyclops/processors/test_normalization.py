@@ -15,6 +15,7 @@ from cyclops.processors.constants import MIN_MAX, STANDARD
 from cyclops.processors.feature.normalization import (
     GroupbyNormalizer,
     SklearnNormalizer,
+    VectorizedNormalizer,
 )
 
 
@@ -176,3 +177,36 @@ def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-n
     assert np.allclose(
         denormalized[EVENT_VALUE].values, test_input[EVENT_VALUE].values, atol=1e-07
     )
+
+
+def test_vectorized_normalizer():
+    """Test VectorizedNormalizer."""
+    feat_map = {"A": 0, "B": 1}
+
+    data = np.array(
+        [
+            [[1, 2, 3], [3, 2, 100]],
+            [[4, 5, 2], [9, 20, 10]],
+        ]
+    ).astype(float)
+
+    feat_map = {"A": 0, "B": 1}
+
+    values0 = np.array([1, 2, 3, 4, 5, 2])
+    values1 = np.array([3, 2, 100, 9, 20, 10])
+
+    normalizer0 = SklearnNormalizer(STANDARD)
+    normalizer0.fit(values0)
+    normalized0 = normalizer0.transform(values0).reshape((2, 3))
+
+    normalizer1 = SklearnNormalizer(STANDARD)
+    normalizer1.fit(values1)
+    normalized1 = normalizer1.transform(values1).reshape((2, 3))
+
+    normalizer = VectorizedNormalizer(axis=1, normalization_method=STANDARD)
+    normalizer.fit(data, feat_map)
+
+    normalized = normalizer.transform(data, feat_map)
+
+    assert np.array_equal(normalized[:, 0, :], normalized0)
+    assert np.array_equal(normalized[:, 1, :], normalized1)
