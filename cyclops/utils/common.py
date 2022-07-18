@@ -119,3 +119,32 @@ def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
 
     """
     return datetime.strptime(date, fmt)
+
+
+def list_swap(lst: List, item1: int, item2: int) -> List:
+    """Swap items in a list given the item index and new item index.
+
+    Parameters
+    ----------
+    lst: list
+        List in which elements will be swapped.
+    item1: int
+        Index of first item to swap.
+    item2: int
+        Index of second item to swap.
+
+    Returns
+    -------
+    list
+        List with elements swapped.
+
+    """
+    if not 0 <= item1 < len(lst):
+        raise ValueError("Item1 index is out of range.")
+
+    if not 0 <= item2 < len(lst):
+        raise ValueError("Item2 index is out of range.")
+
+    lst[item1], lst[item2] = lst[item2], lst[item1]
+
+    return lst

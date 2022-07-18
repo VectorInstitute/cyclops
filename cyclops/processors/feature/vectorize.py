@@ -10,6 +10,7 @@ import numpy as np
 from codebase_ops import get_log_file_path
 from cyclops.processors.feature.normalization import VectorizedNormalizer
 from cyclops.processors.feature.split import split_idx
+from cyclops.utils.common import list_swap
 from cyclops.utils.file import save_array
 from cyclops.utils.indexing import take_indices_over_axis
 from cyclops.utils.log import setup_logging
@@ -17,6 +18,133 @@ from cyclops.utils.log import setup_logging
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+
+
+def process_axes(
+    vecs: List[Vectorized], axes: Union[str, int, List[str], List[int]]
+) -> List[int]:
+    """Process a common axis (int/str) or list of axes (list of int/str).
+
+    Parameters
+    ----------
+    vecs: list of Vectorized
+        Vectorized datasets.
+    axes: str or int or list or str or list of int, optional
+        The axis, or axes if different in the different datasets, over which to
+        intersect. Can provide axis indices (int) or names (str).
+
+    Returns
+    -------
+    list of int
+        The processed axes.
+
+    """
+    axes_list: List[int]
+    if isinstance(axes, list):
+        axes_list = [vec.get_axis(axes[i]) for i, vec in enumerate(vecs)]
+    else:
+        axes_list = [vec.get_axis(axes) for vec in vecs]
+
+    if not len(vecs) == len(axes_list):
+        raise ValueError(f"Got {len(axes_list)} axes but needed {len(vecs)}.")
+
+    return axes_list
+
+
+def intersect_vectorized(
+    vecs: List[Vectorized],
+    axes: Union[str, int, List[str], List[int]] = 0,
+) -> Tuple:
+    """Perform an intersection over the indexes of vectorized datasets.
+
+    This is especially useful to align the samples of separate datasets.
+
+    Parameters
+    ----------
+    vecs: list of Vectorized
+        Vectorized datasets.
+    axes: str or int or list or str or list of int, optional
+        The axis, or axes if different in the datasets, over which to
+        intersect. Can provide axis indices (int) or names (str).
+
+    Returns
+    -------
+    tuple
+        A tuple of the Vectorized objects in the same order as provided.
+
+    """
+    # Process axes
+    axes_list: List[int] = process_axes(vecs, axes)
+
+    # Get intersection
+    index_sets = [set(vec.get_index(axes_list[i])) for i, vec in enumerate(vecs)]
+    intersection = np.array(list(set.intersection(*index_sets)))
+
+    # Return intersected datasets
+    intersected_vecs = [
+        vec.take_with_index(axes_list[i], intersection) for i, vec in enumerate(vecs)
+    ]
+
+    return tuple(intersected_vecs)
+
+
+def split_vectorized(
+    vecs: List[Vectorized],
+    fractions: Union[float, List[float]],
+    axes: Union[str, int, List[str], List[int]] = 0,
+    randomize: bool = True,
+    seed: int = None,
+) -> Tuple:
+    """Split vectorized datasets matching the index.
+
+    Parameters
+    ----------
+    vecs: list of Vectorized
+        Vectorized datasets.
+    fractions: float or list of float
+        Fraction(s) of samples between 0 and 1 to use for each split.
+    axes: str or int or list or str or list of int, optional
+        The axis, or axes if different in the datasets, over which to
+        intersect. Can provide axis indices (int) or names (str).
+    randomize: bool, default = True
+        Whether to randomize the samples in the splits. Otherwise it splits
+        the samples in the current order.
+    seed: int, optional
+        A seed for the randomization.
+
+    Returns
+    -------
+    tuple of tuple of Vectorized
+        A tuple of datasets of splits. All splits are Vectorized objects.
+
+    """
+    # Process axes
+    axes_list: List[int] = process_axes(vecs, axes)
+
+    indexes = [vec.indexes[axes_list[i]] for i, vec in enumerate(vecs)]
+
+    # Check that index lengths are the same - inexpensive check
+    index_lens = [len(index) for index in indexes]
+
+    if index_lens.count(index_lens[0]) != len(index_lens):
+        raise ValueError("Indexes must be the same. Consider intersecting the data.")
+
+    # Check that indexes are exactly identical
+    if not index_lens[0] == len(set.union(*[set(index) for index in indexes])):
+        raise ValueError("Indexes must be the same. Consider intersecting the data.")
+
+    index_splits = split_idx(
+        fractions=fractions,
+        data_len=index_lens[0],
+        randomize=randomize,
+        seed=seed,
+    )
+
+    splits = [
+        vec.split_by_indices(axes_list[i], index_splits) for i, vec in enumerate(vecs)
+    ]
+
+    return tuple(splits)
 
 
 class Vectorized:
@@ -461,18 +589,45 @@ class Vectorized:
             allow_drops=False,
         )
 
+    def rename_axis(self, axis: Union[str, int], name: str) -> None:
+        """Rename an axis.
 
-#     def reorder_axes(axes_order: List[Union[int, str]]) -> None:
-#         """
-#         Parameters
-#         ----------
-#         axes_order: list of int or str
-#             List of new axes order.
+        Parameters
+        ----------
+        axis: int or str
+            Old axis index or name.
+        name: str
+            New axis name.
 
-#         """
-#         data
-#         indexes
-#         index_maps
-#         axis_names
+        """
+        axis_index = self.get_axis(axis)
+        self.axis_names[axis_index] = name
 
-#     def rename_axis():
+    def swap_axes(
+        self,
+        axis1: Union[str, int],
+        axis2: Union[str, int],
+    ) -> None:
+        """Swap the position of one axis for another position.
+
+        Other axes remain in their original order.
+
+        Parameters
+        ----------
+        axis1: int or str
+            First axis to swap.
+        axis2: int or str
+            Second axis to swap.
+
+        """
+        # Process axes
+        axis1_index: int = self.get_axis(axis1)
+        axis2_index: int = self.get_axis(axis2)
+
+        # Call moveaxis before meta changes in case there are errors
+        self.data = np.swapaxes(self.data, axis1_index, axis2_index)
+
+        # Update meta
+        self.indexes = list_swap(self.indexes, axis1_index, axis2_index)
+        self.index_maps = list_swap(self.index_maps, axis1_index, axis2_index)
+        self.axis_names = list_swap(self.axis_names, axis1_index, axis2_index)

@@ -7,7 +7,11 @@ import pytest
 
 from cyclops.processors.constants import STANDARD
 from cyclops.processors.feature.normalization import VectorizedNormalizer
-from cyclops.processors.feature.vectorize import Vectorized
+from cyclops.processors.feature.vectorize import (
+    Vectorized,
+    intersect_vectorized,
+    split_vectorized,
+)
 
 
 @pytest.fixture
@@ -64,12 +68,6 @@ def test_take_with_index(  # pylint: disable=redefined-outer-name
     assert np.array_equal(expanded, vectorized.take_with_index(1, ["1-1"]).data)
 
     # Test that getting via indidces vs the index is the same
-
-    print("\n" * 10)
-    print(vectorized.take_with_index(1, ["1-1", "1-0"]).data)
-    print(vectorized.take_with_indices(1, [1, 0]).data)
-    print("\n" * 10)
-
     assert np.array_equal(
         vectorized.take_with_index(1, ["1-1", "1-0"]).data,
         vectorized.take_with_indices(1, [1, 0]).data,
@@ -178,3 +176,71 @@ def test_normalization(  # pylint: disable=redefined-outer-name
     for index_name in vectorized.get_index("B"):
         val_sum = np.nansum(vectorized.take_with_index("B", [index_name]).data)
         assert np.isclose(val_sum, 0)
+
+
+def test_rename_axis(  # pylint: disable=redefined-outer-name
+    input_data,
+):
+    """Test rename_axis method."""
+    data, indexes = input_data
+    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+
+    vectorized.rename_axis("B", "hello")
+    assert vectorized.axis_names[1] == "hello"
+
+
+def test_swap_axes(  # pylint: disable=redefined-outer-name
+    input_data,
+):
+    """Test swap_axes method."""
+    data, indexes = input_data
+    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+
+    shape = vectorized.shape
+    index_lens = [len(index) for index in vectorized.indexes]
+    axis_names = list(vectorized.axis_names)
+
+    vectorized.swap_axes(0, 2)
+
+    shape_after = vectorized.shape
+    index_lens_after = [len(index) for index in vectorized.indexes]
+    axis_names_after = vectorized.axis_names
+
+    assert shape[0] == shape_after[2]
+    assert shape[1] == shape_after[1]
+    assert shape[2] == shape_after[0]
+    assert index_lens[0] == index_lens_after[2]
+    assert index_lens[1] == index_lens_after[1]
+    assert index_lens[2] == index_lens_after[0]
+    assert axis_names[0] == axis_names_after[2]
+    assert axis_names[1] == axis_names_after[1]
+    assert axis_names[2] == axis_names_after[0]
+
+
+def test_intersect_vectorized(  # pylint: disable=redefined-outer-name
+    input_data,
+):
+    """Test intersect_vectorized function."""
+    data, indexes = input_data
+    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+
+    vec1, vec2 = intersect_vectorized([vectorized, vectorized], axes="B")
+
+    assert (vec1.data == vec2.data).all()
+
+
+def test_split_vectorized(  # pylint: disable=redefined-outer-name
+    input_data,
+):
+    """Test split_vectorized function."""
+    data, indexes = input_data
+    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+
+    vec_split1, vec_split2 = split_vectorized(
+        [vectorized, vectorized], [0.8, 0.2], axes="C"
+    )
+    split1_data1, split1_data2 = vec_split1
+    split2_data1, split2_data2 = vec_split2
+
+    assert (split1_data1.data == split2_data1.data).all()
+    assert (split1_data2.data == split2_data2.data).all()
