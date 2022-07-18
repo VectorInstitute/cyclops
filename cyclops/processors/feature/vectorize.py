@@ -10,7 +10,7 @@ import numpy as np
 from codebase_ops import get_log_file_path
 from cyclops.processors.feature.normalization import VectorizedNormalizer
 from cyclops.processors.feature.split import split_idx
-from cyclops.utils.common import list_swap, to_list
+from cyclops.utils.common import list_swap
 from cyclops.utils.file import save_array
 from cyclops.utils.indexing import take_indices_over_axis
 from cyclops.utils.log import setup_logging
@@ -603,34 +603,31 @@ class Vectorized:
         axis_index = self.get_axis(axis)
         self.axis_names[axis_index] = name
 
-    def reorder_axes(
+    def swap_axes(
         self,
-        source: Union[str, int, List[str], List[int]],
-        destination: Union[str, int, List[str], List[int]],
+        axis1: Union[str, int],
+        axis2: Union[str, int],
     ) -> None:
-        """Move axes to new positions, being functionally similar to numpy.moveaxis.
+        """Swap the position of one axis for another position.
 
         Other axes remain in their original order.
 
         Parameters
         ----------
-        source: int or list of int
-            Original positions of the axes to move. These must be unique.
-        destination: int or list of int
-            Destination positions for each of the original axes.
-            These must also be unique.
+        axis1: int or str
+            First axis to swap.
+        axis2: int or str
+            Second axis to swap.
 
         """
         # Process axes
-        source_list: List[int] = [self.get_axis(axis) for axis in to_list(source)]
-        destination_list: List[int] = [
-            self.get_axis(axis) for axis in to_list(destination)
-        ]
+        axis1_index: int = self.get_axis(axis1)
+        axis2_index: int = self.get_axis(axis2)
 
         # Call moveaxis before meta changes in case there are errors
-        self.data = np.moveaxis(self.data, source_list, destination_list)
+        self.data = np.swapaxes(self.data, axis1_index, axis2_index)
 
         # Update meta
-        self.indexes = list_swap(self.indexes, source_list, destination_list)
-        self.index_maps = list_swap(self.index_maps, source_list, destination_list)
-        self.axis_names = list_swap(self.axis_names, source_list, destination_list)
+        self.indexes = list_swap(self.indexes, axis1_index, axis2_index)
+        self.index_maps = list_swap(self.index_maps, axis1_index, axis2_index)
+        self.axis_names = list_swap(self.axis_names, axis1_index, axis2_index)

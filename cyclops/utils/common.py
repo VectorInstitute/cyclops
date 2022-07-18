@@ -121,16 +121,17 @@ def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
     return datetime.strptime(date, fmt)
 
 
-def list_swap(lst: List, source: List[int], destination: List[int]) -> List:
+def list_swap(lst: List, item1: int, item2: int) -> List:
     """Swap items in a list given the item index and new item index.
 
     Parameters
     ----------
-    source: int or list of int
-        Original positions of the axes to move. These must be unique.
-    destination: int or list of int
-        Destination positions for each of the original axes.
-        These must also be unique.
+    lst: list
+        List in which elements will be swapped.
+    item1: int
+        Index of first item to swap.
+    item2: int
+        Index of second item to swap.
 
     Returns
     -------
@@ -138,13 +139,12 @@ def list_swap(lst: List, source: List[int], destination: List[int]) -> List:
         List with elements swapped.
 
     """
-    assert len(source) == len(destination)
-    assert all(0 <= ind < len(lst) for ind in source)
-    assert all(0 <= ind < len(lst) for ind in destination)
-    assert len(set(source)) == len(source)
-    assert len(set(destination)) == len(destination)
+    if not 0 <= item1 < len(lst):
+        raise ValueError("Item1 index is out of range.")
 
-    for i, src in enumerate(source):
-        lst[src], lst[destination[i]] = lst[destination[i]], lst[src]
+    if not 0 <= item2 < len(lst):
+        raise ValueError("Item2 index is out of range.")
+
+    lst[item1], lst[item2] = lst[item2], lst[item1]
 
     return lst
