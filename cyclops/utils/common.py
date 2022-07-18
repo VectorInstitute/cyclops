@@ -119,3 +119,32 @@ def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
 
     """
     return datetime.strptime(date, fmt)
+
+
+def list_swap(lst: List, source: List[int], destination: List[int]) -> List:
+    """Swap items in a list given the item index and new item index.
+
+    Parameters
+    ----------
+    source: int or list of int
+        Original positions of the axes to move. These must be unique.
+    destination: int or list of int
+        Destination positions for each of the original axes.
+        These must also be unique.
+
+    Returns
+    -------
+    list
+        List with elements swapped.
+
+    """
+    assert len(source) == len(destination)
+    assert all(0 <= ind < len(lst) for ind in source)
+    assert all(0 <= ind < len(lst) for ind in destination)
+    assert len(set(source)) == len(source)
+    assert len(set(destination)) == len(destination)
+
+    for i, src in enumerate(source):
+        lst[src], lst[destination[i]] = lst[destination[i]], lst[src]
+
+    return lst
