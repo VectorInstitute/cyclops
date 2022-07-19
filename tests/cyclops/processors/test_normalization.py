@@ -203,7 +203,7 @@ def test_vectorized_normalizer():
     normalizer1.fit(values1)
     normalized1 = normalizer1.transform(values1).reshape((2, 3))
 
-    normalizer = VectorizedNormalizer(axis=1, normalization_method=STANDARD)
+    normalizer = VectorizedNormalizer(1, {"A": STANDARD, "B": STANDARD})
     normalizer.fit(data, feat_map)
 
     normalized = normalizer.transform(data, feat_map)
