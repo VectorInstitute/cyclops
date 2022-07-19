@@ -5,6 +5,11 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
+from cyclops.processors.cleaning import (
+    combine_events,
+    convert_to_events,
+    normalize_events,
+)
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
     EVENT_CATEGORY,
@@ -12,11 +17,6 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
-)
-from cyclops.processors.events import (
-    combine_events,
-    convert_to_events,
-    normalize_events,
 )
 
 

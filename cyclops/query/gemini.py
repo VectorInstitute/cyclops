@@ -278,6 +278,9 @@ def patient_encounters(
         table = qp.Join(er_admin_table, on=ENCOUNTER_ID)(table)
 
     # Process optional operations
+    if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
+        process_kwargs["died"] = True
+
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
         (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),

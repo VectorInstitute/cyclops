@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - release_v0.1.0
     paths:
       - .github/workflows/docs.yml
       - '**.py'
@@ -14,6 +15,7 @@ on:
   pull_request:
     branches:
       - master
+      - release_v0.1.0
     paths:
       - .github/workflows/docs.yml
       - '**.py'

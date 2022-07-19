@@ -17,7 +17,7 @@ def to_list(obj: Any) -> list:
     Returns
     -------
     list
-        The processed function.
+        The processed object.
 
     """
     if isinstance(obj, list):
@@ -29,30 +29,49 @@ def to_list(obj: Any) -> list:
     return [obj]
 
 
-def to_list_optional(obj: Optional[Any]) -> Optional[list]:
+def to_list_optional(obj: Optional[Any], none_to_empty: bool = False) -> Optional[list]:
     """Convert some object to a list of object(s) unless already None or a list.
 
     Parameters
     ----------
     obj : any
         The object to convert to a list.
+    none_to_empty: bool, default = False
+        If true, return a None obj as an empty list. Otherwise, return as None.
 
     Returns
     -------
-    list
-        The processed function.
+    list or None
+        The processed object.
 
     """
     if obj is None:
+        if none_to_empty:
+            return []
         return None
 
-    if isinstance(obj, list):
-        return obj
+    return to_list(obj)
 
-    if isinstance(obj, np.ndarray):
-        return list(obj)
 
-    return [obj]
+def print_dict(dictionary: dict, limit: int = None) -> None:
+    """Print a dictionary with the option to limit the number of items.
+
+    Parameters
+    ----------
+    dictionary: dict
+        Dictionary to print.
+    limit: int, optional
+        Item limit to print.
+
+    """
+    if limit is None:
+        print(dictionary)
+        return
+
+    if limit < 0:
+        raise ValueError("Limit must be greater than 0.")
+
+    print(dict(list(dictionary.items())[0:10]))
 
 
 def append_if_missing(lst: Any, append_lst: Any, to_start: bool = False) -> List[Any]:
@@ -100,3 +119,32 @@ def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
 
     """
     return datetime.strptime(date, fmt)
+
+
+def list_swap(lst: List, item1: int, item2: int) -> List:
+    """Swap items in a list given the item index and new item index.
+
+    Parameters
+    ----------
+    lst: list
+        List in which elements will be swapped.
+    item1: int
+        Index of first item to swap.
+    item2: int
+        Index of second item to swap.
+
+    Returns
+    -------
+    list
+        List with elements swapped.
+
+    """
+    if not 0 <= item1 < len(lst):
+        raise ValueError("Item1 index is out of range.")
+
+    if not 0 <= item2 < len(lst):
+        raise ValueError("Item2 index is out of range.")
+
+    lst[item1], lst[item2] = lst[item2], lst[item1]
+
+    return lst
