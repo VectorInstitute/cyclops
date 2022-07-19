@@ -1,6 +1,9 @@
 """Feature normalization."""
 
-from typing import Dict, List, Optional, Union
+from __future__ import annotations
+
+import copy
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -191,7 +194,7 @@ class GroupbyNormalizer:
         {"event_values": "standard"}
     by: str or list of str, optional
         Columns to groupby, which affects how values are normalized.
-    normalizers: pandas.DataFrame
+    normalizers: dict
         The normalizer object information, where each column/group has a row
         with a normalization object.
 
@@ -367,39 +370,27 @@ class VectorizedNormalizer:
 
     Attributes
     ----------
+    axis: int
+        Axis over which to normalize.
     normalizer_map: dict
-        A map from the column name to the type of normalization, e.g.,
-        {"event_values": "standard"}
-    normalizers: pandas.DataFrame
-        The normalizer object information, where each column/group has a row
-        with a normalization object.
+        Mapping from an index to normalization type, e.g., {"eventA": "standard"}.
+    normalizers: dict
+        Mapping from an index to a normalizer object.
+    is_fit: bool
+        Whether or not the normalizers are fit.
 
     """
 
     def __init__(
         self,
         axis: int,
-        normalization_method: Optional[str] = None,
-        normalizer_map: Optional[dict] = None,
+        normalizer_map: dict,
     ) -> None:
         """Initialize."""
-        if normalization_method is None and normalizer_map is None:
-            raise ValueError(
-                (
-                    "Must specify normalization_method to normalize all features "
-                    "with the same method, or normalization_map to map specific "
-                    "indices to normalization methods."
-                )
-            )
-        if normalization_method is not None and normalizer_map is not None:
-            raise ValueError(
-                "Cannot specify both normalization_method and normalization_map."
-            )
-
         self.axis = axis
-        self.normalization_method = normalization_method
-        self.normalizer_map = normalizer_map
-        self.normalizers: Dict[str, SklearnNormalizer] = {}
+        self.normalizer_map: Dict[Any, str] = normalizer_map
+        self.normalizers: Dict[Any, SklearnNormalizer] = {}
+        self.is_fit: bool = False
 
     def get_map(self) -> Optional[dict]:
         """Get normalization mapping from features to type.
@@ -412,40 +403,34 @@ class VectorizedNormalizer:
         """
         return self.normalizer_map
 
-    def _check_missing(self, feat_map: Dict[str, int]) -> None:
-        """Check if any of the normalizer_map features are missing a given feat_map.
+    def _check_missing(self, index_map: Dict[str, int]) -> None:
+        """Check if any of the normalizer_map features are missing a given index_map.
 
         Parameters
         ----------
-        feat_map: dict
+        index_map: dict
             Map from feature name to index in the normalizer's given axis.
 
         """
         if self.normalizer_map is None:
             raise ValueError("normalizer_map is not set. Cannot check missing.")
 
-        missing = set(self.normalizer_map.keys()) - set(feat_map.keys())
+        missing = set(self.normalizer_map.keys()) - set(index_map.keys())
         if len(missing) != 0:
             raise ValueError(f"Missing features {', '.join(missing)} in the data.")
 
-    def fit(self, data: np.ndarray, feat_map: Dict[str, int]) -> None:
+    def fit(self, data: np.ndarray, index_map: Dict[str, int]) -> None:
         """Fit the normalizing objects.
 
         Parameters
         ----------
-        data: pandas.DataFrame
+        data: numpy.ndarray
             Data over which to fit.
-        feat_map: dict
+        index_map: dict
             Map from feature name to index in the normalizer's given axis.
 
         """
-        if self.normalizer_map is None:
-            # Use the same normalization method for all features
-            self.normalizer_map = {
-                feat: self.normalization_method for feat in feat_map.keys()
-            }
-        else:
-            self._check_missing(feat_map)
+        self._check_missing(index_map)
 
         for feat, method in self.normalizer_map.items():
             if isinstance(method, str):
@@ -456,14 +441,16 @@ class VectorizedNormalizer:
                     Passing normalizer objects not yet supported."""
                 )
 
-            ind = feat_map[feat]
+            ind = index_map[feat]
             values = data[index_axis(ind, self.axis, data.shape)]
             values = values.flatten()
             normalizer.fit(values)
             self.normalizers[feat] = normalizer
 
+        self.is_fit = True
+
     def _transform_by_method(
-        self, data: np.ndarray, feat_map: Dict[str, int], method: str
+        self, data: np.ndarray, index_map: Dict[str, int], method: str
     ) -> np.ndarray:
         """Apply a method from the normalizer object to the data.
 
@@ -471,7 +458,7 @@ class VectorizedNormalizer:
         ----------
         data: numpy.ndarray
             Data to transform.
-        feat_map: dict
+        index_map: dict
             Map from feature name to index in the normalizer's given axis.
         method: str
             Name of normalizer method to apply.
@@ -485,10 +472,10 @@ class VectorizedNormalizer:
         if not self.normalizers:
             raise ValueError("Must first fit the normalizers.")
 
-        self._check_missing(feat_map)
+        self._check_missing(index_map)
 
         for feat, normalizer in self.normalizers.items():
-            ind = feat_map[feat]
+            ind = index_map[feat]
             data_indexing = index_axis(ind, self.axis, data.shape)
             values = data[data_indexing]
             prev_shape = values.shape
@@ -498,14 +485,14 @@ class VectorizedNormalizer:
 
         return data
 
-    def transform(self, data: np.ndarray, feat_map: Dict[str, int]):
+    def transform(self, data: np.ndarray, index_map: Dict[str, int]):
         """Normalize the data.
 
         Parameters
         ----------
         data: numpy.ndarray
             Data to transform.
-        feat_map: dict
+        index_map: dict
             Map from feature name to index in the normalizer's given axis.
 
         Returns
@@ -514,16 +501,19 @@ class VectorizedNormalizer:
             The normalized data.
 
         """
-        return self._transform_by_method(data, feat_map, "transform")
+        if not self.is_fit:
+            raise ValueError("Normalizer has not been fit.")
 
-    def inverse_transform(self, data: np.ndarray, feat_map: Dict[str, int]):
+        return self._transform_by_method(data, index_map, "transform")
+
+    def inverse_transform(self, data: np.ndarray, index_map: Dict[str, int]):
         """Inversely normalize the data.
 
         Parameters
         ----------
         data: numpy.ndarray
             Data to transform.
-        feat_map: dict
+        index_map: dict
             Map from feature name to index in the normalizer's given axis.
 
         Returns
@@ -532,4 +522,51 @@ class VectorizedNormalizer:
             The inversely normalized data.
 
         """
-        return self._transform_by_method(data, feat_map, "inverse_transform")
+        if not self.is_fit:
+            raise ValueError("Normalizer has not been fit.")
+
+        return self._transform_by_method(data, index_map, "inverse_transform")
+
+    def set_normalizers(self, normalizers: Dict[str, Any]) -> None:
+        """Directly set the normalizer objects rather than fitting.
+
+        Parameters
+        ----------
+        normalizers: dict
+            Mapping from an index to a normalizer object.
+
+        """
+        if set(normalizers.keys()) - set(self.normalizer_map.keys()):
+            raise ValueError("normalizers has keys not existing in the normalizer map.")
+        self.normalizers = normalizers
+        self.is_fit = True
+
+    def subset(self, indexes: np.ndarray) -> VectorizedNormalizer:
+        """Subset the normalizers and return this new VectorizedNormalizer.
+
+        Parameters
+        ----------
+        indexes: numpy.ndarray
+            Indexes to keep.
+
+        """
+        normalizer_map = copy.deepcopy(self.normalizer_map)
+
+        keys = np.array(list(normalizer_map.keys()))
+        keep = np.in1d(keys, indexes)
+
+        keep_keys = keys[keep]
+        normalizer_map = {
+            key: val for key, val in normalizer_map.items() if key in keep_keys
+        }
+
+        normalizer = VectorizedNormalizer(self.axis, normalizer_map=normalizer_map)
+
+        if self.is_fit:
+            normalizers = copy.deepcopy(self.normalizers)
+            normalizers = {
+                key: val for key, val in normalizers.items() if key in keep_keys
+            }
+            normalizer.set_normalizers(normalizers)
+
+        return normalizer

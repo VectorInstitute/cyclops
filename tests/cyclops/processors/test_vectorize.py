@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from cyclops.processors.constants import STANDARD
-from cyclops.processors.feature.normalization import VectorizedNormalizer
 from cyclops.processors.feature.vectorize import (
     Vectorized,
     intersect_vectorized,
@@ -159,25 +158,6 @@ def test_split_by_fraction(  # pylint: disable=redefined-outer-name
     assert (vectorized.data[1, :, :] == vectorized1.data).all()
 
 
-def test_normalization(  # pylint: disable=redefined-outer-name
-    input_data,
-):
-    """Test normalization."""
-    data, indexes = input_data
-    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
-
-    normalizer = VectorizedNormalizer(
-        vectorized.get_axis("B"),
-        normalization_method=STANDARD,
-    )
-    vectorized.add_normalizer(normalizer)
-    vectorized.normalize()
-
-    for index_name in vectorized.get_index("B"):
-        val_sum = np.nansum(vectorized.take_with_index("B", [index_name]).data)
-        assert np.isclose(val_sum, 0)
-
-
 def test_rename_axis(  # pylint: disable=redefined-outer-name
     input_data,
 ):
@@ -244,3 +224,48 @@ def test_split_vectorized(  # pylint: disable=redefined-outer-name
 
     assert (split1_data1.data == split2_data1.data).all()
     assert (split1_data2.data == split2_data2.data).all()
+
+
+def test_normalization(  # pylint: disable=redefined-outer-name
+    input_data,
+):
+    """Test normalization."""
+    data, indexes = input_data
+    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+    vectorized.add_normalizer("B", normalization_method=STANDARD)
+    vectorized.fit_normalizer()
+    vectorized.normalize()
+
+    for index_name in vectorized.get_index("B"):
+        val_sum = np.nansum(vectorized.take_with_index("B", [index_name]).data)
+        assert np.isclose(val_sum, 0)
+
+
+def test_vectorized_normalizer_subset(  # pylint: disable=redefined-outer-name
+    input_data,
+):
+    """Test VectorizedNormalizer subset method and related Vectorized handling."""
+    data, indexes = input_data
+    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+    vectorized.add_normalizer("B", normalization_method=STANDARD)
+    vectorized.fit_normalizer()
+
+    # Split along the normalized axis, should affect the normalizers
+    vec_in, vec_out = vectorized.split_out("B", ["1-0"])
+    assert set(vec_in.normalizer.normalizer_map.keys()) == set(["1-1"])
+    assert set(vec_in.normalizer.normalizers.keys()) == set(["1-1"])
+    assert set(vec_out.normalizer.normalizer_map.keys()) == set(["1-0"])
+    assert set(vec_out.normalizer.normalizers.keys()) == set(["1-0"])
+
+    vec_in.normalize()
+    vec_out.normalize()
+
+    # Split along a different axis, should not affect the normalizers
+    vec_in, vec_out = vectorized.split_out("A", ["0-0"])
+    assert set(vec_in.normalizer.normalizer_map.keys()) == set(["1-0", "1-1"])
+    assert set(vec_in.normalizer.normalizers.keys()) == set(["1-0", "1-1"])
+    assert set(vec_out.normalizer.normalizer_map.keys()) == set(["1-0", "1-1"])
+    assert set(vec_out.normalizer.normalizers.keys()) == set(["1-0", "1-1"])
+
+    vec_in.normalize()
+    vec_out.normalize()

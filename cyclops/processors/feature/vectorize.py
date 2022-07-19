@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -78,11 +79,11 @@ def intersect_vectorized(
 
     # Get intersection
     index_sets = [set(vec.get_index(axes_list[i])) for i, vec in enumerate(vecs)]
-    intersection = np.array(list(set.intersection(*index_sets)))
+    intersect = np.array(list(set.intersection(*index_sets)))
 
     # Return intersected datasets
     intersected_vecs = [
-        vec.take_with_index(axes_list[i], intersection) for i, vec in enumerate(vecs)
+        vec.take_with_index(axes_list[i], intersect) for i, vec in enumerate(vecs)
     ]
 
     return tuple(intersected_vecs)
@@ -161,8 +162,6 @@ class Vectorized:
         A name to index map in each dimension.
     axis_names: list of str
         Axis names.
-    normalizer: VectorizedNormalizer, optional
-        Normalizer.
 
     """
 
@@ -171,7 +170,6 @@ class Vectorized:
         data: np.ndarray,
         indexes: List[Union[List, np.ndarray]],
         axis_names: List[str],
-        normalizer: Optional[VectorizedNormalizer] = None,
         is_normalized: bool = False,
     ) -> None:
         """Init."""
@@ -216,12 +214,7 @@ class Vectorized:
         ]
         self.axis_names: List[str] = axis_names
 
-        self.normalizer: Optional[VectorizedNormalizer]
-        if normalizer is not None:
-            self.add_normalizer(normalizer)
-        else:
-            self.normalizer = None
-
+        self.normalizer: Optional[VectorizedNormalizer] = None
         self.is_normalized = is_normalized
 
     @property
@@ -247,8 +240,58 @@ class Vectorized:
         """
         return self.data
 
-    def add_normalizer(self, normalizer: VectorizedNormalizer) -> None:
+    def add_normalizer(
+        self,
+        axis: Union[str, int],
+        normalization_method: Optional[str] = None,
+        normalizer_map: Optional[dict] = None,
+    ) -> None:
         """Add a normalizer.
+
+        Parameters
+        ----------
+        axis: int
+            Axis over which to normalize.
+        normalization_method: str, optional
+            Normalization method used for all over an axis.
+        normalizer_map: dict
+            Mapping from an index to normalization type, e.g., {"eventA": "standard"}.
+        normalizers: dict
+            Mapping from an index to a normalizer object.
+
+        """
+        if normalization_method is None and normalizer_map is None:
+            raise ValueError(
+                (
+                    "Must specify normalization_method to normalize all features "
+                    "with the same method, or normalization_map to map specific "
+                    "indices to separate normalization methods."
+                )
+            )
+        if normalization_method is not None and normalizer_map is not None:
+            raise ValueError(
+                "Cannot specify both normalization_method and normalization_map."
+            )
+
+        if self.normalizer is not None:
+            LOGGER.warning("Replacing existing normalizer.")
+
+        axis_index = self.get_axis(axis)
+        index_map = self.index_maps[axis_index]
+
+        if normalizer_map is None:
+            # Use the same normalization method for all features
+            normalizer_map = {feat: normalization_method for feat in index_map.keys()}
+        else:
+            missing = set(normalizer_map.keys()) - set(index_map.keys())
+            if len(missing) != 0:
+                raise ValueError(f"Invalid index values {', '.join(missing)}.")
+
+        normalizer = VectorizedNormalizer(axis_index, normalizer_map)
+        self.normalizer = normalizer
+
+    def add_normalizer_direct(self, normalizer: VectorizedNormalizer) -> None:
+        """Directly add a normalizer by supplying the VectorizedNormalizer.
 
         Parameters
         ----------
@@ -260,11 +303,20 @@ class Vectorized:
             raise ValueError("Normalizer must be a VectorizedNormalizer.")
 
         if self.normalizer is not None:
-            LOGGER.warning("Replacing an existing normalizer.")
+            LOGGER.warning("Replacing existing normalizer.")
 
-        index_map = self.index_maps[normalizer.axis]
-        normalizer.fit(self.data, index_map)
         self.normalizer = normalizer
+
+    def fit_normalizer(self) -> None:
+        """Fit the normalizer."""
+        if self.normalizer is None:
+            raise ValueError("Must add a normalizer.")
+
+        if self.normalizer.is_fit:
+            LOGGER.warning("Re-fitting existing normalizer.")
+
+        index_map = self.index_maps[self.normalizer.axis]
+        self.normalizer.fit(self.data, index_map)
 
     def normalize(self) -> None:
         """Normalize.
@@ -343,7 +395,21 @@ class Vectorized:
         new_indexes = list(self.indexes)
         new_indexes[axis_index] = [self.indexes[axis_index][ind] for ind in indices]
 
-        return Vectorized(data, new_indexes, self.axis_names)
+        vec = Vectorized(
+            data, new_indexes, self.axis_names, is_normalized=self.is_normalized
+        )
+
+        # Add normalizers (and possibly a subset of the existing normalizers if
+        # splitting on the normalization axis)
+        if self.normalizer is not None:
+            if axis != self.normalizer.axis:
+                normalizer = copy.deepcopy(self.normalizer)
+            else:
+                normalizer = self.normalizer.subset(vec.indexes[self.normalizer.axis])
+
+            vec.add_normalizer_direct(normalizer)
+
+        return vec
 
     def take_with_index(
         self, axis: Union[str, int], index: Union[List[Any], np.ndarray]
@@ -468,11 +534,11 @@ class Vectorized:
             if len(diff) > 0:
                 raise ValueError("Not allowing dropping and missing certain values.")
 
-        splits = []
+        vec_splits = []
         for split_indices in indices:
-            splits.append(self.take_with_indices(axis_index, split_indices))
+            vec_splits.append(self.take_with_indices(axis_index, split_indices))
 
-        return tuple(splits)
+        return tuple(vec_splits)
 
     def split_by_index(
         self,
@@ -631,3 +697,10 @@ class Vectorized:
         self.indexes = list_swap(self.indexes, axis1_index, axis2_index)
         self.index_maps = list_swap(self.index_maps, axis1_index, axis2_index)
         self.axis_names = list_swap(self.axis_names, axis1_index, axis2_index)
+
+        # Update axis on which the normalizer acts if it was switched
+        if self.normalizer is not None:
+            if self.normalizer.axis == axis1_index:
+                self.normalizer.axis = axis2_index
+            elif self.normalizer.axis == axis2_index:
+                self.normalizer.axis = axis1_index
