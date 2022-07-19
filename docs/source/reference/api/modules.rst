@@ -6,10 +6,8 @@ cyclops
 
    config
    constants
-   feature_handler
    orm
    plotter
-   processor
    processors
    query
    utils

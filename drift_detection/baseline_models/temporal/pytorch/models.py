@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class RNNModel(nn.Module):
     """RNN Class.
 
@@ -14,11 +15,21 @@ class RNNModel(nn.Module):
         Number of hidden layers
     output_dim: int
         Dimension of output
-    dropout_prob: int 
-        Dropout probability for dropout layer 
+    dropout_prob: int
+        Dropout probability for dropout layer
 
     """
-    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob, last_timestep_only=False):
+
+    def __init__(
+        self,
+        device,
+        input_dim,
+        hidden_dim,
+        layer_dim,
+        output_dim,
+        dropout_prob,
+        last_timestep_only=False,
+    ):
         super(RNNModel, self).__init__()
         self.device = device
         self.hidden_dim = hidden_dim
@@ -30,13 +41,14 @@ class RNNModel(nn.Module):
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
-        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
+        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
         out, h0 = self.rnn(x, h0.detach())
         if self.last_timestep_only:
             out = out[:, -1, :]
         out = self.fc(out)
         return out
-    
+
+
 class GRUModel(nn.Module):
     """GRU Class.
 
@@ -50,11 +62,21 @@ class GRUModel(nn.Module):
         Number of hidden layers
     output_dim: int
         Dimension of output
-    dropout_prob: int 
-        Dropout probability for dropout layer 
+    dropout_prob: int
+        Dropout probability for dropout layer
 
     """
-    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob,last_timestep_only=False):
+
+    def __init__(
+        self,
+        device,
+        input_dim,
+        hidden_dim,
+        layer_dim,
+        output_dim,
+        dropout_prob,
+        last_timestep_only=False,
+    ):
         super(GRUModel, self).__init__()
         self.device = device
         self.layer_dim = layer_dim
@@ -62,17 +84,18 @@ class GRUModel(nn.Module):
         self.gru = nn.GRU(
             input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob
         )
-        self.fc = nn.Linear(hidden_dim, output_dim)  
+        self.fc = nn.Linear(hidden_dim, output_dim)
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
-        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
+        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
         out, _ = self.gru(x, h0.detach())
         if self.last_timestep_only:
             out = out[:, -1, :]
         out = self.fc(out)
         return out
-    
+
+
 class LSTMModel(nn.Module):
     """LSTM Class.
 
@@ -86,11 +109,21 @@ class LSTMModel(nn.Module):
         Number of hidden layers
     output_dim: int
         Dimension of output
-    dropout_prob: int 
-        Dropout probability for dropout layer 
+    dropout_prob: int
+        Dropout probability for dropout layer
 
     """
-    def __init__(self, device, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob, last_timestep_only=False):
+
+    def __init__(
+        self,
+        device,
+        input_dim,
+        hidden_dim,
+        layer_dim,
+        output_dim,
+        dropout_prob,
+        last_timestep_only=False,
+    ):
         super(LSTMModel, self).__init__()
         self.device = device
         self.hidden_dim = hidden_dim
@@ -98,15 +131,15 @@ class LSTMModel(nn.Module):
         self.lstm = nn.LSTM(
             input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob
         )
-        self.fc = nn.Linear(hidden_dim, output_dim)       
+        self.fc = nn.Linear(hidden_dim, output_dim)
         self.sigmoid = nn.Sigmoid()
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
-        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
-        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
+        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
+        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
         out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
-        if self.last_timestep_only:    
-            out = out[:, -1 , :]
+        if self.last_timestep_only:
+            out = out[:, -1, :]
         out = self.fc(out)
         return out

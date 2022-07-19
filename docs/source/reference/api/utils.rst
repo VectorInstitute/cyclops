@@ -7,7 +7,9 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   utils.common
    utils.file
+   utils.indexing
    utils.log
    utils.profile
 

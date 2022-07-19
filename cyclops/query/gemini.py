@@ -1,7 +1,7 @@
 """GEMINI query API."""
 
 import logging
-from typing import List, Optional
+from typing import Callable, List, Optional, Union
 
 from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
@@ -32,13 +32,14 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import EMPTY_STRING
 from cyclops.query import process as qp
-from cyclops.query.interface import QueryInterface
+from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.util import (
     TableTypes,
     _to_subquery,
     assert_table_has_columns,
     table_params_to_type,
 )
+from cyclops.utils.common import append_if_missing
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -62,8 +63,12 @@ ROOM_TRANSFER = "room_transfer"
 BLOOD_TRANSFUSION = "blood_transfusion"
 IMAGING = "imaging"
 LOOKUP_IMAGING = "lookup_imaging"
+DERIVED_VARIABLES = "derived_variables"
+
 
 _db = Database(config.read_config(GEMINI_OMOP))
+
+
 TABLE_MAP = {
     IP_ADMIN: lambda db: db.public.ip_administrative,
     ER_ADMIN: lambda db: db.public.er_administrative,
@@ -81,6 +86,7 @@ TABLE_MAP = {
     BLOOD_TRANSFUSION: lambda db: db.public.blood_transfusion,
     IMAGING: lambda db: db.public.imaging,
     LOOKUP_IMAGING: lambda db: db.public.lookup_imaging,
+    DERIVED_VARIABLES: lambda db: db.public.derived_variables,
 }
 GEMINI_COLUMN_MAP = {
     "genc_id": ENCOUNTER_ID,
@@ -110,21 +116,30 @@ EVENT_CATEGORIES = [LAB, VITALS]
 
 
 @table_params_to_type(Subquery)
-def get_interface(table: TableTypes) -> QueryInterface:
+def get_interface(
+    table: TableTypes,
+    process_fn: Optional[Callable] = None,
+) -> Union[QueryInterface, QueryInterfaceProcessed]:
     """Get a query interface for a GEMINI table.
 
     Parameters
     ----------
     table: cyclops.query.util.TableTypes
         Table to wrap in the interface.
+    process_fn: Callable
+        Process function to apply on the Pandas DataFrame returned from the query.
 
     Returns
     -------
-    cyclops.query.interface.QueryInterface
+    cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
         A query interface using the GEMINI database object.
 
     """
-    return QueryInterface(_db, table)
+    if process_fn is None:
+        return QueryInterface(_db, table)
+
+    return QueryInterfaceProcessed(_db, table, process_fn)
 
 
 def get_table(table_name: str, rename: bool = True) -> Subquery:
@@ -191,7 +206,7 @@ def er_admin(**process_kwargs) -> QueryInterface:
         (qp.ConditionAfterDate, [ER_ADMIT_TIMESTAMP, qp.QAP("after_date")], {}),
         (qp.ConditionInYears, [ER_ADMIT_TIMESTAMP, qp.QAP("years")], {}),
         (qp.ConditionInMonths, [ER_ADMIT_TIMESTAMP, qp.QAP("months")], {}),
-        (qp.ConditionIn, ["triage_level", qp.QAP("triage_level")], {"to_int": True}),
+        (qp.ConditionIn, ["triage_level", qp.QAP("triage_level")], {"to_str": True}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
     table = qp.process_operations(table, operations, process_kwargs)
@@ -202,7 +217,9 @@ def er_admin(**process_kwargs) -> QueryInterface:
 @table_params_to_type(Subquery)
 @assert_table_has_columns(er_admin_table=ENCOUNTER_ID)
 def patient_encounters(
-    er_admin_table: Optional[TableTypes] = None, **process_kwargs
+    er_admin_table: Optional[TableTypes] = None,
+    drop_null_subject_ids=True,
+    **process_kwargs,
 ) -> QueryInterface:
     """Query GEMINI patient encounters.
 
@@ -242,6 +259,9 @@ def patient_encounters(
     """
     table = get_table(IP_ADMIN)
 
+    if drop_null_subject_ids:
+        table = qp.DropNulls(SUBJECT_ID)(table)
+
     # Get the discharge disposition code descriptions
     lookup_table = get_table(LOOKUP_IP_ADMIN)
     lookup_table = qp.ConditionEquals("variable", "discharge_disposition")(lookup_table)
@@ -260,6 +280,9 @@ def patient_encounters(
         table = qp.Join(er_admin_table, on=ENCOUNTER_ID)(table)
 
     # Process optional operations
+    if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
+        process_kwargs["died"] = True
+
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
         (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),
@@ -271,7 +294,7 @@ def patient_encounters(
             qp.ConditionEquals,
             ["discharge_description", "Died"],
             {
-                "not_": qp.QAP("died", not_=True),
+                "not_": qp.QAP("died", transform_fn=lambda x: not x),
                 "binarize_col": qp.QAP("died_binarize_col", required=False),
             },
         ),
@@ -515,6 +538,7 @@ def events(
     event_category: str,
     patient_encounters_table: Optional[TableTypes] = None,
     drop_null_event_names: bool = True,
+    drop_null_event_values: bool = False,
     **process_kwargs,
 ) -> QueryInterface:
     """Query events.
@@ -525,6 +549,10 @@ def events(
         Specify event category, e.g., lab, vitals, intervention, etc.
     patient_encounters_table: cyclops.query.util.TableTypes, optional
         Patient encounters table used to join.
+    drop_null_event_names: bool, default = True
+        Whether to drop rows with null or empty event names.
+    drop_null_event_values: bool, default = False
+        Whether to drop rows with null event values.
 
     Returns
     -------
@@ -550,12 +578,16 @@ def events(
 
     table = get_table(event_category)
 
-    # Remove null events and events with no recorded name
+    # Remove rows with null events/events with no recorded name
     if drop_null_event_names:
         table = qp.DropNulls(EVENT_NAME)(table)
         table = qp.ConditionEquals(EVENT_NAME, EMPTY_STRING, not_=True, to_str=True)(
             table
         )
+
+    # Remove rows with null event values
+    if drop_null_event_values:
+        table = qp.DropNulls(EVENT_VALUE)(table)
 
     # Process optional operations
     operations: List[tuple] = [
@@ -637,7 +669,7 @@ def blood_transfusions(**process_kwargs) -> QueryInterface:
     return QueryInterface(_db, table)
 
 
-def interventions() -> QueryInterface:
+def interventions(**process_kwargs) -> QueryInterface:
     """Query interventions data.
 
     Returns
@@ -645,8 +677,21 @@ def interventions() -> QueryInterface:
     cyclops.query.interface.QueryInterface
         Constructed table, wrapped in an interface object.
 
+    Other Parameters
+    ----------------
+    limit: int, optional
+        Limit the number of rows returned.
+    years: int or list of int, optional
+        Get tests by year.
+
     """
     table = get_table(INTERVENTION)
+
+    operations: List[tuple] = [
+        (qp.ConditionInYears, ["intervention_episode_start_date", qp.QAP("years")], {}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)
 
@@ -661,7 +706,7 @@ def imaging(**process_kwargs) -> QueryInterface:
 
     Other Parameters
     ----------------
-    test_descriptions:
+    test_descriptions: str or list of str
         Get only certain tests with the specified descriptions.
     raw_test_names: str or list of str
         Get only certain raw test names.
@@ -710,6 +755,68 @@ def imaging(**process_kwargs) -> QueryInterface:
             ["imaging_test_name_raw", qp.QAP("raw_test_names")],
             {"to_str": True},
         ),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
+
+    return QueryInterface(_db, table)
+
+
+def derived_variables(**process_kwargs) -> QueryInterface:
+    """Query derived variable data.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    variables: str or list of str
+        Variable columns to keep.
+    limit: int, optional
+        Limit the number of rows returned.
+
+    """
+    table = get_table(DERIVED_VARIABLES)
+
+    operations: List[tuple] = [
+        (
+            qp.FilterColumns,
+            [
+                qp.QAP(
+                    "variables",
+                    transform_fn=lambda x: append_if_missing(
+                        x, ENCOUNTER_ID, to_start=True
+                    ),
+                )
+            ],
+            {},
+        ),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+    table = qp.process_operations(table, operations, process_kwargs)
+
+    return QueryInterface(_db, table)
+
+
+def pharmacy(**process_kwargs) -> QueryInterface:
+    """Query pharmacy data.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed table, wrapped in an interface object.
+
+    Other Parameters
+    ----------------
+    limit: int, optional
+        Limit the number of rows returned.
+
+    """
+    table = get_table(PHARMACY)
+
+    operations: List[tuple] = [
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
     table = qp.process_operations(table, operations, process_kwargs)

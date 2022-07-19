@@ -3,7 +3,7 @@
 # pylint: disable=duplicate-code
 
 import logging
-from typing import List, Optional
+from typing import Callable, List, Optional, Union
 
 from sqlalchemy import Integer, func, select
 from sqlalchemy.sql.selectable import Subquery
@@ -21,6 +21,7 @@ from cyclops.processors.column_names import (
     DIAGNOSIS_VERSION,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
+    EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
@@ -83,21 +84,30 @@ MIMIC_COLUMN_MAP = {
 
 
 @table_params_to_type(Subquery)
-def get_interface(table: TableTypes) -> QueryInterface:
-    """Get a query interface for a MIMIC table.
+def get_interface(
+    table: TableTypes,
+    process_fn: Optional[Callable] = None,
+) -> Union[QueryInterface, QueryInterfaceProcessed]:
+    """Get a query interface for a GEMINI table.
 
     Parameters
     ----------
     table: cyclops.query.util.TableTypes
         Table to wrap in the interface.
+    process_fn: Callable
+        Process function to apply on the Pandas DataFrame returned from the query.
 
     Returns
     -------
-    cyclops.query.interface.QueryInterface
-        A query interface using the MIMIC database object.
+    cyclops.query.interface.QueryInterface or
+    cyclops.query.interface.QueryInterfaceProcessed
+        A query interface using the GEMINI database object.
 
     """
-    return QueryInterface(_db, table)
+    if process_fn is None:
+        return QueryInterface(_db, table)
+
+    return QueryInterfaceProcessed(_db, table, process_fn)
 
 
 def get_table(
@@ -216,7 +226,7 @@ def patients(**process_kwargs) -> QueryInterface:
         (
             qp.ConditionEquals,
             [DATE_OF_DEATH, None],
-            {"not_": qp.QAP("died", not_=True)},
+            {"not_": qp.QAP("died", transform_fn=lambda x: not x)},
         ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
@@ -406,8 +416,7 @@ def care_units(
     return QueryInterfaceProcessed(
         _db,
         table,
-        process_fn=process_mimic_care_units,
-        process_fn_kwargs={"specific": False},
+        process_fn=lambda x: process_mimic_care_units(x, specific=False),
     )
 
 
@@ -430,6 +439,12 @@ def patient_encounters(
 
     Other Parameters
     ----------------
+    sex: str or list of string, optional
+        Specify patient sex (one or multiple).
+    died: bool, optional
+        Specify True to get patients who have died, and False for those who haven't.
+    died_binarize_col: str, optional
+        Binarize the died condition and save as a column with label died_binarize_col.
     before_date: datetime.datetime or str
         Get patients encounters before some date.
         If a string, provide in YYYY-MM-DD format.
@@ -440,6 +455,8 @@ def patient_encounters(
         Get patient encounters by year.
     months: int or list of int, optional
         Get patient encounters by month.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
     table = get_table(ADMISSIONS)
@@ -462,11 +479,24 @@ def patient_encounters(
     table = qp.ReorderAfter(AGE, SEX)(table)
 
     # Process optional operations
+    if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
+        process_kwargs["died"] = True
+
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
         (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),
         (qp.ConditionInYears, ["admit_timestamp", qp.QAP("years")], {}),
         (qp.ConditionInMonths, ["admit_timestamp", qp.QAP("months")], {}),
+        (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+        (
+            qp.ConditionEquals,
+            ["discharge_location", "DIED"],
+            {
+                "not_": qp.QAP("died", transform_fn=lambda x: not x),
+                "binarize_col": qp.QAP("died_binarize_col", required=False),
+            },
+        ),
+        (qp.Limit, [qp.QAP("limit")], {}),
     ]
 
     table = qp.process_operations(table, operations, process_kwargs)
@@ -509,6 +539,8 @@ def events(
     table = qp.Join(
         event_labels, on="itemid", join_table_cols=["category", "event_name"]
     )(table)
+
+    table = qp.Rename({"category": EVENT_CATEGORY})(table)
 
     # Process optional operations
     operations: List[tuple] = [

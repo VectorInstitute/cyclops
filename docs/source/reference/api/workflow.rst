@@ -8,7 +8,6 @@ Submodules
    :maxdepth: 4
 
    workflow.constants
-   workflow.queries
    workflow.task
 
 Module contents
