@@ -9,6 +9,7 @@ Submodules
 
    utils.common
    utils.file
+   utils.indexing
    utils.log
    utils.profile
 
