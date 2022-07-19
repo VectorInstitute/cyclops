@@ -9,6 +9,7 @@ Welcome to cyclops's documentation!
    intro
    gemini_hpc
    design
+   contributing
    coverage
    reference/api/modules
 
