@@ -1,6 +1,14 @@
 processors package
 ==================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   processors.feature
+
 Submodules
 ----------
 
