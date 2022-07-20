@@ -18,6 +18,7 @@ from consts import (
     SEXES,
     TRIAGE_LEVEL_MAP,
     OUTCOME_DEATH,
+    OUTCOME_EDEMA,
 )
 
 import cyclops.query.process as qp
@@ -461,8 +462,6 @@ def get_labs(cohort: pd.DataFrame) -> pd.DataFrame:
         "lab", drop_null_event_names=True, drop_null_event_values=True
     ).query
 
-    # table = qp.Limit(1000)(table)
-
     table = qp.FilterColumns(
         [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT, EVENT_TIMESTAMP]
     )(table)
@@ -513,7 +512,6 @@ def main(drop_admin_cols=True):
 
     # Get lab data
     labs = get_labs(cohort)
-    # labs = None
 
     return cohort, labs
 
