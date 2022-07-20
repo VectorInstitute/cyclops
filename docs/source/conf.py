@@ -17,6 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../cyclops"))
 sys.path.insert(0, os.path.abspath("../../cyclops/processors"))
+sys.path.insert(0, os.path.abspath("../../cyclops/processors/feature"))
 sys.path.insert(0, os.path.abspath("../../cyclops/utils"))
 sys.path.insert(0, os.path.abspath("../../cyclops/query"))
 sys.path.insert(0, os.path.abspath("../../cyclops/query/postprocess"))
