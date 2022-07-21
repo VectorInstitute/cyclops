@@ -119,7 +119,6 @@ class ShiftReductor:
                 device=self.device,
                 batch_size=batch_size,
             )
-            pred = softmax(pred,0)
             return pred
         elif "BBSDh" in self.dr_tech:
             pred = preprocess_drift(
@@ -128,8 +127,7 @@ class ShiftReductor:
                 device=self.device,
                 batch_size=batch_size,
             )
-            pred = softmax(pred,0)
-            pred = np.argmax(pred, axis=1)
+            pred = np.where(pred > 0.5, 1, 0)
             return pred  
         elif self.dr_tech == "GMM":           
             gmm = self.gaussian_mixture_model(n_clusters)

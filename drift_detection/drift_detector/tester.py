@@ -34,7 +34,9 @@ from alibi_detect.cd import (
     MMDDriftOnline,
     TabularDrift,
     ContextMMDDrift,
-    ChiSquareDrift
+    ChiSquareDrift,
+    FETDrift,
+    SpotTheDiffDrift
 )
 
 class ShiftTester:
@@ -253,6 +255,14 @@ class ShiftTester:
             
         elif self.mt == "Chi-Squared":
             dd = ChiSquareDrift(X_s, correction = "bonferroni", p_val=0.05)
+            preds = dd.predict(
+                X_t, drift_type="batch", return_p_val=True, return_distance=True
+            )
+            p_val = preds["data"]["p_val"]
+            dist = preds["data"]["distance"]
+            
+        elif self.mt == "FET":
+            dd = FETDrift(X_s, alternative="two-sided", p_val=0.05)
             preds = dd.predict(
                 X_t, drift_type="batch", return_p_val=True, return_distance=True
             )

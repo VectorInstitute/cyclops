@@ -62,19 +62,19 @@ def plot_roc(ax, fpr, tpr, roc_auc):
     ax.plot(fpr, tpr)
     ax.plot([0, 1], [0, 1], "k--")
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
-    ax.set_xlabel("False Positive Rate")
-    ax.set_ylabel("True Positive Rate")
+    ax.set_xlabel("False Positive Rate", fontsize = 12)
+    ax.set_ylabel("True Positive Rate", fontsize = 12)
     ax.set_title("ROC curve (area = %0.6f)" % roc_auc)
     return ax
 
 
-def plot_pr(ax, recall, precision, average_precision):
+def plot_pr(ax, recall, precision, roc_prc):
     ax.step(recall, precision, color="b", alpha=0.2, where="post")
     ax.fill_between(recall, precision, step="post", alpha=0.2, color="b")
-    ax.set_xlabel("Recall")
-    ax.set_ylabel("Precision")
+    ax.set_xlabel("Recall", fontsize = 12)
+    ax.set_ylabel("Precision", fontsize = 12)
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
-    ax.set_title("Average Precision: {0:0.6f}".format(average_precision))
+    ax.set_title("PRC curve (area = %0.6f)" % roc_prc)
     return ax
 
 def setup_plot(plot_handle: mpl.axes.SubplotBase,
