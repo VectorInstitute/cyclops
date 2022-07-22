@@ -1,9 +1,11 @@
 """Test common utility fns."""
 
 import numpy as np
+import pandas as pd
 
 from cyclops.utils.common import (
     append_if_missing,
+    array_series_conversion,
     to_datetime_format,
     to_list,
     to_list_optional,
@@ -42,3 +44,161 @@ def test_append_if_missing():
     assert out_list == ["a", "b"]
     out_list = append_if_missing(["b"], ["a"], to_start=True)
     assert out_list == ["a", "b"]
+
+def test_array_series_conversion():
+    """Test array_series_conversion not including out_to='back'."""
+    array = np.array([1, np.nan, 2])
+    series = pd.Series([1, np.nan, 2])
+    
+    # Test single return
+    
+    @array_series_conversion(to="array", out_to="array")
+    def test(data):
+        assert isinstance(data, np.ndarray)
+        return data
+    
+    ret = test(array)
+    assert isinstance(ret, np.ndarray)
+    
+    ret = test(series)
+    assert isinstance(ret, np.ndarray)
+    
+    @array_series_conversion(to="series", out_to="array")
+    def test(data):
+        assert isinstance(data, pd.Series)
+        return data
+    
+    ret = test(array)
+    assert isinstance(ret, np.ndarray)
+    
+    ret = test(series)
+    assert isinstance(ret, np.ndarray)
+    
+    @array_series_conversion(to="array", out_to="series")
+    def test(data):
+        assert isinstance(data, np.ndarray)
+        return data
+    
+    ret = test(array)
+    assert isinstance(ret, pd.Series)
+    
+    ret = test(series)
+    assert isinstance(ret, pd.Series)
+    
+    @array_series_conversion(to="series", out_to="series")
+    def test(data):
+        assert isinstance(data, pd.Series)
+        return data
+    
+    ret = test(array)
+    assert isinstance(ret, pd.Series)
+    
+    ret = test(series)
+    assert isinstance(ret, pd.Series)
+    
+    
+    # Test multiple returns
+    
+    @array_series_conversion(to="array", out_to="array")
+    def test(*datas):
+        assert all([isinstance(data, np.ndarray) for data in datas])
+        return datas
+    
+    array_ret, series_ret = test(array, series)
+    assert isinstance(array_ret, np.ndarray)
+    assert isinstance(series_ret, np.ndarray)
+    
+    @array_series_conversion(to="series", out_to="array")
+    def test(*datas):
+        assert all([isinstance(data, pd.Series) for data in datas])
+        return datas
+    
+    array_ret, series_ret = test(array, series)
+    assert isinstance(array_ret, np.ndarray)
+    assert isinstance(series_ret, np.ndarray)
+    
+    @array_series_conversion(to="array", out_to="series")
+    def test(*datas):
+        assert all([isinstance(data, np.ndarray) for data in datas])
+        return datas
+    
+    array_ret, series_ret = test(array, series)
+    assert isinstance(array_ret, pd.Series)
+    assert isinstance(series_ret, pd.Series)
+    
+    @array_series_conversion(to="series", out_to="series")
+    def test(*datas):
+        assert all([isinstance(data, pd.Series) for data in datas])
+        return datas
+    
+    array_ret, series_ret = test(array, series)
+    assert isinstance(array_ret, pd.Series)
+    assert isinstance(series_ret, pd.Series)
+    
+
+def test_array_series_conversion_out_to_back():
+    """Test array_series_conversion with out_to='back'."""
+    array = np.array([1, np.nan, 2])
+    series = pd.Series([1, np.nan, 2])
+
+    # Test single return
+    
+    # Array to array (no conversion)
+    @array_series_conversion(to="array")
+    def test(data):
+        assert isinstance(data, np.ndarray)
+        return data
+
+    ret = test(array)
+    assert isinstance(ret, np.ndarray)
+
+
+    # Array to series and back
+    @array_series_conversion(to="series")
+    def test(data):
+        assert isinstance(data, pd.Series)
+        return data
+
+    ret = test(array)
+    assert isinstance(ret, np.ndarray)
+
+    # Series to series (no conversion)
+    @array_series_conversion(to="series")
+    def test(data):
+        assert isinstance(data, pd.Series)
+        return data
+
+    ret = test(series)
+    assert isinstance(ret, pd.Series)
+
+    # Series to to array and back
+    @array_series_conversion(to="array")
+    def test(data):
+        assert isinstance(data, np.ndarray)
+        return data
+
+    ret = test(series)
+    assert isinstance(ret, pd.Series)
+
+    
+    # Test multiple returns
+    
+    # To array
+    @array_series_conversion(to="array")
+    def test(*datas):
+        assert all([isinstance(data, np.ndarray) for data in datas])
+        return datas
+
+    array_ret, series_ret = test(array, series)
+    assert isinstance(array_ret, np.ndarray)
+    assert isinstance(series_ret, pd.Series)
+
+    # To series
+    @array_series_conversion(to="series")
+    def test(*datas):
+        assert all([isinstance(data, pd.Series) for data in datas])
+        return datas
+
+    array_ret, series_ret = test(array, series)
+    assert isinstance(array_ret, np.ndarray)
+    assert isinstance(series_ret, pd.Series)
