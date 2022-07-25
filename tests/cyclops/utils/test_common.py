@@ -7,6 +7,7 @@ import pytest
 from cyclops.utils.common import (
     append_if_missing,
     array_series_conversion,
+    is_one_dimensional,
     list_swap,
     print_dict,
     to_datetime_format,
@@ -52,9 +53,18 @@ def test_append_if_missing():
 
 def test_print_dict(capfd):
     """Test print_dict fn."""
-    print_dict({"blackbird": "single"})
+    test_dict = {"blackbird": "single"}
+    print_dict(test_dict)
     out, _ = capfd.readouterr()
     assert out == "{'blackbird': 'single'}\n"
+
+    with pytest.raises(ValueError):
+        print_dict(test_dict, limit=-1)
+
+    test_dict = {"a": 1, "b": 2, "c": 3}
+    print_dict(test_dict, limit=2)
+    out, _ = capfd.readouterr()
+    assert out == "{'a': 1, 'b': 2}\n"
 
 
 def test_list_swap():
@@ -221,3 +231,11 @@ def test_array_series_conversion_out_to_back():
     array_ret, series_ret = test6(array, series)
     assert isinstance(array_ret, np.ndarray)
     assert isinstance(series_ret, pd.Series)
+
+
+def test_is_one_dimensional():
+    """Test is_one_dimensional fn."""
+    assert is_one_dimensional(np.array([1, 3, 4])) is True
+    assert is_one_dimensional(np.array([[1], [3], [4]]), raise_error=False) is False
+    with pytest.raises(ValueError):
+        is_one_dimensional(np.array([[1], [3], [4]]))
