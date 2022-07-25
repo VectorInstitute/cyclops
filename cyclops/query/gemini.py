@@ -6,7 +6,6 @@ from typing import Callable, List, Optional, Union
 from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
 from sqlalchemy.sql.selectable import Subquery
-from sqlalchemy.dialects.postgresql.base import TIMESTAMP
 
 from codebase_ops import get_log_file_path
 from cyclops import config
@@ -264,10 +263,10 @@ def patient_encounters(
     # Get the discharge disposition code descriptions
     lookup_table = get_table(LOOKUP_IP_ADMIN)
     lookup_table = qp.ConditionEquals("variable", "discharge_disposition")(lookup_table)
-    
+
     # Possibly cast string representations to timestamps
     table = qp.Cast([ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], "timestamp")(table)
-    
+
     table = qp.Join(
         lookup_table,
         on=("discharge_disposition", "value"),

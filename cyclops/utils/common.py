@@ -1,10 +1,11 @@
 """Common utility functions that can be used across multiple cyclops packages."""
 
 from datetime import datetime
-from typing import Any, Union, List, Callable, Optional
 from functools import wraps
+from typing import Any, Callable, List, Optional
 
 import numpy as np
+import pandas as pd
 
 
 def to_list(obj: Any) -> list:
@@ -153,14 +154,14 @@ def list_swap(lst: List, item1: int, item2: int) -> List:
 
 def is_one_dimensional(arr: np.ndarray, raise_error: bool = True):
     """Determine whether a NumPy array is 1-dimensional.
-    
+
     Parameters
     ----------
     arr: numpy.ndarray
         Array to check.
     raise_error: bool, default = True
         Whether to raise an error if the array is not 1-dimensional.
-    
+
     Returns
     -------
     bool
@@ -169,21 +170,21 @@ def is_one_dimensional(arr: np.ndarray, raise_error: bool = True):
     """
     if arr.ndim == 1:
         return True
-    
+
     if raise_error:
         raise ValueError("Array must be one dimensional.")
-    
+
     return False
 
 
 def series_to_array(val: Any) -> Any:
     """Convert Pandas series to NumPy array, leaving other values unchanged.
-    
+
     Parameters
     ----------
     val: any
         Any value.
-    
+
     Returns
     -------
     any
@@ -198,12 +199,12 @@ def series_to_array(val: Any) -> Any:
 
 def array_to_series(val: Any):
     """Convert NumPy array to Pandas series, leaving other values unchanged.
-    
+
     Parameters
     ----------
     val: any
         Any value.
-    
+
     Returns
     -------
     any
@@ -218,14 +219,14 @@ def array_to_series(val: Any):
 
 
 def array_series_conversion(
-    to: str,
+    to: str,  # pylint: disable=invalid-name
     out_to: str = "back",
 ) -> Callable:
     """Convert positional arguments between numpy.ndarray and pandas.Series.
-    
+
     When using out_to = 'back', the positional arguments given must correspond to the
     values returned, i.e., the same number in the same semantic ordering.
-    
+
     Parameters
     ----------
     to: str
@@ -244,13 +245,18 @@ def array_series_conversion(
         The processed function.
 
     """
+    in_fn: Callable
     if to == "array":
         in_fn = series_to_array
     elif to == "series":
         in_fn = array_to_series
     else:
         raise ValueError("to must be in: 'array', 'series'.")
-    
+
+    def identity(val: Any):
+        return val, False
+
+    out_fn: Callable
     if out_to == "back":
         if to == "array":
             out_fn = array_to_series
@@ -261,55 +267,59 @@ def array_series_conversion(
     elif out_to == "series":
         out_fn = array_to_series
     elif out_to == "none":
-        out_fn = lambda x: x
+        out_fn = identity
     else:
-        raise ValueError(
-            "out_to must be in: 'back', 'array', 'series', 'none'."
-        )
-    
+        raise ValueError("out_to must be in: 'back', 'array', 'series', 'none'.")
+
     def decorator(func_: Callable) -> Callable:
         """Decorate function."""
 
         @wraps(func_)
-        def wrapper_func(*args, **kwargs) -> Callable:
+        def wrapper_func(*args, **kwargs):
             # Convert relevant arguments.
             args = list(args)
             args, converted = zip(*[in_fn(arg) for arg in args])
-            
+
             ret = func_(*tuple(args), **kwargs)
-            
+
             if out_to == "back":
+                # Multiple returns
                 if isinstance(ret, tuple):
                     if len(args) != len(ret):
                         raise ValueError(
-                            ("When using out_to = 'back', the positional arguments "
-                             "given must correspond to the values returned, i.e., "
-                             "the same number in the same semantic ordering."
+                            (
+                                "When using out_to = 'back', the positional arguments "
+                                "given must correspond to the values returned, i.e., "
+                                "the same number in the same semantic ordering."
                             )
                         )
-                    ret, _ = zip(*[
-                        out_fn(r) if converted[i] else (r, False) for i, r in enumerate(ret)
-                    ])
+                    ret, _ = zip(
+                        *[
+                            out_fn(r) if converted[i] else (r, False)
+                            for i, r in enumerate(ret)
+                        ]
+                    )
                     return tuple(ret)
-                else:
-                    if len(args) != 1:
-                        raise ValueError(
-                            ("When using out_to = 'back', the positional arguments "
-                             "given must correspond to the values returned, i.e., "
-                             "the same number in the same semantic ordering."
-                            )
+
+                # One return
+                if len(args) != 1:
+                    raise ValueError(
+                        (
+                            "When using out_to = 'back', the positional arguments "
+                            "given must correspond to the values returned, i.e., "
+                            "the same number in the same semantic ordering."
                         )
-                    if converted[0]:
-                        ret, _ = out_fn(ret)
-                        return ret
-                    
+                    )
+                if converted[0]:
+                    ret, _ = out_fn(ret)
                     return ret
-            
+
+                return ret
 
             if isinstance(ret, tuple):
                 ret, _ = zip(*[out_fn(r) for r in ret])
                 return tuple(ret)
-            
+
             ret, _ = out_fn(ret)
             return ret
 
