@@ -281,6 +281,8 @@ def array_series_conversion(
             args, converted = zip(*[in_fn(arg) for arg in args])
 
             ret = func_(*tuple(args), **kwargs)
+            print(len(args), len(ret), out_to, type(ret))
+            print("----")
 
             if out_to == "back":
                 # Multiple returns
