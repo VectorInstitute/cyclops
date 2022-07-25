@@ -2,6 +2,9 @@
 
 import numpy as np
 
+OUTCOME_DEATH = "outcome_death"
+OUTCOME_EDEMA = "outcome_edema"
+
 BEFORE_DATE = "2020-01-23"
 
 SEXES = ["M", "F"]

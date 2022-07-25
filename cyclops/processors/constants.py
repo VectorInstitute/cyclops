@@ -69,6 +69,9 @@ INTRA = "intra"
 INTER = "inter"
 EXTRA = "extra"
 
+FIRST = "first"
+LAST = "last"
+ALL = "all"
 
 # GEMINI Admin.
 THPM = "THPM"

@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
-from wanglab_constants import (
+from consts import (
     ADMIT_VIA_AMBULANCE_MAP,
     BEFORE_DATE,
     BT_SUBSTRINGS,
@@ -13,6 +13,8 @@ from wanglab_constants import (
     EDEMA_PHARMA_SUBSTRINGS,
     IMAGING_DESCRIPTIONS,
     IMAGING_KEYWORDS,
+    OUTCOME_DEATH,
+    OUTCOME_EDEMA,
     PRESCRIPTION_AFTER_IMAGING_DAYS,
     READMISSION_MAP,
     SEXES,
@@ -83,7 +85,7 @@ def get_most_recent_encounters() -> pd.DataFrame:
         sex=SEXES,
         before_date=BEFORE_DATE,
         died=True,
-        died_binarize_col="outcome_death",
+        died_binarize_col=OUTCOME_DEATH,
     ).query
 
     # Do not do any further filtering before this point since
@@ -110,7 +112,7 @@ def get_most_recent_encounters() -> pd.DataFrame:
         AGE,
         SEX,
         HOSPITAL_ID,
-        "outcome_death",
+        OUTCOME_DEATH,
         "readmission",
         "from_nursing_home_mapped",
         "from_acute_care_institution_mapped",
@@ -430,14 +432,14 @@ def get_pulmonary_edema_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
     imaging_pharma["prescribed_after"] = pd.to_datetime(
         imaging_pharma["med_order_start_date_time"], errors="coerce"
     ) - pd.to_datetime(imaging_pharma["performed_date_time"], errors="coerce")
-    imaging_pharma["outcome_edema"] = (
+    imaging_pharma[OUTCOME_EDEMA] = (
         imaging_pharma["prescribed_after"].dt.days >= 0
     ) & (imaging_pharma["prescribed_after"].dt.days <= PRESCRIPTION_AFTER_IMAGING_DAYS)
-    imaging_pharma = imaging_pharma[imaging_pharma["outcome_edema"]]
+    imaging_pharma = imaging_pharma[imaging_pharma[OUTCOME_EDEMA]]
 
-    imaging_pharma = imaging_pharma[[ENCOUNTER_ID, "outcome_edema"]].drop_duplicates()
+    imaging_pharma = imaging_pharma[[ENCOUNTER_ID, OUTCOME_EDEMA]].drop_duplicates()
     cohort = cohort.merge(imaging_pharma, how="left", on=ENCOUNTER_ID)
-    cohort["outcome_edema"] = cohort["outcome_edema"].fillna(False)
+    cohort[OUTCOME_EDEMA] = cohort[OUTCOME_EDEMA].fillna(False)
     return cohort
 
 
@@ -459,8 +461,6 @@ def get_labs(cohort: pd.DataFrame) -> pd.DataFrame:
     table = gemini.events(
         "lab", drop_null_event_names=True, drop_null_event_values=True
     ).query
-
-    # table = qp.Limit(1000)(table)
 
     table = qp.FilterColumns(
         [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT, EVENT_TIMESTAMP]
@@ -512,7 +512,6 @@ def main(drop_admin_cols=True):
 
     # Get lab data
     labs = get_labs(cohort)
-    # labs = None
 
     return cohort, labs
 

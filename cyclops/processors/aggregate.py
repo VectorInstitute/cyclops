@@ -11,13 +11,15 @@ import pandas as pd
 from codebase_ops import get_log_file_path
 from cyclops.processors.cleaning import dropna_rows
 from cyclops.processors.column_names import (
+    EVENT_NAME,
+    EVENT_VALUE,
     RESTRICT_TIMESTAMP,
     START_TIMESTAMP,
     START_TIMESTEP,
     STOP_TIMESTAMP,
     TIMESTEP,
 )
-from cyclops.processors.constants import MEAN, MEDIAN
+from cyclops.processors.constants import ALL, FIRST, LAST, MEAN, MEDIAN
 from cyclops.processors.feature.vectorize import Vectorized
 from cyclops.processors.impute import AggregatedImputer
 from cyclops.processors.util import has_columns, is_timestamp_series
@@ -642,3 +644,73 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             indexes=indexes,
             axis_names=["aggfuncs"] + self.agg_by + ["timesteps"],
         )
+
+
+def tabular_as_aggregated(  # pylint: disable=too-many-arguments
+    tab: pd.DataFrame,
+    index: str,
+    var_name: str = EVENT_NAME,
+    value_name: str = EVENT_VALUE,
+    strategy: str = ALL,
+    num_timesteps: Optional[int] = None,
+    sort: bool = True,
+) -> pd.DataFrame:
+    """Pose tabular (static, non-timeseries) data as timeseries data.
+
+    Parameters
+    ----------
+    tab: pd.DataFrame
+        Tabular data.
+    index: str
+        Index column name.
+    var_name: str, optional
+        The name of the resultant column containing the original tabular column names.
+    value_name: str, optional
+        The name of the resultant column containing the tabular values.
+    strategy: str
+        Strategy to fake aggregation. E.g., FIRST sets a first timestep to the value,
+        LAST sets the last timestep to the value, and ALL sets all timesteps to
+        the value.
+    num_timesteps: int, optional
+        The max number of timesteps in the aggregation. This is required by strategies
+        such as LAST and ALL.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Tabular data processed as if it is aggregated temporal data.
+
+    """
+    supported = [FIRST, LAST, ALL]
+    if strategy not in supported:
+        raise ValueError(
+            f"Strategy not recognized. Must be in: {', '.join(supported)}."
+        )
+
+    if num_timesteps is None and strategy in [LAST, ALL]:
+        raise ValueError("Must specify num_timesteps for this strategy.")
+
+    tab = tab.set_index(index)
+    tab = tab.melt(var_name=var_name, value_name=value_name, ignore_index=False)
+    tab = tab.reset_index()
+
+    # Set value in the first timestep
+    if strategy == FIRST:
+        tab[TIMESTEP] = 0
+
+    # Set value in the last timestep
+    elif strategy == LAST:
+        assert num_timesteps is not None
+        tab[TIMESTEP] = num_timesteps - 1
+
+    # Repeat value across all timesteps
+    elif strategy == ALL:
+        assert num_timesteps is not None
+        tab = pd.concat(
+            [t.assign(**{TIMESTEP: i}) for i, t in enumerate([tab] * num_timesteps)]
+        )
+
+    tab = tab.set_index([index, var_name, TIMESTEP])
+    if sort:
+        return tab.sort_index()
+    return tab

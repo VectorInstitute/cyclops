@@ -264,6 +264,9 @@ def patient_encounters(
     lookup_table = get_table(LOOKUP_IP_ADMIN)
     lookup_table = qp.ConditionEquals("variable", "discharge_disposition")(lookup_table)
 
+    # Possibly cast string representations to timestamps
+    table = qp.Cast([ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], "timestamp")(table)
+
     table = qp.Join(
         lookup_table,
         on=("discharge_disposition", "value"),
