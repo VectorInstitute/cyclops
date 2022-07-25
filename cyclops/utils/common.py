@@ -71,7 +71,7 @@ def print_dict(dictionary: dict, limit: int = None) -> None:
     if limit < 0:
         raise ValueError("Limit must be greater than 0.")
 
-    print(dict(list(dictionary.items())[0:10]))
+    print(dict(list(dictionary.items())[0:limit]))
 
 
 def append_if_missing(lst: Any, append_lst: Any, to_start: bool = False) -> List[Any]:
@@ -121,16 +121,16 @@ def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
     return datetime.strptime(date, fmt)
 
 
-def list_swap(lst: List, item1: int, item2: int) -> List:
+def list_swap(lst: List, index1: int, index2: int) -> List:
     """Swap items in a list given the item index and new item index.
 
     Parameters
     ----------
     lst: list
         List in which elements will be swapped.
-    item1: int
+    index1: int
         Index of first item to swap.
-    item2: int
+    index2: int
         Index of second item to swap.
 
     Returns
@@ -139,12 +139,12 @@ def list_swap(lst: List, item1: int, item2: int) -> List:
         List with elements swapped.
 
     """
-    if not 0 <= item1 < len(lst):
-        raise ValueError("Item1 index is out of range.")
+    if not 0 <= index1 < len(lst):
+        raise ValueError("index 1 is out of range.")
 
-    if not 0 <= item2 < len(lst):
-        raise ValueError("Item2 index is out of range.")
+    if not 0 <= index2 < len(lst):
+        raise ValueError("index 2 is out of range.")
 
-    lst[item1], lst[item2] = lst[item2], lst[item1]
+    lst[index1], lst[index2] = lst[index2], lst[index1]
 
     return lst
