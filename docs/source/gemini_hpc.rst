@@ -19,12 +19,13 @@ file before trying to setup the python virtual environment and install dependenc
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
 
-To use querying features, which involves access to GEMINI's database, add the
-GEMINI password to the environment variables:
+To use the querying API which involves access to GEMINI's database, add the
+GEMINI password to a ``.env`` file in the root of this repo. The password is
+automatically added to cyclops's configuration and used when running queries.
+
+For security, ensure that the permissions are set such that the repo is accessible
+to only you, hence preventing other users on the HPC from accessing your password!
 
 .. code-block:: bash
 
-   export PGPASSWORD=<your-gemini-db-password>
-
-For convenience of use, add the above line to a ``.env`` file in the root of this repo.
-The variable is automatically added to the configuration.
+   PGPASSWORD=<your-gemini-db-password>
