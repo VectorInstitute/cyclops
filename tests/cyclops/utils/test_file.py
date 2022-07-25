@@ -107,6 +107,9 @@ def test_save_array():
     with pytest.raises(ValueError):
         save_array(np.array([1, 2]), path, file_format="donkey")
 
+    with pytest.raises(ValueError):
+        save_array("donkey", path, file_format="donkey")
+
     shutil.rmtree("test_save")
 
 
