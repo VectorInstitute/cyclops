@@ -166,6 +166,20 @@ def test_array_series_conversion():
     assert isinstance(array_ret, pd.Series)
     assert isinstance(series_ret, pd.Series)
 
+    with pytest.raises(ValueError):
+        array_series_conversion(to="donkey")
+    with pytest.raises(ValueError):
+        array_series_conversion(to="series", out_to="donkey")
+
+    @array_series_conversion(to="series", out_to="none")
+    def test9(*datas):
+        assert all(isinstance(data, pd.Series) for data in datas)
+        return datas
+
+    array_ret, series_ret = test9(array, series)
+    assert isinstance(array_ret, pd.Series)
+    assert isinstance(series_ret, pd.Series)
+
 
 def test_array_series_conversion_out_to_back():
     """Test array_series_conversion with out_to='back'."""
@@ -231,6 +245,20 @@ def test_array_series_conversion_out_to_back():
     array_ret, series_ret = test6(array, series)
     assert isinstance(array_ret, np.ndarray)
     assert isinstance(series_ret, pd.Series)
+
+    @array_series_conversion(to="series")
+    def test7(*datas):
+        return (datas[0], datas[1], datas[0])
+
+    with pytest.raises(ValueError):
+        _ = test7(array, series)
+
+    @array_series_conversion(to="series")
+    def test8(*datas):
+        return datas[0]
+
+    with pytest.raises(ValueError):
+        _ = test8(array, array)
 
 
 def test_is_one_dimensional():
