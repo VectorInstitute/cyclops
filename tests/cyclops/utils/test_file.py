@@ -19,6 +19,6 @@ def test_save_dataframe(test_data):  # pylint: disable=redefined-outer-name
     """Test save fn."""
     path = os.path.join("test_save", "test_features")
     save_dataframe(test_data, path)
-    loaded_data = pd.read_parquet(path)
+    loaded_data = pd.read_parquet(path + ".parquet")
     assert loaded_data.equals(test_data)
     shutil.rmtree("test_save")

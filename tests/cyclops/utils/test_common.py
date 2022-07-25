@@ -2,10 +2,13 @@
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from cyclops.utils.common import (
     append_if_missing,
     array_series_conversion,
+    list_swap,
+    print_dict,
     to_datetime_format,
     to_list,
     to_list_optional,
@@ -24,6 +27,7 @@ def test_to_list_optional():
     assert to_list_optional(np.array([1, 2])) == [1, 2]
     assert to_list_optional(None) is None
     assert to_list_optional([1]) == [1]
+    assert to_list_optional(None, True) == []
 
 
 def test_to_datetime_format():
@@ -44,6 +48,23 @@ def test_append_if_missing():
     assert out_list == ["a", "b"]
     out_list = append_if_missing(["b"], ["a"], to_start=True)
     assert out_list == ["a", "b"]
+
+
+def test_print_dict(capfd):
+    """Test print_dict fn."""
+    print_dict({"blackbird": "single"})
+    out, _ = capfd.readouterr()
+    assert out == "{'blackbird': 'single'}\n"
+
+
+def test_list_swap():
+    """Test list_swap fn."""
+    with pytest.raises(ValueError):
+        list_swap([0, 1, 2, 8], 4, 1)
+    with pytest.raises(ValueError):
+        list_swap([0, 1, 2, 8], 1, 4)
+
+    assert list_swap([0, 1, 2, 8], 0, 1) == [1, 0, 2, 8]
 
 
 def test_array_series_conversion():

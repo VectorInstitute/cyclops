@@ -28,6 +28,7 @@ def index_axis(ind: int, axis: int, shape: Tuple) -> Tuple:
     """
     index: List[Union[slice, int]] = [slice(None)] * len(shape)
     index[axis] = ind
+
     return tuple(index)
 
 
@@ -86,4 +87,5 @@ def take_indices_over_axis(
     """
     indexes: List[Union[None, np.ndarray]] = [None] * len(data.shape)
     indexes[axis] = np.array(index)
+
     return take_indices(data, indexes)
