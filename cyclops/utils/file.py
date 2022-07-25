@@ -144,7 +144,7 @@ def load_dataframe(
     if file_format == "parquet":
         data = pd.read_parquet(load_path)
     elif file_format == "csv":
-        data = pd.read_csv(load_path)
+        data = pd.read_csv(load_path, index_col=[0])
     else:
         raise ValueError(
             "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
