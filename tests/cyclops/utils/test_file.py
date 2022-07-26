@@ -104,11 +104,12 @@ def test_save_array():
     save_array(np.array([1, 2]), path)
     assert os.path.isfile(path)
 
+    path = os.path.join("test_save", "test_array.npz")
     with pytest.raises(ValueError):
-        save_array(np.array([1, 2]), path, file_format="donkey")
+        save_array(np.array([1, 2]), path, file_format="npz")
 
     with pytest.raises(ValueError):
-        save_array("donkey", path, file_format="donkey")
+        save_array("donkey", path, file_format="npz")
 
     shutil.rmtree("test_save")
 
