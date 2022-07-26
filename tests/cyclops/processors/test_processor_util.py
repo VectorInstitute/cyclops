@@ -23,6 +23,9 @@ def test_create_indicator_variables():
     indicator_features = create_indicator_variables(features)
     assert (indicator_features.columns == ["A_indicator", "B_indicator"]).all()
     assert (indicator_features["A_indicator"] == pd.Series([0, 1])).all()
+    indicator_features = create_indicator_variables(features, columns=["A"])
+    assert (indicator_features.columns == ["A_indicator"]).all()
+    assert (indicator_features["A_indicator"] == pd.Series([0, 1])).all()
 
 
 def test_has_columns():
@@ -32,7 +35,9 @@ def test_has_columns():
     assert has_columns(test_input, ["A", "C"]) is True
     assert has_columns(test_input, ["D", "C"]) is False
     with pytest.raises(ValueError):
-        has_columns(test_input, ["D", "C"], exactly=True, raise_error=True)
+        has_columns(test_input, ["D", "C"], raise_error=True)
+    with pytest.raises(ValueError):
+        has_columns(test_input, ["B", "C"], exactly=True, raise_error=True)
 
 
 def test_assert_has_columns():
@@ -109,7 +114,10 @@ def test_gather_columns():
 def test_to_range_index():
     """Test to_range_index fn."""
     test_df = pd.DataFrame(index=[1, 3], columns=["A", "B"])
+    test_df.index.name = "index"
     test_df_with_range_index = to_range_index(test_df)
+    test_df = pd.DataFrame(columns=["A", "B"])
+    assert to_range_index(test_df).equals(test_df)
     assert has_range_index(test_df_with_range_index)
 
 
