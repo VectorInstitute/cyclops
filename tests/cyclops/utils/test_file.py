@@ -121,6 +121,7 @@ def test_load_array():
     arr = load_array(path)
     assert (arr == np.array([1, 2])).all()
 
+    path = os.path.join("test_save", "test_array.donkey")
     with pytest.raises(ValueError):
         load_array(path, file_format="donkey")
 
