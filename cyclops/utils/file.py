@@ -176,6 +176,7 @@ def save_array(
 
     """
     save_path = process_file_save_path(save_path, file_format)
+    print(save_path, data)
 
     if not isinstance(data, np.ndarray):
         raise ValueError("Input data is not an array.")
