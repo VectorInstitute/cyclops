@@ -181,7 +181,8 @@ for si, SHIFT in enumerate(shifts):
                 if np.any(mean_dr_md[si, hi, di, mi, :] == -1):
                     try:
                         if SHIFT in ["covid","seasonal"]:
-                            mean_p_vals, std_p_vals, mean_dist, std_dist = run_shift_experiment(
+                            mean_p_vals, std_p_vals, 
+                            mean_dist, std_dist = run_shift_experiment(
                                 shift=SHIFT,
                                 outcome=OUTCOME,
                                 hospital=HOSPITAL,

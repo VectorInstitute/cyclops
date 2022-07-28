@@ -23,7 +23,7 @@ def run_model(model_name, X, Y, Xv, Yv):
     elif model_name == "rf":
         best_model = fit_rf(X, Y, Xv, Yv)
     elif model_name == "xgb":
-        best_model = fit_xgb(X, Y, Xv, Yv)
+        best_model = fit_gbt(X, Y, Xv, Yv)
     return best_model
 
 
