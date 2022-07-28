@@ -73,9 +73,9 @@ class ShiftTester:
         model = get_temporal_model(model_name, model_params).to(self.device)
         return model
     
-    def context(self, x, context_type="lstm", n_clusters=2):
-        if context_type == "lstm":
-            model = self.recurrent_neural_network(context_type, x.shape[2])
+    def context(self, x, context_type="rnn", n_clusters=2):
+        if context_type == "rnn":
+            model = self.recurrent_neural_network("lstm", x.shape[2])
             model.load_state_dict(torch.load(self.model_path))
             model.eval()
             with torch.no_grad():
@@ -88,7 +88,7 @@ class ShiftTester:
                 c_gmm_proba = gmm.predict_proba(x) 
                 return c_gmm_proba
             else: 
-                return self.context(x, "lstm")
+                return self.context(x, "rnn")
         
     def gaussian_mixture_model(self, n_clusters=2):
         gmm=None
@@ -123,8 +123,8 @@ class ShiftTester:
             dist = preds["data"]["distance"]
 
         elif self.mt == "LK":
-            if representation == "lstm":
-                proj = self.lstm(X_s.shape[2])
+            if representation == "rnn":
+                proj = self.recurrent_neural_network("lstm",X_s.shape[2])
                 if self.model_path is not None:   
                     proj.load_state_dict(torch.load(self.model_path))
                     
@@ -188,8 +188,8 @@ class ShiftTester:
                     binarize_preds=False,
                     n_folds=5
                 )             
-            elif representation == "lstm":
-                model = self.lstm(X_s.shape[2])
+            elif representation == "rnn":
+                model = self.recurrent_neural_network("lstm",X_s.shape[2])
                 backend='pytorch'
                 dd = ClassifierDrift(
                     X_s, 

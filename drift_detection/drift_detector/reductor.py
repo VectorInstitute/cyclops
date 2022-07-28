@@ -136,7 +136,7 @@ class ShiftReductor:
 
     def sparse_random_projection(self):
         n_components = self.get_dr_amount()
-        srp = SparseRandomProjection(n_components=self.dr_amount)
+        srp = SparseRandomProjection(n_components=n_components)
         srp.fit(self.X)
         return srp
 
@@ -148,13 +148,13 @@ class ShiftReductor:
 
     def kernel_principal_components_anaylsis(self, kernel="rbf"):
         n_components = self.get_dr_amount()
-        kpca = KernelPCA(n_components=self.dr_amount, kernel=kernel)
+        kpca = KernelPCA(n_components=n_components, kernel=kernel)
         kpca.fit(self.X)
         return kpca
 
     def manifold_isomap(self):
         n_components = self.get_dr_amount()
-        isomap = Isomap(n_components=self.dr_amount)
+        isomap = Isomap(n_components=n_components)
         isomap.fit(self.X)
         return isomap
 
