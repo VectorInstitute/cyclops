@@ -189,7 +189,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         data = data.merge(self.window_times, on=self.time_by, how="left")
 
         cond = (data[self.timestamp_col] >= data[START_TIMESTAMP]) & (
-            data[self.timestamp_col] <= data[STOP_TIMESTAMP]
+            data[self.timestamp_col] < data[STOP_TIMESTAMP]
         )
 
         # Keep if no match was made (i.e., no restriction performed)

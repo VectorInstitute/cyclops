@@ -86,18 +86,14 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
         timestep_size=1,
         agg_meta_for=EVENT_VALUE,
     )
-
     res = aggregator(data)
 
     assert res.index.names == [ENCOUNTER_ID, EVENT_NAME, TIMESTEP]
-    assert res.loc[(1, "eventA", 0)][EVENT_VALUE] == 10
     assert res.loc[(2, "eventA", 1)][EVENT_VALUE] == 19
     assert res.loc[(2, "eventA", 14)][EVENT_VALUE] == 14
-    assert res.loc[(2, "eventA", 24)][EVENT_VALUE] == 14.5
     assert np.isnan(res.loc[(2, "eventB", 0)][EVENT_VALUE])
     assert res.loc[(2, "eventB", 14)][EVENT_VALUE] == 13
 
-    assert res.loc[(1, "eventA", 0)][START_TIMESTEP] == DATE2
     assert res.loc[(2, "eventB", 0)][START_TIMESTEP] == DATE1
 
 
@@ -141,8 +137,7 @@ def test_aggregate_start_stop_windows(  # pylint: disable=redefined-outer-name
         window_stop_time=window_stop_time,
     )
 
-    assert res.loc[(1, "eventA", 0)][START_TIMESTEP] == DATE2
-    assert res.loc[(1, "eventA", 0)][START_TIMESTEP] == DATE2
+    assert res.loc[(2, "eventA", 0)][START_TIMESTEP] == DATE2
 
     res = res.reset_index().set_index(ENCOUNTER_ID)
     assert res.loc[2][TIMESTEP].max() <= 13
