@@ -26,6 +26,8 @@ def create_indicator_variables(
 ) -> pd.DataFrame:
     """Create binary indicator variable for each column (or specified).
 
+    Create new indicator variable columns based on NAs for other feature columns.
+
     Parameters
     ----------
     features: pandas.DataFrame
@@ -73,23 +75,6 @@ def pivot_aggregated_events_to_features(
         aggfunc=aggfunc,
         dropna=False,
     )
-
-
-def is_timeseries_data(data: pd.DataFrame) -> bool:
-    """Check if input data is time-series dataframe (multi-index).
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input dataframe.
-
-    Returns
-    -------
-    bool
-        Yes if dataframe has multi-index (timeseries), No otherwise.
-
-    """
-    return isinstance(data.index, pd.core.indexes.multi.MultiIndex)
 
 
 def is_timestamp_series(series, raise_error: bool = False):

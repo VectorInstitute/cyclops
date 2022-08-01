@@ -194,7 +194,7 @@ def load_dataframe(
     if file_format == "parquet":
         data = pd.read_parquet(load_path)
     elif file_format == "csv":
-        data = pd.read_csv(load_path)
+        data = pd.read_csv(load_path, index_col=[0])
     else:
         raise ValueError(
             "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
@@ -226,6 +226,7 @@ def save_array(
 
     """
     save_path = process_file_save_path(save_path, file_format)
+    print(save_path, data)
 
     if not isinstance(data, np.ndarray):
         raise ValueError("Input data is not an array.")

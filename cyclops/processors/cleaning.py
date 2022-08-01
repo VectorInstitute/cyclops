@@ -249,21 +249,11 @@ def normalize_values(values: pd.Series) -> pd.Series:
     values = values.apply(
         replace_if_string_match, args=("|".join(NEGATIVE_RESULT_TERMS), "0")
     )
-    # log_counts_step(data, "Convert Positive/Negative to 1/0...", columns=True)
 
     values = values.apply(remove_text_in_parentheses)
-    # log_counts_step(data, "Remove any text in paranthesis", columns=True)
-
     values = values.apply(fix_inequalities)
-    # log_counts_step(
-    #    data, "Fixing inequalities and removing outlier values...", columns=True
-    # )
-
     values = values.apply(fill_missing_with_nan)
-    # log_counts_step(data, "Fill empty result string values with NaN...", columns=True)
-
     values = values.astype("float")
-    # LOGGER.info("Converting string result values to numeric...")
 
     return values
 
@@ -317,6 +307,7 @@ def normalize_events(data) -> pd.DataFrame:
 
     if data[EVENT_VALUE].dtypes == object:
         data[EVENT_VALUE] = normalize_values(data[EVENT_VALUE])
+        log_counts_step(data, "Normalized values...", columns=True)
 
     if EVENT_VALUE_UNIT in list(data.columns):
         data[EVENT_VALUE_UNIT] = normalize_units(data[EVENT_VALUE_UNIT])
