@@ -1674,7 +1674,7 @@ class DropNulls:
 
 @dataclass
 class OrderBy:
-    """Order the rows of a table by some columns.
+    """Order, or sort, the rows of a table by some columns.
 
     Attributes
     ----------
@@ -1708,7 +1708,7 @@ class OrderBy:
         table = process_checks(table, cols=self.cols)
 
         if ascending is None:
-            ascending = [True for _ in range(len(self.cols))]
+            ascending = [True] * len(self.cols)
         else:
             if len(ascending) != len(self.cols):
                 raise ValueError(
@@ -1791,7 +1791,7 @@ class GroupByAggregate:
                 )
 
         all_names = groupby_names + aggfunc_names
-        if len(all_names) != len(list(set(all_names))):
+        if len(all_names) != len(set(all_names)):
             raise ValueError(
                 """Duplicate column names were found. Try naming aggregated columns
                 to avoid this issue."""
