@@ -483,10 +483,10 @@ def patient_encounters(
         process_kwargs["died"] = True
 
     operations: List[tuple] = [
-        (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
-        (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),
-        (qp.ConditionInYears, ["admit_timestamp", qp.QAP("years")], {}),
-        (qp.ConditionInMonths, ["admit_timestamp", qp.QAP("months")], {}),
+        (qp.ConditionBeforeDate, [ADMIT_TIMESTAMP, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [ADMIT_TIMESTAMP, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [ADMIT_TIMESTAMP, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [ADMIT_TIMESTAMP, qp.QAP("months")], {}),
         (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
         (
             qp.ConditionEquals,
@@ -536,17 +536,21 @@ def events(
     table = get_table(EVENTS)
     event_labels = get_table(EVENT_LABELS)
 
+    # Get category and event name
     table = qp.Join(
         event_labels, on="itemid", join_table_cols=["category", "event_name"]
     )(table)
-
     table = qp.Rename({"category": EVENT_CATEGORY})(table)
 
     # Process optional operations
     operations: List[tuple] = [
-        (qp.ConditionIn, ["category", qp.QAP("categories")], {}),
-        (qp.ConditionIn, ["event_name", qp.QAP("event_names")], {}),
-        (qp.ConditionSubstring, ["event_name", qp.QAP("event_name_substring")], {}),
+        (qp.ConditionBeforeDate, [EVENT_TIMESTAMP, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [EVENT_TIMESTAMP, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [EVENT_TIMESTAMP, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [EVENT_TIMESTAMP, qp.QAP("months")], {}),
+        (qp.ConditionIn, [EVENT_CATEGORY, qp.QAP("categories")], {}),
+        (qp.ConditionIn, [EVENT_NAME, qp.QAP("event_names")], {}),
+        (qp.ConditionSubstring, [EVENT_NAME, qp.QAP("event_name_substring")], {}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
 

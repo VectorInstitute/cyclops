@@ -144,9 +144,10 @@ class Optimizer:
             y_test_labels = []
             y_pred_labels = []
             for x_test, y_test in test_loader:
-                x_test = x_test.view([batch_size, timesteps, n_features]).to(
-                    self.device
-                )
+                #x_test = x_test.view([batch_size, timesteps, n_features]).to(
+                #    self.device
+                #)
+                x_test = x_test.to(self.device)
                 y_test = y_test.to(self.device)
                 self.model.eval()
                 y_hat = self.activation(self.model(x_test))
