@@ -16,3 +16,9 @@ mlruns
 _extract
 *.gzip
 *checkpoint*
+*.parquet
+*.npy
+*.pkl
+*.npz
+*.csv
+*.pickle
