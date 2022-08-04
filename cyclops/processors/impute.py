@@ -52,6 +52,114 @@ def compute_inter_range(null: pd.Series) -> Optional[Tuple[int, int]]:
     return inds[0], inds[-1] + 1
 
 
+def np_ffill(arr: np.ndarray) -> np.ndarray:
+    """Forward fill a 1D array.
+
+    Parameters
+    ----------
+    arr: numpy.ndarray
+        Array to impute.
+
+    """
+    mask = np.isnan(arr)
+    idx = np.where(~mask, np.arange(mask.shape[0]), 0)
+    idx = np.maximum.accumulate(idx, axis=0, out=idx)
+    return arr[idx]
+
+
+def np_bfill(arr: np.ndarray) -> np.ndarray:
+    """Backward fill a 1D array.
+
+    Parameters
+    ----------
+    arr: numpy.ndarray
+        Array to impute.
+
+    Returns
+    -------
+    numpy.ndarray
+        Imputed array.
+
+    """
+    mask = np.isnan(arr)
+    idx = np.where(~mask, np.arange(mask.shape[0]), mask.shape[0] - 1)
+    idx = np.minimum.accumulate(idx[::-1], axis=0)[::-1]
+    return arr[idx]
+
+
+def np_ffill_bfill(arr: np.ndarray) -> np.ndarray:
+    """Equivalent to forward filling and then backward filling a 1D array.
+
+    Parameters
+    ----------
+    arr: numpy.ndarray
+        Array to impute.
+
+    Returns
+    -------
+    numpy.ndarray
+        Imputed array.
+
+    """
+    arr = np_ffill(arr)
+    mask = np.isnan(arr)
+    first_non_null_idx = mask.argmin()
+    first_non_null = arr[first_non_null_idx]
+    arr[:first_non_null_idx] = first_non_null
+    return arr
+
+
+def np_fill_null_num(arr: np.ndarray, num: float) -> np.ndarray:
+    """Fill null values with a number.
+
+    Parameters
+    ----------
+    arr: numpy.ndarray
+        Array to impute.
+
+    Returns
+    -------
+    numpy.ndarray
+        Imputed array.
+
+    """
+    return np.nan_to_num(arr, nan=num)
+
+
+def np_fill_null_zero(arr: np.ndarray) -> np.ndarray:
+    """Fill null values with zero.
+
+    Parameters
+    ----------
+    arr: numpy.ndarray
+        Array to impute.
+
+    Returns
+    -------
+    numpy.ndarray
+        Imputed array.
+
+    """
+    return np_fill_null_num(arr, 0)
+
+
+def np_fill_null_mean(arr: np.ndarray) -> np.ndarray:
+    """Fill null values with the array mean.
+
+    Parameters
+    ----------
+    arr: numpy.ndarray
+        Array to impute.
+
+    Returns
+    -------
+    numpy.ndarray
+        Imputed array.
+
+    """
+    return np_fill_null_num(arr, np.nanmean(arr))
+
+
 def fill_null_with(series: pd.Series, null: pd.Series, value: Any) -> pd.Series:
     """Fill null values with a specified value when the nulls were already located.
 

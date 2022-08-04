@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -148,7 +148,7 @@ def split_vectorized(
     return tuple(splits)
 
 
-class Vectorized:
+class Vectorized:  # pylint: disable=too-many-public-methods
     """Vectorized data.
 
     Attributes
@@ -185,6 +185,9 @@ class Vectorized:
             raise ValueError(
                 "Number of array axes and the number of axis names do not match."
             )
+
+        if not all(isinstance(name, str) for name in axis_names):
+            raise ValueError("Axis names must be strings.")
 
         for i, index in enumerate(indexes):
             if not isinstance(index, list) and not isinstance(index, np.ndarray):
@@ -489,10 +492,26 @@ class Vectorized:
         Returns
         -------
         numpy.ndarray
-            Axis index.
+            Index for the given axis.
 
         """
         return self.indexes[self.get_axis(axis)]
+
+    def get_index_map(self, axis: Union[int, str]) -> np.ndarray:
+        """Get an axis index by index or by name.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis index or name.
+
+        Returns
+        -------
+        dict
+            Index map for the given axis.
+
+        """
+        return self.index_maps[self.get_axis(axis)]
 
     def split_by_indices(
         self,
@@ -704,3 +723,97 @@ class Vectorized:
                 self.normalizer.axis = axis2_index
             elif self.normalizer.axis == axis2_index:
                 self.normalizer.axis = axis1_index
+
+    def value_counts(
+        self, axis: Union[str, int], index: Any
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Return the value counts for a given axis and index.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis index or name
+        index: any
+            Index name in the axis for which to get the value counts.
+
+        """
+        axis_index = self.get_axis(axis)
+        index_map = self.index_maps[axis_index]
+        data = take_indices_over_axis(self.data, axis_index, [index_map[index]])
+        return np.unique(data, return_counts=True)
+
+    def _check_index_exp(self, index_exp: Tuple) -> None:
+        """Check that an index expression is valid.
+
+        Parameters
+        ----------
+        index_exp: tuple
+            Should be a tuple of slice objects.
+
+        """
+        if not isinstance(index_exp, tuple):
+            raise ValueError("Index expression must be a tuple.")
+
+        for i in index_exp:
+            if not isinstance(i, slice):
+                raise ValueError(
+                    (
+                        "Index expression must consist only of slices. "
+                        "Consider using the vec_index_exp."
+                    )
+                )
+
+    def impute_over_axis(
+        self,
+        axis: Union[str, int],
+        impute_fn: Callable,
+        index_exp: Optional[Tuple] = None,
+    ):
+        """Imputes values over an axis, treating the other axes as grouping.
+
+        For example, imputing over the timesteps of an event for some encounter.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis index or name over which to impute.
+        impute_fn: callable
+            An imputation function, which takes in and outputs a same-size 1D array.
+        index_exp: tuple, optional
+            A tuple of slice objects enabling imputation of only a subset of the data.
+
+        """
+        axis_index = self.get_axis(axis)
+
+        if index_exp is not None:
+            self._check_index_exp(index_exp)
+            sliced_data = self.data[index_exp]
+            self.data[index_exp] = np.apply_along_axis(
+                impute_fn, axis_index, sliced_data
+            )
+
+        else:
+            self.data = np.apply_along_axis(impute_fn, axis_index, self.data)
+
+
+class VectorizedIndexExpression:  # pylint: disable=too-few-public-methods
+    """Functions similar to the NumPy IndexExpression for simplified slicing.
+
+    Different from the NumPy IndexExpression, it treats singular indices as ranges such
+    that no axes are dropped, e.g., [1, 3:4, 2] is equivalent to [1:2, 3:4, 2:3]. This
+    is necessary to keep the same axes in the same order for Vectorized objects.
+
+    """
+
+    def __getitem__(self, item: Tuple) -> Tuple:
+        """Create index expression using slice notation.
+
+        Parameters
+        ----------
+        item: tuple
+
+        """
+        return tuple(slice(i, i + 1) if isinstance(i, int) else i for i in item)
+
+
+vec_index_exp = VectorizedIndexExpression()
