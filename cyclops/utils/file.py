@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Generator, List
+from typing import Generator, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -226,7 +226,6 @@ def save_array(
 
     """
     save_path = process_file_save_path(save_path, file_format)
-    print(save_path, data)
 
     if not isinstance(data, np.ndarray):
         raise ValueError("Input data is not an array.")
@@ -289,7 +288,9 @@ def listdir_nonhidden(path: str) -> List[str]:
 
 
 def yield_dataframes(
-    dir_path: str, sort: bool = True
+    dir_path: str,
+    sort: bool = True,
+    skip_n: Optional[int] = None,
 ) -> Generator[pd.DataFrame, None, None]:
     """Yield DataFrames loaded from a directory.
 
@@ -301,6 +302,9 @@ def yield_dataframes(
         Directory path of files.
     sort: bool, default = True
         Whether to sort the files and yield them in an ordered manner.
+    skip_n: int, optional
+        If specified, skip the first n files when yielding the files.
+        This is especially useful in lieu of the execution being interrupted.
 
     Yields
     ------
@@ -312,6 +316,9 @@ def yield_dataframes(
 
     if sort:
         files.sort()
+
+    if skip_n:
+        files = files[skip_n:]
 
     for file in files:
         yield load_dataframe(join(dir_path, file))
@@ -345,7 +352,6 @@ def concat_consequtive_dataframes(
 
         # Yield full batches
         if (i + 1) % every_n == 0:
-            print(len(datas))
             yield pd.concat(datas)
             datas = []
 
