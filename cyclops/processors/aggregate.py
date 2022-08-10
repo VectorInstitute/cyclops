@@ -651,6 +651,60 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             indexes=indexes,
             axis_names=["aggfuncs"] + self.agg_by + [TIMESTEP],
         )
+    
+    @time_function
+    def vectorize(self, aggregated: pd.DataFrame) -> np.ndarray:
+        """Vectorize aggregated data.
+
+        Parameters
+        ----------indexes
+        aggregated: pandas.DataFrame
+            Aggregated data.
+
+        Returns
+        -------
+        numpy.ndarray
+            Vectorized aggregated data of shape:
+            (# of aggfuncs, *# of unique in each agg_by, window_duration/timestep_size)
+
+        """
+        if self.window_duration is None:
+            raise NotImplementedError(
+                "Cannot currently vectorize data aggregated with no window duration."
+            )
+
+        num_timesteps = int(self.window_duration / self.timestep_size)
+
+        # Parameter checking
+        has_columns(aggregated, list(self.aggfuncs.keys()), raise_error=True)
+        if not aggregated.index.names == self.agg_by + [TIMESTEP]:
+            raise ValueError(f"Index must be: {self.agg_by + [TIMESTEP]}.")
+
+        # Reindex to add missing groups/timesteps
+        index = self.agg_by + [TIMESTEP]
+        aggregated = aggregated.reset_index().set_index(index)
+        idx = pd.MultiIndex.from_product(
+            [aggregated.index.levels[i] for i in range(len(self.agg_by))]
+            + [range(num_timesteps)],
+            names=index,
+        )
+        vectorized = aggregated.reindex(idx)
+
+        # Calculate new shape and indexes
+        shape = [len(aggregated.index.levels[i]) for i in range(len(aggregated.index.levels))]
+        indexes = [list(self.aggfuncs.keys())]
+        indexes.extend([ind.values for ind in vectorized.index.levels])
+
+        # Reshape and vectorize
+        vectorized = np.stack(
+            [vectorized[aggfunc].values.reshape(shape) for aggfunc in self.aggfuncs]
+        )
+
+        return Vectorized(
+            data=vectorized,
+            indexes=indexes,
+            axis_names=["aggfuncs"] + self.agg_by + [TIMESTEP],
+        )
 
 
 def tabular_as_aggregated(  # pylint: disable=too-many-arguments
