@@ -2,7 +2,6 @@
 
 import logging
 from collections import OrderedDict
-from itertools import product
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -605,81 +604,6 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         if not aggregated.index.names == self.agg_by + [TIMESTEP]:
             raise ValueError(f"Index must be: {self.agg_by + [TIMESTEP]}.")
 
-        # Add missing agg_by groups
-        aggregated = aggregated.reset_index()
-        aggregated = aggregated[self.agg_by + [TIMESTEP] + list(self.aggfuncs.keys())]
-
-        unique_individuals = [list(pd.unique(aggregated[col])) for col in self.agg_by]
-        aggregated = aggregated.set_index(self.agg_by)
-        existing_groups = set(aggregated.index.unique().values)
-        all_groups = set(product(*unique_individuals))
-        missing_groups = all_groups - existing_groups
-        missing = pd.DataFrame(list(missing_groups), columns=self.agg_by)
-        missing = missing.set_index(self.agg_by)
-        aggregated = pd.concat([aggregated, missing])
-
-        # Create a map from an index to part of the group name
-        grouped = aggregated.groupby(self.agg_by)
-        indexes = [list(dict.fromkeys(lst)) for lst in zip(*grouped.groups.keys())]
-        indexes.insert(0, list(self.aggfuncs.keys()))
-        indexes.insert(len(indexes), list(range(num_timesteps)))
-
-        # Add missing timesteps
-        index = self.agg_by + [TIMESTEP]
-        aggregated = aggregated.reset_index().set_index(index)
-        idx = pd.MultiIndex.from_product(
-            [aggregated.index.levels[i] for i in range(len(self.agg_by))]
-            + [range(num_timesteps)],
-            names=index,
-        )
-        vectorized = aggregated.reindex(idx)
-
-        # ADD EXTRA IMPUTATION HERE?
-        # if self.imputer is not None:
-        #    if self.imputer.extra is not None:
-
-        # Turn into numpy array and reshape accordingly
-        unique_lens = [len(unique) for unique in unique_individuals]
-        shape = unique_lens + [int(self.window_duration / self.timestep_size)]
-
-        vectorized = np.stack(
-            [vectorized[aggfunc].values.reshape(shape) for aggfunc in self.aggfuncs]
-        )
-
-        return Vectorized(
-            data=vectorized,
-            indexes=indexes,
-            axis_names=["aggfuncs"] + self.agg_by + [TIMESTEP],
-        )
-    
-    @time_function
-    def vectorize(self, aggregated: pd.DataFrame) -> np.ndarray:
-        """Vectorize aggregated data.
-
-        Parameters
-        ----------indexes
-        aggregated: pandas.DataFrame
-            Aggregated data.
-
-        Returns
-        -------
-        numpy.ndarray
-            Vectorized aggregated data of shape:
-            (# of aggfuncs, *# of unique in each agg_by, window_duration/timestep_size)
-
-        """
-        if self.window_duration is None:
-            raise NotImplementedError(
-                "Cannot currently vectorize data aggregated with no window duration."
-            )
-
-        num_timesteps = int(self.window_duration / self.timestep_size)
-
-        # Parameter checking
-        has_columns(aggregated, list(self.aggfuncs.keys()), raise_error=True)
-        if not aggregated.index.names == self.agg_by + [TIMESTEP]:
-            raise ValueError(f"Index must be: {self.agg_by + [TIMESTEP]}.")
-
         # Reindex to add missing groups/timesteps
         index = self.agg_by + [TIMESTEP]
         aggregated = aggregated.reset_index().set_index(index)
@@ -691,7 +615,9 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         vectorized = aggregated.reindex(idx)
 
         # Calculate new shape and indexes
-        shape = [len(aggregated.index.levels[i]) for i in range(len(aggregated.index.levels))]
+        shape = [
+            len(vectorized.index.levels[i]) for i in range(len(vectorized.index.levels))
+        ]
         indexes = [list(self.aggfuncs.keys())]
         indexes.extend([ind.values for ind in vectorized.index.levels])
 

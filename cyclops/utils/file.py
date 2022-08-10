@@ -379,7 +379,9 @@ def save_consequtive_dataframes(prev_dir: str, new_dir: str, every_n: int) -> No
     save_count = 0
     while True:
         try:
-            save_dataframe(next(generator), join(new_dir, "batch_" + f"{save_count:04d}"))
+            save_dataframe(
+                next(generator), join(new_dir, "batch_" + f"{save_count:04d}")
+            )
             save_count += 1
         except StopIteration:
             return
