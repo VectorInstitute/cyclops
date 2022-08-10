@@ -476,12 +476,26 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
     def _aggregate(
         self, data: pd.DataFrame, include_timestep_start: bool = True
     ) -> pd.DataFrame:
+        # Get the timestep according to the timestep for each event
         data_with_timesteps = data.groupby(self.time_by, sort=False).apply(
             self._compute_timestep
         )
-        aggregated = data_with_timesteps.groupby(self.agg_by, sort=False).apply(
-            self._compute_aggregation
-        )
+
+        # Aggregate
+        has_inter_imputer = True
+        if self.imputer is None:
+            has_inter_imputer = False
+        elif self.imputer.inter is None:
+            has_inter_imputer = False
+
+        if self.agg_meta_for is None and not has_inter_imputer:
+            # EFFICIENT - Can perform if no imputation or metadata calculation is done
+            grouped = data_with_timesteps.groupby(self.agg_by + [TIMESTEP], sort=False)
+            aggregated = grouped.agg(self.aggfuncs)
+        else:
+            # INEFFICIENT - Perform with a custom function to allow addded functionality
+            grouped = data_with_timesteps.groupby(self.agg_by, sort=False)
+            aggregated = grouped.apply(self._compute_aggregation)
 
         if not include_timestep_start:
             return aggregated
@@ -495,13 +509,6 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         )
         aggregated = aggregated.drop(START_TIMESTAMP, axis=1)
         aggregated = aggregated.reset_index()
-
-        if self.imputer is not None:
-            if self.imputer.inter is not None:
-                # aggregated = aggregated.set_index(self.agg_by)
-                aggregated = aggregated.groupby(self.agg_by).apply(self.imputer.inter)
-            # aggregated = aggregated.reset_index()
-
         aggregated = aggregated.set_index(self.agg_by + [TIMESTEP])
 
         return aggregated
