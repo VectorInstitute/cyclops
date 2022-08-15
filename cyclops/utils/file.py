@@ -2,7 +2,8 @@
 
 import logging
 import os
-from typing import Generator, List, Optional
+import pickle
+from typing import Any, Generator, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -132,6 +133,7 @@ def save_dataframe(
     data: pd.DataFrame,
     save_path: str,
     file_format: str = "parquet",
+    log: bool = True,
 ) -> str:
     """Save a pandas.DataFrame object to file.
 
@@ -143,6 +145,8 @@ def save_dataframe(
         Path where the file will be saved.
     file_format: str
         File format of the file to save.
+    log: bool
+        Whether to log the occurence.
 
     Returns
     -------
@@ -155,7 +159,8 @@ def save_dataframe(
     if not isinstance(data, pd.DataFrame):
         raise ValueError("Input data is not a DataFrame.")
 
-    LOGGER.info("Saving dataframe to %s", save_path)
+    if log:
+        LOGGER.info("Saving dataframe to %s", save_path)
 
     if file_format == "parquet":
         data.to_parquet(save_path)
@@ -172,6 +177,7 @@ def save_dataframe(
 def load_dataframe(
     load_path: str,
     file_format: str = "parquet",
+    log: bool = True,
 ) -> pd.DataFrame:
     """Load file to a pandas.DataFrame object.
 
@@ -181,6 +187,8 @@ def load_dataframe(
         Path where the file to load.
     file_format: str
         File format of the file to load.
+    log: bool
+        Whether to log the occurence.
 
     Returns
     -------
@@ -189,7 +197,9 @@ def load_dataframe(
 
     """
     load_path = process_file_save_path(load_path, file_format)
-    LOGGER.info("Loading DataFrame from %s", load_path)
+
+    if log:
+        LOGGER.info("Loading DataFrame from %s", load_path)
 
     if file_format == "parquet":
         data = pd.read_parquet(load_path)
@@ -207,6 +217,7 @@ def save_array(
     data: np.ndarray,
     save_path: str,
     file_format: str = "npy",
+    log: bool = True,
 ) -> str:
     """Save a numpy.ndarray object to file.
 
@@ -218,6 +229,8 @@ def save_array(
         Path where the file will be saved.
     file_format: str
         File format of the file to save.
+    log: bool
+        Whether to log the occurence.
 
     Returns
     -------
@@ -230,7 +243,8 @@ def save_array(
     if not isinstance(data, np.ndarray):
         raise ValueError("Input data is not an array.")
 
-    LOGGER.info("Saving array to %s", save_path)
+    if log:
+        LOGGER.info("Saving array to %s", save_path)
 
     if file_format == "npy":
         np.save(save_path, data)
@@ -243,6 +257,7 @@ def save_array(
 def load_array(
     load_path: str,
     file_format: str = "npy",
+    log: bool = True,
 ) -> np.ndarray:
     """Load file to a numpy.ndarray object.
 
@@ -252,6 +267,8 @@ def load_array(
         Path where the file to load.
     file_format: str
         File format of the file to load.
+    log: bool
+        Whether to log the occurence.
 
     Returns
     -------
@@ -260,7 +277,9 @@ def load_array(
 
     """
     load_path = process_file_save_path(load_path, file_format)
-    LOGGER.info("Loading array from %s", load_path)
+
+    if log:
+        LOGGER.info("Loading array from %s", load_path)
 
     if file_format == "npy":
         data = np.load(load_path)
@@ -268,6 +287,67 @@ def load_array(
         raise ValueError("Invalid file formated provided. Currently supporting 'npy'.")
 
     return data
+
+
+def save_pickle(
+    data: Any,
+    save_path: str,
+    log: bool = True,
+) -> str:
+    """Save a object to pickle file.
+
+    Parameters
+    ----------
+    data: any
+        Data to save.
+    save_path: str
+        Path where the file will be saved.
+    log: bool
+        Whether to log the occurence.
+
+    Returns
+    -------
+    str
+        Processed save path for upstream use.
+
+    """
+    save_path = process_file_save_path(save_path, "pkl")
+
+    if log:
+        LOGGER.info("Pickling data to %s", save_path)
+
+    with open(save_path, "wb") as handle:
+        pickle.dump(data, handle)
+
+    return save_path
+
+
+def load_pickle(
+    load_path: str,
+    log: bool = True,
+) -> Any:
+    """Load an object from a pickle file.
+
+    Parameters
+    ----------
+    load_path: str
+        Path where the file to load.
+    log: bool
+        Whether to log the occurence.
+
+    Returns
+    -------
+    any
+        Loaded data.
+
+    """
+    load_path = process_file_save_path(load_path, "pkl")
+
+    if log:
+        LOGGER.info("Loading pickled data from %s", load_path)
+
+    with open(load_path, "rb") as handle:
+        return pickle.load(handle)
 
 
 def listdir_nonhidden(path: str) -> List[str]:
@@ -291,6 +371,7 @@ def yield_dataframes(
     dir_path: str,
     sort: bool = True,
     skip_n: Optional[int] = None,
+    log: bool = True,
 ) -> Generator[pd.DataFrame, None, None]:
     """Yield DataFrames loaded from a directory.
 
@@ -305,6 +386,8 @@ def yield_dataframes(
     skip_n: int, optional
         If specified, skip the first n files when yielding the files.
         This is especially useful in lieu of the execution being interrupted.
+    log: bool
+        Whether to log the occurence.
 
     Yields
     ------
@@ -321,11 +404,13 @@ def yield_dataframes(
         files = files[skip_n:]
 
     for file in files:
-        yield load_dataframe(join(dir_path, file))
+        yield load_dataframe(join(dir_path, file), log=log)
 
 
 def concat_consequtive_dataframes(
-    dir_path: str, every_n: int
+    dir_path: str,
+    every_n: int,
+    log: bool = True,
 ) -> Generator[pd.DataFrame, None, None]:
     """Yield DataFrames concatenated from consequtive files in a directory.
 
@@ -337,6 +422,8 @@ def concat_consequtive_dataframes(
         Directory path of files. Any non-hidden file must be loadable as a DataFrame.
     every_n: int
         Concatenate and yield every N consequtive files.
+    log: bool
+        Whether to log the occurence.
 
     Yields
     ------
@@ -347,7 +434,7 @@ def concat_consequtive_dataframes(
     assert every_n > 1
 
     datas = []
-    for i, data in enumerate(yield_dataframes(dir_path)):
+    for i, data in enumerate(yield_dataframes(dir_path, log=log)):
         datas.append(data)
 
         # Yield full batches
@@ -360,7 +447,12 @@ def concat_consequtive_dataframes(
         yield pd.concat(datas)
 
 
-def save_consequtive_dataframes(prev_dir: str, new_dir: str, every_n: int) -> None:
+def save_consequtive_dataframes(
+    prev_dir: str,
+    new_dir: str,
+    every_n: int,
+    log: bool = True,
+) -> None:
     """Save DataFrames concatenated from consequtive files in a directory.
 
     Parameters
@@ -371,10 +463,12 @@ def save_consequtive_dataframes(prev_dir: str, new_dir: str, every_n: int) -> No
         Directory in which to save the newly concatenated DataFrames.
     every_n: int
         Concatenate and yield every N consequtive files.
+    log: bool
+        Whether to log the occurence.
 
     """
     new_dir = process_dir_save_path(new_dir)
-    generator = concat_consequtive_dataframes(prev_dir, every_n)
+    generator = concat_consequtive_dataframes(prev_dir, every_n, log=log)
 
     save_count = 0
     while True:
@@ -385,3 +479,43 @@ def save_consequtive_dataframes(prev_dir: str, new_dir: str, every_n: int) -> No
             save_count += 1
         except StopIteration:
             return
+
+
+def yield_pickled_files(
+    dir_path: str,
+    sort: bool = True,
+    skip_n: Optional[int] = None,
+    log: bool = True,
+) -> Generator[pd.DataFrame, None, None]:
+    """Yield pickled files loaded from a directory.
+
+    Any non-hidden files in the directory must be loadable with pickle.
+
+    Parameters
+    ----------
+    dir_path: str
+        Directory path of files.
+    sort: bool, default = True
+        Whether to sort the files and yield them in an ordered manner.
+    skip_n: int, optional
+        If specified, skip the first n files when yielding the files.
+        This is especially useful in lieu of the execution being interrupted.
+    log: bool
+        Whether to log the occurence.
+
+    Yields
+    ------
+    any
+        Previously pickled data.
+
+    """
+    files = list(listdir_nonhidden(dir_path))
+
+    if sort:
+        files.sort()
+
+    if skip_n:
+        files = files[skip_n:]
+
+    for file in files:
+        yield load_pickle(join(dir_path, file), log=log)
