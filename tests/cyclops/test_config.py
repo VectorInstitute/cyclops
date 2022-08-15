@@ -5,6 +5,7 @@ import os
 import shutil
 import unittest
 
+import pytest
 import yaml
 
 from codebase_ops import PROJECT_ROOT
@@ -57,6 +58,16 @@ class TestConfig(unittest.TestCase):
         cfg = config.read_config(self.dummy_config_dir)
         assert cfg.database == "test"
         assert cfg.years == ["2020", "2019"]
+
+        if os.path.isfile(os.path.join(self.dummy_config_dir, "workflow.yaml")):
+            os.remove(os.path.join(self.dummy_config_dir, "workflow.yaml"))
+
+        with pytest.raises(AssertionError):
+            _ = config.read_config(self.dummy_config_dir)
+        _save_to_yaml({}, os.path.join(self.dummy_config_dir, "workflow.yaml"))
+
+        os.environ.pop("PGPASSWORD", None)
+        _ = config.read_config(self.dummy_config_dir)
 
     def test_config_to_dict(self):
         """Test config_to_dict fn."""
