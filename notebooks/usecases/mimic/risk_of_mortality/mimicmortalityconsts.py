@@ -1,9 +1,6 @@
 """MIMIC use case constants."""
 
-from cyclops.processors.column_names import (
-    AGE,
-    SEX,
-)
+from cyclops.processors.column_names import AGE, SEX
 from cyclops.processors.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
 

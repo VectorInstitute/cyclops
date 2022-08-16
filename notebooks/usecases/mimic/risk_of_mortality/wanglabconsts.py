@@ -2,13 +2,7 @@
 
 import numpy as np
 
-from cyclops.processors.column_names import (
-    HOSPITAL_ID,
-    AGE,
-    SEX,
-    DIAGNOSIS_TRAJECTORY,
-)
-from cyclops.processors.constants import TARGETS
+from cyclops.processors.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
 from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "wanglab"
