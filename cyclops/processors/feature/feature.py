@@ -254,7 +254,7 @@ class Features:
         for col in binary_cols:
             data[col] = data[col].astype(int)
 
-        return data
+        return data.set_index(self.by)
 
     @property
     def columns(self) -> List[str]:
@@ -693,7 +693,8 @@ class Features:
 
         # Map back to original values
         for feat in features:
-            data[feat] = data[feat].replace(self.meta[feat].get_mapping())
+            mapping = self.meta[feat].get_mapping()
+            data[feat].replace(mapping, inplace=True)
 
         # Convert to binary categorical indicators
         return self._to_feature_types(
@@ -767,7 +768,7 @@ class TabularFeatures(Features):
 
         get_data_kwargs["features_only"] = True
 
-        data = self.get_data(**get_data_kwargs)
+        data = self.get_data(**get_data_kwargs).reset_index()
 
         by_map = list(data[self.by[0]].values)
         data = data.drop(self.by, axis=1)

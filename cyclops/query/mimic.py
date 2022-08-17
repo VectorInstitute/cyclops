@@ -196,7 +196,7 @@ def patients(**process_kwargs) -> QueryInterface:
 
     # Shift relevant columns by anchor year difference
     table = qp.AddColumn("anchor_year", "anchor_year_difference")(table)
-    table = qp.AddDeltaColumns(DATE_OF_DEATH, years="anchor_year_difference")(table)
+    table = qp.AddDeltaColumns([DATE_OF_DEATH], years="anchor_year_difference")(table)
 
     # Calculate approximate year of birth
     table = qp.AddColumn(
@@ -220,13 +220,19 @@ def patients(**process_kwargs) -> QueryInterface:
     )(table)
 
     # Process optional operations
+    if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
+        process_kwargs["died"] = True
+
     operations: List[tuple] = [
         # Must convert to string since CHAR(1) type doesn't recognize equality
         (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
         (
             qp.ConditionEquals,
-            [DATE_OF_DEATH, None],
-            {"not_": qp.QAP("died", transform_fn=lambda x: not x)},
+            ["discharge_location", "DIED"],
+            {
+                "not_": qp.QAP("died", transform_fn=lambda x: not x),
+                "binarize_col": qp.QAP("died_binarize_col", required=False),
+            },
         ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
@@ -469,7 +475,7 @@ def patient_encounters(
 
     # Update timestamps with anchor year difference
     table = qp.AddDeltaColumns(
-        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "deathtime"],
+        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "deathtime", "edregtime", "edouttime"],
         years="anchor_year_difference",
     )(table)
 

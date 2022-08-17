@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
-from consts import (
+from wanglabconsts import (
     ADMIT_VIA_AMBULANCE_MAP,
     BEFORE_DATE,
     BT_SUBSTRINGS,
