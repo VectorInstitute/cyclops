@@ -2,19 +2,127 @@
 
 import os
 import shutil
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from cyclops.utils.file import (
+    concat_consequtive_dataframes,
     exchange_extension,
+    join,
+    listdir_nonhidden,
     load_array,
     load_dataframe,
+    load_pickle,
+    process_dir_save_path,
     process_file_save_path,
     save_array,
+    save_consequtive_dataframes,
     save_dataframe,
+    save_pickle,
+    yield_dataframes,
+    yield_pickled_files,
 )
+
+
+def test_yield_pickled_files():
+    """Test yield_pickled_files fn."""
+    os.makedirs("test_dir4", exist_ok=True)
+    test_data = {"data": "some data"}
+    save_pickle(test_data, "test_dir4/test_data1")
+    save_pickle(test_data, "test_dir4/test_data2")
+    save_pickle(test_data, "test_dir4/test_data3")
+    for pkl_file_content in yield_pickled_files("test_dir4", skip_n=1):
+        TestCase().assertDictEqual(test_data, pkl_file_content)
+
+
+def test_concat_consequtive_save_dataframes():
+    """Test concat_consequtive_dataframes and save_consequtive_dataframes fn."""
+    test_df = pd.DataFrame([1, 2], columns=["a"])
+    os.makedirs("test_dir2", exist_ok=True)
+    save_dataframe(test_df, "test_dir2/df1")
+    save_dataframe(test_df, "test_dir2/df2")
+    save_dataframe(test_df, "test_dir2/df3")
+    save_dataframe(test_df, "test_dir2/df4")
+    for dataframe in concat_consequtive_dataframes("test_dir2", every_n=2):
+        assert dataframe.equals(
+            pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1])
+        )
+
+    save_consequtive_dataframes("test_dir2", "test_dir3", every_n=2)
+    df1 = load_dataframe("test_dir3/batch_0000.parquet")
+    df2 = load_dataframe("test_dir3/batch_0001.parquet")
+    assert df1.equals(pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1]))
+    assert df2.equals(pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1]))
+
+    shutil.rmtree("test_dir2")
+    shutil.rmtree("test_dir3")
+
+
+def test_yield_dataframes():
+    """Test yield_dataframes fn."""
+    test_df = pd.DataFrame([1, 2], columns=["a"])
+    os.makedirs("test_dir1", exist_ok=True)
+    save_dataframe(test_df, "test_dir1/df1")
+    save_dataframe(test_df, "test_dir1/df2")
+    save_dataframe(test_df, "test_dir1/df3")
+    count = 0
+    for dataframe in yield_dataframes("test_dir1", skip_n=1):
+        assert dataframe.equals(test_df)
+        count += 1
+    assert count == 2
+    shutil.rmtree("./test_dir1")
+
+
+def test_join():
+    """Test path join fn."""
+    assert join("/mnt", "donkey") == "/mnt/donkey"
+    assert join("\\Users", "monkey") == "/Users/monkey"
+
+
+def test_process_dir_save_path():
+    """Test process_dir_save_path fn."""
+    tmp_dir_path = "./tmp_dir"
+    assert process_dir_save_path(tmp_dir_path) == tmp_dir_path
+    shutil.rmtree(tmp_dir_path)
+    with pytest.raises(ValueError):
+        process_dir_save_path("./tmp_dir", create_dir=False)
+    with open("tmp_file", "w", encoding="utf8") as _:
+        pass
+    with pytest.raises(ValueError):
+        process_dir_save_path("tmp_file")
+    os.remove("tmp_file")
+
+
+def test_save_load_pickle():
+    """Test save_pickle and load_pickle fn."""
+    test_data = {"data": "some data"}
+    save_path = save_pickle(test_data, "test_data")
+    return_data = load_pickle(save_path)
+    TestCase().assertDictEqual(test_data, return_data)
+
+    test_data = [1, "a", 3.4]
+    save_path = save_pickle(test_data, "test_data")
+    return_data = load_pickle(save_path)
+    TestCase().assertListEqual(test_data, return_data)
+
+    os.remove("test_data.pkl")
+
+
+def test_listdir_nonhidden():
+    """Test listdir_nonhidden fn."""
+    os.makedirs("./test_dir", exist_ok=True)
+    with open("test_dir/tmp_file1", "w", encoding="utf8") as _:
+        pass
+    with open("test_dir/tmp_file2", "w", encoding="utf8") as _:
+        pass
+    with open("test_dir/.tmp_file1", "w", encoding="utf8") as _:
+        pass
+    non_hidden_files = listdir_nonhidden("test_dir")
+    TestCase().assertListEqual(sorted(non_hidden_files), ["tmp_file1", "tmp_file2"])
+    shutil.rmtree("./test_dir")
 
 
 @pytest.fixture
