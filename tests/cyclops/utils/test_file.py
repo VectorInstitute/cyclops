@@ -46,8 +46,10 @@ def test_concat_consequtive_save_dataframes():
     save_dataframe(test_df, "test_dir2/df2")
     save_dataframe(test_df, "test_dir2/df3")
     save_dataframe(test_df, "test_dir2/df4")
-    for df in concat_consequtive_dataframes("test_dir2", every_n=2):
-        assert df.equals(pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1]))
+    for dataframe in concat_consequtive_dataframes("test_dir2", every_n=2):
+        assert dataframe.equals(
+            pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1])
+        )
 
     save_consequtive_dataframes("test_dir2", "test_dir3", every_n=2)
     df1 = load_dataframe("test_dir3/batch_0000.parquet")
@@ -67,8 +69,8 @@ def test_yield_dataframes():
     save_dataframe(test_df, "test_dir1/df2")
     save_dataframe(test_df, "test_dir1/df3")
     count = 0
-    for df in yield_dataframes("test_dir1", skip_n=1):
-        assert df.equals(test_df)
+    for dataframe in yield_dataframes("test_dir1", skip_n=1):
+        assert dataframe.equals(test_df)
         count += 1
     assert count == 2
     shutil.rmtree("./test_dir1")
@@ -87,7 +89,8 @@ def test_process_dir_save_path():
     shutil.rmtree(tmp_dir_path)
     with pytest.raises(ValueError):
         process_dir_save_path("./tmp_dir", create_dir=False)
-    open("tmp_file", "w").close()
+    with open("tmp_file", "w", encoding="utf8") as _:
+        pass
     with pytest.raises(ValueError):
         process_dir_save_path("tmp_file")
     os.remove("tmp_file")
@@ -111,9 +114,12 @@ def test_save_load_pickle():
 def test_listdir_nonhidden():
     """Test listdir_nonhidden fn."""
     os.makedirs("./test_dir", exist_ok=True)
-    open("test_dir/tmp_file1", "w").close()
-    open("test_dir/tmp_file2", "w").close()
-    open("test_dir/.tmp_file", "w").close()
+    with open("test_dir/tmp_file1", "w", encoding="utf8") as _:
+        pass
+    with open("test_dir/tmp_file2", "w", encoding="utf8") as _:
+        pass
+    with open("test_dir/.tmp_file1", "w", encoding="utf8") as _:
+        pass
     non_hidden_files = listdir_nonhidden("test_dir")
     TestCase().assertListEqual(sorted(non_hidden_files), ["tmp_file1", "tmp_file2"])
     shutil.rmtree("./test_dir")
