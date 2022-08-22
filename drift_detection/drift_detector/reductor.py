@@ -23,7 +23,49 @@ np.set_printoptions(precision=5)
 class Reductor:
 
     """
-    Dimensionality Reduction Methods
+    The Reductor class is used to reduce the dimensionality of the data. 
+    
+    The reductor is initialized with a dimensionality reduction method. 
+    The reductor can then be fit to the data and used to transform the data.
+
+    Example:
+    --------
+    >>> from drift_detection.baseline_models.temporal.pytorch.reductor import Reductor
+    >>> from sklearn.datasets import load_iris
+    >>> X, y = load_iris(return_X_y=True)
+    >>> reductor = Reductor("PCA")
+    >>> reductor.load_dataset(X)
+    >>> reductor.fit()
+    >>> X_transformed = reductor.transform(X)
+    
+    Arguments
+    ---------
+    dr_method: String
+        The dimensionality reduction method to use.
+        Available methods are:
+            "PCA"
+            "SRP"
+            "kPCA"
+            "Isomap"
+            "BBSDs_untrained_FFNN"
+            "BBSDh_untrained_FFNN"
+            "BBSDs_untrained_CNN"
+            "BBSDh_untrained_CNN"
+            "BBSDs_untrained_LSTM"
+            "BBSDh_untrained_LSTM"
+            "BBSDs_trained_LSTM"
+            "BBSDh_trained_LSTM"
+            "BBSDs_txrv_CNN"
+            "TAE_txrv_CNN"
+    model_path: String
+        The path to the model to use for dimensionality reduction.
+        If None, A new model is fit.
+    var_ret: float
+        The percentage of variance to retain for {"PCA", "SRP", "kPCA", "Isomap"}.
+    gmm_n_clusters: int
+        The number of clusters to use for "GMM".
+    random_state: int
+        The global random seed.
     """
 
     def __init__(
@@ -46,14 +88,18 @@ class Reductor:
         
     def load_dataset(self, X, y=None):
         '''
-        Loads a dataset into the reductor object
+        Loads an (X, y) numpy dataset from memory. 
 
         Parameters
         ----------
         X: numpy.matrix
             covariate data
         y: numpy.matrix
-            optional labels/targets for the data
+            optional targets/labels for the data
+
+        Shape:
+            X: (n_samples, n_features)
+            y: (n_samples, n_targets)
         '''
         self.X = X
         self.y = y
@@ -180,13 +226,8 @@ class Reductor:
         ):
             if hasattr(self, "X"):
                 X_transformed = self.model.transform(self.X)
-                if y is not None:
-                    return X_transformed, self.y
-                else:
-                    return X_transformed
             elif hasattr(self, "dataset"):
-                X_transformed, y = self.batch_inference(self.model)
-                return X_transformed, y
+                X_transformed, self.y = self.batch_inference(self.model)
         elif self.dr_method == "NoRed":
             if hasattr(self, "X"):
                 if self.y is not None:
@@ -198,8 +239,7 @@ class Reductor:
         elif "BBSDs" in self.dr_method:
             if "xrv_clf" in self.dr_method:
                 self.dataloader = DataLoader(self.dataset, batch_size=batch_size, num_workers=num_workers)
-                X_transformed, y = self.xrv_clf_inference(self.model)
-                return X_transformed, y
+                X_transformed, self.y = self.xrv_clf_inference(self.model)
             else:
                 X_transformed = preprocess_drift(
                     x=self.X.astype("float32"),
@@ -221,33 +261,82 @@ class Reductor:
             if num_workers is None:
                 num_workers = os.cpu_count()
             self.dataloader = DataLoader(self.dataset, batch_size=batch_size, num_workers=num_workers)
-            return self.xrv_ae_inference(self.model)
-            
+            X_transformed, self.y = self.xrv_ae_inference(self.model)
+        if self.y is not None:
+            return X_transformed, self.y
+        else:
+            return X_transformed
+        
     def sparse_random_projection(self):
+        '''
+        Fits a sparse random projection model.
+
+        Returns
+        -------
+        sklearn.decomposition.SparseRandomProjection
+            sparse random projection model.
+        '''
         n_components = self.get_dr_amount()
         srp = SparseRandomProjection(n_components=n_components)
         srp.fit(self.X)
         return srp
 
     def principal_components_anaylsis(self):
+        '''
+        Fits a principal components analysis model.
+
+        Returns
+        -------
+        sklearn.decomposition.PCA
+            principal components analysis model.
+        '''
         n_components = self.get_dr_amount()
         pca = PCA(n_components=n_components)
         pca.fit(self.X)
         return pca
 
     def kernel_principal_components_anaylsis(self, kernel="rbf"):
+        '''
+        Fits a kernel principal components analysis model.
+
+        Parameters
+        ----------
+        kernel: str
+            kernel to be used. Default: "rbf"
+        
+        Returns
+        -------
+        sklearn.decomposition.KernelPCA
+            kernel principal components analysis model.
+        '''
         n_components = self.get_dr_amount()
         kpca = KernelPCA(n_components=n_components, kernel=kernel)
         kpca.fit(self.X)
         return kpca
 
     def manifold_isomap(self):
+        '''
+        Fits an isomap model.
+
+        Returns
+        -------
+        sklearn.manifold.Isomap
+            isomap model.
+        '''
         n_components = self.get_dr_amount()
         isomap = Isomap(n_components=n_components)
         isomap.fit(self.X)
         return isomap
 
     def feed_foward_neural_network(self):
+        '''
+        Creates a feed forward neural network model.
+
+        Returns
+        -------
+        model: torch.nn.Module
+            feed forward neural network model.
+        '''
         data_dim = self.X.shape[-1]
         ffnn = nn.Sequential(
                 nn.Linear(data_dim, 16),
@@ -259,6 +348,14 @@ class Reductor:
         return ffnn
     
     def convolutional_neural_network(self):
+        '''
+        Creates a convolutional neural network model.
+        
+        Returns
+        -------
+        torch.nn.Module
+            convolutional neural network for dimensionality reduction.
+        '''
         cnn = nn.Sequential(
                 nn.Conv2d(3, 8, 4, stride=2, padding=0),
                 nn.ReLU(),
@@ -271,6 +368,31 @@ class Reductor:
         return cnn
         
     def recurrent_neural_network(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
+        '''
+        Creates a recurrent neural network model.
+        
+        Parameters
+        ----------
+        model_name: str
+            name of the model.
+        input_dim: int
+            number of input dimensions.
+        hidden_dim: int
+            number of hidden dimensions.
+        layer_dim: int
+            number of layers.
+        dropout: float  
+            dropout rate.
+        output_dim: int
+            number of output dimensions.
+        last_timestep_only: bool
+            if True, only the last timestep is used as input.
+        
+        Returns
+        -------
+        model: torch.nn.Module
+            the rnn model.
+        '''
         model_params = {
             "device": self.device,
             "input_dim": input_dim,
@@ -284,11 +406,29 @@ class Reductor:
         return model
 
     def gaussian_mixture_model(self):
+        '''
+        Creates a gaussian mixture model.
+        '''
         gmm = GaussianMixture(n_components=self.gmm_n_clusters, covariance_type='full')
         gmm.fit(self.X)
         return gmm
 
     def batch_inference(self, model):
+        '''
+        Performs batched inference on the dataset.
+
+        Parameters
+        ----------
+        model: torch.nn.Module
+            the model to use for inference.
+
+        Returns
+        -------
+        X_transformed: np.ndarray
+            the transformed dataset.
+        labels: np.ndarray
+            the labels of the transformed dataset.
+        '''
         imgs_transformed = []
         all_labels = []
         for batch in tqdm(self.dataloader):
@@ -297,9 +437,26 @@ class Reductor:
             all_labels.append(labels)
             for img in imgs:
                 imgs_transformed.append(model.fit_transform(img))
-        return np.concatenate(imgs_transformed), np.concatenate(all_labels)
+        X_transformed = np.concatenate(imgs_transformed)
+        labels = np.concatenate(all_labels)
+        return X_transformed, labels
     
     def xrv_clf_inference(self, model):
+        '''
+        Performs batched inference with the TXRV Classifier on the dataset.
+
+        Parameters
+        ----------
+        model: torch.nn.Module
+            the model to use for inference.
+        
+        Returns
+        -------
+        X_transformed: np.ndarray
+            the transformed dataset.
+        labels: np.ndarray
+            the labels of the transformed dataset.
+        '''
         all_preds = []
         all_labels = []
         model = model.to(self.device).eval()
@@ -312,9 +469,26 @@ class Reductor:
             preds = preds.cpu().numpy()
             all_preds.append(preds)
             all_labels.append(labels)
-        return np.concatenate(preds), np.concatenate(labels)
+        X_transformed = np.concatenate(all_preds)
+        labels = np.concatenate(all_labels)
+        return X_transformed, labels
 
     def xrv_ae_inference(self, model):
+        '''
+        Performs batched inference with the TXRV Autoencoder on the dataset.
+
+        Parameters
+        ----------
+        model: torch.nn.Module
+            the model to use for inference.
+        
+        Returns
+        -------
+        X_transformed: np.ndarray
+            the transformed dataset.
+        labels: np.ndarray
+            the labels of the transformed dataset.
+        '''
         all_preds = []
         all_labels = []
         model = model.to(self.device).eval()
@@ -327,6 +501,8 @@ class Reductor:
             preds = preds.cpu().numpy()
             all_preds.append(preds)
             all_labels.append(labels)        
-        return np.concatenate(preds), np.concatenate(labels)
+        X_transformed = np.concatenate(all_preds)
+        labels = np.concatenate(all_labels)
+        return X_transformed, labels
             
 
