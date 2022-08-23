@@ -35,8 +35,6 @@ class ShiftReductor:
         labels for source
     dr_tech: String
         dimensionality reduction technique (e.g. PCA, BBSDs)
-    orig_dims: int
-        number of dimensions of data
     datset: String
         dataset name
     dr_amount: int
@@ -51,7 +49,6 @@ class ShiftReductor:
         X,
         y,
         dr_tech,
-        orig_dims,
         datset,
         var_ret=0.8,
         model_path=None):
@@ -59,7 +56,6 @@ class ShiftReductor:
         self.X = X
         self.y = y
         self.dr_tech = dr_tech
-        self.orig_dims = orig_dims
         self.dataset = datset
         self.model_path = model_path
         self.var_ret = var_ret

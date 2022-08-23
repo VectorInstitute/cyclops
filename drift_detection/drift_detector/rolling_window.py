@@ -4,6 +4,7 @@ import random
 import sys
 import pandas as pd
 from datetime import date, timedelta
+from drift_detection.baseline_models.temporal.pytorch.utils import *
 
 sys.path.append("..")
 
@@ -76,10 +77,12 @@ def rolling_window_performance(X_stream, y_stream, opt, sample, stat_window, loo
         y_test_labels = y_test_labels[y_test_labels != -1]
 
         pred_metrics = print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=0)
-        rolling_metrics.append(pred_metrics)
+        rolling_metrics.append(pd.DataFrame(pred_metrics.values(),index=pred_metrics.keys()).T)
         
         i += stride
-            
+        
+    rolling_metrics = pd.concat(rolling_metrics).reset_index(drop=True)
+    
     return rolling_metrics
 
 def rolling_window_drift(X_train, X_stream, shift_detector, sample, stat_window, lookup_window, stride, num_timesteps, threshold, custom_ref=None):
@@ -107,8 +110,7 @@ def rolling_window_drift(X_train, X_stream, shift_detector, sample, stat_window,
         
         (p_val, dist, val_acc, te_acc) = shift_detector.detect_data_shift(X_train, 
                                                                           X_prev[:1000,:], 
-                                                                          X_next[:sample,:], 
-                                                                          orig_dims,
+                                                                          X_next[:sample,:]
         )
         
         if p_val < threshold:

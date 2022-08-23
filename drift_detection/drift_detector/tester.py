@@ -104,8 +104,8 @@ class ShiftTester:
         return gmm
     
     def test_shift(self, X_s, X_t, context_type, representation = None, backend = "pytorch"):
-        X_s = X_s.astype("float32")
-        X_t = X_t.astype("float32")
+        X_s = X_s.astype(np.float32)
+        X_t = X_t.astype(np.float32)
 
         p_val = None
         dist = None
@@ -227,9 +227,9 @@ class ShiftTester:
                 n_diffs=1,
                 l1_reg=1e-3,
                 epochs=100,
-                batch_size=1
+                batch_size=1,
             )
-            preds = dd.predict(X_t)
+            preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 

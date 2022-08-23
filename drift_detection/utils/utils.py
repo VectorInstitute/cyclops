@@ -422,9 +422,8 @@ def import_dataset_hospital(admin_data, x, y, dataset, outcome, hospital, seed=1
         y_source[np.in1d(encounter_ids, ids)]
         for ids in [train_ids, val_ids]
     ]
-    orig_dims = x_train.shape[1:]
 
-    return (x_train, y_train), (x_val, y_val), (x_test, y_test), feats, orig_dims, admin_data
+    return (x_train, y_train), (x_val, y_val), (x_test, y_test), feats, admin_data
 
 def get_label(admin_data, X, label):
     admin_data = admin_data.drop_duplicates('encounter_id')
@@ -579,7 +578,7 @@ def run_shift_experiment(
         np.random.seed(rand_run)
         
         # Query data
-        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, admin_data = import_dataset_hospital(admin_data, x, y, shift, outcome, hospital, rand_run, shuffle=True)
         
         # Normalize data
         (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(aggregation_type, admin_data, timesteps, X_tr, y_tr, X_val, y_val, X_t, y_t)
@@ -599,29 +598,33 @@ def run_shift_experiment(
                 os.makedirs(sample_path)
 
             shift_reductor = ShiftReductor(
-            X_tr_final, y_tr, dr_technique, orig_dims, dataset, var_ret=0.8, model_path=model_path,
+            X_tr_final, y_tr, dr_technique, dataset, var_ret=0.8, model_path=model_path,
             )
             # Detect shift.
             shift_detector = ShiftDetector(
                 dr_technique, md_test, sign_level, shift_reductor, sample, dataset, feats, model_path, context_type, representation,
             )
             
-            (
-                p_val,
-                dist,
-                val_acc,
-                te_acc,
-            ) = shift_detector.detect_data_shift(
-                X_tr_final, X_val_final[:1000,:], X_t_final[:sample,:], orig_dims 
-            )
-            
-            print("Shift %s | Random Run %s | Sample %s | P-Value %s" % (shift, rand_run, sample, p_val))
+            try:
+                (
+                    p_val,
+                    dist,
+                    val_acc,
+                    te_acc,
+                ) = shift_detector.detect_data_shift(
+                    X_tr_final, X_val_final[:1000,:], X_t_final[:sample,:]
+                )
                 
-            val_accs[rand_run, si] = val_acc
-            te_accs[rand_run, si] = te_acc
+                print("Shift %s | Random Run %s | Sample %s | P-Value %s" % (shift, rand_run, sample, p_val))
+                
+                val_accs[rand_run, si] = val_acc
+                te_accs[rand_run, si] = te_acc
 
-            samples_rands_pval[si, rand_run] = p_val
-            samples_rands_dist[si, rand_run] = dist
+                samples_rands_pval[si, rand_run] = p_val
+                samples_rands_dist[si, rand_run] = dist
+            
+            except ValueError as e:
+                print ('Error Type: ', type (e))
             
     mean_p_vals = np.mean(samples_rands_pval, axis=1)
     std_p_vals = np.std(samples_rands_pval, axis=1)
@@ -684,7 +687,7 @@ def run_synthetic_shift_experiment(
         np.random.seed(rand_run)
         
         # Query data
-        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, orig_dims, admin_data = import_dataset_hospital(admin_data, x, y, "random", outcome, hospital, rand_run, shuffle=True)
+        (X_tr, y_tr), (X_val, y_val), (X_t, y_t), feats, admin_data = import_dataset_hospital(admin_data, x, y, "random", outcome, hospital, rand_run, shuffle=True)
         # Normalize data
         (X_tr_normalized, y_tr),(X_val_normalized, y_val), (X_t_normalized, y_t) = normalize_data(aggregation_type, admin_data, timesteps, X_tr, y_tr, X_val, y_val, X_t, y_t)
         # Scale data
@@ -706,7 +709,7 @@ def run_synthetic_shift_experiment(
                 os.makedirs(sample_path)
 
             shift_reductor = ShiftReductor(
-            X_tr_final, y_tr, dr_technique, orig_dims, dataset, var_ret=0.8, model_path=model_path,
+            X_tr_final, y_tr, dr_technique, dataset, var_ret=0.8, model_path=model_path,
             )
             # Detect shift.
             shift_detector = ShiftDetector(
@@ -719,7 +722,7 @@ def run_synthetic_shift_experiment(
                 val_acc,
                 te_acc,
             ) = shift_detector.detect_data_shift(
-                X_tr_final, X_val_final[:1000,:], X_t_1[:sample,:], orig_dims,
+                X_tr_final, X_val_final[:1000,:], X_t_1[:sample,:],
             )
                 
             print("Shift %s | Random Run %s | Sample %s | P-Value %s" % (shift, rand_run, sample, p_val))

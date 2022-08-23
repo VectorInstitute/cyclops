@@ -34,12 +34,12 @@ class ShiftDetector:
         self.context_type = context_type
         self.representation = representation
 
-    def classify_data(self, X_s_tr, X_s_val, X_t, orig_dims):
+    def classify_data(self, X_s_tr, X_s_val, X_t):
         shift_reductor_model = self.shift_reductor.fit_reductor()
         X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
         return X_t_red
 
-    def detect_data_shift(self, X_s_tr, X_s_val, X_t, orig_dims):
+    def detect_data_shift(self, X_s_tr, X_s_val, X_t):
 
         val_acc = None
         te_acc = None

@@ -40,13 +40,9 @@ class Optimizer:
         yhat = self.model(x)
 
         # Computes loss
-        loss = self.loss_fn(yhat.squeeze(), y.squeeze())
+        loss = self.loss_fn(yhat, y)
         
-        # Mask out the loss for -1 labels.
-        loss *= ~y.eq(-1).squeeze()
-        
-        # Take mean of loss.
-        loss = loss.sum() / (~y.eq(-1)).sum()
+        loss = loss.sum()
 
         # Computes gradients
         loss.backward()
@@ -65,9 +61,7 @@ class Optimizer:
         val_loader,
         batch_size=64,
         n_epochs=50,
-        n_features=1,
-        timesteps=-1,
-        model_path=None,
+        n_features=1
     ):
         """Train pytorch model.
 
@@ -85,9 +79,7 @@ class Optimizer:
             Number of features.
             
         """ 
-        if model_path is None:
-            model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-            
+        model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
         best_loss = math.inf
 
         for epoch in range(1, n_epochs + 1):
@@ -110,13 +102,8 @@ class Optimizer:
                     y_val = y_val.to(self.device)
                     self.model.eval()
                     yhat = self.model(x_val)
-                    val_loss = self.loss_fn(yhat.squeeze(), y_val.squeeze())
-                    
-                    # Mask out the loss for -1 labels.
-                    val_loss *= ~y_val.eq(-1).squeeze()
-                    
-                    # Take mean of loss.
-                    val_loss = (val_loss.sum() / (~y_val.eq(-1)).sum()).item()
+                    val_loss = self.loss_fn(yhat, y_val)
+                    val_loss = val_loss.sum().item()
                     
                     assert not(np.isnan(val_loss).any())
 
@@ -131,7 +118,7 @@ class Optimizer:
             self.lr_scheduler.step()
         
 
-    def evaluate(self, test_loader, batch_size=1, n_features=1, timesteps=-1, flatten=True):
+    def evaluate(self, test_loader, batch_size=1, n_features=1, flatten=True):
         """Evaluate pytorch model.
 
         Parameters
@@ -147,7 +134,7 @@ class Optimizer:
             y_test_labels = []
             y_pred_labels = []
             for x_test, y_test in test_loader:
-                x_test = x_test.view([batch_size, timesteps, n_features]).to(
+                x_test = x_test.view([batch_size, n_features]).to(
                     self.device
                 )
                 y_test = y_test.to(self.device)
