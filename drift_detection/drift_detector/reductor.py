@@ -8,7 +8,6 @@ from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
-from alibi_detect.cd.pytorch import preprocess_drift
 import torchxrayvision as xrv
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -30,7 +29,7 @@ class Reductor:
 
     Example:
     --------
-    >>> from drift_detection.baseline_models.temporal.pytorch.reductor import Reductor
+    >>> from drift_detection.reductor import Reductor
     >>> from sklearn.datasets import load_iris
     >>> X, y = load_iris(return_X_y=True)
     >>> reductor = Reductor("PCA")
@@ -215,6 +214,7 @@ class Reductor:
         X_transformed: numpy.matrix
             transformed data
         '''
+        self.batch_size = batch_size
         if num_workers is None:
             num_workers = os.cpu_count()
 
@@ -241,19 +241,9 @@ class Reductor:
                 self.dataloader = DataLoader(self.dataset, batch_size=batch_size, num_workers=num_workers)
                 X_transformed, self.y = self.xrv_clf_inference(self.model)
             else:
-                X_transformed = preprocess_drift(
-                    x=self.X.astype("float32"),
-                    model=self.model,
-                    device=self.device,
-                    batch_size=batch_size,
-                    )
+                X_transformed = self.minibatch_inference(self.model)
         elif "BBSDh" in self.dr_method:
-            X_transformed = preprocess_drift(
-                x=self.X.astype("float32"),
-                model=self.model,
-                device=self.device,
-                batch_size=batch_size,
-            )
+            X_transformed = self.minibatch_inference(self.model)
             X_transformed = np.where(X_transformed > 0.5, 1, 0)
         elif self.dr_method == "GMM":           
             X_transformed = self.model.predict_proba(self.X)
@@ -367,7 +357,7 @@ class Reductor:
         ).to(self.device).eval()
         return cnn
         
-    def recurrent_neural_network(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
+    def recurrent_neural_network(self, model_name: str, input_dim: int, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
         '''
         Creates a recurrent neural network model.
         
@@ -412,6 +402,41 @@ class Reductor:
         gmm = GaussianMixture(n_components=self.gmm_n_clusters, covariance_type='full')
         gmm.fit(self.X)
         return gmm
+
+    def minibatch_inference(self, model):
+        '''
+        Performs batch inference on in-memory data by breaking into series of mini-batches.
+
+        Parameters
+        ----------
+        model: torch.nn.Module
+            the model to use for inference.
+
+        Returns
+        -------
+        X_transformed: np.ndarray
+            the transformed data.
+        '''
+
+        if isinstance(self.X, np.ndarray):
+            self.X = torch.from_numpy(self.X)
+        num_samples = self.X.shape[0]
+        n_batches = int(np.ceil(num_samples / self.batch_size))
+
+        X_transformed_all = []
+        model.to(self.device)
+        with torch.no_grad():
+            for i in range(n_batches):
+                batch_idx = (i*self.batch_size, min((i+1)*self.batch_size, num_samples))
+                X_batch = self.X[batch_idx[0]:batch_idx[1]]
+                X_batch = X_batch.to(self.device)
+                X_transformed = model(X_batch.float())
+                if self.device.type == 'cuda':
+                    X_transformed = X_transformed.cpu()
+                X_transformed_all.append(X_transformed.detach().numpy())
+        
+        X_transformed = np.concatenate(X_transformed_all, axis=0)
+        return X_transformed
 
     def batch_inference(self, model):
         '''
