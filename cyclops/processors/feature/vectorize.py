@@ -162,6 +162,8 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         A name to index map in each dimension.
     axis_names: list of str
         Axis names.
+    is_normalized: bool
+        Whether the Vectorized object has been normalized.
 
     """
 
@@ -659,9 +661,12 @@ class Vectorized:  # pylint: disable=too-many-public-methods
             Axis index or name.
         index_names: list of numpy.ndarray or list of any
             A list of the index names in each split.
-        allow_drops:
-            If True and certain indices or index names do not appear in any of the
-            splits, then drop any which do not appear. Otherwise, raises an error.
+
+        Returns
+        -------
+        tuple of Vectorized
+            Two Vectorized objects. The first has the remaining over the relevant
+            axis, and the second has those selected index names.
 
         """
         axis_index = self.get_axis(axis)
@@ -673,6 +678,31 @@ class Vectorized:  # pylint: disable=too-many-public-methods
             index_names=[remaining, index_names],
             allow_drops=False,
         )
+
+    def remove_with_index(
+        self,
+        axis: Union[str, int],
+        index_names: Union[List[Any], np.ndarray],
+    ):
+        """Split out some indexes by name.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis index or name.
+        index_names: numpy.ndarray or list of any
+            A list of index name to remove.
+
+        Returns
+        -------
+        Vectorized
+            A new Vectorized object with the selected indexes removed.
+
+        """
+        axis_index = self.get_axis(axis)
+        index_names = np.array(index_names)
+        remaining = np.setdiff1d(self.indexes[axis_index], index_names)
+        return self.take_with_index(axis_index, remaining)
 
     def rename_axis(self, axis: Union[str, int], name: str) -> None:
         """Rename an axis.
@@ -794,6 +824,69 @@ class Vectorized:  # pylint: disable=too-many-public-methods
 
         else:
             self.data = np.apply_along_axis(impute_fn, axis_index, self.data)
+
+    def concat_over_axis(
+        self,
+        axis: Union[str, int],
+        arr: np.ndarray,
+        concat_index: Union[List, np.ndarray],
+    ) -> Vectorized:
+        """Concatenate an array over an axis to create a new Vectorized object.
+
+        In other words, the indexes of the array are assumed to be identical
+        to this object's, except along a single axis, which is the axis over
+        which the data is concatenated.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis index or name over which to concatenate.
+        arr: numpy.ndarray
+            Array of data to concatenate. Required to have the same shape except in the
+            axis over which the concatenation occurs. Indexes are assumed to be aligned.
+        concat_index: numpy.ndarray or list
+            Index names being concatenated over the axis.
+
+        Returns
+        -------
+        Vectorized
+            Vectorized object with the concatenated data and indexes.
+
+        """
+        axis_index = self.get_axis(axis)
+        concat_index = np.array(concat_index)
+
+        # Check dimensionality for issues
+        shape = self.shape
+        arr_shape = arr.shape
+
+        if len(concat_index) != arr.shape[axis_index]:
+            raise ValueError(
+                "Incorrect number of index names for the data to concatenate."
+            )
+
+        if len(shape) != len(arr_shape):
+            raise ValueError("Array must have the same number of dimensions.")
+
+        equal_shape = [arr_shape[i] == shape[i] for i in range(len(shape))]
+        equal_shape = (
+            equal_shape[:axis_index] + equal_shape[axis_index + 1 :]  # noqa: E203
+        )
+        if not all(equal_shape):
+            raise ValueError(
+                "Array shape must be identical except along the concatenated axis."
+            )
+
+        # Check that none of the new indexes already exist
+        index_inter = np.intersect1d(self.indexes[axis_index], concat_index)
+        if len(index_inter) > 0:
+            raise ValueError(f"Forbidden intersection of indexes: {index_inter}.")
+
+        # Concatenate and return a new Vectorized object
+        res = np.concatenate([self.data, arr], axis=axis_index)
+        indexes = [ind.copy() for ind in self.indexes]
+        indexes[axis_index] = np.concatenate([indexes[axis_index], concat_index])
+        return Vectorized(res, indexes, self.axis_names)
 
 
 class VectorizedIndexExpression:  # pylint: disable=too-few-public-methods
