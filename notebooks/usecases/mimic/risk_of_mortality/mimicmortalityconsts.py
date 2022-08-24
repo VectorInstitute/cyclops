@@ -28,14 +28,16 @@ TAB_FEATURES = [
 ] + TAB_TARGETS
 
 # Temporal
-TIMESTEP_SIZE = 24
-WINDOW_DURATION = 144
-PREDICT_OFFSET = 24
+TIMESTEP_SIZE = 24  # Make a prediction every day
+WINDOW_DURATION = 144  # Predict for the first 6 days of admission
+PREDICT_OFFSET = 24 * 14  # Death in occurs in the next 2 weeks
 
 TOP_N_EVENTS = 150
 
 OUTCOME_DEATH_TEMP = TARGETS + " - " + OUTCOME_DEATH
 TEMP_TARGETS = [OUTCOME_DEATH_TEMP]
+
+TARGET_TIMESTAMP = "deathtime"
 
 QUERIED_DIR = process_dir_save_path(join(ROOT_DIR, "0queried"))
 CLEANED_DIR = process_dir_save_path(join(ROOT_DIR, "1cleaned"))

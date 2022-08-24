@@ -848,8 +848,13 @@ class TemporalFeatures(Features):
         else:
             plot_temporal_features(self.data, features)
 
-    def aggregate(self) -> pd.DataFrame:
+    def aggregate(self, **aggregate_kwargs) -> pd.DataFrame:
         """Aggregate the data.
+
+        Parameters
+        ----------
+        **aggregate_kwargs
+            Keywords to pass to the aggregation function.
 
         Returns
         -------
@@ -871,7 +876,7 @@ class TemporalFeatures(Features):
                 f"The following columns are not features: {', '.join(nonexistent)}."
             )
 
-        return self.aggregator(self.data)
+        return self.aggregator(self.data, **aggregate_kwargs)
 
 
 def split_features(
