@@ -29,7 +29,7 @@ poetry install
 source $(poetry env info --path)/bin/activate
 ```
 
-> :warning: ``poetry`` is the preferred installation method since it also installs
+> ⚠️ ``poetry`` is the preferred installation method since it also installs
 the ``cyclops`` package, and is tested. There is also an ``environment.yaml``
 and ``requirements.txt`` to install dependencies using
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or
