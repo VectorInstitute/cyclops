@@ -15,10 +15,10 @@ pre-commit run --all-files
 
 ## Coding guidelines
 
-For code style, we recommend the [google style guide](https://google.github.io/styleguide/pyguide.html). 
+For code style, we recommend the [google style guide](https://google.github.io/styleguide/pyguide.html).
 
 Pre-commit hooks apply the [black](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html)
-code formatting. 
+code formatting.
 
 For docstrings we use [numpy format](https://numpydoc.readthedocs.io/en/latest/format.html).
 
