@@ -3,6 +3,7 @@
 import numpy as np
 
 from cyclops.processors.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
+from cyclops.processors.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "wanglab"
@@ -37,11 +38,14 @@ TAB_FEATURES = [
 # Temporal
 TIMESTEP_SIZE = 24
 WINDOW_DURATION = 144
-PREDICT_OFFSET = 24
+PREDICT_OFFSET = 24 * 14
 
 TOP_N_EVENTS = 150
 
-TEMP_TARGETS = [OUTCOME_DEATH]
+OUTCOME_DEATH_TEMP = TARGETS + " - " + OUTCOME_DEATH
+TEMP_TARGETS = [OUTCOME_DEATH_TEMP]
+
+TARGET_TIMESTAMP = "deathtime"
 
 QUERIED_DIR = process_dir_save_path(join(ROOT_DIR, "0queried"))
 CLEANED_DIR = process_dir_save_path(join(ROOT_DIR, "1cleaned"))
