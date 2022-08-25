@@ -22,7 +22,7 @@ class Optimizer:
         Optimization algorithm (e.g. Adam)
 
     """
-    def __init__(self, model, loss_fn, optimizer, activation, lr_scheduler):
+    def __init__(self, model, loss_fn, optimizer, activation, lr_scheduler, reweight_positive = None):
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
@@ -31,7 +31,16 @@ class Optimizer:
         self.train_losses = []
         self.val_losses = []
         self.device = model.device
-
+        self.reweight_positive = reweight_positive
+    
+    def reweight_loss(self, loss, y):
+        if isinstance(self.reweight_positive, float) or isinstance(self.reweight_positive, np.float64):
+            loss[y.squeeze() == 1] *= self.reweight_positive
+        elif self.reweight_positive == "mini-batch":
+            loss[y.squeeze() == 1] *= (y == 0).sum()/(y == 1).sum()
+        
+        return loss
+    
     def train_step(self, x, y):
         # Sets model to train mode
         self.model.train(True)
@@ -41,6 +50,9 @@ class Optimizer:
 
         # Computes loss
         loss = self.loss_fn(yhat.squeeze(), y.squeeze())
+        
+        # Reweight the losses
+        loss = self.reweight_loss(loss, y)
         
         # Mask out the loss for -1 labels.
         loss *= ~y.eq(-1).squeeze()
@@ -108,6 +120,9 @@ class Optimizer:
                     self.model.eval()
                     yhat = self.model(x_val)
                     val_loss = self.loss_fn(yhat.squeeze(), y_val.squeeze())
+                    
+                    # Reweight the losses
+                    val_loss = self.reweight_loss(val_loss, y_val)
                     
                     # Mask out the loss for -1 labels.
                     val_loss *= ~y_val.eq(-1).squeeze()
