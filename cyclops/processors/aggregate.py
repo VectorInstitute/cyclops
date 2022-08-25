@@ -20,7 +20,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.processors.constants import ALL, FIRST, LAST, MEAN, MEDIAN
 from cyclops.processors.feature.vectorize import Vectorized
-from cyclops.processors.impute import AggregatedImputer
+from cyclops.processors.impute import AggregatedImputer, numpy_2d_ffill
 from cyclops.processors.util import has_columns, is_timestamp_series
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
@@ -701,3 +701,60 @@ def tabular_as_aggregated(  # pylint: disable=too-many-arguments
     if sort:
         return tab.sort_index()
     return tab
+
+
+def timestamp_ffill_agg(
+    timesteps: pd.Series, num_timesteps: int, val: float = 1, fill_nan: float = None
+):
+    """Perform single-value aggregation with fill forward functionality given timesteps.
+
+    If a timestep is negative, it is treated as occuring before the regular window and
+    is "filled forward" through all the timesteps.
+
+    If a timestep is between 0 and num_timesteps, it is bucketed accordingly and then
+    forward filled.
+
+    The timesteps can be nan.
+
+    Parameters
+    ----------
+    timesteps: pandas.Series
+        A series of integer timesteps
+    num_timesteps: int
+        The total number of timesteps to consider in the aggregation window.
+    val: float, default = 1
+        The value with which to fill.
+    fill_nan: float, optional
+        Optionally fill any remaining nan with a value.
+
+    Returns
+    -------
+    numpy.ndarray
+        The filled forward aggregated data in the form of a 2-dimensional array.
+
+    """
+    shape = (len(timesteps), num_timesteps)
+    arr = np.empty(shape)
+    arr[:, :] = np.NaN
+
+    before = (timesteps < 0).values
+    after = (timesteps >= 0).values
+
+    # Predict 1 from beginning to end
+    arr[before] = val
+
+    # Predict 1 in a specific timestep
+    rows = np.where(after)[0]
+    cols = timesteps[after].values.astype(int)
+
+    before_end = cols < num_timesteps
+    rows = rows[before_end]
+    cols = cols[before_end]
+    arr[rows, cols] = val
+
+    arr = numpy_2d_ffill(arr)
+
+    if fill_nan is not None:
+        arr = np.nan_to_num(arr, nan=fill_nan)
+
+    return arr

@@ -593,3 +593,27 @@ class AggregatedImputer:
 
         has_columns(group, list(self.extra_imputer.imputers.keys()), raise_error=True)
         return self.extra_imputer(group)
+
+
+def numpy_2d_ffill(arr: np.ndarray) -> np.ndarray:
+    """Foward fill a 2D array in a row-wise fashion, i.e., filling each row separately.
+
+    Parameters
+    ----------
+    arr: numpy.ndarray
+        A 2-dimensional array.
+
+    Returns
+    -------
+    numpy.ndarray
+        The row-wise forward filled array.
+
+    """
+    if arr.ndim != 2:
+        raise ValueError("The array must be 2-dimensional.")
+
+    mask = np.isnan(arr)
+    idx = np.where(~mask, np.arange(mask.shape[1]), 0)
+    np.maximum.accumulate(idx, axis=1, out=idx)
+    out = arr[np.arange(idx.shape[0])[:, None], idx]
+    return out

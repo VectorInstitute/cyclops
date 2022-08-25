@@ -269,3 +269,26 @@ def test_vectorized_normalizer_subset(  # pylint: disable=redefined-outer-name
 
     vec_in.normalize()
     vec_out.normalize()
+
+
+def test_concat_over_axis():
+    """Test Vectorized method concat_over_axis."""
+    # Use this format to test the concatentation
+    _ = """
+    comb_vectorized = temp_vectorized.concat_over_axis(
+        EVENT_NAME,
+        tab_aggregated_vec.data,
+        tab_aggregated_vec.get_index(EVENT_NAME)
+    )
+
+    _, save = comb_vectorized.split_out(
+        EVENT_NAME,
+        temp_vectorized.get_index(EVENT_NAME)
+    )
+    assert np.array_equal(save.data, temp_vectorized.data, equal_nan=True)
+
+    _, save = comb_vectorized.split_out(
+        EVENT_NAME, tab_aggregated_vec.get_index(EVENT_NAME)
+    )
+    assert np.array_equal(save.data, tab_aggregated_vec.data, equal_nan=True)
+    """
