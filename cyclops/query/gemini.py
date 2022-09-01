@@ -260,12 +260,12 @@ def patient_encounters(
     if drop_null_subject_ids:
         table = qp.DropNulls(SUBJECT_ID)(table)
 
+    # Possibly cast string representations to timestamps
+    table = qp.Cast([ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], "timestamp")(table)
+
     # Get the discharge disposition code descriptions
     lookup_table = get_table(LOOKUP_IP_ADMIN)
     lookup_table = qp.ConditionEquals("variable", "discharge_disposition")(lookup_table)
-
-    # Possibly cast string representations to timestamps
-    table = qp.Cast([ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], "timestamp")(table)
 
     table = qp.Join(
         lookup_table,
