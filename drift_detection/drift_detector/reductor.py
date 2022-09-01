@@ -73,13 +73,13 @@ class Reductor:
 
     def __init__(
         self,
-        dr_method,
-        model_path=None,
-        var_ret=0.8,
-        n_components=None,
-        n_features=None,
-        gmm_n_clusters=2,
-        random_state=42
+        dr_method: str,
+        model_path: str = None,
+        var_ret: float = 0.8,
+        n_components: int = None,
+        n_features: int = None,
+        gmm_n_clusters: int = 2,
+        random_state: int = 42
         ):
 
         self.dr_method = dr_method
@@ -186,7 +186,7 @@ class Reductor:
         "BBSDh_untrained_CNN", "BBSDs_untrained_LSTM", "BBSDh_untrained_LSTM", "BBSDs_trained_LSTM", "BBSDh_trained_LSTM", 
         "BBSDs_txrv_CNN", "TAE_txrv_CNN"]
         
-    def get_dr_amount(self, X):
+    def get_dr_amount(self, X: np.ndarray) -> int:
         '''
         Returns the number of components to be used to retain the variation specified.
 
@@ -235,7 +235,8 @@ class Reductor:
         else:
             raise ValueError("data must be a numpy matrix (n_samples, n_features) or a torch Dataset")
 
-    def transform(self, data, batch_size=32, num_workers=None) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    def transform(self, data: Union[np.ndarray, torch.utils.data.Dataset], 
+                        batch_size: int = 32, num_workers: int = None) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         '''Transforms the data using the chosen dimensionality reduction method
 
         Parameters
@@ -301,7 +302,7 @@ class Reductor:
         else:
             return X_transformed
 
-    def feed_forward_neural_network(self, n_features):
+    def feed_forward_neural_network(self, n_features: int):
         '''
         Creates a feed forward neural network model.
 
@@ -339,7 +340,8 @@ class Reductor:
         ).to(self.device).eval()
         return cnn
         
-    def recurrent_neural_network(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
+    def recurrent_neural_network(self, model_name: str, input_dim: int, hidden_dim: int = 64, layer_dim: int = 2, dropout: int = 0.2, 
+                                output_dim: int = 1, last_timestep_only: bool = False):
         '''
         Creates a recurrent neural network model.
         
