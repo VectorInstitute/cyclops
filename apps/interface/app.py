@@ -110,9 +110,10 @@ def toggle_collapse_diagnosis(checked):
 )
 def toggle_advanced_options(n_clicks, is_open):
     """Toggle diagnosis collapse with a button."""
-    if n_clicks is not None:
-        return not is_open
-    return is_open
+    if n_clicks is None or n_clicks == 0:
+        return False
+
+    return not is_open
 
 
 # Run the query
