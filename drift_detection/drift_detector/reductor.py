@@ -89,11 +89,11 @@ class ShiftReductor:
             return self.recurrent_neural_network("lstm", self.X.shape[2])
         elif self.dr_tech == "BBSDs_trained_LSTM":
             model = self.recurrent_neural_network("lstm",self.X.shape[2])
-            model.load_state_dict(torch.load(self.model_path))
+            model.load_state_dict(torch.load(self.model_path)['model'])
             return model
         elif self.dr_tech == "BBSDh_trained_LSTM":
             model = self.recurrent_neural_network("lstm", self.X.shape[2])
-            model.load_state_dict(torch.load(self.model_path))
+            model.load_state_dict(torch.load(self.model_path)['model'])
             return model
         else:
             return None

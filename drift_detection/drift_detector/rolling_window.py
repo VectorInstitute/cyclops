@@ -37,7 +37,7 @@ def get_streams(x, y, admin_data, start_date, end_date, stride, window, ids_to_e
             measure_dates.append((single_date+timedelta(days=window)).strftime("%Y-%m-%d"))
     return(target_stream_x, target_stream_y, measure_dates)
 
-def rolling_window_performance(X_stream, y_stream, opt, sample, stat_window, lookup_window, stride, num_timesteps, threshold, custom_ref=None):
+def rolling_window_performance(X_stream, y_stream, opt, sample, stat_window, lookup_window, stride, num_timesteps, input_dim, threshold, custom_ref=None):
     
     rolling_metrics = []
     
