@@ -65,7 +65,7 @@ non_interactive = true
 
 [tool.pylint]
     [tool.pylint.master]
-    disable=["import-error"]
+    disable=["import-error", "duplicate-code"]
 
     [tool.pylint.format]
     max-line-length=88
@@ -75,7 +75,6 @@ non_interactive = true
 
     [tool.pylint.similarities]
     ignore-imports=["yes"]
-    min-similarity-lines=8
 
 [tool.flake8]
 max-line-length = 88
