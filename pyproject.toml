@@ -75,6 +75,7 @@ non_interactive = true
 
     [tool.pylint.similarities]
     ignore-imports=["yes"]
+    min-similarity-lines=8
 
 [tool.flake8]
 max-line-length = 88
