@@ -23,7 +23,7 @@ from utils.utils import import_dataset_hospital, run_shift_experiment
 from baseline_models.static.utils import run_model
 
 DATASET = sys.argv[1]
-SHIFT =  sys.argv[2]
+SHIFT = sys.argv[2]
 DR_TECHNIQUE = sys.argv[3]
 MD_TEST = sys.argv[4]
 OUTCOME = sys.argv[5]
@@ -48,12 +48,12 @@ elif SHIFT == "large_gn_shift":
     shifts = ["large_gn_shift_0.1", "large_gn_shift_0.5", "large_gn_shift_1.0"]
 elif SHIFT == "ko_shift":
     shifts = ["ko_shift_0.1", "ko_shift_0.5", "ko_shift_1.0"]
-elif SHIFT == 'small_bn_shift':
-    shifts = ['small_bn_shift_0.1','small_bn_shift_0.5','small_bn_shift_1.0']
-elif SHIFT == 'medium_bn_shift':
-    shifts = ['medium_bn_shift_0.1','medium_bn_shift_0.5','medium_bn_shift_1.0']
-elif SHIFT == 'large_bn_shift':
-    shifts = ['large_bn_shift_0.1','large_bn_shift_0.5','large_bn_shift_1.0']
+elif SHIFT == "small_bn_shift":
+    shifts = ["small_bn_shift_0.1", "small_bn_shift_0.5", "small_bn_shift_1.0"]
+elif SHIFT == "medium_bn_shift":
+    shifts = ["medium_bn_shift_0.1", "medium_bn_shift_0.5", "medium_bn_shift_1.0"]
+elif SHIFT == "large_bn_shift":
+    shifts = ["large_bn_shift_0.1", "large_bn_shift_0.5", "large_bn_shift_1.0"]
 elif SHIFT == "mfa_shift":
     shifts = ["mfa_shift_0.25", "mfa_shift_0.5", "mfa_shift_0.75"]
 elif SHIFT == "cp_shift":
@@ -87,7 +87,7 @@ OUTCOMES = ["length_of_stay_in_er", "mortality_in_hospital"]
 if OUTCOME not in OUTCOMES:
     raise Exception("Not a valid outcome")
 # Hospital
-HOSPITALS = ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW","PMH"]
+HOSPITALS = ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW", "PMH"]
 if HOSPITAL in HOSPITALS:
     raise Exception("Not a valid hospital")
 # Model
@@ -117,9 +117,7 @@ for si, SHIFT in enumerate(EXPERIMENTS):
         for mi, MD_TEST in enumerate(MD_TESTS):
             if np.any(mean_dr_md_pval[si, di, mi, :] == -1):
                 print(
-                    "{} | {} | {} | {}".format(
-                        SHIFT, HOSPITAL, DR_TECHNIQUE, MD_TEST
-                    )
+                    "{} | {} | {} | {}".format(SHIFT, HOSPITAL, DR_TECHNIQUE, MD_TEST)
                 )
                 try:
                     mean_p_vals, std_p_vals, mean_dist, std_dist = run_shift_experiment(
@@ -135,8 +133,8 @@ for si, SHIFT in enumerate(EXPERIMENTS):
                         na_cutoff=NA_CUTOFF,
                         random_runs=RANDOM_RUNS,
                         calc_acc=CALC_ACC,
-                        bucket_size=6, 
-                        window=6
+                        bucket_size=6,
+                        window=6,
                     )
                     mean_dr_md_pval[si, di, mi, :] = mean_p_vals
                     std_dr_md_pval[si, di, mi, :] = std_p_vals
@@ -150,17 +148,14 @@ fig = plt.figure(figsize=(8, 6))
 for si, shift in enumerate(EXPERIMENTS):
     for di, dr_technique in enumerate(DR_TECHNIQUES):
         for mi, md_test in enumerate(MD_TESTS):
-            if (
-                    dr_technique == DIM_RED
-                    and md_test == MD_TEST
-            ):
+            if dr_technique == DIM_RED and md_test == MD_TEST:
                 errorfill(
-                        np.array(SAMPLES),
-                        mean_dr_md_pval[si, di, mi, :],
-                        std_dr_md_pval[si, di, mi, :],
-                        fmt=linestyles[si] + markers[si],
-                        color=colorscale(colors[si], brightness[si]),
-                        label="%s" % "_".join([shift, dr_technique, md_test]),
+                    np.array(SAMPLES),
+                    mean_dr_md_pval[si, di, mi, :],
+                    std_dr_md_pval[si, di, mi, :],
+                    fmt=linestyles[si] + markers[si],
+                    color=colorscale(colors[si], brightness[si]),
+                    label="%s" % "_".join([shift, dr_technique, md_test]),
                 )
 plt.xlabel("Number of samples from test data")
 plt.ylabel("$p$-value")

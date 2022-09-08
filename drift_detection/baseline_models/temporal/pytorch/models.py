@@ -41,7 +41,11 @@ class RNNModel(nn.Module):
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
-        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
+        h0 = (
+            torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
+            .requires_grad_()
+            .to(self.device)
+        )
         out, h0 = self.rnn(x, h0.detach())
         if self.last_timestep_only:
             out = out[:, -1, :]
@@ -88,7 +92,11 @@ class GRUModel(nn.Module):
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
-        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
+        h0 = (
+            torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
+            .requires_grad_()
+            .to(self.device)
+        )
         out, _ = self.gru(x, h0.detach())
         if self.last_timestep_only:
             out = out[:, -1, :]
@@ -136,8 +144,16 @@ class LSTMModel(nn.Module):
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
-        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
-        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_().to(self.device)
+        h0 = (
+            torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
+            .requires_grad_()
+            .to(self.device)
+        )
+        c0 = (
+            torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
+            .requires_grad_()
+            .to(self.device)
+        )
         out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
         if self.last_timestep_only:
             out = out[:, -1, :]

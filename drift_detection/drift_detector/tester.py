@@ -36,8 +36,9 @@ from alibi_detect.cd import (
     ContextMMDDrift,
     ChiSquareDrift,
     FETDrift,
-    SpotTheDiffDrift
+    SpotTheDiffDrift,
 )
+
 
 class ShiftTester:
 
@@ -52,7 +53,9 @@ class ShiftTester:
         path to model (optional)
     """
 
-    def __init__(self, sign_level=0.05, mt=None, model_path=None, features=None, dataset=None):
+    def __init__(
+        self, sign_level=0.05, mt=None, model_path=None, features=None, dataset=None
+    ):
         self.sign_level = sign_level
         self.mt = mt
         self.model_path = model_path
@@ -60,7 +63,16 @@ class ShiftTester:
         self.features = features
         self.dataset = dataset
 
-    def recurrent_neural_network(self, model_name, input_dim, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
+    def recurrent_neural_network(
+        self,
+        model_name,
+        input_dim,
+        hidden_dim=64,
+        layer_dim=2,
+        dropout=0.2,
+        output_dim=1,
+        last_timestep_only=False,
+    ):
         model_params = {
             "device": self.device,
             "input_dim": input_dim,
@@ -72,7 +84,7 @@ class ShiftTester:
         }
         model = get_temporal_model(model_name, model_params).to(self.device)
         return model
-    
+
     def context(self, x, context_type="rnn", n_clusters=2):
         if context_type == "rnn":
             model = self.recurrent_neural_network("lstm", x.shape[2])
@@ -85,25 +97,27 @@ class ShiftTester:
             gmm = self.gaussian_mixture_model(n_clusters)
             if gmm is not None:
                 # compute all contexts
-                c_gmm_proba = gmm.predict_proba(x) 
+                c_gmm_proba = gmm.predict_proba(x)
                 return c_gmm_proba
-            else: 
+            else:
                 return self.context(x, "rnn")
-        
+
     def gaussian_mixture_model(self, n_clusters=2):
-        gmm=None
-        if os.path.exists(self.dataset + '_' + str(n_clusters) + '_means.npy'):
-            n_clusters=str(n_clusters)
-            means = np.load(self.dataset + '_' + n_clusters + '_means.npy')
-            covar = np.load(self.dataset + '_' + n_clusters + '_covariances.npy')
-            gmm = GaussianMixture(n_components = len(means), covariance_type='full')
+        gmm = None
+        if os.path.exists(self.dataset + "_" + str(n_clusters) + "_means.npy"):
+            n_clusters = str(n_clusters)
+            means = np.load(self.dataset + "_" + n_clusters + "_means.npy")
+            covar = np.load(self.dataset + "_" + n_clusters + "_covariances.npy")
+            gmm = GaussianMixture(n_components=len(means), covariance_type="full")
             gmm.precisions_cholesky_ = np.linalg.cholesky(np.linalg.inv(covar))
-            gmm.weights_ = np.load(self.dataset + '_' + n_clusters + '_weights.npy')
+            gmm.weights_ = np.load(self.dataset + "_" + n_clusters + "_weights.npy")
             gmm.means_ = means
             gmm.covariances_ = covar
         return gmm
-    
-    def test_shift(self, X_s, X_t, context_type, representation = None, backend = "pytorch"):
+
+    def test_shift(
+        self, X_s, X_t, context_type, representation=None, backend="pytorch"
+    ):
         X_s = X_s.astype("float32")
         X_t = X_t.astype("float32")
 
@@ -124,35 +138,43 @@ class ShiftTester:
 
         elif self.mt == "LK":
             if representation == "rnn":
-                proj = self.recurrent_neural_network("lstm",X_s.shape[2])
-                if self.model_path is not None:   
+                proj = self.recurrent_neural_network("lstm", X_s.shape[2])
+                if self.model_path is not None:
                     proj.load_state_dict(torch.load(self.model_path))
-                    
-            elif representation == "cnn":             
+
+            elif representation == "cnn":
                 # define the projection phi
-                proj = nn.Sequential(
-                    nn.Conv2d(3, 8, 4, stride=2, padding=0),
-                    nn.ReLU(),
-                    nn.Conv2d(8, 16, 4, stride=2, padding=0),
-                    nn.ReLU(),
-                    nn.Conv2d(16, 32, 4, stride=2, padding=0),
-                    nn.ReLU(),
-                    nn.Flatten(),
-                ).to(self.device).eval()
-                
+                proj = (
+                    nn.Sequential(
+                        nn.Conv2d(3, 8, 4, stride=2, padding=0),
+                        nn.ReLU(),
+                        nn.Conv2d(8, 16, 4, stride=2, padding=0),
+                        nn.ReLU(),
+                        nn.Conv2d(16, 32, 4, stride=2, padding=0),
+                        nn.ReLU(),
+                        nn.Flatten(),
+                    )
+                    .to(self.device)
+                    .eval()
+                )
+
             elif representation == "ffnn":
-                proj = nn.Sequential(
-                    nn.Linear(X_s.shape[-1], 32),
-                    nn.SiLU(),
-                    nn.Linear(32, 8),
-                    nn.SiLU(),
-                    nn.Linear(8, 1),
-                ).to(self.device).eval()
+                proj = (
+                    nn.Sequential(
+                        nn.Linear(X_s.shape[-1], 32),
+                        nn.SiLU(),
+                        nn.Linear(32, 8),
+                        nn.SiLU(),
+                        nn.Linear(8, 1),
+                    )
+                    .to(self.device)
+                    .eval()
+                )
             else:
                 raise ValueError("Incorrect Representation Option")
-                
+
             kernel = DeepKernel(proj, eps=0.01)
-            
+
             dd = LearnedKernelDrift(
                 X_s, kernel, backend=backend, p_val=0.05, epochs=100, batch_size=32
             )
@@ -162,59 +184,49 @@ class ShiftTester:
 
         elif self.mt == "Classifier":
             if representation == "gb":
-                X_s = X_s.reshape(X_s.shape[0],X_s.shape[1])
-                X_t = X_t.reshape(X_t.shape[0],X_t.shape[1])
+                X_s = X_s.reshape(X_s.shape[0], X_s.shape[1])
+                X_t = X_t.reshape(X_t.shape[0], X_t.shape[1])
                 model = GradientBoostingClassifier()
-                backend='sklearn'
+                backend = "sklearn"
                 dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend=backend, 
-                    p_val=0.05, 
-                    preds_type='scores', 
+                    X_s,
+                    model,
+                    backend=backend,
+                    p_val=0.05,
+                    preds_type="scores",
                     binarize_preds=False,
-                    n_folds=5
-                )        
+                    n_folds=5,
+                )
             elif representation == "rf":
-                X_s = X_s.reshape(X_s.shape[0],X_s.shape[1])
-                X_t = X_t.reshape(X_t.shape[0],X_t.shape[1])
+                X_s = X_s.reshape(X_s.shape[0], X_s.shape[1])
+                X_t = X_t.reshape(X_t.shape[0], X_t.shape[1])
                 model = RandomForestClassifier()
-                backend='sklearn'
+                backend = "sklearn"
                 dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend=backend, 
-                    p_val=0.05, 
+                    X_s,
+                    model,
+                    backend=backend,
+                    p_val=0.05,
                     binarize_preds=False,
-                    n_folds=5
-                )             
+                    n_folds=5,
+                )
             elif representation == "rnn":
-                model = self.recurrent_neural_network("lstm",X_s.shape[2])
-                backend='pytorch'
-                dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend=backend, 
-                    p_val=0.05
-                ) 
-                
+                model = self.recurrent_neural_network("lstm", X_s.shape[2])
+                backend = "pytorch"
+                dd = ClassifierDrift(X_s, model, backend=backend, p_val=0.05)
+
             elif representation == "ffnn":
                 model = nn.Sequential(
-                        nn.Linear(X_s.shape[-1], 32),
-                        nn.SiLU(),
-                        nn.Linear(32, 8),
-                        nn.SiLU(),
-                        nn.Linear(8, 1),
+                    nn.Linear(X_s.shape[-1], 32),
+                    nn.SiLU(),
+                    nn.Linear(32, 8),
+                    nn.SiLU(),
+                    nn.Linear(8, 1),
                 ).to(self.device)
-                dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend=backend, 
-                    p_val=0.05
-                ) 
+                dd = ClassifierDrift(X_s, model, backend=backend, p_val=0.05)
             else:
                 raise ValueError("Incorrect Representation Option")
-                
+
             preds = dd.predict(X_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
@@ -223,11 +235,11 @@ class ShiftTester:
             dd = SpotTheDiffDrift(
                 X_s,
                 backend=backend,
-                p_val=.05,
+                p_val=0.05,
                 n_diffs=1,
                 l1_reg=1e-3,
                 epochs=100,
-                batch_size=1
+                batch_size=1,
             )
             preds = dd.predict(X_t)
             p_val = preds["data"]["p_val"]
@@ -236,31 +248,33 @@ class ShiftTester:
         elif self.mt == "Context-Aware MMD":
             C_s = self.context(X_s, context_type)
             C_t = self.context(X_t, context_type)
-            dd = ContextMMDDrift(X_s, C_s, backend=backend, n_permutations=100, p_val=0.05)
+            dd = ContextMMDDrift(
+                X_s, C_s, backend=backend, n_permutations=100, p_val=0.05
+            )
             preds = dd.predict(X_t, C_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
         elif self.mt == "Univariate":
-            X_s = X_s.reshape(X_s.shape[0],X_s.shape[1])
-            X_t = X_t.reshape(X_t.shape[0],X_t.shape[1])
+            X_s = X_s.reshape(X_s.shape[0], X_s.shape[1])
+            X_t = X_t.reshape(X_t.shape[0], X_t.shape[1])
             ## add feature map
-            dd = TabularDrift(X_s, correction = "bonferroni", p_val=0.05)
+            dd = TabularDrift(X_s, correction="bonferroni", p_val=0.05)
             preds = dd.predict(
                 X_t, drift_type="batch", return_p_val=True, return_distance=True
             )
-            p_val = min(np.min(preds["data"]["p_val"]),1.0)
+            p_val = min(np.min(preds["data"]["p_val"]), 1.0)
             dist = np.mean(preds["data"]["distance"])
-            threshold = preds['data']['threshold']
-            
+            threshold = preds["data"]["threshold"]
+
         elif self.mt == "Chi-Squared":
-            dd = ChiSquareDrift(X_s, correction = "bonferroni", p_val=0.05)
+            dd = ChiSquareDrift(X_s, correction="bonferroni", p_val=0.05)
             preds = dd.predict(
                 X_t, drift_type="batch", return_p_val=True, return_distance=True
             )
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
-            
+
         elif self.mt == "FET":
             dd = FETDrift(X_s, alternative="two-sided", p_val=0.05)
             preds = dd.predict(
@@ -269,7 +283,7 @@ class ShiftTester:
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
-        #need torch two sample for below
+        # need torch two sample for below
         elif self.mt == "Energy":
             energy_test = EnergyStatistic(len(X_s), len(X_t))
             t_val, matrix = energy_test(
@@ -298,9 +312,8 @@ class ShiftTester:
                 ret_matrix=True,
             )
             p_val = knn_test.pval(matrix)
-            
+
         else:
             raise ValueError("Incorrect Representation Option")
-                
+
         return p_val, dist
-    
