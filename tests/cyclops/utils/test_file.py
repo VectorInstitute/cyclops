@@ -36,6 +36,7 @@ def test_yield_pickled_files():
     save_pickle(test_data, "test_dir4/test_data3")
     for pkl_file_content in yield_pickled_files("test_dir4", skip_n=1):
         TestCase().assertDictEqual(test_data, pkl_file_content)
+    shutil.rmtree("./test_dir4")
 
 
 def test_concat_consequtive_save_dataframes():
@@ -50,6 +51,17 @@ def test_concat_consequtive_save_dataframes():
         assert dataframe.equals(
             pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1])
         )
+
+    save_dataframe(test_df, "test_dir2/df5")
+    count = 0
+    for dataframe in concat_consequtive_dataframes("test_dir2", every_n=2):
+        if count == 2:
+            assert dataframe.equals(pd.DataFrame([1, 2], columns=["a"], index=[0, 1]))
+        else:
+            assert dataframe.equals(
+                pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1])
+            )
+        count += 1
 
     save_consequtive_dataframes("test_dir2", "test_dir3", every_n=2)
     df1 = load_dataframe("test_dir3/batch_0000.parquet")
@@ -94,6 +106,8 @@ def test_process_dir_save_path():
     with pytest.raises(ValueError):
         process_dir_save_path("tmp_file")
     os.remove("tmp_file")
+    os.makedirs(tmp_dir_path, exist_ok=True)
+    assert process_dir_save_path(tmp_dir_path) == tmp_dir_path
 
 
 def test_save_load_pickle():
