@@ -1,10 +1,14 @@
 """Test common utility fns."""
 
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from cyclops.utils.common import (
+    add_years_approximate,
+    add_years_exact,
     append_if_missing,
     array_series_conversion,
     is_one_dimensional,
@@ -14,6 +18,23 @@ from cyclops.utils.common import (
     to_list,
     to_list_optional,
 )
+
+
+def test_add_years_approximate():
+    """Test add_years_approximate fn."""
+    datetime_series = pd.Series([datetime(2022, 11, 3, hour=13)])
+    years_series = pd.Series([5])
+    result_series = add_years_approximate(datetime_series, years_series)
+    assert result_series[0].year == 2027
+
+
+def test_add_years_exact():
+    """Test add_years_exact fn."""
+    datetime_series = pd.Series([datetime(2022, 11, 3, hour=13)])
+    years_series = pd.Series([5])
+    with pytest.warns() as _:
+        result_series = add_years_exact(datetime_series, years_series)
+    assert result_series[0].year == 2027
 
 
 def test_to_list():
