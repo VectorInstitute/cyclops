@@ -22,9 +22,9 @@ from alibi_detect.cd import (
     SpotTheDiffDrift
 )
 
-class ShiftTester:
+class ShiftClassifier:
 
-    """ShiftTester Class.
+    """ShiftClassifier Class.
     Attributes
     ----------
     sign_level: float
@@ -54,6 +54,16 @@ class ShiftTester:
             "last_timestep_only": last_timestep_only,
         }
         model = get_temporal_model(model_name, model_params).to(self.device)
+        return model
+    
+    def feed_forward_neural_network(self, input_dim):
+        model = nn.Sequential(
+                    nn.Linear(input_dim, 32),
+                    nn.SiLU(),
+                    nn.Linear(32, 8),
+                    nn.SiLU(),
+                    nn.Linear(8, 1),
+                ).to(self.device)
         return model
     
     def test_shift(self, X_s, X_t, classifier_type = "ffnn" , backend = "pytorch"):
@@ -102,13 +112,7 @@ class ShiftTester:
                 ) 
                 
             elif classifier_type == "ffnn":
-                model = nn.Sequential(
-                        nn.Linear(X_s.shape[-1], 32),
-                        nn.SiLU(),
-                        nn.Linear(32, 8),
-                        nn.SiLU(),
-                        nn.Linear(8, 1),
-                ).to(self.device)
+                model = self.feed_forward_neural_network(X_s.shape[-1])
                 dd = ClassifierDrift(
                     X_s, 
                     model, 

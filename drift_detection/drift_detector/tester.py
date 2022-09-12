@@ -11,12 +11,6 @@ from scipy.spatial import distance
 from sklearn.mixture import GaussianMixture
 from alibi_detect.utils.pytorch.kernels import DeepKernel
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-
-sys.path.append("..")
-
-from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
-from drift_detection.baseline_models.temporal.pytorch.utils import *
-
 from scipy.stats import (
     anderson_ksamp,
     binom_test,
@@ -24,7 +18,6 @@ from scipy.stats import (
     chisquare,
     ks_2samp,
 )
-
 from alibi_detect.cd import (
     ClassifierDrift,
     LearnedKernelDrift,
@@ -38,6 +31,11 @@ from alibi_detect.cd import (
     FETDrift,
     SpotTheDiffDrift
 )
+
+sys.path.append("..")
+
+from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
+from drift_detection.baseline_models.temporal.pytorch.utils import *
 
 class ShiftTester:
 
@@ -72,6 +70,28 @@ class ShiftTester:
         }
         model = get_temporal_model(model_name, model_params).to(self.device)
         return model
+    
+    def feed_forward_neural_network(self, input_dim):
+        model = nn.Sequential(
+                        nn.Linear(input_dim, 32),
+                        nn.SiLU(),
+                        nn.Linear(32, 8),
+                        nn.SiLU(),
+                        nn.Linear(8, 1),
+                ).to(self.device)
+        return model
+    
+    def convolutional_neural_network(self):
+        model = nn.Sequential(
+                    nn.Conv2d(3, 8, 4, stride=2, padding=0),
+                    nn.ReLU(),
+                    nn.Conv2d(8, 16, 4, stride=2, padding=0),
+                    nn.ReLU(),
+                    nn.Conv2d(16, 32, 4, stride=2, padding=0),
+                    nn.ReLU(),
+                    nn.Flatten(),
+                ).to(self.device)
+        return(model)
     
     def context(self, x, context_type="rnn", n_clusters=2):
         if context_type == "rnn":
@@ -125,32 +145,19 @@ class ShiftTester:
         elif self.mt == "LK":
             if representation == "rnn":
                 proj = self.recurrent_neural_network("lstm",X_s.shape[2])
-                if self.model_path is not None:   
-                    proj.load_state_dict(torch.load(self.model_path))
                     
             elif representation == "cnn":             
-                # define the projection phi
-                proj = nn.Sequential(
-                    nn.Conv2d(3, 8, 4, stride=2, padding=0),
-                    nn.ReLU(),
-                    nn.Conv2d(8, 16, 4, stride=2, padding=0),
-                    nn.ReLU(),
-                    nn.Conv2d(16, 32, 4, stride=2, padding=0),
-                    nn.ReLU(),
-                    nn.Flatten(),
-                ).to(self.device).eval()
+                proj = self.convolutional_neural_network().eval()
                 
             elif representation == "ffnn":
-                proj = nn.Sequential(
-                    nn.Linear(X_s.shape[-1], 32),
-                    nn.SiLU(),
-                    nn.Linear(32, 8),
-                    nn.SiLU(),
-                    nn.Linear(8, 1),
-                ).to(self.device).eval()
+                proj = self.feed_forward_neural_network(X_s.shape[-1]).eval()
+ 
             else:
                 raise ValueError("Incorrect Representation Option")
-                
+            
+            if self.model_path is not None:   
+                proj.load_state_dict(torch.load(self.model_path))
+                    
             kernel = DeepKernel(proj, eps=0.01)
             
             dd = LearnedKernelDrift(
