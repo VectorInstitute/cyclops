@@ -3,7 +3,6 @@ from .tester import ShiftTester
 class ShiftDetector:
 
     """ShiftDetector Class.
-
     Attributes
     ----------
     dr_technique: String
@@ -18,10 +17,21 @@ class ShiftDetector:
         number of samples in test set
     datset: String
         name of dataset
-
     """
 
-    def __init__(self, dr_technique, md_test, sign_level, shift_reductor, sample, datset, features, model_path, context_type, representation):
+    def __init__(
+        self,
+        dr_technique,
+        md_test,
+        sign_level,
+        shift_reductor,
+        sample,
+        datset,
+        features,
+        model_path,
+        context_type,
+        representation,
+    ):
         self.dr_technique = dr_technique
         self.sign_level = sign_level
         self.shift_reductor = shift_reductor
@@ -34,12 +44,12 @@ class ShiftDetector:
         self.context_type = context_type
         self.representation = representation
 
-    def classify_data(self, X_s_tr, X_s_val, X_t):
+    def classify_data(self, X_s_tr, X_s_val, X_t, orig_dims):
         shift_reductor_model = self.shift_reductor.fit_reductor()
         X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
         return X_t_red
 
-    def detect_data_shift(self, X_s_tr, X_s_val, X_t):
+    def detect_data_shift(self, X_s_tr, X_s_val, X_t, orig_dims):
 
         val_acc = None
         te_acc = None
@@ -52,13 +62,17 @@ class ShiftDetector:
         X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
 
         # Perform statistical test
-        shift_tester = ShiftTester(sign_level=self.sign_level, 
-                                   mt=self.md_test, 
-                                   model_path=self.model_path, 
-                                   features=self.features, 
-                                   dataset=self.dataset)
+        shift_tester = ShiftTester(
+            sign_level=self.sign_level,
+            mt=self.md_test,
+            model_path=self.model_path,
+            features=self.features,
+            dataset=self.dataset,
+        )
 
-        p_val, dist = shift_tester.test_shift(X_s_red[: self.sample], X_t_red, self.context_type, self.representation)
+        p_val, dist = shift_tester.test_shift(
+            X_s_red[: self.sample], X_t_red, self.context_type, self.representation
+        )
 
         if self.dr_technique != "BBSDh":
             # Lower the significance level for all tests (Bonferroni) besides BBSDh, which needs no correction.

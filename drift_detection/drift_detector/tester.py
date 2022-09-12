@@ -103,7 +103,7 @@ class ShiftTester:
             gmm.covariances_ = covar
         return gmm
     
-    def test_shift(self, X_s, X_t, context_type, representation = None, backend = "pytorch"):
+    def test_shift(self, X_s, X_t, representation = None, backend = "pytorch"):
         X_s = X_s.astype(np.float32)
         X_t = X_t.astype(np.float32)
 
@@ -160,82 +160,9 @@ class ShiftTester:
             p_val = preds["data"]["p_val"]
             dist = preds["data"]["distance"]
 
-        elif self.mt == "Classifier":
-            if representation == "gb":
-                X_s = X_s.reshape(X_s.shape[0],X_s.shape[1])
-                X_t = X_t.reshape(X_t.shape[0],X_t.shape[1])
-                model = GradientBoostingClassifier()
-                backend='sklearn'
-                dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend=backend, 
-                    p_val=0.05, 
-                    preds_type='scores', 
-                    binarize_preds=False,
-                    n_folds=5
-                )        
-            elif representation == "rf":
-                X_s = X_s.reshape(X_s.shape[0],X_s.shape[1])
-                X_t = X_t.reshape(X_t.shape[0],X_t.shape[1])
-                model = RandomForestClassifier()
-                backend='sklearn'
-                dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend=backend, 
-                    p_val=0.05, 
-                    binarize_preds=False,
-                    n_folds=5
-                )             
-            elif representation == "rnn":
-                model = self.recurrent_neural_network("lstm",X_s.shape[2])
-                backend='pytorch'
-                dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend=backend, 
-                    p_val=0.05
-                ) 
-                
-            elif representation == "ffnn":
-                model = nn.Sequential(
-                        nn.Linear(X_s.shape[-1], 32),
-                        nn.SiLU(),
-                        nn.Linear(32, 8),
-                        nn.SiLU(),
-                        nn.Linear(8, 1),
-                ).to(self.device)
-                dd = ClassifierDrift(
-                    X_s, 
-                    model, 
-                    backend=backend, 
-                    p_val=0.05
-                ) 
-            else:
-                raise ValueError("Incorrect Representation Option")
-                
-            preds = dd.predict(X_t, return_p_val=True, return_distance=True)
-            p_val = preds["data"]["p_val"]
-            dist = preds["data"]["distance"]
-
-        elif self.mt == "Spot-the-diff":
-            dd = SpotTheDiffDrift(
-                X_s,
-                backend=backend,
-                p_val=.05,
-                n_diffs=1,
-                l1_reg=1e-3,
-                epochs=100,
-                batch_size=1,
-            )
-            preds = dd.predict(X_t, return_p_val=True, return_distance=True)
-            p_val = preds["data"]["p_val"]
-            dist = preds["data"]["distance"]
-
         elif self.mt == "Context-Aware MMD":
-            C_s = self.context(X_s, context_type)
-            C_t = self.context(X_t, context_type)
+            C_s = self.context(X_s, representation)
+            C_t = self.context(X_t, representation)
             dd = ContextMMDDrift(X_s, C_s, backend=backend, n_permutations=100, p_val=0.05)
             preds = dd.predict(X_t, C_t, return_p_val=True, return_distance=True)
             p_val = preds["data"]["p_val"]
