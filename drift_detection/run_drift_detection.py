@@ -15,11 +15,11 @@ from sklearn.metrics import (
     roc_curve,
 )
 
-from drift_detector.explainer import ShiftExplainer
-from experiments import *
-from utils.constants import *
-from utils.plot_utils import errorfill, plot_roc, plot_pr
-from utils.utils import import_dataset_hospital, run_shift_experiment
+from drift_detector.explainer import Explainer
+from drift_detector.experiments import *
+from drift_detector.plotter import errorfill, plot_roc, plot_pr
+from gemini.utils import import_dataset_hospital, run_shift_experiment
+from gemini.constants import *
 from baseline_models.static.utils import run_model
 
 DATASET = sys.argv[1]
