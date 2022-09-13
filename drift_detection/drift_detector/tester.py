@@ -34,12 +34,12 @@ from alibi_detect.cd import (
 
 sys.path.append("..")
 
-from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
-from drift_detection.baseline_models.temporal.pytorch.utils import *
+from baseline_models.temporal.pytorch.optimizer import Optimizer
+from baseline_models.temporal.pytorch.utils import *
 
-class ShiftTester:
+class Tester:
 
-    """ShiftTester Class.
+    """Tester Class.
     Attributes
     ----------
     sign_level: float

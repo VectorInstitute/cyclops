@@ -1,6 +1,6 @@
-from .tester import ShiftTester
+from .tester import Tester
 
-class ShiftDetector:
+class Detector:
 
     """ShiftDetector Class.
     Attributes

@@ -4,7 +4,6 @@ import random
 import sys
 import pandas as pd
 from datetime import date, timedelta
-from utils.utils import *
 
 def daterange(start_date, end_date, stride, window):
     for n in range(int((end_date - start_date).days)):

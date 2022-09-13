@@ -14,8 +14,9 @@ import pickle
 from typing import Optional, List, Union, Tuple, Dict, Any
 
 sys.path.append("..")
-from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
-from drift_detection.baseline_models.temporal.pytorch.utils import (
+
+from baseline_models.temporal.pytorch.optimizer import Optimizer
+from baseline_models.temporal.pytorch.utils import (
     get_temporal_model,
     get_device,
 )

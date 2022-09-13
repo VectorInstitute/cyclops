@@ -1,7 +1,7 @@
 import numpy as np
 import shap
 
-class ShiftExplainer:
+class Explainer:
     
     """ShiftExplainer Class.
 

@@ -3,11 +3,11 @@ import os
 import random
 import sys
 import pandas as pd
-from drift_detection.baseline_models.temporal.pytorch.utils import *
 
 sys.path.append("..")
 
-from utils.utils import *
+from baseline_models.temporal.pytorch.utils import *
+from gemini.utils import *
     
 class RollingWindow:
     
@@ -116,42 +116,3 @@ class RollingWindow:
                         }
 
         return drift_metrics
-
-    def plot_drift(results, threshold=0.05):
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16,10))
-        detection = results['pval']<threshold,1,0)
-        cmap = ListedColormap(['lightgrey','red'])
-        ax1.plot(results['dates'], results['pval'], '.-', color="red", linewidth=0.5, markersize=2)
-        ax1.set_xlim(results['dates'], results['dates'])
-        ax1.axhline(y=threshold, color='dimgrey', linestyle='--')
-        ax1.set_ylabel('P-Values',fontsize=16)
-        ax1.set_xticklabels([])
-        ax1.pcolorfast(ax1.get_xlim(), ax1.get_ylim(),detection.values[np.newaxis], cmap = cmap, alpha = 0.4)
-
-        ax2.plot(results['dates'], results['dist'], '.-',color="red", linewidth=0.5, markersize=2)
-        ax2.set_xlim(results['dates'], results['dates'])
-        ax2.set_ylabel('Distance',fontsize=16)
-        ax2.axhline(y=np.mean(results['dist']), color='dimgrey', linestyle='--')
-        ax2.set_xticklabels([])
-        ax2.pcolorfast(ax6.get_xlim(), ax2.get_ylim(),detection.values[np.newaxis], cmap = cmap, alpha = 0.4)
-
-        for index, label in enumerate(ax2.xaxis.get_ticklabels()):
-            if index % 28 != 0:
-                label.set_visible(False)
-        plt.show()
-  
-    def plot_performance(results, metric, threshold):
-        ax1.plot(results['dates'], results[metric], '.-',color="blue", linewidth=0.5, markersize=2)
-        ax1.set_xlim(results['dates'], results['dates'])
-        ax1.set_ylabel(metric,fontsize=16)
-        ax1.set_xlabel('time (s)', fontsize=16)
-        ax1.axhline(y=np.mean(results[metric]), color='dimgrey', linestyle='--')
-        ax1.tick_params(axis='x', labelrotation=45)
-        ax1.pcolorfast(ax1.get_xlim(), ax1.get_ylim(),detection.values[np.newaxis], cmap = cmap, alpha = 0.4)
-
-        for index, label in enumerate(ax1.xaxis.get_ticklabels()):
-            if index % 28 != 0:
-                label.set_visible(False)
-
-        plt.show()
-

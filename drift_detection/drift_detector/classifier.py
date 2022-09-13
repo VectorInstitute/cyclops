@@ -8,23 +8,19 @@ import torch.nn as nn
 import tensorflow as tf
 from scipy.special import softmax
 from scipy.spatial import distance
-from sklearn.mixture import GaussianMixture
-from alibi_detect.utils.pytorch.kernels import DeepKernel
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-
-sys.path.append("..")
-
-from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
-from drift_detection.baseline_models.temporal.pytorch.utils import *
-
 from alibi_detect.cd import (
     ClassifierDrift,
     SpotTheDiffDrift
 )
+sys.path.append('..')
+from baseline_models.temporal.pytorch.optimizer import Optimizer
+from baseline_models.temporal.pytorch.utils import *
 
-class ShiftClassifier:
 
-    """ShiftClassifier Class.
+class Classifier:
+
+    """Classifier Class.
     Attributes
     ----------
     sign_level: float
