@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectKBest
 
+
 def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip=True):
     """Creates gaussian noise of specificed parameters in input data.
 
@@ -21,23 +22,25 @@ def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip
 
     """
     num_timesteps = 1
-    
+
     if len(X.shape) > 2:
         num_encounters = X.shape[0]
         num_timesteps = X.shape[1]
-        X = X.reshape(num_encounters,-1)
-        
+        X = X.reshape(num_encounters, -1)
+
     X_df = pd.DataFrame(X)
-    
+
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
     c_cols = [x for x in X_df.columns if x not in bin_cols]
     indices = np.random.choice(
         X.shape[0], math.ceil(X.shape[0] * delta_total), replace=False
     )
     X_mod = X[np.ix_(indices, c_cols)]
-    
+
     if len(c_cols) == 1:
-        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(X_mod.shape[0],1)
+        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(
+            X_mod.shape[0], 1
+        )
     else:
         noise = np.random.normal(
             0, noise_amt / normalization, (X_mod.shape[0], len(c_cols))
@@ -46,13 +49,14 @@ def gaussian_noise_subset(X, noise_amt, normalization=1.0, delta_total=1.0, clip
         X_mod = np.clip(X_mod + noise, 0.0, 1.0)
     else:
         X_mod = X_mod + noise
-        
+
     X[np.ix_(indices, c_cols)] = X_mod
-    
+
     if num_timesteps > 1:
-        X = X.reshape(num_encounters,num_timesteps, -1)
-        
+        X = X.reshape(num_encounters, num_timesteps, -1)
+
     return X, indices
+
 
 # Remove instances of a single class.
 def knockout_shift(X, y, cl, delta):
@@ -193,36 +197,39 @@ def binary_noise_subset(X, p, delta_total=1.0):
 
     """
     num_timesteps = 1
-    
+
     if len(X.shape) > 2:
         num_encounters = X.shape[0]
         num_timesteps = X.shape[1]
-        X = X.reshape(num_encounters,-1)
-        
+        X = X.reshape(num_encounters, -1)
+
     X_df = pd.DataFrame(X)
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
     indices = np.random.choice(
         X.shape[0], math.ceil(X.shape[0] * delta_total), replace=False
     )
     X_mod = X[indices, :][:, bin_cols]
-    
+
     if X_mod.shape[1] == 1:
         noise = np.random.binomial(1, p, X_mod.shape[0])
     else:
         noise = np.random.binomial(1, p, (X_mod.shape[0], X_mod.shape[1]))
-        
+
     X[np.ix_(indices, bin_cols)] = noise
-    
+
     if num_timesteps > 1:
-        X = X.reshape(num_encounters,num_timesteps, -1)
-        
+        X = X.reshape(num_encounters, num_timesteps, -1)
+
     return X, indices
+
 
 def age_shift(X_s, y_s, X_t, y_t, col="age"):
     raise NotImplementedError
-    
+
+
 def sex_shift(X_s, y_s, X_t, y_t, col="sex"):
-    raise NotImplementedError 
+    raise NotImplementedError
+
 
 def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
 

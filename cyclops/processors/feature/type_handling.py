@@ -52,7 +52,7 @@ def get_unique(
 
     """
     if unique is None:
-        return values.unique()
+        return np.unique(values)
 
     return unique
 

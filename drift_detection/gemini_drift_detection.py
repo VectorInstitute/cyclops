@@ -19,11 +19,15 @@ from drift_detector.explainer import ShiftExplainer
 from experiments import *
 from utils.constants import *
 from utils.plot_utils import errorfill, plot_roc, plot_pr
-from utils.utils import import_dataset_hospital, run_shift_experiment, run_synthetic_shift_experiment
+from utils.utils import (
+    import_dataset_hospital,
+    run_shift_experiment,
+    run_synthetic_shift_experiment,
+)
 from baseline_models.static.utils import run_model
 
 DATASET = sys.argv[1]
-SHIFT =  sys.argv[2]
+SHIFT = sys.argv[2]
 
 # Define results path and create directory.
 PATH = "/mnt/nfs/project/delirium/drift_exp/results/"
@@ -42,12 +46,12 @@ elif SHIFT == "large_gn_shift":
     shifts = ["large_gn_shift_0.1", "large_gn_shift_0.5", "large_gn_shift_1.0"]
 elif SHIFT == "ko_shift":
     shifts = ["ko_shift_0.1", "ko_shift_0.5", "ko_shift_1.0"]
-elif SHIFT == 'small_bn_shift':
-    shifts = ['small_bn_shift_0.1','small_bn_shift_0.5','small_bn_shift_1.0']
-elif SHIFT == 'medium_bn_shift':
-    shifts = ['medium_bn_shift_0.1','medium_bn_shift_0.5','medium_bn_shift_1.0']
-elif SHIFT == 'large_bn_shift':
-    shifts = ['large_bn_shift_0.1','large_bn_shift_0.5','large_bn_shift_1.0']
+elif SHIFT == "small_bn_shift":
+    shifts = ["small_bn_shift_0.1", "small_bn_shift_0.5", "small_bn_shift_1.0"]
+elif SHIFT == "medium_bn_shift":
+    shifts = ["medium_bn_shift_0.1", "medium_bn_shift_0.5", "medium_bn_shift_1.0"]
+elif SHIFT == "large_bn_shift":
+    shifts = ["large_bn_shift_0.1", "large_bn_shift_0.5", "large_bn_shift_1.0"]
 elif SHIFT == "mfa_shift":
     shifts = ["mfa_shift_0.25", "mfa_shift_0.5", "mfa_shift_0.75"]
 elif SHIFT == "cp_shift":
@@ -71,7 +75,7 @@ CALC_ACC = True
 # Dimensionality Reduction Techniques
 DR_TECHNIQUES = ["NoRed", "PCA", "BBSDs_FFNN", "SRP", "Isomap", "kPCA"]
 # Statistical Tests
-MD_TESTS = ["MMD", "LK", "LSDD","Classifier"]
+MD_TESTS = ["MMD", "LK", "LSDD", "Classifier"]
 # Outcomes
 OUTCOMES = ["length_of_stay_in_er", "mortality_in_hospital"]
 # Hospital
@@ -92,7 +96,7 @@ for si, SHIFT in enumerate(shifts):
         for hi, HOSPITAL in enumerate(HOSPITALS):
             for mi, MODEL in enumerate(MODELS):
                 print("{} | {} | {} | {}".format(SHIFT, OUTCOME, HOSPITAL, MODEL))
-                if SHIFT in ["covid","seasonal"]:
+                if SHIFT in ["covid", "seasonal"]:
                     (
                         (X_train, y_train),
                         (X_val, y_val),
@@ -113,8 +117,8 @@ for si, SHIFT in enumerate(shifts):
                     ) = import_dataset_hospital(
                         "baseline", OUTCOME, HOSPITAL, NA_CUTOFF, shuffle=True
                     )
-                        X_t_1, y_t_1 = X_t.copy(), y_t.copy()
-                        (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
+                    X_t_1, y_t_1 = X_t.copy(), y_t.copy()
+                    (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
                 optimised_model = run_model(MODEL, X_train, y_train, X_val, y_val)
 
                 # calc metrics for validation set
@@ -180,8 +184,8 @@ for si, SHIFT in enumerate(shifts):
                 )
                 if np.any(mean_dr_md[si, hi, di, mi, :] == -1):
                     try:
-                        if SHIFT in ["covid","seasonal"]:
-                            mean_p_vals, std_p_vals, 
+                        if SHIFT in ["covid", "seasonal"]:
+                            mean_p_vals, std_p_vals,
                             mean_dist, std_dist = run_shift_experiment(
                                 shift=SHIFT,
                                 outcome=OUTCOME,
@@ -197,7 +201,12 @@ for si, SHIFT in enumerate(shifts):
                                 calc_acc=CALC_ACC,
                             )
                         else:
-                            mean_p_vals, std_p_vals, mean_dist, std_dist = run_synthetic_shift_experiment(
+                            (
+                                mean_p_vals,
+                                std_p_vals,
+                                mean_dist,
+                                std_dist,
+                            ) = run_synthetic_shift_experiment(
                                 shift=SHIFT,
                                 outcome=OUTCOME,
                                 hospital=HOSPITAL,
@@ -210,7 +219,7 @@ for si, SHIFT in enumerate(shifts):
                                 na_cutoff=NA_CUTOFF,
                                 random_runs=RANDOM_RUNS,
                                 calc_acc=CALC_ACC,
-                            ) 
+                            )
                         mean_dr_md_pval[si, hi, di, mi, :] = mean_p_vals
                         std_dr_md_pval[si, hi, di, mi, :] = std_p_vals
                         mean_dr_md_dist[si, hi, di, mi, :] = mean_dist
