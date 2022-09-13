@@ -144,12 +144,13 @@ def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1)
         print("confusion matrix:")
         print(cf)
     cf = cf.astype(np.float32)
-
-    acc = (cf[0][0] + cf[1][1]) / np.sum(cf)
-    prec0 = cf[0][0] / (cf[0][0] + cf[1][0])
-    prec1 = cf[1][1] / (cf[1][1] + cf[0][1])
-    rec0 = cf[0][0] / (cf[0][0] + cf[0][1])
-    rec1 = cf[1][1] / (cf[1][1] + cf[1][0])
+    tn, fp, fn, tp = cf.ravel()
+    acc = (tn + tp) / np.sum(cf)
+    prec0 = tn / (tn + fn)
+    prec1 = tp / (tp + fp)
+    rec0 = tn / (tn + fp) 
+    rec1 = tp / (tp + fn) 
+    
     auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
 
     (precisions, recalls, thresholds) = metrics.precision_recall_curve(
