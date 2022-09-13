@@ -1,7 +1,6 @@
 import os
 import random
 import sys
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,16 +10,12 @@ import torch.optim as optim
 from sklearn.preprocessing import StandardScaler
 from matplotlib.colors import ListedColormap
 
-sys.path.append("../..")
+sys.path.append('..')
 
-from utils.utils import *
 from drift_detector.rolling_window import *
 from baseline_models.temporal.pytorch.optimizer import Optimizer
 from baseline_models.temporal.pytorch.utils import *
 
-#####################################################
-## dynamically adjusting drift detector - if drift is significant, reference dataset is reset to current time 
-#####################################################
 class MostRecentRollingWindow:
     
     """MostRecentRollingWindow Class.
@@ -104,7 +99,13 @@ class MostRecentRollingWindow:
                         print("Invalid Model Name")
 
                 i += retrain_parameters['stride']
-
+                
+            if data_parameters['X_val'] is None:
+                X_ref = pd.concat(data_parameters['X_test'][max(int(i)-run_length,0):int(i)+retrain_parameters['stat_window']])
+                X_ref = X_ref[~X_ref.index.duplicated(keep='first')]
+                X_ref = reshape_inputs(X_ref, model_parameters['num_timesteps'])
+                #X_ref = X_ref.reshape(X_ref.shape[0]*X_ref.shape[1],X_ref.shape[2])
+                
             X_next = pd.concat(data_parameters['X_test'][max(int(i)+retrain_parameters['lookup_window'],0):int(i)+retrain_parameters['stat_window']+retrain_parameters['lookup_window']])
             X_next = X_next[~X_next.index.duplicated(keep='first')]
             next_ind = X_next.index.get_level_values(0).unique()
@@ -114,8 +115,13 @@ class MostRecentRollingWindow:
             y_next.index = next_ind
             y_next = y_next[~y_next.index.duplicated(keep='first')].to_numpy()
 
-            if X_next.shape[0]<=2 or X_ref.shape[0]<=2:
-                break
+            if X_next.shape[0]<=2:
+                print("No more data, ending retraining.")
+                return
+            
+            if X_ref.shape[0]<=2:
+                print("Reference is empty, exiting retraining.")
+                return
 
             ## Check Performance 
             test_dataset = get_data(X_next, y_next)
