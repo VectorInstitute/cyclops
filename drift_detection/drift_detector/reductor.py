@@ -128,8 +128,8 @@ class Reductor:
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
             self.model.load_state_dict(torch.load(self.model_path))
         elif (
-            self.dr_method == "BBSDs_Untrained_LSTM"
-            or self.dr_method == "BBSDh_Untrained_LSTM"
+            self.dr_method == "BBSDs_untrained_LSTM"
+            or self.dr_method == "BBSDh_untrained_LSTM"
         ):
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
         elif (

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# Plotting parametersai
+# Plotting parameters
 linestyles = ["-", "-.", "--", ":"]
 format = ["-o", "-h", "-p", "-s", "-D", "-<", "->", "-X"]
 markers = ["o", "h", "p", "s", "D", "<", ">", "X"]

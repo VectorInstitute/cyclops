@@ -76,7 +76,7 @@ class RollingWindow:
 
         return rolling_metrics
 
-    def rolling_window(self):
+    def rolling_window_drift(self):
         p_vals = []
         dist_vals =[]
 

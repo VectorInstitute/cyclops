@@ -12,16 +12,20 @@ class Explainer:
         
     """
     
-    def __init__(self, model):
+    def __init__(self, model, explainer_type=None):
         self.model = model
-        self.explainer = None
+        self.explainer_type = explainer_type
+        self.explainer = get_explainer()
 
     def get_explainer(self):
-        if True:
-            explainer = shap.Explainer(self.model)
+        if self.explainer_type == "tree":
+            self.explainer = shap.TreeExplainer(self.model)
+        elif self.explainer_type == "deep":
+            self.explainer = shap.DeepExplainer(self.model)
+        elif self.explainer_type == "gradient":
+            self.explainer = shap.GradientExplainer(self.model)
         else:
-            explainer = shap.TreeExplainer(self.model)
-        self.explainer = explainer
+            self.explainer = shap.Explainer(self.model)
 
     def get_shap_values(self, X):
         shap_values = self.explainer(X, check_additivity=False)
