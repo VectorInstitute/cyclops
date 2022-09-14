@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from drift_detector import Reductor, TSTester, DCTester
 from typing import List, Tuple, Union, Optional, Callable, Any, Dict
 
@@ -34,6 +35,9 @@ class Detector:
 
     """
     Detector class for distribution shift detection. 
+=======
+class ShiftDetector:
+>>>>>>> origin
 
 
     Attributes
