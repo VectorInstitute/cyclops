@@ -1,5 +1,3 @@
-
-
 class ShiftDetector:
 
     """ShiftDetector Class.
