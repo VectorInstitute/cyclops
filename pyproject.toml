@@ -51,6 +51,7 @@ torchxrayvision = "^0.0.37"
 dash-mantine-components = "^0.10.2"
 d = "^0.2.2"
 dash-cool-components = "^0.1.8"
+hydra-core = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 

@@ -1,3 +1,4 @@
 from .reductor import Reductor
-from .tester import ShiftTester
+from .tester import TSTester, DCTester
 from .detector import ShiftDetector
+
