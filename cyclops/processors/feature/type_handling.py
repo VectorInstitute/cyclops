@@ -32,7 +32,7 @@ def get_unique(
     values: Union[np.ndarray, pd.Series],
     unique: Optional[np.ndarray] = None,
 ) -> np.ndarray:
-    """Get the unique values of an array or series.
+    """Get the unique values of pandas series.
 
     The utility of this function comes from checking whether the
     unique values have already been calculated. This function
@@ -40,7 +40,7 @@ def get_unique(
 
     Parameters
     ----------
-    values: numpy.ndarray or pandas.Series
+    values: pandas.Series
         Values for which to get the unique values.
     unique: numpy.ndarray, optional
         Unique values which can be optionally specified.
@@ -52,7 +52,7 @@ def get_unique(
 
     """
     if unique is None:
-        return np.unique(values)
+        return values.unique()
 
     return unique
 
