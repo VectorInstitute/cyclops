@@ -150,11 +150,11 @@ query_result_components = (
 )
 
 query_page_components = (
-   html.Div(
-       [
-           html.H2("Cohort Curation"),
-       ],
-       style={"textAlign": "center"},
+    html.Div(
+        [
+            html.H2("Cohort Curation"),
+        ],
+        style={"textAlign": "center"},
     ),
     html.Hr(),
     dmc.Space(h=5),

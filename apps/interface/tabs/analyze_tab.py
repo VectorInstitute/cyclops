@@ -100,11 +100,11 @@ column_visualization_components = (
 )
 
 analyze_page_components = (
-   html.Div(
-       [
-           html.H2("Analyze"),
-       ],
-       style={"textAlign": "center"},
+    html.Div(
+        [
+            html.H2("Analyze"),
+        ],
+        style={"textAlign": "center"},
     ),
     html.Hr(),
     *upload_components,

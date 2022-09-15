@@ -4,15 +4,10 @@ from datetime import datetime
 from os import path
 from typing import Any, Dict, List, Optional, Tuple
 
-from dash import dcc, Dash, Input, Output, State, html
+import app_query
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 import pandas as pd
-from flask_caching import Cache
-
-import app_query
-from tabs.analyze_tab import analyze_page_components
 from component_utils import (
     generate_table_contents,
     get_dataframe_info,
@@ -26,14 +21,19 @@ from consts import (
     APP_PAGE_ANALYZE,
     APP_PAGE_QUERY,
     CACHE_TIMEOUT,
-    NAV_PAGE_IDS,
     NAV_PAGE_BUTTON_GRADIENTS,
     NAV_PAGE_BUTTON_ICONS,
+    NAV_PAGE_IDS,
     NAV_PAGES,
     TABLE_IDS,
 )
 from css import TEXT_ALIGN_CENTER
+from dash import Dash, Input, Output, State, dcc, html
+from dash_iconify import DashIconify
+from flask_caching import Cache
+from tabs.analyze_tab import analyze_page_components
 from tabs.query_tab import query_page_components
+
 from cyclops.utils.file import join, load_dataframe, save_dataframe
 
 ANALYZE_DATA = None
@@ -59,19 +59,19 @@ navbar_components = (
     dbc.Nav(
         dmc.Group(
             [
-            *(
-                dmc.Button(
-                    page,
-                    id=f"nav-{NAV_PAGE_IDS[i]}-button",
-                    leftIcon=[DashIconify(icon=NAV_PAGE_BUTTON_ICONS[page])],
-                    n_clicks=0,
-                    variant="gradient",
-                    gradient=NAV_PAGE_BUTTON_GRADIENTS[page],
-                    size="xl",
-                )
-                for i, page in enumerate(NAV_PAGES)
-            ),
-        ],
+                *(
+                    dmc.Button(
+                        page,
+                        id=f"nav-{NAV_PAGE_IDS[i]}-button",
+                        leftIcon=[DashIconify(icon=NAV_PAGE_BUTTON_ICONS[page])],
+                        n_clicks=0,
+                        variant="gradient",
+                        gradient=NAV_PAGE_BUTTON_GRADIENTS[page],
+                        size="xl",
+                    )
+                    for i, page in enumerate(NAV_PAGES)
+                ),
+            ],
         ),
     ),
 )
