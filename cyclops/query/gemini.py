@@ -149,7 +149,7 @@ def get_table(table_name: str, rename: bool = True) -> Subquery:
     Parameters
     ----------
     table_name: str
-        Name of MIMIC table.
+        Name of GEMINI table.
     rename: bool, optional
         Whether to map the column names
 
