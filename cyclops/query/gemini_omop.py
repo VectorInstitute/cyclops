@@ -3,34 +3,24 @@
 import logging
 from typing import Callable, List, Optional, Union
 
-from sqlalchemy import select
-from sqlalchemy.sql.expression import union_all
 from sqlalchemy.sql.selectable import Subquery
 
 from codebase_ops import get_log_file_path
 from cyclops import config
 from cyclops.constants import GEMINI_OMOP
 from cyclops.orm import Database
-from cyclops.processors.constants import EMPTY_STRING
 from cyclops.query import process as qp
-from cyclops.query.omop import (
-    TABLE_MAP,
-    OMOP_COLUMN_MAP,
-    VISIT_OCCURRENCE,
-    VISIT_OCCURRENCE_ID,
-    PERSON_ID,
-    VISIT_START_DATETIME,
-    VISIT_END_DATETIME,
-    CARE_SITE_ID,
-)
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from cyclops.query.util import (
-    TableTypes,
-    _to_subquery,
-    assert_table_has_columns,
-    table_params_to_type,
+from cyclops.query.omop import (
+    CARE_SITE_ID,
+    OMOP_COLUMN_MAP,
+    PERSON_ID,
+    TABLE_MAP,
+    VISIT_END_DATETIME,
+    VISIT_OCCURRENCE,
+    VISIT_START_DATETIME,
 )
-from cyclops.utils.common import append_if_missing
+from cyclops.query.util import TableTypes, _to_subquery, table_params_to_type
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -104,7 +94,7 @@ def visit_occurrence(
     **process_kwargs,
 ) -> QueryInterface:
     """Query GEMINI_OMOP visit_occurrence table.
-    
+
     Parameters
     ----------
     drop_null_person_ids: bool

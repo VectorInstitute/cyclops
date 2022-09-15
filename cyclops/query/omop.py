@@ -27,4 +27,4 @@ VISIT_END_DATETIME = "visit_end_datetime"
 CARE_SITE_ID = "care_site_id"
 
 # Column map.
-OMOP_COLUMN_MAP = {}
+OMOP_COLUMN_MAP: dict = {}
