@@ -108,6 +108,7 @@ def test_process_dir_save_path():
     os.remove("tmp_file")
     os.makedirs(tmp_dir_path, exist_ok=True)
     assert process_dir_save_path(tmp_dir_path) == tmp_dir_path
+    shutil.rmtree(tmp_dir_path)
 
 
 def test_save_load_pickle():
