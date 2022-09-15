@@ -1,6 +1,5 @@
 """Cyclops Visualizer Application."""
 
-
 import logging
 import os
 
