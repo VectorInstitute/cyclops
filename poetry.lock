@@ -654,14 +654,6 @@ ssh = ["bcrypt (>=3.1.5)"]
 test = ["pytest (>=6.2.0)", "pytest-benchmark", "pytest-cov", "pytest-subtests", "pytest-xdist", "pretend", "iso8601", "pytz", "hypothesis (>=1.11.4,!=3.79.2)"]
 
 [[package]]
-name = "cssselect"
-version = "1.1.0"
-description = "cssselect parses CSS3 Selectors and translates them to XPath 1.0"
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[[package]]
 name = "cycler"
 version = "0.11.0"
 description = "Composable style cycles"
@@ -676,19 +668,6 @@ description = "Manage calls to calloc/free through Cython"
 category = "main"
 optional = false
 python-versions = "*"
-
-[[package]]
-name = "d"
-version = "0.2.2"
-description = "Documentation generation that won't make you tear your hair out."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-Markdown = "*"
-pygments = "*"
-pyquery = "*"
 
 [[package]]
 name = "dash"
@@ -3122,18 +3101,6 @@ flake8 = "<5.0.0"
 tomli = {version = "*", markers = "python_version < \"3.11\""}
 
 [[package]]
-name = "pyquery"
-version = "1.4.3"
-description = "A jquery-like library for python"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-cssselect = ">0.7.9"
-lxml = ">=2.1"
-
-[[package]]
 name = "pyrsistent"
 version = "0.18.1"
 description = "Persistent/Functional/Immutable data structures"
@@ -3459,26 +3426,6 @@ pygments = ">=2.6.0,<3.0.0"
 
 [package.extras]
 jupyter = ["ipywidgets (>=7.5.1,<8.0.0)"]
-
-[[package]]
-name = "river"
-version = "0.11.1"
-description = "Online machine learning in Python"
-category = "main"
-optional = false
-python-versions = ">=3.8.0"
-
-[package.dependencies]
-numpy = ">=1.22"
-pandas = ">=1.3"
-scipy = ">=1.5"
-
-[package.extras]
-benckmarks = ["numpy (>=1.22)", "scipy (>=1.5)", "pandas (>=1.3)", "dominate", "scikit-learn", "torch", "vowpalwabbit", "slugify"]
-compat = ["numpy (>=1.22)", "scipy (>=1.5)", "pandas (>=1.3)", "scikit-learn", "sqlalchemy (>=1.4)", "torch", "vaex"]
-dev = ["numpy (>=1.22)", "scipy (>=1.5)", "pandas (>=1.3)", "black (>=22.1.0)", "flake8 (>=4.0.1)", "graphviz (>=0.10.1)", "isort (>=5.9.3)", "matplotlib (>=3.0.2)", "mypy (>=0.761)", "pre-commit (>=2.9.2)", "pytest (>=4.5.0)", "pytest-cov (>=2.6.1)", "scikit-learn (>=1.0.1)", "sqlalchemy (>=1.4)"]
-docs = ["numpy (>=1.22)", "scipy (>=1.5)", "pandas (>=1.3)", "black (>=22.1.0)", "flake8 (>=4.0.1)", "graphviz (>=0.10.1)", "isort (>=5.9.3)", "matplotlib (>=3.0.2)", "mypy (>=0.761)", "pre-commit (>=2.9.2)", "pytest (>=4.5.0)", "pytest-cov (>=2.6.1)", "scikit-learn (>=1.0.1)", "sqlalchemy (>=1.4)", "flask", "ipykernel", "jupyter-client", "mike", "mkdocs", "mkdocs-awesome-pages-plugin", "mkdocs-material", "nbconvert", "spacy"]
-extra = ["river-extra (==0.11.1)"]
 
 [[package]]
 name = "rsa"
@@ -4688,7 +4635,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "3.9.7"
-content-hash = "508ca2028f2c0a39d80695a5163c2acb1adc64ac56a14d0f7610c168c29e773f"
+content-hash = "86f94c117695eb382628f41389df25f3267ade14423f18b17f52c3eedeecc409"
 
 [metadata.files]
 absl-py = []
@@ -5012,7 +4959,6 @@ croniter = [
     {file = "croniter-1.3.5.tar.gz", hash = "sha256:7592fc0e8a00d82af98dfa2768b75983b6fb4c2adc8f6d0d7c931a715b7cefee"},
 ]
 cryptography = []
-cssselect = []
 cycler = [
     {file = "cycler-0.11.0-py3-none-any.whl", hash = "sha256:3a27e95f763a428a739d2add979fa7494c912a32c17c4c38c4d5f082cad165a3"},
     {file = "cycler-0.11.0.tar.gz", hash = "sha256:9c87405839a19696e837b3b818fed3f5f69f16f1eec1a1ad77e043dcea9c772f"},
@@ -5035,7 +4981,6 @@ cymem = [
     {file = "cymem-2.0.6-cp39-cp39-win_amd64.whl", hash = "sha256:c59293b232b53ebb47427f16cf648e937022f489cff36c11d1d8a1f0075b6609"},
     {file = "cymem-2.0.6.tar.gz", hash = "sha256:169725b5816959d34de2545b33fee6a8021a6e08818794a426c5a4f981f17e5e"},
 ]
-d = []
 dash = []
 dash-bootstrap-components = []
 dash-cool-components = []
@@ -5981,7 +5926,6 @@ pyparsing = [
     {file = "pyparsing-3.0.8.tar.gz", hash = "sha256:7bf433498c016c4314268d95df76c81b842a4cb2b276fa3312cfb1e1d85f6954"},
 ]
 pyproject-flake8 = []
-pyquery = []
 pyrsistent = [
     {file = "pyrsistent-0.18.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:df46c854f490f81210870e509818b729db4488e1f30f2a1ce1698b2295a878d1"},
     {file = "pyrsistent-0.18.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5d45866ececf4a5fff8742c25722da6d4c9e180daa7b405dc0a2a2790d668c26"},
@@ -6141,30 +6085,6 @@ rfc3986 = [
     {file = "rfc3986-1.5.0.tar.gz", hash = "sha256:270aaf10d87d0d4e095063c65bf3ddbc6ee3d0b226328ce21e036f946e421835"},
 ]
 rich = []
-river = [
-    {file = "river-0.11.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:58b8b81d8769aef1459d9b37aa0f0734c04814f51c4984bd16b8ba0ff3a4b54a"},
-    {file = "river-0.11.1-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a4433879382b40758c84f76864d27c77bc5cfc0805203f878fa1d0b853646d74"},
-    {file = "river-0.11.1-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8fd7e2a5a7116206a4f08a3cefc1ce166fa887236f101826c8fdc15a8e0761f4"},
-    {file = "river-0.11.1-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:bc3101a0f641ddf1bdc1508379d020ad4f1e84368d6ea6bbe99c253f831b1327"},
-    {file = "river-0.11.1-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:59865182e80577b193243abfdc495dbb691607afa73e488235491970f9c636d2"},
-    {file = "river-0.11.1-cp310-cp310-win32.whl", hash = "sha256:7cf1b3708b1ec6247967f1544d68200bfc50ed06e534441bc7409e9f6b1cfaf5"},
-    {file = "river-0.11.1-cp310-cp310-win_amd64.whl", hash = "sha256:fe7e5510ed6f4591d2d9101f89f8ae2f2cce89c37fc5d77c36b532fa005a223a"},
-    {file = "river-0.11.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:c88bbd6dbebd709898363de01224ba6b5207fa388110d06b9a4571c65ca48adf"},
-    {file = "river-0.11.1-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:03580f28379cb2cd19d8ec02d7d0bd250eb97061c5098a966f0ccdaaf565e87d"},
-    {file = "river-0.11.1-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7deb88ac90a65ca059e97ca34fcb896f0e204526d2a573311956f6da92e4e54b"},
-    {file = "river-0.11.1-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:767ad09e661c6390e5e74d47a808172ef4d2fa4c8e405fb0dc72ba0d64fa99fc"},
-    {file = "river-0.11.1-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:3ae6511e91e9e35548f6f0a434b6454314d200f3b3582c1b190b35569b3074a6"},
-    {file = "river-0.11.1-cp38-cp38-win32.whl", hash = "sha256:cd3596b9f20c0adaaebac09d6f32eb8d24c8812622aac6297765c732c32de1cf"},
-    {file = "river-0.11.1-cp38-cp38-win_amd64.whl", hash = "sha256:4b3bb1965cc518e81f5d205884281fca0dc34f29c99b54749d20bda268d5364d"},
-    {file = "river-0.11.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:d2bc91903137548e07743d859689c82abcbc28b5b094ec0848628db51bdb1868"},
-    {file = "river-0.11.1-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8ecc15c0a8791dcea53cca896da0639b4c999630eb10a867c97ec7be85ec1363"},
-    {file = "river-0.11.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:017a70654db5ca3682015063b5aace86d0def710ba3a09a4699907f8dc7b5863"},
-    {file = "river-0.11.1-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:ca491a3a7f7eb55fa50fae53f67131ab7e48ede8d4408101ec3cf5c15d489cda"},
-    {file = "river-0.11.1-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:8505ad32d61b3b23369c1049a09dd8e91a1a43612816d50cb534e4f00b837d6f"},
-    {file = "river-0.11.1-cp39-cp39-win32.whl", hash = "sha256:83fceb4b3149ed289c0ac847e25fc55c5d638a2ef39cf5871933e5c8d5511902"},
-    {file = "river-0.11.1-cp39-cp39-win_amd64.whl", hash = "sha256:fa17c4210dc8a993f96a4d8b47af6d175560306889454752dad412ee928ec98d"},
-    {file = "river-0.11.1.tar.gz", hash = "sha256:4257c35203f5cd90b4eb13e95fa9e17a966f6e219ea1d5e66440d033cd0d497a"},
-]
 rsa = []
 s3transfer = [
     {file = "s3transfer-0.6.0-py3-none-any.whl", hash = "sha256:06176b74f3a15f61f1b4f25a1fc29a4429040b7647133a463da8fa5bd28d5ecd"},
