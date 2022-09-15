@@ -52,6 +52,7 @@ dash-mantine-components = "^0.10.2"
 d = "^0.2.2"
 dash-cool-components = "^0.1.8"
 hydra-core = "^1.2.0"
+dash-iconify = "^0.1.2"
 
 [tool.poetry.dev-dependencies]
 

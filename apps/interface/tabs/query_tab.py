@@ -1,4 +1,5 @@
 """Query page components."""
+
 import dash_bootstrap_components as dbc
 import dash_cool_components as dcool
 import dash_mantine_components as dmc
@@ -115,11 +116,12 @@ advanced_options_components = (
 
 query_option_components = (
     html.H3("Query Options"),
+    dmc.Space(h=5),
     dmc.Checkbox(
         id=f"{APP_PAGE_QUERY}-save-checkbox",
         label="Save queries",
     ),
-    dmc.Space(h=30),
+    dmc.Space(h=20),
     html.Label("Row display limit"),
     dmc.Space(h=5),
     dcc.Input(
@@ -130,12 +132,12 @@ query_option_components = (
         max=50,
         style={"width": 100},
     ),
+    dmc.Space(h=5),
     dbc.Button("RUN", id=f"{APP_PAGE_QUERY}-run-btn", style={"width": 100}),
     dcc.Loading(
         children=[html.Div([html.Div(id=f"{APP_PAGE_QUERY}-loading-output")])],
         type="circle",
     ),
-    dmc.Space(h=30),
 )
 
 query_result_components = (
@@ -148,14 +150,21 @@ query_result_components = (
 )
 
 query_page_components = (
-    html.H2("Cohort Curation"),
-    dmc.Space(h=10),
+   html.Div(
+       [
+           html.H2("Cohort Curation"),
+       ],
+       style={"textAlign": "center"},
+    ),
+    html.Hr(),
+    dmc.Space(h=5),
     html.H3("Query"),
+    dmc.Space(h=5),
     *encounter_components,
     *diagnosis_components,
-    dmc.Space(h=40),
     *advanced_options_components,
-    dmc.Space(h=30),
+    html.Hr(),
     *query_option_components,
+    html.Hr(),
     *query_result_components,
 )

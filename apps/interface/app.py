@@ -1,13 +1,18 @@
 """Main interface application file."""
+
 from datetime import datetime
 from os import path
 from typing import Any, Dict, List, Optional, Tuple
 
-import app_query
+from dash import dcc, Dash, Input, Output, State, html
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
 import pandas as pd
-from analyze_page import analyze_page_components
+from flask_caching import Cache
+
+import app_query
+from tabs.analyze_tab import analyze_page_components
 from component_utils import (
     generate_table_contents,
     get_dataframe_info,
@@ -20,41 +25,70 @@ from consts import (
     APP_ENC,
     APP_PAGE_ANALYZE,
     APP_PAGE_QUERY,
+    CACHE_TIMEOUT,
     NAV_PAGE_IDS,
+    NAV_PAGE_BUTTON_GRADIENTS,
+    NAV_PAGE_BUTTON_ICONS,
     NAV_PAGES,
     TABLE_IDS,
 )
-from dash import Dash, Input, Output, State, html
-from query_page import query_page_components
-
+from css import TEXT_ALIGN_CENTER
+from tabs.query_tab import query_page_components
 from cyclops.utils.file import join, load_dataframe, save_dataframe
 
 ANALYZE_DATA = None
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = Dash(external_stylesheets=[dbc.themes.COSMO], suppress_callback_exceptions=True)
+app.title = "cyclops.interface"
+app.scripts.config.serve_locally = True
+app.css.config.serve_locally = True
+server = app.server
+cache = Cache(
+    server,
+    config={
+        "DEBUG": True,
+        "CACHE_TYPE": "SimpleCache",
+        "CACHE_DEFAULT_TIMEOUT": CACHE_TIMEOUT,
+    },
+)
+
 
 # APP LAYOUT
 # ------------------------------------------------------------------------------
 navbar_components = (
     dbc.Nav(
-        [
+        dmc.Group(
+            [
             *(
-                dbc.NavItem(
-                    dbc.NavLink(page, id=f"nav-{NAV_PAGE_IDS[i]}-button", n_clicks=0)
+                dmc.Button(
+                    page,
+                    id=f"nav-{NAV_PAGE_IDS[i]}-button",
+                    leftIcon=[DashIconify(icon=NAV_PAGE_BUTTON_ICONS[page])],
+                    n_clicks=0,
+                    variant="gradient",
+                    gradient=NAV_PAGE_BUTTON_GRADIENTS[page],
+                    size="xl",
                 )
                 for i, page in enumerate(NAV_PAGES)
-            )
+            ),
         ],
-        pills=True,
-        fill=True,
+        ),
     ),
 )
 
 # App layout
 app.layout = html.Div(
     [
-        html.H1("CyclOps Interface", style={"text-align": "center"}),
+        html.Div(
+            [
+                html.Img(src=app.get_asset_url("vector_logo.png"), height=32),
+                dcc.Markdown("""# CyclOps Interface"""),
+            ],
+            style=TEXT_ALIGN_CENTER,
+        ),
+        html.Hr(),
         *navbar_components,
+        html.Hr(),
         dmc.Space(h=10),
         dbc.Collapse(
             dbc.Card([*query_page_components]),
@@ -74,12 +108,12 @@ app.layout = html.Div(
 
 @app.callback(
     [Output(f"{s}-collapse", "is_open") for s in NAV_PAGE_IDS],
-    [Input(f"nav-{s}-button", "n_clicks_timestamp") for s in NAV_PAGE_IDS],
+    [Input(f"nav-{s}-button", "n_clicks") for s in NAV_PAGE_IDS],
 )
-def navbar_page_selection(*n_clicks_timestamps):
+def navbar_page_selection(*n_clicks):
     """Navbar page selection."""
     # Detect which button was clicked based on the latest pressed
-    return multiple_collapse_toggle(n_clicks_timestamps, NAV_PAGE_IDS)
+    return multiple_collapse_toggle(n_clicks, NAV_PAGE_IDS)
 
 
 # Encounters checkbox / collapse
