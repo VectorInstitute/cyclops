@@ -11,7 +11,6 @@ import pandas as pd
 from component_utils import (
     generate_table_contents,
     get_dataframe_info,
-    multiple_collapse_toggle,
     recently_clicked,
     upload_to_dataframe,
 )
@@ -21,24 +20,23 @@ from consts import (
     APP_PAGE_ANALYZE,
     APP_PAGE_QUERY,
     CACHE_TIMEOUT,
-    NAV_PAGE_BUTTON_GRADIENTS,
-    NAV_PAGE_BUTTON_ICONS,
-    NAV_PAGE_IDS,
     NAV_PAGES,
     TABLE_IDS,
 )
 from css import TEXT_ALIGN_CENTER
-from dash import Dash, Input, Output, State, dcc, html
-from dash_iconify import DashIconify
+from dash import Dash, Input, Output, State, dcc, dependencies, html
 from flask_caching import Cache
 from tabs.analyze_tab import analyze_page_components
 from tabs.query_tab import query_page_components
+from tabs.visualizer_tab import encounters_events, events, visualizer_page_components
 
+from cyclops.plotter import plot_timeline
+from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.utils.file import join, load_dataframe, save_dataframe
 
 ANALYZE_DATA = None
 
-app = Dash(external_stylesheets=[dbc.themes.COSMO], suppress_callback_exceptions=True)
+app = Dash(external_stylesheets=[dbc.themes.UNITED], suppress_callback_exceptions=True)
 app.title = "cyclops.interface"
 app.scripts.config.serve_locally = True
 app.css.config.serve_locally = True
@@ -55,26 +53,18 @@ cache = Cache(
 
 # APP LAYOUT
 # ------------------------------------------------------------------------------
-navbar_components = (
-    dbc.Nav(
-        dmc.Group(
-            [
-                *(
-                    dmc.Button(
-                        page,
-                        id=f"nav-{NAV_PAGE_IDS[i]}-button",
-                        leftIcon=[DashIconify(icon=NAV_PAGE_BUTTON_ICONS[page])],
-                        n_clicks=0,
-                        variant="gradient",
-                        gradient=NAV_PAGE_BUTTON_GRADIENTS[page],
-                        size="xl",
-                    )
-                    for i, page in enumerate(NAV_PAGES)
-                ),
-            ],
+tabs_components = html.Div(
+    [
+        dmc.Tabs(
+            id="nav-tabs",
+            active=0,
+            color="grape",
+            children=[dmc.Tab(label=f"{page}") for _, page in enumerate(NAV_PAGES)],
         ),
-    ),
+        html.Div(id="tab-content"),
+    ]
 )
+
 
 # App layout
 app.layout = html.Div(
@@ -82,22 +72,15 @@ app.layout = html.Div(
         html.Div(
             [
                 html.Img(src=app.get_asset_url("vector_logo.png"), height=32),
-                dcc.Markdown("""# CyclOps Interface"""),
+                dcc.Markdown(
+                    """# CyclOps Interface""",
+                    style={"background-color": "grape"},
+                ),
             ],
             style=TEXT_ALIGN_CENTER,
         ),
         html.Hr(),
-        *navbar_components,
-        html.Hr(),
-        dmc.Space(h=10),
-        dbc.Collapse(
-            dbc.Card([*query_page_components]),
-            id=f"{APP_PAGE_QUERY}-collapse",
-        ),
-        dbc.Collapse(
-            dbc.Card([*analyze_page_components]),
-            id=f"{APP_PAGE_ANALYZE}-collapse",
-        ),
+        tabs_components,
     ],
     style={"padding-left": "20px", "padding-top": "20px"},
 )
@@ -106,14 +89,15 @@ app.layout = html.Div(
 # ------------------------------------------------------------------------------
 
 
-@app.callback(
-    [Output(f"{s}-collapse", "is_open") for s in NAV_PAGE_IDS],
-    [Input(f"nav-{s}-button", "n_clicks") for s in NAV_PAGE_IDS],
-)
-def navbar_page_selection(*n_clicks):
-    """Navbar page selection."""
-    # Detect which button was clicked based on the latest pressed
-    return multiple_collapse_toggle(n_clicks, NAV_PAGE_IDS)
+@app.callback(Output("tab-content", "children"), Input("nav-tabs", "active"))
+def tab_selection(active):
+    """Navbar tab selection."""
+    if active == 0:
+        return query_page_components
+    if active == 1:
+        return analyze_page_components
+
+    return visualizer_page_components
 
 
 # Encounters checkbox / collapse
@@ -343,6 +327,30 @@ def analyze_column(col_name):
     )
     value_count_components = generate_table_contents(value_counts_df)
     return (value_count_components,)
+
+
+# VISUALIZER PAGE FUNCTIONALITY
+# ------------------------------------------------------------------------------
+
+
+@app.callback(
+    [
+        dependencies.Output("timeline", "figure"),
+        dependencies.Output("encounter-events-caption", "children"),
+        dependencies.Output("encounter-events-slider", "max"),
+    ],
+    {
+        **{"index": dependencies.Input("encounter-events-slider", "value")},
+    },
+)
+def update_timeline_plot(index):
+    """Update timeline plot."""
+    events_encounter = events.loc[events[ENCOUNTER_ID] == encounters_events[index]]
+    return [
+        plot_timeline(events_encounter, return_fig=True),
+        f'Encounter ID: "{encounters_events[index]}"',
+        len(encounters_events) - 1,
+    ]
 
 
 # ------------------------------------------------------------------------------

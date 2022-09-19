@@ -23,7 +23,6 @@ TAB_FEATURES = [
     SEX,
     "admission_type",
     "admission_location",
-    # "discharge_location",
     "ethnicity",
 ] + TAB_TARGETS
 
