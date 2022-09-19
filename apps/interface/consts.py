@@ -11,7 +11,7 @@ APP_PAGE_VISUALIZE = "visualize"
 TABLES = ["Encounters", "Diagnoses", "Events"]
 TABLE_IDS = [APP_ENC, APP_DIAG, APP_EVNT]
 
-NAV_PAGE_IDS = [APP_PAGE_QUERY, APP_PAGE_ANALYZE]
+NAV_PAGE_IDS = [APP_PAGE_QUERY, APP_PAGE_ANALYZE, APP_PAGE_VISUALIZE]
 NAV_PAGES = [page_id.capitalize() for page_id in NAV_PAGE_IDS]
 NAV_PAGE_BUTTON_GRADIENTS = {
     APP_PAGE_QUERY.capitalize(): {"from": "teal", "to": "lime", "deg": 105},
@@ -25,3 +25,10 @@ NAV_PAGE_BUTTON_ICONS = {
 }
 
 CACHE_TIMEOUT = 3000
+STATIC = "static"
+TEMPORAL = "temporal"
+
+EVALUATION = "evaluation"
+TIMELINE = "timeline"
+FEATURE_STORE = "feature_store"
+DIRECT_LOAD = "direct_load"
