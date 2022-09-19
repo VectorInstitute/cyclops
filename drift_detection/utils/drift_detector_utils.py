@@ -11,6 +11,7 @@ from drift_detection.baseline_models.temporal.pytorch.utils import (
 )
 from typing import Callable, Dict, List, Optional, Tuple, Union, Any
 from alibi_detect.utils.pytorch.kernels import GaussianRBF
+import importlib
 
 
 def get_args(obj, kwargs):
@@ -38,6 +39,29 @@ def get_args(obj, kwargs):
             if key in obj.__code__.co_varnames:
                 args[key] = kwargs[key]
     return args
+
+
+def get_obj_from_str(obj_str: str, **kwargs):
+    """
+    Get object from string.
+
+    Parameters
+    ----------
+    obj_str
+        String of object to get.
+    kwargs
+        Arguments to pass to object.
+
+    Returns
+    -------
+    obj
+        Object from string.
+    """
+    module_name, class_name = obj_str.rsplit(".", 1)
+    module = importlib.import_module(module_name)
+    obj = getattr(module, class_name)
+    args = get_args(obj, kwargs)
+    return obj(**args)
 
 
 def load_model(self, model_path: str):

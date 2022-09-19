@@ -35,7 +35,6 @@ from alibi_detect.cd import (
     KSDrift,
 )
 
-
 class TSTester:
 
     """
@@ -109,7 +108,7 @@ class DCTester:
             "rnn": recurrent_neural_network,
             "cnn": convolutional_neural_network,
             "ffnn": feed_forward_neural_network,
-            "spot_the_diff": SpotTheDiffDrift(),
+            "spot_the_diff": SpotTheDiffDrift,
         }
 
         if self.model_method not in self.model_methods.keys():

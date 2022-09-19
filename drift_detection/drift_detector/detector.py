@@ -1,50 +1,23 @@
-<<<<<<< HEAD
-from drift_detector import Reductor, TSTester, DCTester
+from drift_detection.drift_detector import Reductor, TSTester, DCTester
 from typing import List, Tuple, Union, Optional, Callable, Any, Dict
-
-import os
-import sys
-import math
-import random
+from drift_detection.utils.drift_detector_utils import get_args
+from omegaconf import DictConfig, OmegaConf
+import hydra
 import numpy as np
 import torch
-import torch.nn as nn
-import tensorflow as tf
-from scipy.special import softmax
-from scipy.spatial import distance
-from sklearn.mixture import GaussianMixture
-from alibi_detect.utils.pytorch.kernels import DeepKernel
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-import os
-import sys
-import numpy as np
-import torch
-import torch.nn as nn
-from sklearn.manifold import Isomap
-from sklearn.mixture import GaussianMixture
-from sklearn.decomposition import PCA, KernelPCA
-from sklearn.random_projection import SparseRandomProjection
-import torchxrayvision as xrv
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-import pickle
 
-from drift_detection.utils.drift_detection_utils import get_args
-
+@hydra.main(config_path="../configs/detector", config_name="NIHCXR-txrv_ae-mmd")
 class Detector:
 
     """
     Detector class for distribution shift detection. 
-=======
-class ShiftDetector:
->>>>>>> origin
 
 
     Attributes
     ----------
-    reductor : str or Reductor
+    reductor : Reductor
         Reductor object for dimensionality reduction.
-    tester : str or TSTester or DCTester
+    tester : TSTester or DCTester
         Tester object for statistical testing.
     p_val_threshold : float
         Threshold for p-value. If p-value is below this threshold, a shift is detected.
@@ -57,10 +30,12 @@ class ShiftDetector:
     """
     def __init__(
         self,
-        reductor: Union[str, Reductor],
-        tester: Union[str, TSTester, DCTester],
-        p_val_threshold=0.05,
+        cfg: DictConfig,
+        reductor: Reductor = None,
+        tester: Union[TSTester, DCTester] = None,
+        p_val_threshold: float = 0.05
     ):
+        print(OmegaConf.to_yaml(cfg.detector))
 
         self.reductor = reductor
         self.tester = tester
@@ -118,3 +93,6 @@ class ShiftDetector:
         #     self.p_val = self.p_val / X_s_red.shape[1]
         # else:
         #     self.p_val = self.sign_level
+
+if __name__ == "__main__":
+    Detector()
