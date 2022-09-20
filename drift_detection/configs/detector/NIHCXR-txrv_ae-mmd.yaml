@@ -1,16 +1,16 @@
 detector:
   p_val_threshold: 0.05
 
-  reductor:
-    dr_method: TAE_txrv_CNN
-    batch_size: 64
-    num_workers: 4
+reductor:
+  dr_method: TAE_txrv_CNN
+  batch_size: 64
+  num_workers: 4
 
-  tester:
-    test_method: mmd
-    backend: pytorch
-    n_permutations: 10000
-    device: None
-    
+tester:
+  test_method: mmd
+  backend: pytorch
+  n_permutations: 10000
+  device: None
+  
 
     

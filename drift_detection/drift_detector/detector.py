@@ -30,7 +30,6 @@ class Detector:
     """
     def __init__(
         self,
-        cfg: DictConfig,
         reductor: Reductor = None,
         tester: Union[TSTester, DCTester] = None,
         p_val_threshold: float = 0.05
@@ -41,13 +40,13 @@ class Detector:
         self.tester = tester
         self.p_val_threshold = p_val_threshold
 
-    def _fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
+    def fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
         self.reductor.fit(data)
 
-    def _transform(self, X, **kwargs):
+    def transform(self, X, **kwargs):
         return self.reductor.transform(X, **kwargs)
         
-    def _test_shift(self, X_s, X_t, **kwargs):
+    def test_shift(self, X_s, X_t, **kwargs):
         """Test for shift.
         """
         p_val, dist = self.tester.test_shift(X_s, X_t, **kwargs)
@@ -87,12 +86,3 @@ class Detector:
             shift_detected = False
         
         return {'p_val': results['p_val'], 'distance': results['distance'], 'shift_detected': shift_detected}
-
-        # if self.reductor.dr_method != "BBSDh":
-        #     # Lower the significance level for all tests (Bonferroni) besides BBSDh, which needs no correction.
-        #     self.p_val = self.p_val / X_s_red.shape[1]
-        # else:
-        #     self.p_val = self.sign_level
-
-if __name__ == "__main__":
-    Detector()
