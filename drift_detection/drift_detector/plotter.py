@@ -19,14 +19,30 @@ colors = [
     "#607d8b",
 ]
 
-def clamp(val, minimum=0, maximum=255):
+def clamp(val: int, minimum=0, maximum=255):
+    '''
+    Ensures colour intensity is within a specified range.
+    
+    Returns
+    -------
+    int
+        clamped colour intensity
+    '''
     if val < minimum:
         return minimum
     if val > maximum:
         return maximum
     return val
 
-def colorscale(hexstr, scalefactor):
+def colorscale(hexstr: str, scalefactor: float):
+    '''
+    Creates color scale.
+    
+    Returns
+    -------
+    String
+        Color scale of hex codes
+    '''
     hexstr = hexstr.strip("#")
 
     if scalefactor < 0 or len(hexstr) != 6:
@@ -40,7 +56,10 @@ def colorscale(hexstr, scalefactor):
 
     return "#%02x%02x%02x" % (int(r), int(g), int(b))
 
-def errorfill(x, y, yerr, color=None, alpha_fill=0.2, ax=None, fmt="-o", label=None):
+def errorfill(x: np.array, y: np.array, yerr: np.array, color=None, alpha_fill=0.2, ax=None, fmt="-o", label=None):
+    '''
+    Creates custom error fill.
+    '''
     ax = ax if ax is not None else plt.gca()
     if color is None:
         color = next(ax._get_lines.prop_cycler)["color"]
@@ -54,7 +73,15 @@ def errorfill(x, y, yerr, color=None, alpha_fill=0.2, ax=None, fmt="-o", label=N
         x, np.clip(ymax, 0, 1), np.clip(ymin, 0, 1), color=color, alpha=alpha_fill
     )
 
-def plot_roc(ax, fpr, tpr, roc_auc):
+def plot_roc(ax: matplotlib.axes.SubplotBase, fpr: list, tpr: list, roc_auc: float):
+    '''
+    Setup ROC curve
+    
+    Returns
+    -------
+    matplotlib.axes.SubplotBase
+        ROC subplot
+    '''
     ax.plot(fpr, tpr)
     ax.plot([0, 1], [0, 1], "k--")
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
@@ -64,6 +91,14 @@ def plot_roc(ax, fpr, tpr, roc_auc):
     return ax
 
 def plot_pr(ax, recall, precision, roc_prc):
+        '''
+    Setup Precision-Recall curve
+    
+    Returns
+    -------
+    matplotlib.axes.SubplotBase
+        PR subplot
+    '''
     ax.step(recall, precision, color="b", alpha=0.2, where="post")
     ax.fill_between(recall, precision, step="post", alpha=0.2, color="b")
     ax.set_xlabel("Recall", fontsize = 12)
@@ -113,6 +148,15 @@ def set_bars_color(bars: mpl.container.BarContainer,
         bar.set_color(color)
 
 def plot_label_distribution(X,y,label, features):
+    """Set color attribute for bars in bar plots.
+    
+    Parameters
+    ----------
+    bars: mpl.container.BarContainer
+        Bars.
+    color: str
+        Color.
+    """
     data = pd.concat([X,y],axis=1)
     data_pos = data.loc[data[label] == 1]
     data_neg = data.loc[data[label] == 0]
@@ -188,8 +232,17 @@ def plot_label_distribution(X,y,label, features):
     plt.show()
     
 def plot_drift(results, threshold=0.05):
+    """Plot drift results.
+    
+    Parameters
+    ----------
+    results: pd.DataFrame
+        Dataframe containing drift p-values and distance metric.
+    threshold: float
+        P-Value threshold.
+    """
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16,10))
-    detection = results['pval']<threshold,1,0)
+    detection = np.where(results['pval']<threshold,1,0)
     cmap = ListedColormap(['lightgrey','red'])
     ax1.plot(results['dates'], results['pval'], '.-', color="red", linewidth=0.5, markersize=2)
     ax1.set_xlim(results['dates'], results['dates'])
@@ -203,21 +256,30 @@ def plot_drift(results, threshold=0.05):
     ax2.set_ylabel('Distance',fontsize=16)
     ax2.axhline(y=np.mean(results['dist']), color='dimgrey', linestyle='--')
     ax2.set_xticklabels([])
-    ax2.pcolorfast(ax6.get_xlim(), ax2.get_ylim(),detection.values[np.newaxis], cmap = cmap, alpha = 0.4)
+    ax2.pcolorfast(ax2.get_xlim(), ax2.get_ylim(),results['detection'][np.newaxis], cmap = cmap, alpha = 0.4)
 
     for index, label in enumerate(ax2.xaxis.get_ticklabels()):
         if index % 28 != 0:
             label.set_visible(False)
     plt.show()
 
-def plot_performance(results, metric, threshold):
+def plot_performance(results, metric):
+    """Plot drift results.
+    
+    Parameters
+    ----------
+    results: pd.DataFrame
+        Dataframe returned from rolling window containing dates and performance metric.
+    metric: str
+        Column name of performance for plotting.
+    """
     ax1.plot(results['dates'], results[metric], '.-',color="blue", linewidth=0.5, markersize=2)
     ax1.set_xlim(results['dates'], results['dates'])
     ax1.set_ylabel(metric,fontsize=16)
     ax1.set_xlabel('time (s)', fontsize=16)
     ax1.axhline(y=np.mean(results[metric]), color='dimgrey', linestyle='--')
     ax1.tick_params(axis='x', labelrotation=45)
-    ax1.pcolorfast(ax1.get_xlim(), ax1.get_ylim(),detection.values[np.newaxis], cmap = cmap, alpha = 0.4)
+    ax1.pcolorfast(ax1.get_xlim(), ax1.get_ylim(),results['detection'][np.newaxis], cmap = cmap, alpha = 0.4)
 
     for index, label in enumerate(ax1.xaxis.get_ticklabels()):
         if index % 28 != 0:
