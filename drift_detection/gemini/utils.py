@@ -20,7 +20,7 @@ sys.path.append("..")
 
 from drift_detector.detector import Detector
 from drift_detector.reductor import Reductor
-from drift_detector.experiments import apply_shift
+from drift_detector.experimenter import Experimenter
 
 sys.path.append("../..")
 
@@ -69,6 +69,205 @@ MORTALITY = "mortality"
 LOS = "los"
 AGGREGATION_WINDOW = 144
 AGGREGATION_BUCKET_SIZE = 24
+
+def apply_predefined_shift(experimenter, X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift, tol_var="gender"):
+
+    """apply_shift.
+
+    Parameters
+    ----------
+    X_s_orig: numpy.matrix
+        Source data.
+    y_s_orig: list
+        Source label.
+    X_te_orig: numpy.matrix
+        Target data.
+    y_te_orig: list
+        Target label.
+    shift: String
+        Name of shift type to use.
+    tol_var: String
+        Column name of variable to perturb.
+    """
+
+    X_te_1 = None
+    y_te_1 = None
+
+    if shift == "large_gn_shift_1.0":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 10.0, normalization=1.0, delta=1.0, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "medium_gn_shift_1.0":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 1.0, normalization=1.0, delta=1.0, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "small_gn_shift_1.0":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 0.1, normalization=1.0, delta=1.0, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "large_gn_shift_0.5":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 10.0, normalization=1.0, delta=0.5, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "medium_gn_shift_0.5":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 1.0, normalization=1.0, delta=0.5, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "small_gn_shift_0.5":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 0.1, normalization=1.0, delta=0.5, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "large_gn_shift_0.1":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 10.0, normalization=1.0, delta=0.1, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "medium_gn_shift_0.1":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 1.0, normalization=1.0, delta=0.1, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "small_gn_shift_0.1":
+        X_te_1, _ = experimenter.gaussian_noise(
+            X_te_orig, 0.1, normalization=1.0, delta=0.1, clip=False
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "ko_shift_0.1":
+        X_te_1, y_te_1 = self.knockout_shift(X_te_orig, y_te_orig, 0, 0.1)
+    elif shift == "ko_shift_0.5":
+        X_te_1, y_te_1 = experimenter.knockout_shift(X_te_orig, y_te_orig, 0, 0.5)
+    elif shift == "ko_shift_1.0":
+        X_te_1, y_te_1 = experimenter.knockout_shift(X_te_orig, y_te_orig, 0, 1.0)
+    elif shift == "cp_shift_0.75":
+        X_te_1, y_te_1 = experimenter.changepoint_shift(
+            X_s_orig, y_s_orig, X_te_orig, y_te_orig, 0, n_shuffle=0.75, rank=True
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "cp_shift_0.25":
+        X_te_1, y_te_1 = experimenter.changepoint_shift(
+            X_s_orig, y_s_orig, X_te_orig, y_te_orig, 0, n_shuffle=0.25, rank=True
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.75_krc_rec":
+        X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.75,
+            keep_rows_constant=True,
+              repermute_each_column=True,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.5_krc_rec":
+         X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.5,
+            keep_rows_constant=True,
+            repermute_each_column=True,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.25_krc_rec":
+        X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.25,
+            keep_rows_constant=True,
+            repermute_each_column=True,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.75_krc":
+        X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.75,
+            keep_rows_constant=True,
+            repermute_each_column=False,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.5_krc":
+        X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.5,
+            keep_rows_constant=True,
+            repermute_each_column=False,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.25_krc":
+        X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.25,
+            keep_rows_constant=True,
+            repermute_each_column=False,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.75":
+        X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.75,
+            keep_rows_constant=False,
+            repermute_each_column=False,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.5":
+        X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.5,
+            keep_rows_constant=False,
+            repermute_each_column=False,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "mfa_shift_0.25":
+        X_te_1, y_te_1 = experimenter.multiway_feat_association_shift(
+            X_te_orig,
+            y_te_orig,
+            n_shuffle=0.25,
+            keep_rows_constant=False,
+            repermute_each_column=False,
+        )
+        y_te_1 = y_te_orig.copy()
+    elif shift == "large_bn_shift_1.0":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.5, 1.0)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "medium_bn_shift_1.0":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.1, 1.0)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "small_bn_shift_1.0":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.01, 1.0)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "large_bn_shift_0.5":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.5, 0.5)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "medium_bn_shift_0.5":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.1, 0.5)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "small_bn_shift_0.5":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.01, 0.5)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "large_bn_shift_0.1":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.5, 0.1)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "medium_bn_shift_0.1":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.1, 0.1)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "small_bn_shift_0.1":
+        X_te_1, _ = experimenter.binary_noise(X_te_orig, 0.01, 0.1)
+        y_te_1 = y_te_orig.copy()
+    elif shift == "tolerance":
+        X_te_1, _ = experimenter.tolerance(X_s_orig, y_s_orig, X_te_orig, y_te_orig, tol_var)
+        y_te_1 = y_te_orig.copy()
+    else:
+        raise ValueError("Not a pre-defined shift, specify custom parameters using appropriate function")
+    return (X_te_1, y_te_1)
 
 def get_merged_data(BASE_DATA_PATH):
 
