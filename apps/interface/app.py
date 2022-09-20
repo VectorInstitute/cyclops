@@ -23,14 +23,18 @@ from consts import (
     NAV_PAGES,
     TABLE_IDS,
 )
-from css import TEXT_ALIGN_CENTER
-from dash import Dash, Input, Output, State, dcc, dependencies, html
+from dash import Dash, Input, Output, State, dcc, html
 from flask_caching import Cache
 from tabs.analyze_tab import analyze_page_components
 from tabs.query_tab import query_page_components
-from tabs.visualizer_tab import encounters_events, events, visualizer_page_components
+from tabs.visualizer_tab import (
+    encounters_events,
+    events,
+    timeline_plot_components,
+    visualizer_page_components,
+)
 
-from cyclops.plotter import plot_timeline
+from cyclops.plotter import plot_histogram, plot_timeline
 from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.utils.file import join, load_dataframe, save_dataframe
 
@@ -77,9 +81,11 @@ app.layout = html.Div(
                     style={"background-color": "grape"},
                 ),
             ],
-            style=TEXT_ALIGN_CENTER,
+            style={
+                "textAlign": "center",
+                "background-color": "rgba(214, 212, 208, 0.5)",
+            },
         ),
-        html.Hr(),
         tabs_components,
     ],
     style={"padding-left": "20px", "padding-top": "20px"},
@@ -329,18 +335,33 @@ def analyze_column(col_name):
     return (value_count_components,)
 
 
+@app.callback(
+    [
+        Output(f"{APP_PAGE_ANALYZE}-column-plot", "figure"),
+    ],
+    [
+        Input(f"{APP_PAGE_ANALYZE}-column-input", "value"),
+    ],
+)
+def update_column_plot(col_name):
+    """Update column analysis plot."""
+    global ANALYZE_DATA  # pylint: disable=global-statement, W0602
+
+    return [plot_histogram(ANALYZE_DATA, names=col_name, return_fig=True)]
+
+
 # VISUALIZER PAGE FUNCTIONALITY
 # ------------------------------------------------------------------------------
 
 
 @app.callback(
     [
-        dependencies.Output("timeline", "figure"),
-        dependencies.Output("encounter-events-caption", "children"),
-        dependencies.Output("encounter-events-slider", "max"),
+        Output("timeline", "figure"),
+        Output("encounter-events-caption", "children"),
+        Output("encounter-events-slider", "max"),
     ],
     {
-        **{"index": dependencies.Input("encounter-events-slider", "value")},
+        **{"index": Input("encounter-events-slider", "value")},
     },
 )
 def update_timeline_plot(index):
@@ -351,6 +372,28 @@ def update_timeline_plot(index):
         f'Encounter ID: "{encounters_events[index]}"',
         len(encounters_events) - 1,
     ]
+
+
+@app.callback(
+    Output("offcanvas-scrollable", "is_open"),
+    Input("options", "n_clicks"),
+    State("offcanvas-scrollable", "is_open"),
+)
+def toggle_offcanvas_scrollable(num_clicks, is_open):
+    """Toggle offcanvas scrolling."""
+    if num_clicks:
+        return not is_open
+    return is_open
+
+
+# Callbacks.
+@app.callback(
+    Output("update-view-mode", "children"),
+    Input("view-mode", "value"),
+)
+def update_view(_):
+    """Update main view."""
+    return timeline_plot_components
 
 
 # ------------------------------------------------------------------------------

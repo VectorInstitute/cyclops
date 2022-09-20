@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import dash_cool_components as dcool
 import dash_mantine_components as dmc
 from component_utils import flatten_2d_tuple, table_result
-from consts import APP_DIAG, APP_ENC, APP_PAGE_QUERY, TABLE_IDS, TABLES  # , APP_EVENT
+from consts import APP_DIAG, APP_ENC, APP_EVENT, APP_PAGE_QUERY, TABLE_IDS, TABLES
 from dash import dcc, html
 
 encounter_components = (
@@ -58,6 +58,7 @@ encounter_components = (
     dmc.Space(h=10),
 )
 
+
 diagnosis_components = (
     dmc.Checkbox(
         id=f"{APP_DIAG}-checkbox",
@@ -97,6 +98,16 @@ diagnosis_components = (
     dmc.Space(h=10),
 )
 
+
+events_components = (
+    dmc.Checkbox(
+        id=f"{APP_EVENT}-checkbox",
+        label="Events",
+    ),
+    dmc.Space(h=10),
+)
+
+
 advanced_options_components = (
     dbc.Button(
         "Show Advanced",
@@ -113,6 +124,7 @@ advanced_options_components = (
     ),
     dmc.Space(h=10),
 )
+
 
 query_option_components = (
     html.H3("Query Options"),
@@ -140,6 +152,7 @@ query_option_components = (
     ),
 )
 
+
 query_result_components = (
     html.H3("Results"),
     dmc.Space(h=10),
@@ -149,19 +162,20 @@ query_result_components = (
     ),
 )
 
+
 query_page_components = (
     html.Div(
         [
             html.H2("Cohort Curation"),
         ],
-        style={"textAlign": "center"},
+        style={"textAlign": "center", "background-color": "rgba(214, 212, 208, 0.5)"},
     ),
-    html.Hr(),
     dmc.Space(h=5),
     html.H3("Query"),
     dmc.Space(h=5),
     *encounter_components,
     *diagnosis_components,
+    *events_components,
     *advanced_options_components,
     html.Hr(),
     *query_option_components,

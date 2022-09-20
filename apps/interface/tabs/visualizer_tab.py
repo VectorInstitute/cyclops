@@ -8,7 +8,7 @@ import pandas as pd
 from css import CONTENT_STYLE, SIDEBAR_LIST_STYLE, SIDEBAR_STYLE, TEXT_ALIGN_CENTER
 from dash import dcc, html
 
-from codebase_ops import get_log_file_path
+from codebase_ops import PROJECT_ROOT
 from cyclops.processors.column_names import ENCOUNTER_ID
 
 STATIC = "static"
@@ -23,7 +23,7 @@ dir_path = os.path.dirname(os.path.abspath(__file__))
 
 events = pd.read_parquet(
     os.path.join(
-        get_log_file_path(),
+        PROJECT_ROOT,
         "notebooks/usecases/mimic/risk_of_mortality/mimic_data/1cleaned/batch_0017.parquet",  # noqa: E501, pylint: disable=line-too-long
     )
 )
@@ -39,10 +39,9 @@ sidebar_components = html.Div(
         dcc.RadioItems(
             id="view-mode",
             options=[
-                {"label": "Encounter Timeline", "value": TIMELINE},
+                {"label": "Visit Timeline", "value": TIMELINE},
                 {"label": "Static Features", "value": STATIC},
                 {"label": "Temporal Features", "value": TEMPORAL},
-                {"label": "Evaluation", "value": EVALUATION},
             ],
             value=TIMELINE,
             labelStyle=SIDEBAR_LIST_STYLE,
@@ -174,6 +173,15 @@ offcanvas_sidebar_components = html.Div(
 
 visualizer_page_components = html.Div(
     [
+        html.Div(
+            [
+                html.H2("Visualize"),
+            ],
+            style={
+                "textAlign": "center",
+                "background-color": "rgba(214, 212, 208, 0.5)",
+            },
+        ),
         offcanvas_sidebar_components,
         dcc.Loading(
             id="loading-view",

@@ -47,6 +47,7 @@ upload_components = (
     dmc.Space(h=10),
 )
 
+
 data_option_components = (
     html.H3("Options"),
     dmc.Space(h=10),
@@ -67,12 +68,14 @@ data_option_components = (
     dmc.Space(h=30),
 )
 
+
 data_info_components = (
     html.H3("Data Analysis"),
     *table_result("Info", f"{APP_PAGE_ANALYZE}-info"),
     dmc.Space(h=20),
     *table_result("Preview", f"{APP_PAGE_ANALYZE}-preview"),
 )
+
 
 column_info_components = (
     html.H3("Column Analysis"),
@@ -89,24 +92,38 @@ column_info_components = (
     dmc.Space(h=10),
 )
 
+
 column_visualization_components = (
     html.H3("Column Visualization"),
-    html.Label("Select plots"),
-    dcc.Dropdown(
-        ["Montreal", "San Francisco"],
-        multi=True,
+    # html.Label("Select plots"),
+    # dcc.Dropdown(
+    #     ["Histogram"],
+    #     multi=True,
+    # ),
+    # dmc.Space(h=10),
+    dcc.Loading(
+        id="loading-column-plot",
+        type="default",
+        color="green",
+        children=html.Div(
+            [
+                html.Div(
+                    dcc.Graph(id=f"{APP_PAGE_ANALYZE}-column-plot"),
+                    style={"overflowY": "scroll", "height": 500},
+                ),
+            ],
+        ),
     ),
-    dmc.Space(h=10),
 )
+
 
 analyze_page_components = (
     html.Div(
         [
             html.H2("Analyze"),
         ],
-        style={"textAlign": "center"},
+        style={"textAlign": "center", "background-color": "rgba(214, 212, 208, 0.5)"},
     ),
-    html.Hr(),
     *upload_components,
     html.Hr(),
     *data_option_components,

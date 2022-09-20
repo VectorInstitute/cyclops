@@ -2,14 +2,14 @@
 
 APP_ENC = "encounter"
 APP_DIAG = "diagnosis"
-APP_EVNT = "event"
+APP_EVENT = "event"
 
 APP_PAGE_QUERY = "query"
 APP_PAGE_ANALYZE = "analyze"
 APP_PAGE_VISUALIZE = "visualize"
 
 TABLES = ["Encounters", "Diagnoses", "Events"]
-TABLE_IDS = [APP_ENC, APP_DIAG, APP_EVNT]
+TABLE_IDS = [APP_ENC, APP_DIAG, APP_EVENT]
 
 NAV_PAGE_IDS = [APP_PAGE_QUERY, APP_PAGE_ANALYZE, APP_PAGE_VISUALIZE]
 NAV_PAGES = [page_id.capitalize() for page_id in NAV_PAGE_IDS]
