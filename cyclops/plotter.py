@@ -55,6 +55,13 @@ def plot_timeline(
         for timestep_timestamp in timestep_timestamps:
             fig.add_vline(timestep_timestamp)
 
+    fig = fig.update_layout(
+        {
+            "plot_bgcolor": "rgba(255, 0, 0, 0.1)",
+            "paper_bgcolor": "rgba(192, 192, 192, 0.25)",
+        }
+    )
+
     if return_fig:
         return fig
 
@@ -65,26 +72,31 @@ def plot_timeline(
 
 
 def plot_histogram(
-    features: pd.DataFrame, names: Optional[List] = None, return_fig: bool = False
+    features: pd.DataFrame,
+    names: Optional[List] = None,
+    return_fig: bool = False,
+    title="Histogram Visualization",
 ) -> Union[plotly.graph_objs.Figure, None]:
-    """Plot histogram of static features.
+    """Plot histogram of columns.
 
-    Plots the histogram of static features over all encounters.
-    If 'names' is not specified, then all available features are
+    Plots the histogram of columns.
+    If 'names' is not specified, then all available columns are
     plotted.
 
     Parameters
     ----------
     features: pandas.DataFrame
-        Static features for multiple encounters.
+        Feature columns.
     names: list, optional
         Names of feature to plot over all encounters.
 
     """
+    if features is None:
+        return make_subplots(rows=1, cols=1)
     if names is None:
         feature_names = list(features.columns)
     else:
-        feature_names = names
+        feature_names = [names]
     for name in feature_names:
         if name not in features:
             raise ValueError(f"Provided feature {name} not present in features data!")
@@ -101,7 +113,7 @@ def plot_histogram(
             col=1,
         )
     fig.update_layout(
-        title="Static Feature Visualization",
+        title=title,
         autosize=False,
         height=int(PLOT_HEIGHT * len(feature_names)),
     )

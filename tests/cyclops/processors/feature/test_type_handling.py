@@ -1,6 +1,5 @@
 """Test type handling fns."""
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -10,9 +9,8 @@ from cyclops.processors.feature.type_handling import get_unique, valid_feature_t
 
 def test_get_unique():
     """Test get_unique fn."""
-    assert get_unique(np.array([1, 3, 4]), [4]) == [4]
-    assert (get_unique(np.array([1, 3, 4])) == [1, 3, 4]).all()
     assert (get_unique(pd.Series([1, 3, 5])) == [1, 3, 5]).all()
+    assert (get_unique(pd.Series([1, 1, 5])) == [1, 5]).all()
 
 
 def test_valid_feature_type():

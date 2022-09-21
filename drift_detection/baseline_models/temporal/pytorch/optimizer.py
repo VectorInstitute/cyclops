@@ -90,6 +90,7 @@ class Optimizer:
         n_epochs=50,
         n_features=1,
         timesteps=-1,
+        model_path=None,
     ):
         """Train pytorch model.
 
@@ -105,9 +106,10 @@ class Optimizer:
             Number of complete passes through the training set.
         n_features: int
             Number of features.
-
-        """
-        model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+            
+        """ 
+        if model_path is None:
+            model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
         best_loss = math.inf
 
         for epoch in range(1, n_epochs + 1):

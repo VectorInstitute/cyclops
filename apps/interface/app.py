@@ -1,4 +1,5 @@
 """Main interface application file."""
+
 from datetime import datetime
 from os import path
 from typing import Any, Dict, List, Optional, Tuple
@@ -7,11 +8,9 @@ import app_query
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 import pandas as pd
-from analyze_page import analyze_page_components
 from component_utils import (
     generate_table_contents,
     get_dataframe_info,
-    multiple_collapse_toggle,
     recently_clicked,
     upload_to_dataframe,
 )
@@ -20,50 +19,74 @@ from consts import (
     APP_ENC,
     APP_PAGE_ANALYZE,
     APP_PAGE_QUERY,
-    NAV_PAGE_IDS,
+    CACHE_TIMEOUT,
     NAV_PAGES,
     TABLE_IDS,
 )
-from dash import Dash, Input, Output, State, html
-from query_page import query_page_components
+from dash import Dash, Input, Output, State, dcc, html
+from flask_caching import Cache
+from tabs.analyze_tab import analyze_page_components
+from tabs.query_tab import query_page_components
+from tabs.visualizer_tab import (
+    encounters_events,
+    events,
+    timeline_plot_components,
+    visualizer_page_components,
+)
 
+from cyclops.plotter import plot_histogram, plot_timeline
+from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.utils.file import join, load_dataframe, save_dataframe
 
 ANALYZE_DATA = None
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = Dash(external_stylesheets=[dbc.themes.UNITED], suppress_callback_exceptions=True)
+app.title = "cyclops.interface"
+app.scripts.config.serve_locally = True
+app.css.config.serve_locally = True
+server = app.server
+cache = Cache(
+    server,
+    config={
+        "DEBUG": True,
+        "CACHE_TYPE": "SimpleCache",
+        "CACHE_DEFAULT_TIMEOUT": CACHE_TIMEOUT,
+    },
+)
+
 
 # APP LAYOUT
 # ------------------------------------------------------------------------------
-navbar_components = (
-    dbc.Nav(
-        [
-            *(
-                dbc.NavItem(
-                    dbc.NavLink(page, id=f"nav-{NAV_PAGE_IDS[i]}-button", n_clicks=0)
-                )
-                for i, page in enumerate(NAV_PAGES)
-            )
-        ],
-        pills=True,
-        fill=True,
-    ),
+tabs_components = html.Div(
+    [
+        dmc.Tabs(
+            id="nav-tabs",
+            active=0,
+            color="grape",
+            children=[dmc.Tab(label=f"{page}") for _, page in enumerate(NAV_PAGES)],
+        ),
+        html.Div(id="tab-content"),
+    ]
 )
+
 
 # App layout
 app.layout = html.Div(
     [
-        html.H1("CyclOps Interface", style={"text-align": "center"}),
-        *navbar_components,
-        dmc.Space(h=10),
-        dbc.Collapse(
-            dbc.Card([*query_page_components]),
-            id=f"{APP_PAGE_QUERY}-collapse",
+        html.Div(
+            [
+                html.Img(src=app.get_asset_url("vector_logo.png"), height=32),
+                dcc.Markdown(
+                    """# CyclOps Interface""",
+                    style={"background-color": "grape"},
+                ),
+            ],
+            style={
+                "textAlign": "center",
+                "background-color": "rgba(214, 212, 208, 0.5)",
+            },
         ),
-        dbc.Collapse(
-            dbc.Card([*analyze_page_components]),
-            id=f"{APP_PAGE_ANALYZE}-collapse",
-        ),
+        tabs_components,
     ],
     style={"padding-left": "20px", "padding-top": "20px"},
 )
@@ -72,14 +95,15 @@ app.layout = html.Div(
 # ------------------------------------------------------------------------------
 
 
-@app.callback(
-    [Output(f"{s}-collapse", "is_open") for s in NAV_PAGE_IDS],
-    [Input(f"nav-{s}-button", "n_clicks_timestamp") for s in NAV_PAGE_IDS],
-)
-def navbar_page_selection(*n_clicks_timestamps):
-    """Navbar page selection."""
-    # Detect which button was clicked based on the latest pressed
-    return multiple_collapse_toggle(n_clicks_timestamps, NAV_PAGE_IDS)
+@app.callback(Output("tab-content", "children"), Input("nav-tabs", "active"))
+def tab_selection(active):
+    """Navbar tab selection."""
+    if active == 0:
+        return query_page_components
+    if active == 1:
+        return analyze_page_components
+
+    return visualizer_page_components
 
 
 # Encounters checkbox / collapse
@@ -309,6 +333,67 @@ def analyze_column(col_name):
     )
     value_count_components = generate_table_contents(value_counts_df)
     return (value_count_components,)
+
+
+@app.callback(
+    [
+        Output(f"{APP_PAGE_ANALYZE}-column-plot", "figure"),
+    ],
+    [
+        Input(f"{APP_PAGE_ANALYZE}-column-input", "value"),
+    ],
+)
+def update_column_plot(col_name):
+    """Update column analysis plot."""
+    global ANALYZE_DATA  # pylint: disable=global-statement, W0602
+
+    return [plot_histogram(ANALYZE_DATA, names=col_name, return_fig=True)]
+
+
+# VISUALIZER PAGE FUNCTIONALITY
+# ------------------------------------------------------------------------------
+
+
+@app.callback(
+    [
+        Output("timeline", "figure"),
+        Output("encounter-events-caption", "children"),
+        Output("encounter-events-slider", "max"),
+    ],
+    {
+        **{"index": Input("encounter-events-slider", "value")},
+    },
+)
+def update_timeline_plot(index):
+    """Update timeline plot."""
+    events_encounter = events.loc[events[ENCOUNTER_ID] == encounters_events[index]]
+    return [
+        plot_timeline(events_encounter, return_fig=True),
+        f'Encounter ID: "{encounters_events[index]}"',
+        len(encounters_events) - 1,
+    ]
+
+
+@app.callback(
+    Output("offcanvas-scrollable", "is_open"),
+    Input("options", "n_clicks"),
+    State("offcanvas-scrollable", "is_open"),
+)
+def toggle_offcanvas_scrollable(num_clicks, is_open):
+    """Toggle offcanvas scrolling."""
+    if num_clicks:
+        return not is_open
+    return is_open
+
+
+# Callbacks.
+@app.callback(
+    Output("update-view-mode", "children"),
+    Input("view-mode", "value"),
+)
+def update_view(_):
+    """Update main view."""
+    return timeline_plot_components
 
 
 # ------------------------------------------------------------------------------

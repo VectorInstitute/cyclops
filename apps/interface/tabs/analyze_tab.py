@@ -1,4 +1,5 @@
 """Analyze page components."""
+
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from component_utils import table_result
@@ -6,7 +7,6 @@ from consts import APP_PAGE_ANALYZE
 from dash import dcc, html
 
 upload_components = (
-    html.H2("Analyze"),
     html.Label("Specify filename from results"),
     dmc.Space(h=10),
     dcc.Input(
@@ -16,6 +16,7 @@ upload_components = (
         placeholder="File name",
         style={"width": "30%"},
     ),
+    dmc.Space(h=5),
     dbc.Button(
         "Upload",
         id="server-upload-button",
@@ -24,7 +25,7 @@ upload_components = (
         n_clicks=0,
         style={"width": 200},
     ),
-    dmc.Space(h=20),
+    dmc.Space(h=10),
     html.Label("OR Select local files"),
     dcc.Upload(
         id="local-upload",
@@ -46,6 +47,7 @@ upload_components = (
     dmc.Space(h=10),
 )
 
+
 data_option_components = (
     html.H3("Options"),
     dmc.Space(h=10),
@@ -66,12 +68,14 @@ data_option_components = (
     dmc.Space(h=30),
 )
 
+
 data_info_components = (
     html.H3("Data Analysis"),
     *table_result("Info", f"{APP_PAGE_ANALYZE}-info"),
     dmc.Space(h=20),
     *table_result("Preview", f"{APP_PAGE_ANALYZE}-preview"),
 )
+
 
 column_info_components = (
     html.H3("Column Analysis"),
@@ -88,24 +92,45 @@ column_info_components = (
     dmc.Space(h=10),
 )
 
+
 column_visualization_components = (
     html.H3("Column Visualization"),
-    html.Label("Select plots"),
-    dcc.Dropdown(
-        ["Montreal", "San Francisco"],
-        multi=True,
+    # html.Label("Select plots"),
+    # dcc.Dropdown(
+    #     ["Histogram"],
+    #     multi=True,
+    # ),
+    # dmc.Space(h=10),
+    dcc.Loading(
+        id="loading-column-plot",
+        type="default",
+        color="green",
+        children=html.Div(
+            [
+                html.Div(
+                    dcc.Graph(id=f"{APP_PAGE_ANALYZE}-column-plot"),
+                    style={"overflowY": "scroll", "height": 500},
+                ),
+            ],
+        ),
     ),
-    dmc.Space(h=10),
 )
 
+
 analyze_page_components = (
+    html.Div(
+        [
+            html.H2("Analyze"),
+        ],
+        style={"textAlign": "center", "background-color": "rgba(214, 212, 208, 0.5)"},
+    ),
     *upload_components,
-    dmc.Space(h=20),
+    html.Hr(),
     *data_option_components,
-    dmc.Space(h=20),
+    html.Hr(),
     *data_info_components,
-    dmc.Space(h=20),
+    html.Hr(),
     *column_info_components,
-    dmc.Space(h=20),
+    html.Hr(),
     *column_visualization_components,
 )
