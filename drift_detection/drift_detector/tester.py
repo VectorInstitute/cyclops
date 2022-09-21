@@ -15,7 +15,7 @@ from drift_detection.baseline_models.temporal.pytorch.utils import (
     get_device,
 )
 
-from drift_detection.utils.drift_detector_utils import (
+from drift_detection.drift_detector.utils import (
     get_args,
     ContextMMDWrapper,
     LKWrapper,
@@ -39,13 +39,11 @@ from alibi_detect.cd import (
 class TSTester:
 
     """
-    Two Sample Statistical Test Methods
-
+    Two Sample Statistical Tester
     Parameters
     ----------
-    sign_level: float
-        significance level
-
+    tester_method: str
+        two-sample statistical test method
     """
 
     def __init__(self, test_method: str):
@@ -91,12 +89,10 @@ class TSTester:
 class DCTester:
     """
     Domain Classifier Tester
-
     Parameters
     ----------
     model: str
         model to use for domain classification. Must be one of: "gb", "rf", "rnn", "cnn", "ffnn"
-
     """
 
     def __init__(self, model_method: str, **kwargs):
@@ -109,7 +105,7 @@ class DCTester:
             "rnn": recurrent_neural_network,
             "cnn": convolutional_neural_network,
             "ffnn": feed_forward_neural_network,
-            "spot_the_diff": SpotTheDiffDrift(),
+            "spot_the_diff": SpotTheDiffDrift,
         }
 
         if self.model_method not in self.model_methods.keys():
