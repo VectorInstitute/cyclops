@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Generator, Optional, Union
 
 import pandas as pd
 
@@ -102,6 +102,64 @@ class QueryInterface:
 
         """
         self.data = None
+
+    def run_in_grouped_batches(
+        self, id_col: str, batch_size: int
+    ) -> Generator[pd.DataFrame, None, None]:
+        """Run the query in batches with complete sets of sample IDs.
+
+        Queries are sorted and grouped such that the rows for a given sample ID are kept
+        together in a single batch.
+
+        Parameters
+        ----------
+        id_col: str
+            Name of the sample ID column by which to batch.
+        batch_size: int
+            Approximate batch size before rearranging based on sample IDs.
+
+        Yields
+        ------
+        pandas.DataFrame
+            A query batch with complete sets of sample IDs.
+
+        """
+        generator = self.database.run_id_batched_query(self.query, id_col, batch_size)
+        while True:
+            try:
+                yield next(generator)
+            except StopIteration:
+                return
+
+    def save_in_grouped_batches(
+        self,
+        dir_path: str,
+        id_col: str,
+        batch_size: int,
+        file_format: str = "parquet",
+    ) -> None:
+        """Save a query in different batches, keeping same sample IDs together.
+
+        Queries are sorted and grouped such that the rows for a given sample ID are kept
+        together in a single batch.
+
+        Parameters
+        ----------
+        query: cyclops.query.util.TableTypes
+            Query to run.
+        dir_path: str
+            Path to directory in which to save the batches.
+        batch_size: int
+            Approximate batch size before rearranging based on sample IDs.
+        id_col: str
+            Name of the sample ID column by which to batch.
+        file_format: str
+            File format of the DataFrame to save.
+
+        """
+        self.database.save_id_batched_query(
+            self.query, dir_path, id_col, batch_size, file_format=file_format
+        )
 
 
 @dataclass

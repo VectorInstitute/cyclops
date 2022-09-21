@@ -17,6 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../cyclops"))
 sys.path.insert(0, os.path.abspath("../../cyclops/processors"))
+sys.path.insert(0, os.path.abspath("../../cyclops/processors/feature"))
 sys.path.insert(0, os.path.abspath("../../cyclops/utils"))
 sys.path.insert(0, os.path.abspath("../../cyclops/query"))
 sys.path.insert(0, os.path.abspath("../../cyclops/query/postprocess"))
@@ -44,6 +45,7 @@ extensions = [
     "numpydoc",
     "sphinx.ext.viewcode",
     "sphinxcontrib.apidoc",
+    "myst_parser",
 ]
 numpydoc_show_inherited_class_members = False
 numpydoc_show_class_members = False
@@ -70,6 +72,7 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns: list = []
+source_suffix = [".rst", ".md"]
 
 
 # -- Options for HTML output -------------------------------------------------

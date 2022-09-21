@@ -1,6 +1,14 @@
 processors package
 ==================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   processors.feature
+
 Submodules
 ----------
 
@@ -8,10 +16,10 @@ Submodules
    :maxdepth: 4
 
    processors.aggregate
+   processors.cleaning
    processors.column_names
    processors.constants
    processors.diagnoses
-   processors.events
    processors.impute
    processors.statics
    processors.string_ops

@@ -1,281 +1,350 @@
 """Test aggregation functions."""
 
-import statistics
 from datetime import datetime
 
 import numpy as np
 import pandas as pd
 import pytest
+from pandas import Timestamp
 
-from cyclops.processors.aggregate import (
-    Aggregator,
-    get_earliest_ts_encounter,
-    restrict_events_by_timestamp,
-)
+from cyclops.processors.aggregate import AGGFUNCS, Aggregator
 from cyclops.processors.column_names import (
-    ADMIT_TIMESTAMP,
     ENCOUNTER_ID,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     RESTRICT_TIMESTAMP,
-    TIMESTEP_START_TIMESTAMP,
+    START_TIMESTAMP,
+    START_TIMESTEP,
+    STOP_TIMESTAMP,
+    TIMESTEP,
 )
 from cyclops.processors.constants import MEAN, MEDIAN
+
+DATE1 = datetime(2022, 11, 3, hour=13)
+DATE2 = datetime(2022, 11, 3, hour=14)
+DATE3 = datetime(2022, 11, 4, hour=3)
+DATE4 = datetime(2022, 11, 4, hour=13)
 
 
 @pytest.fixture
 def test_input():
-    """Create a test input."""
-    input_ = pd.DataFrame(
-        index=[0, 1, 2, 4],
-        columns=[ENCOUNTER_ID, "B", "C", EVENT_TIMESTAMP, ADMIT_TIMESTAMP],
-    )
-    input_.loc[0] = [
-        "sheep",
-        10,
-        "0",
-        datetime(2022, 11, 3, 12, 13),
-        datetime(2022, 11, 3, 12, 13),
-    ]
-    input_.loc[1] = [
-        "cat",
-        2,
-        "0",
-        datetime(2022, 11, 4, 7, 13),
-        datetime(2022, 11, 3, 21, 13),
-    ]
-    input_.loc[2] = [
-        "cat",
-        3,
-        "1",
-        datetime(2022, 11, 3, 8, 5),
-        datetime(2022, 11, 3, 21, 13),
-    ]
-    input_.loc[4] = [
-        "dog",
-        9.1,
-        "0",
-        datetime(2022, 11, 6, 18, 1),
-        datetime(2022, 11, 3, 12, 13),
-    ]
-    input_[EVENT_TIMESTAMP] = pd.to_datetime(input_[EVENT_TIMESTAMP])
-    input_[ADMIT_TIMESTAMP] = pd.to_datetime(input_[ADMIT_TIMESTAMP])
-
-    return input_
-
-
-@pytest.fixture
-def test_events_input():
     """Create a test events input."""
-    date1 = datetime(2022, 11, 3, hour=13)
-    date2 = datetime(2022, 11, 3, hour=14)
-    date3 = datetime(2022, 11, 4, hour=3)
     data = [
-        [1, "eventA", 10, date1, date2],
-        [2, "eventA", 11, date1, date2],
-        [2, "eventA", 12, date1, date3],
-        [2, "eventA", 16, date1, date3],
-        [2, "eventB", 13, date1, date3],
-    ]
-    columns = [ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, ADMIT_TIMESTAMP, EVENT_TIMESTAMP]
-
-    return pd.DataFrame(data, columns=columns)
-
-
-@pytest.fixture
-def test_aggregate_events_input():
-    """Create a test events input."""
-    date1 = datetime(2022, 11, 3, hour=13)
-    date2 = datetime(2022, 11, 3, hour=14)
-    date3 = datetime(2022, 11, 4, hour=3)
-    date4 = datetime(2022, 11, 3, hour=13)
-    data = [
-        [1, "eventA", 10, date1, date2, "wash"],
-        [2, "eventA", 19, date1, date2, "clean"],
-        [2, "eventA", 11, date1, date4, "dog"],
-        [2, "eventA", 18, date1, date4, "pet"],
-        [2, "eventA", 12, date1, date3, "store"],
-        [2, "eventA", 16, date1, date3, "kobe"],
-        [2, "eventA", np.nan, date1, date3, "bryant"],
-        [2, "eventB", 13, date1, date3, "trump"],
-        [2, "eventB", np.nan, date1, date3, "tie"],
+        [1, "eventA", 10, DATE2, "wash"],
+        [2, "eventA", 19, DATE2, "clean"],
+        [2, "eventA", 11, DATE4, "dog"],
+        [2, "eventA", 18, DATE4, "pet"],
+        [2, "eventA", 12, DATE3, "store"],
+        [2, "eventA", 16, DATE3, "kobe"],
+        [2, "eventA", np.nan, DATE3, "bryant"],
+        [2, "eventB", 13, DATE3, "trump"],
+        [2, "eventB", np.nan, DATE3, "tie"],
+        [2, "eventB", np.nan, DATE1, "aaa"],
     ]
     columns = [
         ENCOUNTER_ID,
         EVENT_NAME,
         EVENT_VALUE,
-        ADMIT_TIMESTAMP,
         EVENT_TIMESTAMP,
         "some_str_col",
     ]
 
-    return pd.DataFrame(data, columns=columns)
+    data = pd.DataFrame(data, columns=columns)
 
-
-@pytest.fixture
-def test_restrict_events_by_timestamp_start_input():
-    """Create a restrict_events_by_timestamp start DataFrame input."""
-    date1 = datetime(2022, 11, 3, hour=13)
-    date3 = datetime(2022, 11, 4, hour=3)
-    data = [
-        [1, date1],
-        [2, date3],
+    window_start_data = [
+        [2, DATE2],
     ]
-    columns = [ENCOUNTER_ID, RESTRICT_TIMESTAMP]
-
-    return pd.DataFrame(data, columns=columns)
-
-
-@pytest.fixture
-def test_restrict_events_by_timestamp_stop_input():
-    """Create a restrict_events_by_timestamp stop DataFrame input."""
-    date2 = datetime(2022, 11, 3, hour=14)
-    data = [[2, date2]]
-    columns = [ENCOUNTER_ID, RESTRICT_TIMESTAMP]
-
-    return pd.DataFrame(data, columns=columns)
-
-
-def test_compute_start_of_window(test_input):  # pylint: disable=redefined-outer-name
-    """Test compute_start_of_window fn."""
-    aggregator = Aggregator()
-    start_time = aggregator.compute_start_of_window(test_input)
-    assert (
-        start_time.loc[start_time[ENCOUNTER_ID] == "cat"][RESTRICT_TIMESTAMP]
-        == datetime(2022, 11, 3, 8, 5)
-    ).all()
-    aggregator = Aggregator(start_at_admission=True)
-    start_time = aggregator.compute_start_of_window(test_input)
-    assert (
-        start_time.loc[start_time[ENCOUNTER_ID] == "cat"][RESTRICT_TIMESTAMP]
-        == datetime(2022, 11, 3, 21, 13)
-    ).all()
-    start_window_ts = pd.DataFrame(
-        [["sheep", datetime(2022, 11, 3, 12, 13)]],
-        columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+    window_start = pd.DataFrame(
+        window_start_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP]
     )
-    aggregator = Aggregator(start_window_ts=start_window_ts)
-    start_time = aggregator.compute_start_of_window(test_input)
-    assert (
-        start_time.loc[start_time[ENCOUNTER_ID] == "sheep"][RESTRICT_TIMESTAMP]
-        == datetime(2022, 11, 3, 12, 13)
-    ).all()
+    window_start = window_start.set_index(ENCOUNTER_ID)
 
+    window_stop_data = [
+        [2, DATE3],
+    ]
+    window_stop = pd.DataFrame(
+        window_stop_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+    )
+    window_stop = window_stop.set_index(ENCOUNTER_ID)
 
-def test_aggregate_events_single_timestep_case(  # pylint: disable=redefined-outer-name
-    test_aggregate_events_input,
-):
-    """Test aggregate_events function for single timestep case."""
-    aggregtor = Aggregator(bucket_size=4, window=4)
-    res = aggregtor(test_aggregate_events_input)
-    assert res[EVENT_NAME][0] == "eventA"
-    assert res[EVENT_NAME][1] == "eventA"
-    assert res["count"][1] == 3
-
-    aggregtor = Aggregator(aggfunc={EVENT_VALUE: MEDIAN}, bucket_size=4, window=40)
-    res = aggregtor(test_aggregate_events_input)
-    assert res[EVENT_VALUE][1] == 18
-    assert res[EVENT_NAME][2] == "eventA"
-    assert res["null_fraction"][3] == 0.5
-
-
-def test_get_earliest_ts_encounter(  # pylint: disable=redefined-outer-name
-    test_events_input,
-):
-    """Test get_earliest_ts_encounter fn."""
-    earliest_ts = get_earliest_ts_encounter(test_events_input)
-    assert (
-        earliest_ts.loc[earliest_ts[ENCOUNTER_ID] == 1][EVENT_TIMESTAMP]
-        == datetime(2022, 11, 3, hour=14)
-    ).all()
-    assert (
-        earliest_ts.loc[earliest_ts[ENCOUNTER_ID] == 2][EVENT_TIMESTAMP]
-        == datetime(2022, 11, 3, hour=14)
-    ).all()
+    return data, window_start, window_stop
 
 
 def test_aggregate_events(  # pylint: disable=redefined-outer-name
-    test_aggregate_events_input,
+    test_input,
 ):
-    """Test aggregate_events function."""
-    # Test initializations of Aggregator.
-    aggfunc = {EVENT_VALUE: MEAN, "some_str_col": statistics.mode}
-    with pytest.raises(NotImplementedError):
-        _ = Aggregator(
-            aggfunc={EVENT_VALUE: "donkey", "some_str_col": statistics.mode},
-            bucket_size=4,
-            window=20,
-            start_at_admission=True,
-        )
-    _ = Aggregator(
-        aggfunc=aggfunc,
-        bucket_size=2,
-        window=20,
-        start_at_admission=True,
-    )
+    """Test aggregation function."""
+    data, _, _ = test_input
 
-    with pytest.raises(ValueError):
-        _ = Aggregator(
-            start_window_ts=test_restrict_events_by_timestamp_start_input,
-            start_at_admission=True,
-            aggfunc=aggfunc,
-        )
-    with pytest.raises(ValueError):
-        _ = Aggregator(
-            stop_window_ts=test_restrict_events_by_timestamp_stop_input,
-            window=12,
-            aggfunc=aggfunc,
-        )
+    # Test initializations of Aggregator.
+    aggregator = Aggregator(
+        aggfuncs={EVENT_VALUE: MEAN},
+        timestamp_col=EVENT_TIMESTAMP,
+        time_by=ENCOUNTER_ID,
+        agg_by=[ENCOUNTER_ID, EVENT_NAME],
+        timestep_size=1,
+        agg_meta_for=EVENT_VALUE,
+    )
+    res = aggregator(data)
+
+    assert res.index.names == [ENCOUNTER_ID, EVENT_NAME, TIMESTEP]
+    assert res.loc[(2, "eventA", 1)][EVENT_VALUE] == 19
+    assert res.loc[(2, "eventA", 14)][EVENT_VALUE] == 14
+    assert np.isnan(res.loc[(2, "eventB", 0)][EVENT_VALUE])
+    assert res.loc[(2, "eventB", 14)][EVENT_VALUE] == 13
+
+    assert res.loc[(2, "eventB", 0)][START_TIMESTEP] == DATE1
+
+
+def test_aggregate_window_duration(  # pylint: disable=redefined-outer-name
+    test_input,
+):
+    """Test aggregation window duration functionality."""
+    data, _, _ = test_input
 
     aggregator = Aggregator(
-        aggfunc=aggfunc,
-        bucket_size=1,
-        window=20,
-        start_at_admission=True,
-    )
-    res = aggregator(test_aggregate_events_input)
-
-    assert res["timestep"][3] == 14
-    assert res["event_value"][1] == 14.5
-    assert res["event_value"][2] == 19
-    assert res["count"][4] == 2
-    assert res["null_fraction"][4] == 0.5
-    assert res["some_str_col"][3] == "store"
-
-    assert aggregator.meta[TIMESTEP_START_TIMESTAMP][TIMESTEP_START_TIMESTAMP][1][
-        18
-    ] == datetime(2022, 11, 4, 7)
-    assert aggregator.meta[TIMESTEP_START_TIMESTAMP][TIMESTEP_START_TIMESTAMP][2][
-        4
-    ] == datetime(2022, 11, 3, 17)
-
-    _ = Aggregator(
-        aggfunc={EVENT_VALUE: MEAN},
-        bucket_size=1,
-        window=None,
-        start_window_ts=test_restrict_events_by_timestamp_start_input,
-        stop_window_ts=test_restrict_events_by_timestamp_stop_input,
+        aggfuncs={EVENT_VALUE: MEAN},
+        timestamp_col=EVENT_TIMESTAMP,
+        time_by=ENCOUNTER_ID,
+        agg_by=[ENCOUNTER_ID, EVENT_NAME],
+        timestep_size=1,
+        window_duration=12,
     )
 
+    res = aggregator(data)
+    res = res.reset_index()
+    assert (res[TIMESTEP] < 2).all()
 
-def test_restrict_events_by_timestamp(  # pylint: disable=redefined-outer-name
-    test_aggregate_events_input,
-    test_restrict_events_by_timestamp_start_input,
-    test_restrict_events_by_timestamp_stop_input,
+
+def test_aggregate_start_stop_windows(  # pylint: disable=redefined-outer-name
+    test_input,
 ):
-    """Test restrict_events_by_timestamp function."""
-    res = restrict_events_by_timestamp(
-        test_aggregate_events_input,
-        start=test_restrict_events_by_timestamp_start_input,
-    )
-    assert list(res.index) == [0, 4, 5, 6, 7, 8]
+    """Test manually providing start/stop time windows."""
+    data, window_start_time, window_stop_time = test_input
 
-    res = restrict_events_by_timestamp(
-        test_aggregate_events_input,
-        stop=test_restrict_events_by_timestamp_stop_input,
+    aggregator = Aggregator(
+        aggfuncs={EVENT_VALUE: MEAN},
+        timestamp_col=EVENT_TIMESTAMP,
+        time_by=ENCOUNTER_ID,
+        agg_by=[ENCOUNTER_ID, EVENT_NAME],
+        timestep_size=1,
     )
-    assert list(res.index) == [0, 1, 2, 3]
 
-    res = restrict_events_by_timestamp(test_aggregate_events_input)
-    assert res.equals(test_aggregate_events_input)
+    res = aggregator(
+        data,
+        window_start_time=window_start_time,
+        window_stop_time=window_stop_time,
+    )
+
+    assert res.loc[(2, "eventA", 0)][START_TIMESTEP] == DATE2
+
+    res = res.reset_index().set_index(ENCOUNTER_ID)
+    assert res.loc[2][TIMESTEP].max() <= 13
+
+    aggregator = Aggregator(
+        aggfuncs={EVENT_VALUE: MEAN},
+        timestamp_col=EVENT_TIMESTAMP,
+        time_by=ENCOUNTER_ID,
+        agg_by=[ENCOUNTER_ID, EVENT_NAME],
+        timestep_size=1,
+        window_duration=10,
+    )
+    try:
+        res = aggregator(data, window_stop_time=window_stop_time)
+        raise ValueError(
+            """Should have raised an error that window_duration cannot be set when
+            window_stop_time is specified."""
+        )
+    except ValueError:
+        pass
+
+
+def test_aggregate_strings(  # pylint: disable=redefined-outer-name
+    test_input,
+):
+    """Test that using aggregation strings is equivalent to inputting the functions."""
+    data, _, _ = test_input
+
+    for string, func in AGGFUNCS.items():
+        aggregator_str = Aggregator(
+            aggfuncs={EVENT_VALUE: string},
+            timestamp_col=EVENT_TIMESTAMP,
+            time_by=ENCOUNTER_ID,
+            agg_by=[ENCOUNTER_ID, EVENT_NAME],
+            timestep_size=1,
+            window_duration=20,
+        )
+
+        aggregator_fn = Aggregator(
+            aggfuncs={EVENT_VALUE: func},
+            timestamp_col=EVENT_TIMESTAMP,
+            time_by=ENCOUNTER_ID,
+            agg_by=[ENCOUNTER_ID, EVENT_NAME],
+            timestep_size=1,
+            window_duration=20,
+        )
+
+        assert aggregator_str(data).equals(aggregator_fn(data))
+
+    try:
+        aggregator_str = Aggregator(
+            aggfuncs={EVENT_VALUE: "shubaluba"},
+            timestamp_col=EVENT_TIMESTAMP,
+            time_by=ENCOUNTER_ID,
+            agg_by=[ENCOUNTER_ID, EVENT_NAME],
+            timestep_size=1,
+            window_duration=20,
+        )
+    except ValueError:
+        pass
+
+
+def test_aggregate_multiple(  # pylint: disable=redefined-outer-name
+    test_input,
+):
+    """Test with multiple columns over which to aggregate."""
+    data, _, _ = test_input
+
+    data["event_value2"] = 2 * data[EVENT_VALUE]
+
+    aggregator = Aggregator(
+        aggfuncs={
+            EVENT_VALUE: MEAN,
+            "event_value2": MEAN,
+        },
+        timestamp_col=EVENT_TIMESTAMP,
+        time_by=ENCOUNTER_ID,
+        agg_by=[ENCOUNTER_ID, EVENT_NAME],
+        timestep_size=1,
+        window_duration=20,
+    )
+
+    res = aggregator(data)
+
+    res = res.reset_index()
+    assert res["event_value2"].equals(res[EVENT_VALUE] * 2)
+
+
+def test_aggregate_one_group_outlier():
+    """Test very specific one group outlier case (currently still broken).
+
+    If only one group in the agg_by and the timesteps form a range, e.g., 0-N,
+    then the agg_by columns and TIMESTEP are dropped and an index range is returned.
+
+    An example of this setup can be seen below, and currently it is still broken.
+
+    """
+    data = [
+        [
+            0,
+            "eventA",
+            10.0,
+            Timestamp("2022-11-03 14:00:00"),
+            "wash",
+            Timestamp("2022-11-03 14:00:00"),
+            Timestamp("2022-11-03 14:00:00"),
+            0,
+        ],
+        [
+            0,
+            "eventA",
+            10.0,
+            Timestamp("2022-11-03 14:00:00"),
+            "wash",
+            Timestamp("2022-11-03 14:00:00"),
+            Timestamp("2022-11-03 14:00:00"),
+            1,
+        ],
+        [
+            0,
+            "eventA",
+            10.0,
+            Timestamp("2022-11-03 14:00:00"),
+            "wash",
+            Timestamp("2022-11-03 14:00:00"),
+            Timestamp("2022-11-03 14:00:00"),
+            2,
+        ],
+    ]
+    columns = [
+        ENCOUNTER_ID,
+        EVENT_NAME,
+        EVENT_VALUE,
+        EVENT_TIMESTAMP,
+        "some_str_col",
+        START_TIMESTAMP,
+        STOP_TIMESTAMP,
+        TIMESTEP,
+    ]
+
+    data = pd.DataFrame(data, columns=columns)
+
+    aggregator = Aggregator(
+        aggfuncs={EVENT_VALUE: MEAN},
+        timestamp_col=EVENT_TIMESTAMP,
+        time_by=ENCOUNTER_ID,
+        agg_by=[ENCOUNTER_ID, EVENT_NAME],
+        timestep_size=1,
+    )
+
+    _ = data.groupby(aggregator.agg_by, sort=False).apply(
+        aggregator._compute_aggregation  # pylint: disable=protected-access
+    )
+
+
+def test_vectorization(  # pylint: disable=redefined-outer-name
+    test_input,
+):
+    """Test vectorization of aggregated data."""
+    data, _, _ = test_input
+
+    data["event_value2"] = 2 * data[EVENT_VALUE]
+    data["event_value3"] = 3 * data[EVENT_VALUE]
+
+    aggregator = Aggregator(
+        aggfuncs={
+            EVENT_VALUE: MEAN,
+            "event_value2": MEAN,
+            "event_value3": MEDIAN,
+        },
+        timestamp_col=EVENT_TIMESTAMP,
+        time_by=ENCOUNTER_ID,
+        agg_by=[ENCOUNTER_ID, EVENT_NAME],
+        timestep_size=1,
+        window_duration=15,
+    )
+
+    aggregated = aggregator(data)
+
+    # print("\n\n\nAGGREGATED")
+    # print(aggregated)
+    # print("\n" * 3)
+
+    vectorized_obj = aggregator.vectorize(aggregated)
+    vectorized, indexes = vectorized_obj.data, vectorized_obj.indexes
+
+    # print("\n\n\nVECTORIZED")
+    # with pd.option_context(
+    #    "display.max_rows", None, "display.max_columns", None
+    # ):  # more options can be specified also
+    #    print(vectorized)
+    # print(vectorized.shape)
+
+    agg_col_index, encounter_id_index, event_name_index, timestep_index = indexes
+
+    assert set(list(encounter_id_index)) == set([1, 2])
+    assert set(list(event_name_index)) == set(["eventA", "eventB"])
+    assert set(list(timestep_index)) == set(range(15))
+
+    assert vectorized.shape == (3, 2, 2, 15)
+    assert np.array_equal(
+        vectorized[list(agg_col_index).index(EVENT_VALUE)] * 2,
+        vectorized[list(agg_col_index).index("event_value2")],
+        equal_nan=True,
+    )
+    assert np.array_equal(
+        vectorized[list(agg_col_index).index(EVENT_VALUE)] * 3,
+        vectorized[list(agg_col_index).index("event_value3")],
+        equal_nan=True,
+    )

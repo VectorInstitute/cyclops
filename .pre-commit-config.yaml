@@ -1,4 +1,8 @@
-exclude: 'drift_detection/'
+exclude: |
+    (?x)(
+        ^drift_detection/|
+        ^notebooks/misc/batching_explore.ipynb
+    )
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0  # Use the ref you want to point at
@@ -78,3 +82,7 @@ repos:
     - id: nbqa-check-ast
       # - id: nbqa-flake8
       # - id: nbqa-mypy
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.6.0
+    hooks:
+    - id: nbstripout

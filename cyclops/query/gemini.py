@@ -149,7 +149,7 @@ def get_table(table_name: str, rename: bool = True) -> Subquery:
     Parameters
     ----------
     table_name: str
-        Name of MIMIC table.
+        Name of GEMINI table.
     rename: bool, optional
         Whether to map the column names
 
@@ -260,6 +260,9 @@ def patient_encounters(
     if drop_null_subject_ids:
         table = qp.DropNulls(SUBJECT_ID)(table)
 
+    # Possibly cast string representations to timestamps
+    table = qp.Cast([ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], "timestamp")(table)
+
     # Get the discharge disposition code descriptions
     lookup_table = get_table(LOOKUP_IP_ADMIN)
     lookup_table = qp.ConditionEquals("variable", "discharge_disposition")(lookup_table)
@@ -278,6 +281,9 @@ def patient_encounters(
         table = qp.Join(er_admin_table, on=ENCOUNTER_ID)(table)
 
     # Process optional operations
+    if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
+        process_kwargs["died"] = True
+
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
         (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),

@@ -2,9 +2,8 @@
 
 import logging
 from functools import wraps
-from typing import Any, Callable, List, Optional, Union
+from typing import Callable, List, Optional, Union
 
-import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
@@ -26,6 +25,8 @@ def create_indicator_variables(
     features: pd.DataFrame, columns: Optional[List] = None
 ) -> pd.DataFrame:
     """Create binary indicator variable for each column (or specified).
+
+    Create new indicator variable columns based on NAs for other feature columns.
 
     Parameters
     ----------
@@ -76,65 +77,7 @@ def pivot_aggregated_events_to_features(
     )
 
 
-def fill_missing_timesteps(
-    data: pd.DataFrame,
-    timestep_col: str,
-    range_from: int,
-    range_to: int,
-    fill_with: Any = np.nan,
-) -> pd.DataFrame:
-    """Fill missing time range in dataframe of aggregated events.
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Dataframe with aggregated events into timesteps.
-    timestep_col: str
-        Name of timestep column with missing values in a range.
-    range_from: int
-        Start of timesteps range.
-    range_to: int
-        End of timesteps range.
-    fill_with: Any
-        Fill value for column values for the missing timesteps.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Dataframe with missing timestep aggregated values filled.
-
-    """
-    return (
-        data.merge(
-            how="right",
-            on=timestep_col,
-            right=pd.DataFrame({timestep_col: np.arange(range_from, range_to)}),
-        )
-        .sort_values(by=timestep_col)
-        .reset_index()
-        .fillna(fill_with)
-        .drop(["index"], axis=1)
-    )
-
-
-def is_timeseries_data(data: pd.DataFrame) -> bool:
-    """Check if input data is time-series dataframe (multi-index).
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Input dataframe.
-
-    Returns
-    -------
-    bool
-        Yes if dataframe has multi-index (timeseries), No otherwise.
-
-    """
-    return isinstance(data.index, pd.core.indexes.multi.MultiIndex)
-
-
-def is_timestamp_series(series):
+def is_timestamp_series(series, raise_error: bool = False):
     """Check whether a series has the Pandas Timestamp datatype.
 
     Parameters
@@ -148,11 +91,19 @@ def is_timestamp_series(series):
         Whether the series has the Pandas Timestamp datatype.
 
     """
-    return series.dtype == pd.to_datetime(["2069-03-29 02:30:00"]).dtype
+    is_timestamp = series.dtype == pd.to_datetime(["2069-03-29 02:30:00"]).dtype
+
+    if not is_timestamp and raise_error:
+        raise ValueError(f"{series.name} must be a timestamp Series.")
+
+    return is_timestamp
 
 
 def has_columns(
-    data: pd.DataFrame, cols: Union[str, List[str]], raise_error: bool = False
+    data: pd.DataFrame,
+    cols: Union[str, List[str]],
+    exactly: bool = False,
+    raise_error: bool = False,
 ) -> bool:
     """Check if data has required columns for processing.
 
@@ -178,7 +129,12 @@ def has_columns(
 
     if not present and raise_error:
         missing = required_set - columns
-        raise ValueError(f"Missing required columns {missing}")
+        raise ValueError(f"Missing required columns: {', '.join(missing)}.")
+
+    if exactly:
+        exact = present and len(data.columns) == len(cols)
+        if not exact and raise_error:
+            raise ValueError(f"Must have exactly the columns: {', '.join(cols)}.")
 
     return present
 
@@ -234,6 +190,48 @@ def assert_has_columns(*args, **kwargs) -> Callable:
         return wrapper_func
 
     return decorator
+
+
+def has_range_index(data: pd.DataFrame) -> bool:
+    """Check whether a DataFrame has a range index.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Data.
+
+    Returns
+    -------
+    bool
+        Whether the data has a range index.
+
+    """
+    return (data.index == pd.RangeIndex(stop=len(data))).all()
+
+
+def to_range_index(data: pd.DataFrame) -> pd.DataFrame:
+    """Force a DataFrame to have a range index.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        Data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Data with a range index.
+
+    """
+    if has_range_index(data):
+        return data
+
+    name = data.index.name
+    data = data.reset_index()
+    if name == "index":
+        data = data.drop("index", axis=1)
+
+    return data
 
 
 def gather_columns(data: pd.DataFrame, columns: Union[List[str], str]) -> pd.DataFrame:

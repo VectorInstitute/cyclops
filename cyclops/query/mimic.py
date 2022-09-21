@@ -21,6 +21,7 @@ from cyclops.processors.column_names import (
     DIAGNOSIS_VERSION,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
+    EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
@@ -195,7 +196,7 @@ def patients(**process_kwargs) -> QueryInterface:
 
     # Shift relevant columns by anchor year difference
     table = qp.AddColumn("anchor_year", "anchor_year_difference")(table)
-    table = qp.AddDeltaColumns(DATE_OF_DEATH, years="anchor_year_difference")(table)
+    table = qp.AddDeltaColumns([DATE_OF_DEATH], years="anchor_year_difference")(table)
 
     # Calculate approximate year of birth
     table = qp.AddColumn(
@@ -219,13 +220,19 @@ def patients(**process_kwargs) -> QueryInterface:
     )(table)
 
     # Process optional operations
+    if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
+        process_kwargs["died"] = True
+
     operations: List[tuple] = [
         # Must convert to string since CHAR(1) type doesn't recognize equality
         (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
         (
             qp.ConditionEquals,
-            [DATE_OF_DEATH, None],
-            {"not_": qp.QAP("died", transform_fn=lambda x: not x)},
+            ["discharge_location", "DIED"],
+            {
+                "not_": qp.QAP("died", transform_fn=lambda x: not x),
+                "binarize_col": qp.QAP("died_binarize_col", required=False),
+            },
         ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
@@ -438,6 +445,12 @@ def patient_encounters(
 
     Other Parameters
     ----------------
+    sex: str or list of string, optional
+        Specify patient sex (one or multiple).
+    died: bool, optional
+        Specify True to get patients who have died, and False for those who haven't.
+    died_binarize_col: str, optional
+        Binarize the died condition and save as a column with label died_binarize_col.
     before_date: datetime.datetime or str
         Get patients encounters before some date.
         If a string, provide in YYYY-MM-DD format.
@@ -448,6 +461,8 @@ def patient_encounters(
         Get patient encounters by year.
     months: int or list of int, optional
         Get patient encounters by month.
+    limit: int, optional
+        Limit the number of rows returned.
 
     """
     table = get_table(ADMISSIONS)
@@ -460,7 +475,7 @@ def patient_encounters(
 
     # Update timestamps with anchor year difference
     table = qp.AddDeltaColumns(
-        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "deathtime"],
+        [ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP, "deathtime", "edregtime", "edouttime"],
         years="anchor_year_difference",
     )(table)
 
@@ -470,11 +485,24 @@ def patient_encounters(
     table = qp.ReorderAfter(AGE, SEX)(table)
 
     # Process optional operations
+    if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
+        process_kwargs["died"] = True
+
     operations: List[tuple] = [
-        (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
-        (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),
-        (qp.ConditionInYears, ["admit_timestamp", qp.QAP("years")], {}),
-        (qp.ConditionInMonths, ["admit_timestamp", qp.QAP("months")], {}),
+        (qp.ConditionBeforeDate, [ADMIT_TIMESTAMP, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [ADMIT_TIMESTAMP, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [ADMIT_TIMESTAMP, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [ADMIT_TIMESTAMP, qp.QAP("months")], {}),
+        (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+        (
+            qp.ConditionEquals,
+            ["discharge_location", "DIED"],
+            {
+                "not_": qp.QAP("died", transform_fn=lambda x: not x),
+                "binarize_col": qp.QAP("died_binarize_col", required=False),
+            },
+        ),
+        (qp.Limit, [qp.QAP("limit")], {}),
     ]
 
     table = qp.process_operations(table, operations, process_kwargs)
@@ -514,15 +542,21 @@ def events(
     table = get_table(EVENTS)
     event_labels = get_table(EVENT_LABELS)
 
+    # Get category and event name
     table = qp.Join(
         event_labels, on="itemid", join_table_cols=["category", "event_name"]
     )(table)
+    table = qp.Rename({"category": EVENT_CATEGORY})(table)
 
     # Process optional operations
     operations: List[tuple] = [
-        (qp.ConditionIn, ["category", qp.QAP("categories")], {}),
-        (qp.ConditionIn, ["event_name", qp.QAP("event_names")], {}),
-        (qp.ConditionSubstring, ["event_name", qp.QAP("event_name_substring")], {}),
+        (qp.ConditionBeforeDate, [EVENT_TIMESTAMP, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [EVENT_TIMESTAMP, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [EVENT_TIMESTAMP, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [EVENT_TIMESTAMP, qp.QAP("months")], {}),
+        (qp.ConditionIn, [EVENT_CATEGORY, qp.QAP("categories")], {}),
+        (qp.ConditionIn, [EVENT_NAME, qp.QAP("event_names")], {}),
+        (qp.ConditionSubstring, [EVENT_NAME, qp.QAP("event_name_substring")], {}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
 

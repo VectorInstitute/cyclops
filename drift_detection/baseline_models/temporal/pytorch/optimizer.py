@@ -22,7 +22,16 @@ class Optimizer:
         Optimization algorithm (e.g. Adam)
 
     """
-    def __init__(self, model, loss_fn, optimizer, activation, lr_scheduler):
+
+    def __init__(
+        self,
+        model,
+        loss_fn,
+        optimizer,
+        activation,
+        lr_scheduler,
+        reweight_positive=None,
+    ):
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
@@ -31,6 +40,17 @@ class Optimizer:
         self.train_losses = []
         self.val_losses = []
         self.device = model.device
+        self.reweight_positive = reweight_positive
+
+    def reweight_loss(self, loss, y):
+        if isinstance(self.reweight_positive, float) or isinstance(
+            self.reweight_positive, np.float64
+        ):
+            loss[y.squeeze() == 1] *= self.reweight_positive
+        elif self.reweight_positive == "mini-batch":
+            loss[y.squeeze() == 1] *= (y == 0).sum() / (y == 1).sum()
+
+        return loss
 
     def train_step(self, x, y):
         # Sets model to train mode
@@ -41,10 +61,13 @@ class Optimizer:
 
         # Computes loss
         loss = self.loss_fn(yhat.squeeze(), y.squeeze())
-        
+
+        # Reweight the losses
+        loss = self.reweight_loss(loss, y)
+
         # Mask out the loss for -1 labels.
         loss *= ~y.eq(-1).squeeze()
-        
+
         # Take mean of loss.
         loss = loss.sum() / (~y.eq(-1)).sum()
 
@@ -87,7 +110,6 @@ class Optimizer:
         """ 
         if model_path is None:
             model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-            
         best_loss = math.inf
 
         for epoch in range(1, n_epochs + 1):
@@ -111,27 +133,31 @@ class Optimizer:
                     self.model.eval()
                     yhat = self.model(x_val)
                     val_loss = self.loss_fn(yhat.squeeze(), y_val.squeeze())
-                    
+
+                    # Reweight the losses
+                    val_loss = self.reweight_loss(val_loss, y_val)
+
                     # Mask out the loss for -1 labels.
                     val_loss *= ~y_val.eq(-1).squeeze()
-                    
+
                     # Take mean of loss.
                     val_loss = (val_loss.sum() / (~y_val.eq(-1)).sum()).item()
-                    
-                    assert not(np.isnan(val_loss).any())
+
+                    assert not (np.isnan(val_loss).any())
 
                     batch_val_losses.append(val_loss)
                 validation_loss = np.mean(batch_val_losses)
                 self.val_losses.append(validation_loss)
-                
-            torch.save(self.model.state_dict(), model_path)        
+
+            torch.save(self.model.state_dict(), model_path)
             print(
                 f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t Validation loss: {validation_loss:.4f}"
             )
             self.lr_scheduler.step()
-        
 
-    def evaluate(self, test_loader, batch_size=1, n_features=1, timesteps=-1, flatten=True):
+    def evaluate(
+        self, test_loader, batch_size=1, n_features=1, timesteps=-1, flatten=True
+    ):
         """Evaluate pytorch model.
 
         Parameters
@@ -147,23 +173,24 @@ class Optimizer:
             y_test_labels = []
             y_pred_labels = []
             for x_test, y_test in test_loader:
-                x_test = x_test.view([batch_size, timesteps, n_features]).to(
-                    self.device
-                )
+                # x_test = x_test.view([batch_size, timesteps, n_features]).to(
+                #    self.device
+                # )
+                x_test = x_test.to(self.device)
                 y_test = y_test.to(self.device)
                 self.model.eval()
                 y_hat = self.activation(self.model(x_test))
                 y_pred_values.append(y_hat.cpu().detach())
                 y_test_labels.append(y_test.cpu().detach())
                 y_pred_labels.append(torch.round(y_hat).cpu().detach())
-        
+
         y_test_labels = np.concatenate(y_test_labels)
         y_pred_labels = np.concatenate(y_pred_labels)
         y_pred_values = np.concatenate(y_pred_values)
-        
+
         if flatten:
             return (y.flatten() for y in [y_test_labels, y_pred_values, y_pred_labels])
-        
+
         return y_test_labels, y_pred_values, y_pred_labels
 
     def plot_losses(self):

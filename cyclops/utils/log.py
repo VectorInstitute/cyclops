@@ -22,7 +22,7 @@ COLOR_SEQ = "\033[1;%dm"
 BOLD_SEQ = "\033[1m"
 
 
-def formatter_message(message: str, use_color: bool = True) -> str:
+def formatter_message(message: str, use_color: Optional[bool] = True) -> str:
     """Format message.
 
     Parameters
@@ -44,8 +44,8 @@ def formatter_message(message: str, use_color: bool = True) -> str:
     return message
 
 
-class ColoredFormatter(logging.Formatter):
-    """Colored Formatter.
+class Formatter(logging.Formatter):
+    """Formatter.
 
     Attributes
     ----------
@@ -98,7 +98,7 @@ def setup_logging(
     log_level: Union[int, str] = "DEBUG",
     print_level: Union[int, str] = "INFO",
     logger: Optional[logging.Logger] = None,
-    fmt: Optional[str] = formatter_message(LOG_FORMAT, True),
+    use_color: Optional[bool] = True,
 ):
     """Create logger, and set it up.
 
@@ -112,20 +112,21 @@ def setup_logging(
         Print level for logging, defaults to INFO.
     logger : logging.Logger, optional
         Pass logger if already exists, else a new logger object is created.
-    fmt : str, optional
-        Logging format, default format specified above.
+    use_color: bool, optional
+        Use colored logging.
 
     """
+    fmt = formatter_message(LOG_FORMAT, use_color)
     logger = logger if logger else logging.getLogger()
     logger.setLevel(log_level)
     logger.handlers = []
 
     stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(ColoredFormatter(fmt))
+    stream_handler.setFormatter(Formatter(fmt, use_color=use_color))
     stream_handler.setLevel(print_level)
     logger.addHandler(stream_handler)
 
     if log_path:
         file_handler = logging.FileHandler(log_path)
-        file_handler.setFormatter(ColoredFormatter(fmt))
+        file_handler.setFormatter(Formatter(fmt, use_color=use_color))
         logger.addHandler(file_handler)

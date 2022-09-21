@@ -14,7 +14,7 @@ import configargparse
 from dotenv import load_dotenv
 
 from codebase_ops import PROJECT_ROOT, get_log_file_path
-from cyclops.constants import GEMINI, MIMIC
+from cyclops.constants import GEMINI, GEMINI_OMOP, MIMIC
 from cyclops.utils.log import setup_logging
 
 # Load environment vars.
@@ -28,6 +28,7 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 DEFAULT_CONFIG_PATHS_MAP = {
     GEMINI: os.path.join(PROJECT_ROOT, "configs/gemini/*.yaml"),
+    GEMINI_OMOP: os.path.join(PROJECT_ROOT, "configs/gemini_omop/*.yaml"),
     MIMIC: os.path.join(PROJECT_ROOT, "configs/mimic/*.yaml"),
 }
 
