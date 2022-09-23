@@ -1,83 +1,122 @@
-class ShiftDetector:
+from drift_detection.drift_detector import Reductor, TSTester, DCTester
+from typing import List, Tuple, Union, Optional, Callable, Any, Dict
+from drift_detection.utils.drift_detector_utils import get_args
+import numpy as np
+import torch
 
-    """ShiftDetector Class.
+
+class Detector:
+
+    """
+    Detector class for distribution shift detection. 
+
 
     Attributes
     ----------
-    dr_technique: String
-        name of dimensionality reduction technique to use
-    sign_level: float
-        significance level
-    red_model:
-        shift reductor model
-    md_test: String
-        name of two sample statisticaal test
-    sample: int
-        number of samples in test set
-    datset: String
-        name of dataset
+    reductor : Reductor
+        Reductor object for dimensionality reduction.
+    tester : TSTester or DCTester
+        Tester object for statistical testing.
+    p_val_threshold : float
+        Threshold for p-value. If p-value is below this threshold, a shift is detected.
+    
 
+    Methods
+    -------
+    fit(data)
+        Fits Reductor to data.
+    transform(X, **kwargs)
+        Transforms data.
+    test_shift(X_s, X_t, **kwargs)
+        Tests shift between source and target data.
+    detect_shift(source_data, target_data, **kwargs)
+        Detects shift between source data and target data.
     """
-
     def __init__(
         self,
-        dr_technique,
-        md_test,
-        sign_level,
-        shift_reductor,
-        sample,
-        datset,
-        features,
-        model_path,
-        context_type,
-        representation,
+        reductor: Reductor = None,
+        tester: Union[TSTester, DCTester] = None,
+        p_val_threshold: float = 0.05
     ):
-        self.dr_technique = dr_technique
-        self.sign_level = sign_level
-        self.shift_reductor = shift_reductor
-        self.md_test = md_test
-        self.sample = sample
-        self.dataset = datset
-        self.sign_level = sign_level
-        self.features = features
-        self.model_path = model_path
-        self.context_type = context_type
-        self.representation = representation
 
-    def classify_data(self, X_s_tr, X_s_val, X_t, orig_dims):
-        shift_reductor_model = self.shift_reductor.fit_reductor()
-        X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
-        return X_t_red
+        self.reductor = reductor
+        self.tester = tester
+        self.p_val_threshold = p_val_threshold
 
-    def detect_data_shift(self, X_s_tr, X_s_val, X_t, orig_dims):
+    def fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
+        self.reductor.fit(data)
 
-        val_acc = None
-        te_acc = None
+    def transform(self, X, **kwargs):
+        """
+        Transforms data.
+        
+        Parameters
+        ----------
+        X : np.ndarray or torch.utils.data.Dataset
+            Data to be transformed.
+        **kwargs
+            Keyword arguments for Reductor.
+        
+        Returns
+        -------
+        np.ndarray
+            Transformed data.
+        """
+        return self.reductor.transform(X, **kwargs)
+        
+    def test_shift(self, X_s, X_t, **kwargs):
+        """
+        Tests shift between source and target data.
+        
+        Parameters
+        ----------
+        X_s : np.ndarray
+            Source data.
+        X_t : np.ndarray
+            Target data.
+        **kwargs    
+            Keyword arguments for Tester.
+        
+        Returns
+        -------
+        dict
+            Dictionary containing p-value and distance.
+        """
+        p_val, dist = self.tester.test_shift(X_s, X_t, **kwargs)
 
-        # Train or load reduction model.
-        shift_reductor_model = self.shift_reductor.fit_reductor()
+        return {'p_val': p_val, 'distance': dist}
 
-        # Reduce test sets.
-        X_s_red = self.shift_reductor.reduce(shift_reductor_model, X_s_val)
-        X_t_red = self.shift_reductor.reduce(shift_reductor_model, X_t)
+    def detect_shift(self, source_data: Union[np.ndarray, torch.utils.data.Dataset],
+                           target_data: Union[np.ndarray, torch.utils.data.Dataset], 
+                           **kwargs):
+        """
+        Detects shift between source and target data.
 
-        # Perform statistical test
-        shift_tester = ShiftTester(
-            sign_level=self.sign_level,
-            mt=self.md_test,
-            model_path=self.model_path,
-            features=self.features,
-            dataset=self.dataset,
-        )
+        
+        Parameters
+        ----------
+        source_data : np.ndarray or torch.utils.data.Dataset
+            Source data.
+        target_data : np.ndarray or torch.utils.data.Dataset
+            Target data.
+        **kwargs
+            Keyword arguments for Reductor and TSTester.
+        
+        Returns
+        -------
+        dict
+            Dictionary containing p-value, distance, and boolean 'shift_detected'.
+        """
+        
+        self.fit(source_data)
+        X_s = self.transform(source_data, **get_args(self.reductor.transform, kwargs))
+        X_t = self.transform(target_data, **get_args(self.reductor.transform, kwargs))
 
-        p_val, dist = shift_tester.test_shift(
-            X_s_red[: self.sample], X_t_red, self.context_type, self.representation
-        )
+        results = self.test_shift(X_s, X_t, **get_args(self.tester.test_shift, kwargs))
 
-        if self.dr_technique != "BBSDh":
-            # Lower the significance level for all tests (Bonferroni) besides BBSDh, which needs no correction.
-            adjust_sign_level = self.sign_level / X_s_red.shape[1]
+        if results['p_val'] < self.p_val_threshold:
+            shift_detected = True
         else:
-            adjust_sign_level = self.sign_level
-
-        return p_val, dist, val_acc, te_acc
+            shift_detected = False
+        
+        return {'p_val': results['p_val'], 'distance': results['distance'], 'shift_detected': shift_detected}
