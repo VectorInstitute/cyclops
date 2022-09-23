@@ -1,7 +1,8 @@
-import numpy as np
 import os
 import random
 import sys
+
+import numpy as np
 import pandas as pd
 
 sys.path.append("..")
@@ -12,10 +13,7 @@ from gemini.utils import *
 
 class RollingWindow:
 
-    """
-    RollingWindow Class.
-
-    """
+    """RollingWindow Class."""
 
     def __init__(self, shift_detector=None, optimizer=None):
 
@@ -54,13 +52,13 @@ class RollingWindow:
         lookup_window: int = 0,
         stride: int = 1,
     ):
-        """
-        Rolling window to measure performance over time series.
+        """Rolling window to measure performance over time series.
 
         Returns
         -------
         performance_metrics: pd.DataFrame
             dataframe containing performance metrics across time series.
+
         """
 
         performance_metrics = []
@@ -128,13 +126,13 @@ class RollingWindow:
         stride: int = 1,
         threshold: float = 0.05,
     ):
-        """
-        Rolling window to measure drift over time series.
+        """Rolling window to measure drift over time series.
 
         Returns
         -------
         drift metrics: pd.DataFrame
             dataframe containing drift p-value and distance metrics across time series.
+
         """
 
         p_vals = []

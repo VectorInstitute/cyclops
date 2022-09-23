@@ -1,22 +1,22 @@
+import importlib
 import inspect
-from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
-from alibi_detect.utils.pytorch.kernels import DeepKernel
+import pickle
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
-import pickle
+from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
+from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
 from scipy.special import softmax
+
 from drift_detection.baseline_models.temporal.pytorch.utils import (
-    get_temporal_model,
     get_device,
+    get_temporal_model,
 )
-from typing import Callable, Dict, List, Optional, Tuple, Union, Any
-from alibi_detect.utils.pytorch.kernels import GaussianRBF
-import importlib
 
 
 def get_args(obj, kwargs):
-    """
-    Get valid arguments from kwargs to pass to object.
+    """Get valid arguments from kwargs to pass to object.
 
     Parameters
     ----------
@@ -29,6 +29,7 @@ def get_args(obj, kwargs):
     -------
     args
         Dictionary of valid arguments to pass to class object.
+
     """
     args = {}
     for key in kwargs:
@@ -42,8 +43,7 @@ def get_args(obj, kwargs):
 
 
 def get_obj_from_str(obj_str: str, **kwargs):
-    """
-    Get object from string.
+    """Get object from string.
 
     Parameters
     ----------
@@ -56,6 +56,7 @@ def get_obj_from_str(obj_str: str, **kwargs):
     -------
     obj
         Object from string.
+
     """
     module_name, class_name = obj_str.rsplit(".", 1)
     module = importlib.import_module(module_name)
@@ -91,6 +92,7 @@ def save_model(self, model, output_path: str):
     ----------
     output_path: String
         path to save the model to
+
     """
     file_type = output_path.split(".")[-1]
     if file_type == "pkl" or file_type == "pickle":
@@ -100,9 +102,7 @@ def save_model(self, model, output_path: str):
 
 
 class ContextMMDWrapper:
-    """
-    Wrapper for ContextMMDDrift
-    """
+    """Wrapper for ContextMMDDrift."""
 
     def __init__(
         self,
@@ -213,9 +213,7 @@ class LKWrapper:
 
 
 def context(x, context_type="rnn", model_path=None):
-    """
-    Get context for context mmd drift detection.
-    """
+    """Get context for context mmd drift detection."""
     device = get_device()
 
     if context_type == "rnn":
@@ -254,13 +252,13 @@ def recurrent_neural_network(
 
 
 def feed_forward_neural_network(input_dim):
-    """
-    Creates a feed forward neural network model.
+    """Creates a feed forward neural network model.
 
     Returns
     -------
     model: torch.nn.Module
         feed forward neural network model.
+
     """
     ffnn = nn.Sequential(
         nn.Linear(input_dim, 16),
@@ -273,13 +271,13 @@ def feed_forward_neural_network(input_dim):
 
 
 def convolutional_neural_network(input_dim):
-    """
-    Creates a convolutional neural network model.
+    """Creates a convolutional neural network model.
 
     Returns
     -------
     torch.nn.Module
         convolutional neural network for dimensionality reduction.
+
     """
     cnn = nn.Sequential(
         nn.Conv2d(input_dim, 4, stride=2, padding=0),

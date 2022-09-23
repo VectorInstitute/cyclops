@@ -1,26 +1,24 @@
 import os
+import pickle
 import sys
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import torch
 import torch.nn as nn
+from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
-from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
 
 # import torchxrayvision as xrv
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import pickle
-from typing import Optional, List, Union, Tuple, Dict, Any
 
 sys.path.append("..")
 
 from baseline_models.temporal.pytorch.optimizer import Optimizer
-from baseline_models.temporal.pytorch.utils import (
-    get_temporal_model,
-    get_device,
-)
+from baseline_models.temporal.pytorch.utils import get_device, get_temporal_model
 
 
 class Reductor:
@@ -149,8 +147,10 @@ class Reductor:
 
     def load_model(self):
         """Load pre-trained model from path.
-        For scikit-learn models, a pickle is loaded from disk.
-        For the torch models, the "state_dict" is loaded from disk.
+
+        For scikit-learn models, a pickle is loaded from disk. For the torch models, the
+        "state_dict" is loaded from disk.
+
         """
         if (
             self.dr_method == "PCA"
@@ -429,9 +429,7 @@ class Reductor:
         return model
 
     def gaussian_mixture_model(self):
-        """
-        Creates a gaussian mixture model.
-        """
+        """Creates a gaussian mixture model."""
         gmm = GaussianMixture(n_components=self.gmm_n_clusters, covariance_type="full")
         return gmm
 

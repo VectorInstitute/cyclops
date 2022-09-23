@@ -2,9 +2,16 @@ import datetime
 import os
 import sys
 from functools import reduce
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from baseline_models.static.utils import run_model
+from drift_detector.experiments import *
+from drift_detector.explainer import Explainer
+from drift_detector.plotter import errorfill, plot_pr, plot_roc
+from gemini.constants import *
+from gemini.utils import import_dataset_hospital, run_shift_experiment
 from sklearn.metrics import (
     accuracy_score,
     auc,
@@ -14,13 +21,6 @@ from sklearn.metrics import (
     roc_auc_score,
     roc_curve,
 )
-
-from drift_detector.explainer import Explainer
-from drift_detector.experiments import *
-from drift_detector.plotter import errorfill, plot_roc, plot_pr
-from gemini.utils import import_dataset_hospital, run_shift_experiment
-from gemini.constants import *
-from baseline_models.static.utils import run_model
 
 DATASET = sys.argv[1]
 SHIFT = sys.argv[2]

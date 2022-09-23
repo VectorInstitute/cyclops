@@ -1,38 +1,38 @@
 import os
 import sys
 from tkinter import SEL_FIRST
+
 import numpy as np
 import torch
 import torch.nn as nn
 from scipy.special import softmax
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.mixture import GaussianMixture
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 sys.path.append("..")
 
-from drift_detection.baseline_models.temporal.pytorch.utils import (
-    get_temporal_model,
-    get_device,
-)
-
-from drift_detection.drift_detector.utils import (
-    get_args,
-    ContextMMDWrapper,
-    LKWrapper,
-    recurrent_neural_network,
-    convolutional_neural_network,
-    feed_forward_neural_network,
-)
-
 from alibi_detect.cd import (
+    ChiSquareDrift,
     ClassifierDrift,
+    FETDrift,
+    KSDrift,
     LSDDDrift,
     MMDDrift,
-    TabularDrift,
-    ChiSquareDrift,
-    FETDrift,
     SpotTheDiffDrift,
-    KSDrift,
+    TabularDrift,
+)
+
+from drift_detection.baseline_models.temporal.pytorch.utils import (
+    get_device,
+    get_temporal_model,
+)
+from drift_detection.drift_detector.utils import (
+    ContextMMDWrapper,
+    LKWrapper,
+    convolutional_neural_network,
+    feed_forward_neural_network,
+    get_args,
+    recurrent_neural_network,
 )
 
 

@@ -2,11 +2,11 @@
 
 import datetime
 import math
+from datetime import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from datetime import datetime
-import matplotlib.pyplot as plt
 
 
 class Optimizer:

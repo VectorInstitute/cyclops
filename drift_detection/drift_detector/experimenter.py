@@ -1,6 +1,7 @@
 import math
 import random
 import sys
+
 import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectKBest
@@ -52,6 +53,7 @@ class SyntheticShiftApplicator:
         ----------
         X: numpy.matrix
             Data to have noise added.
+
         """
 
         X_shift = None

@@ -21,13 +21,13 @@ colors = [
 
 
 def clamp(val: int, minimum=0, maximum=255):
-    """
-    Ensures colour intensity is within a specified range.
+    """Ensures colour intensity is within a specified range.
 
     Returns
     -------
     int
         clamped colour intensity
+
     """
     if val < minimum:
         return minimum
@@ -37,13 +37,13 @@ def clamp(val: int, minimum=0, maximum=255):
 
 
 def colorscale(hexstr: str, scalefactor: float):
-    """
-    Creates color scale.
+    """Creates color scale.
 
     Returns
     -------
     String
         Color scale of hex codes
+
     """
     hexstr = hexstr.strip("#")
 
@@ -69,9 +69,7 @@ def errorfill(
     fmt="-o",
     label=None,
 ):
-    """
-    Creates custom error fill.
-    """
+    """Creates custom error fill."""
     ax = ax if ax is not None else plt.gca()
     if color is None:
         color = next(ax._get_lines.prop_cycler)["color"]
@@ -87,13 +85,13 @@ def errorfill(
 
 
 def plot_roc(ax: matplotlib.axes.SubplotBase, fpr: list, tpr: list, roc_auc: float):
-    """
-    Setup ROC curve
+    """Setup ROC curve.
 
     Returns
     -------
     matplotlib.axes.SubplotBase
         ROC subplot
+
     """
     ax.plot(fpr, tpr)
     ax.plot([0, 1], [0, 1], "k--")
@@ -105,13 +103,13 @@ def plot_roc(ax: matplotlib.axes.SubplotBase, fpr: list, tpr: list, roc_auc: flo
 
 
 def plot_pr(ax, recall, precision, roc_prc):
-    """
-    Setup Precision-Recall curve
+    """Setup Precision-Recall curve.
 
     Returns
     -------
     matplotlib.axes.SubplotBase
         PR subplot
+
     """
     ax.step(recall, precision, color="b", alpha=0.2, where="post")
     ax.fill_between(recall, precision, step="post", alpha=0.2, color="b")
@@ -143,6 +141,7 @@ def setup_plot(
         Label for y-axis.
     legend: list
         Legend for different sub-groups.
+
     """
     plot_handle.title.set_text(title)
     plot_handle.set_xlabel(xlabel, fontsize=20)
@@ -159,6 +158,7 @@ def set_bars_color(bars: mpl.container.BarContainer, color: str):
         Bars.
     color: str
         Color.
+
     """
     for bar in bars:
         bar.set_color(color)
@@ -173,6 +173,7 @@ def plot_label_distribution(X, y, label, features):
         Bars.
     color: str
         Color.
+
     """
     data = pd.concat([X, y], axis=1)
     data_pos = data.loc[data[label] == 1]
@@ -266,6 +267,7 @@ def plot_drift(results, threshold=0.05):
         Dataframe containing drift p-values and distance metric.
     threshold: float
         P-Value threshold.
+
     """
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
     detection = np.where(results["pval"] < threshold, 1, 0)
@@ -325,6 +327,7 @@ def plot_performance(results, metric):
         Dataframe returned from rolling window containing dates and performance metric.
     metric: str
         Column name of performance for plotting.
+
     """
     ax1.plot(
         results["dates"],

@@ -1,26 +1,27 @@
-import random
 import datetime
 import os
 import pickle
+import random
 import re
 import sys
 from collections import OrderedDict
 from functools import reduce
+
 import numpy as np
 import pandas as pd
 import sqlalchemy
 from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.preprocessing import StandardScaler
 from sqlalchemy import desc, extract, func, select
 from sqlalchemy.sql.expression import and_, or_
-from sklearn.preprocessing import StandardScaler
 
 from .constants import *
 
 sys.path.append("..")
 
 from drift_detector.detector import Detector
-from drift_detector.reductor import Reductor
 from drift_detector.experimenter import Experimenter
+from drift_detector.reductor import Reductor
 
 sys.path.append("../..")
 
@@ -91,6 +92,7 @@ def apply_predefined_shift(
         Name of shift type to use.
     tol_var: String
         Column name of variable to perturb.
+
     """
 
     X_te_1 = None

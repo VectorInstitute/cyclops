@@ -2,9 +2,13 @@ import datetime
 import os
 import sys
 from functools import reduce
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from baseline_models.static.utils import run_model
+from drift_detector.explainer import ShiftExplainer
+from experiments import *
 from sklearn.metrics import (
     accuracy_score,
     auc,
@@ -14,17 +18,13 @@ from sklearn.metrics import (
     roc_auc_score,
     roc_curve,
 )
-
-from drift_detector.explainer import ShiftExplainer
-from experiments import *
 from utils.constants import *
-from utils.plot_utils import errorfill, plot_roc, plot_pr
+from utils.plot_utils import errorfill, plot_pr, plot_roc
 from utils.utils import (
     import_dataset_hospital,
     run_shift_experiment,
     run_synthetic_shift_experiment,
 )
-from baseline_models.static.utils import run_model
 
 DATASET = sys.argv[1]
 SHIFT = sys.argv[2]
