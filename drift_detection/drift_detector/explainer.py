@@ -1,17 +1,18 @@
 import numpy as np
 import shap
 
+
 class Explainer:
-    
+
     """ShiftExplainer Class.
 
     Attributes
     ----------
     model: sklearn, tf, pytorch
         Model for which to build explainer
-        
+
     """
-    
+
     def __init__(self, model, explainer_type=None):
         self.model = model
         self.explainer_type = explainer_type
@@ -37,14 +38,14 @@ class Explainer:
     def plot_summary(self, shap_values, X):
         shap.summary_plot(shap_values, X)
 
-    def plot_waterfall(self, shap_values,max_display=20):
+    def plot_waterfall(self, shap_values, max_display=20):
         shap.plots.waterfall(shap_values, max_display=max_display)
 
     def plot_beeswarm(self, shap_values):
         shap.plots.beeswarm(shap_values)
-    
+
     def plot_heatmap(self, shap_values):
         shap.plots.heatmap(shap_values)
-        
+
     def plot_dependence(self, variable, shap_values, X):
         shap.dependence_plot(variable, shap_values, X)

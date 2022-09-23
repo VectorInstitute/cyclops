@@ -12,11 +12,13 @@ from .dataset import Data
 from .models import RNNModel, LSTMModel, GRUModel
 from .metrics import *
 
+
 def load_ckp(checkpoint_fpath, model):
     checkpoint = torch.load(checkpoint_fpath)
-    model.load_state_dict(checkpoint['model'])
-    optimizer = checkpoint['optimizer']
-    return model, optimizer, checkpoint['n_epochs']
+    model.load_state_dict(checkpoint["model"])
+    optimizer = checkpoint["optimizer"]
+    return model, optimizer, checkpoint["n_epochs"]
+
 
 def get_device():
     if torch.cuda.is_available():
