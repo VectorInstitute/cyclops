@@ -7,28 +7,26 @@ from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
-import torchxrayvision as xrv
+#import torchxrayvision as xrv
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import pickle
 from typing import Optional, List, Union, Tuple, Dict, Any
 
 sys.path.append("..")
-from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
-from drift_detection.baseline_models.temporal.pytorch.utils import (
+
+from baseline_models.temporal.pytorch.optimizer import Optimizer
+from baseline_models.temporal.pytorch.utils import (
     get_temporal_model,
     get_device,
 )
-
 
 class Reductor:
 
     """
     The Reductor class is used to reduce the dimensionality of the data.
-
     The reductor is initialized with a dimensionality reduction method.
     The reductor can then be fit to the data and used to transform the data.
-
     Example: (Data is loaded from memory)
     --------
     >>> from drift_detection.reductor import Reductor
@@ -37,7 +35,6 @@ class Reductor:
     >>> reductor = Reductor("PCA")
     >>> reductor.fit(X)
     >>> X_transformed = reductor.transform(X)
-
     Arguments
     ---------
     dr_method: String
@@ -130,8 +127,8 @@ class Reductor:
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
             self.model.load_state_dict(torch.load(self.model_path))
         elif (
-            self.dr_method == "BBSDs_Untrained_LSTM"
-            or self.dr_method == "BBSDh_Untrained_LSTM"
+            self.dr_method == "BBSDs_untrained_LSTM"
+            or self.dr_method == "BBSDh_untrained_LSTM"
         ):
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
         elif (
@@ -150,11 +147,8 @@ class Reductor:
 
     def load_model(self):
         """Load pre-trained model from path.
-
         For scikit-learn models, a pickle is loaded from disk.
-
         For the torch models, the "state_dict" is loaded from disk.
-
         """
         if (
             self.dr_method == "PCA"
@@ -173,7 +167,6 @@ class Reductor:
 
     def save_model(self, output_path: str):
         """Saves the model to disk.
-
         Parameters
         ----------
         output_path: String
@@ -196,7 +189,6 @@ class Reductor:
 
     def get_available_dr_methods(self):
         """Returns a list of available dimensionality reduction methods.
-
         Returns
         -------
         list
@@ -223,7 +215,6 @@ class Reductor:
     def get_dr_amount(self, X: np.ndarray) -> int:
         """
         Returns the number of components to be used to retain the variation specified.
-
         Returns
         -------
         int
@@ -235,14 +226,11 @@ class Reductor:
 
     def fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
         """Fits the reductor to the data.
-
         For pre-trained or untrained models, this function loads the weights or initializes the model, respectively.
-
         Parameters
         ----------
         data:
             data to fit the reductor to.
-
             Shape:
                 data: np.ndarray (n_samples, n_features)
                       or torch Dataset
@@ -280,7 +268,6 @@ class Reductor:
         num_workers: int = None,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """Transforms the data using the chosen dimensionality reduction method
-
         Parameters
         ----------
         data: np.ndarray (n_samples, n_features) or torch Dataset
@@ -289,12 +276,10 @@ class Reductor:
             batch size for LSTM inference/pytorch dataloader. Default: 32
         num_workers: int
             number of workers for pytorch dataloader. If None, uses max number of cpus.
-
         Returns
         -------
         X_transformed: numpy.matrix
             transformed data
-
         optionally: y: numpy.array
         """
         y = None
@@ -355,7 +340,6 @@ class Reductor:
     def feed_forward_neural_network(self, n_features: int):
         """
         Creates a feed forward neural network model.
-
         Returns
         -------
         model: torch.nn.Module
@@ -377,7 +361,6 @@ class Reductor:
     def convolutional_neural_network(self):
         """
         Creates a convolutional neural network model.
-
         Returns
         -------
         torch.nn.Module
@@ -410,7 +393,6 @@ class Reductor:
     ):
         """
         Creates a recurrent neural network model.
-
         Parameters
         ----------
         model_name: str
@@ -427,7 +409,6 @@ class Reductor:
             number of output dimensions.
         last_timestep_only: bool
             if True, only the last timestep is used as input.
-
         Returns
         -------
         model: torch.nn.Module
@@ -455,12 +436,10 @@ class Reductor:
     def minibatch_inference(self, model: nn.Module) -> np.ndarray:
         """
         Performs batch inference on in-memory data by breaking into series of mini-batches.
-
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
-
         Returns
         -------
         X_transformed: np.ndarray
@@ -493,12 +472,10 @@ class Reductor:
     def batch_inference(self, model: nn.Module) -> Tuple[np.ndarray, np.ndarray]:
         """
         Performs batched inference on the dataset.
-
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
-
         Returns
         -------
         X_transformed: np.ndarray
@@ -522,12 +499,10 @@ class Reductor:
     def xrv_clf_inference(self, model: nn.Module) -> Tuple[np.ndarray, np.ndarray]:
         """
         Performs batched inference with the TXRV Classifier on the dataset.
-
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
-
         Returns
         -------
         X_transformed: np.ndarray
@@ -554,12 +529,10 @@ class Reductor:
     def xrv_ae_inference(self, model: nn.Module) -> Tuple[np.ndarray, np.ndarray]:
         """
         Performs batched inference with the TXRV Autoencoder on the dataset.
-
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
-
         Returns
         -------
         X_transformed: np.ndarray
