@@ -106,8 +106,8 @@ class Optimizer:
             Number of complete passes through the training set.
         n_features: int
             Number of features.
-            
-        """ 
+
+        """
         if model_path is None:
             model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
         best_loss = math.inf

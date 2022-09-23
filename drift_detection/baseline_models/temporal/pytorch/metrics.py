@@ -174,9 +174,9 @@ def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1)
     acc = (tn + tp) / np.sum(cf)
     prec0 = tn / (tn + fn)
     prec1 = tp / (tp + fp)
-    rec0 = tn / (tn + fp) 
-    rec1 = tp / (tp + fn) 
-    
+    rec0 = tn / (tn + fp)
+    rec1 = tp / (tp + fn)
+
     auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
 
     (precisions, recalls, thresholds) = metrics.precision_recall_curve(

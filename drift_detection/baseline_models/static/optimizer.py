@@ -22,6 +22,7 @@ class Optimizer:
         Optimization algorithm (e.g. Adam)
 
     """
+
     def __init__(self, model, loss_fn, optimizer, activation, lr_scheduler):
         self.model = model
         self.loss_fn = loss_fn
@@ -41,7 +42,7 @@ class Optimizer:
 
         # Computes loss
         loss = self.loss_fn(yhat, y)
-        
+
         loss = loss.sum()
 
         # Computes gradients
@@ -55,14 +56,7 @@ class Optimizer:
         # Returns the loss
         return loss.item()
 
-    def train(
-        self,
-        train_loader,
-        val_loader,
-        batch_size=64,
-        n_epochs=50,
-        n_features=1
-    ):
+    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):
         """Train pytorch model.
 
         Parameters
@@ -77,8 +71,8 @@ class Optimizer:
             Number of complete passes through the training set.
         n_features: int
             Number of features.
-            
-        """ 
+
+        """
         model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
         best_loss = math.inf
 
@@ -104,19 +98,18 @@ class Optimizer:
                     yhat = self.model(x_val)
                     val_loss = self.loss_fn(yhat, y_val)
                     val_loss = val_loss.sum().item()
-                    
-                    assert not(np.isnan(val_loss).any())
+
+                    assert not (np.isnan(val_loss).any())
 
                     batch_val_losses.append(val_loss)
                 validation_loss = np.mean(batch_val_losses)
                 self.val_losses.append(validation_loss)
-                
-            torch.save(self.model.state_dict(), model_path)        
+
+            torch.save(self.model.state_dict(), model_path)
             print(
                 f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t Validation loss: {validation_loss:.4f}"
             )
             self.lr_scheduler.step()
-        
 
     def evaluate(self, test_loader, batch_size=1, n_features=1, flatten=True):
         """Evaluate pytorch model.
@@ -134,23 +127,21 @@ class Optimizer:
             y_test_labels = []
             y_pred_labels = []
             for x_test, y_test in test_loader:
-                x_test = x_test.view([batch_size, n_features]).to(
-                    self.device
-                )
+                x_test = x_test.view([batch_size, n_features]).to(self.device)
                 y_test = y_test.to(self.device)
                 self.model.eval()
                 y_hat = self.activation(self.model(x_test))
                 y_pred_values.append(y_hat.cpu().detach())
                 y_test_labels.append(y_test.cpu().detach())
                 y_pred_labels.append(torch.round(y_hat).cpu().detach())
-        
+
         y_test_labels = np.concatenate(y_test_labels)
         y_pred_labels = np.concatenate(y_pred_labels)
         y_pred_values = np.concatenate(y_pred_values)
-        
+
         if flatten:
             return (y.flatten() for y in [y_test_labels, y_pred_values, y_pred_labels])
-        
+
         return y_test_labels, y_pred_values, y_pred_labels
 
     def plot_losses(self):

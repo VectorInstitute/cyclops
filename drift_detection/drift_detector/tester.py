@@ -35,6 +35,7 @@ from alibi_detect.cd import (
     KSDrift,
 )
 
+
 class TSTester:
 
     """
