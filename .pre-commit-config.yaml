@@ -82,6 +82,7 @@ repos:
     - id: nbqa-check-ast
       # - id: nbqa-flake8
       # - id: nbqa-mypy
+
   - repo: https://github.com/kynan/nbstripout
     rev: 0.6.0
     hooks:
