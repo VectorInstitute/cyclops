@@ -7,8 +7,7 @@ from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
-
-# import torchxrayvision as xrv
+#import torchxrayvision as xrv
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import pickle
