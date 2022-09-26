@@ -13,20 +13,14 @@ class Experimenter:
 
     Attributes
     ----------
-    reductor : Reductor
-        Reductor object for dimensionality reduction.
-    tester : TSTester or DCTester
-        Tester object for statistical testing.
-    p_val_threshold : float
-        Threshold for p-value. If p-value is below this threshold, a shift is detected.
+    detector : Detector
+        Detector object for detecting data shift.
+    syntheticshiftapplicator : SyntheticShiftApplicator
+        SyntheticShiftApplicator object for applying synthetic data shift to target data.
 
 
     Methods
     -------
-    fit(data)
-        Fits Reductor to data.
-    transform(X, **kwargs)
-        Transforms data.
     detect_shift_sample(X_s, X_t, **kwargs)
         Tests shift between source and target data.
     detect_shift_samples(source_data, target_data, **kwargs)
