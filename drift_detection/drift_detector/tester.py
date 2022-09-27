@@ -1,19 +1,7 @@
-import os
 import sys
-from tkinter import SEL_FIRST
-import numpy as np
-import torch
-import torch.nn as nn
-from scipy.special import softmax
-from sklearn.mixture import GaussianMixture
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 sys.path.append("..")
-
-from drift_detection.baseline_models.temporal.pytorch.utils import (
-    get_temporal_model,
-    get_device,
-)
 
 from drift_detection.drift_detector.utils import (
     get_args,
@@ -34,7 +22,6 @@ from alibi_detect.cd import (
     SpotTheDiffDrift,
     KSDrift,
 )
-
 
 class TSTester:
 

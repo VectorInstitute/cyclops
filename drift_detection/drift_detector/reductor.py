@@ -11,16 +11,7 @@ from sklearn.random_projection import SparseRandomProjection
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import pickle
-from typing import Optional, List, Union, Tuple, Dict, Any
-
-sys.path.append("..")
-
-from baseline_models.temporal.pytorch.optimizer import Optimizer
-from baseline_models.temporal.pytorch.utils import (
-    get_temporal_model,
-    get_device,
-)
-
+from typing import Union, Tuple
 
 class Reductor:
 

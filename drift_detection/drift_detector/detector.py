@@ -1,6 +1,6 @@
 from drift_detection.drift_detector import Reductor, TSTester, DCTester
 from typing import List, Tuple, Union, Optional, Callable, Any, Dict
-from drift_detection.utils.drift_detector_utils import get_args
+from drift_detection.drift_detector.utils import get_args
 import numpy as np
 import torch
 
@@ -8,7 +8,7 @@ import torch
 class Detector:
 
     """
-    Detector class for distribution shift detection.
+    ShiftDetector class for distribution shift detection.
 
 
     Attributes
@@ -85,7 +85,16 @@ class Detector:
         """
         p_val, dist = self.tester.test_shift(X_s, X_t, **kwargs)
 
-        return {"p_val": p_val, "distance": dist}
+        if p_val < self.p_val_threshold:
+            shift_detected = True
+        else:
+            shift_detected = False
+        
+        return {
+            "p_val": p_val, 
+            "distance": dist, 
+            "shift_detected": shift_detected
+        }
 
     def detect_shift(
         self,
