@@ -5,9 +5,8 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectKBest
 
-
 class SyntheticShiftApplicator:
-
+    
     """
     The SyntheticShiftApplicator class is used induce synthetic dataset shift.
     --------
@@ -17,33 +16,32 @@ class SyntheticShiftApplicator:
     >>> X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
     >>> applicator = SyntheticShiftApplicator()
     >>> X_shift, y_shift = applicator.apply_shift(X_train, X_test, y_train, y_test, "small_gn_shift_0.1")
-
+    
     Parameters
     ----------
-    shift_method: str
-        method used to induce shift in data. Options include: "gn_shift", "ko_shift", "cp_shift", "mfa_shift", "bn_shift",
+    shift_type: str
+        method used to induce shift in data. Options include: "gn_shift", "ko_shift", "cp_shift", "mfa_shift", "bn_shift", 
         "tolerance_shift"
-
-    """
-
-    def __init__(self, shift_method: str, **kwargs):
-
-        self.shift_methods = {
-            "gn_shift": gaussian_noise_shift,
+    
+    """   
+    def __init__(self, shift_type: str, **kwargs):
+        
+        self.shift_types = { 
+            "gn_shift": gaussian_noise_shift, 
             "ko_shift": knockout_shift,
             "cp_shift": changepoint_shift,
             "mfa_shift": multiway_feat_association_shift,
             "bn_shift": binary_noise_shift,
-            "tolerance_shift": tolerance_shift,
+            "tolerance_shift": tolerance_shift
         }
-
-        if self.shift_method not in self.shift_methods.keys():
+           
+        if self.shift_type not in self.shift_types.keys():
             raise ValueError(
                 "Shift not supported, must be one of: {}".format(
-                    self.shift_methods.keys()
+                    self.shift_types.keys()
                 )
             )
-
+        
     def apply_shift(self, X, **kwargs):
 
         """apply_shift.
@@ -57,16 +55,14 @@ class SyntheticShiftApplicator:
         X_shift = None
         y_shift = None
 
-        X_shift, _ = self.shift_methods[self.shift_method](
-            X, **get_args(self.shift_methods[self.shift_method], kwargs)
-        )
+        X_shift, _ = self.shift_types[self.shift_type](
+                X, **get_args(self.shift_types[self.shift_type], kwargs)
+            )
         y_shift = y_shift.copy()
-
-        return (X_shift, y_shift)
+        
+        return (X_shift, y_shift)  
     
-
-
-def gaussian_noise_shift(self, X, noise_amt=0.5, delta=0.5, clip=True):
+def gaussian_noise_shift(self, X, noise_amt = 0.5, delta = 0.5, clip=True):
     """Creates gaussian noise of specificed parameters in input data.
 
     Parameters
@@ -87,13 +83,13 @@ def gaussian_noise_shift(self, X, noise_amt=0.5, delta=0.5, clip=True):
 
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
     c_cols = [x for x in X_df.columns if x not in bin_cols]
-    indices = np.random.choice(X.shape[0], math.ceil(X.shape[0] * delta), replace=False)
+    indices = np.random.choice(
+        X.shape[0], math.ceil(X.shape[0] * delta), replace=False
+    )
     X_mod = X[np.ix_(indices, c_cols)]
 
     if len(c_cols) == 1:
-        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(
-            X_mod.shape[0], 1
-        )
+        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(X_mod.shape[0],1)
     else:
         noise = np.random.normal(
             0, noise_amt / normalization, (X_mod.shape[0], len(c_cols))
@@ -107,9 +103,8 @@ def gaussian_noise_shift(self, X, noise_amt=0.5, delta=0.5, clip=True):
 
     return X, indices
 
-
 # Remove instances of a single class.
-def knockout_shift(self, X, y, delta=0.5, cl=1):
+def knockout_shift(self, X, y, delta = 0.5, cl=1):
     """Creates class imbalance by removing a fraction of samples from a class.
 
     Parameters
@@ -233,7 +228,7 @@ def multiway_feat_association_shift(
     return (X, y)
 
 
-def binary_noise_shift(X, p=0.5, delta=0.5):
+def binary_noise_shift(X, p = 0.5, delta = 0.5):
     """Creates binary noise of specificed parameters in input data.
 
     Parameters
@@ -249,7 +244,9 @@ def binary_noise_shift(X, p=0.5, delta=0.5):
     ## add if temporal then flatten then unflatten at end
     X_df = pd.DataFrame(X)
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
-    indices = np.random.choice(X.shape[0], math.ceil(X.shape[0] * delta), replace=False)
+    indices = np.random.choice(
+        X.shape[0], math.ceil(X.shape[0] * delta), replace=False
+    )
     X_mod = X[indices, :][:, bin_cols]
 
     if X_mod.shape[1] == 1:
@@ -260,7 +257,6 @@ def binary_noise_shift(X, p=0.5, delta=0.5):
     X[np.ix_(indices, bin_cols)] = noise
 
     return X, indices
-
 
 def tolerance_shift(X, y, X_ref, y_ref, tol_var="gender"):
     raise NotImplementedError
