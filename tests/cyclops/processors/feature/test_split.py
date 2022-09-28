@@ -1,9 +1,11 @@
 """Test dataset splits."""
 
 import numpy as np
+import pandas as pd
 
 from cyclops.processors.feature.split import (
     fractions_to_split,
+    intersect_datasets,
     split_datasets,
     split_idx,
 )
@@ -44,3 +46,20 @@ def test_split_datasets():
         )
     except ValueError:
         pass
+
+
+def test_intersect_datasets():
+    """Test intersect_datasets fn."""
+    dataframe1 = pd.DataFrame(
+        [[1, 2, 3], [2, 3, 8], [3, 2, 0.2]], columns=["A", "B", "C"]
+    )
+    dataframe2 = pd.DataFrame(
+        [[1, 4, 3], [4, 6.3, 8], [3, 2, 0.2]], columns=["A", "D", "E"]
+    )
+    datas = intersect_datasets([dataframe1, dataframe2], on_col="A")
+    assert datas[0]["A"][0] == 1 and datas[0]["A"][2] == 3
+    assert datas[1]["A"][0] == 1 and datas[1]["A"][2] == 3
+    assert datas[0]["B"][0] == 2 and datas[0]["B"][2] == 2
+    assert datas[0]["C"][0] == 3 and datas[0]["C"][2] == 0.2
+    assert datas[1]["D"][0] == 4 and datas[1]["D"][2] == 2
+    assert datas[1]["E"][0] == 3 and datas[1]["E"][2] == 0.2

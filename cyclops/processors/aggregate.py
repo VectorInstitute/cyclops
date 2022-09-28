@@ -479,9 +479,9 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         self, data: pd.DataFrame, include_timestep_start: bool = True
     ) -> pd.DataFrame:
         # Get the timestep according to the timestep for each event
-        data_with_timesteps = data.groupby(self.time_by, sort=False).apply(
-            self._compute_timestep
-        )
+        data_with_timesteps = data.groupby(
+            self.time_by, sort=False, group_keys=False
+        ).apply(self._compute_timestep)
 
         # Aggregate
         has_inter_imputer = True

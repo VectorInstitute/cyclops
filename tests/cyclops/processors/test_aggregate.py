@@ -288,7 +288,7 @@ def test_aggregate_one_group_outlier():
         timestep_size=1,
     )
 
-    _ = data.groupby(aggregator.agg_by, sort=False).apply(
+    _ = data.groupby(aggregator.agg_by, sort=False, group_keys=False).apply(
         aggregator._compute_aggregation  # pylint: disable=protected-access
     )
 
@@ -317,19 +317,8 @@ def test_vectorization(  # pylint: disable=redefined-outer-name
 
     aggregated = aggregator(data)
 
-    # print("\n\n\nAGGREGATED")
-    # print(aggregated)
-    # print("\n" * 3)
-
     vectorized_obj = aggregator.vectorize(aggregated)
     vectorized, indexes = vectorized_obj.data, vectorized_obj.indexes
-
-    # print("\n\n\nVECTORIZED")
-    # with pd.option_context(
-    #    "display.max_rows", None, "display.max_columns", None
-    # ):  # more options can be specified also
-    #    print(vectorized)
-    # print(vectorized.shape)
 
     agg_col_index, encounter_id_index, event_name_index, timestep_index = indexes
 
