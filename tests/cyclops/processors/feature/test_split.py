@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from cyclops.processors.feature.split import (
     fractions_to_split,
@@ -14,6 +15,14 @@ from cyclops.processors.feature.split import (
 def test_fractions_to_split():
     """Test fractions_to_split function."""
     assert fractions_to_split(0.8, 100) == [80]
+    with pytest.raises(ValueError):
+        fractions_to_split("donkey", 12)
+    with pytest.raises(ValueError):
+        fractions_to_split([0.8, 1], 12)
+    with pytest.raises(ValueError):
+        fractions_to_split([0.8, -0.2], 12)
+    with pytest.raises(ValueError):
+        fractions_to_split([0.8, 0.13, 0.23], 12)
 
 
 def test_split_idx():
@@ -28,6 +37,8 @@ def test_split_datasets():
     """Test split_datasets function."""
     data = np.array([6, 3, 3, 54, 6, 3, 8, 6, 2, 1, 1, 9])
     labels = data.copy()
+    _ = split_datasets(data, 0.8)
+    _ = split_datasets(data, 0.8, axes=0)
     splits = split_datasets([data, labels], 0.8)
     train_data, val_data = splits[0]
     train_labels, val_labels = splits[1]
