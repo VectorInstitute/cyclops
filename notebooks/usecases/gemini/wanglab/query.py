@@ -4,22 +4,6 @@ from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
-from constants import (
-    ADMIT_VIA_AMBULANCE_MAP,
-    BEFORE_DATE,
-    BT_SUBSTRINGS,
-    DERIVED_VARIABLES,
-    EDEMA_IMAGING_SUBSTRINGS,
-    EDEMA_PHARMA_SUBSTRINGS,
-    IMAGING_DESCRIPTIONS,
-    IMAGING_KEYWORDS,
-    OUTCOME_DEATH,
-    OUTCOME_EDEMA,
-    PRESCRIPTION_AFTER_IMAGING_DAYS,
-    READMISSION_MAP,
-    SEXES,
-    TRIAGE_LEVEL_MAP,
-)
 
 import cyclops.query.process as qp
 from cyclops.processors.column_names import (
@@ -41,6 +25,22 @@ from cyclops.processors.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
+from notebooks.usecases.gemini.wanglab.constants import (
+    ADMIT_VIA_AMBULANCE_MAP,
+    BEFORE_DATE,
+    BT_SUBSTRINGS,
+    DERIVED_VARIABLES,
+    EDEMA_IMAGING_SUBSTRINGS,
+    EDEMA_PHARMA_SUBSTRINGS,
+    IMAGING_DESCRIPTIONS,
+    IMAGING_KEYWORDS,
+    OUTCOME_DEATH,
+    OUTCOME_EDEMA,
+    PRESCRIPTION_AFTER_IMAGING_DAYS,
+    READMISSION_MAP,
+    SEXES,
+    TRIAGE_LEVEL_MAP,
+)
 
 
 def join_queries_flow_fake(

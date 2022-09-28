@@ -165,7 +165,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         """
         # Limit the results returned
         if limit is not None:
-            query = query.limit(limit)
+            query = query.limit(limit)  # type: ignore
 
         # Run the query and return the results
         with self.session.connection():

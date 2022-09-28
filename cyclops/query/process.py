@@ -5,7 +5,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 from sqlalchemy import and_, cast, extract, func, or_, select
 from sqlalchemy.sql.elements import BinaryExpression
@@ -179,7 +179,7 @@ def process_operations(  # pylint: disable=too-many-locals
         return qap_args
 
     def get_qap_kwargs(operation, required=False):
-        qap_kwargs = [val for key, val in operation[2].items() if isinstance(val, QAP)]
+        qap_kwargs = [val for _, val in operation[2].items() if isinstance(val, QAP)]
         if required:
             qap_kwargs = get_required_qap(qap_kwargs)
         return qap_kwargs
@@ -945,13 +945,13 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
     def __init__(
         self,
         join_table: TableTypes,
-        on: Optional[  # pylint:disable=invalid-name
-            Union[str, List[str], tuple, List[tuple]]
+        on: Union[  # pylint:disable=invalid-name
+            str, List[str], tuple, List[tuple], None
         ] = None,
-        on_to_type: Optional[Union[type, List[type]]] = None,
-        cond: Optional[BinaryExpression] = None,
-        table_cols: Optional[Union[str, List[str]]] = None,
-        join_table_cols: Optional[Union[str, List[str]]] = None,
+        on_to_type: Union[type, List[type], None] = None,
+        cond: Union[BinaryExpression, None] = None,
+        table_cols: Union[str, List[str], None] = None,
+        join_table_cols: Union[str, List[str], None] = None,
     ):
         """Initialize."""
         if on is not None and cond is not None:
@@ -1027,11 +1027,13 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
             if self.table_cols is not None:
                 table = FilterColumns(self.table_cols)(table)
             if self.join_table_cols is not None:
-                self.join_table = FilterColumns(self.table_cols)(self.join_table)
+                self.join_table = FilterColumns(self.table_cols)(  # type: ignore
+                    self.join_table
+                )
 
             # Join on a specified condition
             if self.cond is not None:
-                table = select(table.join(self.join_table, self.cond))
+                table = select(table.join(self.join_table, self.cond))  # type: ignore
 
             # Join on no condition, i.e., a Cartesian product
             else:
@@ -1605,7 +1607,7 @@ class Limit:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        return table.limit(self.number).subquery()
+        return table.limit(self.number).subquery()  # type: ignore
 
 
 @dataclass
@@ -1741,7 +1743,7 @@ class GroupByAggregate:
     """
 
     groupby_cols: Union[str, List[str]]
-    aggfuncs: Dict[str, Union[str]]
+    aggfuncs: Union[Dict[str, Sequence[str]], Dict[str, str]]
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.

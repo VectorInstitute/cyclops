@@ -420,12 +420,15 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         """
         # Note: .counts() returns the number of non-null values in the Series.
         meta = group.agg(
-            {col: [lambda x: x.count(), len] for col in self.agg_meta_for},
+            {
+                col: [lambda x: x.count(), len]
+                for col in self.agg_meta_for  # type: ignore
+            },
             dropna=False,
         )
 
         keep = []
-        for col in self.agg_meta_for:
+        for col in self.agg_meta_for:  # type: ignore
             meta[col + "_count"] = meta[(col, "len")]
             meta[col + "_null_fraction"] = 1 - (
                 meta[(col, "<lambda_0>")] / meta[(col, "len")]

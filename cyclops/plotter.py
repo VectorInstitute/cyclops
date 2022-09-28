@@ -16,6 +16,7 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
 )
+from cyclops.utils.common import to_list
 
 PLOT_HEIGHT = 520
 
@@ -73,7 +74,7 @@ def plot_timeline(
 
 def plot_histogram(
     features: pd.DataFrame,
-    names: Optional[List] = None,
+    names: Union[str, list] = None,
     return_fig: bool = False,
     title="Histogram Visualization",
 ) -> Union[plotly.graph_objs.Figure, None]:
@@ -96,7 +97,7 @@ def plot_histogram(
     if names is None:
         feature_names = list(features.columns)
     else:
-        feature_names = [names]
+        feature_names = to_list(names)
     for name in feature_names:
         if name not in features:
             raise ValueError(f"Provided feature {name} not present in features data!")
@@ -126,7 +127,7 @@ def plot_histogram(
 
 def plot_temporal_features(
     features: pd.DataFrame,
-    names: Optional[list] = None,
+    names: Union[str, List] = None,
     return_fig: bool = False,
 ) -> Union[plotly.graph_objs.Figure, None]:
     """Plot temporal features.
@@ -152,7 +153,7 @@ def plot_temporal_features(
     if names is None:
         feature_names = list(features.columns)
     else:
-        feature_names = names
+        feature_names = to_list(names)
     for name in feature_names:
         if name not in features:
             raise ValueError(f"Provided feature {name} not present in features data!")
