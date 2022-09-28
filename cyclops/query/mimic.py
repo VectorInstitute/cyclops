@@ -348,7 +348,7 @@ def patient_diagnoses(
 @assert_table_has_columns(patients_table=SUBJECT_ID)
 def transfers(
     patients_table: Optional[TableTypes] = None, **process_kwargs
-) -> QueryInterfaceProcessed:
+) -> QueryInterface:
     """Get care unit table within a given set of encounters.
 
     Parameters
@@ -358,7 +358,7 @@ def transfers(
 
     Returns
     -------
-    cyclops.query.interface.QueryInterfaceProcessed
+    cyclops.query.interface.QueryInterface
         Constructed table, wrapped in an interface object.
 
     Other Parameters

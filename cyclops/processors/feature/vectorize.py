@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -355,7 +355,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         self.normalizer.inverse_transform(self.data, index_map)
         self.is_normalized = False
 
-    def save(self, save_path: str, file_format: str = "npy") -> None:
+    def save(self, save_path: str, file_format: str = "npy") -> str:
         """Save data to file.
 
         Parameters
@@ -518,7 +518,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
     def split_by_indices(
         self,
         axis: Union[str, int],
-        indices: List[Union[List[int], np.ndarray]],
+        indices: Union[Sequence[int], np.ndarray],
         allow_drops: bool = False,
     ):
         """Split the data over an axis using indices.
