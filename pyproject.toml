@@ -87,8 +87,3 @@ max-line-length = 88
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[[tool.poetry.source]]
-name = "gemini_repository"
-url = "https://packages.gemini-hpc.ca/repository/pypi/simple"
-default = true
