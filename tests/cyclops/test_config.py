@@ -44,13 +44,13 @@ class TestConfig(unittest.TestCase):
         assert cfg.password == "test"
 
         cfg = config.read_config(os.path.join(PROJECT_ROOT, "configs/mimic"))
-        assert cfg.database == "mimiciv"
+        assert cfg.database == "mimiciv-1.0"
 
         cfg = config.read_config(os.path.join(PROJECT_ROOT, "configs/mimic/*.yaml"))
-        assert cfg.database == "mimiciv"
+        assert cfg.database == "mimiciv-1.0"
 
         cfg = config.read_config("mimic")
-        assert cfg.database == "mimiciv"
+        assert cfg.database == "mimiciv-1.0"
 
         cfg = config.read_config("gemini")
         assert cfg.host == "db.gemini-hpc.ca"
