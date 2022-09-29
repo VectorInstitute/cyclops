@@ -1,6 +1,7 @@
 """WangLab use case constants."""
 
 import os
+
 import numpy as np
 
 from cyclops.processors.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
