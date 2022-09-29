@@ -593,6 +593,10 @@ def events(
     # Process optional operations
     operations: List[tuple] = [
         (qp.ConditionIn, [EVENT_NAME, qp.QAP("event_names")], {"to_str": True}),
+        (qp.ConditionBeforeDate, [EVENT_TIMESTAMP, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [EVENT_TIMESTAMP, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [EVENT_TIMESTAMP, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [EVENT_TIMESTAMP, qp.QAP("months")], {}),
         (
             qp.ConditionSubstring,
             [EVENT_NAME, qp.QAP("event_name_substring")],
