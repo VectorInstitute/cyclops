@@ -97,7 +97,7 @@ def to_list(obj: Any) -> list:
     if isinstance(obj, list):
         return obj
 
-    if isinstance(obj, (np.ndarray, set)):
+    if isinstance(obj, (np.ndarray, set, dict)):
         return list(obj)
 
     return [obj]

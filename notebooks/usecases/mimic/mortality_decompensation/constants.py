@@ -26,7 +26,6 @@ TAB_FEATURES = [
     SEX,
     "admission_type",
     "admission_location",
-    "ethnicity",
 ] + TAB_TARGETS
 
 # Temporal
