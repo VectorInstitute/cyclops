@@ -57,13 +57,13 @@ ED_STAYS = "ed_stays"
 
 _db = Database(config.read_config(MIMIC))
 TABLE_MAP = {
-    PATIENTS: lambda db: db.mimic_core.patients,
-    ADMISSIONS: lambda db: db.mimic_core.admissions,
-    DIAGNOSES: lambda db: db.mimic_hosp.d_icd_diagnoses,
-    PATIENT_DIAGNOSES: lambda db: db.mimic_hosp.diagnoses_icd,
-    EVENT_LABELS: lambda db: db.mimic_icu.d_items,
-    EVENTS: lambda db: db.mimic_icu.chartevents,
-    TRANSFERS: lambda db: db.mimic_core.transfers,
+    PATIENTS: lambda db: db.mimiciv_hosp.patients,
+    ADMISSIONS: lambda db: db.mimiciv_hosp.admissions,
+    DIAGNOSES: lambda db: db.mimiciv_hosp.d_icd_diagnoses,
+    PATIENT_DIAGNOSES: lambda db: db.mimiciv_hosp.diagnoses_icd,
+    EVENT_LABELS: lambda db: db.mimiciv_icu.d_items,
+    EVENTS: lambda db: db.mimiciv_icu.chartevents,
+    TRANSFERS: lambda db: db.mimiciv_hosp.transfers,
     ED_STAYS: lambda db: db.mimic_ed.edstays,
 }
 MIMIC_COLUMN_MAP = {
