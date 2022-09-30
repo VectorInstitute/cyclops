@@ -265,9 +265,6 @@ def filter_columns(
 
     """
     cols = to_list(cols)
-    if len(cols) == 0:
-        raise ValueError("Must specify at least one column to filter.")
-
     col_names = get_column_names(table)
     filtered = []
     for col in cols:
