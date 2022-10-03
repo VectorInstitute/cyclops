@@ -8,7 +8,7 @@ from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "wanglab"
 USECASE_ROOT_DIR = join(
-    "/mnt/data/nfs",
+    "/mnt/nfs/project/delirium",
     "cyclops",
     "usecases",
     CONST_NAME,
