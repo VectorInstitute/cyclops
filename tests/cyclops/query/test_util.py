@@ -8,11 +8,16 @@ from cyclops.query.util import (
     DBTable,
     _to_select,
     _to_subquery,
+    drop_columns,
     filter_columns,
     get_column,
     get_column_names,
     get_columns,
     has_columns,
+    rename_columns,
+    reorder_columns,
+    table_params_to_type,
+    trim_columns,
 )
 
 
@@ -30,6 +35,8 @@ def test__to_subquery():
     assert isinstance(_to_subquery(DBTable("a", Table())), Subquery)
     with pytest.raises(TypeError):
         _to_subquery("a")
+    with pytest.raises(ValueError):
+        table_params_to_type(int)
 
 
 def test__to_select():
@@ -65,7 +72,7 @@ def test_get_column_names(test_table):  # pylint: disable=redefined-outer-name
 
 def test_filter_columns(test_table):  # pylint: disable=redefined-outer-name
     """Test filter_columns fn."""
-    filtered = filter_columns(test_table, ["a", "c"])
+    filtered = filter_columns(test_table, ["a", "c", "d"])
     assert get_column_names(filtered) == ["a", "c"]
 
 
@@ -75,3 +82,31 @@ def test_has_columns(test_table):  # pylint: disable=redefined-outer-name
     assert has_columns(test_table, ["a", "b"])
     with pytest.raises(ValueError):
         has_columns(test_table, ["a", "d"], raise_error=True)
+
+
+def test_drop_columns(test_table):  # pylint: disable=redefined-outer-name
+    """Test drop_columns fn."""
+    after_drop = drop_columns(test_table, ["a"])
+    assert get_column_names(after_drop) == ["b", "c"]
+
+
+def test_rename_columns(test_table):  # pylint: disable=redefined-outer-name
+    """Test rename_columns fn."""
+    after_rename = rename_columns(test_table, {"a": "apple", "b": "ball"})
+    assert get_column_names(after_rename) == ["apple", "ball", "c"]
+
+
+def test_reorder_columns(test_table):  # pylint: disable=redefined-outer-name
+    """Test reorder_columns fn."""
+    with pytest.raises(ValueError):
+        reorder_columns(test_table, ["ball", "c", "a"])
+    with pytest.raises(ValueError):
+        reorder_columns(test_table, ["c", "a"])
+    after_reorder = reorder_columns(test_table, ["b", "c", "a"])
+    assert get_column_names(after_reorder) == ["b", "c", "a"]
+
+
+def test_trim_columns(test_table):  # pylint: disable=redefined-outer-name
+    """Test apply_to_columns fn."""
+    after_trim = trim_columns(test_table, ["a"], ["apple"])
+    assert get_column_names(after_trim) == ["a", "b", "c", "apple"]

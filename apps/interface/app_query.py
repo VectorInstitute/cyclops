@@ -5,7 +5,7 @@ import pandas as pd
 from consts import APP_DIAG, APP_ENC  # , APP_EVENT
 from sqlalchemy import and_, select
 
-import cyclops.query.mimic as db
+import cyclops.query.mimiciv as db
 from cyclops.processors.column_names import AGE, ENCOUNTER_ID, SUBJECT_ID
 from cyclops.query.util import get_column
 

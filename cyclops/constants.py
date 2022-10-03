@@ -3,6 +3,7 @@
 
 GEMINI = "gemini"
 GEMINI_OMOP = "gemini_omop"
-MIMIC = "mimic"
+MIMICIV = "mimiciv"
+EICU_CRD = "eicu_crd"
 
 FEATURES = "features"
