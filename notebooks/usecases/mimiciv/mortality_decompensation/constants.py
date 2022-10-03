@@ -1,14 +1,18 @@
-"""MIMIC use case constants."""
-
-import os
+"""MIMICIV mortality decompensation use case constants."""
 
 from cyclops.processors.column_names import AGE, SEX
 from cyclops.processors.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "mortality_decompensation"
-USECASE_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = process_dir_save_path(os.path.join(USECASE_ROOT_DIR, "./data"))
+USECASE_ROOT_DIR = join(
+    "/mnt/data",
+    "cyclops",
+    "usecases",
+    "mimiciv",
+    CONST_NAME,
+)
+DATA_DIR = process_dir_save_path(join(USECASE_ROOT_DIR, "./data"))
 
 OUTCOME_DEATH = "outcome_death"
 SPLIT_FRACTIONS = [0.8, 0.1, 0.1]
