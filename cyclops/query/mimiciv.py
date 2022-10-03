@@ -1,4 +1,8 @@
-"""MIMIC-IV query API."""
+"""MIMIC-IV query API.
+
+Supports querying of MIMICIV-2.0.
+
+"""
 
 # pylint: disable=duplicate-code
 
@@ -10,7 +14,7 @@ from sqlalchemy.sql.selectable import Subquery
 
 from codebase_ops import get_log_file_path
 from cyclops import config
-from cyclops.constants import MIMIC
+from cyclops.constants import MIMICIV
 from cyclops.orm import Database
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
@@ -31,7 +35,7 @@ from cyclops.processors.column_names import (
 )
 from cyclops.query import process as qp
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from cyclops.query.postprocess.mimic import process_mimic_care_units
+from cyclops.query.postprocess.mimiciv import process_mimic_care_units
 from cyclops.query.util import (
     TableTypes,
     _to_subquery,
@@ -55,7 +59,7 @@ EVENTS = "events"
 TRANSFERS = "transfers"
 ED_STAYS = "ed_stays"
 
-_db = Database(config.read_config(MIMIC))
+_db = Database(config.read_config(MIMICIV))
 TABLE_MAP = {
     PATIENTS: lambda db: db.mimiciv_hosp.patients,
     ADMISSIONS: lambda db: db.mimiciv_hosp.admissions,
