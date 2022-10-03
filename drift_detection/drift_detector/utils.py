@@ -1,27 +1,27 @@
-import inspect
+import numpy as np
 import os
-import pickle
 import random
 import sys
-from datetime import date, timedelta
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
-import numpy as np
 import pandas as pd
+from datetime import date, timedelta
+import inspect
 import torch
 import torch.nn as nn
-from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
-from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
+import pickle
 from scipy.special import softmax
-
+from typing import Callable, Dict, List, Optional, Tuple, Union, Any
+from alibi_detect.utils.pytorch.kernels import GaussianRBF
+from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
+from alibi_detect.utils.pytorch.kernels import DeepKernel
 from drift_detection.baseline_models.temporal.pytorch.utils import (
-    get_device,
     get_temporal_model,
+    get_device,
 )
 
 
 def get_args(obj, kwargs):
-    """Get valid arguments from kwargs to pass to object.
+    """
+    Get valid arguments from kwargs to pass to object.
 
     Parameters
     ----------
@@ -34,7 +34,6 @@ def get_args(obj, kwargs):
     -------
     args
         Dictionary of valid arguments to pass to class object.
-
     """
     args = {}
     for key in kwargs:
@@ -48,14 +47,14 @@ def get_args(obj, kwargs):
 
 
 def load_model(self, model_path: str):
-    """Load pre-trained model from path. For scikit-learn models, a pickle is loaded
-    from disk. For the torch models, the "state_dict" is loaded from disk.
+    """Load pre-trained model from path.
+    For scikit-learn models, a pickle is loaded from disk.
+    For the torch models, the "state_dict" is loaded from disk.
 
     Returns
     -------
     model
         loaded pre-trained model
-
     """
     file_type = self.model_path.split(".")[-1]
     if file_type == "pkl" or file_type == "pickle":
@@ -66,14 +65,14 @@ def load_model(self, model_path: str):
 
 
 def save_model(self, model, output_path: str):
-    """Saves the model to disk. For scikit-learn models, a pickle is saved to disk. For
-    the torch models, the "state_dict" is saved to disk.
+    """Saves the model to disk.
+    For scikit-learn models, a pickle is saved to disk.
+    For the torch models, the "state_dict" is saved to disk.
 
     Parameters
     ----------
     output_path: String
         path to save the model to
-
     """
     file_type = output_path.split(".")[-1]
     if file_type == "pkl" or file_type == "pickle":
@@ -83,10 +82,12 @@ def save_model(self, model, output_path: str):
 
 
 class ContextMMDWrapper:
-    """Wrapper for ContextMMDDrift.
+    """
+    Wrapper for ContextMMDDrift
 
     Parameters
     ----------
+
 
     """
 
@@ -124,10 +125,12 @@ class ContextMMDWrapper:
 
 
 class LKWrapper:
-    """Wrapper for LKWrapper.
+    """
+    Wrapper for LKWrapper
 
     Parameters
     ----------
+
 
     """
 
@@ -207,7 +210,8 @@ class LKWrapper:
 
 
 def context(x: pd.DataFrame, context_type="rnn", model_path=None):
-    """Get context for context mmd drift detection.
+    """
+    Get context for context mmd drift detection.
 
     Parameters
     ----------
@@ -239,7 +243,8 @@ def recurrent_neural_network(
     output_dim=1,
     last_timestep_only=False,
 ):
-    """Creates a recurrent neural network model.
+    """
+    Creates a recurrent neural network model.
 
     Parameters
     ----------
@@ -252,7 +257,6 @@ def recurrent_neural_network(
     -------
     model: torch.nn.Module
         recurrent neural network model.
-
     """
     model_params = {
         "device": get_device(),
@@ -268,7 +272,8 @@ def recurrent_neural_network(
 
 
 def feed_forward_neural_network(input_dim: int):
-    """Creates a feed forward neural network model.
+    """
+    Creates a feed forward neural network model.
 
     Parameters
     ----------
@@ -279,7 +284,6 @@ def feed_forward_neural_network(input_dim: int):
     -------
     model: torch.nn.Module
         feed forward neural network model.
-
     """
     ffnn = nn.Sequential(
         nn.Linear(input_dim, 16),
@@ -292,7 +296,8 @@ def feed_forward_neural_network(input_dim: int):
 
 
 def convolutional_neural_network(input_dim: int):
-    """Creates a convolutional neural network model.
+    """
+    Creates a convolutional neural network model.
 
     Parameters
     ----------
@@ -303,7 +308,6 @@ def convolutional_neural_network(input_dim: int):
     -------
     torch.nn.Module
         convolutional neural network.
-
     """
     cnn = nn.Sequential(
         nn.Conv2d(input_dim, 4, stride=2, padding=0),
@@ -318,13 +322,13 @@ def convolutional_neural_network(input_dim: int):
 
 
 def scale_temporal(x: pd.DataFrame):
-    """Scale columns of temporal dataframe.
+    """
+    Scale columns of temporal dataframe.
 
     Returns
     -------
     model: torch.nn.Module
         feed forward neural network model.
-
     """
     numerical_cols = [
         col
@@ -343,14 +347,13 @@ def scale_temporal(x: pd.DataFrame):
 
 
 def daterange(start_date, end_date, stride: int, window: int):
-    """Outputs a range of dates after applying a shift of a given stride and window
-    adjustment.
+    """
+    Outputs a range of dates after applying a shift of a given stride and window adjustment.
 
     Returns
     -------
     datetime.date
         range of dates after stride and window adjustment.
-
     """
     for n in range(int((end_date - start_date).days)):
         if start_date + timedelta(n * stride + window) < end_date:
@@ -369,15 +372,13 @@ def get_serving_data(
     encounter_id="encounter_id",
     admit_timestamp="admit_timestamp",
 ):
-    """Transforms a static set of patient encounters with timestamps into serving data
-    that ranges from a given start date and goes until a given end date with a constant
-    window and stride length.
+    """
+    Transforms a static set of patient encounters with timestamps into serving data that ranges from a given start date and goes until a given end date with a constant window and stride length.
 
     Returns
     -------
     dictionary
         dictionary containing keys timestamp, X and y
-
     """
 
     target_stream_X = []

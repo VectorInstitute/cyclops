@@ -7,6 +7,7 @@ from warnings import warn
 import numpy as np
 from divergence import FisherDivergence, KnnKS, ModelKS
 from featureshiftdetector import FeatureShiftDetector
+from models import GaussianDensity, Knn
 from utils import (
     create_graphical_model,
     get_confusion_tensor,
@@ -15,8 +16,6 @@ from utils import (
     marginal_attack,
     plot_confusion_matrix,
 )
-
-from models import GaussianDensity, Knn
 
 # Experiment Parameters
 n_samples = 1000  # The number of samples in p, q (thus n_samples_total = n_samples*2)

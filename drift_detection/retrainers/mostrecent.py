@@ -1,21 +1,20 @@
 import os
 import random
 import sys
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch.nn as nn
 import torch.optim as optim
-from matplotlib.colors import ListedColormap
 from sklearn.preprocessing import StandardScaler
+from matplotlib.colors import ListedColormap
 
 sys.path.append("..")
 
+from drift_detector.rolling_window import *
 from baseline_models.temporal.pytorch.optimizer import Optimizer
 from baseline_models.temporal.pytorch.utils import *
-from drift_detector.rolling_window import *
 
 
 class MostRecentRollingWindow:

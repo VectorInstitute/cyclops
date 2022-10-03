@@ -1,15 +1,15 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
+from drift_detection.drift_detector import Reductor, TSTester, DCTester
+from typing import List, Tuple, Union, Optional, Callable, Any, Dict
+from drift_detection.utils.drift_detector_utils import get_args
 import numpy as np
 import torch
-
-from drift_detection.drift_detector import DCTester, Reductor, TSTester
-from drift_detection.utils.drift_detector_utils import get_args
 
 
 class Detector:
 
-    """Detector class for distribution shift detection.
+    """
+    Detector class for distribution shift detection.
+
 
     Attributes
     ----------
@@ -31,7 +31,6 @@ class Detector:
         Tests shift between source and target data.
     detect_shift(source_data, target_data, **kwargs)
         Detects shift between source data and target data.
-
     """
 
     def __init__(
@@ -49,7 +48,8 @@ class Detector:
         self.reductor.fit(data)
 
     def transform(self, X, **kwargs):
-        """Transforms data.
+        """
+        Transforms data.
 
         Parameters
         ----------
@@ -62,12 +62,12 @@ class Detector:
         -------
         np.ndarray
             Transformed data.
-
         """
         return self.reductor.transform(X, **kwargs)
 
     def test_shift(self, X_s, X_t, **kwargs):
-        """Tests shift between source and target data.
+        """
+        Tests shift between source and target data.
 
         Parameters
         ----------
@@ -82,7 +82,6 @@ class Detector:
         -------
         dict
             Dictionary containing p-value and distance.
-
         """
         p_val, dist = self.tester.test_shift(X_s, X_t, **kwargs)
 
@@ -94,7 +93,9 @@ class Detector:
         target_data: Union[np.ndarray, torch.utils.data.Dataset],
         **kwargs
     ):
-        """Detects shift between source and target data.
+        """
+        Detects shift between source and target data.
+
 
         Parameters
         ----------
@@ -109,7 +110,6 @@ class Detector:
         -------
         dict
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
-
         """
 
         self.fit(source_data)

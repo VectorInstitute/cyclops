@@ -1,10 +1,13 @@
+from sklearn import metrics
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn import metrics
+import pandas as pd
+import numpy as np
 
 
 def plot_pretty_confusion_matrix(confusion_matrix):

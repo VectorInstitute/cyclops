@@ -18,7 +18,7 @@ We use multivariate tests to detect malignant shifts in the joint distribution b
 
 - MMD
 - LSDD
-- LK
+- LK 
 - Classifier
 
 ## Explainer
@@ -45,3 +45,4 @@ Synthetic experiments will be performed to evaluate under what magnitudes and ty
 - Binary Noise Shift
 - Changepoint Shift
 - Multiway Feature Association Shift
+

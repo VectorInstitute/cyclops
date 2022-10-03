@@ -1,7 +1,6 @@
 import math
 import random
 import sys
-
 import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectKBest
@@ -248,7 +247,6 @@ def apply_shift(X_s_orig, y_s_orig, X_te_orig, y_te_orig, shift):
         target label
     shift: String
         shift type
-
     """
 
     X_te_1 = None

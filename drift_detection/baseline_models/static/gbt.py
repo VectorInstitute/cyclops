@@ -1,5 +1,7 @@
-from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier
+from sklearn.metrics import (
+    roc_auc_score,
+)
 
 
 def fit_gbt(X, Y, Xv, Yv):

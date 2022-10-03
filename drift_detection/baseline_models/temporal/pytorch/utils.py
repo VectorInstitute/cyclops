@@ -1,17 +1,16 @@
-import numpy as np
-import pandas as pd
-import torch
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import (
-    MaxAbsScaler,
     MinMaxScaler,
-    RobustScaler,
     StandardScaler,
+    MaxAbsScaler,
+    RobustScaler,
 )
-
+from sklearn.model_selection import train_test_split
+import pandas as pd
+import numpy as np
+import torch
 from .dataset import Data
+from .models import RNNModel, LSTMModel, GRUModel
 from .metrics import *
-from .models import GRUModel, LSTMModel, RNNModel
 
 
 def load_ckp(checkpoint_fpath, model):
@@ -29,8 +28,8 @@ def get_device():
 
 
 def format_dataset(X, level="features", imputation_method="simple"):
-    """Clean the data into machine-learnable matrices.
-
+    """
+    Clean the data into machine-learnable matrices.
     Inputs:
         X (pd.DataFrame): a multiindex dataframe of GEMINI data
         level (string or bytes): the level of the column index to use as the features level
@@ -39,7 +38,6 @@ def format_dataset(X, level="features", imputation_method="simple"):
     Returns:
         X (pd.DataFrame): the X data to input to the model
         y (array): the labels for the corresponding X-data
-
     """
     scaler = None
 
@@ -175,16 +173,15 @@ def get_temporal_model(model, model_params):
 
 
 def impute_simple(df, time_index=None):
-    """Concatenate the forward filled value, the mask of the measurement, and the time
-    of the last measurement refer to paper Z.
-
-    Che, S. Purushotham, K. Cho, D. Sontag, and Y. Liu, "Recurrent Neural Networks for Multivariate Time Series with Missing Values," Scientific Reports, vol. 8, no. 1, p. 6085, Apr 2018.
+    """
+    Concatenate the forward filled value, the mask of the measurement, and the time of the last measurement
+    refer to paper
+    Z. Che, S. Purushotham, K. Cho, D. Sontag, and Y. Liu, "Recurrent Neural Networks for Multivariate Time Series with Missing Values," Scientific Reports, vol. 8, no. 1, p. 6085, Apr 2018.
     Input:
         df (pandas.DataFrame): the dataframe with timeseries data in the index.
         time_index (string, optional): the heading name for the time-series index.
     Returns:
         df (pandas.DataFrame): a dataframe according to the simple impute algorithm described in the paper.
-
     """
 
     ID_COLS = ["encounter_id"]

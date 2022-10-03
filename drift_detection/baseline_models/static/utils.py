@@ -8,11 +8,11 @@ from sklearn.metrics import (
     roc_curve,
 )
 
-from .gbt import fit_gbt
 from .gp import fit_gp
 from .lr import fit_lr
 from .mlp import fit_mlp
 from .rf import fit_rf
+from .gbt import fit_gbt
 
 
 def run_model(model_name, X, Y, Xv, Yv):
