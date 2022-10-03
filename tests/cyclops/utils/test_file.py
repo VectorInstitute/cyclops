@@ -91,6 +91,7 @@ def test_yield_dataframes():
 def test_join():
     """Test path join fn."""
     assert join("/mnt", "donkey") == "/mnt/donkey"
+    assert join("/mnt", "donkey", "monkey") == "/mnt/donkey/monkey"
     assert join("\\Users", "monkey") == "/Users/monkey"
 
 

@@ -1,7 +1,5 @@
 """WangLab use case constants."""
 
-import os
-
 import numpy as np
 
 from cyclops.processors.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
@@ -9,8 +7,13 @@ from cyclops.processors.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "wanglab"
-USECASE_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = process_dir_save_path(os.path.join(USECASE_ROOT_DIR, "./data"))
+USECASE_ROOT_DIR = join(
+    "/mnt/data/nfs",
+    "cyclops",
+    "usecases",
+    CONST_NAME,
+)
+DATA_DIR = process_dir_save_path(join(USECASE_ROOT_DIR, "./data"))
 
 OUTCOME_DEATH = "outcome_death"
 OUTCOME_EDEMA = "outcome_edema"
