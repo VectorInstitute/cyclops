@@ -13,6 +13,13 @@ from tqdm import tqdm
 import pickle
 from typing import Union, Tuple
 
+sys.path.append("..")
+
+from baseline_models.temporal.pytorch.utils import (
+    get_temporal_model,
+    get_device,
+)
+
 class Reductor:
 
     """
@@ -70,6 +77,7 @@ class Reductor:
         var_ret: float = 0.8,
         n_components: int = None,
         n_features: int = None,
+        batch_size: int = 64,
         gmm_n_clusters: int = 2,
         random_state: int = 42,
     ):
@@ -100,9 +108,9 @@ class Reductor:
             "BBSDh_untrained_LSTM": self.recurrent_neural_network,
             "BBSDs_trained_LSTM": self.recurrent_neural_network,
             "BBSDh_trained_LSTM": self.recurrent_neural_network,
-            "BBSDs_txrv_CNN": xrv.models.DenseNet,
-            "BBSDh_txrv_CNN": xrv.models.DenseNet,
-            "TAE_txrv_CNN": xrv.autoencoders.ResNetAE,
+#            "BBSDs_txrv_CNN": xrv.models.DenseNet,
+#            "BBSDh_txrv_CNN": xrv.models.DenseNet,
+#            "TAE_txrv_CNN": xrv.autoencoders.ResNetAE,
         }
 
         # check if dr_method is valid
@@ -187,6 +195,7 @@ class Reductor:
             list of available dimensionality reduction methods
         """
         return [
+            "NoRed",
             "PCA",
             "SRP",
             "kPCA",
@@ -230,9 +239,6 @@ class Reductor:
         # check if data is a numpy matrix or a torch dataset
         if isinstance(data, np.ndarray):
 
-            if self.n_components is None:
-                self.n_components = self.get_dr_amount(data)
-
             if (
                 self.dr_method == "PCA"
                 or self.dr_method == "SRP"
@@ -240,6 +246,9 @@ class Reductor:
                 or self.dr_method == "Isomap"
                 or self.dr_method == "GMM"
             ):
+                if self.n_components is None:
+                    self.n_components = self.get_dr_amount(data)
+                    
                 self.model = self.model(n_components=self.n_components)
                 self.model.fit(data)
 
@@ -276,7 +285,6 @@ class Reductor:
         """
         y = None
 
-        self.batch_size = batch_size
         if num_workers is None:
             num_workers = os.cpu_count()
 
@@ -306,7 +314,7 @@ class Reductor:
                 )
                 X_transformed, y = self.xrv_clf_inference(self.model)
             else:
-                X_transformed = self.minibatch_inference(self.model)
+                X_transformed = self.minibatch_inference(data, self.model)
         elif "BBSDh" in self.dr_method:
             if "txrv_CNN" in self.dr_method:
                 self.dataloader = DataLoader(
@@ -315,7 +323,7 @@ class Reductor:
                 X_transformed, y = self.xrv_clf_inference(self.model)
                 X_transformed = np.where(X_transformed > 0.5, 1, 0)
             else:
-                X_transformed = self.minibatch_inference(self.model)
+                X_transformed = self.minibatch_inference(data, self.model)
                 X_transformed = np.where(X_transformed > 0.5, 1, 0)
         elif self.dr_method == "GMM":
             X_transformed = self.model.predict_proba(data)
@@ -425,7 +433,7 @@ class Reductor:
         gmm = GaussianMixture(n_components=self.gmm_n_clusters, covariance_type="full")
         return gmm
 
-    def minibatch_inference(self, model: nn.Module) -> np.ndarray:
+    def minibatch_inference(self, data, model: nn.Module, batch_size: int = 32) -> np.ndarray:
         """
         Performs batch inference on in-memory data by breaking into series of mini-batches.
         Parameters
@@ -438,20 +446,20 @@ class Reductor:
             the transformed data.
         """
 
-        if isinstance(self.X, np.ndarray):
-            self.X = torch.from_numpy(self.X)
-        num_samples = self.X.shape[0]
-        n_batches = int(np.ceil(num_samples / self.batch_size))
+        if isinstance(data, np.ndarray):
+            X = torch.from_numpy(data)
+        num_samples = X.shape[0]
+        n_batches = int(np.ceil(num_samples / batch_size))
 
         X_transformed_all = []
         model.to(self.device)
         with torch.no_grad():
             for i in range(n_batches):
                 batch_idx = (
-                    i * self.batch_size,
-                    min((i + 1) * self.batch_size, num_samples),
+                    i * batch_size,
+                    min((i + 1) * batch_size, num_samples),
                 )
-                X_batch = self.X[batch_idx[0] : batch_idx[1]]
+                X_batch = X[batch_idx[0] : batch_idx[1]]
                 X_batch = X_batch.to(self.device)
                 X_transformed = model(X_batch.float())
                 if self.device.type == "cuda":

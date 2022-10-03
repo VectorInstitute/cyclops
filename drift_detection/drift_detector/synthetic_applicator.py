@@ -3,9 +3,10 @@ import random
 import sys
 import numpy as np
 import pandas as pd
+from .utils import get_args
 from sklearn.feature_selection import SelectKBest
 
-class SyntheticShiftApplicator:
+class SyntheticShiftApplicator(object):
     
     """
     The SyntheticShiftApplicator class is used induce synthetic dataset shift.
@@ -26,13 +27,14 @@ class SyntheticShiftApplicator:
     """   
     def __init__(self, shift_type: str, **kwargs):
         
+        self.shift_type = shift_type
+        
         self.shift_types = { 
             "gn_shift": gaussian_noise_shift, 
             "ko_shift": knockout_shift,
             "cp_shift": changepoint_shift,
             "mfa_shift": multiway_feat_association_shift,
             "bn_shift": binary_noise_shift,
-            "tolerance_shift": tolerance_shift
         }
            
         if self.shift_type not in self.shift_types.keys():
@@ -58,11 +60,179 @@ class SyntheticShiftApplicator:
         X_shift, _ = self.shift_types[self.shift_type](
                 X, **get_args(self.shift_types[self.shift_type], kwargs)
             )
-        y_shift = y_shift.copy()
         
         return (X_shift, y_shift)  
-    
-def gaussian_noise_shift(self, X, noise_amt = 0.5, delta = 0.5, clip=True):
+
+def apply_predefined_shift(
+    predefined_shift: str,
+    X: np.ndarray,
+    y: np.ndarray = None, 
+    X_ref: np.ndarray = None, 
+    y_ref: np.ndarray = None
+):
+
+    """apply_predefined_shift.
+
+    Parameters
+    ----------
+    predefined_shift: String
+        Name of shift type to use.
+    X: numpy.matrix
+        Source data.
+    y: list
+        Source label.
+    X_ref: numpy.matrix
+        Target data.
+    y_ref: list
+        Target label.
+    """
+
+    X_shift = None
+    y_shift = None
+
+    if predefined_shift == "large_gn_shift_1.0":
+        X_shift, _ = gaussian_noise_shift(
+            X, 10.0, normalization=1.0, delta=1.0, clip=False
+        )
+    elif predefined_shift == "medium_gn_shift_1.0":
+        X_shift, _ = gaussian_noise_shift(
+            X, 1.0, normalization=1.0, delta=1.0, clip=False
+        )
+    elif predefined_shift == "small_gn_shift_1.0":
+        X_shift, _ = gaussian_noise_shift(
+            X, 0.1, normalization=1.0, delta=1.0, clip=False
+        )
+    elif predefined_shift == "large_gn_shift_0.5":
+        X_shift, _ = gaussian_noise_shift(
+            X, 10.0, normalization=1.0, delta=0.5, clip=False
+        )
+    elif predefined_shift == "medium_gn_shift_0.5":
+        X_shift, _ = gaussian_noise_shift(
+            X, 1.0, normalization=1.0, delta=0.5, clip=False
+        )
+    elif predefined_shift == "small_gn_shift_0.5":
+        X_shift, _ = gaussian_noise_shift(
+            X, 0.1, normalization=1.0, delta=0.5, clip=False
+        )
+    elif predefined_shift == "large_gn_shift_0.1":
+        X_shift, _ = gaussian_noise_shift(
+            X, 10.0, normalization=1.0, delta=0.1, clip=False
+        )
+    elif predefined_shift == "medium_gn_shift_0.1":
+        X_shift, _ = gaussian_noise_shift(
+            X, 1.0, normalization=1.0, delta=0.1, clip=False
+        )
+    elif predefined_shift == "small_gn_shift_0.1":
+        X_shift, _ = gaussian_noise_shift(
+            X, 0.1, normalization=1.0, delta=0.1, clip=False
+        )
+    elif predefined_shift == "ko_shift_0.1":
+        X_shift, y_shift = knockout_shift(X, y, 0, 0.1)
+    elif predefined_shift == "ko_shift_0.5":
+        X_shift, y_shift = knockout_shift(X, y, 0, 0.5)
+    elif predefined_shift == "ko_shift_1.0":
+        X_shift, y_shift = knockout_shift(X, y, 0, 1.0)
+    elif predefined_shift == "cp_shift_0.75":
+        X_shift, y_shift = changepoint_shift(
+            X, y, X_ref, y_ref, 0, n_shuffle=0.75, rank=True
+        )
+    elif predefined_shift == "cp_shift_0.25":
+        X_shift, y_shift = changepoint_shift(
+            X, y, X_ref, y_ref, 0, n_shuffle=0.25, rank=True
+        )
+    elif predefined_shift == "mfa_shift_0.75_krc_rec":
+        X_shift, y_shift = multiway_feat_association_shift(
+            X,
+            y,
+            n_shuffle=0.75,
+            keep_rows_constant=True,
+            repermute_each_column=True,
+        )
+    elif predefined_shift == "mfa_shift_0.25_krc_rec":
+        X_shift, y_shift = multiway_feat_association_shift(
+            X,
+            y,
+            n_shuffle=0.25,
+            keep_rows_constant=True,
+            repermute_each_column=True,
+        )
+    elif predefined_shift == "mfa_shift_0.75_krc":
+        X_shift, y_shift = multiway_feat_association_shift(
+            X,
+            y,
+            n_shuffle=0.75,
+            keep_rows_constant=True,
+            repermute_each_column=False,
+        )
+    elif predefined_shift == "mfa_shift_0.5_krc":
+        X_shift, y_shift = multiway_feat_association_shift(
+            X,
+            y,
+            n_shuffle=0.5,
+            keep_rows_constant=True,
+            repermute_each_column=False,
+        )
+    elif predefined_shift == "mfa_shift_0.25_krc":
+        X_shift, y_shift = multiway_feat_association_shift(
+            X,
+            y,
+            n_shuffle=0.25,
+            keep_rows_constant=True,
+            repermute_each_column=False,
+        )
+    elif predefined_shift == "mfa_shift_0.75":
+        X_shift, y_shift = multiway_feat_association_shift(
+            X,
+            y,
+            n_shuffle=0.75,
+            keep_rows_constant=False,
+            repermute_each_column=False,
+        )
+    elif predefined_shift == "mfa_shift_0.5":
+        X_shift, y_shift = multiway_feat_association_shift(
+            X,
+            y,
+            n_shuffle=0.5,
+            keep_rows_constant=False,
+            repermute_each_column=False,
+        )
+    elif predefined_shift == "mfa_shift_0.25":
+        X_shift, y_shift = multiway_feat_association_shift(
+            X,
+            y,
+            n_shuffle=0.25,
+            keep_rows_constant=False,
+            repermute_each_column=False,
+        )
+    elif predefined_shift == "large_bn_shift_1.0":
+        X_shift, _ = binary_noise_shift(X, 0.5, 1.0)
+    elif predefined_shift == "medium_bn_shift_1.0":
+        X_shift, _ = binary_noise_shift(X, 0.1, 1.0)
+    elif predefined_shift == "small_bn_shift_1.0":
+        X_shift, _ = binary_noise_shift(X, 0.01, 1.0)
+    elif predefined_shift == "large_bn_shift_0.5":
+        X_shift, _ = binary_noise_shift(X, 0.5, 0.5)
+    elif predefined_shift == "medium_bn_shift_0.5":
+        X_shift, _ = binary_noise_shift(X, 0.1, 0.5)
+    elif predefined_shift == "small_bn_shift_0.5":
+        X_shift, _ = binary_noise_shift(X, 0.01, 0.5)
+    elif predefined_shift == "large_bn_shift_0.1":
+        X_shift, _ = binary_noise_shift(X, 0.5, 0.1)
+    elif predefined_shift == "medium_bn_shift_0.1":
+        X_shift, _ = binary_noise_shift(X, 0.1, 0.1)
+    elif predefined_shift == "small_bn_shift_0.1":
+        X_shift, _ = binary_noise_shift(X, 0.01, 0.1)
+    else:
+        raise ValueError("Not a pre-defined shift, specify custom parameters using appropriate function")
+    return (X_shift, y_shift)
+
+def gaussian_noise_shift(
+    X = None, 
+    noise_amt = 0.5, 
+    normalization = 1,
+    delta = 0.5, 
+    clip = True
+):
     """Creates gaussian noise of specificed parameters in input data.
 
     Parameters
@@ -104,7 +274,12 @@ def gaussian_noise_shift(self, X, noise_amt = 0.5, delta = 0.5, clip=True):
     return X, indices
 
 # Remove instances of a single class.
-def knockout_shift(self, X, y, delta = 0.5, cl=1):
+def knockout_shift(
+    X = None, 
+    y = None, 
+    delta = 0.5, 
+    cl=1
+):
     """Creates class imbalance by removing a fraction of samples from a class.
 
     Parameters
@@ -129,7 +304,15 @@ def knockout_shift(self, X, y, delta = 0.5, cl=1):
     return X, y
 
 
-def changepoint_shift(self, X, y, X_ref, y_ref, cl=1, n_shuffle=0.25, rank=False):
+def changepoint_shift(
+    X = None, 
+    y = None, 
+    X_ref = None, 
+    y_ref = None, 
+    cl=1, 
+    n_shuffle=0.25, 
+    rank=False
+):
     """changepoint shift swaps features on a changepoint axis.
 
     Parameters
@@ -183,7 +366,11 @@ def changepoint_shift(self, X, y, X_ref, y_ref, cl=1, n_shuffle=0.25, rank=False
 
 
 def multiway_feat_association_shift(
-    X, y, n_shuffle=0.25, keep_rows_constant=True, repermute_each_column=True
+    X = None, 
+    y = None, 
+    n_shuffle=0.25, 
+    keep_rows_constant=True, 
+    repermute_each_column=True
 ):
     """multiway_feat_association_shift swaps individuals within features.
 
@@ -228,7 +415,11 @@ def multiway_feat_association_shift(
     return (X, y)
 
 
-def binary_noise_shift(X, p = 0.5, delta = 0.5):
+def binary_noise_shift(
+    X = None, 
+    p = 0.5, 
+    delta = 0.5
+):
     """Creates binary noise of specificed parameters in input data.
 
     Parameters
@@ -257,6 +448,3 @@ def binary_noise_shift(X, p = 0.5, delta = 0.5):
     X[np.ix_(indices, bin_cols)] = noise
 
     return X, indices
-
-def tolerance_shift(X, y, X_ref, y_ref, tol_var="gender"):
-    raise NotImplementedError
