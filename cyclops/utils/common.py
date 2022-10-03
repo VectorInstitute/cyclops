@@ -3,7 +3,7 @@
 import warnings
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -97,13 +97,15 @@ def to_list(obj: Any) -> list:
     if isinstance(obj, list):
         return obj
 
-    if isinstance(obj, np.ndarray):
+    if isinstance(obj, (np.ndarray, set, dict)):
         return list(obj)
 
     return [obj]
 
 
-def to_list_optional(obj: Optional[Any], none_to_empty: bool = False) -> Optional[list]:
+def to_list_optional(
+    obj: Optional[Any], none_to_empty: bool = False
+) -> Union[list, None]:
     """Convert some object to a list of object(s) unless already None or a list.
 
     Parameters

@@ -51,6 +51,7 @@ dash-mantine-components = "^0.10.2"
 dash-cool-components = "^0.1.8"
 hydra-core = "^1.2.0"
 dash-iconify = "^0.1.2"
+dask = {extras = ["dataframe"], version = "^2022.9.1"}
 
 [tool.poetry.dev-dependencies]
 
@@ -83,6 +84,14 @@ max-line-length = 88
     [tool.coverage.run]
     source=["cyclops"]
     omit=["tests/*", "*__init__.py"]
+
+[tool.nbqa.addopts]
+flake8 = [
+    "--max-line-length=88"
+]
+
+[tool.nbqa.exclude]
+flake8 = "notebooks/tutorials/mimiciv/query_api_developer.ipynb|notebooks/usecases/gemini/los_er/1-query.ipynb|notebooks/usecases/gemini/mortality_decompensation/1-query.ipynb"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

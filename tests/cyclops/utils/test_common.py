@@ -41,6 +41,7 @@ def test_to_list():
     """Test to_list fn."""
     assert to_list("kobe") == ["kobe"]
     assert to_list(np.array([1, 2])) == [1, 2]
+    assert to_list({1, 2, 3}) == [1, 2, 3]
 
 
 def test_to_list_optional():

@@ -42,6 +42,9 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
+# mypy: ignore-errors
+
+
 class FeatureMeta:
     """Feature metadata class.
 
@@ -169,7 +172,7 @@ class Features:
         data: pd.DataFrame,
         features: Union[str, List[str]],
         by: Optional[Union[str, List[str]]],  # pylint: disable=invalid-name
-        targets: Optional[Union[str, List[str]]] = None,
+        targets: Union[str, List[str], None] = None,
         force_types: Optional[dict] = None,
         normalizers: Optional[Dict[str, GroupbyNormalizer]] = None,
     ):
@@ -376,7 +379,7 @@ class Features:
 
         save_data = self.data
         self.data = None
-        splits = [copy.deepcopy(self) for i in range(len(value_splits))]
+        splits = [copy.deepcopy(self) for _ in range(len(value_splits))]
         for i, split in enumerate(splits):
             split.data = datas[i]
         self.data = save_data
@@ -385,7 +388,7 @@ class Features:
 
     def split(
         self,
-        fractions: Optional[Union[float, List[float]]] = None,
+        fractions: Union[float, List[float]] = 1.0,
         randomize: bool = True,
         seed: int = None,
     ):
@@ -393,7 +396,7 @@ class Features:
 
         Parameters
         ----------
-        fractions: list, optional
+        fractions: list of float or float, optional
             Fraction(s) of samples between 0 and 1 to use for each split.
         randomize: bool, default = True
             Whether to randomize the data in the splits.
@@ -411,7 +414,7 @@ class Features:
 
     def compute_value_splits(
         self,
-        fractions: Optional[Union[float, List[float]]] = None,
+        fractions: Union[float, List[float]] = 1.0,
         randomize: bool = True,
         seed: int = None,
     ) -> List[np.ndarray]:
@@ -419,7 +422,7 @@ class Features:
 
         Parameters
         ----------
-        fractions: list, optional
+        fractions: list of float or float, optional
             Fraction(s) of samples between 0 and 1 to use for each split.
         randomize: bool, default = True
             Whether to randomize the data in the splits.
@@ -520,8 +523,8 @@ class Features:
             A map from the feature name to the forced feature type.
 
         """
-        infer_features = set(self.features) - set(
-            to_list_optional(force_types, none_to_empty=True)
+        infer_features = to_list(
+            set(self.features) - set(to_list_optional(force_types, none_to_empty=True))
         )
 
         new_types = infer_types(self.data, infer_features)
@@ -562,7 +565,7 @@ class Features:
 
         # Check to make sure none of the feature exist in another normalizer
         for norm_key, norm in self.normalizers.items():
-            norm_set = set(norm.keys())
+            norm_set = set(norm.normalizer_map.keys())
             intersect = norm_set.intersection(features)
             if len(intersect) != 0:
                 raise ValueError(
@@ -701,7 +704,7 @@ class Features:
             data, {feat: CATEGORICAL_INDICATOR for feat in features}, inplace=False
         )
 
-    def save(self, save_path: str, file_format: str = "parquet") -> None:
+    def save(self, save_path: str, file_format: str = "parquet") -> str:
         """Save data to file.
 
         Parameters
@@ -792,7 +795,7 @@ class TabularFeatures(Features):
 
         """
         if features is None:
-            plot_histogram(self.data, self.feature_names)
+            plot_histogram(self.data, self.feature_names())
         else:
             plot_histogram(self.data, features)
 
@@ -844,7 +847,7 @@ class TemporalFeatures(Features):
 
         """
         if features is None:
-            plot_temporal_features(self.data, self.feature_names)
+            plot_temporal_features(self.data, self.feature_names())
         else:
             plot_temporal_features(self.data, features)
 
