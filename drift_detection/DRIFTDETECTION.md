@@ -13,6 +13,10 @@ We use multivariate tests to detect malignant shifts in the joint distribution b
 - Isomap
 - BBSDs_FFNN
 - BBSDh_FFNN
+- BBSDs_CNN
+- BBSDh_CNN
+- BBSDs_LSTM
+- BBSDh_LSTM
 
 ## Tester
 
@@ -20,10 +24,11 @@ We use multivariate tests to detect malignant shifts in the joint distribution b
 - LSDD
 - LK 
 - Classifier
+- Context-Aware MMD
 
 ## Explainer
 
-- Shap
+- Shap values
 
 ## Experiments
 
@@ -31,11 +36,11 @@ We use multivariate tests to detect malignant shifts in the joint distribution b
 
 We will use prior knowledge to evaluate real-life scenarios that may cause malignant shifts in healthcare data. Evaluating real-life settings that cause malignant shift can reveal sociodemographic factors that result in biases of machine learning models (e.g. demographic, gender, income, education, employment status), problems affecting care by providers (e.g. overworked, not compensated, lack of resources), and inefficiencies in the management of care that lead to poor outcomes (e.g. resource allocation, staffing). The experiments available are as follows:
 
-- Covid
-- Seasonal
-- Hospital Type (Academic vs Community)
-- Age (unsupported)
-- Sex (unsupported)
+- Time (e.g. Covid)
+- Seasonal (e.g. summer vs. winter)
+- Hospital Type (e.g. academic hospitals vs. community hospitals)
+- Age (e.g. paediatric vs. adult)
+- Gender (e.g. male vs. female)
 
 ### Synthetic Experiments
 
@@ -43,6 +48,6 @@ Synthetic experiments will be performed to evaluate under what magnitudes and ty
 
 - Gaussian Noise Shift
 - Binary Noise Shift
+- Knockout Shift
 - Changepoint Shift
 - Multiway Feature Association Shift
-
