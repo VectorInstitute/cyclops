@@ -6,7 +6,7 @@ from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "mortality_decompensation"
 USECASE_ROOT_DIR = join(
-    "/mnt/data/nfs",
+    "/mnt/nfs/project/delirium",
     "cyclops",
     "usecases",
     "gemini",
