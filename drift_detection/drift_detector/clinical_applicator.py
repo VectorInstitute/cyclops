@@ -22,9 +22,10 @@ class ClinicalShiftApplicator(object):
                  **kwargs
                 ):
         
+        self.shift_type = shift_type
+        
         self.shift_types = { 
-            "summer": summer, 
-            "winter": winter, 
+            "month": month, 
             "hospital_type": hospital_type,
             "time": time,
         }
@@ -38,9 +39,8 @@ class ClinicalShiftApplicator(object):
         
     def apply_shift(
         self, 
-        admin_data, 
         X, 
-        y, 
+        admin_data,
         **kwargs
     ):
 
@@ -48,32 +48,29 @@ class ClinicalShiftApplicator(object):
 
         Returns
         ----------
-        admin_data: pd.DataFrame
-            Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
-        X: numpy.matrix
+        X: pd.DataFrame
             Data to apply shift to.
         y: 
             Outcome labels.
+        admin_data: pd.DataFrame
+            Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
         """
         
-        
+        encounter_ids = list(X.index.get_level_values(0).unique())
+        X = X[np.in1d(X.index.get_level_values(0),admin_data['encounter_id'])]
+    
         X_s, X_t = self.shift_types[self.shift_type](
-                admin_data, X, **get_args(self.shift_types[self.shift_type], kwargs)
+                X, admin_data, **get_args(self.shift_types[self.shift_type], kwargs)
             )
         
         encounter_ids = list(X.index.get_level_values(0).unique())
-        y_s = y[np.in1d(encounter_ids, X_s.index.get_level_values(0).unique())]
-        y_t = y[np.in1d(encounter_ids, X_t.index.get_level_values(0).unique())]
-
-        assert len(X_s.index.get_level_values(0).unique()) == len(y_s)
-        assert len(X_t.index.get_level_values(0).unique()) == len(y_t)
-        
-        return (X_s, y_s, X_t, y_t)  
+     
+        return (X_s, X_t)  
 
             
 def time(
-    admin_data, 
     X, 
+    admin_data, 
     start_date,
     cutoff_date,
     end_date,
@@ -84,10 +81,10 @@ def time(
 
     Parameters
     ----------
+    X: pd.DataFrame
+        Data to apply shift to.
     admin_data: pd.DataFrame
         Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
-    X: numpy.ndarray
-        Data to apply shift to.
     start_date: datetime.date
         Start of source data.
     cutoff_date: datetime.date
@@ -116,20 +113,22 @@ def time(
     X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
     return (X_s, X_t)
 
-def winter(
-    admin_data, 
+def month(
     X, 
+    admin_data, 
+    source,
+    target,
     encounter_id='encounter_id', 
     admit_timestamp='admit_timestamp'
 ):
-    """winter.
+    """month.
 
     Parameters
     ----------
+    X: pd.DataFrame
+        Data to apply shift to.
     admin_data: pd.DataFrame
         Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
-    X: numpy.matrix
-        Data to apply shift to.
     encounter_id: str
         Column name for encounter ids.
     admit_timestamp: str
@@ -138,49 +137,13 @@ def winter(
     """
     ids_source = admin_data.loc[
         (
-            (admin_data[admit_timestamp].dt.month.isin([11, 12, 1, 2]))
+            (admin_data[admit_timestamp].dt.month.isin(source))
         ),
             encounter_id,
     ]
     ids_target = admin_data.loc[
         (
-            (admin_data[admit_timestamp].dt.month.isin([3, 4, 5, 6, 7, 8, 9, 10]))
-        ),
-        encounter_id,
-    ]
-    X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
-    X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t)
-
-def summer(
-    admin_data, 
-    X, 
-    encounter_id='encounter_id', 
-    admit_timestamp='admit_timestamp'
-):
-    """summer.
-
-    Parameters
-    ----------
-    admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
-    X: numpy.matrix
-        Data to apply shift to.
-    encounter_id: str
-        Column name for encounter ids.
-    admit_timestamp: str
-        Column name for admission timestamps.
-
-    """
-    ids_source = admin_data.loc[
-        (
-            (admin_data[admit_timestamp].dt.month.isin([6, 7, 8, 9]))
-        ),
-        encounter_id,
-    ]
-    ids_target = admin_data.loc[
-        (
-            (admin_data[admit_timestamp].dt.month.isin([1, 2, 3, 4, 5, 10, 11, 12]))
+            (admin_data[admit_timestamp].dt.month.isin(target))
         ),
         encounter_id,
     ]
@@ -189,10 +152,10 @@ def summer(
     return (X_s, X_t)
 
 def hospital_type(
-    admin_data, 
     X, 
-    source_hospitals, 
-    target_hospitals, 
+    admin_data,
+    source, 
+    target, 
     encounter_id='encounter_id', 
     hospital_id='hospital_id'
 ):
@@ -201,10 +164,10 @@ def hospital_type(
 
     Parameters
     ----------
+    X: pd.DataFrame
+        Data to apply shift to.
     admin_data: pd.DataFrame
         Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
-    X: numpy.matrix
-        Data to apply shift to.
     source_hospitals: list
         List of hospitals for source data.
     target_hospitals: list
@@ -218,16 +181,16 @@ def hospital_type(
     
     ids_source = admin_data.loc[
         (
-            (admin_data[hospital_id].isin(source_hospitals))
+            (admin_data[hospital_id].isin(source))
         ),
         encounter_id,
     ]
     ids_target = admin_data.loc[
         (
-            (admin_data[hospital_id].isin(target_hospitals))
+            (admin_data[hospital_id].isin(target))
         ),
         encounter_id,
     ]
     X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
     X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t)
+    return (X_s, X_t) 

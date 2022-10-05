@@ -30,34 +30,34 @@ class RollingWindow:
         self.optimizer = optimizer
         
     def rolling_window_mean(
-        x: pd.DataFrame = None, 
+        X: pd.DataFrame = None, 
         window: int = 30
     ):
         """
         Get rolling mean of time series data.
         Parameters
         ----------
-        x: 
+        X: 
             time series data
         window: int
             window length
         """
-        return x.rolling(window).mean().dropna(inplace=True)
+        return X.rolling(window).mean().dropna(inplace=True)
         
     def rolling_window_stdev(
-        x: pd.DataFrame = None, 
+        X: pd.DataFrame = None, 
         window: int =30
     ):
         """
         Get rolling standard deviation of time series data.
         Parameters
         ----------
-        x: 
+        X: 
             time series data
         window: int
             window length
         """
-        return x.rolling(window).stdev().dropna(inplace=True)
+        return X.rolling(window).stdev().dropna(inplace=True)
         
     def rolling_window_performance(self, 
                                    X_test: pd.DataFrame = None, 
@@ -129,7 +129,7 @@ class RollingWindow:
 
         Returns
         -------
-        drift metrics: pd.DataFrame
+        drift_metrics: pd.DataFrame
             dataframe containing drift p-value and distance metrics across time series.
         """
         

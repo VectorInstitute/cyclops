@@ -39,6 +39,7 @@ class Reductor:
     dr_method: String
         The dimensionality reduction method to use.
         Available methods are:
+            "NoRed"
             "PCA"
             "SRP"
             "kPCA"
@@ -95,6 +96,7 @@ class Reductor:
 
         # dictionary of string methods with corresponding functions
         reductor_methods = {
+            "NoRed": None,
             "PCA": PCA,
             "SRP": SparseRandomProjection,
             "kPCA": KernelPCA,

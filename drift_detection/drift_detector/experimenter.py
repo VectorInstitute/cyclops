@@ -4,6 +4,7 @@ from .clinical_applicator import ClinicalShiftApplicator
 from .utils import get_args
 from typing import Union
 import numpy as np
+import pandas as pd
 import torch
 
 class Experimenter:
@@ -27,20 +28,59 @@ class Experimenter:
     def __init__(
         self,
         detector: Detector = None,
-        shiftapplicator: Union[SyntheticShiftApplicator, ClinicalShiftApplicator] = None,
-        random_runs = 10
+        syntheticshiftapplicator: SyntheticShiftApplicator = None,
+        clinicalshiftapplicator: ClinicalShiftApplicator = None,
+        random_runs = 5,
+        admin_data: pd.DataFrame = None,
+        data: pd.DataFrame = None
     ):
 
         self.detector = detector
-        self.shiftapplicator = shiftapplicator
+        self.syntheticshiftapplicator = syntheticshiftapplicator
+        self.clinicalshiftapplicator = clinicalshiftapplicator
         self.random_runs = random_runs
+        self.admin_data = admin_data
         
         self.samples = [10, 20, 50, 100, 200, 500, 1000]
         
+    def apply_synthetic_shift(
+        self,
+        X: np.ndarray, 
+        **kwargs
+    ):         
+        X_target = None
+        
+        if self.syntheticshiftapplicator is not None:
+            X_target, _ = self.syntheticshiftapplicator.apply_shift(
+                X, 
+                **kwargs
+            )
+        else:
+            raise ValueError("No SyntheticShiftApplicator detected.")
+        return X_target    
+        
+    def apply_clinical_shift(
+        self, 
+        X: pd.DataFrame,
+        **kwargs
+    ):
+        X_source = None
+        X_target = None
+        
+        if self.clinicalshiftapplicator is not None:
+            X_source, X_target = self.clinicalshiftapplicator.apply_shift(
+                X, 
+                self.admin_data, 
+                **kwargs
+            )
+        else:
+            raise ValueError("No ClinicalShiftApplicator detected.")
+        return X_source, X_target
+        
     def detect_shift_sample(
         self, 
-        X_s, 
-        X_t, 
+        X_source: Union[np.ndarray, torch.utils.data.Dataset], 
+        X_target: Union[np.ndarray, torch.utils.data.Dataset], 
         sample: int, 
         **kwargs
     ):
@@ -48,9 +88,9 @@ class Experimenter:
         Tests shift between source and target data.
         Parameters
         ----------
-        X_s : np.ndarray
+        X_source : np.ndarray
             Source data.
-        X_t : np.ndarray
+        X_target : np.ndarray
             Target data.
         **kwargs
             Keyword arguments for Detector.
@@ -59,7 +99,12 @@ class Experimenter:
         dict
             Dictionary containing p-value and distance.
         """
-        drift_results = self.detector.detect_shift(X_s, X_t, **get_args(self.detector.detect_shift, kwargs))
+        
+        drift_results = self.detector.detect_shift(
+            X_source[:1000,:], 
+            X_target[:sample,:], 
+            **get_args(self.detector.detect_shift, kwargs)
+        )
 
         return drift_results
 
@@ -67,6 +112,7 @@ class Experimenter:
         self,
         X_source: Union[np.ndarray, torch.utils.data.Dataset],
         X_target: Union[np.ndarray, torch.utils.data.Dataset],
+        synthetic: bool = False,
         **kwargs
     ):
         """
@@ -92,19 +138,14 @@ class Experimenter:
             
             np.random.seed(rand_run)
             np.random.shuffle(X_target)
-            
-            ## add functionality to shuffle data
         
             for si, sample in enumerate(self.samples):
-            
-                if isinstance(self.shiftapplicator, SyntheticShiftApplicator):
-                    X_shifted_target, _ = self.shiftapplicator.apply_shift(X_target, **kwargs)
-                elif isinstance(self.shiftapplicator, ClinicalShiftApplicator):
-                    X_source, y_source, X_shifted_target, y_shifted_target = self.shiftapplicator.apply_shift(X_target, **kwargs)
-                else: 
-                    X_shifted_target = X_target     
 
-                drift_results = self.detector.detect_shift(X_source[:1000,:], X_shifted_target[:sample,:], **get_args(self.detector.detect_shift, kwargs))
+                drift_results = self.detector.detect_shift(
+                    X_source[:1000,:], 
+                    X_target[:sample,:], 
+                    **get_args(self.detector.detect_shift, kwargs)
+                )
 
                 p_val_samples[si, rand_run] = drift_results['p_val']
                 dist_samples[si, rand_run] = drift_results['distance']
