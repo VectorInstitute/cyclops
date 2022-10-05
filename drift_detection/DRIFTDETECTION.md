@@ -34,7 +34,7 @@ We use multivariate tests to detect malignant shifts in the joint distribution b
 
 ### Clinical Experiments
 
-We will use prior knowledge to evaluate real-life scenarios that may cause malignant shifts in healthcare data. Evaluating real-life settings that cause malignant shift can reveal sociodemographic factors that result in biases of machine learning models (e.g. demographic, gender, income, education, employment status), problems affecting care by providers (e.g. overworked, not compensated, lack of resources), and inefficiencies in the management of care that lead to poor outcomes (e.g. resource allocation, staffing). The experiments available are as follows:
+We will use prior knowledge to evaluate real-life scenarios that may cause malignant shifts in healthcare data. Evaluating real-life settings that cause malignant shift can reveal sociodemographic factors that result in biases of machine learning models (e.g. demographic, gender, income, education, employment status), problems affecting care by providers (e.g. overworked, not compensated, lack of resources), and inefficiencies in the management of care that lead to poor outcomes (e.g. resource allocation, staffing). The types of experiments one can run include, but are not limited to:
 
 - Time (e.g. Covid)
 - Seasonal (e.g. summer vs. winter)
