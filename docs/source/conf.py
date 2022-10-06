@@ -16,12 +16,6 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../../cyclops"))
-sys.path.insert(0, os.path.abspath("../../cyclops/processors"))
-sys.path.insert(0, os.path.abspath("../../cyclops/processors/feature"))
-sys.path.insert(0, os.path.abspath("../../cyclops/utils"))
-sys.path.insert(0, os.path.abspath("../../cyclops/query"))
-sys.path.insert(0, os.path.abspath("../../cyclops/query/postprocess"))
-sys.path.insert(0, os.path.abspath("../../cyclops/workflow"))
 
 
 # -- Project information -----------------------------------------------------
@@ -40,6 +34,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
+    "sphinx.ext.autosummary",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "numpydoc",
@@ -52,14 +47,16 @@ numpydoc_show_class_members = False
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
+add_module_names = False
 
 apidoc_module_dir = "../../cyclops"
-apidoc_excluded_paths = ["tests", "models"]
+apidoc_excluded_paths = ["tests", "models", "*constants.py", "*column_names.py"]
 apidoc_output_dir = "reference/api"
 apidoc_separate_modules = True
+apidoc_extra_args = ["-f", "-M", "-T", "--implicit-namespaces"]
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.8/", None),
+    "python": ("https://docs.python.org/3.9/", None),
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org", None),
@@ -71,7 +68,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns: list = []
+exclude_patterns: list = ["reference/api/cyclops.rst"]
 source_suffix = [".rst", ".md"]
 
 

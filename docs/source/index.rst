@@ -11,7 +11,7 @@ Welcome to cyclops's documentation!
    design
    contributing
    coverage
-   reference/api/modules
+   api
 
 
 Indices and tables
