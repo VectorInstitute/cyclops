@@ -9,7 +9,7 @@ from typing import Literal, Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike
-from sklearn.metrics import confusion_matrix, multilabel_confusion_matrix
+from sklearn.metrics import multilabel_confusion_matrix
 
 from ..utils import _check_topk, _common_input_checks_and_format, _select_topk, sigmoid
 
@@ -18,6 +18,7 @@ def _stat_scores_update(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
+    pos_label: int = 1,
     num_classes: Optional[int] = None,
     num_labels: Optional[int] = None,
     sample_weight: Optional[ArrayLike] = None,
@@ -36,6 +37,9 @@ def _stat_scores_update(  # pylint: disable=too-many-arguments
             Ground truth.
         task: String
             The task type. Can be either 'binary', 'multiclass' or 'multilabel'.
+        pos_label: int
+            The positive label to report. Defaults to 1. Can be either 0, 1.
+            Only applicable to binary data.
         num_classes: int
             The number of classes. Only used for multiclass tasks.
         num_labels: int
@@ -64,6 +68,7 @@ def _stat_scores_update(  # pylint: disable=too-many-arguments
             If the task is not one of 'binary', 'multiclass' or 'multilabel'.
 
     """
+    # pylint: disable=invalid-name
     if task == "binary":
         tp, fp, tn, fn = _binary_stat_scores_update(
             target,
@@ -115,6 +120,7 @@ def _stat_scores(
         The stat scores.
 
     """
+    # pylint: disable=invalid-name
     samplewise = reduce == "samples"
     confmat = multilabel_confusion_matrix(
         target, preds, sample_weight=sample_weight, labels=labels, samplewise=samplewise
@@ -139,7 +145,7 @@ def _stat_scores(
     )
 
 
-def _stat_scores_compute(
+def _stat_scores_compute(  # pylint: disable=invalid-name
     tp: np.ndarray, fp: np.ndarray, tn: np.ndarray, fn: np.ndarray
 ) -> np.ndarray:
     """Compute true positives, false positives, true negatives and false negatives.
@@ -224,6 +230,7 @@ def stat_scores(  # pylint: disable=too-many-arguments
         The stat scores.
 
     """
+    # pylint: disable=invalid-name
     tp, fp, tn, fn = _stat_scores_update(
         target,
         preds,
@@ -338,6 +345,7 @@ def _binary_stat_scores_update(
             If the target and preds are not numeric.
 
     """
+    # pylint: disable=invalid-name
     target, preds = _binary_stat_scores_format(target, preds, threshold)
 
     if pos_label not in [0, 1]:
@@ -357,7 +365,7 @@ def _binary_stat_scores_update(
     return np.concatenate([tp, fp, tn, fn]).astype(np.int32)
 
 
-def _binary_stat_scores_compute(
+def _binary_stat_scores_compute(  # pylint: disable=invalid-name
     tp: np.ndarray, fp: np.ndarray, tn: np.ndarray, fn: np.ndarray
 ) -> np.ndarray:
     """Return the stat scores for binary inputs.
@@ -385,7 +393,6 @@ def binary_stat_scores(
     target: ArrayLike,
     preds: ArrayLike,
     sample_weight: Optional[ArrayLike] = None,
-    normalize: Optional[str] = None,
     threshold: Optional[float] = 0.5,
 ) -> np.ndarray:
     """Compute the stat scores for binary inputs.
@@ -398,14 +405,6 @@ def binary_stat_scores(
             Predictions.
         sample_weight: ArrayLike
             Sample weights.
-        normalize: String
-            The method to normalize the stat scores. One of:
-
-            * 'true': Divide the stat scores by the number of true positives.
-            * 'pred': Divide the stat scores by the number of predicted positives.
-            * 'all': Divide the stat scores by the total number of samples.
-
-            Defaults to ``None``.
         threshold: float
             Threshold for converting logits and probability predictions to binary
             [1, 0]. Defaults to 0.5.
@@ -420,6 +419,7 @@ def binary_stat_scores(
             If threshold is not a float and not in [0,1].
 
     """
+    # pylint: disable=invalid-name
     if not (isinstance(threshold, float) and (0 <= threshold <= 1)):
         raise ValueError(
             f"Expected argument `threshold` to be a float in the [0,1] range, "
@@ -564,6 +564,7 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
             If the input target and preds are not numeric.
 
     """
+    # pylint: disable=invalid-name
     target, preds = _multiclass_stat_scores_format(target, preds, num_classes, top_k)
     labels = np.arange(num_classes)
 
@@ -575,7 +576,7 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
     return tp, fp, tn, fn
 
 
-def _multiclass_stat_scores_compute(
+def _multiclass_stat_scores_compute(  # pylint: disable=invalid-name
     tp: np.ndarray, fp: np.ndarray, tn: np.ndarray, fn: np.ndarray
 ) -> np.ndarray:
     """Compute the stat scores for multiclass inputs.
@@ -632,6 +633,7 @@ def multiclass_stat_scores(  # pylint: disable=too-many-arguments
         negatives.
 
     """
+    # pylint: disable=invalid-name
     tp, fp, tn, fn = _multiclass_stat_scores_update(
         target,
         preds,
@@ -766,6 +768,7 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
             If the input target and preds are not numeric.
 
     """
+    # pylint: disable=invalid-name
     target, preds = _multilabel_stat_scores_format(
         target, preds, num_labels, threshold, top_k
     )
@@ -778,7 +781,7 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
     return tp, fp, tn, fn
 
 
-def _multilabel_stat_scores_compute(
+def _multilabel_stat_scores_compute(  # pylint: disable=invalid-name
     tp: np.ndarray, fp: np.ndarray, tn: np.ndarray, fn: np.ndarray
 ) -> np.ndarray:
     """Compute the stat scores for multilabel inputs.
@@ -861,6 +864,7 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
             f"but got {threshold}."
         )
 
+    # pylint: disable=invalid-name
     tp, fp, tn, fn = _multilabel_stat_scores_update(
         target,
         preds,

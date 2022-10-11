@@ -1,2 +1,2 @@
-from . import functional
-from . import utils
+"""Evaluation metrics package."""
+from . import functional, utils  # noqa: F401

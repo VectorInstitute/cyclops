@@ -135,9 +135,9 @@ def _common_input_checks_and_format(
     return target, preds, type_target, type_preds
 
 
-def sigmoid(x: ArrayLike) -> np.ndarray:
+def sigmoid(arr: ArrayLike) -> np.ndarray:
     """Sigmoid function."""
-    return 1 / (1 + np.exp(-x))
+    return 1 / (1 + np.exp(-arr))
 
 
 def _check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -> None:
