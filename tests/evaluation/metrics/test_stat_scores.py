@@ -1,198 +1,149 @@
-import pytest
+"""Test stat_scores functions."""
+from functools import partial
+from typing import Literal
+
 import numpy as np
-from sklearn.utils._testing import assert_array_equal
+import pytest
+from sklearn.metrics import confusion_matrix as sk_confusion_matrix
+from sklearn.metrics import (
+    multilabel_confusion_matrix as sk_multilabel_confusion_matrix,
+)
+
 from evaluation.metrics.functional.stat_scores import (
     binary_stat_scores,
     multiclass_stat_scores,
     multilabel_stat_scores,
 )
+from evaluation.metrics.utils import sigmoid
+
+from .helpers import _functional_test
+from .inputs import (
+    NUM_CLASSES,
+    NUM_LABELS,
+    THRESHOLD,
+    _binary_cases,
+    _multiclass_cases,
+    _multilabel_cases,
+)
 
 
-@pytest.fixture
-def binary_cases():
-    """Binary cases."""
-    int_preds = [1, 1, 1, 0, 0, 0]
-    target = [0, 1, 0, 1, 0, 1]
-    proba_preds = [0.8, 0.55, 0.75, 0.38, 0.49, 0.22]
+def _sk_stat_scores_binary(
+    target: np.ndarray, preds: np.ndarray, threshold: float
+) -> np.ndarray:
+    """Compute stat scores for binary case using sklearn."""
+    # pylint: disable=invalid-name
+    if np.issubdtype(preds.dtype, np.floating):
+        if not ((0 < preds) & (preds < 1)).all():
+            preds = sigmoid(preds)
+        preds = (preds >= threshold).astype(np.uint8)
 
-    return int_preds, proba_preds, target
-
-
-@pytest.fixture
-def multiclass_cases():
-    """Multiclass cases."""
-    int_preds = [0, 0, 2, 2, 0, 2]
-    target = [2, 0, 2, 2, 0, 1]
-
-    proba_preds = [
-        [0.9, 0.1, 0],
-        [0.6, 0.1, 0.3],
-        [0.2, 0.3, 0.5],
-        [0.1, 0, 0.9],
-        [0.6, 0.1, 0.3],
-        [0.3, 0.2, 0.5],
-    ]
-
-    return int_preds, proba_preds, target
+    tn, fp, fn, tp = sk_confusion_matrix(
+        y_true=target, y_pred=preds, labels=[0, 1]
+    ).ravel()
+    return np.array([tp, fp, tn, fn, tp + fn])
 
 
-@pytest.fixture
-def multilabel_cases():
-    """Multilabel cases."""
-    int_preds = [[0, 0, 1], [1, 0, 1]]
-    target = [[0, 1, 0], [1, 0, 1]]
-
-    proba_preds = [[0.11, 0.22, 0.84], [0.73, 0.33, 0.92]]
-
-    return int_preds, proba_preds, target
-
-
-@pytest.mark.parametrize("threshold", [0.5, 0.1, 0.9])
-def test_binary_stat_scores(binary_cases, threshold):
+@pytest.mark.parametrize("inputs", _binary_cases)
+def test_binary_stat_scores(inputs):
     """Test binary case."""
-    int_preds, proba_preds, target = binary_cases
+    target, preds = inputs
 
-    # same preds
-    same_input_result = [3, 0, 3, 0, 3]
-    assert_array_equal(binary_stat_scores(int_preds, int_preds), same_input_result)
-
-    result = [1, 2, 1, 2, 3]
-
-    # preds: int list, target: int list
-    output = binary_stat_scores(target, int_preds)
-    assert_array_equal(output, result)
-
-    # probablistic preds
-    if threshold == 0.1:
-        result = [3, 3, 0, 0, 3]
-    elif threshold == 0.9:
-        result = [0, 0, 3, 3, 3]
-
-    # preds: list of probability scores, target: int list
-    output = binary_stat_scores(target, proba_preds, threshold=threshold)
-    assert_array_equal(output, result)
+    # test functional
+    _functional_test(
+        target,
+        preds,
+        binary_stat_scores,
+        partial(_sk_stat_scores_binary, threshold=THRESHOLD),
+        {"threshold": THRESHOLD},
+    )
 
 
-@pytest.mark.parametrize("top_k", [1, 2, 3])
-def test_multiclass_stat_scores(multiclass_cases, top_k):
+def _sk_stat_scores_multiclass(
+    target: np.ndarray, preds: np.ndarray, classwise: bool
+) -> np.ndarray:
+    """Compute stat scores for multiclass case using sklearn."""
+    # pylint: disable=invalid-name
+    if preds.ndim == target.ndim + 1:
+        preds = np.argmax(preds, axis=1)
+    confmat = sk_multilabel_confusion_matrix(
+        y_true=target, y_pred=preds, labels=list(range(NUM_CLASSES))
+    )
+
+    tn = confmat[:, 0, 0]
+    fn = confmat[:, 1, 0]
+    tp = confmat[:, 1, 1]
+    fp = confmat[:, 0, 1]
+
+    if not classwise:
+        tp = tp.sum(keepdims=True)
+        fp = fp.sum(keepdims=True)
+        tn = tn.sum(keepdims=True)
+        fn = fn.sum(keepdims=True)
+        return np.concatenate([tp, fp, tn, fn, tp + fn])
+    return np.stack([tp, fp, tn, fn, tp + fn], axis=-1)
+
+
+@pytest.mark.parametrize("inputs", _multiclass_cases)
+@pytest.mark.parametrize("classwise", [True, False])
+def test_multiclass_stat_scores(inputs, classwise):
     """Test multiclass case."""
-    int_preds, proba_preds, target = multiclass_cases
+    target, preds = inputs
 
-    # same preds
-    assert_array_equal(
-        multiclass_stat_scores(int_preds, int_preds, num_classes=3), [6, 0, 12, 0, 6]
+    # test functional
+    _functional_test(
+        target,
+        preds,
+        multiclass_stat_scores,
+        partial(_sk_stat_scores_multiclass, classwise=classwise),
+        {"num_classes": NUM_CLASSES, "classwise": classwise},
     )
-    assert_array_equal(
-        multiclass_stat_scores(int_preds, int_preds, num_classes=3, classwise=True),
-        [[3, 0, 3, 0, 3], [0, 0, 6, 0, 0], [3, 0, 3, 0, 3]],
+
+
+def _sk_stat_scores_multilabel(
+    target: np.ndarray,
+    preds: np.ndarray,
+    threshold: float,
+    reduce: Literal["micro", "macro", "samples"],
+) -> np.ndarray:
+    """Compute stat scores for multilabel case using sklearn."""
+    # pylint: disable=invalid-name
+    if np.issubdtype(preds.dtype, np.floating):
+        if not ((0 < preds) & (preds < 1)).all():
+            preds = sigmoid(preds)
+        preds = (preds >= threshold).astype(np.uint8)
+
+    confmat = sk_multilabel_confusion_matrix(
+        y_true=target,
+        y_pred=preds,
+        labels=list(range(NUM_LABELS)),
+        samplewise=reduce == "samples",
     )
 
-    result_global = [4, 2, 10, 2, 6]
-    result_classwise = [[2, 1, 3, 0, 2], [0, 0, 5, 1, 1], [2, 1, 2, 1, 3]]
+    tn = confmat[:, 0, 0]
+    fn = confmat[:, 1, 0]
+    tp = confmat[:, 1, 1]
+    fp = confmat[:, 0, 1]
 
-    output = multiclass_stat_scores(target, int_preds, num_classes=3)
-    assert_array_equal(output, result_global)
-
-    output = multiclass_stat_scores(target, int_preds, num_classes=3, classwise=True)
-    assert_array_equal(output, result_classwise)
-
-    # probablistic preds
-    result_global = [4, 2, 10, 2, 6]
-    result_classwise = [[2, 1, 3, 0, 2], [0, 0, 5, 1, 1], [2, 1, 2, 1, 3]]
-
-    # top_k
-    if top_k == 2:
-        result_global = [4, 8, 4, 2, 6]
-        result_classwise = [[2, 3, 1, 0, 2], [0, 2, 3, 1, 1], [2, 3, 0, 1, 3]]
-    if top_k == 3:
-        with pytest.raises(
-            ValueError,
-            match=r"The `top_k` has to be strictly smaller than the number of classes.",
-        ):
-            multiclass_stat_scores(target, proba_preds, num_classes=3, top_k=top_k)
-    else:
-        output = multiclass_stat_scores(
-            target,
-            proba_preds,
-            num_classes=3,
-            top_k=top_k,
-        )
-        assert_array_equal(output, result_global)
-
-        output = multiclass_stat_scores(
-            target, proba_preds, num_classes=3, classwise=True, top_k=top_k
-        )
-        assert_array_equal(output, result_classwise)
+    if reduce == "micro":
+        tp = tp.sum(keepdims=True)
+        fp = fp.sum(keepdims=True)
+        tn = tn.sum(keepdims=True)
+        fn = fn.sum(keepdims=True)
+        return np.concatenate([tp, fp, tn, fn, tp + fn])
+    return np.stack([tp, fp, tn, fn, tp + fn], axis=-1)
 
 
-def test_multilabel_stat_scores(multilabel_cases):
+@pytest.mark.parametrize("inputs", _multilabel_cases)
+@pytest.mark.parametrize("reduce", ["micro", "macro", "samples"])
+def test_multilabel_stat_scores(inputs, reduce):
     """Test multilabel case."""
-    int_preds, proba_preds, target = multilabel_cases
+    target, preds = inputs
 
-    # same preds
-    assert_array_equal(
-        multilabel_stat_scores(int_preds, int_preds, num_labels=3), [3, 0, 3, 0, 3]
+    # test functional
+    _functional_test(
+        target,
+        preds,
+        multilabel_stat_scores,
+        partial(_sk_stat_scores_multilabel, threshold=THRESHOLD, reduce=reduce),
+        {"num_labels": NUM_LABELS, "threshold": THRESHOLD, "reduce": reduce},
     )
-    assert_array_equal(
-        multilabel_stat_scores(int_preds, int_preds, num_labels=3, reduce="macro"),
-        [[1, 0, 1, 0, 1], [0, 0, 2, 0, 0], [2, 0, 0, 0, 2]],
-    )
-    assert_array_equal(
-        multilabel_stat_scores(int_preds, int_preds, num_labels=3, reduce="samples"),
-        [[1, 0, 2, 0, 1], [2, 0, 1, 0, 2]],
-    )
-
-    result_micro = [2, 1, 2, 1, 3]
-    result_macro = [[1, 0, 1, 0, 1], [0, 0, 1, 1, 1], [1, 1, 0, 0, 1]]
-    result_samples = [[0, 1, 1, 1, 1], [2, 0, 1, 0, 2]]
-
-    output = multilabel_stat_scores(target, int_preds, num_labels=3)
-    assert_array_equal(output, result_micro)
-
-    output = multilabel_stat_scores(target, int_preds, num_labels=3, reduce="macro")
-    assert_array_equal(output, result_macro)
-
-    output = multilabel_stat_scores(target, int_preds, num_labels=3, reduce="samples")
-    assert_array_equal(output, result_samples)
-
-    # probablistic preds
-    output = multilabel_stat_scores(target, proba_preds, num_labels=3)
-    assert_array_equal(output, result_micro)
-
-    output = multilabel_stat_scores(target, proba_preds, num_labels=3, reduce="macro")
-    assert_array_equal(output, result_macro)
-
-    output = multilabel_stat_scores(target, proba_preds, num_labels=3, reduce="samples")
-    assert_array_equal(output, result_samples)
-
-    # top_k
-    result_micro = [3, 1, 2, 0, 3]
-    result_macro = [[1, 0, 1, 0, 1], [1, 0, 1, 0, 1], [1, 1, 0, 0, 1]]
-    result_samples = [[1, 1, 1, 0, 1], [2, 0, 1, 0, 2]]
-
-    output = multilabel_stat_scores(target, proba_preds, num_labels=3, top_k=2)
-    assert_array_equal(output, result_micro)
-
-    output = multilabel_stat_scores(
-        target, proba_preds, num_labels=3, reduce="macro", top_k=2
-    )
-    assert_array_equal(output, result_macro)
-
-    output = multilabel_stat_scores(
-        target, proba_preds, num_labels=3, reduce="samples", top_k=2
-    )
-    assert_array_equal(output, result_samples)
-
-    # top_k > num_labels
-    with pytest.raises(
-        ValueError,
-        match=r"The `top_k` has to be strictly smaller than the number of classes.",
-    ):
-        multilabel_stat_scores(target, proba_preds, num_labels=3, top_k=4)
-
-    # top_k = num_labels
-    with pytest.raises(
-        ValueError,
-        match=r"The `top_k` has to be strictly smaller than the number of classes.",
-    ):
-        multilabel_stat_scores(target, proba_preds, num_labels=3, top_k=3)
