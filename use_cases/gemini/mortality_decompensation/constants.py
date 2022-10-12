@@ -1,4 +1,6 @@
-"""WangLab use case constants."""
+"""Mortality decompensation use-case constants."""
+
+import numpy as np
 
 from cyclops.processors.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
 from cyclops.processors.constants import TARGETS
@@ -15,6 +17,7 @@ USECASE_ROOT_DIR = join(
 DATA_DIR = process_dir_save_path(join(USECASE_ROOT_DIR, "./data"))
 
 OUTCOME_DEATH = "outcome_death"
+OUTCOME_EDEMA = "outcome_edema"
 SPLIT_FRACTIONS = [0.8, 0.1, 0.1]
 
 ENCOUNTERS_FILE = join(DATA_DIR, "encounters.parquet")
@@ -24,19 +27,28 @@ TAB_VECTORIZED_FILE = join(DATA_DIR, "tab_vectorized.pkl")
 TEMP_VECTORIZED_FILE = join(DATA_DIR, "temp_vectorized.pkl")
 
 # Tabular
-TAB_TARGETS = [OUTCOME_DEATH]
+TAB_TARGETS = [OUTCOME_DEATH, OUTCOME_EDEMA]
 TAB_FEATURES = [
     HOSPITAL_ID,
     AGE,
     SEX,
     DIAGNOSIS_TRAJECTORY,
     OUTCOME_DEATH,
+    OUTCOME_EDEMA,
+    "readmission",
+    "from_nursing_home_mapped",
+    "from_acute_care_institution_mapped",
+    "los_derived",
+    "prev_encounter_count",
+    "triage_level",
 ] + TAB_TARGETS
 
 # Temporal
 TIMESTEP_SIZE = 24
 WINDOW_DURATION = 144
 PREDICT_OFFSET = 24 * 14
+
+TOP_N_EVENTS = 150
 
 OUTCOME_DEATH_TEMP = TARGETS + " - " + OUTCOME_DEATH
 TEMP_TARGETS = [OUTCOME_DEATH_TEMP]
@@ -53,10 +65,7 @@ FINAL_VECTORIZED = process_dir_save_path(join(DATA_DIR, "4-final"))
 TAB_UNALIGNED = join(FINAL_VECTORIZED, "unaligned_")
 TAB_VEC_COMB = join(FINAL_VECTORIZED, "aligned_")
 
-
 # Querying constants
-YEARS = list(range(2015, 2021))
+BEFORE_DATE = "2020-01-23"
 
-# Column add-ons
-MORTALITY = "mortality"
-LOS = "los"
+SEXES = ["M", "F"]
