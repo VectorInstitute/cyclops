@@ -16,8 +16,8 @@ def is_numeric(*arrays: ArrayLike) -> bool:
     NumPy array. Booleans, unsigned integers, signed integers, floats and complex
     numbers are the kinds of numeric datatype.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     arrays: array-likes
         The arrays to check.
 
@@ -48,7 +48,7 @@ def _check_muldim_input(target: np.ndarray, preds: np.ndarray) -> None:
 
     None of the metrics support multidimensional input.
 
-    Arguments
+    Parameters
     ----------
         preds: np.ndarray
             The predictions.
@@ -76,7 +76,7 @@ def _common_input_checks_and_format(
 
     This function also checks if the input is valid.
 
-    Arguments
+    Parameters
     ----------
         target: ArrayLike
             The target.
@@ -143,7 +143,7 @@ def sigmoid(arr: ArrayLike) -> np.ndarray:
 def _check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -> None:
     """Check if top_k is valid.
 
-    Arguments
+    Parameters
     ----------
         top_k: int
             The number of classes to select.
@@ -171,7 +171,7 @@ def _check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -
 def _select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray:
     """Convert a probability scores to binary by selecting top-k highest entries.
 
-    Arguments
+    Parameters
     ----------
         prob_scores: np.ndarray
             The probability scores. Must be a 2D array.

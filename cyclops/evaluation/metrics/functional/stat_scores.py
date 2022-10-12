@@ -29,7 +29,7 @@ def _stat_scores_update(  # pylint: disable=too-many-arguments
 ):
     """Update the stat scores for a given task.
 
-    Arguments
+    Parameters
     ----------
         preds: ArrayLike
             Predictions.
@@ -102,7 +102,7 @@ def _stat_scores(
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute true positives, false positives, true negatives and false negatives.
 
-    Arguments
+    Parameters
     ----------
         preds: np.ndarray
             Predictions.
@@ -152,7 +152,7 @@ def _stat_scores_compute(  # pylint: disable=invalid-name
 
     Concatenates the results in a single array, along with the support.
 
-    Arguments
+    Parameters
     ----------
         tp: np.ndarray
             True positives.
@@ -199,7 +199,7 @@ def stat_scores(  # pylint: disable=too-many-arguments
     Concatenates the results in a single array, along with the support. This
     function acts as an entry point for more specialized functions.
 
-    Arguments
+    Parameters
     ----------
         preds: ArrayLike
             Predictions.
@@ -252,8 +252,8 @@ def _binary_stat_scores_format(target: ArrayLike, preds: ArrayLike, threshold: f
 
     Converts the target and preds to binary and checks the shape.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth.
         preds: ArrayLike
@@ -321,7 +321,7 @@ def _binary_stat_scores_update(
 ) -> np.ndarray:
     """Compute the statistics for binary inputs.
 
-    Arguments
+    Parameters
     ----------
         target: ArrayLike
             Ground truth.
@@ -370,8 +370,8 @@ def _binary_stat_scores_compute(  # pylint: disable=invalid-name
 ) -> np.ndarray:
     """Return the stat scores for binary inputs.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         tp: np.ndarray
             True positives.
         fp: np.ndarray
@@ -397,7 +397,7 @@ def binary_stat_scores(
 ) -> np.ndarray:
     """Compute the stat scores for binary inputs.
 
-    Arguments
+    Parameters
     ----------
         target: ArrayLike
             Ground truth.
@@ -445,8 +445,8 @@ def _multiclass_stat_scores_format(
     and preds are of the correct shape. Converts the target and preds to the
     correct type.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth.
         preds: ArrayLike
@@ -537,7 +537,7 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Update the stat scores for multiclass inputs.
 
-    Arguments
+    Parameters
     ----------
         target: ArrayLike
             Ground truth.
@@ -581,7 +581,7 @@ def _multiclass_stat_scores_compute(  # pylint: disable=invalid-name
 ) -> np.ndarray:
     """Compute the stat scores for multiclass inputs.
 
-    Arguments
+    Parameters
     ----------
         tp: np.ndarray
             True positives.
@@ -610,7 +610,7 @@ def multiclass_stat_scores(  # pylint: disable=too-many-arguments
 ) -> np.ndarray:
     """Compute stat scores for multiclass inputs.
 
-    Arguments
+    Parameters
     ----------
         target: ArrayLike
             Ground truth.
@@ -655,7 +655,7 @@ def _multilabel_stat_scores_format(
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Format the target and preds for multilabel inputs.
 
-    Arguments
+    Parameters
     ----------
         target: ArrayLike
             Ground truth.
@@ -734,7 +734,7 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Update the stat scores for multilabel inputs.
 
-    Arguments
+    Parameters
     ----------
         target: ArrayLike
             Ground truth.
@@ -786,7 +786,7 @@ def _multilabel_stat_scores_compute(  # pylint: disable=invalid-name
 ) -> np.ndarray:
     """Compute the stat scores for multilabel inputs.
 
-    Arguments
+    Parameters
     ----------
         tp: np.ndarray
             The number of true positives.
@@ -817,7 +817,7 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
 ) -> np.ndarray:
     """Compute the stat scores for multilabel inputs.
 
-    Arguments
+    Parameters
     ----------
         target: ArrayLike
             Ground truth.

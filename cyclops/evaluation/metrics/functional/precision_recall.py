@@ -23,8 +23,8 @@ def _precision_recall_reduce(  # pylint: disable=invalid-name, too-many-argument
 ) -> Union[np.ndarray, float]:
     """Compute precision or recall scores and apply specified average.
 
-    Arguements
-    -----------
+    Parameters
+    ----------
         tp: np.ndarray
             True positives.
         fp: np.ndarray
@@ -42,7 +42,7 @@ def _precision_recall_reduce(  # pylint: disable=invalid-name, too-many-argument
             If set to "warn", this acts as 0, but warnings are also raised.
 
     Returns
-    --------
+    -------
         scores: np.ndarray or float (if average is not None).
 
     """
@@ -96,8 +96,8 @@ def binary_precision(  # pylint: disable=too-many-arguments
 ) -> float:
     """Compute precision score for binary classification.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -156,8 +156,8 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
 ) -> Union[float, np.ndarray]:
     """Compute precision score for multiclass classification.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -237,8 +237,8 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
     be a binary array-like, where 1 indicates the presence of a label and 0
     indicates its absence.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -314,8 +314,8 @@ def binary_recall(  # pylint: disable=too-many-arguments
 ):
     """Compute recall score for binary classification.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -374,8 +374,8 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
 ):
     """Compute recall score for multiclass classification.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -453,8 +453,8 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
     be a binary array-like, where 1 indicates the presence of a label and 0
     indicates its absence.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike

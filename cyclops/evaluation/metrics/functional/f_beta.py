@@ -30,8 +30,8 @@ def _fbeta_reduce(  # pylint: disable=too-many-arguments, invalid-name
     important. `beta < 1` lends more weight to precision, while `beta > 1`
     favors recall (beta -> inf: precision, beta -> 0: recall).
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         tp: np.ndarray
             True positives per class
         fp: np.ndarray
@@ -126,8 +126,8 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
 ) -> float:
     """Compute the F-beta score for binary data.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -189,8 +189,8 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
 ) -> Union[float, np.ndarray]:
     """Compute the F-beta score for multiclass data.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -273,8 +273,8 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
 ):
     """Compute the F-beta score for multilabel data.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -359,8 +359,8 @@ def binary_f1_score(
 ) -> float:
     """Compute the F1 score for binary data.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -405,8 +405,8 @@ def multiclass_f1_score(  # pylint: disable=too-many-arguments
 ) -> Union[float, np.ndarray]:
     """Compute the F1 score for multiclass data.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike
@@ -471,8 +471,8 @@ def multilabel_f1_score(  # pylint: disable=too-many-arguments
 ):
     """Compute the F1 score for multilabel data.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: ArrayLike
             Ground truth (correct) target values.
         preds: ArrayLike

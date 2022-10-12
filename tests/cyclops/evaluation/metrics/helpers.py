@@ -17,8 +17,8 @@ def _functional_test(  # pylint: disable=too-many-arguments
 ) -> None:
     """Test functional metric against sklearn metric.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
         target: np.ndarray
             The target.
         preds: np.ndarray
