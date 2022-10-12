@@ -40,8 +40,6 @@ jobs:
       - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9.7
-          cache: 'poetry'
-          check-latest: true
       - run: |
           python --version
           poetry env use 3.9.7
