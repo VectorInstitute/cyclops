@@ -86,6 +86,7 @@ def compute_statics(
         """Get a non-null unique value in the series, or if none, returns np.nan.
 
         Assumes at most one non-null unique value in the series.
+
         Parameters
         ----------
         series: pandas.Series

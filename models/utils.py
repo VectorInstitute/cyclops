@@ -31,10 +31,12 @@ def get_activation_fn(act: str) -> typing.Union[torch.nn.Module, None]:
     ----------
     act: str
         String specifying activation function.
+
     Returns
     -------
     torch.nn.modules.activation or None
         Activation function module.
+
     Raises
     ------
     ValueError
