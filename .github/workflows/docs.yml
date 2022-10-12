@@ -35,14 +35,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v3
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install dependencies, build docs and coverage report
+      - run: pipx install poetry
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.9.7
+          python-version: '.python-version'
           cache: 'poetry'
-      - name: Install dependencies, build docs and coverage report
-        run: |
+          check-latest: true
+      - run: |
+          python --version
           poetry env use 3.9.7 && poetry install
           source $(poetry env list --full-path)/bin/activate
           cd docs && make html

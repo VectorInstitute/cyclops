@@ -1,7 +1,6 @@
 *__pycache__*
 *.log
 docs/build
-.python-version
 *.DS_Store
 htmlcov
 .coverage
