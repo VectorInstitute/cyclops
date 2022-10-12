@@ -7,25 +7,17 @@ import pandas as pd
 
 import cyclops.query.process as qp
 from cyclops.processors.column_names import (
-    ADMIT_TIMESTAMP,
-    AGE,
-    DIAGNOSIS_CODE,
-    DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
-    HOSPITAL_ID,
-    SEX,
-    SUBJECT_ID,
 )
-from cyclops.processors.diagnoses import process_diagnoses
 from cyclops.processors.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from use_cases.gemini.wanglab.constants import (
+from use_cases.gemini.common.constants import (
     ADMIT_VIA_AMBULANCE_MAP,
     BT_SUBSTRINGS,
     DERIVED_VARIABLES,
@@ -35,7 +27,6 @@ from use_cases.gemini.wanglab.constants import (
     IMAGING_KEYWORDS,
     OUTCOME_EDEMA,
     PRESCRIPTION_AFTER_IMAGING_DAYS,
-    READMISSION_MAP,
     TRIAGE_LEVEL_MAP,
 )
 

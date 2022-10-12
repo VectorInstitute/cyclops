@@ -1,8 +1,5 @@
 """GEMINI mortality decompensation use case querying."""
 
-from typing import Optional, Union
-
-import numpy as np
 import pandas as pd
 
 import cyclops.query.process as qp
@@ -12,36 +9,24 @@ from cyclops.processors.column_names import (
     DIAGNOSIS_CODE,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
-    EVENT_NAME,
-    EVENT_TIMESTAMP,
-    EVENT_VALUE,
-    EVENT_VALUE_UNIT,
     HOSPITAL_ID,
     SEX,
     SUBJECT_ID,
 )
 from cyclops.processors.diagnoses import process_diagnoses
-from cyclops.processors.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
-from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from use_cases.gemini.common.constants import (
-    OUTCOME_DEATH,
-    READMISSION_MAP,
-)
-from use_cases.gemini.mortality_decompensation.constants import (
-    BEFORE_DATE,
-    SEXES,
-)
+from use_cases.gemini.common.constants import OUTCOME_DEATH, READMISSION_MAP
 from use_cases.gemini.common.query import (
-    join_queries_flow_fake,
-    get_er_for_cohort,
     get_bt_for_cohort,
-    get_imaging_for_cohort,
     get_derived_variables_for_cohort,
-    get_pulmonary_edema_for_cohort,
+    get_er_for_cohort,
+    get_imaging_for_cohort,
     get_labs_for_cohort,
+    get_pulmonary_edema_for_cohort,
+    join_queries_flow_fake,
 )
+from use_cases.gemini.mortality_decompensation.constants import BEFORE_DATE, SEXES
 
 
 def get_most_recent_encounters() -> pd.DataFrame:

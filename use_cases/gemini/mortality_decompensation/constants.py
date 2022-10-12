@@ -1,7 +1,5 @@
 """Mortality decompensation use-case constants."""
 
-import numpy as np
-
 from cyclops.processors.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
 from cyclops.processors.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
