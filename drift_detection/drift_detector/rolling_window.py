@@ -13,7 +13,7 @@ class RollingWindow:
     """
     RollingWindow Class.
     ----------
-    shift_detector: Detector
+    shift_detector: Detectpr
         Shift detector object to use in rolling window.
     optimizer: Optimizer
         Deep learning model optimizer to use in rolling window.

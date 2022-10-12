@@ -1,1 +1,1 @@
-"""Post-processing functions applied on queried data."""
+"""Query post-process functions for datasets."""

@@ -33,8 +33,8 @@ class TSTester:
         two-sample statistical test method
     """
 
-    def __init__(self, test_method: str):
-        self.tester_method = test_method
+    def __init__(self, tester_method: str):
+        self.tester_method = tester_method
 
         # dict where the key is the string of each test_method and the value is the class of the test_method
         self.tester_methods = {

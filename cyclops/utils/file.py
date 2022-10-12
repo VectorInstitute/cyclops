@@ -16,25 +16,23 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
-def join(path1: str, path2: str) -> str:
-    """Robustly join two paths.
+def join(*paths: str) -> str:
+    """Robustly join paths.
 
     os.path.join only may cause problems with some filepaths (especially on Windows).
 
     Parameters
     ----------
-    path1: str
-        Start of file path.
-    path2: str
-        End of file path.
+    paths: str
+        file paths
 
     Returns
     -------
     str
-        The joined path of path1 and path2.
+        The joined path of all input paths.
 
     """
-    return os.path.join(path1, path2).replace("\\", "/")
+    return os.path.join(*paths).replace("\\", "/")
 
 
 def exchange_extension(file_path: str, new_ext: str) -> str:

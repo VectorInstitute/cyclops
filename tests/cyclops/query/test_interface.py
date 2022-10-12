@@ -2,6 +2,7 @@
 
 import os
 import shutil
+from typing import Generator
 from unittest.mock import patch
 
 import pandas as pd
@@ -33,6 +34,17 @@ def test_query_interface(
     shutil.rmtree("test_save")
     query_interface.clear_data()
     assert not query_interface.data
+
+    query_interface.data = None
+    query_interface.save(path)
+    query_interface.save(path, file_format="csv")
+    with pytest.raises(ValueError):
+        query_interface.save(path, file_format="donkey")
+
+    generator = query_interface.run_in_grouped_batches(id_col="donkey", batch_size=10)
+    assert isinstance(generator, Generator)
+
+    query_interface.save_in_grouped_batches("test_save", id_col="donkey", batch_size=10)
 
 
 @patch("cyclops.orm.Database")

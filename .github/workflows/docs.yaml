@@ -5,6 +5,7 @@ on:
     branches:
       - master
     paths:
+      - .pre-commit-config.yaml
       - .github/workflows/docs.yml
       - '**.py'
       - poetry.lock
@@ -16,6 +17,7 @@ on:
     branches:
       - master
     paths:
+      - .pre-commit-config.yaml
       - .github/workflows/docs.yml
       - '**.py'
       - poetry.lock

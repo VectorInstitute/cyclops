@@ -584,7 +584,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         """Vectorize aggregated data.
 
         Parameters
-        ----------indexes
+        ----------
         aggregated: pandas.DataFrame
             Aggregated data.
 

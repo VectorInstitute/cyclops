@@ -1,6 +1,6 @@
 from drift_detection.drift_detector import Reductor, TSTester, DCTester
 from typing import List, Tuple, Union, Optional, Callable, Any, Dict
-from drift_detection.drift_detector.utils import get_args
+from .utils import get_args
 import numpy as np
 import torch
 
@@ -23,13 +23,13 @@ class Detector:
 
     Methods
     -------
-    fit(data)
+    fit(X)
         Fits Reductor to data.
     transform(X, **kwargs)
         Transforms data.
-    test_shift(X_s, X_t, **kwargs)
+    test_shift(X_source, X_target, **kwargs)
         Tests shift between source and target data.
-    detect_shift(source_data, target_data, **kwargs)
+    detect_shift(X_source, X_target, **kwargs)
         Detects shift between source data and target data.
     """
 
@@ -44,8 +44,8 @@ class Detector:
         self.tester = tester
         self.p_val_threshold = p_val_threshold
 
-    def fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
-        self.reductor.fit(data)
+    def fit(self, X: Union[np.ndarray, torch.utils.data.Dataset]):
+        self.reductor.fit(X)
 
     def transform(self, X, **kwargs):
         """
@@ -65,15 +65,15 @@ class Detector:
         """
         return self.reductor.transform(X, **kwargs)
 
-    def test_shift(self, X_s, X_t, **kwargs):
+    def test_shift(self, X_source, X_target, **kwargs):
         """
         Tests shift between source and target data.
 
         Parameters
         ----------
-        X_s : np.ndarray
+        X_source : np.ndarray
             Source data.
-        X_t : np.ndarray
+        X_target : np.ndarray
             Target data.
         **kwargs
             Keyword arguments for Tester.
@@ -83,7 +83,7 @@ class Detector:
         dict
             Dictionary containing p-value and distance.
         """
-        p_val, dist = self.tester.test_shift(X_s, X_t, **kwargs)
+        p_val, dist = self.tester.test_shift(X_source, X_target, **kwargs)
 
         if p_val < self.p_val_threshold:
             shift_detected = True
@@ -98,8 +98,8 @@ class Detector:
 
     def detect_shift(
         self,
-        source_data: Union[np.ndarray, torch.utils.data.Dataset],
-        target_data: Union[np.ndarray, torch.utils.data.Dataset],
+        X_source: Union[np.ndarray, torch.utils.data.Dataset],
+        X_target: Union[np.ndarray, torch.utils.data.Dataset],
         **kwargs
     ):
         """
@@ -108,9 +108,9 @@ class Detector:
 
         Parameters
         ----------
-        source_data : np.ndarray or torch.utils.data.Dataset
+        X_source : np.ndarray or torch.utils.data.Dataset
             Source data.
-        target_data : np.ndarray or torch.utils.data.Dataset
+        X_target : np.ndarray or torch.utils.data.Dataset
             Target data.
         **kwargs
             Keyword arguments for Reductor and TSTester.
@@ -120,10 +120,12 @@ class Detector:
         dict
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
         """
-
-        self.fit(source_data)
-        X_s = self.transform(source_data, **get_args(self.reductor.transform, kwargs))
-        X_t = self.transform(target_data, **get_args(self.reductor.transform, kwargs))
+        
+        #add if reductor is not fit then 
+        #    self.fit(X_source)
+        
+        X_s = self.transform(X_source, **get_args(self.reductor.transform, kwargs))
+        X_t = self.transform(X_target, **get_args(self.reductor.transform, kwargs))
 
         results = self.test_shift(X_s, X_t, **get_args(self.tester.test_shift, kwargs))
 
