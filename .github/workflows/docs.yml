@@ -45,8 +45,8 @@ jobs:
       - run: |
           python --version
           poetry env use 3.9.7
-          source $(poetry env list --full-path)/bin/activate
           python --version
+          source $(poetry env info --path)/bin/activate
           poetry install
           cd docs && make html
           cd .. && coverage run -m pytest && coverage html && cp htmlcov/* docs/build/html/_static/
