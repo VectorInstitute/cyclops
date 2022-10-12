@@ -7,7 +7,7 @@ import pytest
 from sklearn.metrics import precision_score as sk_precision_score
 from sklearn.metrics import recall_score as sk_recall_score
 
-from evaluation.metrics.functional.precision_recall import (
+from cyclops.evaluation.metrics.functional.precision_recall import (
     binary_precision,
     binary_recall,
     multiclass_precision,
@@ -15,7 +15,7 @@ from evaluation.metrics.functional.precision_recall import (
     multilabel_precision,
     multilabel_recall,
 )
-from evaluation.metrics.utils import sigmoid
+from cyclops.evaluation.metrics.utils import sigmoid
 
 from .helpers import _functional_test
 from .inputs import (

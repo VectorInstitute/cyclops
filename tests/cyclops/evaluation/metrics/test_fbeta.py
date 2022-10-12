@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from sklearn.metrics import fbeta_score as sk_fbeta_score
 
-from evaluation.metrics.functional.f_beta import (
+from cyclops.evaluation.metrics.functional.f_beta import (
     binary_f1_score,
     binary_fbeta_score,
     multiclass_f1_score,
@@ -14,7 +14,7 @@ from evaluation.metrics.functional.f_beta import (
     multilabel_f1_score,
     multilabel_fbeta_score,
 )
-from evaluation.metrics.utils import sigmoid
+from cyclops.evaluation.metrics.utils import sigmoid
 
 from .helpers import _functional_test
 from .inputs import (

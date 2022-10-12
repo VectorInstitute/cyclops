@@ -9,12 +9,12 @@ from sklearn.metrics import (
     multilabel_confusion_matrix as sk_multilabel_confusion_matrix,
 )
 
-from evaluation.metrics.functional.stat_scores import (
+from cyclops.evaluation.metrics.functional.stat_scores import (
     binary_stat_scores,
     multiclass_stat_scores,
     multilabel_stat_scores,
 )
-from evaluation.metrics.utils import sigmoid
+from cyclops.evaluation.metrics.utils import sigmoid
 
 from .helpers import _functional_test
 from .inputs import (
