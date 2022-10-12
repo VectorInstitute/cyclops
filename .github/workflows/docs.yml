@@ -39,7 +39,7 @@ jobs:
         run: pipx install poetry && ls -la
       - uses: actions/setup-python@v4.3.0
         with:
-          python-version: '.python-version'
+          python-version: 3.9.7
           cache: 'poetry'
           check-latest: true
       - run: |
