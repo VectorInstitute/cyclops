@@ -40,10 +40,9 @@ jobs:
       - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9.7
+          cache: 'poetry'
       - run: |
-          python --version
           poetry env use 3.9.7
-          python --version
           source $(poetry env info --path)/bin/activate
           poetry install
           cd docs && make html
