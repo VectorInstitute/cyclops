@@ -20,12 +20,12 @@ def _stat_scores_update(  # pylint: disable=too-many-arguments
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
     num_classes: Optional[int] = None,
-    num_labels: Optional[int] = None,
-    sample_weight: Optional[ArrayLike] = None,
     classwise: Optional[bool] = False,
-    reduce: Optional[Literal["micro", "macro", "samples"]] = "micro",
     threshold: float = 0.5,
     top_k: Optional[int] = None,
+    num_labels: Optional[int] = None,
+    sample_weight: Optional[ArrayLike] = None,
+    reduce: Optional[Literal["micro", "macro", "samples"]] = "micro",
 ):
     """Update the stat scores for a given task.
 
@@ -50,7 +50,11 @@ def _stat_scores_update(  # pylint: disable=too-many-arguments
             Whether to compute the stat scores classwise. Defaults to False. Only
             used for multiclass tasks.
         reduce: String
-            Reduction mode. Defaults to 'micro'. Only used for multilabel tasks.
+            Reduction mode. Defaults to 'macro'. One of:
+            'micro': sum the statistics over all samples and labels to compute the
+                global score.
+            'macro': Calculate metrics for each label/class.
+            'samples': Calculate metrics for each instance/sample.
         threshold: float
             Threshold for binarizing the predictions. Defaults to 0.5. Only used
             for binary and multilabel tasks.
@@ -78,17 +82,35 @@ def _stat_scores_update(  # pylint: disable=too-many-arguments
             sample_weight=sample_weight,
         )
     elif task == "multiclass":
-        assert isinstance(num_classes, int)
+        assert (
+            isinstance(num_classes, int) and num_classes > 0
+        ), "Number of classes must be a positive integer."
         tp, fp, tn, fn = _multiclass_stat_scores_update(
-            target, preds, num_classes, sample_weight, classwise, top_k
+            target,
+            preds,
+            num_classes,
+            sample_weight=sample_weight,
+            classwise=classwise,
+            top_k=top_k,
         )
     elif task == "multilabel":
-        assert isinstance(num_labels, int)
+        assert (
+            isinstance(num_labels, int) and num_labels > 0
+        ), "Number of labels must be a positive integer."
         tp, fp, tn, fn = _multilabel_stat_scores_update(
-            target, preds, num_labels, sample_weight, reduce, threshold, top_k
+            target,
+            preds,
+            num_labels,
+            sample_weight=sample_weight,
+            reduce=reduce,
+            threshold=threshold,
+            top_k=top_k,
         )
     else:
-        raise ValueError(f"Unknown task: {task}")
+        raise ValueError(
+            f"Unsupported task: {task}, expected one of 'binary', 'multiclass' or "
+            f"'multilabel'."
+        )
 
     return tp, fp, tn, fn
 
@@ -111,7 +133,7 @@ def _stat_scores(
         sample_weight: np.ndarray
             Sample weights.
         labels: np.ndarray
-            The set of labels
+            The set of labels to include.
         reduce: String
             Reduction mode. Defaults to 'micro'.
 
@@ -186,13 +208,14 @@ def stat_scores(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
+    pos_label: int = 1,
     num_classes: Optional[int] = None,
-    num_labels: Optional[int] = None,
-    sample_weight: Optional[ArrayLike] = None,
     classwise: Optional[bool] = False,
-    reduce: Optional[Literal["micro", "macro", "samples"]] = "micro",
-    threshold: float = 0.5,
     top_k: Optional[int] = None,
+    threshold: float = 0.5,
+    num_labels: Optional[int] = None,
+    reduce: Optional[Literal["micro", "macro", "samples"]] = "micro",
+    sample_weight: Optional[ArrayLike] = None,
 ) -> np.ndarray:
     """Compute true positives, false positives, true negatives and false negatives.
 
@@ -207,23 +230,37 @@ def stat_scores(  # pylint: disable=too-many-arguments
             Ground truth.
         task: String
             The task type. Can be either 'binary', 'multiclass' or 'multilabel'.
+            One of:
+                - "binary": binary classification.
+                Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
+                - "multiclass": multiclass classification.
+                Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
+                - "multilabel": multilabel classification.
+                Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
+                [[0.1, 0.9], [0.0, 0.8], ...]
+        pos_label: int
+            The positive label. Defaults to 1. Only used for binary tasks.
         num_classes: int
             The number of classes. Only used for multiclass tasks.
+        classwise: bool
+            Whether to compute the stat scores classwise. Only used for multiclass
+            tasks. Defaults to False.
+        top_k: int
+            The number of top classes to consider. Used for multiclass and
+            multilabel tasks. Defaults to None.
+        threshold: float
+            The threshold to use for binarizing the predictions. Used for
+            binary and multilabel tasks. Defaults to 0.5.
         num_labels: int
             The number of labels. Only used for multilabel tasks.
+        reduce: Literal["micro", "macro", "samples"]
+            Reduction mode. Defaults to 'micro'. Only used for multiclass and
+            multilabel tasks. One of:
+                - "micro": compute the stat scores globally.
+                - "macro": compute the stat scores for each class.
+                - "samples": compute the stat scores for each sample.
         sample_weight: ArrayLike
             Sample weights.
-        classwise: bool
-            Whether to compute the stat scores classwise. Defaults to False. Only
-            used for multiclass tasks.
-        reduce: String
-            Reduction mode. Defaults to 'micro'. Only used for multilabel tasks.
-        threshold: float
-            Threshold for binarizing the predictions. Defaults to 0.5. Only used
-            for binary and multilabel tasks.
-        top_k: int
-            Number of top elements to look at for computing accuracy. Only used
-            for multiclass and multilabel tasks.
 
     Returns
     -------
@@ -235,6 +272,7 @@ def stat_scores(  # pylint: disable=too-many-arguments
         target,
         preds,
         task,
+        pos_label=pos_label,
         num_classes=num_classes,
         num_labels=num_labels,
         sample_weight=sample_weight,
@@ -392,8 +430,9 @@ def _binary_stat_scores_compute(  # pylint: disable=invalid-name
 def binary_stat_scores(
     target: ArrayLike,
     preds: ArrayLike,
-    sample_weight: Optional[ArrayLike] = None,
+    pos_label: int = 1,
     threshold: Optional[float] = 0.5,
+    sample_weight: Optional[ArrayLike] = None,
 ) -> np.ndarray:
     """Compute the stat scores for binary inputs.
 
@@ -403,11 +442,13 @@ def binary_stat_scores(
             Ground truth.
         preds: ArrayLike
             Predictions.
-        sample_weight: ArrayLike
-            Sample weights.
+        pos_label: int
+            The positive label to report. Defaults to 1. Can be either 0, 1.
         threshold: float
             Threshold for converting logits and probability predictions to binary
             [1, 0]. Defaults to 0.5.
+        sample_weight: ArrayLike
+            Sample weights.
 
     Returns
     -------
@@ -429,6 +470,7 @@ def binary_stat_scores(
     tp, fp, tn, fn = _binary_stat_scores_update(
         target,
         preds,
+        pos_label=pos_label,
         sample_weight=sample_weight,
         threshold=threshold,
     )
@@ -531,9 +573,9 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     num_classes: int,
-    sample_weight: Optional[ArrayLike] = None,
-    classwise: Optional[bool] = False,
     top_k: Optional[int] = None,
+    classwise: Optional[bool] = False,
+    sample_weight: Optional[ArrayLike] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Update the stat scores for multiclass inputs.
 
@@ -545,14 +587,14 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
             Predictions.
         num_classes: int
             The total number of classes for the problem.
-        sample_weight: ArrayLike
-            Sample weights.
-        classwise: bool
-            Whether to return the statistics for each class or sum over all classes.
-            Defaults to ``False``.
         top_k: int
             The number of top predictions to consider when computing the statistics.
             Defaults to ``None``.
+        classwise: bool
+            Whether to return the statistics for each class or sum over all classes.
+            Defaults to ``False``.
+        sample_weight: ArrayLike
+            Sample weights.
 
     Returns
     -------
@@ -604,9 +646,9 @@ def multiclass_stat_scores(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     num_classes: int,
-    sample_weight: Optional[ArrayLike] = None,
-    classwise: Optional[bool] = False,
     top_k: Optional[int] = None,
+    classwise: Optional[bool] = False,
+    sample_weight: Optional[ArrayLike] = None,
 ) -> np.ndarray:
     """Compute stat scores for multiclass inputs.
 
@@ -618,14 +660,14 @@ def multiclass_stat_scores(  # pylint: disable=too-many-arguments
             Predictions.
         num_classes: int
             The total number of classes for the problem.
-        sample_weight: ArrayLike
-            Sample weights.
-        classwise: bool
-            Whether to return the statistics for each class or sum over all classes.
-            Defaults to ``False``.
         top_k: int
             The number of top predictions to consider when computing the statistics.
             Defaults to ``None``.
+        classwise: bool
+            Whether to return the statistics for each class or sum over all classes.
+            Defaults to ``False``.
+        sample_weight: ArrayLike
+            Sample weights.
 
     Returns
     -------
@@ -727,10 +769,10 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     num_labels: int,
-    sample_weight: Optional[ArrayLike] = None,
-    reduce: Optional[Literal["micro", "macro", "samples"]] = "micro",
     threshold: float = 0.5,
     top_k: Optional[int] = None,
+    reduce: Optional[Literal["micro", "macro", "samples"]] = "micro",
+    sample_weight: Optional[ArrayLike] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Update the stat scores for multilabel inputs.
 
@@ -742,20 +784,20 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
             Predictions.
         num_labels: int
             The total number of labels for the problem.
-        sample_weight: ArrayLike
-            Sample weights.
-        reduce: str
+        threshold: float
+            Threshold value for binarizing the predictions. Defaults to ``0.5``.
+        top_k: int
+            The number of top predictions to consider when computing the statistics.
+            Defaults to ``None``.
+         reduce: str
             The reduction method to use. Defaults to ``"micro"``. Can be one of
                 * ``"micro"`` - sum the statistics over all labels.
                 * ``"macro"`` - compute the unweighted mean of the per-label
                 statistics.
                 * ``"samples"`` - compute the unweighted mean of the per-sample
                 statistics.
-        threshold: float
-            Threshold value for binarizing the predictions. Defaults to ``0.5``.
-        top_k: int
-            The number of top predictions to consider when computing the statistics.
-            Defaults to ``None``.
+        sample_weight: ArrayLike
+            Sample weights.
 
     Returns
     -------
@@ -810,10 +852,10 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     num_labels: int,
-    sample_weight: Optional[ArrayLike] = None,
-    reduce: Optional[Literal["micro", "macro", "samples"]] = "micro",
     threshold: Optional[float] = 0.5,
     top_k: Optional[int] = None,
+    reduce: Optional[Literal["micro", "macro", "samples"]] = "micro",
+    sample_weight: Optional[ArrayLike] = None,
 ) -> np.ndarray:
     """Compute the stat scores for multilabel inputs.
 
@@ -825,20 +867,20 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
             Predictions.
         num_labels: int
             The total number of labels for the problem.
-        sample_weight: ArrayLike
-            Sample weights.
-        reduce: str
+        threshold: float
+            Threshold value for binarizing the predictions. Defaults to ``0.5``.
+        top_k: int
+            The number of top predictions to consider when computing the statistics.
+            Defaults to ``None``.
+        reduce: Literal["micro", "macro", "samples"]
             The reduction method to use. Defaults to ``"micro"``. Can be one of
                 * ``"micro"`` - sum the statistics over all labels.
                 * ``"macro"`` - compute the unweighted mean of the per-label
                 statistics.
                 * ``"samples"`` - compute the unweighted mean of the per-sample
                 statistics.
-        threshold: float
-            Threshold value for binarizing the predictions. Defaults to ``0.5``.
-        top_k: int
-            The number of top predictions to consider when computing the statistics.
-            Defaults to ``None``.
+        sample_weight: ArrayLike
+            Sample weights.
 
     Returns
     -------

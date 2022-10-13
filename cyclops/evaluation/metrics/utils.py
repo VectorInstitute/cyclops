@@ -137,6 +137,7 @@ def _common_input_checks_and_format(
 
 def sigmoid(arr: ArrayLike) -> np.ndarray:
     """Sigmoid function."""
+    arr = np.asanyarray(arr)
     return 1 / (1 + np.exp(-arr))
 
 
@@ -147,6 +148,10 @@ def _check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -
     ----------
         top_k: int
             The number of classes to select.
+        type_preds: str
+            The type of the predictions.
+        type_target: str
+            The type of the target.
         n_classes: int
             The number of classes.
 

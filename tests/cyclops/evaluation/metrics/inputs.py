@@ -15,7 +15,7 @@ THRESHOLD = 0.5
 Input = namedtuple("Input", ["target", "preds"])
 
 
-def set_random_seed(seed):
+def set_random_seed(seed: int) -> None:
     """Set random seed."""
     np.random.seed(seed)
     random.seed(seed)
@@ -23,6 +23,7 @@ def set_random_seed(seed):
 
 def _inv_sigmoid(arr: ArrayLike) -> np.ndarray:
     """Inverse sigmoid function."""
+    arr = np.asanyarray(arr)
     return np.log(arr / (1 - arr))
 
 
