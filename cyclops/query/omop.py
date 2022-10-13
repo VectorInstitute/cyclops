@@ -25,6 +25,8 @@ PERSON_ID = "person_id"
 VISIT_START_DATETIME = "visit_start_datetime"
 VISIT_END_DATETIME = "visit_end_datetime"
 CARE_SITE_ID = "care_site_id"
+CONCEPT_NAME = "concept_name"
+CONCEPT_ID = "concept_id"
 
 # Column map.
 OMOP_COLUMN_MAP: dict = {}

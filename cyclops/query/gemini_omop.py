@@ -15,12 +15,18 @@ from cyclops.query.omop import (
     CARE_SITE_ID,
     OMOP_COLUMN_MAP,
     PERSON_ID,
+    VISIT_OCCURRENCE_ID,
     TABLE_MAP,
     VISIT_END_DATETIME,
     VISIT_OCCURRENCE,
+    VISIT_DETAIL,
     VISIT_START_DATETIME,
+    CONCEPT,
+    CONCEPT_NAME,
+    CONCEPT_ID,
 )
 from cyclops.query.util import TableTypes, _to_subquery, table_params_to_type
+from cyclops.utils.common import to_list
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -29,6 +35,11 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 
 
 _db = Database(config.read_config(GEMINI_OMOP))
+
+
+# Constants
+ID = "id"
+NAME = "name"
 
 
 @table_params_to_type(Subquery)
@@ -88,17 +99,47 @@ def get_table(table_name: str, rename: bool = True) -> Subquery:
     return _to_subquery(table)
 
 
+def _map_concept_ids_to_name(source_table: Subquery, source_cols: List[str]) -> Subquery:
+    """Map concept IDs in a source table to concept names from concept table.
+    
+    Parameters
+    ----------
+    source_table: Subquery
+        Source table with concept IDs.
+    source_cols: list of str
+        List of columns names to consider as concept IDs for mapping.
+    
+    Returns
+    -------
+    Subquery
+        Query with mapped columns from concept table.
+    
+    """
+    concept_table = get_table(CONCEPT)
+    for col in to_list(source_cols):
+        if ID not in col:
+            raise ValueError("Specified column not a concept ID column!")
+        source_table = qp.Join(concept_table, on=(col, CONCEPT_ID), join_table_cols=[CONCEPT_NAME])(source_table)
+        source_table = qp.Rename({CONCEPT_NAME: col.replace(ID, NAME)})(source_table)
+        
+    return source_table
+
 @table_params_to_type(Subquery)
 def visit_occurrence(
     drop_null_person_ids=True,
+    map_concept_cols: Union[None, str, List[str]] = None,
     **process_kwargs,
 ) -> QueryInterface:
     """Query GEMINI_OMOP visit_occurrence table.
 
     Parameters
     ----------
-    drop_null_person_ids: bool
+    drop_null_person_ids: bool, optional
         Flag to say if entries should be dropped if 'person_id' is missing.
+    map_concept_cols: str or list of str, optional
+        Names of columns which need to be joined with concept table
+        to map concepts (concept names are created as new column).
+    
 
     Returns
     -------
@@ -141,5 +182,41 @@ def visit_occurrence(
     ]
 
     table = qp.process_operations(table, operations, process_kwargs)
+    
+    if map_concept_cols is not None:       
+        table = _map_concept_ids_to_name(table, map_concept_cols)
+    
+    return QueryInterface(_db, table)
+
+
+@table_params_to_type(Subquery)
+def visit_detail(
+    visit_occurrence_table: Optional[TableTypes] = None,
+    map_concept_cols: Union[None, str, List[str]] = None,
+    **process_kwargs,
+) -> QueryInterface:
+    """Query GEMINI_OMOP visit_detail table.
+
+    Parameters
+    ----------
+    visit_occurrence_table: Subquery, optional
+        Visit occurrence table to join on.
+    map_concept_cols: str or list of str, optional
+        Names of columns which need to be joined with concept table
+        to map concepts (concept names are created as new column).
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    table = get_table(VISIT_DETAIL)
+
+    if visit_occurrence_table is not None:
+        table = qp.Join(visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID])(table)
+        
+    if map_concept_cols is not None:       
+        table = _map_concept_ids_to_name(table, map_concept_cols)
 
     return QueryInterface(_db, table)
