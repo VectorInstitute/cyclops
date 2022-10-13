@@ -1,5 +1,5 @@
 """Metrics functional package."""
-from .f_beta import (  # noqa: F401
+from cyclops.evaluation.metrics.functional.f_beta import (  # noqa: F401
     binary_f1_score,
     binary_fbeta_score,
     f1_score,
@@ -9,7 +9,7 @@ from .f_beta import (  # noqa: F401
     multilabel_f1_score,
     multilabel_fbeta_score,
 )
-from .precision_recall import (  # noqa: F401
+from cyclops.evaluation.metrics.functional.precision_recall import (  # noqa: F401
     binary_precision,
     binary_recall,
     multiclass_precision,
@@ -19,7 +19,7 @@ from .precision_recall import (  # noqa: F401
     precision,
     recall,
 )
-from .stat_scores import (  # noqa: F401
+from cyclops.evaluation.metrics.functional.stat_scores import (  # noqa: F401
     binary_stat_scores,
     multiclass_stat_scores,
     multilabel_stat_scores,

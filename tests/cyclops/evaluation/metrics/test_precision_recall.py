@@ -4,6 +4,15 @@ from typing import Callable, Literal
 
 import numpy as np
 import pytest
+from metrics.helpers import _functional_test
+from metrics.inputs import (
+    NUM_CLASSES,
+    NUM_LABELS,
+    THRESHOLD,
+    _binary_cases,
+    _multiclass_cases,
+    _multilabel_cases,
+)
 from sklearn.metrics import precision_score as sk_precision_score
 from sklearn.metrics import recall_score as sk_recall_score
 
@@ -14,16 +23,6 @@ from cyclops.evaluation.metrics.functional.precision_recall import (
     recall as cyclops_recall,
 )
 from cyclops.evaluation.metrics.utils import sigmoid
-
-from .helpers import _functional_test
-from .inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    THRESHOLD,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
 
 
 def _sk_binary_precision_recall(

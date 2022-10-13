@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from sklearn.metrics._classification import _prf_divide
 
-from .stat_scores import (
+from cyclops.evaluation.metrics.functional.stat_scores import (
     _binary_stat_scores_update,
     _multiclass_stat_scores_update,
     _multilabel_stat_scores_update,

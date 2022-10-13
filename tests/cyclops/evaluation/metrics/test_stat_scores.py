@@ -4,16 +4,8 @@ from typing import Literal
 
 import numpy as np
 import pytest
-from sklearn.metrics import confusion_matrix as sk_confusion_matrix
-from sklearn.metrics import (
-    multilabel_confusion_matrix as sk_multilabel_confusion_matrix,
-)
-
-from cyclops.evaluation.metrics.functional.stat_scores import stat_scores
-from cyclops.evaluation.metrics.utils import sigmoid
-
-from .helpers import _functional_test
-from .inputs import (
+from metrics.helpers import _functional_test
+from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
     THRESHOLD,
@@ -21,6 +13,13 @@ from .inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
+from sklearn.metrics import confusion_matrix as sk_confusion_matrix
+from sklearn.metrics import (
+    multilabel_confusion_matrix as sk_multilabel_confusion_matrix,
+)
+
+from cyclops.evaluation.metrics.functional.stat_scores import stat_scores
+from cyclops.evaluation.metrics.utils import sigmoid
 
 
 def _sk_stat_scores_binary(

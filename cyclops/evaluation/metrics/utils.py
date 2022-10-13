@@ -68,7 +68,7 @@ def _check_muldim_input(target: np.ndarray, preds: np.ndarray) -> None:
         )
 
 
-def _common_input_checks_and_format(
+def common_input_checks_and_format(
     target: ArrayLike,
     preds: ArrayLike,
 ) -> Tuple[np.ndarray, np.ndarray, str, str]:
@@ -141,7 +141,7 @@ def sigmoid(arr: ArrayLike) -> np.ndarray:
     return 1 / (1 + np.exp(-arr))
 
 
-def _check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -> None:
+def check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -> None:
     """Check if top_k is valid.
 
     Parameters
@@ -173,7 +173,7 @@ def _check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -
         )
 
 
-def _select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray:
+def select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray:
     """Convert a probability scores to binary by selecting top-k highest entries.
 
     Parameters

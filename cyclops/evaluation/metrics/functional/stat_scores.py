@@ -11,7 +11,12 @@ import numpy as np
 from numpy.typing import ArrayLike
 from sklearn.metrics import multilabel_confusion_matrix
 
-from ..utils import _check_topk, _common_input_checks_and_format, _select_topk, sigmoid
+from cyclops.evaluation.metrics.utils import (
+    check_topk,
+    common_input_checks_and_format,
+    select_topk,
+    sigmoid,
+)
 
 
 def _stat_scores_update(  # pylint: disable=too-many-arguments
@@ -313,7 +318,7 @@ def _binary_stat_scores_format(target: ArrayLike, preds: ArrayLike, threshold: f
             If the target and preds have non-binary values.
 
     """
-    target, preds, type_target, type_preds = _common_input_checks_and_format(
+    target, preds, type_target, type_preds = common_input_checks_and_format(
         target, preds
     )
 
@@ -518,7 +523,7 @@ def _multiclass_stat_scores_format(
 
     """
     # convert target and preds to numpy arrays
-    target, preds, type_target, type_preds = _common_input_checks_and_format(
+    target, preds, type_target, type_preds = common_input_checks_and_format(
         target, preds
     )
 
@@ -554,7 +559,7 @@ def _multiclass_stat_scores_format(
 
     # check top_k
     if top_k is not None:
-        _check_topk(top_k, type_preds, type_target, num_classes)
+        check_topk(top_k, type_preds, type_target, num_classes)
 
     # handle probabilities and logits
     if type_preds == "continuous-multioutput" and not np.all(
@@ -563,7 +568,7 @@ def _multiclass_stat_scores_format(
         preds = sigmoid(preds)  # convert logits to probabilities
 
     if type_preds == "continuous-multioutput" and type_target == "multiclass":
-        preds = _select_topk(preds, top_k or 1)
+        preds = select_topk(preds, top_k or 1)
         target = np.eye(preds.shape[1])[target]  # one-hot encoding
 
     return target.astype(np.int32), preds.astype(np.int32)
@@ -726,7 +731,7 @@ def _multilabel_stat_scores_format(
             ``num_labels``.
 
     """
-    target, preds, type_target, type_preds = _common_input_checks_and_format(
+    target, preds, type_target, type_preds = common_input_checks_and_format(
         target, preds
     )
 
@@ -749,7 +754,7 @@ def _multilabel_stat_scores_format(
         )
 
     if top_k is not None:
-        _check_topk(top_k, type_preds, type_target, num_labels)
+        check_topk(top_k, type_preds, type_target, num_labels)
 
     if type_preds == "continuous-multioutput" and not np.all(
         np.logical_and(preds >= 0.0, preds <= 1.0)
@@ -758,7 +763,7 @@ def _multilabel_stat_scores_format(
 
     if type_preds == "continuous-multioutput":
         if top_k is not None:
-            preds = _select_topk(preds, top_k)
+            preds = select_topk(preds, top_k)
         else:
             preds = (preds >= threshold).astype(np.int32)
 

@@ -4,13 +4,8 @@ from typing import Literal
 
 import numpy as np
 import pytest
-from sklearn.metrics import fbeta_score as sk_fbeta_score
-
-from cyclops.evaluation.metrics.functional.f_beta import f1_score, fbeta_score
-from cyclops.evaluation.metrics.utils import sigmoid
-
-from .helpers import _functional_test
-from .inputs import (
+from metrics.helpers import _functional_test
+from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
     THRESHOLD,
@@ -18,6 +13,10 @@ from .inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
+from sklearn.metrics import fbeta_score as sk_fbeta_score
+
+from cyclops.evaluation.metrics.functional.f_beta import f1_score, fbeta_score
+from cyclops.evaluation.metrics.utils import sigmoid
 
 
 def _sk_binary_fbeta_score(
