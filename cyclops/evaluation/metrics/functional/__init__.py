@@ -2,6 +2,8 @@
 from .f_beta import (  # noqa: F401
     binary_f1_score,
     binary_fbeta_score,
+    f1_score,
+    fbeta_score,
     multiclass_f1_score,
     multiclass_fbeta_score,
     multilabel_f1_score,
@@ -14,6 +16,8 @@ from .precision_recall import (  # noqa: F401
     multiclass_recall,
     multilabel_precision,
     multilabel_recall,
+    precision,
+    recall,
 )
 from .stat_scores import (  # noqa: F401
     binary_stat_scores,
