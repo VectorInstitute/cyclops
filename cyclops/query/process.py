@@ -934,9 +934,9 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         two columns have the same values but in different format, e.g., strings of int.
     cond: BinaryExpression, optional
         Condition on which to join to tables.
-    table_attrs: str or list of str, optional
+    table_cols: str or list of str, optional
         Filters to keep only these columns from the table.
-    join_table_attrs:
+    join_table_cols:
         Filters to keep only these columns from the join_table.
 
     """
