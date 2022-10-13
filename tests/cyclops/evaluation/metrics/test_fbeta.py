@@ -6,14 +6,7 @@ import numpy as np
 import pytest
 from sklearn.metrics import fbeta_score as sk_fbeta_score
 
-from cyclops.evaluation.metrics.functional.f_beta import (
-    binary_f1_score,
-    binary_fbeta_score,
-    multiclass_f1_score,
-    multiclass_fbeta_score,
-    multilabel_f1_score,
-    multilabel_fbeta_score,
-)
+from cyclops.evaluation.metrics.functional.f_beta import f1_score, fbeta_score
 from cyclops.evaluation.metrics.utils import sigmoid
 
 from .helpers import _functional_test
@@ -55,14 +48,20 @@ def test_binary_fbeta(inputs, beta):
     _functional_test(
         target,
         preds,
-        binary_f1_score if beta == 1.0 else partial(binary_fbeta_score, beta=beta),
+        f1_score
+        if beta == 1.0
+        else partial(
+            fbeta_score,
+            beta=beta,
+            task="binary",
+        ),
         partial(
             _sk_binary_fbeta_score,
             beta=beta,
             threshold=THRESHOLD,
             zero_division=0,
         ),
-        {"threshold": THRESHOLD, "zero_division": 0},
+        {"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
     )
 
 
@@ -97,16 +96,19 @@ def test_multiclass_fbeta(inputs, beta, average):
     _functional_test(
         target,
         preds,
-        partial(multiclass_f1_score, num_classes=NUM_CLASSES)
-        if beta == 1.0
-        else partial(multiclass_fbeta_score, num_classes=NUM_CLASSES, beta=beta),
+        f1_score if beta == 1.0 else partial(fbeta_score, beta=beta),
         partial(
             _sk_multiclass_fbeta_score,
             beta=beta,
             average=average,
             zero_division=0,
         ),
-        {"average": average, "zero_division": 0},
+        {
+            "task": "multiclass",
+            "num_classes": NUM_CLASSES,
+            "average": average,
+            "zero_division": 0,
+        },
     )
 
 
@@ -144,9 +146,7 @@ def test_multilabel_fbeta(inputs, beta, average):
     _functional_test(
         target,
         preds,
-        partial(multilabel_f1_score, num_labels=NUM_LABELS)
-        if beta == 1.0
-        else partial(multilabel_fbeta_score, num_labels=NUM_LABELS, beta=beta),
+        f1_score if beta == 1.0 else partial(fbeta_score, beta=beta),
         partial(
             _sk_multilabel_fbeta_score,
             beta=beta,
@@ -154,5 +154,11 @@ def test_multilabel_fbeta(inputs, beta, average):
             threshold=THRESHOLD,
             zero_division=0,
         ),
-        {"average": average, "threshold": THRESHOLD, "zero_division": 0},
+        {
+            "task": "multilabel",
+            "num_labels": NUM_LABELS,
+            "average": average,
+            "threshold": THRESHOLD,
+            "zero_division": 0,
+        },
     )

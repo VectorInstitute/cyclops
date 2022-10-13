@@ -9,11 +9,7 @@ from sklearn.metrics import (
     multilabel_confusion_matrix as sk_multilabel_confusion_matrix,
 )
 
-from cyclops.evaluation.metrics.functional.stat_scores import (
-    binary_stat_scores,
-    multiclass_stat_scores,
-    multilabel_stat_scores,
-)
+from cyclops.evaluation.metrics.functional.stat_scores import stat_scores
 from cyclops.evaluation.metrics.utils import sigmoid
 
 from .helpers import _functional_test
@@ -52,9 +48,9 @@ def test_binary_stat_scores(inputs):
     _functional_test(
         target,
         preds,
-        binary_stat_scores,
+        stat_scores,
         partial(_sk_stat_scores_binary, threshold=THRESHOLD),
-        {"threshold": THRESHOLD},
+        {"task": "binary", "threshold": THRESHOLD},
     )
 
 
@@ -93,9 +89,9 @@ def test_multiclass_stat_scores(inputs, classwise):
     _functional_test(
         target,
         preds,
-        multiclass_stat_scores,
+        stat_scores,
         partial(_sk_stat_scores_multiclass, classwise=classwise),
-        {"num_classes": NUM_CLASSES, "classwise": classwise},
+        {"task": "multiclass", "num_classes": NUM_CLASSES, "classwise": classwise},
     )
 
 
@@ -143,7 +139,12 @@ def test_multilabel_stat_scores(inputs, reduce):
     _functional_test(
         target,
         preds,
-        multilabel_stat_scores,
+        stat_scores,
         partial(_sk_stat_scores_multilabel, threshold=THRESHOLD, reduce=reduce),
-        {"num_labels": NUM_LABELS, "threshold": THRESHOLD, "reduce": reduce},
+        {
+            "task": "multilabel",
+            "num_labels": NUM_LABELS,
+            "threshold": THRESHOLD,
+            "reduce": reduce,
+        },
     )
