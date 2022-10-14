@@ -19,6 +19,12 @@ from cyclops.evaluation.metrics.functional.precision_recall import (  # noqa: F4
     precision,
     recall,
 )
+from cyclops.evaluation.metrics.functional.specificity import (  # noqa: F401
+    binary_specificity,
+    multiclass_specificity,
+    multilabel_specificity,
+    specificity,
+)
 from cyclops.evaluation.metrics.functional.stat_scores import (  # noqa: F401
     binary_stat_scores,
     multiclass_stat_scores,
