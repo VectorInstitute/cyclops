@@ -6,6 +6,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import torch
+from tqdm import tqdm
 
 class Experimenter:
 
@@ -30,6 +31,7 @@ class Experimenter:
         detector: Detector = None,
         syntheticshiftapplicator: SyntheticShiftApplicator = None,
         clinicalshiftapplicator: ClinicalShiftApplicator = None,
+        rollingwindow = None,
         random_runs = 5,
         admin_data: pd.DataFrame = None,
         data: pd.DataFrame = None
@@ -79,7 +81,6 @@ class Experimenter:
         
     def detect_shift_sample(
         self, 
-        X_source: Union[np.ndarray, torch.utils.data.Dataset], 
         X_target: Union[np.ndarray, torch.utils.data.Dataset], 
         sample: int, 
         **kwargs
@@ -101,8 +102,8 @@ class Experimenter:
         """
         
         drift_results = self.detector.detect_shift(
-            X_source[:1000,:], 
-            X_target[:sample,:], 
+            X_target, 
+            sample,
             **get_args(self.detector.detect_shift, kwargs)
         )
 
@@ -110,9 +111,7 @@ class Experimenter:
 
     def detect_shift_samples(
         self,
-        X_source: Union[np.ndarray, torch.utils.data.Dataset],
         X_target: Union[np.ndarray, torch.utils.data.Dataset],
-        synthetic: bool = False,
         **kwargs
     ):
         """
@@ -131,37 +130,10 @@ class Experimenter:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
         """
         
-        p_val_samples = np.ones((len(self.samples), self.random_runs)) * (-1)
-        dist_samples = np.ones((len(self.samples), self.random_runs)) * (-1)
-        
-        for rand_run in range(0, self.random_runs):
-            
-            np.random.seed(rand_run)
-            np.random.shuffle(X_target)
-        
-            for si, sample in enumerate(self.samples):
+        drift_samples_results = self.detector.detect_shift_samples(
+            X_target,
+            **get_args(self.detector.detect_shift, kwargs)
+        )
 
-                drift_results = self.detector.detect_shift(
-                    X_source[:1000,:], 
-                    X_target[:sample,:], 
-                    **get_args(self.detector.detect_shift, kwargs)
-                )
-
-                p_val_samples[si, rand_run] = drift_results['p_val']
-                dist_samples[si, rand_run] = drift_results['distance']
-            
-        mean_p_vals = np.mean(p_val_samples, axis=1)
-        std_p_vals = np.std(p_val_samples, axis=1)
-    
-        mean_dist = np.mean(dist_samples, axis=1)
-        std_dist = np.std(dist_samples, axis=1)
-        
-        drift_samples_results = {
-            'samples': self.samples,
-            'mean_p_vals': mean_p_vals,
-            'std_p_vals': std_p_vals,
-            'mean_dist': mean_dist,
-            'std_dist': std_dist
-        }
-        
         return drift_samples_results
+

@@ -10,6 +10,11 @@ from sklearn.preprocessing import StandardScaler
 from .constants import *
 from .query import *
 
+def unison_shuffled_copies(a, b):
+    assert len(a) == len(b)
+    p = np.random.permutation(len(a))
+    return a[p], b[p]
+
 def random_shuffle_and_split(
     x_train, 
     y_train, 
@@ -20,7 +25,7 @@ def random_shuffle_and_split(
     x = np.append(x_train, x_test, axis=0)
     y = np.append(y_train, y_test, axis=0)
 
-    x, y = __unison_shuffled_copies(x, y)
+    x, y = unison_shuffled_copies(x, y)
 
     x_train = x[:split_index, :]
     x_test = x[split_index:, :]
@@ -48,7 +53,7 @@ def reshape_2d_to_3d(
     data = data.unstack()
     num_encounters = data.shape[0]
     data = data.values.reshape((num_encounters, num_timesteps, -1))
-    return inputs
+    return data
 
 def unison_shuffled_copies(
     a, 
@@ -72,10 +77,12 @@ def temporal_mean(
 
 def temporal_first(
     X, 
-    y
+    y=None
 ):
+    y_first=None
     X_first = X.groupby(level=[0]).first()
-    y_first = y[:,0]
+    if y is not None:
+        y_first = y[:,0]
     return X_first, y_first
 
 def temporal_last(
@@ -112,14 +119,16 @@ def scale(
             np.squeeze(scaler.transform(X[col].values.reshape(-1, 1))),
             index=X[col].index,
         )
-    return(x)
+    return(X)
 
 def normalize(
-    aggregation_type,
     admin_data,
-    timesteps,
-    X
+    X,
+    aggregation_type,
+    timesteps
 ):
+    y = None
+    
     if aggregation_type == "mean":
         X_normalized = temporal_mean(X)           
     elif aggregation_type == "first":
@@ -135,9 +144,9 @@ def normalize(
     return(X_normalized)
 
 def process(
+    X,
     aggregation_type, 
-    timesteps, 
-    X
+    timesteps 
 ): 
     if aggregation_type == "time_flatten":                    
         X_preprocessed = flatten(X)
@@ -188,31 +197,16 @@ def get_dataset_hospital(
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
         x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
 
-    elif dataset == "pre-covid":
-        dataset_ids = admin_data.loc[
-            (
-                (admin_data["admit_timestamp"].dt.date > datetime.date(2019, 1, 1)) 
-                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 2, 1)),
-            ),
-            "encounter_id",
-        ]
-        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
-        num_train = int(train_frac*len(dataset_ids))
-        ids_source = dataset_ids[0:num_train]
-        ids_target = dataset_ids[num_train:]
-        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
-        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
-
     elif dataset == "seasonal_winter":
         ids_source = admin_data.loc[
             (
-                (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
+                (admin_data["admit_timestamp"].dt.month.isin([3, 4, 5, 6, 7, 8, 9, 10]))
             ),
             "encounter_id",
         ]
         ids_target = admin_data.loc[
             (
-                (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8, 9]))
+                (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
             ),
             "encounter_id",
         ]
@@ -222,52 +216,23 @@ def get_dataset_hospital(
     elif dataset == "seasonal_summer":
         ids_source = admin_data.loc[
             (
-                (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8, 9]))
+                (admin_data["admit_timestamp"].dt.month.isin([1, 2, 3, 4, 5, 10, 11, 12]))
             ),
             "encounter_id",
         ]
         ids_target = admin_data.loc[
             (
-                (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
-            ),
-            "encounter_id",
-        ]
-        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
-        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
-
-    elif dataset == "seasonal_summer_baseline":
-        dataset_ids = admin_data.loc[
-            (
                 (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8, 9]))
             ),
             "encounter_id",
         ]
-        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
-        x_spl = np.array_split(x, 2)
-        num_train = int(train_frac*len(dataset_ids))
-        ids_source = dataset_ids[0:num_train]
-        ids_target = dataset_ids[num_train:]
-        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
-        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
-
-    elif dataset == "seasonal_winter_baseline":
-        dataset_ids = admin_data.loc[
-            (
-                (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
-            ),
-            "encounter_id",
-        ]
-        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
-        num_train = int(train_frac*len(dataset_ids))
-        ids_source = dataset_ids[0:num_train]
-        ids_target = dataset_ids[num_train:]
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
         x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
 
     elif dataset == "hosp_type_academic":
         ids_source = admin_data.loc[
             (
-                (admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW","PMH"]))
+                (admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW","PMH", "SBK"]))
             ),
             "encounter_id",
         ]
@@ -277,20 +242,6 @@ def get_dataset_hospital(
             ),
             "encounter_id",
         ]
-        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
-        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
-
-    elif dataset == "hosp_type_academic_baseline":
-        dataset_ids = admin_data.loc[
-            (
-                (admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW","PMH"]))
-            ),
-            "encounter_id",
-        ]
-        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
-        num_train = int(train_frac*len(dataset_ids))
-        ids_source = dataset_ids[0:num_train]
-        ids_target = dataset_ids[num_train:]
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
         x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
 
@@ -309,6 +260,90 @@ def get_dataset_hospital(
         ]
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
         x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
+        
+    elif dataset == "simulated_deployment":
+        ids_source = admin_data.loc[
+            ((admin_data["admit_timestamp"].dt.date > datetime.date(2011, 4, 1)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2019, 1, 1)),
+            ),
+            "encounter_id",
+        ]
+        ids_target = admin_data.loc[
+            ((admin_data["admit_timestamp"].dt.date > datetime.date(2019, 1, 1)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 8, 1)),
+            ),
+            "encounter_id",
+        ]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
+        
+    elif dataset == "random":
+        num_train = int(train_frac*len(encounter_ids))
+        ids_source = encounter_ids[0:num_train]
+        ids_target = encounter_ids[num_train:]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
+        
+    elif dataset == "covid_baseline":
+        dataset_ids = admin_data.loc[
+            (
+                (admin_data["admit_timestamp"].dt.date > datetime.date(2019, 1, 1)) 
+                & (admin_data["admit_timestamp"].dt.date < datetime.date(2020, 2, 1)),
+            ),
+            "encounter_id",
+        ]
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
+        num_train = int(train_frac*len(dataset_ids))
+        ids_source = dataset_ids[0:num_train]
+        ids_target = dataset_ids[num_train:]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
+
+    elif dataset == "seasonal_summer_baseline":
+        ids_source = admin_data.loc[
+            (
+                (admin_data["admit_timestamp"].dt.month.isin([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]))
+            ),
+            "encounter_id",
+        ]
+        ids_target = admin_data.loc[
+            (
+                (admin_data["admit_timestamp"].dt.month.isin([6, 7, 8, 9]))
+            ),
+            "encounter_id",
+        ]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
+
+    elif dataset == "seasonal_winter_baseline":
+        ids_source = admin_data.loc[
+            (
+                (admin_data["admit_timestamp"].dt.month.isin([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]))
+            ),
+            "encounter_id",
+        ]
+        ids_target = admin_data.loc[
+            (
+                (admin_data["admit_timestamp"].dt.month.isin([11, 12, 1, 2]))
+            ),
+            "encounter_id",
+        ]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
+        
+    elif dataset == "hosp_type_academic_baseline":
+        dataset_ids = admin_data.loc[
+            (
+                (admin_data["hospital_id"].isin(["SMH", "MSH", "UHNTG", "UHNTW","PMH", "SBK"]))
+            ),
+            "encounter_id",
+        ]
+        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
+        num_train = int(train_frac*len(dataset_ids))
+        ids_source = dataset_ids[0:num_train]
+        ids_target = dataset_ids[num_train:]
+        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
+        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
 
     elif dataset == "hosp_type_community_baseline":
         dataset_ids = admin_data.loc[
@@ -323,29 +358,7 @@ def get_dataset_hospital(
         ids_target = dataset_ids[num_train:]
         x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
         x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
-        
-    elif dataset == "simulated_deployment":
-        dataset_ids = admin_data.loc[
-            (
-                (admin_data["admit_timestamp"].dt.date > datetime.date(2015, 1, 1)) 
-                & (admin_data["admit_timestamp"].dt.date < datetime.date(2019, 1, 1)),
-            ),
-            "encounter_id",
-        ]
-        x = x.loc[x.index.get_level_values(0).isin(dataset_ids)]
-        num_train = int(train_frac*len(dataset_ids))
-        ids_source = dataset_ids[0:num_train]
-        ids_target = dataset_ids[num_train:]
-        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
-        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
 
-        
-    elif dataset == "random":
-        num_train = int(train_frac*len(encounter_ids))
-        ids_source = encounter_ids[0:num_train]
-        ids_target = encounter_ids[num_train:]
-        x_s = x.loc[x.index.get_level_values(0).isin(ids_source)]
-        x_t = x.loc[x.index.get_level_values(0).isin(ids_target)]
         
     y_s = y[np.in1d(encounter_ids, x_s.index.get_level_values(0).unique())]
     y_t = y[np.in1d(encounter_ids, x_t.index.get_level_values(0).unique())]

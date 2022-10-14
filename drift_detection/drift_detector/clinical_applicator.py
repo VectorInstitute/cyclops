@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import pandas as pd
 from .utils import get_args
+from sklearn.model_selection import train_test_split
 
 class ClinicalShiftApplicator(object):
     
@@ -25,6 +26,7 @@ class ClinicalShiftApplicator(object):
         self.shift_type = shift_type
         
         self.shift_types = { 
+            'source_target': source_target,
             "month": month, 
             "hospital_type": hospital_type,
             "time": time,
@@ -67,15 +69,13 @@ class ClinicalShiftApplicator(object):
      
         return (X_s, X_t)  
 
-            
-def time(
+
+def source_target(
     X, 
     admin_data, 
-    start_date,
-    cutoff_date,
-    end_date,
-    admit_timestamp='admit_timestamp', 
-    encounter_id='encounter_id'
+    train_frac: int = 0.5, 
+    encounter_id='encounter_id', 
+    admit_timestamp='admit_timestamp'
 ):
     """time.
 
@@ -97,15 +97,58 @@ def time(
         Column name for admission timestamps.
 
     """
+    train_size_ind=admin_data.shape[0]
+    dataset_ids = admin_data.loc[
+        (
+            (admin_data[admit_timestamp].dt.date > datetime.date(2015, 1, 1)) 
+            & (admin_data[admit_timestamp].dt.date < datetime.date(2019, 1, 1)),
+        ),
+        encounter_id,
+    ]
+    X = X.loc[X.index.get_level_values(0).isin(dataset_ids)]
+    num_train = int(train_frac*len(dataset_ids))
+    ids_source = dataset_ids[0:num_train]
+    ids_target = dataset_ids[num_train:]
+        
+    X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
+    X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
+    return (X_s, X_t)
+
+def time(
+    X, 
+    admin_data, 
+    source,
+    target,
+    admit_timestamp='admit_timestamp', 
+    encounter_id='encounter_id'
+):
+    """time.
+
+    Parameters
+    ----------
+    X: pd.DataFrame
+        Data to apply shift to.
+    admin_data: pd.DataFrame
+        Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
+    source: list[datetime.date]
+        Start and end of source data.
+    target: list[datetime.date]
+        Start and end of target data.
+    encounter_id: str
+        Column name for encounter ids.
+    admit_timestamp: str
+        Column name for admission timestamps.
+
+    """
     ids_source = admin_data.loc[
-        ((admin_data[admit_timestamp].dt.date > start_date) 
-            & (admin_data[admit_timestamp].dt.date < cutoff_date),
+        ((admin_data[admit_timestamp].dt.date > source[0]) 
+            & (admin_data[admit_timestamp].dt.date < source[1]),
         ),
         encounter_id,
     ]
     ids_target = admin_data.loc[
-        ((admin_data[admit_timestamp].dt.date > cutoff_date) 
-            & (admin_data[admit_timestamp].dt.date < end_date),
+        ((admin_data[admit_timestamp].dt.date > target[0]) 
+            & (admin_data[admit_timestamp].dt.date < target[1]),
         ),
         encounter_id,
     ]
@@ -193,4 +236,4 @@ def hospital_type(
     ]
     X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
     X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t) 
+    return (X_s, X_t)

@@ -16,7 +16,6 @@ from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
 from alibi_detect.utils.pytorch.kernels import DeepKernel
 from drift_detection.baseline_models.temporal.pytorch.utils import get_temporal_model, get_device
 
-
 def get_args(obj, kwargs):
     '''
     Get valid arguments from kwargs to pass to object.
@@ -43,7 +42,7 @@ def get_args(obj, kwargs):
                 args[key] = kwargs[key]
     return args
 
-def load_model(self, model_path: str):
+def load_model(model_path: str):
     '''Load pre-trained model from path.
     For scikit-learn models, a pickle is loaded from disk.
     For the torch models, the "state_dict" is loaded from disk.
@@ -53,15 +52,15 @@ def load_model(self, model_path: str):
     model
         loaded pre-trained model
     '''
-    file_type = self.model_path.split(".")[-1]
+    file_type = model_path.split(".")[-1]
     if file_type == "pkl" or file_type == "pickle":
         model = pickle.load(open(model_path, "rb"))
     elif file_type == "pt":
-        model = torch.load(self.model_path)
+        model = torch.load(model_path)
     return model
 
 
-def save_model(self, model, output_path: str):
+def save_model(model, output_path: str):
     '''Saves the model to disk.
     For scikit-learn models, a pickle is saved to disk.
     For the torch models, the "state_dict" is saved to disk.
@@ -85,21 +84,43 @@ class ContextMMDWrapper:
     Parameters
     ----------
      
-    
     '''
-    def __init__(self, X_s, backend= 'tensorflow', p_val = 0.05, preprocess_x_ref = True, update_ref = None, preprocess_fn = None, 
-    x_kernel = None, c_kernel = None, n_permutations= 1000, prop_c_held = 0.25, n_folds = 5, batch_size = 256, device = None, 
-    input_shape = None, data_type = None, verbose = False, context_type='rnn', model_path=None):
-
+    def __init__(self, X_s, backend= 'pytorch', p_val = 0.05, preprocess_x_ref = True, update_ref = None, preprocess_fn = None, 
+    x_kernel = None, c_kernel = None, n_permutations= 100, prop_c_held = 0.25, n_folds = 5, batch_size = 64, device = None, 
+    input_shape = None, data_type = None, verbose = False, context_type='lstm', model_path=None):
         self.context_type = context_type
         self.model_path = model_path
-        C_s = context(X_s, self.context_type, self.model_path)
+        self.device = get_device()
+        C_s = self.context(X_s)
         self.tester = ContextMMDDrift(X_s, C_s)
 
     def predict(self, X_t, **kwargs):
-        
-        C_t = context(X_t, self.context_type, self.model_path)
+        C_t = self.context(X_t)
         return self.tester.predict(X_t, C_t, **get_args(self.tester.predict, kwargs))
+    
+    def context(self, X: np.ndarray):
+        '''
+        Get context for context mmd drift detection.
+
+        Parameters
+        ----------
+        X
+            Data to build context for context mmd drift detection.
+
+        '''
+        if self.context_type in ["rnn", "gru", "lstm"]:
+            model = recurrent_neural_network(self.context_type, X.shape[-1])
+            model.load_state_dict(load_model(self.model_path)['model'])
+            model.to(self.device).eval()
+            with torch.no_grad():
+                logits = model(torch.from_numpy(X).to(self.device)).cpu().numpy()
+            return softmax(logits, -1)
+        elif self.context_type == "gmm":
+            gmm = load_model(self.model_path)
+            c_gmm_proba = gmm.predict_proba(X) 
+            return c_gmm_proba
+        else:
+            raise ValueError("Context not supported")
 
 class LKWrapper:
     '''
@@ -110,7 +131,7 @@ class LKWrapper:
      
     
     '''
-    def __init__(self, X_s, *, backend = 'tensorflow', p_val = 0.05, preprocess_x_ref = True, update_x_ref = None, 
+    def __init__(self, X_s, *, backend = 'pytorch', p_val = 0.05, preprocess_x_ref = True, update_x_ref = None, 
     preprocess_fn = None, n_permutations = 100, var_reg = 0.00001, reg_loss_fn = lambda kernel: 0, train_size = 0.75,
     retrain_from_scratch = True, optimizer = None, learning_rate = 0.001, batch_size = 32, preprocess_batch = None, 
     epochs = 3, verbose = 0, train_kwargs = None, device = None, dataset = None, dataloader = None, data_type = None, 
@@ -132,39 +153,14 @@ class LKWrapper:
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
 
     def choose_proj(self, X_s, proj_type):
-        if proj_type == 'rnn':
-            return recurrent_neural_network("lstm", X_s.shape[-1])
+        if proj_type in ["rnn","gru","lstm"]:
+            return recurrent_neural_network(proj_type, X_s.shape[-1])
         elif proj_type == 'ffnn':
             return feed_forward_neural_network(X_s.shape[-1])
         elif proj_type == 'cnn':
             return convolutional_neural_network(X_s.shape[-1])
         else:
             raise ValueError("Invalid projection type.")
-
-def context(x: pd.DataFrame, context_type='rnn', model_path=None):
-    '''
-    Get context for context mmd drift detection.
-    
-    Parameters
-    ----------
-    x
-        data to build context for context mmd drift detection
-    
-    '''
-    device = get_device()
-
-    if context_type == "rnn":
-        model = recurrent_neural_network("lstm", x.shape[-1])
-        model.load_state_dict(load_model(model_path))
-        model.eval()
-        with torch.no_grad():
-            logits = model(torch.from_numpy(x).to(device)).cpu().numpy()
-        return softmax(logits, -1)
-    elif context_type == "gmm":
-        gmm = load_model(model_path)
-        c_gmm_proba = gmm.predict_proba(x) 
-        return c_gmm_proba
-
 
 def recurrent_neural_network(model_name: str, input_dim: int, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
     '''
@@ -312,3 +308,12 @@ def get_serving_data(X, y, admin_data, start_date, end_date, stride=1, window=1,
                     'y': target_stream_y 
                   }                 
     return(target_data)
+
+def reshape_2d_to_3d(
+    data, 
+    num_timesteps
+):
+    data = data.unstack()
+    num_encounters = data.shape[0]
+    data = data.values.reshape((num_encounters, num_timesteps, -1))
+    return data

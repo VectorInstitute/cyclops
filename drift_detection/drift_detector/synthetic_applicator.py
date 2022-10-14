@@ -32,8 +32,8 @@ class SyntheticShiftApplicator(object):
         self.shift_types = { 
             "gn_shift": gaussian_noise_shift, 
             "ko_shift": knockout_shift,
-            "cp_shift": changepoint_shift,
-            "mfa_shift": multiway_feat_association_shift,
+            "fs_shift": feature_swap_shift,
+            "fa_shift": feature_association_shift,
             "bn_shift": binary_noise_shift,
         }
            
@@ -133,15 +133,15 @@ def apply_predefined_shift(
     elif predefined_shift == "ko_shift_1.0":
         X_shift, y_shift = knockout_shift(X_shift, y, 0, 1.0)
     elif predefined_shift == "cp_shift_0.75":
-        X_shift, y_shift = changepoint_shift(
+        X_shift, y_shift = feature_swap_shift(
             X_shift, y, X_ref, y_ref, 0, n_shuffle=0.75, rank=True
         )
     elif predefined_shift == "cp_shift_0.25":
-        X_shift, y_shift = changepoint_shift(
+        X_shift, y_shift = feature_swap_shift(
             X_shift, y, X_ref, y_ref, 0, n_shuffle=0.25, rank=True
         )
     elif predefined_shift == "mfa_shift_0.75_krc_rec":
-        X_shift, y_shift = multiway_feat_association_shift(
+        X_shift, y_shift = feature_association_shift(
             X_shift,
             y,
             n_shuffle=0.75,
@@ -149,7 +149,7 @@ def apply_predefined_shift(
             repermute_each_column=True,
         )
     elif predefined_shift == "mfa_shift_0.25_krc_rec":
-        X_shift, y_shift = multiway_feat_association_shift(
+        X_shift, y_shift = feature_association_shift(
             X_shift,
             y,
             n_shuffle=0.25,
@@ -157,7 +157,7 @@ def apply_predefined_shift(
             repermute_each_column=True,
         )
     elif predefined_shift == "mfa_shift_0.75_krc":
-        X_shift, y_shift = multiway_feat_association_shift(
+        X_shift, y_shift = feature_association_shift(
             X_shift,
             y,
             n_shuffle=0.75,
@@ -165,7 +165,7 @@ def apply_predefined_shift(
             repermute_each_column=False,
         )
     elif predefined_shift == "mfa_shift_0.5_krc":
-        X_shift, y_shift = multiway_feat_association_shift(
+        X_shift, y_shift = feature_association_shift(
             X_shift,
             y,
             n_shuffle=0.5,
@@ -173,7 +173,7 @@ def apply_predefined_shift(
             repermute_each_column=False,
         )
     elif predefined_shift == "mfa_shift_0.25_krc":
-        X_shift, y_shift = multiway_feat_association_shift(
+        X_shift, y_shift = feature_association_shift(
             X_shift,
             y,
             n_shuffle=0.25,
@@ -181,7 +181,7 @@ def apply_predefined_shift(
             repermute_each_column=False,
         )
     elif predefined_shift == "mfa_shift_0.75":
-        X_shift, y_shift = multiway_feat_association_shift(
+        X_shift, y_shift = feature_association_shift(
             X_shift,
             y,
             n_shuffle=0.75,
@@ -189,7 +189,7 @@ def apply_predefined_shift(
             repermute_each_column=False,
         )
     elif predefined_shift == "mfa_shift_0.5":
-        X_shift, y_shift = multiway_feat_association_shift(
+        X_shift, y_shift = feature_association_shift(
             X_shift,
             y,
             n_shuffle=0.5,
@@ -197,7 +197,7 @@ def apply_predefined_shift(
             repermute_each_column=False,
         )
     elif predefined_shift == "mfa_shift_0.25":
-        X_shift, y_shift = multiway_feat_association_shift(
+        X_shift, y_shift = feature_association_shift(
             X_shift,
             y,
             n_shuffle=0.25,
@@ -304,7 +304,7 @@ def knockout_shift(
     return X, y
 
 
-def changepoint_shift(
+def feature_swap_shift(
     X: np.ndarray, 
     y: np.ndarray, 
     X_ref: np.ndarray = None, 
@@ -313,7 +313,7 @@ def changepoint_shift(
     n_shuffle: float = 0.25, 
     rank: bool = False
 ):
-    """changepoint shift swaps features on a changepoint axis.
+    """feature swap shift swaps features on a changepoint axis.
 
     Parameters
     ----------
@@ -365,7 +365,7 @@ def changepoint_shift(
     return (X, y)
 
 
-def multiway_feat_association_shift(
+def feature_association_shift(
     X: np.ndarray, 
     y: np.ndarray, 
     n_shuffle: float = 0.25, 
