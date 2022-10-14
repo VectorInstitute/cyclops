@@ -1,21 +1,20 @@
 import os
 import sys
 import numpy as np
+import pickle
 import torch
 import torch.nn as nn
+from tqdm import tqdm
+from typing import Union, Tuple
+import torchxrayvision as xrv
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
-#import torchxrayvision as xrv
 from torch.utils.data import DataLoader
-from tqdm import tqdm
-import pickle
-from typing import Union, Tuple
+from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
 
-sys.path.append("..")
-
-from baseline_models.temporal.pytorch.utils import (
+from drift_detection.baseline_models.temporal.pytorch.utils import (
     get_temporal_model,
     get_device,
 )
@@ -39,6 +38,7 @@ class Reductor:
     dr_method: String
         The dimensionality reduction method to use.
         Available methods are:
+            "NoRed"
             "PCA"
             "SRP"
             "kPCA"
@@ -95,6 +95,7 @@ class Reductor:
 
         # dictionary of string methods with corresponding functions
         reductor_methods = {
+            "NoRed": None,
             "PCA": PCA,
             "SRP": SparseRandomProjection,
             "kPCA": KernelPCA,
@@ -108,9 +109,9 @@ class Reductor:
             "BBSDh_untrained_LSTM": self.recurrent_neural_network,
             "BBSDs_trained_LSTM": self.recurrent_neural_network,
             "BBSDh_trained_LSTM": self.recurrent_neural_network,
-#            "BBSDs_txrv_CNN": xrv.models.DenseNet,
-#            "BBSDh_txrv_CNN": xrv.models.DenseNet,
-#            "TAE_txrv_CNN": xrv.autoencoders.ResNetAE,
+            "BBSDs_txrv_CNN": xrv.models.DenseNet,
+            "BBSDh_txrv_CNN": xrv.models.DenseNet,
+            "TAE_txrv_CNN": xrv.autoencoders.ResNetAE,
         }
 
         # check if dr_method is valid
@@ -125,7 +126,7 @@ class Reductor:
             or self.dr_method == "BBSDh_trained_LSTM"
         ):
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
-            self.model.load_state_dict(torch.load(self.model_path))
+            self.model.load_state_dict(torch.load(self.model_path)['model'])
         elif (
             self.dr_method == "BBSDs_untrained_LSTM"
             or self.dr_method == "BBSDh_untrained_LSTM"
@@ -162,7 +163,7 @@ class Reductor:
             self.dr_method == "BBSDs_trained_LSTM"
             or self.dr_method == "BBSDh_trained_LSTM"
         ):
-            self.model.load_state_dict(torch.load(self.model_path))
+            self.model.load_state_dict(torch.load(self.model_path)['model'])
         print("Model loaded from {}".format(self.model_path))
 
     def save_model(self, output_path: str):
@@ -447,7 +448,7 @@ class Reductor:
         """
 
         if isinstance(data, np.ndarray):
-            X = torch.from_numpy(data)
+            X = torch.from_numpy(data.astype('float32'))
         num_samples = X.shape[0]
         n_batches = int(np.ceil(num_samples / batch_size))
 
@@ -459,13 +460,12 @@ class Reductor:
                     i * batch_size,
                     min((i + 1) * batch_size, num_samples),
                 )
-                X_batch = X[batch_idx[0] : batch_idx[1]]
+                X_batch = X[batch_idx[0]:batch_idx[1]]
                 X_batch = X_batch.to(self.device)
-                X_transformed = model(X_batch.float())
+                X_transformed = model(X_batch)
                 if self.device.type == "cuda":
                     X_transformed = X_transformed.cpu()
                 X_transformed_all.append(X_transformed.detach().numpy())
-
         X_transformed = np.concatenate(X_transformed_all, axis=0)
         return X_transformed
 

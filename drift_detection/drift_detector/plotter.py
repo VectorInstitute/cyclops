@@ -73,7 +73,7 @@ def errorfill(x: np.array, y: np.array, yerr: np.array, color=None, alpha_fill=0
         x, np.clip(ymax, 0, 1), np.clip(ymin, 0, 1), color=color, alpha=alpha_fill
     )
 
-def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: float):
+def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
     '''
     Setup ROC curve
     
@@ -87,10 +87,10 @@ def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: float):
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
     ax.set_xlabel("False Positive Rate", fontsize = 12)
     ax.set_ylabel("True Positive Rate", fontsize = 12)
-    ax.set_title("ROC curve (area = %0.6f)" % roc_auc)
+    ax.set_title("ROC curve (area = %s)" % roc_auc)
     return ax
 
-def plot_pr(ax, recall, precision, roc_prc):
+def plot_pr(ax: mpl.axes.SubplotBase, recall: list, precision: list, roc_prc: str):
     '''
     Setup Precision-Recall curve
     
@@ -104,7 +104,7 @@ def plot_pr(ax, recall, precision, roc_prc):
     ax.set_xlabel("Recall", fontsize = 12)
     ax.set_ylabel("Precision", fontsize = 12)
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
-    ax.set_title("PRC curve (area = %0.6f)" % roc_prc)
+    ax.set_title("PRC curve (area = %s)" % roc_prc)
     return ax
 
 def setup_plot(plot_handle: mpl.axes.SubplotBase,
