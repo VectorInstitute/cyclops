@@ -12,20 +12,26 @@ from .dataset import Data
 from .models import RNNModel, LSTMModel, GRUModel
 from .metrics import *
 
-
 def load_ckp(checkpoint_fpath, model):
     checkpoint = torch.load(checkpoint_fpath)
-    model.load_state_dict(checkpoint["model"])
-    optimizer = checkpoint["optimizer"]
-    return model, optimizer, checkpoint["n_epochs"]
+    model.load_state_dict(checkpoint['model'])
+    optimizer = checkpoint['optimizer']
+    return model, optimizer, checkpoint['n_epochs']
 
+def reshape_2d_to_3d(
+    data, 
+    num_timesteps
+):
+    data = data.unstack()
+    num_encounters = data.shape[0]
+    data = data.values.reshape((num_encounters, num_timesteps, -1))
+    return data
 
 def get_device():
     if torch.cuda.is_available():
         return torch.device("cuda")
     else:
         return torch.device("cpu")
-
 
 def format_dataset(X, level="features", imputation_method="simple"):
     """
