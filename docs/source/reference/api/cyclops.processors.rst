@@ -24,6 +24,5 @@ Submodules
    cyclops.processors.cleaning
    cyclops.processors.diagnoses
    cyclops.processors.impute
-   cyclops.processors.statics
    cyclops.processors.string_ops
    cyclops.processors.util
