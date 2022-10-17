@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from typing import Union, Tuple
-import torchxrayvision as xrv
+#import torchxrayvision as xrv
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA, KernelPCA
@@ -109,9 +109,9 @@ class Reductor:
             "BBSDh_untrained_LSTM": self.recurrent_neural_network,
             "BBSDs_trained_LSTM": self.recurrent_neural_network,
             "BBSDh_trained_LSTM": self.recurrent_neural_network,
-            "BBSDs_txrv_CNN": xrv.models.DenseNet,
-            "BBSDh_txrv_CNN": xrv.models.DenseNet,
-            "TAE_txrv_CNN": xrv.autoencoders.ResNetAE,
+#            "BBSDs_txrv_CNN": xrv.models.DenseNet,
+#            "BBSDh_txrv_CNN": xrv.models.DenseNet,
+#            "TAE_txrv_CNN": xrv.autoencoders.ResNetAE,
         }
 
         # check if dr_method is valid
