@@ -1,0 +1,46 @@
+name: Deploy documentation
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/docs_build.yml
+      - .github/workflows/docs_deploy.yml
+      - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
+      - '**.rst'
+      - '**.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install apt dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libcurl4-openssl-dev libssl-dev pandoc
+      - uses: actions/checkout@v3
+      - name: Install dependencies, build docs and coverage report
+        run: pipx install poetry
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.9.7
+          cache: 'poetry'
+      - run: |
+          poetry env use 3.9.7
+          source $(poetry env info --path)/bin/activate
+          poetry install
+          pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
+          cd docs && make html
+          cd .. && coverage run -m pytest && coverage html && cp htmlcov/* docs/build/html/_static/
+          mv docs/build/html/_static/index.html docs/build/html/_static/coverage_report.html
+  deploy:
+      - name: Deploy to Github pages
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          branch: github_pages
+          folder: docs/build/html
