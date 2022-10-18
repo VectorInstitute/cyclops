@@ -17,13 +17,32 @@ from cyclops.query.omop import (
     CONCEPT_ID,
     CONCEPT_NAME,
     OMOP_COLUMN_MAP,
+    PERSON,
     PERSON_ID,
+    GENDER_CONCEPT_NAME,
+    RACE_CONCEPT_NAME,
+    ETHNICITY_CONCEPT_NAME,
     TABLE_MAP,
     VISIT_DETAIL,
-    VISIT_END_DATETIME,
     VISIT_OCCURRENCE,
     VISIT_OCCURRENCE_ID,
     VISIT_START_DATETIME,
+    VISIT_DETAIL_START_DATETIME,
+    VISIT_DETAIL_CONCEPT_NAME,
+    CARE_SITE,
+    CARE_SITE_NAME,
+    CARE_SITE_SOURCE_VALUE,
+    OBSERVATION,
+    OBSERVATION_CONCEPT_ID,
+    OBSERVATION_TYPE_CONCEPT_ID,
+    OBSERVATION_DATETIME,
+    MEASUREMENT,
+    MEASUREMENT_CONCEPT_ID,
+    MEASUREMENT_TYPE_CONCEPT_ID,
+    MEASUREMENT_DATETIME,
+    UNIT_CONCEPT_ID,
+    VALUE_AS_CONCEPT_ID,
+    
 )
 from cyclops.query.util import TableTypes, _to_subquery, table_params_to_type
 from cyclops.utils.common import to_list
@@ -47,7 +66,7 @@ def get_interface(
     table: TableTypes,
     process_fn: Optional[Callable] = None,
 ) -> Union[QueryInterface, QueryInterfaceProcessed]:
-    """Get a query interface for a GEMINI_OMOP table.
+    """Get a query interface for an OMOP table.
 
     Parameters
     ----------
@@ -78,7 +97,7 @@ def get_table(table_name: str, rename: bool = True) -> Subquery:
     Parameters
     ----------
     table_name: str
-        Name of GEMINI_OMOP table.
+        Name of table.
     rename: bool, optional
         Whether to map the column names
 
@@ -129,22 +148,39 @@ def _map_concept_ids_to_name(
     return source_table
 
 
+def _map_care_site_id(source_table: Subquery) -> Subquery:
+    """Map care_site_id in a source table to care_site table.
+    
+    Parameters
+    ----------
+    source_table: Subquery
+        Source table with care_site_id.
+
+    Returns
+    -------
+    Subquery
+        Query with mapped columns from care_site table.
+
+    """
+    care_site_table = get_table(CARE_SITE)
+    source_table = qp.Join(
+        care_site_table, on=CARE_SITE_ID, join_table_cols=[CARE_SITE_NAME, CARE_SITE_SOURCE_VALUE]
+    )(source_table)
+
+    return source_table
+
+
 @table_params_to_type(Subquery)
 def visit_occurrence(
     drop_null_person_ids=True,
-    map_concept_cols: Union[None, str, List[str]] = None,
     **process_kwargs,
 ) -> QueryInterface:
-    """Query GEMINI_OMOP visit_occurrence table.
+    """Query OMOP visit_occurrence table.
 
     Parameters
     ----------
     drop_null_person_ids: bool, optional
         Flag to say if entries should be dropped if 'person_id' is missing.
-    map_concept_cols: str or list of str, optional
-        Names of columns which need to be joined with concept table
-        to map concepts (concept names are created as new column).
-
 
     Returns
     -------
@@ -154,17 +190,17 @@ def visit_occurrence(
     Other Parameters
     ----------------
     before_date: datetime.datetime or str
-        Get patients encounters before some date.
+        Get patient visits starting before some date.
         If a string, provide in YYYY-MM-DD format.
     after_date: datetime.datetime or str
-        Get patients encounters after some date.
+        Get patient visits starting after some date.
         If a string, provide in YYYY-MM-DD format.
     hospitals: str or list of str, optional
-        Get patient encounters by hospital sites.
+        Get patient visits by hospital sites.
     years: int or list of int, optional
-        Get patient encounters by year.
+        Get patient visits by year.
     months: int or list of int, optional
-        Get patient encounters by month.
+        Get patient visits by month.
     limit: int, optional
         Limit the number of rows returned.
 
@@ -174,22 +210,25 @@ def visit_occurrence(
     if drop_null_person_ids:
         table = qp.DropNulls(PERSON_ID)(table)
 
-    # Possibly cast string representations to timestamps
-    table = qp.Cast([VISIT_START_DATETIME, VISIT_END_DATETIME], "timestamp")(table)
+    # Possibly cast string representations to timestamps.
+    table = qp.Cast([VISIT_START_DATETIME], "timestamp")(table)
+    
+    # Map concept IDs to concept table cols.
+    table = _map_concept_ids_to_name(table, ["visit_concept_id", "visit_type_concept_id"])
+    
+    # Map care_site ID to care_site information from care_site table.
+    table = _map_care_site_id(table)
 
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, [VISIT_START_DATETIME, qp.QAP("before_date")], {}),
         (qp.ConditionAfterDate, [VISIT_START_DATETIME, qp.QAP("after_date")], {}),
         (qp.ConditionInYears, [VISIT_START_DATETIME, qp.QAP("years")], {}),
         (qp.ConditionInMonths, [VISIT_START_DATETIME, qp.QAP("months")], {}),
-        (qp.ConditionIn, [CARE_SITE_ID, qp.QAP("hospitals")], {"to_str": True}),
+        (qp.ConditionIn, [CARE_SITE_SOURCE_VALUE, qp.QAP("hospitals")], {"to_str": True}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
 
     table = qp.process_operations(table, operations, process_kwargs)
-
-    if map_concept_cols is not None:
-        table = _map_concept_ids_to_name(table, map_concept_cols)
 
     return QueryInterface(_db, table)
 
@@ -197,17 +236,31 @@ def visit_occurrence(
 @table_params_to_type(Subquery)
 def visit_detail(
     visit_occurrence_table: Optional[TableTypes] = None,
-    map_concept_cols: Union[None, str, List[str]] = None,
+    **process_kwargs,
 ) -> QueryInterface:
-    """Query GEMINI_OMOP visit_detail table.
+    """Query OMOP visit_detail table.
 
     Parameters
     ----------
     visit_occurrence_table: Subquery, optional
         Visit occurrence table to join on.
-    map_concept_cols: str or list of str, optional
-        Names of columns which need to be joined with concept table
-        to map concepts (concept names are created as new column).
+        
+    Other Parameters
+    ----------------
+    before_date: datetime.datetime or str
+        Get patient visits starting before some date.
+        If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get patient visits starting after some date.
+        If a string, provide in YYYY-MM-DD format.
+    years: int or list of int, optional
+        Get patient visits by year.
+    months: int or list of int, optional
+        Get patient visits by month.
+    care_unit: str or list of str
+        Filter on care_unit, accepts substring e.g. "Emergency Room".
+    limit: int, optional
+        Limit the number of rows returned.
 
     Returns
     -------
@@ -216,13 +269,195 @@ def visit_detail(
 
     """
     table = get_table(VISIT_DETAIL)
-
+    
+    # Possibly cast string representations to timestamps
+    table = qp.Cast([VISIT_DETAIL_START_DATETIME], "timestamp")(table)
+    
     if visit_occurrence_table is not None:
         table = qp.Join(visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID])(
             table
         )
 
-    if map_concept_cols is not None:
-        table = _map_concept_ids_to_name(table, map_concept_cols)
+    table = _map_concept_ids_to_name(table, ["visit_detail_concept_id", "visit_detail_type_concept_id"])
+
+    operations: List[tuple] = [
+        (qp.ConditionBeforeDate, [VISIT_DETAIL_START_DATETIME, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [VISIT_DETAIL_START_DATETIME, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [VISIT_DETAIL_START_DATETIME, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [VISIT_DETAIL_START_DATETIME, qp.QAP("months")], {}),
+        (qp.ConditionSubstring, [VISIT_DETAIL_CONCEPT_NAME, qp.QAP("care_unit")], {}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+        
+    table = qp.process_operations(table, operations, process_kwargs)
+
+    return QueryInterface(_db, table)
+
+
+@table_params_to_type(Subquery)
+def person(
+    visit_occurrence_table: Optional[TableTypes] = None,
+    **process_kwargs,
+) -> QueryInterface:
+    """Query OMOP person table.
+
+    Parameters
+    ----------
+    visit_occurrence_table: Subquery, optional
+        Visit occurrence table to join on.
+        
+    Other Parameters
+    ----------------
+    gender: str or list of str
+        Filter on gender.
+    race: str or list of str
+        Filter on race.
+    ethnicity: str or list of str
+        Filter on ethnicity.
+    limit: int, optional
+        Limit the number of rows returned.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    table = get_table(PERSON)
+    
+    if visit_occurrence_table is not None:
+        table = qp.Join(visit_occurrence_table, on=PERSON_ID)(
+            table
+        )
+
+    table = _map_concept_ids_to_name(table, ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"])
+
+    operations: List[tuple] = [
+        (qp.ConditionIn, [GENDER_CONCEPT_NAME, qp.QAP("gender")], {}),
+        (qp.ConditionIn, [RACE_CONCEPT_NAME, qp.QAP("race")], {}),
+        (qp.ConditionIn, [ETHNICITY_CONCEPT_NAME, qp.QAP("ethnicity")], {}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+        
+    table = qp.process_operations(table, operations, process_kwargs)
+
+    return QueryInterface(_db, table)
+
+
+@table_params_to_type(Subquery)
+def observation(
+    visit_occurrence_table: Optional[TableTypes] = None,
+    **process_kwargs,
+) -> QueryInterface:
+    """Query OMOP observation table.
+
+    Parameters
+    ----------
+    visit_occurrence_table: Subquery, optional
+        Visit occurrence table to join on.
+        
+    Other Parameters
+    ----------------
+    before_date: datetime.datetime or str
+        Get patient observations starting before some date.
+        If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get patient observations starting after some date.
+        If a string, provide in YYYY-MM-DD format.
+    years: int or list of int, optional
+        Get patient observations by year.
+    months: int or list of int, optional
+        Get patient observations by month.
+    limit: int, optional
+        Limit the number of rows returned.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    table = get_table(OBSERVATION)
+    
+    if visit_occurrence_table is not None:
+        table = qp.Join(visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID])(
+            table
+        )
+        
+    # Possibly cast string representations to timestamps
+    table = qp.Cast([OBSERVATION_DATETIME], "timestamp")(table)
+
+    table = _map_concept_ids_to_name(table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID])
+
+    operations: List[tuple] = [
+        (qp.ConditionBeforeDate, [OBSERVATION_DATETIME, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [OBSERVATION_DATETIME, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [OBSERVATION_DATETIME, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [OBSERVATION_DATETIME, qp.QAP("months")], {}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+        
+    table = qp.process_operations(table, operations, process_kwargs)
+
+    return QueryInterface(_db, table)
+
+
+@table_params_to_type(Subquery)
+def measurement(
+    visit_occurrence_table: Optional[TableTypes] = None,
+    **process_kwargs,
+) -> QueryInterface:
+    """Query OMOP measurement table.
+
+    Parameters
+    ----------
+    visit_occurrence_table: Subquery, optional
+        Visit occurrence table to join on.
+        
+    Other Parameters
+    ----------------
+    before_date: datetime.datetime or str
+        Get patient measurements starting before some date.
+        If a string, provide in YYYY-MM-DD format.
+    after_date: datetime.datetime or str
+        Get patient measurements starting after some date.
+        If a string, provide in YYYY-MM-DD format.
+    years: int or list of int, optional
+        Get patient measurements by year.
+    months: int or list of int, optional
+        Get patient measurements by month.
+    limit: int, optional
+        Limit the number of rows returned.
+
+    Returns
+    -------
+    cyclops.query.interface.QueryInterface
+        Constructed query, wrapped in an interface object.
+
+    """
+    table = get_table(MEASUREMENT)
+    
+    if visit_occurrence_table is not None:
+        table = qp.Join(visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID])(
+            table
+        )
+        
+    # Possibly cast string representations to timestamps
+    table = qp.Cast([MEASUREMENT_DATETIME], "timestamp")(table)
+    
+    # Cast value_as_concept_id to int.
+    table = qp.Cast([VALUE_AS_CONCEPT_ID], "int")(table)
+
+    table = _map_concept_ids_to_name(table, [MEASUREMENT_CONCEPT_ID, MEASUREMENT_TYPE_CONCEPT_ID, UNIT_CONCEPT_ID])
+
+    operations: List[tuple] = [
+        (qp.ConditionBeforeDate, [MEASUREMENT_DATETIME, qp.QAP("before_date")], {}),
+        (qp.ConditionAfterDate, [MEASUREMENT_DATETIME, qp.QAP("after_date")], {}),
+        (qp.ConditionInYears, [MEASUREMENT_DATETIME, qp.QAP("years")], {}),
+        (qp.ConditionInMonths, [MEASUREMENT_DATETIME, qp.QAP("months")], {}),
+        (qp.Limit, [qp.QAP("limit")], {}),
+    ]
+        
+    table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)

@@ -2,6 +2,7 @@
 
 from cyclops.processors.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
 from cyclops.processors.constants import TARGETS
+from cyclops.processors.constants import TARGETS, NUMERIC
 from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "mortality_decompensation"
@@ -25,7 +26,42 @@ TAB_VECTORIZED_FILE = join(DATA_DIR, "tab_vectorized.pkl")
 TEMP_VECTORIZED_FILE = join(DATA_DIR, "temp_vectorized.pkl")
 
 # Tabular
-TAB_TARGETS = [OUTCOME_DEATH, OUTCOME_EDEMA]
+TAB_TARGETS = [OUTCOME_DEATH]
+IMAGING_FEATURES = [
+    'CT_head',
+    'CT_neck',
+    'CT_chest',
+    'CT_abd',
+    'CT_pelvis',
+    'CT_limb',
+    'CT_whole_body',
+    'CT_shoulder',
+    'MRI_head',
+    'MRI_chest',
+    'MRI_neck',
+    'MRI_whole_body',
+    'MRI_pelvis',
+    'MRI_abd',
+    'MRI_limb',
+    'MRI_shoulder',
+    'X-ray_head',
+    'X-ray_abd',
+    'X-ray_chest',
+    'X-ray_pelvis',
+    'X-ray_neck',
+    'X-ray_whole_body',
+    'X-ray_limb',
+    'X-ray_shoulder',
+    'Ultrasound_head',
+    'Ultrasound_chest',
+    'Ultrasound_abd',
+    'Ultrasound_pelvis',
+    'Ultrasound_limb',
+    'Ultrasound_shoulder',
+    'Ultrasound_neck',
+    'Ultrasound_whole_body',
+    'Echo_chest',
+]
 TAB_FEATURES = [
     HOSPITAL_ID,
     AGE,
@@ -36,10 +72,17 @@ TAB_FEATURES = [
     "readmission",
     "from_nursing_home_mapped",
     "from_acute_care_institution_mapped",
-    "los_derived",
     "prev_encounter_count",
     "triage_level",
-] + TAB_TARGETS
+    "admit_via_ambulance",
+    'bt_platelet',
+    'bt_albumin',
+    'bt_plasma',
+    'bt_rbc',
+] + IMAGING_FEATURES + TAB_TARGETS
+TAB_FEATURES_TYPES = {
+    imaging_feature: NUMERIC for imaging_feature in IMAGING_FEATURES
+}
 
 # Temporal
 TIMESTEP_SIZE = 24
