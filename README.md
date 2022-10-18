@@ -9,9 +9,9 @@ cyclops is a framework for facilitating research and deployment of ML models
 in the health (or clinical) setting. It provides three high-level features:
 
 
-* Data extraction and processing
-* Model training and evaluation support
-* Drift detection toolkit
+* Data Querying and Processing
+* Rigorous Evaluation
+* Drift Detection toolkit
 
 
 ## 🐣 Getting Started
