@@ -14,4 +14,3 @@ Framework Design
    <p float="left">
      <img src="_static/cyclops_arch.png" />
    </p>
-

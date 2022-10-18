@@ -1,0 +1,19 @@
+---
+# MIMIC database parameters, required if running extraction from database.
+dbms: "postgresql"
+port: 5432
+host: "localhost"
+database: "mimiciii"
+user: "postgres"
+password: "pwd"
+
+output_folder: "./_extract"
+
+# Use QueryBuilder.
+# Filter years.
+years: []
+# Filter on hospital sites.
+hospitals: []
+# Filter based on date range yyyy-mm-dd. Select starting from from_date and/or to_date.
+from_date: ""
+to_date: ""

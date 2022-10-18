@@ -37,23 +37,27 @@ def _fbeta_reduce(  # pylint: disable=too-many-arguments, invalid-name
         average: Literal["micro", "macro", "weighted", "samples", None]
             If ``None``, the scores for each class are returned. Otherwise, this
             determines the type of averaging performed on the data:
-                - ``"micro"``: Calculate metrics globally by counting the total true positives,
-                    false negatives and false positives.
-                - ``"macro"``: Calculate metrics for each label, and find their unweighted
-                    mean.  This does not take label imbalance into account.
-                - ``"weighted"``: Calculate metrics for each label, and find their average, weighted
-                    by support (the number of true instances for each label). This
-                    alters 'macro' to account for label imbalance; it can result in an
-                    F-score that is not between precision and recall.
-                - ``"samples"``: Calculate metrics for each instance, and find their average (only
-                    meaningful for multilabel classification).
+                - ``"micro"``: Calculate metrics globally by counting the total
+                    true positives, false negatives and false positives.
+                - ``"macro"``: Calculate metrics for each label, and find their
+                    unweighted mean.  This does not take label imbalance into account.
+                - ``"weighted"``: Calculate metrics for each label, and find their
+                    average, weighted by support (the number of true instances for each
+                    label). This alters 'macro' to account for label imbalance;
+                    it can result in an F-score that is not between precision and
+                    recall.
+                - ``"samples"``: Calculate metrics for each instance, and find
+                    their average (only meaningful for multilabel classification).
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Sets the value to return when there is a zero division:
-                - ``"warn"``: return 0 if the denominator is zero, otherwise return the result
-                - ``0``: return 0 if the denominator is zero, otherwise return the result
-                - ``1``: return 1 if the denominator is zero, otherwise return the result
+                - ``"warn"``: return 0 if the denominator is zero, otherwise return
+                    the result
+                - ``0``: return 0 if the denominator is zero, otherwise return
+                    the result
+                - ``1``: return 1 if the denominator is zero, otherwise return
+                    the result
 
     Returns
     -------

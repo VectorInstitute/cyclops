@@ -234,8 +234,8 @@ def stat_scores(  # pylint: disable=too-many-arguments
         target: ArrayLike
             Ground truth.
         task: String
-            The task type. Can be either ``"binary"``, ``"multiclass"`` or ``"multilabel"``.
-            One of:
+            The task type. Can be either ``"binary"``, ``"multiclass"`` or
+            ``"multilabel"``. One of:
                 - ``"binary"``: binary classification.
                     Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
                 - ``"multiclass"``: multiclass classification.
@@ -883,7 +883,8 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
             The reduction method to use. Defaults to ``"micro"``. Can be one of:
                 - ``"micro"`` - sum the statistics over all labels.
                 - ``"macro"`` - compute the unweighted mean of the per-label statistics.
-                - ``"samples"`` - compute the unweighted mean of the per-sample statistics.
+                - ``"samples"`` - compute the unweighted mean of the per-sample
+                    statistics.
         sample_weight: ArrayLike
             Sample weights.
 

@@ -1,4 +1,5 @@
 """Querying functions used in the query page."""
+
 from typing import Dict
 
 import pandas as pd
