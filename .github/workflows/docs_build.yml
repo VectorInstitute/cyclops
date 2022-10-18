@@ -1,24 +1,12 @@
-name: Documentation and Coverage Report
+name: Build documentation and coverage report
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - .pre-commit-config.yaml
-      - .github/workflows/docs.yml
-      - '**.py'
-      - poetry.lock
-      - pyproject.toml
-      - requirements.txt
-      - '**.rst'
-      - '**.md'
   pull_request:
     branches:
       - master
     paths:
       - .pre-commit-config.yaml
-      - .github/workflows/docs.yml
+      - .github/workflows/docs_build.yml
       - '**.py'
       - poetry.lock
       - pyproject.toml
@@ -33,7 +21,7 @@ jobs:
       - name: Install apt dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libcurl4-openssl-dev libssl-dev
+          sudo apt-get install libcurl4-openssl-dev libssl-dev pandoc
       - uses: actions/checkout@v3
       - name: Install dependencies, build docs and coverage report
         run: pipx install poetry
@@ -45,11 +33,7 @@ jobs:
           poetry env use 3.9.7
           source $(poetry env info --path)/bin/activate
           poetry install
+          pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && make html
           cd .. && coverage run -m pytest && coverage html && cp htmlcov/* docs/build/html/_static/
           mv docs/build/html/_static/index.html docs/build/html/_static/coverage_report.html
-      - name: Deploy to Github pages
-        uses: JamesIves/github-pages-deploy-action@4.1.1
-        with:
-          branch: github_pages
-          folder: docs/build/html

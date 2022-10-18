@@ -8,7 +8,7 @@ CONST_NAME = "wanglab"
 USECASE_ROOT_DIR = join(
     "/mnt/nfs/project/delirium",
     "cyclops",
-    "usecases",
+    "use_cases",
     CONST_NAME,
 )
 DATA_DIR = process_dir_save_path(join(USECASE_ROOT_DIR, "./data"))
