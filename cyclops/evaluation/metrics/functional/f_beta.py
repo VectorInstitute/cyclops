@@ -303,7 +303,7 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
         fp = np.array([fp])
         fn = np.array([fn])
 
-    return _fbeta_reduce(
+    score = _fbeta_reduce(
         tp,
         fp,
         fn,
@@ -312,6 +312,8 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
         sample_weight=sample_weight,
         zero_division=zero_division,
     )
+
+    return np.squeeze(score)
 
 
 def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
