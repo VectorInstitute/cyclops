@@ -236,4 +236,4 @@ def hospital_type(
     ]
     X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
     X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t)
+    return (X_s, X_t)    
