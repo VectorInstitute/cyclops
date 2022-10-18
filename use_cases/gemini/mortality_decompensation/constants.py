@@ -8,7 +8,7 @@ CONST_NAME = "mortality_decompensation"
 USECASE_ROOT_DIR = join(
     "/mnt/nfs/project/delirium",
     "cyclops",
-    "usecases",
+    "use_cases",
     "gemini",
     CONST_NAME,
 )

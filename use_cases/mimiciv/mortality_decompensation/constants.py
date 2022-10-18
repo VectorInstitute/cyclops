@@ -8,7 +8,7 @@ CONST_NAME = "mortality_decompensation"
 USECASE_ROOT_DIR = join(
     "/mnt/data",
     "cyclops",
-    "usecases",
+    "use_cases",
     "mimiciv",
     CONST_NAME,
 )
