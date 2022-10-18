@@ -1,5 +1,5 @@
 
-# cyclops
+![cyclops Logo](https://github.com/VectorInstitute/cyclops/tree/master/docs/source/theme/static/cyclops_logo.png)
 ---------
 
 [![Code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml)
