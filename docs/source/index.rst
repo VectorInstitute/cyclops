@@ -7,8 +7,8 @@ Welcome to cyclops's documentation!
    :caption: Contents:
 
    intro
-   gemini_hpc
    design
+   gemini_hpc
    contributing
    coverage
    api

@@ -234,15 +234,16 @@ def stat_scores(  # pylint: disable=too-many-arguments
         target: ArrayLike
             Ground truth.
         task: String
-            The task type. Can be either 'binary', 'multiclass' or 'multilabel'.
+            The task type. Can be either ``"binary"``, ``"multiclass"`` or ``"multilabel"``.
             One of:
-                - "binary": binary classification.
-                Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
-                - "multiclass": multiclass classification.
-                Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
-                - "multilabel": multilabel classification.
-                Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
-                [[0.1, 0.9], [0.0, 0.8], ...]
+                - ``"binary"``: binary classification.
+                    Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
+                - ``"multiclass"``: multiclass classification.
+                    Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
+                - ``"multilabel"``: multilabel classification.
+                    Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
+                    [[0.1, 0.9], [0.0, 0.8], ...]
+
         pos_label: int
             The positive label. Defaults to 1. Only used for binary tasks.
         num_classes: int
@@ -261,9 +262,10 @@ def stat_scores(  # pylint: disable=too-many-arguments
         reduce: Literal["micro", "macro", "samples"]
             Reduction mode. Defaults to 'micro'. Only used for multiclass and
             multilabel tasks. One of:
-                - "micro": compute the stat scores globally.
-                - "macro": compute the stat scores for each class.
-                - "samples": compute the stat scores for each sample.
+                - ``"micro"``: compute the stat scores globally.
+                - ``"macro"``: compute the stat scores for each class.
+                - ``"samples"``: compute the stat scores for each sample.
+
         sample_weight: ArrayLike
             Sample weights.
 
@@ -878,12 +880,10 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
             The number of top predictions to consider when computing the statistics.
             Defaults to ``None``.
         reduce: Literal["micro", "macro", "samples"]
-            The reduction method to use. Defaults to ``"micro"``. Can be one of
-                * ``"micro"`` - sum the statistics over all labels.
-                * ``"macro"`` - compute the unweighted mean of the per-label
-                statistics.
-                * ``"samples"`` - compute the unweighted mean of the per-sample
-                statistics.
+            The reduction method to use. Defaults to ``"micro"``. Can be one of:
+                - ``"micro"`` - sum the statistics over all labels.
+                - ``"macro"`` - compute the unweighted mean of the per-label statistics.
+                - ``"samples"`` - compute the unweighted mean of the per-sample statistics.
         sample_weight: ArrayLike
             Sample weights.
 

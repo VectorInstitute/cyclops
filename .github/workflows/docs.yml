@@ -27,6 +27,12 @@ on:
       - '**.md'
 
 jobs:
+  convert_readme_md_to_rst:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker://pandoc/core:2.9
+        with:
+          args: "README.md -f markdown -t rst -s -o docs/source/intro.rst"
   build:
     runs-on: ubuntu-latest
     steps:

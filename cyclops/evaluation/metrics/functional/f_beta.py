@@ -37,30 +37,23 @@ def _fbeta_reduce(  # pylint: disable=too-many-arguments, invalid-name
         average: Literal["micro", "macro", "weighted", "samples", None]
             If ``None``, the scores for each class are returned. Otherwise, this
             determines the type of averaging performed on the data:
-            ``"micro"``:
-                Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            ``"macro"``:
-                Calculate metrics for each label, and find their unweighted
-                mean.  This does not take label imbalance into account.
-            ``"weighted"``:
-                Calculate metrics for each label, and find their average, weighted
-                by support (the number of true instances for each label). This
-                alters 'macro' to account for label imbalance; it can result in an
-                F-score that is not between precision and recall.
-            ``"samples"``:
-                Calculate metrics for each instance, and find their average (only
-                meaningful for multilabel classification).
+                - ``"micro"``: Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - ``"macro"``: Calculate metrics for each label, and find their unweighted
+                    mean.  This does not take label imbalance into account.
+                - ``"weighted"``: Calculate metrics for each label, and find their average, weighted
+                    by support (the number of true instances for each label). This
+                    alters 'macro' to account for label imbalance; it can result in an
+                    F-score that is not between precision and recall.
+                - ``"samples"``: Calculate metrics for each instance, and find their average (only
+                    meaningful for multilabel classification).
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Sets the value to return when there is a zero division:
-            ``"warn"``:
-                return 0 if the denominator is zero, otherwise return the result
-            ``0``:
-                return 0 if the denominator is zero, otherwise return the result
-            ``1``:
-                return 1 if the denominator is zero, otherwise return the result
+                - ``"warn"``: return 0 if the denominator is zero, otherwise return the result
+                - ``0``: return 0 if the denominator is zero, otherwise return the result
+                - ``1``: return 1 if the denominator is zero, otherwise return the result
 
     Returns
     -------
@@ -148,12 +141,12 @@ def fbeta_score(  # pylint: disable=too-many-arguments
         task: Literal["binary", "multiclass", "multilabel"]
             The task type. One of:
                 - `"binary"`: binary classification.
-                Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
+                    Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
                 - `"multiclass"`: multiclass classification.
-                Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
+                    Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
                 - `"multilabel"`: multilabel classification.
-                Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
-                [[0.1, 0.9], [0.0, 0.8], ...]
+                    Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
+                    [[0.1, 0.9], [0.0, 0.8], ...]
         pos_label: int
             The class to report if task is binary. Defaults to 1.
         num_classes: Optional[int]
@@ -167,22 +160,22 @@ def fbeta_score(  # pylint: disable=too-many-arguments
             Number of labels for multilabel task. Defaults to None.
         average: Literal["micro", "macro", "weighted", "samples", None]
             If not None, this determines the type of averaging performed on the data:
-            `"micro"`:
-                Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            `"macro"`:
-                Calculate metrics for each label, and find their unweighted
-                mean.  This does not take label imbalance into account.
-            `"weighted"`:
-                Calculate metrics for each label, and find their average, weighted
-                by support (the number of true instances for each label). This
-                alters 'macro' to account for label imbalance; it can result in an
-                F-score that is not between precision and recall.
-            `"samples"`:
-                Calculate metrics for each instance, and find their average (only
-                meaningful for multilabel classification).
-            `None`:
-                The scores for each class are returned.
+                - `"micro"`:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - `"macro"`:
+                    Calculate metrics for each label, and find their unweighted
+                    mean.  This does not take label imbalance into account.
+                - `"weighted"`:
+                    Calculate metrics for each label, and find their average, weighted
+                    by support (the number of true instances for each label). This
+                    alters 'macro' to account for label imbalance; it can result in an
+                    F-score that is not between precision and recall.
+                - `"samples"`:
+                    Calculate metrics for each instance, and find their average (only
+                    meaningful for multilabel classification).
+                - `None`:
+                    The scores for each class are returned.
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
@@ -346,19 +339,19 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
             Sample weights.
         average: Literal["micro", "macro", "weighted", None]
             If not None, this determines the type of averaging performed on the data:
-            `"micro"`:
-                Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            `"macro"`:
-                Calculate metrics for each label, and find their unweighted
-                mean.  This does not take label imbalance into account.
-            `"weighted"`:
-                Calculate metrics for each label, and find their average, weighted
-                by support (the number of true instances for each label). This
-                alters 'macro' to account for label imbalance; it can result in an
-                F-score that is not between precision and recall.
-            `None`:
-                The scores for each class are returned.
+                - `"micro"`:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - `"macro"`:
+                    Calculate metrics for each label, and find their unweighted
+                    mean.  This does not take label imbalance into account.
+                - `"weighted"`:
+                    Calculate metrics for each label, and find their average, weighted
+                    by support (the number of true instances for each label). This
+                    alters 'macro' to account for label imbalance; it can result in an
+                    F-score that is not between precision and recall.
+                - `None`:
+                    The scores for each class are returned.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
             If set to `"warn"`, this acts as 0, but warnings are also raised.
@@ -433,21 +426,21 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
             Sample weights.
         average: Literal["micro", "macro", "samples", "weighted", None]
             If not None, this determines the type of averaging performed on the data:
-            `"micro"`:
-                Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            `"macro"`:
-                Calculate metrics for each label, and find their unweighted
-                mean.  This does not take label imbalance into account.
-            `"samples"`:
-                Calculate metrics for each instance, and find their average.
-            `"weighted"`:
-                Calculate metrics for each label, and find their average, weighted
-                by support (the number of true instances for each label). This
-                alters 'macro' to account for label imbalance; it can result in an
-                F-score that is not between precision and recall.
-            `None`: The scores for each class are returned.
-            Default: None.
+                - `"micro"`:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - `"macro"`:
+                    Calculate metrics for each label, and find their unweighted
+                    mean.  This does not take label imbalance into account.
+                - `"samples"`:
+                    Calculate metrics for each instance, and find their average.
+                - `"weighted"`:
+                    Calculate metrics for each label, and find their average, weighted
+                    by support (the number of true instances for each label). This
+                    alters 'macro' to account for label imbalance; it can result in an
+                    F-score that is not between precision and recall.
+                - `None`:
+                    The scores for each class are returned. Default: None.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
             If set to "warn", this acts as 0, but warnings are also raised.
@@ -515,12 +508,12 @@ def f1_score(  # pylint: disable=too-many-arguments
         task: Literal["binary", "multiclass", "multilabel"]
             The task type. One of:
                 - `"binary"`: binary classification.
-                Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
+                    Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
                 - `"multiclass"`: multiclass classification.
-                Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
+                    Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
                 - `"multilabel"`: multilabel classification.
-                Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
-                [[0.1, 0.9], [0.0, 0.8], ...]
+                    Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
+                    [[0.1, 0.9], [0.0, 0.8], ...]
         pos_label: int
             The class to report if task is binary. Defaults to 1.
         num_classes: Optional[int]
@@ -534,22 +527,22 @@ def f1_score(  # pylint: disable=too-many-arguments
             Number of labels for multilabel task. Defaults to None.
         average: Literal["micro", "macro", "weighted", "samples", None]
             If not None, this determines the type of averaging performed on the data:
-            `"micro"`:
-                Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            `"macro"`:
-                Calculate metrics for each label, and find their unweighted
-                mean.  This does not take label imbalance into account.
-            `"weighted"`:
-                Calculate metrics for each label, and find their average, weighted
-                by support (the number of true instances for each label). This
-                alters 'macro' to account for label imbalance; it can result in an
-                F-score that is not between precision and recall.
-            `"samples"`:
-                Calculate metrics for each instance, and find their average (only
-                meaningful for multilabel classification).
-            `None`:
-                The scores for each class are returned.
+                - `"micro"`:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - `"macro"`:
+                    Calculate metrics for each label, and find their unweighted
+                    mean.  This does not take label imbalance into account.
+                - `"weighted"`:
+                    Calculate metrics for each label, and find their average, weighted
+                    by support (the number of true instances for each label). This
+                    alters 'macro' to account for label imbalance; it can result in an
+                    F-score that is not between precision and recall.
+                - `"samples"`:
+                    Calculate metrics for each instance, and find their average (only
+                    meaningful for multilabel classification).
+                - `None`:
+                    The scores for each class are returned.
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
@@ -647,19 +640,19 @@ def multiclass_f1_score(  # pylint: disable=too-many-arguments
             Sample weights.
         average: Literal["micro", "macro", "weighted", None]
             If not None, this determines the type of averaging performed on the data:
-            `"micro"`:
-                Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            `"macro"`:
-                Calculate metrics for each label, and find their unweighted
-                mean.  This does not take label imbalance into account.
-            `"weighted"`:
-                Calculate metrics for each label, and find their average, weighted
-                by support (the number of true instances for each label). This
-                alters 'macro' to account for label imbalance; it can result in an
-                F-score that is not between precision and recall.
-            `None`: The scores for each class are returned.
-            Default: None.
+                - `"micro"`:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - `"macro"`:
+                    Calculate metrics for each label, and find their unweighted
+                    mean.  This does not take label imbalance into account.
+                - `"weighted"`:
+                    Calculate metrics for each label, and find their average, weighted
+                    by support (the number of true instances for each label). This
+                    alters 'macro' to account for label imbalance; it can result in an
+                    F-score that is not between precision and recall.
+                - `None`:
+                    The scores for each class are returned. Default: None.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
             If set to `"warn"`, this acts as 0, but warnings are also raised.
@@ -711,21 +704,21 @@ def multilabel_f1_score(  # pylint: disable=too-many-arguments
             Sample weights.
         average: Literal["micro", "macro", "samples", "weighted", None]
             If not None, this determines the type of averaging performed on the data:
-            `"micro"`:
-                Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            `"macro"`:
-                Calculate metrics for each label, and find their unweighted
-                mean.  This does not take label imbalance into account.
-            `"samples"`:
-                Calculate metrics for each instance, and find their average.
-            `"weighted"`:
-                Calculate metrics for each label, and find their average, weighted
-                by support (the number of true instances for each label). This
-                alters 'macro' to account for label imbalance; it can result in an
-                F-score that is not between precision and recall.
-            `None`: The scores for each class are returned.
-            Default: None.
+                - `"micro"`:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - `"macro"`:
+                    Calculate metrics for each label, and find their unweighted
+                    mean.  This does not take label imbalance into account.
+                - `"samples"`:
+                    Calculate metrics for each instance, and find their average.
+                - `"weighted"`:
+                    Calculate metrics for each label, and find their average, weighted
+                    by support (the number of true instances for each label). This
+                    alters 'macro' to account for label imbalance; it can result in an
+                    F-score that is not between precision and recall.
+                - `None`:
+                    The scores for each class are returned. Default: None.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
             If set to "warn", this acts as 0, but warnings are also raised.
