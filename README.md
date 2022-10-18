@@ -1,6 +1,6 @@
+![cyclops Logo](https://github.com/VectorInstitute/cyclops/tree/master/docs/source/theme/static/cyclops_logo.png)
 
-# cyclops
----------
+--------------------------------------------------------------------------------
 
 [![Code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml)
 [![Documentation and Coverage Report](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml)

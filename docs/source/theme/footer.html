@@ -21,13 +21,13 @@
 {% block extrafooter %}
 
   <div class="citation">
-    Hadfield <i>et al.,</i>
-    <a href="https://doi.org/10.1093/bioinformatics/bty407">Nextstrain: real-time tracking of pathogen evolution</a>
-    <i>, Bioinformatics</i> (2018)
+    CyclOps team <i>et al.,</i>
+    <a href="https://vectorinstitute.github.io/cyclops/">CyclOps: Cyclical development towards Operationalizing ML models for health</a>
+    <i>, TBD</i> (2022)
   </def>
 
 
-  <p class="avatar">Nextstrain is built by</p>
+  <p class="avatar">cyclops is built by</p>
   <div class="avatar">
     {% macro TeamMember(name, image, link) %}
     <span>
@@ -37,25 +37,34 @@
       {% if link %}</a>{% endif %}
     </span>
     {% endmacro %}
-    {{ TeamMember(name="Trevor Bedford", image="trevor-bedford.jpg", link="http://bedford.io/team/trevor-bedford/") }},
+    {{ TeamMember(name="Amrit Krishnan", image="amrit-krishnan.jpg", link="https://github.com/amrit110") }},
+    {{ TeamMember(name="Kaden McKeen", image="kaden-mckeen.jpg", link="https://github.com/KadenMc") }},
+    {{ TeamMember(name="Valli Subasri", image="valli-subasri.jpg", link="https://github.com/vsubasri") }},
+    {{ TeamMember(name="Ali Kore", image="ali-kore.jpg", link="https://github.com/a-kore") }},
+    {{ TeamMember(name="Franklin Ogidi", image="franklin-ogidi.jpg", link="https://github.com/fcogidi") }},
+    {{ TeamMember(name="Dhrumil Patel", image="dhrumil-patel.jpg", link="https://github.com/dhrumilp15") }},
   </div>
 
 
   <div class="footer-small-text">
-    All <a href="https://github.com/nextstrain">source code for Nextstrain</a> is freely available under the terms of an <a href="https://opensource.org/osd">open-source license</a>, typically <a href="https://opensource.org/licenses/AGPL-3.0">AGPL-3.0</a> or <a href="https://opensource.org/licenses/MIT">MIT</a>.
+    All <a href="https://github.com/nextstrain">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/osd">open-source license</a>, typically <a href="https://opensource.org/licenses/AGPL-3.0">AGPL-3.0</a> or <a href="https://opensource.org/licenses/MIT">MIT</a>.
   </div>
 
   <div class="footer-small-text">
-    This work is done by ...
-    We gratefully acknowledge their contributions.
+    This work is made possible due to the data obtained from the
+    General Medicine Inpatient Initiative (GEMINI).
   </div>
 
   <hr/>
 
   <div class="logo">
-    <a class="logo" href="http://www.fredhutch.org/">
+    <a class="logo" href="https://vectorinstitute.ai/">
       <span class="logo"></span>
-      <img alt="Logo of the Fred Hutch" style="width:90px; max-width:90px;" src="{{ pathto('_static/logos/fred-hutch-logo-small.png', 1) }}" />
+      <img alt="Logo of the Vector Institute" style="width:90px; max-width:90px;" src="{{ pathto('_static/logos/vector_logo.png', 1) }}" />
+    </a>
+    <a class="logo" href="https://www.geminimedicine.ca/">
+      <span class="logo"></span>
+      <img alt="Logo of GEMINI" style="width:90px; max-width:90px;" src="{{ pathto('_static/logos/gemini_logo.png', 1) }}" />
     </a>
   </div>
 
@@ -73,8 +82,7 @@
       Last updated on {{ last_updated }}.
     {%- endif %}
     </p>
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
-    using <a href="https://github.com/nextstrain/sphinx-theme">our customised version</a> of a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using customised version of
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">base theme</a> provided by
     <a href="https://readthedocs.org">Read the Docs</a>.
   </div>
