@@ -16,7 +16,7 @@ on:
       - '**.md'
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Install apt dependencies
