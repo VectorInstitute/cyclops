@@ -12,37 +12,36 @@ from cyclops.orm import Database
 from cyclops.query import process as qp
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.omop import (
+    CARE_SITE,
     CARE_SITE_ID,
+    CARE_SITE_NAME,
+    CARE_SITE_SOURCE_VALUE,
     CONCEPT,
     CONCEPT_ID,
     CONCEPT_NAME,
+    ETHNICITY_CONCEPT_NAME,
+    GENDER_CONCEPT_NAME,
+    MEASUREMENT,
+    MEASUREMENT_CONCEPT_ID,
+    MEASUREMENT_DATETIME,
+    MEASUREMENT_TYPE_CONCEPT_ID,
+    OBSERVATION,
+    OBSERVATION_CONCEPT_ID,
+    OBSERVATION_DATETIME,
+    OBSERVATION_TYPE_CONCEPT_ID,
     OMOP_COLUMN_MAP,
     PERSON,
     PERSON_ID,
-    GENDER_CONCEPT_NAME,
     RACE_CONCEPT_NAME,
-    ETHNICITY_CONCEPT_NAME,
     TABLE_MAP,
+    UNIT_CONCEPT_ID,
+    VALUE_AS_CONCEPT_ID,
     VISIT_DETAIL,
+    VISIT_DETAIL_CONCEPT_NAME,
+    VISIT_DETAIL_START_DATETIME,
     VISIT_OCCURRENCE,
     VISIT_OCCURRENCE_ID,
     VISIT_START_DATETIME,
-    VISIT_DETAIL_START_DATETIME,
-    VISIT_DETAIL_CONCEPT_NAME,
-    CARE_SITE,
-    CARE_SITE_NAME,
-    CARE_SITE_SOURCE_VALUE,
-    OBSERVATION,
-    OBSERVATION_CONCEPT_ID,
-    OBSERVATION_TYPE_CONCEPT_ID,
-    OBSERVATION_DATETIME,
-    MEASUREMENT,
-    MEASUREMENT_CONCEPT_ID,
-    MEASUREMENT_TYPE_CONCEPT_ID,
-    MEASUREMENT_DATETIME,
-    UNIT_CONCEPT_ID,
-    VALUE_AS_CONCEPT_ID,
-    
 )
 from cyclops.query.util import TableTypes, _to_subquery, table_params_to_type
 from cyclops.utils.common import to_list
@@ -150,7 +149,7 @@ def _map_concept_ids_to_name(
 
 def _map_care_site_id(source_table: Subquery) -> Subquery:
     """Map care_site_id in a source table to care_site table.
-    
+
     Parameters
     ----------
     source_table: Subquery
@@ -164,7 +163,9 @@ def _map_care_site_id(source_table: Subquery) -> Subquery:
     """
     care_site_table = get_table(CARE_SITE)
     source_table = qp.Join(
-        care_site_table, on=CARE_SITE_ID, join_table_cols=[CARE_SITE_NAME, CARE_SITE_SOURCE_VALUE]
+        care_site_table,
+        on=CARE_SITE_ID,
+        join_table_cols=[CARE_SITE_NAME, CARE_SITE_SOURCE_VALUE],
     )(source_table)
 
     return source_table
@@ -212,10 +213,12 @@ def visit_occurrence(
 
     # Possibly cast string representations to timestamps.
     table = qp.Cast([VISIT_START_DATETIME], "timestamp")(table)
-    
+
     # Map concept IDs to concept table cols.
-    table = _map_concept_ids_to_name(table, ["visit_concept_id", "visit_type_concept_id"])
-    
+    table = _map_concept_ids_to_name(
+        table, ["visit_concept_id", "visit_type_concept_id"]
+    )
+
     # Map care_site ID to care_site information from care_site table.
     table = _map_care_site_id(table)
 
@@ -224,7 +227,11 @@ def visit_occurrence(
         (qp.ConditionAfterDate, [VISIT_START_DATETIME, qp.QAP("after_date")], {}),
         (qp.ConditionInYears, [VISIT_START_DATETIME, qp.QAP("years")], {}),
         (qp.ConditionInMonths, [VISIT_START_DATETIME, qp.QAP("months")], {}),
-        (qp.ConditionIn, [CARE_SITE_SOURCE_VALUE, qp.QAP("hospitals")], {"to_str": True}),
+        (
+            qp.ConditionIn,
+            [CARE_SITE_SOURCE_VALUE, qp.QAP("hospitals")],
+            {"to_str": True},
+        ),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
 
@@ -244,7 +251,7 @@ def visit_detail(
     ----------
     visit_occurrence_table: Subquery, optional
         Visit occurrence table to join on.
-        
+
     Other Parameters
     ----------------
     before_date: datetime.datetime or str
@@ -269,26 +276,36 @@ def visit_detail(
 
     """
     table = get_table(VISIT_DETAIL)
-    
+
     # Possibly cast string representations to timestamps
     table = qp.Cast([VISIT_DETAIL_START_DATETIME], "timestamp")(table)
-    
+
     if visit_occurrence_table is not None:
         table = qp.Join(visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID])(
             table
         )
 
-    table = _map_concept_ids_to_name(table, ["visit_detail_concept_id", "visit_detail_type_concept_id"])
+    table = _map_concept_ids_to_name(
+        table, ["visit_detail_concept_id", "visit_detail_type_concept_id"]
+    )
 
     operations: List[tuple] = [
-        (qp.ConditionBeforeDate, [VISIT_DETAIL_START_DATETIME, qp.QAP("before_date")], {}),
-        (qp.ConditionAfterDate, [VISIT_DETAIL_START_DATETIME, qp.QAP("after_date")], {}),
+        (
+            qp.ConditionBeforeDate,
+            [VISIT_DETAIL_START_DATETIME, qp.QAP("before_date")],
+            {},
+        ),
+        (
+            qp.ConditionAfterDate,
+            [VISIT_DETAIL_START_DATETIME, qp.QAP("after_date")],
+            {},
+        ),
         (qp.ConditionInYears, [VISIT_DETAIL_START_DATETIME, qp.QAP("years")], {}),
         (qp.ConditionInMonths, [VISIT_DETAIL_START_DATETIME, qp.QAP("months")], {}),
         (qp.ConditionSubstring, [VISIT_DETAIL_CONCEPT_NAME, qp.QAP("care_unit")], {}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
-        
+
     table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)
@@ -305,7 +322,7 @@ def person(
     ----------
     visit_occurrence_table: Subquery, optional
         Visit occurrence table to join on.
-        
+
     Other Parameters
     ----------------
     gender: str or list of str
@@ -324,13 +341,13 @@ def person(
 
     """
     table = get_table(PERSON)
-    
-    if visit_occurrence_table is not None:
-        table = qp.Join(visit_occurrence_table, on=PERSON_ID)(
-            table
-        )
 
-    table = _map_concept_ids_to_name(table, ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"])
+    if visit_occurrence_table is not None:
+        table = qp.Join(visit_occurrence_table, on=PERSON_ID)(table)
+
+    table = _map_concept_ids_to_name(
+        table, ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"]
+    )
 
     operations: List[tuple] = [
         (qp.ConditionIn, [GENDER_CONCEPT_NAME, qp.QAP("gender")], {}),
@@ -338,7 +355,7 @@ def person(
         (qp.ConditionIn, [ETHNICITY_CONCEPT_NAME, qp.QAP("ethnicity")], {}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
-        
+
     table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)
@@ -355,7 +372,7 @@ def observation(
     ----------
     visit_occurrence_table: Subquery, optional
         Visit occurrence table to join on.
-        
+
     Other Parameters
     ----------------
     before_date: datetime.datetime or str
@@ -378,16 +395,18 @@ def observation(
 
     """
     table = get_table(OBSERVATION)
-    
+
     if visit_occurrence_table is not None:
         table = qp.Join(visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID])(
             table
         )
-        
+
     # Possibly cast string representations to timestamps
     table = qp.Cast([OBSERVATION_DATETIME], "timestamp")(table)
 
-    table = _map_concept_ids_to_name(table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID])
+    table = _map_concept_ids_to_name(
+        table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID]
+    )
 
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, [OBSERVATION_DATETIME, qp.QAP("before_date")], {}),
@@ -396,7 +415,7 @@ def observation(
         (qp.ConditionInMonths, [OBSERVATION_DATETIME, qp.QAP("months")], {}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
-        
+
     table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)
@@ -413,7 +432,7 @@ def measurement(
     ----------
     visit_occurrence_table: Subquery, optional
         Visit occurrence table to join on.
-        
+
     Other Parameters
     ----------------
     before_date: datetime.datetime or str
@@ -436,19 +455,21 @@ def measurement(
 
     """
     table = get_table(MEASUREMENT)
-    
+
     if visit_occurrence_table is not None:
         table = qp.Join(visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID])(
             table
         )
-        
+
     # Possibly cast string representations to timestamps
     table = qp.Cast([MEASUREMENT_DATETIME], "timestamp")(table)
-    
+
     # Cast value_as_concept_id to int.
     table = qp.Cast([VALUE_AS_CONCEPT_ID], "int")(table)
 
-    table = _map_concept_ids_to_name(table, [MEASUREMENT_CONCEPT_ID, MEASUREMENT_TYPE_CONCEPT_ID, UNIT_CONCEPT_ID])
+    table = _map_concept_ids_to_name(
+        table, [MEASUREMENT_CONCEPT_ID, MEASUREMENT_TYPE_CONCEPT_ID, UNIT_CONCEPT_ID]
+    )
 
     operations: List[tuple] = [
         (qp.ConditionBeforeDate, [MEASUREMENT_DATETIME, qp.QAP("before_date")], {}),
@@ -457,7 +478,7 @@ def measurement(
         (qp.ConditionInMonths, [MEASUREMENT_DATETIME, qp.QAP("months")], {}),
         (qp.Limit, [qp.QAP("limit")], {}),
     ]
-        
+
     table = qp.process_operations(table, operations, process_kwargs)
 
     return QueryInterface(_db, table)
