@@ -91,7 +91,7 @@ flake8 = [
 ]
 
 [tool.nbqa.exclude]
-flake8 = "tutorials/mimiciv/query_api_developer.ipynb|use_cases/gemini/los_er/1-query.ipynb|use_cases/gemini/mortality_decompensation/"
+flake8 = "tutorials/mimiciv/query_api_developer.ipynb|use_cases/gemini/delirium/pipeline_to_convert.ipynb"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
