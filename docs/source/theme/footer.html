@@ -1,0 +1,82 @@
+{% extends "sphinx_rtd_theme/footer.html" %}
+
+{#
+  The design of the rtd-theme footer template includes content which is
+  not inside a block (and thus not trivial to overwrite). By setting
+  the following variabels we essentially hide footer content which we want
+  to include ourselves. P.S. These variables are only used in the footer.
+#}
+{% set show_sphinx = false %}
+{% set show_copyright = false %}
+
+{#
+  Footer design largely replicates https://github.com/nextstrain/nextstrain.org/raw/0c3222d/static-site/src/components/Footer/index.jsx
+#}
+
+{#
+  The following could probably be written in a much nicer, less verbose style.
+  This is/was my first time using Jinja, so i'm falling back onto basic HTML.
+  If you can improve this, please do & show me the way!       james oct 2020
+#}
+{% block extrafooter %}
+
+  <div class="citation">
+    Hadfield <i>et al.,</i>
+    <a href="https://doi.org/10.1093/bioinformatics/bty407">Nextstrain: real-time tracking of pathogen evolution</a>
+    <i>, Bioinformatics</i> (2018)
+  </def>
+
+
+  <p class="avatar">Nextstrain is built by</p>
+  <div class="avatar">
+    {% macro TeamMember(name, image, link) %}
+    <span>
+      {% if link %}<a href="{{ link |e }}">{% endif %}
+        <img src="{{ pathto('_static/team/' + image, 1) }}" width="32"/>
+        {{ name |e }}
+      {% if link %}</a>{% endif %}
+    </span>
+    {% endmacro %}
+    {{ TeamMember(name="Trevor Bedford", image="trevor-bedford.jpg", link="http://bedford.io/team/trevor-bedford/") }},
+  </div>
+
+
+  <div class="footer-small-text">
+    All <a href="https://github.com/nextstrain">source code for Nextstrain</a> is freely available under the terms of an <a href="https://opensource.org/osd">open-source license</a>, typically <a href="https://opensource.org/licenses/AGPL-3.0">AGPL-3.0</a> or <a href="https://opensource.org/licenses/MIT">MIT</a>.
+  </div>
+
+  <div class="footer-small-text">
+    This work is done by ...
+    We gratefully acknowledge their contributions.
+  </div>
+
+  <hr/>
+
+  <div class="logo">
+    <a class="logo" href="http://www.fredhutch.org/">
+      <span class="logo"></span>
+      <img alt="Logo of the Fred Hutch" style="width:90px; max-width:90px;" src="{{ pathto('_static/logos/fred-hutch-logo-small.png', 1) }}" />
+    </a>
+  </div>
+
+  <div class="copyright">
+    &copy; {% trans %}Copyright{% endtrans %} {{ copyright }}
+  </div>
+
+  <div class="copyright">
+    {%- if build_id and build_url %}
+      Build <a href="{{ build_url }}">{{ build_id }}</a>.
+    {%- elif commit %}
+      Revision <code>{{ commit }}</code>.
+    {%- endif %}
+    {%- if last_updated %}
+      Last updated on {{ last_updated }}.
+    {%- endif %}
+    </p>
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+    using <a href="https://github.com/nextstrain/sphinx-theme">our customised version</a> of a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">base theme</a> provided by
+    <a href="https://readthedocs.org">Read the Docs</a>.
+  </div>
+
+{% endblock %}

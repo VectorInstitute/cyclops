@@ -1,0 +1,117 @@
+{#
+  Use our theme's favicon by default.  We do it here layout.html since the
+  "html_favicon" configuration option unfortunately can't be set by the theme
+  directly.  The "favicon" variable is used by Sphinx versions < 4;
+  "favicon_url" by newer versions.
+#}
+{% if not favicon %}
+{%   set favicon     = 'favicon.ico' %}
+{%   set favicon_url = pathto('_static/' + favicon, 1) %}
+{% endif %}
+
+{% extends "sphinx_rtd_theme/layout.html" %}
+{#
+  Most of this block is copied from sphinx_rtd_theme version 0.5.0-1-gaa71fd6.
+
+  Tweaks were necessary for our theme to provide a default logo, since Sphinx's
+  html_logo configuration option (template variable "logo" below) can't be set
+  by the theme *and also* can't refer to a theme-provided file when set by the
+  doc project's conf.py.
+
+  We also adjust the rendering of the project name to remove the home icon.
+#}
+{% block sidebartitle %}
+
+{% set logo = logo if logo else 'nextstrain-logo.svg' if theme_logo else '' %}
+
+{% if logo %}
+  <a href="{{ theme_logo_link }}">
+    <img src="{{ pathto('_static/' + logo, 1) }}" class="logo" alt="{{ _('Logo') }}"/>
+  </a>
+{% endif %}
+
+{% if theme_subproject %}
+  <div class="subproject">
+    <a href="{{ pathto(master_doc) }}" class="project-name" alt="{{ _("Documentation Home") }}">
+      {{ project }}
+    </a>
+
+    {#
+      NOTE the version only works on RTD (not locally) as the variables `nav_version` and
+      `current_version` don't seem to be set on a local build.
+    #}
+    {%- set nav_version = version %}
+    {% if READTHEDOCS and current_version %}
+      {%- set nav_version = current_version %}
+    {% endif %}
+    {% if nav_version %}
+      <div class="version">
+        {% if nav_version == "stable" %}
+          stable version
+          {% if version and version != "stable" %}
+            <small>({{ version }})</small>
+          {% endif %}
+        {% elif nav_version == "latest" %}
+          development version
+          {% if commit %}
+            <small>(<tt>{{ commit }}</tt>)</small>
+          {% endif %}
+        {% else %}
+          version {{ nav_version }}
+        {% endif %}
+      </div>
+    {% endif %}
+
+  </div>
+
+{% endif %}
+
+{% include "searchbox.html" %}
+
+{% endblock %}
+
+
+{% block extrabody %}
+  <!--
+    Lie about what theme we really are when some RTD-injected JS fetches the
+    full versions panel from the RTD API.  RTD's JS replaces the stub versions
+    panel in the Sphinx-generated HTML with the full versions panel it fetches
+    from the RTD API.  If the API thinks we're not sphinx_rtd_theme, it will
+    serve us the wrong HTML and the panel will float as a "badge" when it
+    shouldn't.  As a customized version of sphinx_rtd_theme, we really do want
+    the same HTML it gets.  See also the diagnoses in
+    <https://github.com/nextstrain/docs.nextstrain.org/issues/76>.
+
+    This bit of JS finds the data RTD injects into the page and modifies it
+    before the code that RTD injects runs and looks at the data.  RTD's
+    <script>s (in <head>) run before this JS, but they wait until the DOM is
+    ready to actually do any work.  This gives us a chance to modify the data
+    during DOM load before the RTD code actually uses it.
+
+      -trs, 27 Jan 2022
+  -->
+  <script>
+    (() => {
+      try {
+        console.log("Lying about the theme to RTD's JS so the versions panel works properly. 🙈");
+
+        /* Update global variable, which is used in the request to get the RTD
+         * "footer" that includes the versions panel.
+         */
+        if (window.READTHEDOCS_DATA)
+          window.READTHEDOCS_DATA.theme = "sphinx_rtd_theme";
+
+        /* Update stored JSON in case anything else deserializes it later.
+         * Comments in the RTD-injected HTML source claim the global variable
+         * above is deprecated.
+         */
+        var script = document.querySelector("#READTHEDOCS_DATA");
+        if (script)
+          script.innerHTML = JSON.stringify({ ...JSON.parse(script.innerHTML), theme: "sphinx_rtd_theme" });
+      }
+      catch (err) {
+        console.log("Lying about the theme to RTD's JS failed… oh well. 🤷", err);
+      }
+    })();
+  </script>
+{% endblock %}

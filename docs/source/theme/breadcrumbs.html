@@ -1,0 +1,41 @@
+{% extends "sphinx_rtd_theme/breadcrumbs.html" %}
+
+{% block breadcrumbs %}
+  {# Separators between <li>s are added by CSS. #}
+
+  {#
+    Breadcrumbs always start with home icon pointing to the main Nextstrain doc
+    project.
+
+    If the current project is the main project, then we don't hardcode the URL
+    so the currently viewed version/language is preserved (although we don't
+    use these features currently).
+  #}
+  {% if theme_subproject %}
+    <li><a href="https://docs.nextstrain.org">Home</a></li>
+    <li><a href="{{ pathto(master_doc) }}">{{ project }}</a></li>
+  {% else %}
+    <li><a href="{{ pathto(master_doc) }}">Home</a></li>
+  {% endif %}
+
+  {#
+    The parents of the current page, according to the project toctree, without
+    the root doc (master_doc).
+  #}
+  {% for doc in parents %}
+    <li><a href="{{ doc.link|e }}">{{ doc.title }}</a></li>
+  {% endfor %}
+
+  {#
+    Don't include the current page's title (like the template we're extending
+    does) because the page title is immediately below these breadcrumbs anyway.
+
+    This also follows common UX recommendations for breadcrumbs, e.g. the UK's
+    Government Digital Service (gov.uk) breadcrumbs component guidelines¹ says:
+
+        The breadcrumb should start with your ‘home’ page and end with the
+        parent section of the current page.
+
+    ¹ https://design-system.service.gov.uk/components/breadcrumbs/
+  #}
+{% endblock %}
