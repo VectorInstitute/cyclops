@@ -136,4 +136,9 @@ class Experimenter:
         )
 
         return drift_samples_results
-
+    
+    def rolling_window_drift(self):
+        return
+    
+    def rollin_window_performance(self):
+        return

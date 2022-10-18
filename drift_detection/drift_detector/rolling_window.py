@@ -26,13 +26,15 @@ class RollingWindow:
         admin_data = None,
         shift_detector: Detector = None, 
         optimizer: Optimizer = None,
-        model = None
+        model = None,
+        verbose: bool = False
     ):
         
         self.admin_data = admin_data
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
+        self.verbose = verbose
         
     def mean(
         self,
@@ -87,6 +89,7 @@ class RollingWindow:
         performance_metrics = []
         i = 0 
         num_timesteps = data_streams['X'][0].index.get_level_values(1).nunique()
+        n_features = data_streams['X'][0].shape[1]
         pbar_total=len(data_streams['X'])-stat_window-lookup_window+1
         pbar = tqdm(total = pbar_total, miniters = int(pbar_total/100))
         while i+stat_window+lookup_window < len(data_streams['X']):
@@ -112,7 +115,7 @@ class RollingWindow:
                 test_dataset = get_data(X_next, y_next)
                 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
                 y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
-                    test_loader, batch_size=1, n_features=data_streams['X'][0].shape[1], timesteps=num_timesteps
+                    test_loader, batch_size=1, n_features=n_features, timesteps=num_timesteps
                 )                
                 y_pred_values = y_pred_values[y_test_labels != -1]
                 y_pred_labels = y_pred_labels[y_test_labels != -1]
@@ -181,8 +184,7 @@ class RollingWindow:
             )
 
             if drift_metrics['p_val'] < threshold:
-                print("P-value below threshold.")
-                print("Ref -->",i+lookup_window,"-",i+stat_window+lookup_window,"\tP-Value: ",drift_metrics['p_val'])
+                print("P-value below threshold for ",data_streams['timesteps'][i+lookup_window],"-",data_streams['timesteps'][i+stat_window+lookup_window],"\tP-Value: ",drift_metrics['p_val'])
                 
             rolling_drift_metrics.append(drift_metrics)
             i += stride
