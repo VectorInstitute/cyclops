@@ -164,6 +164,7 @@ query_result_components = (
 
 
 query_page_components = (
+    dmc.Space(h=30),
     html.Div(
         [
             html.H2("Cohort Curation"),

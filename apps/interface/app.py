@@ -23,7 +23,7 @@ from consts import (
     NAV_PAGES,
     TABLE_IDS,
 )
-from dash import Dash, Input, Output, State, dcc, html
+from dash import Dash, Input, Output, State, html
 from flask_caching import Cache
 from tabs.analyze_tab import analyze_page_components
 from tabs.query_tab import query_page_components
@@ -59,14 +59,21 @@ cache = Cache(
 # ------------------------------------------------------------------------------
 tabs_components = html.Div(
     [
-        dmc.Tabs(
-            id="nav-tabs",
-            active=0,
-            color="grape",
-            children=[dmc.Tab(label=f"{page}") for _, page in enumerate(NAV_PAGES)],
+        html.Div(
+            [
+                dmc.Tabs(
+                    id="nav-tabs",
+                    active=0,
+                    color="grape",
+                    children=[
+                        dmc.Tab(label=f"{page}") for _, page in enumerate(NAV_PAGES)
+                    ],
+                ),
+            ],
+            style={"background-color": "rgba(214, 212, 208, 0.5)"},
         ),
         html.Div(id="tab-content"),
-    ]
+    ],
 )
 
 
@@ -75,15 +82,11 @@ app.layout = html.Div(
     [
         html.Div(
             [
-                html.Img(src=app.get_asset_url("vector_logo.png"), height=32),
-                dcc.Markdown(
-                    """# CyclOps Interface""",
-                    style={"background-color": "grape"},
-                ),
+                html.Img(src=app.get_asset_url("cyclops_logo-dark.png"), height=64),
             ],
             style={
                 "textAlign": "center",
-                "background-color": "rgba(214, 212, 208, 0.5)",
+                "background-color": "rgba(157, 201, 252, 0.5)",
             },
         ),
         tabs_components,

@@ -118,6 +118,7 @@ column_visualization_components = (
 
 
 analyze_page_components = (
+    dmc.Space(h=30),
     html.Div(
         [
             html.H2("Analyze"),
