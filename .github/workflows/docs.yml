@@ -27,19 +27,13 @@ on:
       - '**.md'
 
 jobs:
-  convert_readme_md_to_rst:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: docker://pandoc/core:2.9
-        with:
-          args: "README.md -f markdown -t rst -s -o docs/source/intro.rst"
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Install apt dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libcurl4-openssl-dev libssl-dev
+          sudo apt-get install libcurl4-openssl-dev libssl-dev pandoc
       - uses: actions/checkout@v3
       - name: Install dependencies, build docs and coverage report
         run: pipx install poetry
@@ -51,6 +45,7 @@ jobs:
           poetry env use 3.9.7
           source $(poetry env info --path)/bin/activate
           poetry install
+          pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && make html
           cd .. && coverage run -m pytest && coverage html && cp htmlcov/* docs/build/html/_static/
           mv docs/build/html/_static/index.html docs/build/html/_static/coverage_report.html
