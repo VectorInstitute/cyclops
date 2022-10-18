@@ -5,13 +5,18 @@
 [![Code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml)
 [![Documentation and Coverage Report](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml)
 
-cyclops is a framework for facilitating research and deployment of ML models
+``cyclops`` is a framework for facilitating research and deployment of ML models
 in the health (or clinical) setting. It provides three high-level features:
 
 
 * Data Querying and Processing
 * Rigorous Evaluation
 * Drift Detection toolkit
+
+``cyclops`` also provides a library of use-cases on clinical datasets. The implemented
+use-cases include:
+
+* Mortality decompensation prediction
 
 
 ## 🐣 Getting Started
