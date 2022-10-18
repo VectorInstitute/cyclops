@@ -14,4 +14,5 @@ Submodules
 
    cyclops.evaluation.metrics.functional.f_beta
    cyclops.evaluation.metrics.functional.precision_recall
+   cyclops.evaluation.metrics.functional.specificity
    cyclops.evaluation.metrics.functional.stat_scores

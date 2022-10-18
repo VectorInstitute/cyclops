@@ -36,13 +36,17 @@ def _specificity_reduce(  # pylint: disable=too-many-arguments, invalid-name
         average : Literal["micro", "macro", "weighted", "samples", None]
             If None, return the specificity for each class, otherwise return the
             average specificity. Average options are:
-            - "micro": Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            - "macro": Calculate metrics for each label, and find their unweighted
-                mean. This does not take label imbalance into account.
-            - "weighted": Calculate metrics for each label, and find their average,
-                weighted by support (the number of true instances for each label).
-            - "samples": Calculate metrics for each instance, and find their average.
+                - ``"micro"``:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - ``"macro"``:
+                    Calculate metrics for each label, and find their unweighted
+                    mean. This does not take label imbalance into account.
+                - ``"weighted"``:
+                    Calculate metrics for each label, and find their average,
+                    weighted by support (the number of true instances for each label).
+                - ``"samples"``:
+                    Calculate metrics for each instance, and find their average.
         sample_weight : Optional[ArrayLike]
             Sample weights.
         zero_division : Literal["warn", 0, 1]
@@ -118,16 +122,18 @@ def specificity(  # pylint: disable=too-many-arguments
             Estimated targets (predictions) as returned by a classifier.
         task : Literal["binary", "multiclass", "multilabel"]
             The task type. One of:
-            - ``"binary"``: binary classification.
-            Example:
-            >>> [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
-            - ``"multiclass"``: multiclass classification.
-            Example:
-            >>> [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
-            - ``"multilabel"``: multilabel classification.
-            Example:
-            >>> [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
-            [[0.1, 0.9], [0.0, 0.8], ...]
+                - ``"binary"``: binary classification.
+                    Example:
+                    >>> [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
+
+                - ``"multiclass"``: multiclass classification.
+                    Example:
+                    >>> [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
+
+                - ``"multilabel"``: multilabel classification.
+                    Example:
+                    >>> [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or [[0.1, 0.9], [0.0, 0.8], ...]
+                        
         pos_label : int
             The class to report if task is binary. Defaults to 1.
         num_classes : int
@@ -145,13 +151,17 @@ def specificity(  # pylint: disable=too-many-arguments
         average : Literal["micro", "macro", "weighted", "samples", None]
             If None, return the specificity for each class, otherwise return the
             average specificity. Average options are:
-            - "micro": Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            - "macro": Calculate metrics for each label, and find their unweighted
-                mean. This does not take label imbalance into account.
-            - "weighted": Calculate metrics for each label, and find their average,
-                weighted by support (the number of true instances for each label).
-            - "samples": Calculate metrics for each instance, and find their average.
+                - ``"micro"``:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - ``"macro"``:
+                    Calculate metrics for each label, and find their unweighted
+                    mean. This does not take label imbalance into account.
+                - ``"weighted"``:
+                    Calculate metrics for each label, and find their average,
+                    weighted by support (the number of true instances for each label).
+                - ``"samples"``:
+                    Calculate metrics for each instance, and find their average.
         sample_weight : Optional[ArrayLike]
             Sample weights.
         zero_division : Literal["warn", 0, 1]
@@ -302,12 +312,15 @@ def multiclass_specificity(  # pylint: disable=too-many-arguments
         average : Literal["micro", "macro", "weighted", None]
             If None, return the specificity for each class, otherwise return the
             average specificity. Average options are:
-            - "micro": Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            - "macro": Calculate metrics for each label, and find their unweighted
-                mean. This does not take label imbalance into account.
-            - "weighted": Calculate metrics for each label, and find their average,
-                weighted by support (the number of true instances for each label).
+                - ``"micro"``:
+                    Calculate metrics globally by counting the total true positives,
+                    false negatives and false positives.
+                - ``"macro"``:
+                    Calculate metrics for each label, and find their unweighted
+                    mean. This does not take label imbalance into account.
+                - ``"weighted"``:
+                    Calculate metrics for each label, and find their average,
+                    weighted by support (the number of true instances for each label).
         zero_division : Literal["warn", 0, 1]
             Sets the value to return when there is a zero division. If set to "warn",
             this acts as 0, but warnings are also raised.
