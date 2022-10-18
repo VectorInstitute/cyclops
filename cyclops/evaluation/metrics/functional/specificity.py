@@ -132,8 +132,9 @@ def specificity(  # pylint: disable=too-many-arguments
 
                 - ``"multilabel"``: multilabel classification.
                     Example:
-                    >>> [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or [[0.1, 0.9], [0.0, 0.8], ...]
-                        
+                    >>> [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
+                    [[0.1, 0.9], [0.0, 0.8], ...]
+
         pos_label : int
             The class to report if task is binary. Defaults to 1.
         num_classes : int
