@@ -1,4 +1,4 @@
-![cyclops Logo](https://github.com/VectorInstitute/cyclops/tree/master/docs/source/theme/static/cyclops_logo-dark.png?raw=true)
+![cyclops Logo](https://github.com/VectorInstitute/cyclops/blob/master/docs/source/theme/static/cyclops_logo-dark.png?raw=true)
 
 --------------------------------------------------------------------------------
 
