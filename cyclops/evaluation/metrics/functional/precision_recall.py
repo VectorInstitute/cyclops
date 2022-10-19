@@ -240,7 +240,7 @@ def binary_precision(  # pylint: disable=too-many-arguments
 
     """
     # pylint: disable=invalid-name
-    tp, fp, tn, fn = _binary_stat_scores_update(
+    tp, fp, _, fn = _binary_stat_scores_update(
         target,
         preds,
         pos_label=pos_label,
@@ -586,7 +586,7 @@ def binary_recall(  # pylint: disable=too-many-arguments
 
     """
     # pylint: disable=invalid-name
-    tp, fp, tn, fn = _binary_stat_scores_update(
+    tp, fp, _, fn = _binary_stat_scores_update(
         target,
         preds,
         pos_label=pos_label,
