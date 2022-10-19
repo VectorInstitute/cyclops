@@ -57,8 +57,8 @@ def _precision_recall_reduce(  # pylint: disable=invalid-name, too-many-argument
     modifier = "predicted" if metric == "precision" else "true"
 
     score = _prf_divide(
-        numerator,
-        denominator,
+        np.array(numerator) if np.isscalar(tp) else numerator,
+        np.array(denominator) if np.isscalar(tp) else denominator,
         metric,
         modifier,
         average,
@@ -240,19 +240,13 @@ def binary_precision(  # pylint: disable=too-many-arguments
 
     """
     # pylint: disable=invalid-name
-    tp, fp, tn, fn = _binary_stat_scores_update(
+    tp, fp, _, fn = _binary_stat_scores_update(
         target,
         preds,
         pos_label=pos_label,
         threshold=threshold,
         sample_weight=sample_weight,
     )
-
-    if tp.ndim == 0:
-        tp = np.array([tp])
-        fp = np.array([fp])
-        tn = np.array([tn])
-        fn = np.array([fn])
 
     precision_score = _precision_recall_reduce(
         tp,
@@ -592,19 +586,13 @@ def binary_recall(  # pylint: disable=too-many-arguments
 
     """
     # pylint: disable=invalid-name
-    tp, fp, tn, fn = _binary_stat_scores_update(
+    tp, fp, _, fn = _binary_stat_scores_update(
         target,
         preds,
         pos_label=pos_label,
         threshold=threshold,
         sample_weight=sample_weight,
     )
-
-    if tp.ndim == 0:
-        tp = np.expand_dims(tp, axis=-1)
-        fp = np.expand_dims(fp, axis=-1)
-        tn = np.expand_dims(tn, axis=-1)
-        fn = np.expand_dims(fn, axis=-1)
 
     recall_score = _precision_recall_reduce(
         tp,
