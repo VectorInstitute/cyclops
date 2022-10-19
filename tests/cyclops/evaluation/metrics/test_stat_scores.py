@@ -1,4 +1,4 @@
-"""Test stat_scores functions."""
+"""Functions for testing stat_scores metrics."""
 from functools import partial
 from typing import Literal
 
