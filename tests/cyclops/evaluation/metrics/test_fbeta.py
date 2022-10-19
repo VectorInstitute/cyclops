@@ -1,4 +1,4 @@
-"""Functions for testing F-beta and F1 score."""
+"""Functions for test F-beta and F1 score."""
 from functools import partial
 from typing import Literal
 
