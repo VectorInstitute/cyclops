@@ -2,7 +2,6 @@
 
 import numpy as np
 
-
 READMISSION_MAP = {
     "planned_from_acute": [1, "1", "Yes"],
     "unplanned_7_day_acute": [2, "2"],

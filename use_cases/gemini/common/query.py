@@ -1,27 +1,23 @@
 """Shared querying functions across use-cases."""
 
-from typing import List, Optional, Union
+from typing import List, Union
 
-import numpy as np
 import pandas as pd
 
 import cyclops.query.process as qp
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
+    EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
     EVENT_VALUE_UNIT,
-    EVENT_CATEGORY,
 )
 from cyclops.processors.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from use_cases.gemini.common.constants import (
-    ADMIT_VIA_AMBULANCE_MAP,
-    TRIAGE_LEVEL_MAP,
-)
+from use_cases.gemini.common.constants import ADMIT_VIA_AMBULANCE_MAP, TRIAGE_LEVEL_MAP
 
 
 def join_queries_flow_fake(
@@ -91,7 +87,9 @@ def get_er_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
 
 
 @assert_has_columns(ENCOUNTER_ID)
-def get_derived_variables_for_cohort(cohort: pd.DataFrame, derived_variables: List[str]) -> pd.DataFrame:
+def get_derived_variables_for_cohort(
+    cohort: pd.DataFrame, derived_variables: List[str]
+) -> pd.DataFrame:
     """Get derived variables for the cohort.
 
     Parameters

@@ -7,7 +7,7 @@ import pandas as pd
 from prefect import flow, task
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.cleaning import normalize_events
+from cyclops.processors.clean import normalize_events
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.utils.log import setup_logging
 

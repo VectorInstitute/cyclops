@@ -1,7 +1,7 @@
 """Mortality decompensation use-case constants."""
 
 from cyclops.processors.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
-from cyclops.processors.constants import BINARY, TARGETS
+from cyclops.processors.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "mortality_decompensation"
@@ -25,23 +25,20 @@ TEMP_VECTORIZED_FILE = join(DATA_DIR, "temp_vectorized.pkl")
 
 # Tabular
 TAB_TARGETS = [OUTCOME_DEATH]
-TAB_FEATURES = (
-    [
-        HOSPITAL_ID,
-        AGE,
-        SEX,
-        DIAGNOSIS_TRAJECTORY,
-        OUTCOME_DEATH,
-        "readmission",
-        "from_nursing_home_mapped",
-        "from_acute_care_institution_mapped",
-        "prev_encounter_count",
-        "triage_level",
-        "admit_via_ambulance",
-    ]
-    + TAB_TARGETS
-)
-TAB_FEATURES_TYPES = {}
+TAB_FEATURES = [
+    HOSPITAL_ID,
+    AGE,
+    SEX,
+    DIAGNOSIS_TRAJECTORY,
+    OUTCOME_DEATH,
+    "readmission",
+    "from_nursing_home_mapped",
+    "from_acute_care_institution_mapped",
+    "prev_encounter_count",
+    "triage_level",
+    "admit_via_ambulance",
+] + TAB_TARGETS
+TAB_FEATURES_TYPES: dict = {}
 
 # Temporal
 TIMESTEP_SIZE = 24

@@ -38,7 +38,7 @@ TAB_FEATURES = [
     "los_derived",
     "prev_encounter_count",
 ] + TAB_TARGETS
-TAB_FEATURES_TYPES = {}
+TAB_FEATURES_TYPES: dict = {}
 
 # Temporal
 TIMESTEP_SIZE = 24

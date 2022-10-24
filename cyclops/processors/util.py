@@ -7,12 +7,7 @@ from typing import Callable, List, Optional, Union
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.column_names import (
-    ENCOUNTER_ID,
-    EVENT_NAME,
-    EVENT_VALUE,
-    TIMESTEP,
-)
+from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.utils.common import to_list
 from cyclops.utils.log import setup_logging
 

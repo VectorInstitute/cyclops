@@ -1,40 +1,38 @@
 """GEMINI mortality decompensation use case querying."""
 
-from typing import Optional
 import pandas as pd
-import numpy as np
 
 import cyclops.query.process as qp
-from cyclops.processors.util import assert_has_columns
+from cyclops.processors.clean import combine_events
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
     DIAGNOSIS_CODE,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
-    HOSPITAL_ID,
-    SEX,
-    SUBJECT_ID,
+    EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
-    EVENT_CATEGORY,
+    HOSPITAL_ID,
+    SEX,
+    SUBJECT_ID,
 )
 from cyclops.processors.diagnoses import process_diagnoses
-from cyclops.processors.clean import combine_events
+from cyclops.processors.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
-from use_cases.gemini.common.constants import (
-    READMISSION_MAP,
-    ADMIT_VIA_AMBULANCE_MAP,
-)
+from use_cases.gemini.common.constants import READMISSION_MAP
 from use_cases.gemini.common.query import (
-    get_derived_variables_for_cohort,
     get_er_for_cohort,
     get_labs_for_cohort,
     join_queries_flow_fake,
 )
-from use_cases.gemini.mortality_decompensation.constants import OUTCOME_DEATH, BEFORE_DATE, SEXES
+from use_cases.gemini.mortality_decompensation.constants import (
+    BEFORE_DATE,
+    OUTCOME_DEATH,
+    SEXES,
+)
 
 
 def get_most_recent_encounters() -> pd.DataFrame:
@@ -167,10 +165,10 @@ def get_imaging_for_cohort(cohort: pd.DataFrame):
     )
     imaging[EVENT_VALUE] = 1
     imaging[EVENT_CATEGORY] = "imaging"
-    imaging = imaging.loc[
-        imaging[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])
+    imaging = imaging.loc[imaging[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])]
+    imaging = imaging[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
     ]
-    imaging = imaging[[ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]]
 
     return imaging
 
@@ -191,9 +189,7 @@ def get_bt_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
 
     """
     transfusions = gemini.blood_transfusions().run()
-    transfusions = transfusions.rename(
-    columns={"issue_date_time": EVENT_TIMESTAMP}
-    )
+    transfusions = transfusions.rename(columns={"issue_date_time": EVENT_TIMESTAMP})
     transfusions[EVENT_NAME] = transfusions["rbc_mapped"]
     transfusions[EVENT_NAME] = transfusions[EVENT_NAME].apply(
         lambda x: "rbc" if x else "non-rbc"
@@ -203,7 +199,9 @@ def get_bt_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
     transfusions = transfusions.loc[
         transfusions[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])
     ]
-    transfusions = transfusions[[ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]]
+    transfusions = transfusions[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
+    ]
 
     return transfusions
 
@@ -237,7 +235,9 @@ def get_interventions_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
         "inv_mech_vent_mapped",
         "surgery_mapped",
     ]
-    interventions = interventions[~interventions["intervention_episode_start_date"].isna()]
+    interventions = interventions[
+        ~interventions["intervention_episode_start_date"].isna()
+    ]
     interventions["intervention_episode_start_time"].loc[
         interventions["intervention_episode_start_time"].isna()
     ] = "12:00:00"
@@ -260,8 +260,10 @@ def get_interventions_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
     interventions[EVENT_NAME] = interventions[
         binary_mapped_cols + ["unmapped_intervention"]
     ].idxmax(axis=1)
-    interventions = interventions[[ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]]
-    
+    interventions = interventions[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
+    ]
+
     return interventions
 
 
@@ -284,7 +286,7 @@ def main(drop_admin_cols=True):
 
     # Get ER data for the cohort
     cohort = get_er_for_cohort(cohort)
-    
+
     if drop_admin_cols:
         cohort = cohort.drop(
             ["subject_id", "ccsr_default", "ccsr_1", "ccsr_2"],
@@ -293,16 +295,16 @@ def main(drop_admin_cols=True):
 
     # Get blood transfusion data for the cohort
     transfusions = get_bt_for_cohort(cohort)
-    
+
     # Get imaging data for the cohort
     imaging = get_imaging_for_cohort(cohort)
-    
+
     # Get interventions data for the cohort
     interventions = get_interventions_for_cohort(cohort)
 
     # Get lab data for the cohort
     labs = get_labs_for_cohort(cohort)
-    
+
     # Combine events
     events = combine_events([labs, transfusions, imaging, interventions])
     events["event_value"] = events["event_value"].astype(str)

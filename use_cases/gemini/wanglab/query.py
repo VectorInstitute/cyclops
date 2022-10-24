@@ -2,11 +2,10 @@
 
 from typing import Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 import cyclops.query.process as qp
-from cyclops.processors.util import assert_has_columns
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
@@ -18,6 +17,7 @@ from cyclops.processors.column_names import (
     SUBJECT_ID,
 )
 from cyclops.processors.diagnoses import process_diagnoses
+from cyclops.processors.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
 from use_cases.gemini.common.constants import READMISSION_MAP
@@ -29,9 +29,8 @@ from use_cases.gemini.common.query import (
 )
 from use_cases.gemini.wanglab.constants import (
     BEFORE_DATE,
-    SEXES,
-    DERIVED_VARIABLES,
     BT_SUBSTRINGS,
+    DERIVED_VARIABLES,
     EDEMA_IMAGING_SUBSTRINGS,
     EDEMA_PHARMA_SUBSTRINGS,
     IMAGING_DESCRIPTIONS,
@@ -39,6 +38,7 @@ from use_cases.gemini.wanglab.constants import (
     OUTCOME_DEATH,
     OUTCOME_EDEMA,
     PRESCRIPTION_AFTER_IMAGING_DAYS,
+    SEXES,
 )
 
 
@@ -209,7 +209,7 @@ def get_pulmonary_edema_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
     imaging_pharma = imaging_pharma[[ENCOUNTER_ID, OUTCOME_EDEMA]].drop_duplicates()
     cohort = cohort.merge(imaging_pharma, how="left", on=ENCOUNTER_ID)
     cohort[OUTCOME_EDEMA] = cohort[OUTCOME_EDEMA].fillna(False)
-    
+
     return cohort
 
 

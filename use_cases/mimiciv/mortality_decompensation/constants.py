@@ -31,7 +31,7 @@ TAB_FEATURES = [
     "admission_type",
     "admission_location",
 ] + TAB_TARGETS
-TAB_FEATURES_TYPES = {}
+TAB_FEATURES_TYPES: dict = {}
 
 # Temporal
 TIMESTEP_SIZE = 24  # Make a prediction every day
