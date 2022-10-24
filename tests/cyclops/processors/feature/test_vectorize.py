@@ -30,17 +30,23 @@ def test_vectorized(  # pylint: disable=redefined-outer-name
     """Test Vectorized."""
     data, indexes = input_data
 
-    try:
+    with pytest.raises(ValueError):
         Vectorized(
             data, [["0-0", "0-1"], ["1-0", "1-1"], ["0-0", "1-1"]], ["A", "B", "C"]
         )
-        raise ValueError(
-            "Should have raised error where the last list must have 3 elements, not 2."
+        Vectorized(data, [["0-0", "0-1"], ["1-0", "1-1"]], ["A", "B", "C"])
+        Vectorized(
+            data, ["0-0", ["1-0", "1-1"], ["2-0", "2-1", "2-2"]], ["A", "B", "C"]
         )
-    except ValueError:
-        pass
-
-    Vectorized(data, indexes, ["A", "B", "C"])
+        Vectorized(data, indexes, ["A", "B", 1])
+        Vectorized(
+            data,
+            [["0-0", "0-0"], ["1-0", "1-1"], ["2-0", "2-1", "2-2"]],
+            ["A", "B", "C"],
+        )
+        Vectorized("donkey", indexes, ["A", "B", "C"])
+    vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+    assert np.array_equal(vectorized.get_data(), data)
 
 
 def test_take_with_indices(  # pylint: disable=redefined-outer-name
@@ -219,6 +225,12 @@ def test_split_vectorized(  # pylint: disable=redefined-outer-name
     vec_split1, vec_split2 = split_vectorized(
         [vectorized, vectorized], [0.8, 0.2], axes="C"
     )
+    vec_split = split_vectorized([vectorized], [0.8, 0.2], axes="C", seed=4)
+    split1_data, split2_data = vec_split[0]
+    assert np.array_equal(
+        split1_data.data, np.array([[[2, 1], [4, 3]], [[2, 3], [2, 3]]])
+    )
+    assert np.array_equal(split2_data.data, np.array([[[3], [6]], [[1], [1]]]))
     split1_data1, split1_data2 = vec_split1
     split2_data1, split2_data2 = vec_split2
 
@@ -232,6 +244,11 @@ def test_normalization(  # pylint: disable=redefined-outer-name
     """Test normalization."""
     data, indexes = input_data
     vectorized = Vectorized(data, indexes, ["A", "B", "C"])
+    with pytest.raises(ValueError):
+        vectorized.add_normalizer("B")
+        vectorized.add_normalizer(
+            "B", normalization_method=STANDARD, normalizer_map={"1-0": STANDARD}
+        )
     vectorized.add_normalizer("B", normalization_method=STANDARD)
     vectorized.fit_normalizer()
     vectorized.normalize()
