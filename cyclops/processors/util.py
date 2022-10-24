@@ -7,12 +7,7 @@ from typing import Callable, List, Optional, Union
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.column_names import (
-    ENCOUNTER_ID,
-    EVENT_NAME,
-    EVENT_VALUE,
-    TIMESTEP,
-)
+from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.utils.common import to_list
 from cyclops.utils.log import setup_logging
 
@@ -47,34 +42,6 @@ def create_indicator_variables(
         indicator_features = features
 
     return indicator_features.notnull().astype(int).add_suffix("_indicator")
-
-
-def pivot_aggregated_events_to_features(
-    aggregated_events: pd.DataFrame, aggfunc: Callable
-) -> pd.DataFrame:
-    """Pivot aggregated events table to column-wise features.
-
-    Parameters
-    ----------
-    aggregated_events: pandas.DataFrame
-        Aggregated events.
-    aggfunc: Callable
-        Aggregation function for the column values.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Column-wise pivoted dataframe with features.
-
-    """
-    return pd.pivot_table(
-        aggregated_events.drop(columns=["count", "null_fraction"]),
-        values=EVENT_VALUE,
-        index=[ENCOUNTER_ID, TIMESTEP],
-        columns=[EVENT_NAME],
-        aggfunc=aggfunc,
-        dropna=False,
-    )
 
 
 def is_timestamp_series(series, raise_error: bool = False):

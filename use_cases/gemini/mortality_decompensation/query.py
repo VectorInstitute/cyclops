@@ -3,30 +3,36 @@
 import pandas as pd
 
 import cyclops.query.process as qp
+from cyclops.processors.clean import combine_events
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
     DIAGNOSIS_CODE,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
+    EVENT_CATEGORY,
+    EVENT_NAME,
+    EVENT_TIMESTAMP,
+    EVENT_VALUE,
     HOSPITAL_ID,
     SEX,
     SUBJECT_ID,
 )
 from cyclops.processors.diagnoses import process_diagnoses
+from cyclops.processors.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
-from use_cases.gemini.common.constants import OUTCOME_DEATH, READMISSION_MAP
+from use_cases.gemini.common.constants import READMISSION_MAP
 from use_cases.gemini.common.query import (
-    get_bt_for_cohort,
-    get_derived_variables_for_cohort,
     get_er_for_cohort,
-    get_imaging_for_cohort,
     get_labs_for_cohort,
-    get_pulmonary_edema_for_cohort,
     join_queries_flow_fake,
 )
-from use_cases.gemini.mortality_decompensation.constants import BEFORE_DATE, SEXES
+from use_cases.gemini.mortality_decompensation.constants import (
+    BEFORE_DATE,
+    OUTCOME_DEATH,
+    SEXES,
+)
 
 
 def get_most_recent_encounters() -> pd.DataFrame:
@@ -135,6 +141,132 @@ def get_cohort() -> pd.DataFrame:
     return cohort
 
 
+@assert_has_columns(ENCOUNTER_ID)
+def get_imaging_for_cohort(cohort: pd.DataFrame):
+    """Get imaging data for the cohort.
+
+    Parameters
+    ----------
+    cohort: pandas.DataFrame
+        Cohort data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Imaging data for cohort.
+
+    """
+    imaging = gemini.imaging().run()
+    imaging = imaging.rename(
+        columns={
+            "imaging_test_description": EVENT_NAME,
+            "performed_date_time": EVENT_TIMESTAMP,
+        }
+    )
+    imaging[EVENT_VALUE] = 1
+    imaging[EVENT_CATEGORY] = "imaging"
+    imaging = imaging.loc[imaging[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])]
+    imaging = imaging[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
+    ]
+
+    return imaging
+
+
+@assert_has_columns(ENCOUNTER_ID)
+def get_bt_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
+    """Get blood transfusion data for the cohort.
+
+    Parameters
+    ----------
+    cohort: pandas.DataFrame
+        Cohort data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Blood transfusions data for cohort.
+
+    """
+    transfusions = gemini.blood_transfusions().run()
+    transfusions = transfusions.rename(columns={"issue_date_time": EVENT_TIMESTAMP})
+    transfusions[EVENT_NAME] = transfusions["rbc_mapped"]
+    transfusions[EVENT_NAME] = transfusions[EVENT_NAME].apply(
+        lambda x: "rbc" if x else "non-rbc"
+    )
+    transfusions[EVENT_VALUE] = 1
+    transfusions[EVENT_CATEGORY] = "transfusions"
+    transfusions = transfusions.loc[
+        transfusions[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])
+    ]
+    transfusions = transfusions[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
+    ]
+
+    return transfusions
+
+
+@assert_has_columns(ENCOUNTER_ID)
+def get_interventions_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
+    """Get interventions data for the cohort.
+
+    Parameters
+    ----------
+    cohort: pandas.DataFrame
+        Cohort data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Interventions data for cohort.
+
+    """
+    interventions = gemini.interventions().run()
+    interventions = interventions.loc[
+        interventions[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])
+    ].copy()
+    interventions[EVENT_VALUE] = 1
+    interventions[EVENT_CATEGORY] = "interventions"
+    binary_mapped_cols = [
+        "endoscopy_mapped",
+        "gi_endoscopy_mapped",
+        "bronch_endoscopy_mapped",
+        "dialysis_mapped",
+        "inv_mech_vent_mapped",
+        "surgery_mapped",
+    ]
+    interventions = interventions[
+        ~interventions["intervention_episode_start_date"].isna()
+    ]
+    interventions["intervention_episode_start_time"].loc[
+        interventions["intervention_episode_start_time"].isna()
+    ] = "12:00:00"
+    interventions[EVENT_TIMESTAMP] = pd.to_datetime(
+        interventions["intervention_episode_start_date"].astype(str)
+        + " "
+        + interventions["intervention_episode_start_time"].astype(str)
+    )
+    interventions[EVENT_TIMESTAMP] = interventions[EVENT_TIMESTAMP].astype(
+        "datetime64[ns]"
+    )
+    interventions["unmapped_intervention"] = ~(
+        interventions["endoscopy_mapped"]
+        | interventions["gi_endoscopy_mapped"]
+        | interventions["bronch_endoscopy_mapped"]
+        | interventions["dialysis_mapped"]
+        | interventions["inv_mech_vent_mapped"]
+        | interventions["surgery_mapped"]
+    )
+    interventions[EVENT_NAME] = interventions[
+        binary_mapped_cols + ["unmapped_intervention"]
+    ].idxmax(axis=1)
+    interventions = interventions[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
+    ]
+
+    return interventions
+
+
 def main(drop_admin_cols=True):
     """Get and process the cohort.
 
@@ -155,28 +287,29 @@ def main(drop_admin_cols=True):
     # Get ER data for the cohort
     cohort = get_er_for_cohort(cohort)
 
-    # Get blood transfusion data for the cohort
-    cohort = get_bt_for_cohort(cohort)
-
-    # Get imaging data for the cohort
-    cohort = get_imaging_for_cohort(cohort, num_tests_thresh=5)
-
-    # Get derived variables for the cohort
-    cohort = get_derived_variables_for_cohort(cohort)
-
-    # Get pulmonary edema indicator for the cohort
-    cohort = get_pulmonary_edema_for_cohort(cohort)
-
     if drop_admin_cols:
         cohort = cohort.drop(
             ["subject_id", "ccsr_default", "ccsr_1", "ccsr_2"],
             axis=1,
         )
 
-    # Get lab data
+    # Get blood transfusion data for the cohort
+    transfusions = get_bt_for_cohort(cohort)
+
+    # Get imaging data for the cohort
+    imaging = get_imaging_for_cohort(cohort)
+
+    # Get interventions data for the cohort
+    interventions = get_interventions_for_cohort(cohort)
+
+    # Get lab data for the cohort
     labs = get_labs_for_cohort(cohort)
 
-    return cohort, labs
+    # Combine events
+    events = combine_events([labs, transfusions, imaging, interventions])
+    events["event_value"] = events["event_value"].astype(str)
+
+    return cohort, events
 
 
 if __name__ == "__main__":
