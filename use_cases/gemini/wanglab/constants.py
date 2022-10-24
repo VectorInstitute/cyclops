@@ -38,6 +38,7 @@ TAB_FEATURES = [
     "los_derived",
     "prev_encounter_count",
 ] + TAB_TARGETS
+TAB_FEATURES_TYPES = {}
 
 # Temporal
 TIMESTEP_SIZE = 24
@@ -66,3 +67,95 @@ TAB_VEC_COMB = join(FINAL_VECTORIZED, "aligned_")
 BEFORE_DATE = "2020-01-23"
 
 SEXES = ["M", "F"]
+
+# Querying constants
+IMAGING_DESCRIPTIONS = ["X-ray", "CT", "MRI", "Ultrasound", "Echo"]
+
+BT_SUBSTRINGS = ["platelet", "albumin", "plasma"]
+
+DERIVED_VARIABLES = ["ip_charlson_derived"]
+
+# Imaging notes must include of all the substrings to be classified as pulmonary edema.
+EDEMA_IMAGING_SUBSTRINGS = ["pulmonary", "edema"]
+EDEMA_PHARMA_SUBSTRINGS = ["lasix", "furosemide"]
+
+PRESCRIPTION_AFTER_IMAGING_DAYS = 1
+
+IMAGING_KEYWORDS = {
+    "head": [
+        "head",
+        "facial",
+        "sinus",
+        "tm joint",
+        "parotid",
+        "mandible",
+        "willis",
+        "brain",
+        "cerebral",
+        "skull",
+        "fossa",
+    ],
+    "neck": ["neck", "carotid", "thyroid"],
+    "chest": [
+        "chest",
+        "lung",
+        "rib",
+        "sternum",
+        "cardiac",
+        "trachea",
+        "thora",
+        "pulmonary",
+        "clavicle",
+        "esophageal",
+        "heart",
+    ],
+    "abd": [
+        "abd",
+        "liver",
+        "pancreas",
+        "colon",
+        "lumbar",
+        "enterography",
+        "urogram",
+        "gastr",
+        "renal",
+    ],
+    "pelvis": [
+        "pelvis",
+        "hip",
+        "sacrum",
+        "coccyx",
+        "testicle",
+        "vagina",
+        "tv",
+        "sacroiliac",
+        "scrotum",
+    ],
+    "limb": [
+        "limb",
+        "leg",
+        "arm",
+        "elbow",
+        "humerus",
+        "ulna",
+        "radius",
+        "wrist",
+        "knee",
+        "tib",
+        "fib",
+        "toe",
+        "femur",
+        "patella",
+        "ankle",
+        "feet",
+        "foot",
+        "peripheral",
+        "extremity",
+        "hand",
+        "fger",
+        "finger",
+        "thumb",
+    ],
+    "shoulder": ["shoulder", "scapula"],
+    "whole_body": ["spine", "whole body"],
+}

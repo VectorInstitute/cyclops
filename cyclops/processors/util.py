@@ -49,34 +49,6 @@ def create_indicator_variables(
     return indicator_features.notnull().astype(int).add_suffix("_indicator")
 
 
-def pivot_aggregated_events_to_features(
-    aggregated_events: pd.DataFrame, aggfunc: Callable
-) -> pd.DataFrame:
-    """Pivot aggregated events table to column-wise features.
-
-    Parameters
-    ----------
-    aggregated_events: pandas.DataFrame
-        Aggregated events.
-    aggfunc: Callable
-        Aggregation function for the column values.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Column-wise pivoted dataframe with features.
-
-    """
-    return pd.pivot_table(
-        aggregated_events.drop(columns=["count", "null_fraction"]),
-        values=EVENT_VALUE,
-        index=[ENCOUNTER_ID, TIMESTEP],
-        columns=[EVENT_NAME],
-        aggfunc=aggfunc,
-        dropna=False,
-    )
-
-
 def is_timestamp_series(series, raise_error: bool = False):
     """Check whether a series has the Pandas Timestamp datatype.
 
