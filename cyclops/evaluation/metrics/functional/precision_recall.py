@@ -112,11 +112,11 @@ def precision(  # pylint: disable=too-many-arguments
             Predictions as returned by a classifier.
         task: Literal["binary", "multiclass", "multilabel"]
             Classification task. One of:
-                - "binary": binary classification.
+                - ``binary``: binary classification.
                     Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
-                - "multiclass": multiclass classification.
+                - ``multiclass``: multiclass classification.
                     Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
-                - "multilabel": multilabel classification.
+                - ``multilabel``: multilabel classification.
                     Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
                     [[0.1, 0.9], [0.0, 0.8], ...]
         pos_label: int
@@ -134,30 +134,30 @@ def precision(  # pylint: disable=too-many-arguments
             Average to apply. If None, return scores for each class. Default is
             None.
             One of:
-                - "micro": Calculate metrics globally by counting the total true
-                    positives, false negatives and false positives.
-                - "macro": Calculate metrics for each label, and find their
-                    unweighted mean. This does not take label imbalance into account.
-                - "weighted": Calculate metrics for each label, and find their
-                    average weighted by support (the number of true instances for
-                    each label). This alters "macro" to account for label imbalance.
-                - "samples": Calculate metrics for each instance, and find their
-                    average (only meaningful for multilabel classification).
+                - ``micro``: Calculate metrics globally by counting the total true
+                  positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each label, and find their
+                  unweighted mean. This does not take label imbalance into account.
+                - ``weighted``: Calculate metrics for each label, and find their
+                  average weighted by support (the number of true instances for
+                  each label). This alters ``macro`` to account for label imbalance.
+                - ``samples``: Calculate metrics for each instance, and find their
+                  average (only meaningful for multilabel classification).
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+            If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        precision: float (if average is None or task is 'binary') or np.ndarray
-        (if average is not None).
+        precision: float (if ``average`` is None or ``task`` is ``binary``) or
+        np.ndarray (if ``average`` is not None).
 
     Raises
     ------
         ValueError
-            If task is not one of "binary", "multiclass" or "multilabel".
+            If task is not one of ``binary``, ``multiclass`` or ``multilabel``.
 
     """
     if task == "binary":
@@ -232,7 +232,7 @@ def binary_precision(  # pylint: disable=too-many-arguments
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+            If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
@@ -287,22 +287,22 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
         average: Literal["micro", "macro", "weighted", None]
             Average to apply. If None, return scores for each class. Default is
             None. One of:
-                - ``"micro"``: Calculate metrics globally by counting the total true
-                    positives, false negatives and false positives.
-                - ``"macro"``: Calculate metrics for each label, and find their
-                    unweighted mean. This does not take label imbalance into account.
-                - ``"weighted"``: Calculate metrics for each label, and find their
-                    average weighted by support (the number of true instances
-                    for each label). This alters "macro" to account for label
-                    imbalance.
+                - ``micro``: Calculate metrics globally by counting the total true
+                  positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each label, and find their
+                  unweighted mean. This does not take label imbalance into account.
+                - ``weighted``: Calculate metrics for each label, and find their
+                  average weighted by support (the number of true instances
+                  for each label). This alters "macro" to account for label
+                  imbalance.
 
-            Note that "samples" is not supported. Use multilabel_precision
+            Note that ``samples`` is not supported. Use multilabel_precision
             instead.
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+            If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
@@ -311,7 +311,8 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
     Raises
     ------
         ValueError
-            If `average` is not one of "micro", "macro", "weighted" or None.
+            If ``average`` is not one of ``micro``, ``macro``, ``weighted``
+            or ``None``.
 
     """
     # pylint: disable=invalid-name
@@ -375,32 +376,32 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
         average: Literal["micro", "macro", "samples", "weighted", None]
             Average to apply. If None, return scores for each class. Default is
             None. One of:
-                - "micro": Calculate metrics globally by counting the total true
-                    positives, false negatives and false positives.
-                - "macro": Calculate metrics for each label, and find their
-                    unweighted mean. This does not take label imbalance into
-                    account.
-                - "weighted": Calculate metrics for each label, and find their
-                    average weighted by support (the number of true instances
-                    for each label). This alters "macro" to account for label
-                    imbalance.
-                - "samples": Calculate metrics for each instance, and find their
-                    average (only meaningful for multilabel classification).
+                - ``micro``: Calculate metrics globally by counting the total true
+                  positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each label, and find their
+                  unweighted mean. This does not take label imbalance into
+                  account.
+                - ``weighted``: Calculate metrics for each label, and find their
+                  average weighted by support (the number of true instances
+                  for each label). This alters ``macro`` to account for label
+                  imbalance.
+                - ``samples``: Calculate metrics for each instance, and find their
+                  average (only meaningful for multilabel classification).
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+            If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        precision: float or np.ndarray (if average is None).
+        precision: float or np.ndarray (if ``average`` is None).
 
     Raises
     ------
         ValueError
-            If average is not one of "micro", "macro", "samples", "weighted",
-            or None.
+            If average is not one of ``micro``, ``macro``, ``samples``, ``weighted``,
+            or ``None``.
 
     """
     if average not in ["micro", "macro", "samples", "weighted", None]:
@@ -458,11 +459,11 @@ def recall(  # pylint: disable=too-many-arguments
             Predictions as returned by a classifier.
         task: Literal["binary", "multiclass", "multilabel"]
             Classification task. One of:
-                - "binary": binary classification.
+                - ``binary``: binary classification.
                     Example: [0, 1, 1, 0, 1] or [0.1, 0.9, 0.8, 0.2, 0.4]
-                - "multiclass": multiclass classification.
+                - ``multiclass``: multiclass classification.
                     Example: [0, 1, 2, 0, 1] or [[0.1, 0.9, 0.0], [0.0, 0.8, 0.2], ...]
-                - "multilabel": multilabel classification.
+                - ``multilabel``: multilabel classification.
                     Example: [[0, 1], [1, 0], [1, 1], [0, 0], [1, 0]] or
                     [[0.1, 0.9], [0.0, 0.8], ...]
         pos_label: int
@@ -480,30 +481,30 @@ def recall(  # pylint: disable=too-many-arguments
             Average to apply. If None, return scores for each class. Default is
             None.
             One of:
-                - "micro": Calculate metrics globally by counting the total true
-                    positives, false negatives and false positives.
-                - "macro": Calculate metrics for each label, and find their
-                    unweighted mean. This does not take label imbalance into account.
-                - "weighted": Calculate metrics for each label, and find their
-                    average weighted by support (the number of true instances for
-                    each label). This alters "macro" to account for label imbalance.
-                - "samples": Calculate metrics for each instance, and find their
-                    average (only meaningful for multilabel classification).
+                - ``micro``: Calculate metrics globally by counting the total true
+                  positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each label, and find their
+                  unweighted mean. This does not take label imbalance into account.
+                - ``weighted``: Calculate metrics for each label, and find their
+                  average weighted by support (the number of true instances for
+                  each label). This alters ``macro`` to account for label imbalance.
+                - ``samples``: Calculate metrics for each instance, and find their
+                  average (only meaningful for multilabel classification).
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+            If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        recalln: float (if average is None or task is 'binary') or np.ndarray
-        (if average is not None).
+        recall: float (if ``average`` is None or ``task`` is ``binary``) or np.ndarray
+        (if ``average`` is not None).
 
     Raises
     ------
         ValueError
-            If task is not one of "binary", "multiclass" or "multilabel".
+            If ``task`` is not one of ``binary``, ``multiclass`` or ``multilabel``.
 
     """
     if task == "binary":
@@ -578,7 +579,7 @@ def binary_recall(  # pylint: disable=too-many-arguments
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+            If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
@@ -633,24 +634,21 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
         average: Literal["micro", "macro", "weighted", None]
             Average to apply. If None, return scores for each class. Default is
             None. One of:
-                - ``"micro"``:
-                    Calculate metrics globally by counting the total true
-                    positives, false negatives and false positives.
-                - ``"macro"``:
-                    Calculate metrics for each label, and find their
-                    unweighted mean. This does not take label imbalance into
-                    account.
-                - ``"weighted"``:
-                    Calculate metrics for each label, and find their
-                    average weighted by support (the number of true instances
-                    for each label). This alters "macro" to account for label
-                    imbalance.
+                - ``micro``: Calculate metrics globally by counting the total true
+                  positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each label, and find their
+                  unweighted mean. This does not take label imbalance into
+                  account.
+                - ``weighted``: Calculate metrics for each label, and find their
+                  average weighted by support (the number of true instances
+                  for each label). This alters "macro" to account for label
+                  imbalance.
 
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+            If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
@@ -659,7 +657,8 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
     Raises
     ------
         ValueError
-            If `average` is not one of "micro", "macro", "weighted" or None.
+            If ``average`` is not one of ``micro``, ``macro``, ``weighted``
+            or ``None``.
 
     """
     if average not in ["micro", "macro", "weighted", None]:
@@ -723,33 +722,33 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
         average: Literal["micro", "macro", "samples", "weighted", None]
             Average to apply. If None, return scores for each class. Default is
             None. One of:
-                - "micro": Calculate metrics globally by counting the total true
-                    positives, false negatives and false positives.
-                - "macro": Calculate metrics for each label, and find their
-                    unweighted mean. This does not take label imbalance into
-                    account.
-                - "samples": Calculate metrics for each instance, and find their
-                    average (only meaningful for multilabel classification where
-                    this differs from accuracy_score).
-                - "weighted": Calculate metrics for each label, and find their
-                    average weighted by support (the number of true instances
-                    for each label). This alters "macro" to account for label
-                    imbalance.
+                - ``micro``: Calculate metrics globally by counting the total true
+                  positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each label, and find their
+                  unweighted mean. This does not take label imbalance into
+                  account.
+                - ``samples``: Calculate metrics for each instance, and find their
+                  average (only meaningful for multilabel classification where
+                  this differs from accuracy_score).
+                - ``weighted``: Calculate metrics for each label, and find their
+                  average weighted by support (the number of true instances
+                  for each label). This alters ``macro`` to account for label
+                  imbalance.
         sample_weight: Optional[ArrayLike]
             Sample weights.
         zero_division: Literal["warn", 0, 1]
             Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+            If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        recall: float or np.ndarray (if average is None).
+        recall: float or np.ndarray (if ``average`` is None).
 
     Raises
     ------
         ValueError
-            If `average` is not one of "micro", "macro", "samples", "weighted"
-            or None.
+            If ``average`` is not one of ``micro``, ``macro``, ``samples``, ``weighted``
+            or ``None``.
 
     """
     if average not in ["micro", "macro", "samples", "weighted", None]:

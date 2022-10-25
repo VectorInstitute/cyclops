@@ -34,16 +34,21 @@ def test_vectorized(  # pylint: disable=redefined-outer-name
         Vectorized(
             data, [["0-0", "0-1"], ["1-0", "1-1"], ["0-0", "1-1"]], ["A", "B", "C"]
         )
+    with pytest.raises(ValueError):
         Vectorized(data, [["0-0", "0-1"], ["1-0", "1-1"]], ["A", "B", "C"])
+    with pytest.raises(ValueError):
         Vectorized(
             data, ["0-0", ["1-0", "1-1"], ["2-0", "2-1", "2-2"]], ["A", "B", "C"]
         )
+    with pytest.raises(ValueError):
         Vectorized(data, indexes, ["A", "B", 1])
+    with pytest.raises(ValueError):
         Vectorized(
             data,
             [["0-0", "0-0"], ["1-0", "1-1"], ["2-0", "2-1", "2-2"]],
             ["A", "B", "C"],
         )
+    with pytest.raises(ValueError):
         Vectorized("donkey", indexes, ["A", "B", "C"])
     vectorized = Vectorized(data, indexes, ["A", "B", "C"])
     assert np.array_equal(vectorized.get_data(), data)

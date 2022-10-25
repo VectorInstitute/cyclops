@@ -52,6 +52,7 @@ dash-cool-components = "^0.1.8"
 hydra-core = "^1.2.0"
 dash-iconify = "^0.1.2"
 dask = {extras = ["dataframe"], version = "^2022.9.1"}
+sphinx-copybutton = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 

@@ -12,6 +12,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cyclops.evaluation.metrics.functional.accuracy
    cyclops.evaluation.metrics.functional.f_beta
    cyclops.evaluation.metrics.functional.precision_recall
    cyclops.evaluation.metrics.functional.specificity
