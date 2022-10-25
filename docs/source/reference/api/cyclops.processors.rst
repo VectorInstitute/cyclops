@@ -21,7 +21,7 @@ Submodules
    :maxdepth: 4
 
    cyclops.processors.aggregate
-   cyclops.processors.cleaning
+   cyclops.processors.clean
    cyclops.processors.diagnoses
    cyclops.processors.impute
    cyclops.processors.string_ops
