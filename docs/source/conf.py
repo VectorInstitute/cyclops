@@ -33,6 +33,7 @@ author = "Vector AI Engineering"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
+    "sphinx.ext.doctest",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
     "sphinx_autodoc_typehints",
@@ -42,6 +43,7 @@ extensions = [
     "sphinxcontrib.apidoc",
     "sphinx.ext.autosectionlabel",
     "myst_parser",
+    "sphinx_copybutton",
 ]
 numpydoc_show_inherited_class_members = False
 numpydoc_show_class_members = False
@@ -50,6 +52,8 @@ napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
 add_module_names = False
 autosectionlabel_prefix_document = True
+copybutton_prompt_text = r">>> |\.\.\. "
+copybutton_prompt_is_regexp = True
 
 apidoc_module_dir = "../../cyclops"
 apidoc_excluded_paths = ["tests", "models", "*constants.py", "*column_names.py"]

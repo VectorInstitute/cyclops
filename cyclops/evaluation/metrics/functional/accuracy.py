@@ -41,7 +41,7 @@ def _accuracy_reduce(  # pylint: disable=too-many-arguments
             The type of averaging to apply to the accuracy scores. One of
             'micro', 'macro', 'weighted', 'samples' or None.
         sample_weight : ArrayLike, default=None
-            The weight to apply to each sample if averaging is 'samples'.
+            The weight to apply to each sample if averaging is ``samples``.
         zero_division : Literal["warn", 0, 1]
             Sets the value to return when there is a zero division. If set to "warn",
             this acts as 0, but warnings are also raised.
@@ -139,38 +139,38 @@ def accuracy(  # pylint: disable=too-many-arguments
         num_labels : int, optional
             The number of labels in the dataset. Required for multilabel tasks.
         average : Literal["micro", "macro", "weighted", "samples", None], default=None
-            The type of averaging to apply to the accuracy scores. One of
-            - 'micro': Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            - 'macro': Calculate metrics for each class, and find their unweighted
-                mean. This does not take class imbalance into account.
-            - 'weighted': Calculate metrics for each class, and find their average,
-                weighted by support (the number of true instances for each class).
-                This alters 'macro' to account for class imbalance.
-            - 'samples': Calculate metrics for each instance, and find their average
-                (only meaningful for multilabel classification).
-            - None: The scores for each class or label are returned.
+            The type of averaging to apply to the accuracy scores. One of:
+                - ``micro``: Calculate metrics globally by counting the total
+                  true positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each class, and find their
+                  unweighted mean. This does not take class imbalance into account.
+                - ``weighted``: Calculate metrics for each class, and find their
+                  average, weighted by support (the number of true instances for
+                  each class). This alters ``macro`` to account for class imbalance.
+                - ``samples``: Calculate metrics for each instance, and find their
+                  average (only meaningful for multilabel classification).
+                - ``None``: The scores for each class or label are returned.
         sample_weight : ArrayLike, default=None
             Sample weights.
         zero_division : Literal["warn", 0, 1], default="warn"
-            Sets the value to return when there is a zero division. If set to "warn",
+            Sets the value to return when there is a zero division. If set to ``warn``,
             this acts as 0, but warnings are also raised.
 
     Returns
     -------
         accuracy_score : Union[float, np.ndarray]
-            The average accuracy score as a float if 'average' is not None,
+            The average accuracy score as a float if ``average`` is not None,
             otherwise a numpy array of accuracy scores per class/label.
 
     Raises
     ------
         ValueError
-            If 'task' is not one of 'binary', 'multiclass' or 'multilabel'.
+            If ``task`` is not one of ``binary``, ``multiclass`` or ``multilabel``.
         AssertionError
-            If task is 'multiclass' and num_classes is not provided or is
+            If ``task`` is ``multiclass`` and ``num_classes`` is not provided or is
             less than 0.
         AssertionError
-            If task is 'multilabel' and num_labels is not provided or is
+            If ``task`` is ``multilabel`` and ``num_labels`` is not provided or is
             less than 0.
 
     Examples
@@ -261,7 +261,7 @@ def binary_accuracy(  # pylint: disable=too-many-arguments
         sample_weight : ArrayLike, default=None
             Sample weights.
         zero_division : Literal["warn", 0, 1], default="warn"
-            Sets the value to return when there is a zero division. If set to "warn",
+            Sets the value to return when there is a zero division. If set to ``warn``,
             this acts as 0, but warnings are also raised.
 
     Returns
@@ -322,27 +322,27 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
             Sample weights.
         average : Literal["micro", "macro", "weighted", None], default=None
             If not None, this determines the type of averaging performed on the data:
-            - 'micro': Calculate metrics globally by counting the total true positives,
-                false negatives and false positives.
-            - 'macro': Calculate metrics for each class, and find their unweighted
-                mean. This does not take class imbalance into account.
-            - 'weighted': Calculate metrics for each class, and find their average,
-                weighted by support (the number of true instances for each class).
-                This alters 'macro' to account for class imbalance.
+                - ``micro``: Calculate metrics globally by counting the total
+                  true positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each class, and find their
+                  unweighted mean. This does not take class imbalance into account.
+                - ``weighted``: Calculate metrics for each class, and find their
+                  average, weighted by support (the number of true instances for
+                  each class). This alters ``macro`` to account for class imbalance.
         zero_division : Literal["warn", 0, 1], default="warn"
-            Sets the value to return when there is a zero division. If set to "warn",
+            Sets the value to return when there is a zero division. If set to ``warn``,
             this acts as 0, but warnings are also raised.
 
     Returns
     -------
         float or np.ndarray
-            The average accuracy score as a float if 'average' is not None,
+            The average accuracy score as a float if ``average`` is not None,
             otherwise a numpy array of accuracy scores per class/label.
 
     Raises
     ------
         ValueError
-            If `average` is not one of 'micro', 'macro', 'weighted' or None.
+            If ``average`` is not one of ``micro``, ``macro``, ``weighted`` or ``None``.
 
     Examples
     --------
@@ -420,32 +420,30 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
         average : Literal['micro', 'macro', 'samples', 'weighted', None], default=None
             If None, return the accuracy score per label, otherwise this determines
             the type of averaging performed on the data:
-                - ``"micro"``:
-                    Calculate metrics globally by counting the total true positives,
-                    false negatives and false positives.
-                - ``"macro"``:
-                    Calculate metrics for each label, and find their unweighted
-                    mean. This does not take label imbalance into account.
-                - ``"weighted"``:
-                    Calculate metrics for each label, and find their average,
-                    weighted by support (the number of true instances for each label).
-                - ``"samples"``:
-                    Calculate metrics for each instance, and find their average.
+                - ``micro``: Calculate metrics globally by counting the total
+                  true positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each label, and find their unweighted
+                  mean. This does not take label imbalance into account.
+                - ``weighted``: Calculate metrics for each label, and find their
+                  average, weighted by support (the number of true instances for
+                  each label).
+                - ``samples``: Calculate metrics for each instance, and find their
+                  average.
         zero_division : Literal['warn', 0, 1], default="warn"
-            Sets the value to return when there is a zero division. If set to "warn",
+            Sets the value to return when there is a zero division. If set to ``warn``,
             this acts as 0, but warnings are also raised.
 
     Returns
     -------
         float or np.ndarray
-            The average accuracy score as a flot if 'average' is not None,
+            The average accuracy score as a flot if ``average`` is not None,
             otherwise a numpy array of accuracy scores per label.
 
     Raises
     ------
         ValueError
-            If ``average`` is not one of ``"micro"``, ``"macro"``, ``"weighted"``,
-            ``"samples"``, or ``None``.
+            If ``average`` is not one of ``micro``, ``macro``, ``weighted``,
+            ``samples``, or ``None``.
 
     Examples
     --------
