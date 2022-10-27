@@ -8,8 +8,10 @@ and probabilities.
 from typing import Literal, Optional, Tuple
 
 import numpy as np
+import scipy as sp
 from numpy.typing import ArrayLike
 from sklearn.metrics import multilabel_confusion_matrix
+from sklearn.preprocessing import label_binarize
 
 from cyclops.evaluation.metrics.utils import (
     check_topk,
@@ -567,11 +569,11 @@ def _multiclass_stat_scores_format(
     if type_preds == "continuous-multioutput" and not np.all(
         np.logical_and(preds >= 0.0, preds <= 1.0)
     ):
-        preds = sigmoid(preds)  # convert logits to probabilities
+        preds = sp.special.softmax(preds, axis=1)  # convert logits to probabilities
 
     if type_preds == "continuous-multioutput" and type_target == "multiclass":
         preds = select_topk(preds, top_k or 1)
-        target = np.eye(preds.shape[1])[target]  # one-hot encoding
+        target = label_binarize(target, classes=np.arange(num_classes))
 
     return target.astype(np.int32), preds.astype(np.int32)
 
