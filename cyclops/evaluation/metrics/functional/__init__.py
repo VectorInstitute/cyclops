@@ -5,6 +5,12 @@ from cyclops.evaluation.metrics.functional.accuracy import (  # noqa: F401
     multiclass_accuracy,
     multilabel_accuracy,
 )
+from cyclops.evaluation.metrics.functional.auroc import (  # noqa: F401
+    auroc,
+    binary_auroc,
+    multiclass_auroc,
+    multilabel_auroc,
+)
 from cyclops.evaluation.metrics.functional.f_beta import (  # noqa: F401
     binary_f1_score,
     binary_fbeta_score,
@@ -24,6 +30,18 @@ from cyclops.evaluation.metrics.functional.precision_recall import (  # noqa: F4
     multilabel_recall,
     precision,
     recall,
+)
+from cyclops.evaluation.metrics.functional.precision_recall_curve import (  # noqa: F401
+    binary_precision_recall_curve,
+    multiclass_precision_recall_curve,
+    multilabel_precision_recall_curve,
+    precision_recall_curve,
+)
+from cyclops.evaluation.metrics.functional.roc import (  # noqa: F401
+    binary_roc_curve,
+    multiclass_roc_curve,
+    multilabel_roc_curve,
+    roc_curve,
 )
 from cyclops.evaluation.metrics.functional.specificity import (  # noqa: F401
     binary_specificity,

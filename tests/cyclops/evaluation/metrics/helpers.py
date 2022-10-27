@@ -1,9 +1,8 @@
 """Helper functions for testing metrics."""
 from functools import partial
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Sequence
 
 import numpy as np
-from sklearn.utils._testing import assert_allclose
 
 
 def _functional_test(  # pylint: disable=too-many-arguments
@@ -57,4 +56,18 @@ def _functional_test(  # pylint: disable=too-many-arguments
         sk_result = sk_metric(target[i], preds[i], **kwargs_update)
 
         # assert its the same
-        assert_allclose(result, sk_result, atol=atol)
+        _assert_allclose(result, sk_result, atol=atol)
+
+
+def _assert_allclose(cyclops_result: Any, sk_result: Any, atol: float = 1e-8):
+    """Assert allclose."""
+    if isinstance(cyclops_result, (np.ndarray, np.ScalarType)):
+        np.allclose(cyclops_result, sk_result, atol=atol)
+    elif isinstance(cyclops_result, Sequence):
+        for cyclops_result_, sk_result_ in zip(cyclops_result, sk_result):
+            _assert_allclose(cyclops_result_, sk_result_, atol=atol)
+    else:
+        raise ValueError(
+            f"Unknown format for comparison: {type(cyclops_result)} and"
+            f" {type(sk_result)}"
+        )

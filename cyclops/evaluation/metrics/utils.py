@@ -1,12 +1,12 @@
 """Utility functions for metrics."""
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
 from sklearn.utils.multiclass import type_of_target
 
 # boolean, unsigned integer, signed integer, float, complex.
-_NUMERIC_KINDS = set("?uifc")
+_NUMERIC_KINDS = set("buifc")
 
 
 def is_numeric(*arrays: ArrayLike) -> bool:
@@ -199,3 +199,60 @@ def select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray
     np.put_along_axis(topk_array, topk_indices, 1.0, axis=1)
 
     return topk_array.astype(np.int32)
+
+
+def _check_thresholds(thresholds: Union[int, List[float], np.ndarray]) -> None:
+    """Check if thresholds are valid.
+
+    Parameters
+    ----------
+        thresholds : Union[int, List[float], np.ndarray]
+            Thresholds used for computing the precision and recall scores.
+            Can be either an integer, a list of floats, a numpy array or None.
+
+    Returns
+    -------
+        None
+
+    Raises
+    ------
+        ValueError
+            If `thresholds` is not None, an integer, a list of floats or a numpy array.
+        ValueError
+            If `thresholds` is an integer and is less than 2.
+        ValueError
+            If `thresholds` is a list or numpy array and does not contain floats
+            in the range [0, 1].
+        ValueError
+            If `thresholds` is a numpy array and is not a 1D array.
+        ValueError
+            If `thresholds` is a list or numpy array and the values are not
+            monotonically increasing.
+
+    """
+    if thresholds is not None and not isinstance(thresholds, (int, list, np.ndarray)):
+        raise ValueError(
+            "Expected argument `thresholds` to either be an integer, list of floats or"
+            f" np.ndarray of floats, but got {thresholds}"
+        )
+    if isinstance(thresholds, int) and thresholds < 2:
+        raise ValueError(
+            "If argument `thresholds` is an integer, expected it to be "
+            f"larger than 1, but got {thresholds}"
+        )
+    if isinstance(thresholds, (list, np.ndarray)) and not all(
+        isinstance(t, float) and 0 <= t <= 1 for t in thresholds
+    ):
+        raise ValueError(
+            "If argument `thresholds` is a list, expected all elements to be "
+            f"floats in the [0,1] range, but got {thresholds}"
+        )
+    if isinstance(thresholds, np.ndarray) and not thresholds.ndim == 1:
+        raise ValueError(
+            "If argument `thresholds` is a numpy array, expected the array to be 1d"
+        )
+    if isinstance(thresholds, (list, np.ndarray)) and not all(np.diff(thresholds) > 0):
+        raise ValueError(
+            "Expected argument `thresholds` to be monotonically increasing,"
+            f" but got {thresholds}"
+        )
