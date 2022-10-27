@@ -4,3 +4,4 @@ from .detector import Detector
 from .synthetic_applicator import SyntheticShiftApplicator
 from .clinical_applicator import ClinicalShiftApplicator
 from .experimenter import Experimenter
+from .dataframe_mapping import DataFrameMapping

@@ -54,6 +54,7 @@ class SyntheticShiftApplicator(object):
             Data to have noise added.
         """
 
+        # check if X is a numpy array or dataset
         X_shift = X.copy()
         y_shift = None
 
