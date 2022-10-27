@@ -80,17 +80,18 @@ def roc_curve(  # pylint: disable=too-many-arguments
             Ground truth (correct) target values.
         preds : ArrayLike
             Estimated probabilities or non-thresholded output of decision function.
-            If `task` is `multiclass` and the values in `preds` are not probabilities,
-            they will be converted to probabilities using the softmax function.
-            If `task` is `multilabel` and the values in `preds` are not probabilities,
-            they will be converted to probabilities using the sigmoid function.
+            If ``task`` is ``multiclass`` and the values in ``preds`` are not
+            probabilities, they will be converted to probabilities using the softmax
+            function. If ``task`` is ``multilabel`` and the values in ``preds`` are
+            not probabilities, they will be converted to probabilities using the
+            sigmoid function.
         task : Literal["binary", "multiclass", "multilabel"]
             The type of task for the input data. One of 'binary', 'multiclass'
             or 'multilabel'.
         thresholds : int or list of floats or np.ndarray of floats, default=None
             Thresholds used for computing the ROC curve. Can be one of:
-            - None: use the unique values of `preds` as thresholds
-            - int: generate `thresholds` number of evenly spaced values between
+            - None: use the unique values of ``preds`` as thresholds
+            - int: generate ``thresholds`` number of evenly spaced values between
             0 and 1 as thresholds.
             - list of floats: use the values in the list as thresholds. The list
             of values should be monotonically increasing. The list will be converted
@@ -107,30 +108,30 @@ def roc_curve(  # pylint: disable=too-many-arguments
     Returns
     -------
         fpr : np.ndarray or list of np.ndarray
-            False positive rate. If `task` is 'binary' or `threshold` is not None,
-            `fpr` is a 1d numpy array. If `task` is 'multiclass' or 'multilabel',
-            and `threshold` is None, then `fpr` is a list of 1d numpy
+            False positive rate. If ``task`` is 'binary' or ``threshold`` is not None,
+            ``fpr`` is a 1d numpy array. If ``task`` is 'multiclass' or 'multilabel',
+            and ``threshold`` is None, then ``fpr`` is a list of 1d numpy
             arrays, one for each class or label.
         tpr : np.ndarray or list of np.ndarray
-            True positive rate. If `task` is 'binary' or `threshold` is not None,
-            `tpr` is a 1d numpy array. If `task` is 'multiclass' or 'multilabel',
-            and `threshold` is None, then `tpr` is a list of 1d numpy
+            True positive rate. If ``task`` is 'binary' or ``threshold`` is not None,
+            ``tpr`` is a 1d numpy array. If ``task`` is 'multiclass' or 'multilabel',
+            and ``threshold`` is None, then ``tpr`` is a list of 1d numpy
             arrays, one for each class or label.
         thresholds : np.ndarray or list of np.ndarray
-            Thresholds used to compute fpr and tpr. If `task` is 'binary' or
-            `threshold` is not None, `thresholds` is a 1d numpy array. If
-            `task` is 'multiclass' or 'multilabel', and `threshold` is None,
-            then `thresholds` is a list of 1d numpy arrays, one for each class
+            Thresholds used to compute fpr and tpr. If ``task`` is 'binary' or
+            ``threshold`` is not None, ``thresholds`` is a 1d numpy array. If
+            ``task`` is 'multiclass' or 'multilabel', and ``threshold`` is None,
+            then ``thresholds`` is a list of 1d numpy arrays, one for each class
             or label.
 
     Raises
     ------
         ValueError
-            If `task` is not one of 'binary', 'multiclass' or 'multilabel'.
+            If ``task`` is not one of 'binary', 'multiclass' or 'multilabel'.
         AssertionError
-            If `task` is `multiclass` and `num_classes` is not provided.
+            If ``task`` is ``multiclass`` and ``num_classes`` is not provided.
         AssertionError
-            If `task` is `multilabel` and `num_labels` is not provided.
+            If ``task`` is ``multilabel`` and ``num_labels`` is not provided.
 
     Example (binary)
     ----------------
@@ -218,8 +219,8 @@ def _binary_roc_compute(
     Parameters
     ----------
         state : tuple of np.ndarray or np.ndarray
-            If `thresholds` is not None, `state` is a multi-threshold confusion
-            matrix. If `thresholds` is None, `state` is a tuple of (target, preds).
+            If ``thresholds`` is not None, ``state`` is a multi-threshold confusion
+            matrix. If ``thresholds`` is None, ``state`` is a tuple of (target, preds).
             probabilities.
         thresholds : np.ndarray, default=None
             Thresholds used to binarize the predicted probabilities. If None,
@@ -286,7 +287,7 @@ def binary_roc_curve(
         target : ArrayLike
             Ground truth (correct) target values.
         preds : ArrayLike
-            Estimated probabilities or decision function. If `preds` is not in
+            Estimated probabilities or decision function. If ``preds`` is not in
             the range [0, 1], a sigmoid function is applied to transform it to
             the range [0, 1].
         thresholds : int or list of floats or np.ndarray of floats, default=None
@@ -294,7 +295,7 @@ def binary_roc_curve(
             If int, then the number of thresholds to use.
             If list or array, then the thresholds to use.
             If None, then the thresholds are automatically determined by the
-            unique values in `preds`.
+            unique values in ``preds``.
         pos_label : int, optional
             The label of the positive class.
 
@@ -345,8 +346,8 @@ def _multiclass_roc_compute(
     Parameters
     ----------
         state : np.ndarray or tuple of np.ndarray
-            If `thresholds` is not None, `state` is a multi-threshold confusion
-            matrix. If `thresholds` is None, `state` is a tuple of (target, preds).
+            If ``thresholds`` is not None, ``state`` is a multi-threshold confusion
+            matrix. If ``thresholds`` is None, ``state`` is a tuple of (target, preds).
         num_classes : int
             Number of classes.
         thresholds : np.ndarray, default=None
@@ -357,14 +358,14 @@ def _multiclass_roc_compute(
     Returns
     -------
         fpr : np.ndarray or list of np.ndarray
-            False positive rate. If `threshold` is not None, `fpr` is a 1d numpy
-            array. Otherwise, `fpr` is a list of 1d numpy arrays, one for each
+            False positive rate. If ``threshold`` is not None, ``fpr`` is a 1d numpy
+            array. Otherwise, ``fpr`` is a list of 1d numpy arrays, one for each
             class.
         tpr : np.ndarray or list of np.ndarray
-            True positive rate. If `threshold` is not None, `tpr` is a 1d numpy
-            array. Otherwise, `tpr` is a list of 1d numpy arrays, one for each class.
+            True positive rate. If ``threshold`` is not None, ``tpr`` is a 1d numpy
+            array. Otherwise, ``tpr`` is a list of 1d numpy arrays, one for each class.
         thresholds : np.ndarray or list of np.ndarray
-            Thresholds used to compute fpr and tpr. `threshold` is not None,
+            Thresholds used to compute fpr and tpr. ``threshold`` is not None,
             thresholds is a 1d numpy array. Otherwise, thresholds is a list of
             1d numpy arrays, one for each class.
 
@@ -403,7 +404,7 @@ def multiclass_roc_curve(
         target : ArrayLike
             Ground truth (correct) target values.
         preds : ArrayLike
-            Estimated probabilities or decision function. If `preds` is not in
+            Estimated probabilities or decision function. If ``preds`` is not in
             the range [0, 1], a softmax function is applied to transform it to
             the range [0, 1].
         num_classes : int
@@ -413,19 +414,19 @@ def multiclass_roc_curve(
             If int, then the number of thresholds to use.
             If list or array, then the thresholds to use.
             If None, then the thresholds are automatically determined by the
-            unique values in `preds`.
+            unique values in ``preds``.
 
     Returns
     -------
         fpr : np.ndarray or list of np.ndarray
-            False positive rate. If `threshold` is not None, `fpr` is a 1d numpy
-            array. Otherwise, `fpr` is a list of 1d numpy arrays, one for each
+            False positive rate. If ``threshold`` is not None, ``fpr`` is a 1d numpy
+            array. Otherwise, ``fpr`` is a list of 1d numpy arrays, one for each
             class.
         tpr : np.ndarray or list of np.ndarray
-            True positive rate. If `threshold` is not None, `tpr` is a 1d numpy
-            array. Otherwise, `tpr` is a list of 1d numpy arrays, one for each class.
+            True positive rate. If ``threshold`` is not None, ``tpr`` is a 1d numpy
+            array. Otherwise, ``tpr`` is a list of 1d numpy arrays, one for each class.
         thresholds : np.ndarray or list of np.ndarray
-            Thresholds used to compute fpr and tpr. `threshold` is not None,
+            Thresholds used to compute fpr and tpr. ``threshold`` is not None,
             thresholds is a 1d numpy array. Otherwise, thresholds is a list of
             1d numpy arrays, one for each class.
 
@@ -476,8 +477,8 @@ def _multilabel_roc_compute(
     Parameters
     ----------
         state : np.ndarray or tuple of np.ndarray
-            If `thresholds` is not None, `state` is a multi-threshold confusion
-            matrix. Otherwise, `state` is a tuple of (target, preds).
+            If ``thresholds`` is not None, ``state`` is a multi-threshold confusion
+            matrix. Otherwise, ``state`` is a tuple of (target, preds).
         num_labels : int
             Number of labels.
         thresholds : np.ndarray, default=None
@@ -488,14 +489,14 @@ def _multilabel_roc_compute(
     Returns
     -------
         fpr : np.ndarray or list of np.ndarray
-            False positive rate. If `threshold` is not None, `fpr` is a 1d numpy
-            array. Otherwise, `fpr` is a list of 1d numpy arrays, one for each
+            False positive rate. If ``threshold`` is not None, ``fpr`` is a 1d numpy
+            array. Otherwise, ``fpr`` is a list of 1d numpy arrays, one for each
             label.
         tpr : np.ndarray or list of np.ndarray
-            True positive rate. If `threshold` is not None, `tpr` is a 1d numpy
-            array. Otherwise, `tpr` is a list of 1d numpy arrays, one for each label.
+            True positive rate. If ``threshold`` is not None, ``tpr`` is a 1d numpy
+            array. Otherwise, ``tpr`` is a list of 1d numpy arrays, one for each label.
         thresholds : np.ndarray or list of np.ndarray
-            Thresholds used to compute fpr and tpr. `threshold` is not None,
+            Thresholds used to compute fpr and tpr. ``threshold`` is not None,
             thresholds is a 1d numpy array. Otherwise, thresholds is a list of
             1d numpy arrays, one for each label.
 
@@ -534,29 +535,29 @@ def multilabel_roc_curve(
         target : ArrayLike
             Ground truth (correct) target values.
         preds : ArrayLike
-            Estimated probabilities or decision function. If `preds` is not in
+            Estimated probabilities or decision function. If ``preds`` is not in
             the range [0, 1], a sigmoid function is applied to transform it to
             the range [0, 1].
         num_labels : int
             Number of labels.
         thresholds : int or list of floats or np.ndarray of floats, default=None
-            Thresholds used for binarizing the values of `preds`.
+            Thresholds used for binarizing the values of ``preds``.
             If int, then the number of thresholds to use.
             If list or array, then the thresholds to use.
             If None, then the thresholds are automatically determined by the
-            unique values in `preds`.
+            unique values in ``preds``.
 
     Returns
     -------
         fpr : np.ndarray or list of np.ndarray
-            False positive rate. If `threshold` is not None, `fpr` is a 1d numpy
-            array. Otherwise, `fpr` is a list of 1d numpy arrays, one for each
+            False positive rate. If ``threshold`` is not None, ``fpr`` is a 1d numpy
+            array. Otherwise, ``fpr`` is a list of 1d numpy arrays, one for each
             label.
         tpr : np.ndarray or list of np.ndarray
-            True positive rate. If `threshold` is not None, `tpr` is a 1d numpy
-            array. Otherwise, `tpr` is a list of 1d numpy arrays, one for each label.
+            True positive rate. If ``threshold`` is not None, ``tpr`` is a 1d numpy
+            array. Otherwise, ``tpr`` is a list of 1d numpy arrays, one for each label.
         thresholds : np.ndarray or list of np.ndarray
-            Thresholds used to compute fpr and tpr. `threshold` is not None,
+            Thresholds used to compute fpr and tpr. ``threshold`` is not None,
             thresholds is a 1d numpy array. Otherwise, thresholds is a list of
             1d numpy arrays, one for each label.
 

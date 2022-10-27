@@ -102,7 +102,7 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
             Thresholds used for computing the precision and recall scores. If int,
             then the number of thresholds to use. If list or array, then the
             thresholds to use. If None, then the thresholds are automatically
-            determined by the sunique values in `preds`
+            determined by the sunique values in ``preds``
         pos_label : int, default=1
             The label of the positive class.
         num_classes : int, optional
@@ -113,26 +113,26 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
     Returns
     -------
         precision : np.ndarray
-            The precision scores where `precision[i]` is the precision score for
-            `scores >= thresholds[i]`. If `task` is 'multiclass' or 'multilaabel',
-            then `precision` is a list of numpy arrays, where `precision[i]` is the
-            precision scores for class or label `i`.
+            The precision scores where ``precision[i]`` is the precision score for
+            ``scores >= thresholds[i]``. If ``task`` is 'multiclass' or 'multilaabel',
+            then ``precision`` is a list of numpy arrays, where ``precision[i]`` is the
+            precision scores for class or label ``i``.
         recall : np.ndarray
-            The recall scores where `recall[i]` is the recall score for `scores >=
-            thresholds[i]`. If `task` is 'multiclass' or 'multilaabel', then `recall`
-            is a list of numpy arrays, where `recall[i]` is the recall scores for
-            class or label `i`.
+            The recall scores where ``recall[i]`` is the recall score for ``scores >=
+            thresholds[i]``. If ``task`` is 'multiclass' or 'multilaabel', then
+            ``recall`` is a list of numpy arrays, where ``recall[i]`` is the recall
+            scores for class or label ``i``.
         thresholds : np.ndarray
             Thresholds used for computing the precision and recall scores.
 
     Raises
     ------
         ValueError
-            If `task` is not one of 'binary', 'multiclass' or 'multilabel'.
+            If ``task`` is not one of 'binary', 'multiclass' or 'multilabel'.
         AssertionError
-            If `task` is `multiclass` and `num_classes` is not provided.
+            If ``task`` is ``multiclass`` and ``num_classes`` is not provided.
         AssertionError
-            If `task` is `multilabel` and `num_labels` is not provided.
+            If ``task`` is ``multilabel`` and ``num_labels`` is not provided.
 
     Example (binary)
     ----------------
@@ -221,7 +221,7 @@ def _binary_precision_recall_curve_format(
             Ground truth (correct) target values.
         preds : ArrayLike
             Estimated probabilities or non-thresholded output of decision function.
-            A sigmoid function is applied if `preds` are not in [0, 1].
+            A sigmoid function is applied if ``preds`` are not in [0, 1].
         thresholds : Union[int, List[float], np.ndarray], default=None
             Thresholds used for computing the precision and recall scores. If
             None, the thresholds are computed automatically from the data.
@@ -240,11 +240,11 @@ def _binary_precision_recall_curve_format(
     Raises
     ------
         ValueError
-            If `target` and `preds` are not of the same shape.
+            If ``target`` and ``preds`` are not of the same shape.
         ValueError
-            If `target` is not binary or `preds` is not continuous.
+            If ``target`` is not binary or ``preds`` is not continuous.
         ValueError
-            If `target` does not contain only 0s and 1s.
+            If ``target`` does not contain only 0s and 1s.
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
@@ -296,9 +296,9 @@ def _binary_precision_recall_curve_update(
     Returns
     -------
         (target, preds): Tuple[np.ndarray, np.ndarray]
-            Target and predicted probabilities, if `thresholds` is None.
+            Target and predicted probabilities, if ``thresholds`` is None.
         confmat : np.ndarray
-            Multi-threshold confusion matrix, if `thresholds` is not None.
+            Multi-threshold confusion matrix, if ``thresholds`` is not None.
 
     """
     if thresholds is None:
@@ -399,7 +399,7 @@ def binary_precision_recall_curve(
         target : ArrayLike
             Binary target values.
         preds : ArrayLike
-            Predicted probabilities or output of a decision function. If `preds`
+            Predicted probabilities or output of a decision function. If ``preds``
             is not in the [0, 1] range, it will be transformed into this range
             via the sigmoid function.
         thresholds : int or list of floats or np.ndarray of floats, default=None
@@ -407,7 +407,7 @@ def binary_precision_recall_curve(
             If int, then the number of thresholds to use.
             If list or array, then the thresholds to use.
             If None, then the thresholds are automatically determined by the
-            unique values in `preds`.
+            unique values in ``preds``.
         pos_label : int
             The label of the positive class.
 
@@ -466,7 +466,7 @@ def _multiclass_precision_recall_curve_format(
             The target values.
         preds : ArrayLike
             The predicted probabilities or output of a decision function. If
-            `preds` is not in the [0, 1] range, it will be transformed into this
+            ``preds`` is not in the [0, 1] range, it will be transformed into this
             range via the softmax function.
         num_classes : int
             Number of classes.
@@ -475,7 +475,7 @@ def _multiclass_precision_recall_curve_format(
             If int, then the number of thresholds to use.
             If list or array, then the thresholds to use.
             If None, then the thresholds are automatically determined by the
-            unique values in `preds`.
+            unique values in ``preds``.
 
     Returns
     -------
@@ -490,17 +490,17 @@ def _multiclass_precision_recall_curve_format(
     Raises
     ------
         ValueError
-            If `target` does not have one more dimension than `preds`.
+            If ``target`` does not have one more dimension than ``preds``.
         ValueError
-            If `preds` is not a 2D array of floats.
+            If ``preds`` is not a 2D array of floats.
         ValueError
-            If `target` is not a 1D array of integers.
+            If ``target`` is not a 1D array of integers.
         ValueError
-            If `preds` does not have the same number of classes as `num_classes`.
+            If ``preds`` does not have the same number of classes as ``num_classes``.
         ValueError
-            If `target` and `preds` have different number of samples.
+            If ``target`` and ``preds`` have different number of samples.
         ValueError
-            If `target` contains values outside of the range [0, num_classes).
+            If ``target`` contains values outside of the range [0, num_classes).
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
@@ -576,9 +576,9 @@ def _multiclass_precision_recall_curve_update(
     Returns
     -------
         (target, preds) : Tuple[np.ndarray, np.ndarray]
-            The target and predicted probabilities, if `thresholds` is None.
+            The target and predicted probabilities, if ``thresholds`` is None.
         state : np.ndarray
-            The state of the multiclass precision-recall curve,  if `thresholds`
+            The state of the multiclass precision-recall curve,  if ``thresholds``
             is not None.
 
     """
@@ -616,9 +616,9 @@ def _multiclass_precision_recall_curve_compute(
     Parameters
     ----------
         state : np.ndarray
-            The state of the multiclass precision-recall curve. If `thresholds` is
-            None, then `state` is a tuple of the target and predicted probabilities.
-            Otherwise, `state` is the one-vs-all multi-threshold confusion matrix.
+            The state of the multiclass precision-recall curve. If ``thresholds`` is
+            None, then ``state`` is a tuple of the target and predicted probabilities.
+            Otherwise, ``state`` is the one-vs-all multi-threshold confusion matrix.
         thresholds : np.ndarray
             Thresholds used for computing the precision and recall scores.
         num_classes : int
@@ -691,7 +691,7 @@ def multiclass_precision_recall_curve(
             If int, then the number of thresholds to use.
             If list or array, then the thresholds to use.
             If None, then the thresholds are automatically determined by the
-            unique values in `preds`.
+            unique values in ``preds``.
 
     Returns
     -------
@@ -759,7 +759,7 @@ def _multilabel_precision_recall_curve_format(
             If int, then the number of thresholds to use.
             If list or array, then the thresholds to use.
             If None, then the thresholds are automatically determined by the
-            unique values in `preds`.
+            unique values in ``preds``.
 
     Returns
     -------
@@ -769,19 +769,19 @@ def _multilabel_precision_recall_curve_format(
             The predicted probabilities as a numpy array.
         thresholds : np.ndarray
             Thresholds used for computing the precision and recall scores as a
-            numpy array, if `thresholds` is not None.
+            numpy array, if ``thresholds`` is not None.
 
     Raises
     ------
         ValueError
-            If `target` is not in multilabel-indicator format.
+            If ``target`` is not in multilabel-indicator format.
         ValueError
-            If `preds` does not contain float values.
+            If ``preds`` does not contain float values.
         ValueError
-            If `num_labels` does not match up with the number of columns in `preds`.
+            If ``num_labels`` does not match up with the number of columns in ``preds``.
         ValueError
-            If the number of columns in `preds` is not the same as the number of
-            columns in `target`.
+            If the number of columns in ``preds`` is not the same as the number of
+            columns in ``target``.
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
@@ -839,9 +839,9 @@ def _multilabel_precision_recall_curve_update(
     Returns
     -------
         (target, preds) : Tuple[np.ndarray, np.ndarray]
-            The target and predicted values, if `thresholds` is None.
+            The target and predicted values, if ``thresholds`` is None.
         state : np.ndarray
-            One-vs-rest multi-threshold confusion matrix, if `thresholds` is not None.
+            One-vs-rest multi-threshold confusion matrix, if ``thresholds`` is not None.
 
     """
     if thresholds is None:
@@ -873,7 +873,7 @@ def _multilabel_precision_recall_curve_compute(
     Parameters
     ----------
         state : Tuple[np.ndarray, np.ndarray] or np.ndarray
-            The target and predicted values, if `thresholds` is None. Otherwise,
+            The target and predicted values, if ``thresholds`` is None. Otherwise,
             the one-vs-rest multi-threshold confusion matrix.
         thresholds : np.ndarray
             Thresholds used for computing the precision and recall scores.
@@ -887,9 +887,9 @@ def _multilabel_precision_recall_curve_compute(
         recall : np.ndarray or List[np.ndarray]
             Recall values for each label.
         thresholds : np.ndarray or List[np.ndarray]
-            If `thresholds` is None, then thresholds is a list of arrays, one for
+            If ``thresholds`` is None, then thresholds is a list of arrays, one for
             each label. Otherwise, thresholds is a single array with shape
-            (len(`thresholds`,).
+            (len(``thresholds``,).
 
     """
     if isinstance(state, np.ndarray):
@@ -947,22 +947,23 @@ def multilabel_precision_recall_curve(
             If int, then the number of thresholds to use.
             If list of floats, then the thresholds to use.
             If None, then the thresholds are computed automatically from the unique
-            values in `preds`.
+            values in ``preds``.
 
     Returns
     -------
         precision : np.ndarray or List[np.ndarray]
-            Precision values for each label. If `thresholds` is None, then
+            Precision values for each label. If ``thresholds`` is None, then
             precision is a list of arrays, one for each label. Otherwise,
-            precision is a single array with shape (`num_labels`, len(`thresholds`)).
+            precision is a single array with shape
+            (``num_labels``, len(``thresholds``)).
         recall : np.ndarray or List[np.ndarray]
-            Recall values for each label. If `thresholds` is None, then
+            Recall values for each label. If ``thresholds`` is None, then
             recall is a list of arrays, one for each label. Otherwise,
-            recall is a single array with shape (`num_labels`, len(`thresholds`)).
+            recall is a single array with shape (``num_labels``, len(``thresholds``)).
         thresholds : np.ndarray or List[np.ndarray]
-            If `thresholds` is None, then thresholds is a list of arrays, one for
+            If ``thresholds`` is None, then thresholds is a list of arrays, one for
             each label. Otherwise, thresholds is a single array with shape
-            (len(`thresholds`,).
+            (len(``thresholds``,).
 
     Examples
     --------
