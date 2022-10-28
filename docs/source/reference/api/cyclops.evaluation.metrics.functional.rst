@@ -13,7 +13,10 @@ Submodules
    :maxdepth: 4
 
    cyclops.evaluation.metrics.functional.accuracy
+   cyclops.evaluation.metrics.functional.auroc
    cyclops.evaluation.metrics.functional.f_beta
    cyclops.evaluation.metrics.functional.precision_recall
+   cyclops.evaluation.metrics.functional.precision_recall_curve
+   cyclops.evaluation.metrics.functional.roc
    cyclops.evaluation.metrics.functional.specificity
    cyclops.evaluation.metrics.functional.stat_scores
