@@ -49,9 +49,13 @@ class Detector:
 
     def fit(self, X_source: Union[np.ndarray, torch.utils.data.Dataset], **kwargs):
         
+        
         self.reductor.fit(X_source)
         
         X_transformed = self.transform(X_source, **get_args(self.reductor.transform, kwargs))
+
+        if isinstance(X_transformed, tuple):
+            X_transformed = X_transformed[0]
         
         self.tester.fit(X_transformed, **kwargs)
 
@@ -131,9 +135,11 @@ class Detector:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
         """
         
-        #add if reductor is not fit then self.fit(X_source)
-
-        X_t = self.transform(X_target, **get_args(self.reductor.transform, kwargs))
+        # check if reductor_method contains 'txrv'
+        if 'txrv' not in self.reductor.dr_method:
+            X_t = self.transform(X_target, **get_args(self.reductor.transform, kwargs))
+        else:
+            X_t = X_target
 
         results = self.test_shift(
             X_t[:sample,:], 
