@@ -5,6 +5,9 @@ import numpy as np
 import pandas as pd
 from .utils import get_args
 from sklearn.feature_selection import SelectKBest
+import torch
+from typing import Union, List, Optional, Dict, Any, Tuple
+from torch.utils.data import Subset
 
 class SyntheticShiftApplicator(object):
     
@@ -25,7 +28,10 @@ class SyntheticShiftApplicator(object):
         "tolerance_shift"
     
     """   
-    def __init__(self, shift_type: str, **kwargs):
+    def __init__(self, 
+                 shift_type: str,
+                 **kwargs
+                ):
         
         self.shift_type = shift_type
         
@@ -35,7 +41,9 @@ class SyntheticShiftApplicator(object):
             "fs_shift": feature_swap_shift,
             "fa_shift": feature_association_shift,
             "bn_shift": binary_noise_shift,
+            "categorical_shift": categorical_shift,
         }
+        self.shift_args = get_args(self.shift_types[self.shift_type], kwargs)
            
         if self.shift_type not in self.shift_types.keys():
             raise ValueError(
@@ -44,7 +52,10 @@ class SyntheticShiftApplicator(object):
                 )
             )
         
-    def apply_shift(self, X, **kwargs):
+    def apply_shift(
+        self, 
+        X
+    ):
 
         """apply_shift.
 
@@ -55,14 +66,28 @@ class SyntheticShiftApplicator(object):
         """
 
         # check if X is a numpy array or dataset
-        X_shift = X.copy()
+        if isinstance(X, np.ndarray):
+            X_shift = X.copy()
         y_shift = None
+        
 
         X_shift, _ = self.shift_types[self.shift_type](
-                X_shift, **get_args(self.shift_types[self.shift_type], kwargs)
+                X_shift, **self.shift_args
             )
         
         return (X_shift, y_shift)  
+
+
+def categorical_shift(X: np.ndarray, 
+                      metadata: pd.DataFrame,
+                      categorical_column: str, 
+                      target_category: str):
+    y_target = None
+    metadata.reset_index(drop=True, inplace=True)
+    target_indices = metadata.loc[metadata[categorical_column] == target_category].index.values
+    X_target = X[target_indices]
+
+    return X_target, y_target
 
 def apply_predefined_shift(
     predefined_shift: str,

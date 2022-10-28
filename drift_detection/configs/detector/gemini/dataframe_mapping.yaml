@@ -1,0 +1,9 @@
+id: encounter_id
+timestamp: admit_timestamp
+targets: None
+predictions: None
+numericals: None
+categoricals: None
+hospital_id: hospital_id
+hospital_type_academic: ["MSH","PMH", "SMH","UHNTW","UHNTG","PMH","SBK"]
+hospital_type_community: ["THPC","THPM"]

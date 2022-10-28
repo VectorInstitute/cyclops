@@ -266,6 +266,7 @@ class Reductor:
         data: Union[np.ndarray, torch.utils.data.Dataset],
         batch_size: int = 32,
         num_workers: int = None,
+        progress: bool = True,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """Transforms the data using the chosen dimensionality reduction method
         Parameters
@@ -299,7 +300,7 @@ class Reductor:
                 self.dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.batch_inference(self.model)
+                X_transformed, y = self.batch_inference(self.model, progress)
 
         elif self.dr_method == "NoRed":
             if isinstance(data, np.ndarray):
@@ -311,18 +312,18 @@ class Reductor:
                 self.dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.xrv_clf_inference(self.model)
+                X_transformed, y = self.xrv_clf_inference(self.model, progress)
             else:
-                X_transformed = self.minibatch_inference(data, self.model)
+                X_transformed = self.minibatch_inference(data, self.model, progress)
         elif "BBSDh" in self.dr_method:
             if "txrv_CNN" in self.dr_method:
                 self.dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.xrv_clf_inference(self.model)
+                X_transformed, y = self.xrv_clf_inference(self.model, progress)
                 X_transformed = np.where(X_transformed > 0.5, 1, 0)
             else:
-                X_transformed = self.minibatch_inference(data, self.model)
+                X_transformed = self.minibatch_inference(data, self.model, progress)
                 X_transformed = np.where(X_transformed > 0.5, 1, 0)
         elif self.dr_method == "GMM":
             X_transformed = self.model.predict_proba(data)
@@ -330,7 +331,7 @@ class Reductor:
             self.dataloader = DataLoader(
                 data, batch_size=batch_size, num_workers=num_workers
             )
-            X_transformed, y = self.xrv_ae_inference(self.model)
+            X_transformed, y = self.xrv_ae_inference(self.model, progress)
         if y is not None:
             return X_transformed, y
         else:
@@ -467,7 +468,7 @@ class Reductor:
         X_transformed = np.concatenate(X_transformed_all, axis=0)
         return X_transformed
 
-    def batch_inference(self, model: nn.Module) -> Tuple[np.ndarray, np.ndarray]:
+    def batch_inference(self, model: nn.Module, progress=True) -> Tuple[np.ndarray, np.ndarray]:
         """
         Performs batched inference on the dataset.
         Parameters
@@ -483,7 +484,7 @@ class Reductor:
         """
         imgs_transformed = []
         all_labels = []
-        for batch in tqdm(self.dataloader):
+        for batch in (tqdm(self.dataloader) if progress else self.dataloader):
             imgs = batch["img"]
             labels = batch["lab"]
             all_labels.append(labels)
@@ -494,7 +495,7 @@ class Reductor:
         labels = np.concatenate(all_labels)
         return X_transformed, labels
 
-    def xrv_clf_inference(self, model: nn.Module) -> Tuple[np.ndarray, np.ndarray]:
+    def xrv_clf_inference(self, model: nn.Module, progress=True) -> Tuple[np.ndarray, np.ndarray]:
         """
         Performs batched inference with the TXRV Classifier on the dataset.
         Parameters
@@ -511,7 +512,7 @@ class Reductor:
         all_preds = []
         all_labels = []
         model = model.to(self.device).eval()
-        for batch in tqdm(self.dataloader):
+        for batch in (tqdm(self.dataloader) if progress else self.dataloader):
             imgs = batch["img"]
             labels = batch["lab"]
             imgs = imgs.to(self.device)
@@ -524,7 +525,7 @@ class Reductor:
         labels = np.concatenate(all_labels)
         return X_transformed, labels
 
-    def xrv_ae_inference(self, model: nn.Module) -> Tuple[np.ndarray, np.ndarray]:
+    def xrv_ae_inference(self, model: nn.Module, progress=True) -> Tuple[np.ndarray, np.ndarray]:
         """
         Performs batched inference with the TXRV Autoencoder on the dataset.
         Parameters
@@ -541,7 +542,7 @@ class Reductor:
         all_preds = []
         all_labels = []
         model = model.to(self.device).eval()
-        for batch in tqdm(self.dataloader):
+        for batch in (tqdm(self.dataloader) if progress else self.dataloader):
             imgs = batch["img"]
             labels = batch["lab"]
             imgs = imgs.to(self.device)
