@@ -1,4 +1,5 @@
 """Test feature module."""
+import pandas as pd
 
 from cyclops.processors.constants import (
     BINARY,
@@ -9,10 +10,17 @@ from cyclops.processors.constants import (
     ORDINAL,
     STRING,
 )
-from cyclops.processors.feature.feature import FeatureMeta
+
+from cyclops.processors.column_names import ENCOUNTER_ID
+
+from cyclops.processors.feature.feature import (
+    FeatureMeta,
+    Features,
+    TabularFeatures
+)
 
 
-def test_get_type():
+def test__feature_meta__get_type():
     """Test FeatureMeta.get_type fn."""
     feature_meta_numeric = FeatureMeta(**{FEATURE_TYPE_ATTR: NUMERIC})
     feature_meta_binary = FeatureMeta(**{FEATURE_TYPE_ATTR: BINARY})
@@ -25,7 +33,7 @@ def test_get_type():
     assert feature_meta_ordinal.get_type() == ORDINAL
 
 
-def test_is_target():
+def test__feature_meta__is_target():
     """Test FeatureMeta.is_target fn."""
     feature_meta_target = FeatureMeta(
         **{FEATURE_TYPE_ATTR: NUMERIC, FEATURE_TARGET_ATTR: True}
@@ -36,7 +44,7 @@ def test_is_target():
     assert not feature_meta.is_target()
 
 
-def test_get_mapping():
+def test__feature_meta__get_mapping():
     """Test FeatureMeta.get_mapping fn."""
     feature_meta = FeatureMeta(**{FEATURE_TYPE_ATTR: NUMERIC})
     assert feature_meta.get_mapping() is None
@@ -47,7 +55,7 @@ def test_get_mapping():
     assert feature_meta.get_mapping() == {1: "hospital"}
 
 
-def test_update():
+def test__feature_meta__update():
     """Test FeatureMeta.update fn."""
     feature_meta = FeatureMeta(**{FEATURE_TYPE_ATTR: NUMERIC})
     assert feature_meta.get_type() == NUMERIC
@@ -56,3 +64,52 @@ def test_update():
     assert not feature_meta.is_target()
     feature_meta.update([(FEATURE_TARGET_ATTR, True)])
     assert feature_meta.is_target()
+
+
+def _create_feature(data, features, by):
+    return Features(data=data, features=features, by=by)
+
+
+def test__feature__get_data():
+    """Test Feature.get_data fn."""
+    data = pd.DataFrame({'fe': [1], 'f': [1], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ['fe', 'f'], ENCOUNTER_ID)
+    data = data.set_index([ENCOUNTER_ID])
+    returned_data = feat.get_data()
+    returned_data = returned_data.reindex(returned_data.columns.sort_values(), axis=1)
+    data = data.reindex(data.columns.sort_values(), axis=1)
+    assert returned_data.equals(data)
+
+    boolean_data = pd.DataFrame({'fe': [True], 'f': [True], ENCOUNTER_ID: [1]})
+    feat = _create_feature(boolean_data, ['fe', 'f'], ENCOUNTER_ID)
+    boolean_data = boolean_data.set_index([ENCOUNTER_ID])
+    boolean_data = boolean_data.astype('int')
+    returned_data = feat.get_data()
+    boolean_data = boolean_data.reindex(boolean_data.columns.sort_values(), axis=1)
+    returned_data = returned_data.reindex(returned_data.columns.sort_values(), axis=1)
+    assert returned_data.equals(boolean_data)
+
+
+def test__feature__columns():
+    """Test Feature.columns fn."""
+    data = pd.DataFrame({'fe': [1], 'f': [1], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ['fe', 'f'], ENCOUNTER_ID)
+    returned_data = feat.columns
+    assert returned_data.sort_values().equals(data.columns.sort_values())
+
+
+def test__feature__feature_names():
+    """Test Feature.feature_names fn."""
+    data = pd.DataFrame({'fe': [1], 'f': [1], ENCOUNTER_ID: [1]})
+    features = ['fe', 'f']
+    feat = _create_feature(data, features, ENCOUNTER_ID)
+    returned_data = feat.feature_names()
+    assert sorted(returned_data) == sorted(features)
+
+
+def test__feature__types():
+    """Test Feature.types fn."""
+    data = pd.DataFrame({'fe': [1], 'f': [1], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ['fe', 'f'], ENCOUNTER_ID)
+    returned_data = feat.types
+    assert returned_data == {'fe': NUMERIC, 'f': NUMERIC}
