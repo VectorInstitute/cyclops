@@ -57,6 +57,7 @@ INTERVENTION = "intervention"
 LOOKUP_IP_ADMIN = "lookup_ip_admin"
 LOOKUP_ER_ADMIN = "lookup_er_admin"
 LOOKUP_DIAGNOSIS = "lookup_diagnosis"
+LOOKUP_CCSR = "lookup_ccsr"
 IP_SCU = "ip_scu"
 LOOKUP_ROOM_TRANSFER = "lookup_room_transfer"
 ROOM_TRANSFER = "room_transfer"
@@ -78,6 +79,7 @@ TABLE_MAP = {
     LOOKUP_IP_ADMIN: lambda db: db.public.lookup_ip_administrative,
     LOOKUP_ER_ADMIN: lambda db: db.public.lookup_er_administrative,
     LOOKUP_DIAGNOSIS: lambda db: db.public.lookup_diagnosis,
+    LOOKUP_CCSR: lambda db: db.public.lookup_ccsr,
     IP_SCU: lambda db: db.public.ip_scu,
     ROOM_TRANSFER: lambda db: db.public.room_transfer,
     LOOKUP_ROOM_TRANSFER: lambda db: db.public.lookup_room_transfer,
@@ -307,8 +309,13 @@ def patient_encounters(
     return QueryInterface(_db, table)
 
 
-def diagnoses(**process_kwargs) -> QueryInterface:
+def diagnoses(include_description: bool = True, **process_kwargs) -> QueryInterface:
     """Query diagnosis data.
+    
+    Parameters
+    ----------
+    include_description: bool, optional
+        Join with lookup table to get diagnosis_type description.
 
     Returns
     -------
@@ -323,20 +330,26 @@ def diagnoses(**process_kwargs) -> QueryInterface:
         Include only those diagnoses that are of certain type.
     limit: int, optional
         Limit the number of rows returned.
+        
+    Warnings
+    --------
+    Setting the ``include_description`` parameter would join diagnosis types
+    with descriptions and if the diagnosis type is None, then those rows would
+    be dropped.
 
     """
     table = get_table(DIAGNOSIS)
 
     # Get diagnosis type description
-    lookup_table = get_table(LOOKUP_DIAGNOSIS)
-    lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(lookup_table)
-
-    table = qp.Join(
-        lookup_table, on=("diagnosis_type", "value"), join_table_cols="description"
-    )(table)
-    table = qp.Drop("value")(table)
-    table = qp.Rename({"description": "diagnosis_type_description"})(table)
-    table = qp.ReorderAfter("diagnosis_type_description", "diagnosis_type")(table)
+    if include_description:
+        lookup_table = get_table(LOOKUP_DIAGNOSIS)
+        lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(lookup_table)
+        table = qp.Join(
+            lookup_table, on=("diagnosis_type", "value"), join_table_cols="description"
+        )(table)
+        table = qp.Drop("value")(table)
+        table = qp.Rename({"description": "diagnosis_type_description"})(table)
+        table = qp.ReorderAfter("diagnosis_type_description", "diagnosis_type")(table)
 
     # Trim whitespace from ICD codes.
     table = qp.Trim(DIAGNOSIS_CODE)(table)
