@@ -311,7 +311,7 @@ def patient_encounters(
 
 def diagnoses(include_description: bool = True, **process_kwargs) -> QueryInterface:
     """Query diagnosis data.
-    
+
     Parameters
     ----------
     include_description: bool, optional
@@ -330,7 +330,7 @@ def diagnoses(include_description: bool = True, **process_kwargs) -> QueryInterf
         Include only those diagnoses that are of certain type.
     limit: int, optional
         Limit the number of rows returned.
-        
+
     Warnings
     --------
     Setting the ``include_description`` parameter would join diagnosis types

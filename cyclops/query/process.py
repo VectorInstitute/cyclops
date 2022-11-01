@@ -415,8 +415,8 @@ class Rename:  # pylint: disable=too-few-public-methods
         if self.check_exists:
             table = process_checks(table, cols=list(self.rename_map.keys()))
         return rename_columns(table, self.rename_map)
-    
-    
+
+
 @dataclass
 class Substring:  # pylint: disable=too-few-public-methods
     """Get substring of a string column.
@@ -430,9 +430,9 @@ class Substring:  # pylint: disable=too-few-public-methods
         Start index of substring.
     stop_index: str
         Name of the new column with extracted substring.
-    
 
     """
+
     col: str
     start_index: int
     stop_index: int
@@ -454,8 +454,13 @@ class Substring:  # pylint: disable=too-few-public-methods
 
         """
         table = process_checks(table, cols=self.col)
-        table = select(table, func.substr(get_column(table, self.col), self.start_index, self.stop_index).label(self.new_col_label)).subquery()
-        
+        table = select(
+            table,
+            func.substr(
+                get_column(table, self.col), self.start_index, self.stop_index
+            ).label(self.new_col_label),
+        ).subquery()
+
         return table
 
 
