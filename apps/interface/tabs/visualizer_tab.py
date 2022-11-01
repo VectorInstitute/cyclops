@@ -8,7 +8,6 @@ import pandas as pd
 from css import CONTENT_STYLE, SIDEBAR_LIST_STYLE, SIDEBAR_STYLE, TEXT_ALIGN_CENTER
 from dash import dcc, html
 
-from codebase_ops import PROJECT_ROOT
 from cyclops.processors.column_names import ENCOUNTER_ID
 
 STATIC = "static"
@@ -23,8 +22,10 @@ dir_path = os.path.dirname(os.path.abspath(__file__))
 
 events = pd.read_parquet(
     os.path.join(
-        PROJECT_ROOT,
-        "notebooks/usecases/mimic/risk_of_mortality/mimic_data/1cleaned/batch_0017.parquet",  # noqa: E501, pylint: disable=line-too-long
+        "/mnt/data",
+        "cyclops/use_cases/mimiciv/mortality_decompensation",
+        "data/1-cleaned",
+        "batch_0017.parquet",
     )
 )
 encounters_events = list(events[ENCOUNTER_ID].unique())[0:80]

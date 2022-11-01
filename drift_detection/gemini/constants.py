@@ -170,3 +170,9 @@ IP = "IP"
 ER = "ER"
 ICU = "ICU"
 SCU = "SCU"
+
+MORTALITY = "mortality"
+LOS = "los"
+LOS_ER = "los_er"
+AGGREGATION_WINDOW = 144
+AGGREGATION_BUCKET_SIZE = 24

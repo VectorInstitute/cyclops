@@ -7,11 +7,11 @@ Welcome to cyclops's documentation!
    :caption: Contents:
 
    intro
-   gemini_hpc
    design
+   gemini_hpc
    contributing
    coverage
-   reference/api/modules
+   api
 
 
 Indices and tables

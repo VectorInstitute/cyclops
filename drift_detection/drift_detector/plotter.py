@@ -73,7 +73,7 @@ def errorfill(x: np.array, y: np.array, yerr: np.array, color=None, alpha_fill=0
         x, np.clip(ymax, 0, 1), np.clip(ymin, 0, 1), color=color, alpha=alpha_fill
     )
 
-def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: float):
+def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
     '''
     Setup ROC curve
     
@@ -87,10 +87,10 @@ def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: float):
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
     ax.set_xlabel("False Positive Rate", fontsize = 12)
     ax.set_ylabel("True Positive Rate", fontsize = 12)
-    ax.set_title("ROC curve (area = %0.6f)" % roc_auc)
+    ax.set_title("ROC curve (area = %s)" % roc_auc)
     return ax
 
-def plot_pr(ax, recall, precision, roc_prc):
+def plot_pr(ax: mpl.axes.SubplotBase, recall: list, precision: list, roc_prc: str):
     '''
     Setup Precision-Recall curve
     
@@ -104,7 +104,7 @@ def plot_pr(ax, recall, precision, roc_prc):
     ax.set_xlabel("Recall", fontsize = 12)
     ax.set_ylabel("Precision", fontsize = 12)
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
-    ax.set_title("PRC curve (area = %0.6f)" % roc_prc)
+    ax.set_title("PRC curve (area = %s)" % roc_prc)
     return ax
 
 def setup_plot(plot_handle: mpl.axes.SubplotBase,
@@ -237,22 +237,39 @@ def plot_label_distribution(X,y,label, features):
 
     plt.show()
     
-def plot_drift(results, threshold=0.05):
+def plot_drift_samples_pval(results, p_val_threshold):
+    fig = plt.figure(figsize=(11, 8))
+    for si, shift in enumerate(results.keys()):
+        errorfill(
+            results[shift]['samples'],
+            results[shift]['mean_p_vals'],
+            results[shift]['std_p_vals'],
+            fmt=linestyles[si] + markers[si],
+            color=colorscale(colors[si], brightness[si]),
+            label=shift,
+        )
+    plt.xlabel("Number of samples from test")
+    plt.ylabel("$p$-value")
+    plt.axhline(y=p_val_threshold, color="k")
+    plt.legend()
+    plt.show()
+    
+def plot_drift(results, p_val_threshold=0.05):
     """Plot drift results.
     
     Parameters
     ----------
     results: pd.DataFrame
         Dataframe containing drift p-values and distance metric.
-    threshold: float
+    p_val_threshold: float
         P-Value threshold.
     """
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16,10))
-    detection = np.where(results['pval']<threshold,1,0)
+    detection = np.where(results['pval']<p_val_threshold,1,0)
     cmap = ListedColormap(['lightgrey','red'])
     ax1.plot(results['dates'], results['pval'], '.-', color="red", linewidth=0.5, markersize=2)
     ax1.set_xlim(results['dates'], results['dates'])
-    ax1.axhline(y=threshold, color='dimgrey', linestyle='--')
+    ax1.axhline(y=p_val_threshold, color='dimgrey', linestyle='--')
     ax1.set_ylabel('P-Values',fontsize=16)
     ax1.set_xticklabels([])
     ax1.pcolorfast(ax1.get_xlim(), ax1.get_ylim(),detection.values[np.newaxis], cmap = cmap, alpha = 0.4)

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from codebase_ops import get_log_file_path
-from cyclops.processors.cleaning import dropna_rows
+from cyclops.processors.clean import dropna_rows
 from cyclops.processors.column_names import (
     EVENT_NAME,
     EVENT_VALUE,
@@ -584,7 +584,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         """Vectorize aggregated data.
 
         Parameters
-        ----------indexes
+        ----------
         aggregated: pandas.DataFrame
             Aggregated data.
 

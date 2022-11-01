@@ -1,4 +1,9 @@
-"""High-level query processing functionality."""
+"""Low-level query processing functionality.
+
+This module contains query operations functions such as AddColumn, Join, DropNulls, etc.
+which can be used in high-level query API functions specific to datasets.
+
+"""
 
 # pylint: disable=too-many-lines
 
@@ -410,6 +415,53 @@ class Rename:  # pylint: disable=too-few-public-methods
         if self.check_exists:
             table = process_checks(table, cols=list(self.rename_map.keys()))
         return rename_columns(table, self.rename_map)
+
+
+@dataclass
+class Substring:  # pylint: disable=too-few-public-methods
+    """Get substring of a string column.
+
+    Parameters
+    ----------
+    col: str
+        Name of column which has string, where substring needs
+        to be extracted.
+    start_index: int
+        Start index of substring.
+    stop_index: str
+        Name of the new column with extracted substring.
+
+    """
+
+    col: str
+    start_index: int
+    stop_index: int
+    new_col_label: str
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Paramaters
+        ----------
+        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = process_checks(table, cols=self.col)
+        table = select(
+            table,
+            func.substr(
+                get_column(table, self.col), self.start_index, self.stop_index
+            ).label(self.new_col_label),
+        ).subquery()
+
+        return table
 
 
 @dataclass
@@ -934,9 +986,9 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         two columns have the same values but in different format, e.g., strings of int.
     cond: BinaryExpression, optional
         Condition on which to join to tables.
-    table_attrs: str or list of str, optional
+    table_cols: str or list of str, optional
         Filters to keep only these columns from the table.
-    join_table_attrs:
+    join_table_cols:
         Filters to keep only these columns from the join_table.
 
     """

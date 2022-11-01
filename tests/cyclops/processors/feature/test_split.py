@@ -8,6 +8,7 @@ from cyclops.processors.feature.split import (
     fractions_to_split,
     intersect_datasets,
     split_datasets,
+    split_datasets_by_idx,
     split_idx,
 )
 
@@ -74,3 +75,13 @@ def test_intersect_datasets():
     assert datas[0]["C"][0] == 3 and datas[0]["C"][2] == 0.2
     assert datas[1]["D"][0] == 4 and datas[1]["D"][2] == 2
     assert datas[1]["E"][0] == 3 and datas[1]["E"][2] == 0.2
+
+
+def test_split_datasets_by_idx():
+    """Test split_datasets_by_idx fn."""
+    data = np.array([6, 3, 3, 54, 6, 3, 8, 6, 2, 1, 1, 9])
+    splits = split_datasets_by_idx(
+        data, (np.array([0, 2, 4, 6]), np.array([1, 3, 5, 7])), axes=0
+    )
+    assert (splits[0] == np.array([6, 3, 6, 8])).all()
+    assert (splits[1] == np.array([3, 54, 3, 6])).all()

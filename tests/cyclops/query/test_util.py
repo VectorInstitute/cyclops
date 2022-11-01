@@ -9,11 +9,16 @@ from cyclops.query.util import (
     _to_select,
     _to_subquery,
     drop_columns,
+    equals,
     filter_columns,
     get_column,
     get_column_names,
     get_columns,
     has_columns,
+    not_equals,
+    process_column,
+    process_elem,
+    process_list,
     rename_columns,
     reorder_columns,
     table_params_to_type,
@@ -110,3 +115,50 @@ def test_trim_columns(test_table):  # pylint: disable=redefined-outer-name
     """Test apply_to_columns fn."""
     after_trim = trim_columns(test_table, ["a"], ["apple"])
     assert get_column_names(after_trim) == ["a", "b", "c", "apple"]
+
+
+def test_process_elem():
+    """Test process_elem fn."""
+    assert process_elem("Test", lower=True) == "test"
+    assert process_elem("Test ", lower=True, trim=True) == "test"
+    assert process_elem("1", to_int=True) == 1
+    assert process_elem("1.2", to_float=True) == 1.2
+    assert process_elem(1, to_bool=True) is True
+    assert process_elem(0, to_bool=True) is False
+
+
+def test_process_list():
+    """Test process_list fn."""
+    assert process_list([1, 2, 3, 0], to_bool=True) == [True, True, True, False]
+
+
+def test_process_column():
+    """Test process_column fn."""
+    test_col = column("a")
+    processed_col = process_column(test_col, to_int=True)
+    assert str(processed_col) == "CAST(a AS INTEGER)"
+    processed_col = process_column(test_col, to_float=True)
+    assert str(processed_col) == "CAST(a AS FLOAT)"
+    processed_col = process_column(test_col, to_str=True)
+    assert str(processed_col) == "CAST(a AS VARCHAR)"
+    processed_col = process_column(test_col, to_bool=True)
+    assert str(processed_col) == "CAST(a AS BOOLEAN)"
+    processed_col = process_column(test_col, to_date=True)
+    assert str(processed_col) == "CAST(a AS DATE)"
+    processed_col = process_column(test_col, to_timestamp=True)
+    assert str(processed_col) == "CAST(a AS TIMESTAMP)"
+    test_col.type = "VARCHAR"
+    processed_col = process_column(test_col, lower=True, trim=True)
+    assert str(processed_col) == "trim(lower(a))"
+
+
+def test_equals():
+    """Test equals fn."""
+    test_col = column("a")
+    assert str(equals(test_col, "bat")) == "a = :a_1"
+
+
+def test_not_equals():
+    """Test not_equals fn."""
+    test_col = column("a")
+    assert str(not_equals(test_col, "bat")) == "a != :a_1"

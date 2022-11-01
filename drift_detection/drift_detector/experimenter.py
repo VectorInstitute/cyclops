@@ -1,8 +1,15 @@
-from drift_detection.drift_detector import Detector, SyntheticShiftApplicator, ClinicalShiftApplicator
-from typing import List, Tuple, Union, Optional, Callable, Any, Dict
+# from drift_detector.detector import Detector
+# from drift_detector.synthetic_applicator import SyntheticShiftApplicator
+# from drift_detector.clinical_applicator import ClinicalShiftApplicator
+from ast import Not
 from drift_detection.drift_detector.utils import get_args
+from drift_detection.drift_detector import Detector, SyntheticShiftApplicator, ClinicalShiftApplicator
+from drift_detection.drift_detector.dataframe_mapping import DataFrameMapping
+from typing import Union
 import numpy as np
+import pandas as pd
 import torch
+from tqdm import tqdm
 
 class Experimenter:
 
@@ -24,80 +31,72 @@ class Experimenter:
 
     def __init__(
         self,
-        detector: Detector = None,
-        shiftapplicator: Union[SyntheticShiftApplicator, ClinicalShiftApplicator] = None
+        experiment_type: str,
+        detector: Detector,
+        shiftapplicator: Union[SyntheticShiftApplicator, ClinicalShiftApplicator] = None,
     ):
 
+        
         self.detector = detector
         self.shiftapplicator = shiftapplicator
-        
-        self.samples = [10, 20, 50, 100, 200, 500, 1000]
 
-    def detect_shift_sample(
+        self.experiment_type = experiment_type
+        
+        self.experiment_types = { 
+            'sensitivity_test': self.sensitivity_test,
+            "balanced_sensitivity_test": self.balanced_sensitivity_test,
+            "rolling_window_drift": self.rolling_window_drift,
+            "rolling_window_performance": self.rolling_window_performance,
+        }
+           
+        if self.experiment_type not in self.experiment_types.keys():
+            raise ValueError(
+                "Experiment not supported, must be one of: {}".format(
+                    self.experiment_types.keys()
+                )
+            )
+
+    def run(self, X: Union[np.ndarray, torch.utils.data.Dataset]):
+        if isinstance(X, torch.utils.data.Dataset):
+            X, _ = self.detector.transform(X)
+        if self.shiftapplicator is not None:
+            X_target, _ = self.shiftapplicator.apply_shift(X)
+        else:
+            X_target = X
+
+        drift_sample_results = self.experiment_types[self.experiment_type](X_target)
+
+        return drift_sample_results
+        
+    def apply_clinical_shift(
         self, 
-        X_s, 
-        X_t, 
-        sample: int, 
+        X: pd.DataFrame,
         **kwargs
     ):
-        """
-        Tests shift between source and target data.
-        Parameters
-        ----------
-        X_s : np.ndarray
-            Source data.
-        X_t : np.ndarray
-            Target data.
-        **kwargs
-            Keyword arguments for Tester.
-        Returns
-        -------
-        dict
-            Dictionary containing p-value and distance.
-        """
-        p_val, dist = self.tester.test_shift(X_s, X_t, **kwargs)
-
-        return {"p_val": p_val, "distance": dist}
-
-    def detect_shift_samples(
-        self,
-        X_source: Union[np.ndarray, torch.utils.data.Dataset],
-        X_target: Union[np.ndarray, torch.utils.data.Dataset],
-        **kwargs
-    ):
-        """
-        Detects shift between source and target data.
-        Parameters
-        ----------
-        source_data : np.ndarray or torch.utils.data.Dataset
-            Source data.
-        target_data : np.ndarray or torch.utils.data.Dataset
-            Target data.
-        **kwargs
-            Keyword arguments for Reductor and TSTester.
-        Returns
-        -------
-        dict
-            Dictionary containing p-value, distance, and boolean 'shift_detected'.
-        """
-
-        p_val_samples = {}
-        dist_samples = {}
+        X_source = None
+        X_target = None
         
-        for sample in self.samples:
-            
-            if isinstance(self.shiftapplicator, SyntheticShiftApplicator):
-                X_shifted_target, _ = self.shiftapplicator.apply_shift(target_data)
-            elif isinstance(self.shiftapplicator, ClinicalShiftApplicator):
-                X_source, y_source, X_shifted_target, y_shifted_target = self.shiftapplicator.apply_shift()  
-            else: 
-                raise ValueError("No Shift Applicator provided, set Shift Applicator to apply shift.")
-            
-            p_val, std = self.detector.detect_shift(X_source[:1000,:], X_shifted_target[:sample,:] **get_args(self.detector.detect_shift, kwargs))
-            
-            p_val_samples.update({sample: p_val})
-            dist_samples.update({sample: std})
+        if self.clinicalshiftapplicator is not None:
+            X_source, X_target = self.clinicalshiftapplicator.apply_shift(
+                X, 
+                self.admin_data, 
+                **kwargs
+            )
+        else:
+            raise ValueError("No ClinicalShiftApplicator detected.")
+        return X_source, X_target
+    
 
-        drift_samples = {k: {'p_val': p_val_samples[k], 'distance': dist_samples[k]} for k in p_val_samples.keys() & dist_samples.keys()}
 
-        return drift_samples
+    def sensitivity_test(self, X_target):
+        drift_samples_results = self.detector.detect_shift_samples(X_target)
+        return drift_samples_results
+
+    def balanced_sensitivity_test(self,):
+        raise NotImplementedError
+
+    def rolling_window_drift(self,):
+        raise NotImplementedError
+    
+    def rolling_window_performance(self,):
+        raise NotImplementedError

@@ -1,9 +1,9 @@
 from drift_detection.drift_detector import Reductor, TSTester, DCTester
 from typing import List, Tuple, Union, Optional, Callable, Any, Dict
-from drift_detection.drift_detector.utils import get_args
+from .utils import get_args
 import numpy as np
 import torch
-
+from tqdm import tqdm
 
 class Detector:
 
@@ -23,13 +23,13 @@ class Detector:
 
     Methods
     -------
-    fit(data)
+    fit(X)
         Fits Reductor to data.
     transform(X, **kwargs)
         Transforms data.
-    test_shift(X_s, X_t, **kwargs)
+    test_shift(X_source, X_target, **kwargs)
         Tests shift between source and target data.
-    detect_shift(source_data, target_data, **kwargs)
+    detect_shift(X_source, X_target, **kwargs)
         Detects shift between source data and target data.
     """
 
@@ -38,14 +38,26 @@ class Detector:
         reductor: Reductor = None,
         tester: Union[TSTester, DCTester] = None,
         p_val_threshold: float = 0.05,
+        random_runs = 5
     ):
 
         self.reductor = reductor
         self.tester = tester
         self.p_val_threshold = p_val_threshold
+        self.random_runs = random_runs
+        self.samples = [10, 20, 50, 100, 200, 500, 1000]
 
-    def fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
-        self.reductor.fit(data)
+    def fit(self, X_source: Union[np.ndarray, torch.utils.data.Dataset], **kwargs):
+        
+        
+        self.reductor.fit(X_source)
+        
+        X_transformed = self.transform(X_source, **get_args(self.reductor.transform, kwargs))
+
+        if isinstance(X_transformed, tuple):
+            X_transformed = X_transformed[0]
+        
+        self.tester.fit(X_transformed, **kwargs)
 
     def transform(self, X, **kwargs):
         """
@@ -65,15 +77,15 @@ class Detector:
         """
         return self.reductor.transform(X, **kwargs)
 
-    def test_shift(self, X_s, X_t, **kwargs):
+    def test_shift(self, X_target, **kwargs):
         """
         Tests shift between source and target data.
 
         Parameters
         ----------
-        X_s : np.ndarray
+        X_source : np.ndarray
             Source data.
-        X_t : np.ndarray
+        X_target : np.ndarray
             Target data.
         **kwargs
             Keyword arguments for Tester.
@@ -83,12 +95,12 @@ class Detector:
         dict
             Dictionary containing p-value and distance.
         """
-        p_val, dist = self.tester.test_shift(X_s, X_t, **kwargs)
+        p_val, dist = self.tester.test_shift(X_target, **kwargs)
 
         if p_val < self.p_val_threshold:
-            shift_detected = True
+            shift_detected = 1
         else:
-            shift_detected = False
+            shift_detected = 0
         
         return {
             "p_val": p_val, 
@@ -98,8 +110,8 @@ class Detector:
 
     def detect_shift(
         self,
-        source_data: Union[np.ndarray, torch.utils.data.Dataset],
-        target_data: Union[np.ndarray, torch.utils.data.Dataset],
+        X_target: Union[np.ndarray, torch.utils.data.Dataset],
+        sample: int, 
         **kwargs
     ):
         """
@@ -108,10 +120,12 @@ class Detector:
 
         Parameters
         ----------
-        source_data : np.ndarray or torch.utils.data.Dataset
+        X_source: np.ndarray or torch.utils.data.Dataset
             Source data.
-        target_data : np.ndarray or torch.utils.data.Dataset
+        X_target: np.ndarray or torch.utils.data.Dataset
             Target data.
+        sample: int 
+            Number of sample in test set.
         **kwargs
             Keyword arguments for Reductor and TSTester.
 
@@ -120,12 +134,17 @@ class Detector:
         dict
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
         """
+        
+        # check if reductor_method contains 'txrv'
+        if 'txrv' not in self.reductor.dr_method:
+            X_t = self.transform(X_target, **get_args(self.reductor.transform, kwargs))
+        else:
+            X_t = X_target
 
-        self.fit(source_data)
-        X_s = self.transform(source_data, **get_args(self.reductor.transform, kwargs))
-        X_t = self.transform(target_data, **get_args(self.reductor.transform, kwargs))
-
-        results = self.test_shift(X_s, X_t, **get_args(self.tester.test_shift, kwargs))
+        results = self.test_shift(
+            X_t[:sample,:], 
+            **kwargs
+        )
 
         if results["p_val"] < self.p_val_threshold:
             shift_detected = True
@@ -137,3 +156,63 @@ class Detector:
             "distance": results["distance"],
             "shift_detected": shift_detected,
         }
+    
+    def detect_shift_samples(
+        self,
+        X_target: Union[np.ndarray, torch.utils.data.Dataset],
+        **kwargs
+    ):
+        """
+        Detects shift between source and target data.
+        Parameters
+        ----------
+        X_source: np.ndarray or torch.utils.data.Dataset
+            Source data.
+        X_target: np.ndarray or torch.utils.data.Dataset
+            Target data.
+        **kwargs
+            Keyword arguments for Reductor and TSTester.
+        Returns
+        -------
+        dict
+            Dictionary containing p-value, distance, and boolean 'shift_detected'.
+        """
+        
+        p_val_samples = np.ones((len(self.samples), self.random_runs)) * (-1)
+        dist_samples = np.ones((len(self.samples), self.random_runs)) * (-1)
+        
+        pbar_total = self.random_runs * len(self.samples)
+        with tqdm(total= pbar_total, miniters = int(pbar_total/100)) as pbar:
+            for rand_run in range(self.random_runs):
+
+                np.random.seed(rand_run)
+                np.random.shuffle(X_target)
+
+                for si, sample in enumerate(self.samples):
+
+                    drift_results = self.detect_shift(
+                        X_target,
+                        sample,
+                        **kwargs
+                    )
+
+                    p_val_samples[si, rand_run] = drift_results['p_val']
+                    dist_samples[si, rand_run] = drift_results['distance']
+                    
+                    pbar.update(1)
+            
+        mean_p_vals = np.mean(p_val_samples, axis=1)
+        std_p_vals = np.std(p_val_samples, axis=1)
+    
+        mean_dist = np.mean(dist_samples, axis=1)
+        std_dist = np.std(dist_samples, axis=1)
+        
+        drift_samples_results = {
+            'samples': self.samples,
+            'mean_p_vals': mean_p_vals,
+            'std_p_vals': std_p_vals,
+            'mean_dist': mean_dist,
+            'std_dist': std_dist
+        }
+        
+        return drift_samples_results

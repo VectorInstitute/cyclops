@@ -204,7 +204,6 @@ class Vectorized:  # pylint: disable=too-many-public-methods
                         f"but the axis itself has length {data.shape[i]}."
                     )
                 )
-
             if len(np.unique(index)) != len(index):
                 raise ValueError(
                     "Each index must have no duplicate values to uniquely identify."
