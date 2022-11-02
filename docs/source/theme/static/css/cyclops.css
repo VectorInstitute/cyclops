@@ -1,0 +1,318 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import "theme.css"; /* From sphinx_rtd_theme */
+
+html {
+  --text-color: #24292e;
+  --heading-color: #404040;
+  --link-color: #5097ba;
+  --sidebar-background-color: #f2f2f2;
+  --content-background-color: #ffffff;
+}
+
+body {
+  font-family: Lato, 'Helvetica Neue', sans-serif;
+  font-weight: 400;
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6, legend, .rst-content .toctree-wrapper p.caption, .rst-content .sidebar .sidebar-title {
+  font-family: Lato, 'Helvetica Neue', sans-serif;
+  font-weight: 600;
+  color: var(--heading-color);
+}
+
+p {
+  line-height: inherit;
+}
+
+a {
+  color: var(--link-color);
+}
+/* underlign lins on hover */
+a:hover {
+  text-decoration: underline;
+}
+
+/* Monospace typography */
+footer span.commit code,
+.rst-content pre.literal-block,
+.rst-content div[class^='highlight'] pre,
+.rst-content .linenodiv pre,
+.rst-content tt,
+.rst-content code,
+.rst-content pre,
+.rst-content kbd,
+.rst-content samp {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+}
+
+/* Inline (backticks) code inspired by docusaurus (which Auspice used previously) */
+.rst-content code.literal,
+.rst-content tt.literal {
+  background-color: rgba(27,31,35,.05);
+  border-radius: 3px;
+  border: 0;
+  color: inherit;
+  margin: 0;
+  padding: 3.2px 6.4px;
+}
+
+/* Sidebar */
+.wy-nav-side {
+  background: var(--sidebar-background-color);
+}
+
+/* main content section */
+.wy-nav-content {
+  background: var(--content-background-color);
+}
+
+/* don't change the background for the area on the RHS of the main content */
+.wy-nav-content-wrap {
+  background: inherit;
+}
+
+/* Pin the Nextstrain logo, project name, version, and search box to the top of
+ * the sidebar when the sidebar scrolls.
+ */
+.wy-side-nav-search {
+  position: sticky;
+  top: 0;
+}
+
+/* Sub-project name, version (optional) and link back to the main docs */
+.wy-side-nav-search > div.subproject {
+  margin-top: -1rem;
+  margin-bottom: 1.2rem;
+}
+.wy-side-nav-search > div.subproject > a { /* subproject name */
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--heading-color);
+}
+.wy-side-nav-search > div.subproject > .version { /* version name */
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: var(--heading-color);
+}
+
+/* Remove blue accent border */
+.wy-side-nav-search input[type="text"] {
+  border-color: #ccc;
+}
+
+.wy-menu-vertical header,
+.wy-menu-vertical p.caption,
+.wy-menu-vertical a {
+  font-size: 1rem;
+}
+
+/* Remove sidebar TOC link colors, hover states, and borders */
+.wy-menu-vertical a {
+  color: var(--text-color);
+  background: none !important;
+}
+
+.wy-menu-vertical a:hover {
+  color: var(--link-color) !important;
+  background: none !important;
+}
+
+.wy-menu-vertical li.current {
+  background: none !important;
+}
+
+.wy-menu-vertical li.current a {
+  border-right: none;
+}
+
+.wy-menu-vertical li.current > a {
+  border-right: 2px solid var(--link-color);
+}
+
+.wy-menu-vertical li.toctree-l1.current > a {
+  border-top: none;
+  border-bottom: none;
+}
+
+/* Remove sidebar TOC heading/caption color */
+.wy-menu-vertical p.caption {
+  color: var(--heading-color);
+}
+
+/* the buttons (previous / next) at the bottom of each doc page */
+.wy-nav-content a.btn {
+  border: 1px solid #24292e;
+  border-radius: 3px;
+  color: inherit;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2em;
+  padding: 10px;
+  text-decoration: none !important;
+  text-transform: uppercase;
+  transition: background .3s,color .3s;
+  box-shadow: none;
+  font-family: inherit;
+  background-color: inherit;
+}
+/* following needs !important to override sphynx CSS which itself uses !important */
+.wy-nav-content a.btn-neutral {
+  background-color: var(--content-background-color) !important;
+  color: var(--text-color) !important;
+}
+.wy-nav-content a.btn-neutral:hover {
+  background-color: var(--text-color) !important;
+  color: var(--content-background-color) !important;
+}
+
+/* Mark external links in the sidebar */
+.wy-menu-vertical a.external::after {
+  display: inline-block;
+  font-family: FontAwesome;
+  font-size: 0.6rem;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  margin-left: 0.2rem;
+  content: "";
+}
+
+
+/* Breadcrumb separators (at top of the page) */
+.wy-breadcrumbs > li:not(:first-child):not(.wy-breadcrumbs-aside)::before {
+  display: inline-block;
+  content: "/\A0"; /* \A0 = no-break space (nbsp) */
+  padding-right: 5px;
+
+  /* The trailing space + 5px _right_ padding matches the amount of whitespace
+   * on the other side of the slash (/) the comes from the spaces between <li>s
+   * in the template and the 5px _left_ padding on <li>s.  The result is that
+   * the slash (/) is centered between the end of the previous <li>'s text and
+   * start of this <li>'s text.
+   */
+}
+
+
+/* Tables
+ */
+.wy-nav-content-wrap .wy-nav-content .wy-table-responsive {
+  /* Tables are wrapped in a container <div> (.wy-table-responsive) to handle
+   * overflow.  Set this <div>'s width to the larger of (a) 100% of its
+   * (several levels removed) container (.wy-nav-content) or (b) the width of
+   * the viewport minus the width of the sidebar and some left-side padding.
+   * Most of the time the latter (b) will be larger, but the former (a) will be
+   * larger when the viewport is narrow and the sidebar is hidden (e.g. on a
+   * mobile device).
+   *
+   * This has the effect of allowing tables to expand rightwards out of the
+   * main content container (.wy-nav-content), which is limited to max-width:
+   * 800px for text readability.  Tables are at first allowed to overrun just
+   * the right-side content padding, but as the viewport expands wider, tables
+   * will spill out into the new blank space beyond the main content padding.
+   * Allowing tables to extend right up against the viewport edge makes a table
+   * appear cut off, which makes it clearer to the reader that expanding the
+   * viewport will reveal more of the table.  However, tables also remain
+   * horizontally scrollable as necessary to accommodate overflow.  This
+   * provides two means for seeing overflowing table content (scrolling or
+   * expanding the viewport).
+   *
+   * For reference in the calculation below:
+   *
+   *   100vw   = width of the viewport
+   *   300px   = width of .wy-nav-side and corresponding margin-left of .wy-nav-content-wrap
+   *   3.236em = padding-left of .wy-nav-content
+   *
+   * -trs, 16 March 2022
+   */
+  width: max(100%, calc(100vw - 300px - 3.236em));
+
+  /* override earlier max-width: 100% */
+  max-width: none;
+}
+
+
+/* Mobile nav (top bar heading + flyout menu icon)
+ */
+
+.wy-nav-top a, .wy-nav-top i {
+  color: var(--heading-color);
+}
+
+
+/* Footer styles. Largely chosen to mimic the previous rendering of the docs. See
+https://github.com/nextstrain/nextstrain.org/blob/b1e09e57e91ed0c9343e1cd3104877ec3c5344a4/static-site/src/components/Footer/index.jsx
+*/
+footer {
+  color: var(--text-color);
+}
+footer div {
+  margin: 20px 0px 0px 0px;
+}
+footer .footer-small-text {
+  font-weight: 300;
+  font-size: 0.9rem;
+}
+footer .copyright {
+  font-weight: 300;
+  font-size: 0.8rem;
+  text-align: center;
+}
+footer div.logo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin: 0px;
+  padding: 10px 0px 0px 0px;
+}
+footer a.logo {
+  /* Using flex here (to vertically align the child img) causes aspect-ratio issues */
+  flex-basis: 120px;
+  margin: 10px auto 10px auto;
+  text-align: center;
+}
+footer a.logo:hover {
+  text-decoration: none;
+}
+footer span.logo {
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+footer img.logo {
+  display: inline-block;
+  vertical-align: middle;
+  height: auto;
+}
+footer p.avatar {
+  font-weight: 300;
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 16px 0px -10px 0px;
+}
+footer div.avatar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  line-height: 2.5
+}
+footer div.avatar a {
+  color: var(--text-color);
+}
+footer div.avatar span {
+  white-space: nowrap;
+  font-weight: 300;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+footer div.avatar img {
+  margin-left: 5px;
+  margin-right: 4px;
+  border-radius: 50%;
+  vertical-align: middle;
+}

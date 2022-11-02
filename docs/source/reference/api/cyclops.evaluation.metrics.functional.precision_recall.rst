@@ -1,0 +1,7 @@
+cyclops.evaluation.metrics.functional.precision\_recall module
+==============================================================
+
+.. automodule:: cyclops.evaluation.metrics.functional.precision_recall
+   :members:
+   :undoc-members:
+   :show-inheritance:

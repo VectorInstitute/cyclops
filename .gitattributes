@@ -1,0 +1,2 @@
+# Exclude jupyter notebooks for language stats.
+*.ipynb linguist-vendored
