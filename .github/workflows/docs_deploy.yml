@@ -3,7 +3,7 @@ name: Deploy documentation
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/docs_build.yml

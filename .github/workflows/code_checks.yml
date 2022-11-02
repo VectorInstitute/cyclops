@@ -3,7 +3,7 @@ name: Code checks
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
@@ -14,7 +14,7 @@ on:
       - '**.ipynb'
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml

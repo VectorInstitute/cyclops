@@ -3,7 +3,7 @@ name: Build documentation and coverage report
 on:
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/docs_build.yml
