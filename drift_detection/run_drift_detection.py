@@ -97,7 +97,7 @@ NA_CUTOFF = 0.6
 # PIPELINE START
 # -------------------------------------------------
 
-EXPERIMENTS = None
+EXPERIMENTS: list[str] = []
 
 mean_dr_md_pval = np.ones(
     (len(EXPERIMENTS), len(DR_TECHNIQUES), len(MD_TESTS), len(SAMPLES))

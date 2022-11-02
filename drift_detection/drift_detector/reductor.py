@@ -410,7 +410,7 @@ class Reductor:
         input_dim: int,
         hidden_dim: int = 64,
         layer_dim: int = 2,
-        dropout: int = 0.2,
+        dropout: float = 0.2,
         output_dim: int = 1,
         last_timestep_only: bool = False,
     ):

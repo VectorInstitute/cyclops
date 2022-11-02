@@ -36,8 +36,8 @@ class RollingWindow:
 
     def __init__(
         self,
-        admin_data=None,
-        shift_detector: Detector = None,
+        admin_data: pd.DataFrame,
+        shift_detector: Detector,
         optimizer: Optimizer = None,
         model=None,
         verbose: bool = False,
@@ -49,30 +49,30 @@ class RollingWindow:
         self.model = model
         self.verbose = verbose
 
-    def mean(self, X: dict = None, window: int = 30):
+    def mean(self, X: pd.DataFrame, window: int = 30):
         """Get rolling mean of time series data.
 
         Parameters
         ----------
-        X: dict
+        X: pd.DataFrame
             time series data
         window: int
             window length
 
         Returns
         -------
-        X: dict
+        X: pd.DataFrame
             time series data with rolling mean
 
         """
         return X.rolling(window).mean().dropna(inplace=True)
 
-    def stdev(self, X: dict = None, window: int = 30):
+    def stdev(self, X: pd.DataFrame, window: int = 30):
         """Get rolling standard deviation of time series data.
 
         Parameters
         ----------
-        X: dict
+        X: pd.DataFrame
             time series data
         window: int
             window length
@@ -175,12 +175,12 @@ class RollingWindow:
 
         pbar.close()
 
-        performance_metrics = {
+        performance_metrics_dict = {
             k: [d.get(k) for d in performance_metrics]
             for k in set().union(*performance_metrics)
         }
 
-        return performance_metrics
+        return performance_metrics_dict
 
     def drift(
         self,
@@ -255,9 +255,9 @@ class RollingWindow:
 
         pbar.close()
 
-        rolling_drift_metrics = {
+        rolling_drift_metrics_dict = {
             k: [d.get(k) for d in rolling_drift_metrics]
             for k in set().union(*rolling_drift_metrics)
         }
 
-        return rolling_drift_metrics
+        return rolling_drift_metrics_dict

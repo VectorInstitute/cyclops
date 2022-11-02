@@ -13,7 +13,7 @@ from utils import (
     marginal_attack,
 )
 
-from models import GaussianDensity, Knn
+from .models import GaussianDensity, Knn
 
 # Experiment Parameters
 # The number of samples in p, q (thus n_samples_total = n_samples*2)
@@ -31,7 +31,7 @@ random_seed_list = [0, 1, 2]
 mi_list = [0.2, 0.1, 0.05, 0.01]
 graph_type_list = ["complete", "grid", "cycle", "random"]
 experiment_list = ["MB-SM", "MB-KS", "KNN-KS"]
-
+models = {"MB-SM": GaussianDensity, "MB-KS": GaussianDensity, "KNN-KS": Knn}
 # the dictionary of results per experiment_graphtype_mi
 experiment_results_dict = {}
 for experiment in experiment_list:
@@ -54,14 +54,11 @@ for experiment in experiment_list:
                     random_seed=random_seed,
                     target_idx="auto",
                 )
-                if experiment == "MB-SM":
-                    model = GaussianDensity()
+                if experiment == "MB-SM" or experiment == "MB-KS":
+                    model = models[experiment]()
                     statistic = FisherDivergence(model, n_expectation=n_expectation)
-                elif experiment == "MB-KS":
-                    model = GaussianDensity()
-                    statistic = ModelKS(model, n_expectation=n_expectation)
-                else:
-                    model = Knn(n_neighbors=n_neighbors)
+                elif experiment == "KNN-KS":
+                    model = models[experiment](n_neighbors=n_neighbors)
                     statistic = KnnKS(model, n_expectation=n_expectation)
                 # Localization results are [did attack happen,
                 # was it localized,the statistic score] for each feature

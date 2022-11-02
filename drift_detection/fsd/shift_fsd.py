@@ -88,7 +88,7 @@ for experiment in experiment_list:
                 # we only need to fit once
                 # TODO: #INSERT LOAD DATA FOR BASELINE
                 # X_boot, Y_boot =  #INSERT LOAD DATA FOR BASELINE
-                X_boot, Y_boot = None
+                X_boot, Y_boot = None, None
                 ###############################################################
                 fsd.fit(X_boot, Y_boot)  # sets the detection threshold for us.
                 # beginning testing
@@ -97,7 +97,7 @@ for experiment in experiment_list:
                     ###########################################################
                     # TODO: INSERT LOAD DATA FOR CASE
                     # X_test, Y_test = # INSERT LOAD DATA FOR CASE
-                    X_test, Y_test = None
+                    X_test, Y_test = None, None
                     ###########################################################
                     start = time()
                     if detection_results[test_idx, 0]:  # if attack

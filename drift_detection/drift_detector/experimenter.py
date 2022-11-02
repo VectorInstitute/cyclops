@@ -47,7 +47,7 @@ class Experimenter:
 
         self.experiment_type = experiment_type
 
-        self.experiment_types = {
+        self.experiment_types: dict = {
             "sensitivity_test": self.sensitivity_test,
             "balanced_sensitivity_test": self.balanced_sensitivity_test,
             "rolling_window_drift": self.rolling_window_drift,
@@ -91,10 +91,8 @@ class Experimenter:
         X_source = None
         X_target = None
 
-        if self.clinicalshiftapplicator is not None:
-            X_source, X_target = self.clinicalshiftapplicator.apply_shift(
-                X, self.admin_data, **kwargs
-            )
+        if self.shiftapplicator is not None:
+            X_source, X_target = self.shiftapplicator.apply_shift(X, **kwargs)
         else:
             raise ValueError("No ClinicalShiftApplicator detected.")
         return X_source, X_target

@@ -40,8 +40,8 @@ class Detector:
 
     def __init__(
         self,
-        reductor: Reductor = None,
-        tester: Union[TSTester, DCTester] = None,
+        reductor: Reductor,
+        tester: Union[TSTester, DCTester],
         p_val_threshold: float = 0.05,
         random_runs=5,
     ):

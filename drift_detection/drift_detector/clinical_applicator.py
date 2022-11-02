@@ -35,7 +35,7 @@ class ClinicalShiftApplicator(object):
                 )
             )
 
-    def apply_shift(self, X, admin_data, **kwargs):
+    def apply_shift(self, X, **kwargs):
         """apply_shift.
 
         Returns
@@ -49,14 +49,15 @@ class ClinicalShiftApplicator(object):
             (e.g. "hospital_id", "admit_timestamp").
 
         """
-        list(X.index.get_level_values(0).unique())
-        X = X[np.in1d(X.index.get_level_values(0), admin_data["encounter_id"])]
+        # list(X.index.get_level_values(0).unique())
+        X_s, X_t = X, X
+        # X = X[np.in1d(X.index.get_level_values(0), admin_data["encounter_id"])]
 
-        X_s, X_t = self.shift_types[self.shift_type](
-            X, admin_data, **get_args(self.shift_types[self.shift_type], kwargs)
-        )
+        # X_s, X_t = self.shift_types[self.shift_type](
+        #     X, admin_data, **get_args(self.shift_types[self.shift_type], kwargs)
+        # )
 
-        list(X.index.get_level_values(0).unique())
+        # list(X.index.get_level_values(0).unique())
 
         return (X_s, X_t)
 
@@ -64,7 +65,7 @@ class ClinicalShiftApplicator(object):
 def source_target(
     X,
     admin_data,
-    train_frac: int = 0.5,
+    train_frac: float = 0.5,
     encounter_id="encounter_id",
     admit_timestamp="admit_timestamp",
 ):

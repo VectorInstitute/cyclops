@@ -53,9 +53,9 @@ def colorscale(hexstr: str, scalefactor: float):
 
     r, g, b = int(hexstr[:2], 16), int(hexstr[2:4], 16), int(hexstr[4:], 16)
 
-    r = clamp(r * scalefactor)
-    g = clamp(g * scalefactor)
-    b = clamp(b * scalefactor)
+    r = clamp(int(r * scalefactor))
+    g = clamp(int(g * scalefactor))
+    b = clamp(int(b * scalefactor))
 
     return "#%02x%02x%02x" % (int(r), int(g), int(b))
 

@@ -175,11 +175,11 @@ def apply_predefined_shift(
             X_shift, 0.1, normalization=1.0, delta=0.1, clip=False
         )
     elif predefined_shift == "ko_shift_0.1":
-        X_shift, y_shift = knockout_shift(X_shift, y, 0, 0.1)
+        X_shift, y_shift = knockout_shift(X_shift, y, 0, 0)
     elif predefined_shift == "ko_shift_0.5":
-        X_shift, y_shift = knockout_shift(X_shift, y, 0, 0.5)
+        X_shift, y_shift = knockout_shift(X_shift, y, 0, 1)
     elif predefined_shift == "ko_shift_1.0":
-        X_shift, y_shift = knockout_shift(X_shift, y, 0, 1.0)
+        X_shift, y_shift = knockout_shift(X_shift, y, 0, 2)
     elif predefined_shift == "cp_shift_0.75":
         X_shift, y_shift = feature_swap_shift(
             X_shift, y, X_ref, y_ref, 0, n_shuffle=0.75, rank=True
@@ -281,7 +281,7 @@ def apply_predefined_shift(
 def gaussian_noise_shift(
     X: np.ndarray,
     noise_amt: float = 0.5,
-    normalization: int = 1,
+    normalization: float = 1,
     delta: float = 0.5,
     clip: bool = False,
 ):
@@ -401,7 +401,8 @@ def feature_swap_shift(
         labels for covariate data
 
     """
-    n_feats = X_ref.shape[1]
+    if isinstance(X_ref, np.ndarray):
+        n_feats = X_ref.shape[1]
     n_shuffle_feats = int(n_shuffle * n_feats)
 
     # Get importance values - should sub for model-specific

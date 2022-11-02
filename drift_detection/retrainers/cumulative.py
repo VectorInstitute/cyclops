@@ -37,8 +37,8 @@ class CumulativeRetrainer:
 
     def __init__(
         self,
-        shift_detector: Detector = None,
-        optimizer: Optimizer = None,
+        shift_detector: Detector,
+        optimizer: Optimizer,
         model=None,
         model_name: str = None,
         retrain_model_path: str = None,
@@ -54,7 +54,7 @@ class CumulativeRetrainer:
 
     def retrain(
         self,
-        data_streams: dict = None,
+        data_streams: dict,
         sample: int = 1000,
         stat_window: int = 30,
         lookup_window: int = 0,
@@ -159,11 +159,11 @@ class CumulativeRetrainer:
 
                     self.model.load_state_dict(torch.load(self.retrain_model_path))
                     self.optimizer.model = self.model
-                    self.shift_detector.model_path = self.retrain_model_path
+                    self.shift_detector.reductor.model_path = self.retrain_model_path
 
                 elif self.model_name == "gbt":
                     # X_retrain, y_retrain not defined
-                    X_retrain, y_retrain = None
+                    X_retrain, y_retrain = None, None
                     self.model = self.model.fit(
                         X_retrain, y_retrain, xgb_model=self.model.get_booster()
                     )
@@ -247,9 +247,9 @@ class CumulativeRetrainer:
 
         pbar.close()
 
-        rolling_metrics = {
+        rolling_metrics_dict = {
             k: [d.get(k) for d in rolling_metrics]
             for k in set().union(*rolling_metrics)
         }
 
-        return rolling_metrics
+        return rolling_metrics_dict
