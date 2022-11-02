@@ -1,3 +1,4 @@
+"""Querying functions for GEMINI Use-case."""
 import os
 import sys
 
@@ -23,7 +24,23 @@ sys.path.append("../..")
 
 
 def get_merged_data(BASE_DATA_PATH):
+    """Merge encounters and aggregated events.
 
+    Parameters
+    ----------
+    BASE_DATA_PATH : str
+        Path to the base data directory
+
+    Returns
+    -------
+    pd.DataFrame
+        Merged data
+    temporal: pd.DataFrame
+        Temporal data
+    static: pd.DataFrame
+        Static data
+
+    """
     print("Load data from feature handler...")
     # Declare feature handler
     feature_handler = FeatureHandler()
@@ -51,6 +68,19 @@ def get_merged_data(BASE_DATA_PATH):
 
 
 def get_aggregated_events(BASE_DATA_PATH):
+    """Get aggregated events.
+
+    Parameters
+    ----------
+    BASE_DATA_PATH : str
+        Path to the base data directory
+
+    Returns
+    -------
+    pd.DataFrame
+        Aggregated events
+
+    """
     print("Load data from aggregated events...")
     # Aggregated events
     aggregated_events = load_dataframe(
@@ -68,6 +98,19 @@ def get_aggregated_events(BASE_DATA_PATH):
 
 
 def get_encounters(BASE_DATA_PATH):
+    """Get encounters.
+
+    Parameters
+    ----------
+    BASE_DATA_PATH : str
+        Path to the base data directory
+
+    Returns
+    -------
+    pd.DataFrame
+        Encounters
+
+    """
     print("Load data from admin data...")
     encounters_data = pd.read_parquet(os.path.join(BASE_DATA_PATH, "admin_er.parquet"))
     encounters_data[LOS] = (
@@ -80,6 +123,23 @@ def get_encounters(BASE_DATA_PATH):
 
 
 def get_gemini_data(BASE_DATA_PATH):
+    """Get GEMINI data.
+
+    Parameters
+    ----------
+    BASE_DATA_PATH : str
+        Path to the base data directory
+    encounters_train_val_test, X, mortality_risk_targets
+    Returns
+    -------
+    encounters_train_val_test : pd.DataFrame
+        encounters metadata
+    X : pd.DataFrame
+        features
+    mortality_risk_targets : pd.DataFrame
+        mortality risk targets
+
+    """
     # Get aggregated events
     aggregated_events = get_aggregated_events(BASE_DATA_PATH)
     # Get merged static + temporal data

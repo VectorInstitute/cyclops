@@ -1,3 +1,4 @@
+"""Script to run drift detection with set of chosen parameters."""
 import os
 import sys
 

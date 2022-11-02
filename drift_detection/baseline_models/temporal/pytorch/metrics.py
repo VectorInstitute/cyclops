@@ -1,3 +1,4 @@
+"""Metrics for temporal pytorch models."""
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
@@ -6,6 +7,7 @@ from sklearn import metrics
 
 
 def plot_pretty_confusion_matrix(confusion_matrix):
+    """Plot a confusion matrix with seaborn heatmap."""
     sns.set(style="white")
     fig, ax = plt.subplots(figsize=(9, 6))
     sns.heatmap(
@@ -47,6 +49,7 @@ def plot_pretty_confusion_matrix(confusion_matrix):
 
 
 def plot_confusion_matrix(confusion_matrix, class_names):
+    """Plot a confusion matrix with seaborn heatmap."""
     confusion_matrix = (
         confusion_matrix.astype("float") / confusion_matrix.sum(axis=1)[:, np.newaxis]
     )
@@ -75,6 +78,7 @@ def plot_auroc_across_timesteps(
     y_pred_labels,
     y_test_labels,
 ):
+    """Plot AUROC across timesteps."""
     num_timesteps = y_pred_labels.shape[1]
     auroc_timesteps = []
     for i in range(num_timesteps):
@@ -107,6 +111,7 @@ def plot_auroc_across_timesteps(
 
 
 def plot_risk_mortality(predictions, labels=None):
+    """Plot risk of mortality across timesteps."""
     prediction_hours = list(range(24, 168, 24))
     is_mortality = labels == 1
     after_mortality = labels == -1
@@ -162,6 +167,7 @@ def plot_risk_mortality(predictions, labels=None):
 
 
 def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
+    """Print metrics for binary classification."""
     cf = metrics.confusion_matrix(y_test_labels, y_pred_labels)
     if verbose:
         print("confusion matrix:")

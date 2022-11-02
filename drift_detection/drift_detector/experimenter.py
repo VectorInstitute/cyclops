@@ -1,3 +1,4 @@
+"""Experimenter class for drift detection."""
 # from drift_detector.detector import Detector
 # from drift_detector.synthetic_applicator import SyntheticShiftApplicator
 # from drift_detector.clinical_applicator import ClinicalShiftApplicator
@@ -7,17 +8,14 @@ import numpy as np
 import pandas as pd
 import torch
 
-from drift_detection.drift_detector import (
-    ClinicalShiftApplicator,
-    Detector,
-    SyntheticShiftApplicator,
-)
+from drift_detection.drift_detector.clinical_applicator import ClinicalShiftApplicator
+from drift_detection.drift_detector.detector import Detector
+from drift_detection.drift_detector.synthetic_applicator import SyntheticShiftApplicator
 
 
 class Experimenter:
+    """Experimenter class for testing out various distribution shifts.
 
-    """
-    Experimenter class for testing out various distribution shifts.
     Attributes
     ----------
     detector : Detector
@@ -25,12 +23,14 @@ class Experimenter:
     syntheticshiftapplicator : SyntheticShiftApplicator
         SyntheticShiftApplicator object for applying
         synthetic data shift to target data.
+
     Methods
     -------
     detect_shift_sample(X_s, X_t, **kwargs)
         Tests shift between source and target data.
     detect_shift_samples(source_data, target_data, **kwargs)
         Detects shift between source data and target data.
+
     """
 
     def __init__(
@@ -62,6 +62,19 @@ class Experimenter:
             )
 
     def run(self, X: Union[np.ndarray, torch.utils.data.Dataset]):
+        """Run experiment.
+
+        Parameters
+        ----------
+        X : Union[np.ndarray, torch.utils.data.Dataset]
+            Target data to run experiment on.
+
+        Returns
+        -------
+        results : dict
+            Dictionary of experiment results.
+
+        """
         if isinstance(X, torch.utils.data.Dataset):
             X, _ = self.detector.transform(X)
         if self.shiftapplicator is not None:
@@ -74,6 +87,7 @@ class Experimenter:
         return drift_sample_results
 
     def apply_clinical_shift(self, X: pd.DataFrame, **kwargs):
+        """Apply clinical shift to target data."""
         X_source = None
         X_target = None
 
@@ -86,20 +100,24 @@ class Experimenter:
         return X_source, X_target
 
     def sensitivity_test(self, X_target):
+        """Sensitivity test for drift detection."""
         drift_samples_results = self.detector.detect_shift_samples(X_target)
         return drift_samples_results
 
     def balanced_sensitivity_test(
         self,
     ):
+        """Perform balanced sensitivity test for drift detection."""
         raise NotImplementedError
 
     def rolling_window_drift(
         self,
     ):
+        """Perform rolling window drift test for drift detection."""
         raise NotImplementedError
 
     def rolling_window_performance(
         self,
     ):
+        """Perform rolling window performance test for drift detection."""
         raise NotImplementedError

@@ -1,3 +1,4 @@
+"""Utilities for static baseline models."""
 from sklearn.metrics import confusion_matrix
 
 from .gbt import fit_gbt
@@ -7,6 +8,7 @@ from .rf import fit_rf
 
 
 def run_model(model_name, X, Y, Xv, Yv):
+    """Choose and run a model on the data and return the best model."""
     if model_name == "mlp":
         best_model = fit_mlp(X, Y, Xv, Yv)
     elif model_name == "lr":

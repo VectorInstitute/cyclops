@@ -1,8 +1,15 @@
+"""Train an mlp model on the data.
+
+Train an mlp model on the data for a series of different values of c and returns the
+best model using auroc metric.
+
+"""
 from sklearn.metrics import roc_auc_score
 from sklearn.neural_network import MLPClassifier as MLP
 
 
 def fit_mlp(X, Y, Xv, Yv):
+    """Train an mlp model on the data and return best model."""
     best_c = None
     best_score = 0
     best_model = None

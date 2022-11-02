@@ -1,3 +1,4 @@
+"""Clinical Shift Applicator module."""
 import datetime
 
 import numpy as np
@@ -6,10 +7,7 @@ from .utils import get_args
 
 
 class ClinicalShiftApplicator(object):
-
-    """
-    The ClinicalShiftApplicator class is used induce synthetic dataset shift.
-    --------
+    """The ClinicalShiftApplicator class is used induce synthetic clinical shifts.
 
     Parameters
     ----------
@@ -41,7 +39,7 @@ class ClinicalShiftApplicator(object):
         """apply_shift.
 
         Returns
-        ----------
+        -------
         X: pd.DataFrame
             Data to apply shift to.
         y:
@@ -51,7 +49,6 @@ class ClinicalShiftApplicator(object):
             (e.g. "hospital_id", "admit_timestamp").
 
         """
-
         list(X.index.get_level_values(0).unique())
         X = X[np.in1d(X.index.get_level_values(0), admin_data["encounter_id"])]
 
@@ -71,7 +68,7 @@ def source_target(
     encounter_id="encounter_id",
     admit_timestamp="admit_timestamp",
 ):
-    """time.
+    """Shift in time across source and target data.
 
     Parameters
     ----------
@@ -118,7 +115,7 @@ def time(
     admit_timestamp="admit_timestamp",
     encounter_id="encounter_id",
 ):
-    """time.
+    """Shift in time.
 
     Parameters
     ----------
@@ -164,7 +161,7 @@ def month(
     encounter_id="encounter_id",
     admit_timestamp="admit_timestamp",
 ):
-    """month.
+    """Shift for selection of months.
 
     Parameters
     ----------
@@ -200,7 +197,7 @@ def hospital_type(
     encounter_id="encounter_id",
     hospital_id="hospital_id",
 ):
-    """hospital_type.
+    """Shift against hospital type.
 
     Parameters
     ----------
@@ -219,7 +216,6 @@ def hospital_type(
         Column name for hospital ids.
 
     """
-
     ids_source = admin_data.loc[
         ((admin_data[hospital_id].isin(source))),
         encounter_id,

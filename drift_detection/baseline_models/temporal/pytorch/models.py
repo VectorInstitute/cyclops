@@ -1,3 +1,4 @@
+"""Model library for baseline temporal models."""
 import torch
 import torch.nn as nn
 
@@ -41,6 +42,19 @@ class RNNModel(nn.Module):
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
+        """Forward pass.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor
+
+        Returns
+        -------
+        out: torch.Tensor
+            Output tensor
+
+        """
         h0 = (
             torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
             .requires_grad_()
@@ -92,6 +106,19 @@ class GRUModel(nn.Module):
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
+        """Forward pass.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor
+
+        Returns
+        -------
+        out: torch.Tensor
+            Output tensor
+
+        """
         h0 = (
             torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
             .requires_grad_()
@@ -144,6 +171,19 @@ class LSTMModel(nn.Module):
         self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
+        """Forward pass.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor
+
+        Returns
+        -------
+        out: torch.Tensor
+            Output tensor
+
+        """
         h0 = (
             torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
             .requires_grad_()

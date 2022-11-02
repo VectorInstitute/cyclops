@@ -1,17 +1,20 @@
+"""Detector base class."""
 from typing import Union
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
-from drift_detection.drift_detector import DCTester, Reductor, TSTester
+from drift_detection.drift_detector.reductor import Reductor
+from drift_detection.drift_detector.tester import DCTester, TSTester
 
 from .utils import get_args
 
 
 class Detector:
+    """Detector class for distribution shift detection.
 
-    """ShiftDetector class for distribution shift detection.
+    Detector combines a Reductor and a Tester to detect distribution shift.
 
     Attributes
     ----------
@@ -21,7 +24,6 @@ class Detector:
         Tester object for statistical testing.
     p_val_threshold : float
         Threshold for p-value. If p-value is below this threshold, a shift is detected.
-
 
     Methods
     -------
@@ -51,7 +53,7 @@ class Detector:
         self.samples = [10, 20, 50, 100, 200, 500, 1000]
 
     def fit(self, X_source: Union[np.ndarray, torch.utils.data.Dataset], **kwargs):
-
+        """Fit Reductor to data."""
         self.reductor.fit(X_source)
 
         X_transformed = self.transform(
@@ -64,7 +66,7 @@ class Detector:
         self.tester.fit(X_transformed, **kwargs)
 
     def transform(self, X, **kwargs):
-        """Transforms data.
+        """Transform data.
 
         Parameters
         ----------
@@ -82,7 +84,7 @@ class Detector:
         return self.reductor.transform(X, **kwargs)
 
     def test_shift(self, X_target, **kwargs):
-        """Tests shift between source and target data.
+        """Test shift between source and target data.
 
         Parameters
         ----------
@@ -114,7 +116,7 @@ class Detector:
         sample: int,
         **kwargs
     ):
-        """Detects shift between source and target data.
+        """Detect shift between source and target data.
 
         Parameters
         ----------
@@ -133,7 +135,6 @@ class Detector:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
 
         """
-
         # check if reductor_method contains 'txrv'
         if "txrv" not in self.reductor.dr_method:
             X_t = self.transform(X_target, **get_args(self.reductor.transform, kwargs))
@@ -156,8 +157,8 @@ class Detector:
     def detect_shift_samples(
         self, X_target: Union[np.ndarray, torch.utils.data.Dataset], **kwargs
     ):
-        """
-        Detects shift between source and target data.
+        """Detect shift between source and target data across samples.
+
         Parameters
         ----------
         X_source: np.ndarray or torch.utils.data.Dataset
@@ -166,12 +167,13 @@ class Detector:
             Target data.
         **kwargs
             Keyword arguments for Reductor and TSTester.
+
         Returns
         -------
         dict
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
-        """
 
+        """
         p_val_samples = np.ones((len(self.samples), self.random_runs)) * (-1)
         dist_samples = np.ones((len(self.samples), self.random_runs)) * (-1)
 

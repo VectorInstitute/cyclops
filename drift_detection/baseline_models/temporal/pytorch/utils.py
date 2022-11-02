@@ -1,13 +1,17 @@
+"""Utilities for baseline temporal pytorch models."""
 import numpy as np
 import pandas as pd
 import torch
 
 from .dataset import Data
-from .metrics import impute_forward
 from .models import GRUModel, LSTMModel, RNNModel
+
+# impute_forward does not exist
+# from metrics import impute_forward
 
 
 def load_ckp(checkpoint_fpath, model):
+    """Load checkpoint."""
     checkpoint = torch.load(checkpoint_fpath)
     model.load_state_dict(checkpoint["model"])
     optimizer = checkpoint["optimizer"]
@@ -15,6 +19,7 @@ def load_ckp(checkpoint_fpath, model):
 
 
 def reshape_2d_to_3d(data, num_timesteps):
+    """Reshape 2D data to 3D data."""
     data = data.unstack()
     num_encounters = data.shape[0]
     data = data.values.reshape((num_encounters, num_timesteps, -1))
@@ -22,6 +27,7 @@ def reshape_2d_to_3d(data, num_timesteps):
 
 
 def get_device():
+    """Get device."""
     if torch.cuda.is_available():
         return torch.device("cuda")
     else:
@@ -31,23 +37,30 @@ def get_device():
 def format_dataset(X, level="features", imputation_method="simple"):
     """Clean the data into machine-learnable matrices.
 
-    Inputs:
-        X (pd.DataFrame): a multiindex dataframe of GEMINI data
-        level (string or bytes): the level of the column index
-        to use as the features level
-        imputation_method (string): the method for imputing
-        the data, either forward, or simple
-        Target (string): the heading to select from the
-        labels in the outcomes_df, i.e. er LOS or mortality
-    Returns:
-        X (pd.DataFrame): the X data to input to the model
-        y (array): the labels for the corresponding X-data
+    Parameters
+    ----------
+        X (pd.DataFrame)
+            a multiindex dataframe of GEMINI data
+            level (string or bytes): the level of the column index
+            to use as the features level
+            imputation_method (string): the method for imputing
+            the data, either forward, or simple
+        Target (string)
+            the heading to select from the labels in the outcomes_df,
+            i.e. er LOS or mortality
+
+    Returns
+    -------
+        X (pd.DataFrame)
+            the X data to input to the model
+        y (array)
+            the labels for the corresponding X-data
 
     """
-
     # Imputation
     if imputation_method == "forward":
-        X_imputed = impute_forward(X, "timestep")
+        # X_imputed = impute_forward(X, "timestep")
+        raise NotImplementedError("impute_forward does not exist.")
     elif imputation_method == "simple":
         X_imputed = impute_simple(X, "timestep")
     else:
@@ -111,15 +124,21 @@ def format_dataset(X, level="features", imputation_method="simple"):
 
 
 def flatten_to_sequence(X):
-    """
-    Turn pandas dataframe into sequence
-    Inputs:
-        X (pd.DataFrame): a multiindex dataframe of GEMINI data
+    """Turn pandas dataframe into sequence.
+
+    Parameters
+    ----------
+        X (pd.DataFrame)
+            a multiindex dataframe of GEMINI data
         vect (tuple) (optional): (timesteps, non-time-varying columns,
         time-varying columns, vectorizer(dict)(a mapping between an item and its index))
-    Returns:
-        X_seq (np.ndarray): Input 3-dimensional input data
-        with the [n_samples, n_features, n_hours]
+
+    Returns
+    -------
+        X_seq (np.ndarray)
+            Input 3-dimensional input data
+            with the shape [n_samples, n_features, n_hours]
+
     """
     timestep_in_values = X.index.get_level_values(X.index.names.index("timestep"))
 
@@ -131,6 +150,7 @@ def flatten_to_sequence(X):
 
 
 def forward_imputer(df):
+    """Forward impute the data."""
     imputed_df = df.fillna(method="ffill").unstack().fillna(0)
     imputed_df.sort_index(axis=1, inplace=True)
     return df
@@ -153,6 +173,7 @@ def get_data(X, y):
 
 
 def process_outcome(outcome, static):
+    """Process the outcome data."""
     if outcome == "mortality":
         static["mortality_derived"] = np.where(
             static["discharge_disposition"].isin([7, 66, 72, 73]), 1, 0
@@ -182,21 +203,29 @@ def get_temporal_model(model, model_params):
 
 
 def impute_simple(df, time_index=None):
-    """Concatenate the forward filled value, the mask of the measurement, and the time
-    of the last measurement refer to paper Z.
+    """Imputation of data with simple schema.
+
+    Concatenates the forward filled value, the mask of the measurement,
+    and the time of the last measurement refer to paper below.
 
     Che, S. Purushotham, K. Cho, D. Sontag, and Y. Liu,
     "Recurrent Neural Networks for Multivariate Time Series with Missing Values,"
     Scientific Reports, vol. 8, no. 1, p. 6085, Apr 2018.
-    Input:
-        df (pandas.DataFrame): the dataframe with timeseries data in the index.
-        time_index (string, optional): the heading name for the time-series index.
-    Returns:
-        df (pandas.DataFrame): a dataframe according to the
-        simple impute algorithm described in the paper.
+
+    Parameters
+    ----------
+        df (pandas.DataFrame)
+            the dataframe with timeseries data in the index.
+        time_index (string, optional)
+            the heading name for the time-series index.
+
+    Returns
+    -------
+        df (pandas.DataFrame)
+            a dataframe according to the simple impute
+            algorithm described in the paper.
 
     """
-
     # masked data
     masked_df = pd.isna(df)
     masked_df = masked_df.apply(pd.to_numeric)

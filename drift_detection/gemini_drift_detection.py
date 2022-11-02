@@ -1,3 +1,4 @@
+"""Script to run drift detection for GEMINI use case with set of chosen parameters."""
 import os
 import sys
 

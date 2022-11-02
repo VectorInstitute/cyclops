@@ -1,12 +1,15 @@
+"""Feature Shift Detector."""
 import numpy as np
 from sklearn.utils import check_random_state
 
 
 class FeatureShiftDetector:
-    """The super class for feature shift detection. This performs bootstrapping using
-    the specified bootstrapping method {'time', 'simple'} and the specified statistic.
-    After this, it uses the thresholds learned during bootstrapping to detect and
-    localize shifted features.
+    """The super class for feature shift detection.
+
+    This performs bootstrapping usingthe specified bootstrapping method
+    {'time', 'simple'} and the specified statistic. After this, it uses
+    the thresholds learned during bootstrapping to detect and localize
+    shifted features.
 
     Parameters
     ----------
@@ -67,7 +70,9 @@ class FeatureShiftDetector:
         return
 
     def fit(self, X_boot, Y_boot, random_state=None):
-        """Sets the detection and localization thresholds using the specified
+        """Set the detection and localization thresholds.
+
+        Sets the detection and localization thresholds using the specified
         bootstrapping method.
 
         Parameters
@@ -83,7 +88,7 @@ class FeatureShiftDetector:
             is the simulated null distribution.
 
         Returns
-        ----------
+        -------
         self, (with detection_thresholds_ and localization_thresholds_ set)
 
         """
@@ -96,7 +101,7 @@ class FeatureShiftDetector:
         return self
 
     def detect_and_localize(self, X, Y, random_state=None, return_scores=False):
-        """Performs distribution shift detection and localization to features.
+        """Perform distribution shift detection and localization to features.
 
         Parameters
         ----------
@@ -116,7 +121,7 @@ class FeatureShiftDetector:
             will be returned. The default is False.
 
         Returns
-        ----------
+        -------
         detection : int
             If at least one feature's score is above the detection threshold
             (i.e. if a feature shift has been detected)
@@ -128,7 +133,6 @@ class FeatureShiftDetector:
             and if a detection has not occurred then returns None
 
         """
-
         self._check_fitted()
         rng = check_random_state(random_state)
         scores = self.statistic.fit(X, Y).score_features(random_state=rng)
@@ -153,7 +157,7 @@ class FeatureShiftDetector:
             return detection, attacked_features, scores
 
     def _simple_bootstrap(self, X_boot, Y_boot, random_state=None):
-        """Performs simple bootstrapping."""
+        """Perform simple bootstrapping."""
         rng = check_random_state(random_state)
         bootstrap_score_distribution = np.zeros(
             shape=(self.n_bootstrap_samples, X_boot.shape[1])
@@ -212,9 +216,11 @@ class FeatureShiftDetector:
         )
 
     def _time_bootstrap(self, X_boot, Y_boot, random_state=None):
-        """Performs a time aware bootstrapping
+        """Perform a time aware bootstrapping.
+
         Note: X_boot, Y_boot should be large
         (note: Y_boot can be none if X_boot alone is the training dataset)
+
         """
         rng = check_random_state(random_state)
         bootstrap_score_distribution = np.zeros(
@@ -276,8 +282,18 @@ class FeatureShiftDetector:
         )
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an
-        error."""
+        """Check if the p_hat and q_hat models have been fitted.
+
+        Check if the p_hat and q_hat models have been fitted
+        else, returns an error.
+
+        Parameters
+        ----------
+        error_message : str, optional
+            The error message to be raised if the models are not fitted.
+            By default, it is None.
+
+        """
         if self.detection_thresholds_ is not None:
             return True
         else:

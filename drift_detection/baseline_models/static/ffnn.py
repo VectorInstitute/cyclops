@@ -1,7 +1,10 @@
+"""FFNN model for static baseline model."""
 import torch.nn as nn
 
 
 class FFNNetModel(nn.Module):
+    """FFNN model for static baseline model."""
+
     def __init__(self, device, input_dim, output_dim):
         super(FFNNetModel, self).__init__()
         self.fc1 = nn.Linear(input_dim, 16)
@@ -10,6 +13,7 @@ class FFNNetModel(nn.Module):
         self.silu = nn.SiLU()
 
     def forward(self, x):
+        """Forward pass."""
         x = self.silu(self.fc1(x))
         x = self.silu(self.fc2(x))
         x = self.fc3(x)

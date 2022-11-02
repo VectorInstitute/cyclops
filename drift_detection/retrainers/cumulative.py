@@ -1,3 +1,4 @@
+"""Retrainer that uses a cumulative set of data to retrain the model."""
 import pandas as pd
 import torch
 from tqdm import tqdm
@@ -15,6 +16,25 @@ from drift_detection.gemini.utils import process
 
 
 class CumulativeRetrainer:
+    """Retrainer that uses a cumulative set of data to retrain the model.
+
+    Parameters
+    ----------
+    shift_detector : Detector
+        Detector that is used to detect drift.
+    optimizer : Optimizer
+        Optimizer that is used to retrain the model.
+    model : torch.nn.Module
+        Model type to be retrained.
+    model_name : str
+        Name of the model that is retrained.
+    retrain_model_path : str
+        Path to the model that is retrained.
+    verbose : bool
+        Whether to print the tracking of drift detection.
+
+    """
+
     def __init__(
         self,
         shift_detector: Detector = None,
@@ -44,6 +64,35 @@ class CumulativeRetrainer:
         n_epochs: int = 1,
         **kwargs
     ):
+        """Retrain the model.
+
+        Parameters
+        ----------
+        data_streams : dict
+            Dictionary of data streams.
+        sample : int
+            Number of samples to be used.
+        stat_window : int
+            Size of the statistical window.
+        lookup_window : int
+            Size of the lookup window.
+        stride : int
+            Stride size.
+        p_val_threshold : float
+            Threshold for the p-value.
+        batch_size : int
+            Size of the batches.
+        n_epochs : int
+            Number of epochs.
+        **kwargs
+            Keyword arguments.
+
+        Returns
+        -------
+        dict
+            Dictionary of results to be sent to the Plotter.
+
+        """
         rolling_metrics = []
         run_length = stat_window
         i = stat_window

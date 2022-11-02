@@ -1,3 +1,8 @@
+"""Utilities for FSD.
+
+This file contains utilities for the FSD algorithm.
+
+"""
 from textwrap import wrap as textwrap
 
 import matplotlib.pyplot as plt
@@ -31,8 +36,12 @@ def create_graphical_model(
     random_seed=0,
     nx_kwargs=None,
 ):
-    """Creates graphical dependence models based on a target MI, random_seed, and
-    target_idx."""
+    """Create graphical dependence models.
+
+    Creates a graphical dependence model based on a target MI, random_seed, and
+    target_idx.
+
+    """
     if nx_kwargs is None:
         nx_kwargs = {}
     n = sqrtn**2
@@ -121,7 +130,7 @@ def create_graphical_model(
 
 
 def sim_copula_data(p_size, q_size, mean, cov, a, b, rng=None):
-    """Takes in a target Gaussian mean and covariance, then transforms to a copula."""
+    """Take in a target Gaussian mean and covariance, then transforms to a copula."""
     if rng is None:
         rng = np.random.RandomState(np.random.randint(10000))
     X = rng.multivariate_normal(mean=mean, cov=cov, size=p_size + q_size)
@@ -133,8 +142,12 @@ def sim_copula_data(p_size, q_size, mean, cov, a, b, rng=None):
 
 
 def get_detection_metrics(true_labels, predicted_labels):
-    """Calculates tp, fp, fn, and tn from a confusion matrix, then get precision,
-    recall, and acc."""
+    """Calculate detection metrics.
+
+    Calculates tp, fp, fn, and tn from a confusion matrix, then get precision,recall,
+    and acc.
+
+    """
     tn, fp, fn, tp = sklearn_confusion_matrix(
         true_labels, predicted_labels, labels=[0, 1]
     ).flatten()
@@ -155,9 +168,12 @@ def get_detection_metrics(true_labels, predicted_labels):
 
 
 def get_localization_metrics(true_labels_tensor, predicted_labels_tensor, n_dim):
-    """Creates a confusion matrix for each feature as an array with shape (n_features,
-    2, 2), then calculates the micro-precision and micro-recall and returns as a
-    dict."""
+    """Create a confusion matrix for each feature.
+
+    Creates a confusion matrix for each feature as an array with shape (n_features, 2,
+    2), then calculates the micro-precision and micro-recall and returns as a dict.
+
+    """
     confusion_tensor = np.zeros(shape=(n_dim, 2, 2))
     for feature_idx in range(n_dim):
         confusion_tensor[feature_idx] = sklearn_confusion_matrix(
@@ -184,7 +200,7 @@ def get_localization_metrics(true_labels_tensor, predicted_labels_tensor, n_dim)
 def plot_confusion_matrix(
     confusion_matrix, plot=False, title=None, axis=None, filename=None
 ):
-    """Plots as confusion matrix using seaborn heatmap."""
+    """Plot as confusion matrix using seaborn heatmap."""
     if axis is None:
         fig, axis = plt.subplots()
     names = ["TN", "FP", "FN", "TP"]
@@ -212,8 +228,12 @@ def plot_confusion_matrix(
 
 
 def get_confusion_tensor(true_labels_tensor, predicted_labels_tensor, n_dim):
-    """Creates a confusion matrix for each feature and returns it as an array with shape
-    (n_features, 2, 2)"""
+    """Create a confusion matrix for each feature.
+
+    Creates a confusion matrix for each feature and returns it as an array with shape
+    (n_features, 2, 2)
+
+    """
     confusion_tensor = np.zeros(shape=(n_dim, 2, 2))
     for feature_idx in range(n_dim):
         confusion_tensor[feature_idx] = sklearn_confusion_matrix(
@@ -223,5 +243,5 @@ def get_confusion_tensor(true_labels_tensor, predicted_labels_tensor, n_dim):
 
 
 def wrap(string):
-    """Wraps strings of legn."""
+    """Wrap strings of legn."""
     return "\n".join(textwrap(string, 60))

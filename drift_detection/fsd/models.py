@@ -1,3 +1,4 @@
+"""Models for FSD algorithm."""
 import numpy as np
 import torch
 from deep_density_model import SingleGaussianizeStep
@@ -7,7 +8,9 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 class GaussianDensity:
-    """Fits a multivariate Gaussian Density to input data with methods for computing log
+    """Fit a multivariate Gaussian Density.
+
+    Fits a multivariate Gaussian Density to input data with methods for computing log
     gradient.
 
     Parameters
@@ -31,15 +34,18 @@ class GaussianDensity:
         self.density_ = None
 
     def fit(self, X):
-        """Fits a multivariate Gaussian Density to the empirical data, X
+        """Fit a multivariate Gaussian Density to the empirical data, X.
+
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
             The empirical data which we will fit a Gaussian to.
+
         Returns
         -------
-        self : the fitted instance"""
+        self : the fitted instance
 
+        """
         X = check_array(X)
         self.mean_ = X.mean(axis=0).astype(np.float64)
         self.covariance_ = np.cov(X, rowvar=False) + 1e-5 * np.eye(X.shape[1])
@@ -51,8 +57,8 @@ class GaussianDensity:
         return self
 
     def sample(self, n_samples=1, random_state=None):
-        """
-        Samples from the fitted Gaussian.
+        """Sample from the fitted Gaussian.
+
         Parameters
         ----------
         n_samples: int, optional (default=1)
@@ -62,12 +68,13 @@ class GaussianDensity:
             if RandomState instance, then the instance is used directly,
             if None then a RandomState instance is
             used as if np.random() was called
+
         Returns
         -------
         samples: array-like, shape (n_samples, n_features)
             The random samples from the fitted Gaussian.
-        """
 
+        """
         self._check_fitted("The density must be fitted before it can be sampled")
         rng = check_random_state(random_state)
         torch.manual_seed(
@@ -76,7 +83,9 @@ class GaussianDensity:
         return self.density_.sample((n_samples,)).numpy()
 
     def conditional_sample(self, x, feature_idx, n_samples=1, random_state=None):
-        """Computes the conditional distribution of the jth feature of the density and
+        """Compute the conditional distribution.
+
+        Computes the conditional distribution of the jth feature of the density and
         samples from the conditional.
 
         Parameters
@@ -117,18 +126,22 @@ class GaussianDensity:
         return conditional_samples
 
     def gradient_log_prob(self, X):
-        """
+        """Compute the gradient of the log probability.
+
         Computes the gradient of the log probability of the provided
         samples under the fitted Gaussian density
+
         Parameters
         ----------
         X: arrray-like (n_samples, n_features)
             The samples for which to compute the log-probability.
+
         Returns
         -------
         gradient-log-probability: array-like (n_samples, n_features)
-            The gradient of the log probability of each sample"""
+            The gradient of the log probability of each sample
 
+        """
         # TODO: see if we can speed this up and perform the gradient on
         #  all the samples at once rather than one at a time
         self._check_fitted(
@@ -150,16 +163,19 @@ class GaussianDensity:
         return grad_log_probs
 
     def log_prob(self, X):
-        """
-        Calculates the log probability of samples X under the fitted gaussian
+        """Calculate the log probability of samples X under the fitted gaussian.
+
         Parameters
         ----------
         X: arrray-like (n_samples, n_features)
             The samples for which to compute the log-probability.
+
         Returns
         -------
         log-probability: array-like (n_samples, n_features)
-            The log probability of each sample"""
+            The log probability of each sample
+
+        """
         self._check_fitted()
         X = check_array(X, ensure_2d=False, dtype=np.float)
         if X.ndim == 1:
@@ -172,9 +188,10 @@ class GaussianDensity:
     def _calculate_1d_guassian_conditional(
         x, feature_idx, joint_mean, joint_cov, random_state=None
     ):
-        """
+        """Compute the conditional distribution.
+
         Computes the conditional distribution of the ith feature
-        of the density and samples from the conditional
+        of the density and samples from the conditional.
         ref: https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf page 40.
 
         Parameters
@@ -197,6 +214,7 @@ class GaussianDensity:
             The mean of the univariate conditional distribution
         conditional_variance: float
             The variance of the univariate conditional distribution
+
         """
         check_random_state(random_state)
         mask = np.ones(len(x), dtype=bool)
@@ -219,6 +237,7 @@ class GaussianDensity:
         return conditional_mean, conditional_var
 
     def _check_fitted(self, error_message=None):
+        """Check if the density has been fitted."""
         if self.density_ is None:
             if error_message is None:
                 raise ValueError(
@@ -231,15 +250,18 @@ class GaussianDensity:
 
 
 class DeepDensity:
-    """
-    Uses iteratize Gaussianization to fit a deep (n_layers) density model
+    """Use iteratize Gaussianization to fit a deep (n_layers) density model.
+
     Parameters
     ----------
     n_layers : int
+
     Attributes
     ----------
     layers_ : object(s),
-        The layers for the Gaussianization fitted to the emperical data"""
+        The layers for the Gaussianization fitted to the emperical data
+
+    """
 
     def __init__(self, n_layers=2):
         self.n_layers = n_layers
@@ -247,15 +269,18 @@ class DeepDensity:
         self.layers_ = None
 
     def fit(self, X):
-        """Iteratively fits a density to the empirical data, X
+        """Iterate to fit a density to the empirical data, X.
+
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
             The empirical data which we will fit a Gaussian to.
+
         Returns
         -------
-        self : the fitted instance"""
+        self : the fitted instance
 
+        """
         check_array(X, dtype=np.float)
         X = torch.from_numpy(X)
         layers = []
@@ -268,8 +293,8 @@ class DeepDensity:
         return self
 
     def sample(self, n_samples=1, random_state=None):
-        """
-        Samples from the fitted density.
+        """Sample from the fitted density.
+
         Parameters
         ----------
         n_samples: int, optional (default=1)
@@ -279,10 +304,12 @@ class DeepDensity:
             if RandomState instance, then the instance is used directly,
             if None then a RandomState instance is
             used as if np.random() was called
+
         Returns
         -------
         samples: array-like, shape (n_samples, n_features)
             The random samples from the fitted Gaussian.
+
         """
         self._check_fitted()
         rng = check_random_state(random_state)
@@ -300,16 +327,21 @@ class DeepDensity:
         return X.numpy()
 
     def log_prob(self, X):
-        """
-        Computes and the log-probability of the samples in X under the fitted density
+        """Compute the log-probability of the samples in X.
+
+        Computes the log-probability of the samples in X under the fitted density
+
         Parameters
         ----------
         X: array-like, shape (n_samples, n_features)
             The input samples which to compute the log-probability of
+
         Returns
         -------
         log_probability: array-like, shape (n_samples, n_features)
-            The log probability of the samples of X under the fitted density"""
+            The log probability of the samples of X under the fitted density
+
+        """
         self._check_fitted()
         # Transform
         log_prob = torch.zeros_like(X[:, 0])
@@ -323,18 +355,22 @@ class DeepDensity:
         return log_prob
 
     def gradient_log_prob(self, X):
-        """
+        """Compute the gradient of the log probability.
+
         Computes the gradient of the log probability of the
         provided samples under the fitted density
+
         Parameters
         ----------
         X: arrray-like (n_samples, n_features)
             The samples for which to compute the log-probability.
+
         Returns
         -------
         gradient-log-probability: array-like (n_samples, n_features)
-            The gradient of the log probability of each sample"""
+            The gradient of the log probability of each sample
 
+        """
         # TODO: see if we can speed this up and perform the gradient on
         #  all the samples at once rather than one at a time
         self._check_fitted()
@@ -355,6 +391,7 @@ class DeepDensity:
         return grad_log_probs
 
     def _check_fitted(self, error_message=None):
+        """Check if the density has been fitted."""
         if self.layers_ is None:
             if error_message is None:
                 raise ValueError(
@@ -366,18 +403,23 @@ class DeepDensity:
         return True
 
 
+# fix docstring below
 class Knn:
-    """
+    """Sklearn's NearestNeighbors class.
+
     Uses Sklearn's NearestNeighbors class to learn the neighborhood
     of points in the training data.
+
     Samples directly from the emperical distribution
     or can perform an estimated conditional sample p(x_j | x_{-j})
     based on the neighborhood around the point of interest (x_{-j}),
     without taking the feature of interest (x_j) into account.
+
     Parameters
     ----------
     n_neighbors : int
         The number of neighbors to consider and return for each neighborhood sample.
+
     Attributes
     ----------
     knn : NearestNeighbors instance
@@ -385,6 +427,7 @@ class Knn:
     X_train_ : array-like, shape (n_samples, n_features)
         During the model's fitting the training data is saved
         so that it can be sampled from later
+
     """
 
     def __init__(self, n_neighbors=100):
@@ -399,22 +442,25 @@ class Knn:
         self.X_train_ = None
 
     def fit(self, X):
-        """
-        Validates and saves the training data.
+        """Validate and save the training data.
+
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
             The training data to be used later during neighborhood sampling.
+
         Returns
-        ----------
+        -------
         self (with training data copied)
+
         """
         X = check_array(X)
         self.X_train_ = X
         return self
 
     def sample(self, n_samples, random_state=None, with_replacement=True):
-        """Uniformly draws samples from the saved emperical training data
+        """Uniformly draw samples from the saved emperical training data.
+
         Parameters
         ----------
         n_samples : int
@@ -428,10 +474,12 @@ class Knn:
             used as if np.random() was called
         with_replacement : bool
             If true, sampling is performed with replacement, and if false then without.
+
         Returns
-        ----------
+        -------
         Samples : array-like (n_samples, n_features)
             The samples uniformly drawn from the training data
+
         """
         self._check_fitted()
         rng = check_random_state(random_state)
@@ -441,11 +489,13 @@ class Knn:
         return self.X_train_[sample_idxs]
 
     def conditional_sample(self, feature_idx, x):
-        """
-        Estimates conditional sampling by finding the k-nearest neighbors
-        to x without taking the feature_idx^{th}
-        feature into account. In other words, if j=feature_idx, f
-        inds the k-nearest neighbors to x_{-j} (x with feature j dropped).
+        """Estimate conditional sampling by finding the k-nearest neighbors.
+
+        Estimate conditional sampling by finding the k-nearest neighbors to
+        x without taking the feature_idx^{th} feature into account.
+        In other words, if j=feature_idx, finds the k-nearest neighbors
+        to x_{-j} (x with feature j dropped).
+
         Parameters
         ----------
         feature_idx : int
@@ -456,6 +506,7 @@ class Knn:
             The sample(s) which will be conditioned upon. If x is a
             single sample of shape (n_features, ), then x will
             be reshaped to (n_samples, n_features) with n_samples = 1
+
         Returns
         -------
         neighborhood_conditional_samples :
@@ -472,6 +523,7 @@ class Knn:
             then x will by construction be returned as the first neighbor.
             If this behavior is unwanted, set the n_neighbors = n_neighbors+1,
             and throw out the first neighbor each time.
+
         """
         self._check_fitted()
         if len(x.shape) == 1:
@@ -490,7 +542,7 @@ class Knn:
         return neighborhood_conditional_samples
 
     def _check_fitted(self, error_message=None):
-        """Checks if the estimator has been fitted."""
+        """Check if the estimator has been fitted."""
         if self.X_train_ is None:
             if error_message is None:
                 raise ValueError("Please fit knn and try again")

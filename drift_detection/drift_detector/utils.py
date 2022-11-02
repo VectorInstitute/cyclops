@@ -1,3 +1,5 @@
+"""Utilities for the drift detector module."""
+
 import inspect
 import pickle
 from datetime import timedelta
@@ -45,8 +47,11 @@ def get_args(obj, kwargs):
 
 
 def load_model(model_path: str):
-    """Load pre-trained model from path. For scikit-learn models, a pickle is loaded
-    from disk. For the torch models, the "state_dict" is loaded from disk.
+    """Load pre-trained model from path.
+
+    Loads pre-trained model from specified model path.
+    For scikit-learn models, a pickle is loaded from disk.
+    For the pytorch models, the "state_dict" is loaded from disk.
 
     Returns
     -------
@@ -63,8 +68,10 @@ def load_model(model_path: str):
 
 
 def save_model(model, output_path: str):
-    """Saves the model to disk. For scikit-learn models, a pickle is saved to disk. For
-    the torch models, the "state_dict" is saved to disk.
+    """Save the model to disk.
+
+    For scikit-learn models, a pickle is saved to disk.
+    For the pytorch models, the "state_dict" is saved to disk.
 
     Parameters
     ----------
@@ -80,12 +87,7 @@ def save_model(model, output_path: str):
 
 
 class ContextMMDWrapper:
-    """Wrapper for ContextMMDDrift.
-
-    Parameters
-    ----------
-
-    """
+    """Wrapper for ContextMMDDrift."""
 
     def __init__(
         self,
@@ -115,6 +117,7 @@ class ContextMMDWrapper:
         self.tester = ContextMMDDrift(X_s, C_s)
 
     def predict(self, X_t, **kwargs):
+        """Predict if there is drift in the data."""
         C_t = self.context(X_t)
         return self.tester.predict(X_t, C_t, **get_args(self.tester.predict, kwargs))
 
@@ -143,12 +146,7 @@ class ContextMMDWrapper:
 
 
 class LKWrapper:
-    """Wrapper for LKWrapper.
-
-    Parameters
-    ----------
-
-    """
+    """Wrapper for LKWrapper."""
 
     def __init__(
         self,
@@ -212,9 +210,11 @@ class LKWrapper:
         self.tester = LearnedKernelDrift(X_s, kernel, *args)
 
     def predict(self, X_t, **kwargs):
+        """Predict if there is drift in the data."""
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
 
     def choose_proj(self, X_s, proj_type):
+        """Choose projection for learned kernel drift detection."""
         if proj_type in ["rnn", "gru", "lstm"]:
             return recurrent_neural_network(proj_type, X_s.shape[-1])
         elif proj_type == "ffnn":
@@ -234,7 +234,7 @@ def recurrent_neural_network(
     output_dim=1,
     last_timestep_only=False,
 ):
-    """Creates a recurrent neural network model.
+    """Create a recurrent neural network model.
 
     Parameters
     ----------
@@ -263,7 +263,7 @@ def recurrent_neural_network(
 
 
 def feed_forward_neural_network(input_dim: int):
-    """Creates a feed forward neural network model.
+    """Create a feed forward neural network model.
 
     Parameters
     ----------
@@ -287,7 +287,7 @@ def feed_forward_neural_network(input_dim: int):
 
 
 def convolutional_neural_network(input_dim: int):
-    """Creates a convolutional neural network model.
+    """Create a convolutional neural network model.
 
     Parameters
     ----------
@@ -336,8 +336,10 @@ def scale(x: pd.DataFrame):
 
 
 def daterange(start_date, end_date, stride: int, window: int):
-    """Outputs a range of dates after applying a shift of a given stride and window
-    adjustment.
+    """Output a range of dates.
+
+    Outputs a range of dates after applying a shift of
+    a given stride and window adjustment.
 
     Returns
     -------
@@ -362,9 +364,11 @@ def get_serving_data(
     encounter_id="encounter_id",
     admit_timestamp="admit_timestamp",
 ):
-    """Transforms a static set of patient encounters with timestamps into serving data
-    that ranges from a given start date and goes until a given end date with a constant
-    window and stride length.
+    """Transform a static set of patient encounters with timestamps into serving data.
+
+    Transforms a static set of patient encounters with timestamps into
+    serving data that ranges from a given start date and goes until
+    a given end date with a constant window and stride length.
 
     Returns
     -------
@@ -372,7 +376,6 @@ def get_serving_data(
         dictionary containing keys timestamp, X and y
 
     """
-
     target_stream_X = []
     target_stream_y = []
     timestamps = []
@@ -416,6 +419,7 @@ def get_serving_data(
 
 
 def reshape_2d_to_3d(data, num_timesteps):
+    """Reshape 2D data to 3D data."""
     data = data.unstack()
     num_encounters = data.shape[0]
     data = data.values.reshape((num_encounters, num_timesteps, -1))

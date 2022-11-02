@@ -1,3 +1,4 @@
+"""Utilities for loading and preprocessing gemini data."""
 import datetime
 import random
 
@@ -11,12 +12,14 @@ from .query import ENCOUNTER_ID
 
 
 def unison_shuffled_copies(a, b):
+    """Shuffle two arrays in unison."""
     assert len(a) == len(b)
     p = np.random.permutation(len(a))
     return a[p], b[p]
 
 
 def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
+    """Randomly shuffle and split data into train and test sets."""
     x = np.append(x_train, x_test, axis=0)
     y = np.append(y_train, y_test, axis=0)
 
@@ -31,6 +34,7 @@ def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
 
 
 def get_label(admin_data, X, label="mortality", encounter_id="encounter_id"):
+    """Get label from admin data."""
     admin_data = admin_data.drop_duplicates(encounter_id)
     X_admin_data = admin_data[
         admin_data[encounter_id].isin(X.index.get_level_values(0))
@@ -45,6 +49,7 @@ def get_label(admin_data, X, label="mortality", encounter_id="encounter_id"):
 
 
 def reshape_2d_to_3d(data, num_timesteps):
+    """Reshape 2D data to 3D data."""
     data = data.unstack()
     num_encounters = data.shape[0]
     data = data.values.reshape((num_encounters, num_timesteps, -1))
@@ -52,16 +57,19 @@ def reshape_2d_to_3d(data, num_timesteps):
 
 
 def flatten(X):
+    """Flatten 3D data to 2D data."""
     X_flattened = X.unstack(1).dropna().to_numpy()
     return X_flattened
 
 
 def temporal_mean(X):
+    """Get temporal mean of data."""
     X_mean = X.groupby(level=[0]).mean()
     return X_mean
 
 
 def temporal_first(X, y=None):
+    """Get temporal first of data."""
     y_first = None
     X_first = X.groupby(level=[0]).first()
     if y is not None:
@@ -70,6 +78,7 @@ def temporal_first(X, y=None):
 
 
 def temporal_last(X, y):
+    """Get temporal last of data."""
     X_last = X.groupby(level=[0]).last()
     num_timesteps = y.shape[1]
     y_last = y[:, (num_timesteps - 1)]
@@ -77,6 +86,7 @@ def temporal_last(X, y):
 
 
 def get_numerical_cols(X: pd.DataFrame):
+    """Get numerical columns of temporal dataframe."""
     numerical_cols = [
         col for col in X if not np.isin(X[col].dropna().unique(), [0, 1]).all()
     ]
@@ -84,6 +94,7 @@ def get_numerical_cols(X: pd.DataFrame):
 
 
 def scale(X: pd.DataFrame):
+    """Scale data."""
     """Scale columns of temporal dataframe.
 
     Returns
@@ -103,6 +114,7 @@ def scale(X: pd.DataFrame):
 
 
 def normalize(admin_data, X, aggregation_type, timesteps):
+    """Normalize data."""
     y = None
 
     if aggregation_type == "mean":
@@ -127,6 +139,7 @@ def normalize(admin_data, X, aggregation_type, timesteps):
 
 
 def process(X, aggregation_type, timesteps):
+    """Process data."""
     if aggregation_type == "time_flatten":
         X_preprocessed = flatten(X)
     elif aggregation_type == "time":
@@ -137,7 +150,7 @@ def process(X, aggregation_type, timesteps):
 
 
 def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals, train_frac=0.8):
-
+    """Get dataset for hospital."""
     # filter hospital
     admin_data = admin_data.loc[admin_data["hospital_id"].isin(hospitals)]
     encounter_ids = list(x.index.get_level_values(0).unique())
@@ -347,6 +360,7 @@ def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals, train_fr
 def import_dataset_hospital(
     admin_data, x, y, dataset, outcome, hospital, seed=1, shuffle=True, train_frac=0.8
 ):
+    """Import dataset for hospital-level analysis."""
     # get source and target data
     x_source, y_source, x_test, y_test, feats, admin_data = get_dataset_hospital(
         admin_data, x, y, dataset, outcome, hospital

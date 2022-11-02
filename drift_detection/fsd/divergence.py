@@ -1,3 +1,5 @@
+"""Defines the class for the FSD divergence test."""
+
 # built in methods
 from copy import copy
 
@@ -37,7 +39,9 @@ class FisherDivergence:
         self.q_hat_ = None
 
     def fit(self, X, Y):
-        """Fits a density specified by density_model to the reference empirical
+        """Fit a density specified by density_model.
+
+        Fits a density specified by density model to the reference empirical
         distribution X and the query empirical distribution Y.
 
         Parameters
@@ -65,7 +69,9 @@ class FisherDivergence:
         return self
 
     def score_features(self, random_state=None):
-        """Computes the feature-wise divergence using the Fisher Divergence via sampling
+        """Compute the feature-wise divergence using the Fisher Divergence.
+
+        Computes the feature-wise divergence using the Fisher Divergence via sampling
         from both densities and averaging over 2*n_expectation times.
 
         Parameters
@@ -100,8 +106,18 @@ class FisherDivergence:
         return feature_divergence / (self.n_expectation * 2)
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an
-        error."""
+        """Check if the p_hat and q_hat models have been fitted.
+
+         Check if the p_hat and q_hat models have been fitted.
+         else, returns an error.
+
+        Parameters
+        ----------
+        error_message: str, optional
+            (default=None) The error message to be returned if the models
+            have not been fitted
+
+        """
         if self.p_hat_ is not None and self.q_hat_ is not None:
             return True
         else:
@@ -115,15 +131,21 @@ class FisherDivergence:
 
 
 class ModelKS(FisherDivergence):
-    """Computes the featurewise Kolmogorov-Smirnov Test between samples from two
-    estimated densities."""
+    """Compute the featurewise Kolmogorov-Smirnov Test.
+
+    Computes the featurewise Kolmogorov-Smirnov Test between samples from two estimated
+    densities.
+
+    """
 
     def __init__(self, density_model, n_expectation=100, n_conditional_samples=1000):
         super().__init__(density_model, n_expectation)
         self.n_conditional_samples = n_conditional_samples
 
     def score_features(self, random_state=None):
-        """Performs a feature wise K-S two sample test by first sampling n_samples from
+        """Perform a feature wise K-S two sample test.
+
+        Performs a feature wise K-S two sample test by first sampling n_samples from
         both fitted densities and then performs a K-S test on those two sampled
         distributions.
 
@@ -175,7 +197,9 @@ class ModelKS(FisherDivergence):
 
 
 class KnnKS:
-    """Computes featurewise Kolmogrov Smirnov two sample tests from the conditional
+    """Compute featurewise Kolmogrov Smirnov two sample tests.
+
+    Computes featurewise Kolmogrov Smirnov two sample tests from the conditional
     neighborhoods of the Knn fit on X and Y.
 
     Parameters
@@ -230,9 +254,11 @@ class KnnKS:
         return self
 
     def score_features(self, random_state=None):
-        """Returns featurewise divergence by performing the Kolmogrov Smirnov two
-        sampletests on the neighborhoods of samples uniformly drawn from X and Y, with
-        the j^th dimension removed.
+        """Return feature-wise divergence by performing the Kolmogrov Smirnov test.
+
+        Returns feature-wise divergence by performing the Kolmogrov Smirnov two
+        sample tests on the neighborhoods of samples uniformly drawn from X and Y,
+        with the j^th dimension removed.
 
         Parameters
         ----------
@@ -274,8 +300,15 @@ class KnnKS:
         return featurewise_KS_stat / (2 * self.n_expectation)
 
     def _check_fitted(self, error_message=None):
-        """Checks if the p_hat and q_hat models have been fitted else, returns an
-        error."""
+        """Check if the p_hat and q_hat models have been fitted else, returns an error.
+
+        Parameters
+        ----------
+        error_message: str, optional
+            (default=None) The error message to be returned if the models
+            have not been fitted
+
+        """
         if self.p_hat_ is not None and self.q_hat_ is not None:
             return True
         else:

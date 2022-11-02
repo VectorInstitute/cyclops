@@ -1,3 +1,4 @@
+"""Dataclass for iterable dataset of inputs and targets."""
 from torch.utils.data import DataLoader, TensorDataset
 
 
@@ -5,7 +6,7 @@ class Data:
     """Data class."""
 
     def __init__(self, inputs, target):
-        """Initialization."""
+        """Initialize Data class."""
         self.inputs = inputs
         self.target = target
 

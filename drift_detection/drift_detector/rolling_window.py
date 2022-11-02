@@ -1,3 +1,4 @@
+"""Rolling window class for detecting drift on time series data."""
 import pandas as pd
 import torch
 from tqdm import tqdm
@@ -13,14 +14,23 @@ from drift_detection.gemini.utils import get_label, process
 
 
 class RollingWindow:
+    """RollingWindow Class.
 
-    """
-    RollingWindow Class.
+    Parameters
     ----------
     shift_detector: Detectpr
         Shift detector object to use in rolling window.
     optimizer: Optimizer
         Deep learning model optimizer to use in rolling window.
+
+    Methods
+    -------
+    mean(X: dict, window: int)
+        Get rolling mean of time series data.
+    stdev(X: dict, window: int)
+        Get rolling standard deviation of time series data.
+    performance(data_streams: dict, stat_window: int, lookup_window: int, stride: int)
+        Rolling window to measure performance over time series.
 
     """
 
@@ -40,26 +50,38 @@ class RollingWindow:
         self.verbose = verbose
 
     def mean(self, X: dict = None, window: int = 30):
-        """
-        Get rolling mean of time series data.
+        """Get rolling mean of time series data.
+
         Parameters
         ----------
         X: dict
             time series data
         window: int
             window length
+
+        Returns
+        -------
+        X: dict
+            time series data with rolling mean
+
         """
         return X.rolling(window).mean().dropna(inplace=True)
 
     def stdev(self, X: dict = None, window: int = 30):
-        """
-        Get rolling standard deviation of time series data.
+        """Get rolling standard deviation of time series data.
+
         Parameters
         ----------
         X: dict
             time series data
         window: int
             window length
+
+        Returns
+        -------
+        X: dict
+            time series data with rolling standard deviation
+
         """
         return X.rolling(window).stdev().dropna(inplace=True)
 
@@ -72,7 +94,22 @@ class RollingWindow:
         aggregation_type="time",
         outcome="mortality",
     ):
-        """Rolling window to measure performance over time series.
+        """Perform rolling window to measure performance over time series.
+
+        Parameters
+        ----------
+        data_streams: dict
+            time series data
+        stat_window: int
+            window length
+        lookup_window: int
+            window length
+        stride: int
+            window length
+        aggregation_type: str
+            type of aggregation to use
+        outcome: str
+            outcome to predict
 
         Returns
         -------
@@ -80,7 +117,6 @@ class RollingWindow:
             dataframe containing performance metrics across time series.
 
         """
-
         performance_metrics = []
         i = 0
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
@@ -157,7 +193,24 @@ class RollingWindow:
         aggregation_type="time",
         **kwargs
     ):
-        """Rolling window to measure drift over time series.
+        """Perform rolling window to measure drift over time series.
+
+        Parameters
+        ----------
+        data_streams: dict
+            time series data
+        sample: int
+            number of samples to use
+        stat_window: int
+            window length
+        lookup_window: int
+            window length
+        stride: int
+            window length
+        threshold: float
+            threshold for drift detection
+        aggregation_type: str
+            type of aggregation to use
 
         Returns
         -------
@@ -165,7 +218,6 @@ class RollingWindow:
             dataframe containing drift p-value and distance metrics across time series.
 
         """
-
         rolling_drift_metrics = []
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1

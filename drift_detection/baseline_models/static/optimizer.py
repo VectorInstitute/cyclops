@@ -33,6 +33,21 @@ class Optimizer:
         self.device = model.device
 
     def train_step(self, x, y):
+        """Train model for one step.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input data.
+        y: torch.Tensor
+            Target data.
+
+        Returns
+        -------
+        loss: float
+            Loss value.
+
+        """
         # Sets model to train mode
         self.model.train(True)
 
@@ -145,6 +160,7 @@ class Optimizer:
         return y_test_labels, y_pred_values, y_pred_labels
 
     def plot_losses(self):
+        """Plot training and validation losses."""
         plt.plot(self.train_losses, label="Training loss")
         plt.plot(self.val_losses, label="Validation loss")
         plt.legend()

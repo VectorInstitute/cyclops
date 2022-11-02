@@ -1,3 +1,4 @@
+"""Reductor Module."""
 import os
 import pickle
 from typing import Tuple, Union
@@ -20,11 +21,11 @@ from drift_detection.baseline_models.temporal.pytorch.utils import (
 
 
 class Reductor:
+    """The Reductor class is used to reduce the dimensionality of the data.
 
-    """
-    The Reductor class is used to reduce the dimensionality of the data.
     The reductor is initialized with a dimensionality reduction method.
     The reductor can then be fit to the data and used to transform the data.
+
     Example: (Data is loaded from memory)
     --------
     >>> from drift_detection.reductor import Reductor
@@ -33,6 +34,7 @@ class Reductor:
     >>> reductor = Reductor("PCA")
     >>> reductor.fit(X)
     >>> X_transformed = reductor.transform(X)
+
     Arguments
     ---------
     dr_method: String
@@ -70,6 +72,7 @@ class Reductor:
         The number of clusters to use for "GMM".
     random_state: int
         The global random seed.
+
     """
 
     def __init__(
@@ -172,11 +175,13 @@ class Reductor:
         print("Model loaded from {}".format(self.model_path))
 
     def save_model(self, output_path: str):
-        """Saves the model to disk.
+        """Save the model to disk.
+
         Parameters
         ----------
         output_path: String
             path to save the model to
+
         """
         if (
             self.dr_method == "PCA"
@@ -194,11 +199,13 @@ class Reductor:
         print("{} saved to {}".format(self.dr_method, output_path))
 
     def get_available_dr_methods(self):
-        """Returns a list of available dimensionality reduction methods.
+        """Return a list of available dimensionality reduction methods.
+
         Returns
         -------
         list
             list of available dimensionality reduction methods
+
         """
         return [
             "NoRed",
@@ -220,21 +227,24 @@ class Reductor:
         ]
 
     def get_dr_amount(self, X: np.ndarray) -> int:
-        """
-        Returns the number of components to be used to retain the variation specified.
+        """Return the number of components to be used to retain the variation specified.
+
         Returns
         -------
         int
             number of components.
+
         """
         pca = PCA(n_components=self.var_ret, svd_solver="full")
         pca.fit(X)
         return pca.n_components_
 
     def fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
-        """Fits the reductor to the data.
+        """Fit the reductor to the data.
+
         For pre-trained or untrained models,
         this function loads the weights or initializes the model, respectively.
+
         Parameters
         ----------
         data:
@@ -242,6 +252,7 @@ class Reductor:
             Shape:
                 data: np.ndarray (n_samples, n_features)
                       or torch Dataset
+
         """
         # check if data is a numpy matrix or a torch dataset
         if isinstance(data, np.ndarray):
@@ -274,7 +285,8 @@ class Reductor:
         num_workers: int = None,
         progress: bool = True,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        """Transforms the data using the chosen dimensionality reduction method
+        """Transform the data using the chosen dimensionality reduction method.
+
         Parameters
         ----------
         data: np.ndarray (n_samples, n_features) or torch Dataset
@@ -283,11 +295,14 @@ class Reductor:
             batch size for LSTM inference/pytorch dataloader. Default: 32
         num_workers: int
             number of workers for pytorch dataloader. If None, uses max number of cpus.
+
         Returns
         -------
         X_transformed: numpy.matrix
             transformed data
         optionally: y: numpy.array
+            labels of the data
+
         """
         y = None
 
@@ -344,12 +359,13 @@ class Reductor:
             return X_transformed
 
     def feed_forward_neural_network(self, n_features: int):
-        """
-        Creates a feed forward neural network model.
+        """Create a feed forward neural network model.
+
         Returns
         -------
         model: torch.nn.Module
             feed forward neural network model.
+
         """
         ffnn = (
             nn.Sequential(
@@ -365,12 +381,13 @@ class Reductor:
         return ffnn
 
     def convolutional_neural_network(self):
-        """
-        Creates a convolutional neural network model.
+        """Create a convolutional neural network model.
+
         Returns
         -------
         torch.nn.Module
             convolutional neural network for dimensionality reduction.
+
         """
         cnn = (
             nn.Sequential(
@@ -397,8 +414,8 @@ class Reductor:
         output_dim: int = 1,
         last_timestep_only: bool = False,
     ):
-        """
-        Creates a recurrent neural network model.
+        """Create a recurrent neural network model.
+
         Parameters
         ----------
         model_name: str
@@ -415,10 +432,12 @@ class Reductor:
             number of output dimensions.
         last_timestep_only: bool
             if True, only the last timestep is used as input.
+
         Returns
         -------
         model: torch.nn.Module
             the rnn model.
+
         """
         model_params = {
             "device": self.device,
@@ -433,15 +452,17 @@ class Reductor:
         return model
 
     def gaussian_mixture_model(self):
-        """Creates a gaussian mixture model."""
+        """Create a gaussian mixture model."""
         gmm = GaussianMixture(n_components=self.gmm_n_clusters, covariance_type="full")
         return gmm
 
     def minibatch_inference(
         self, data, model: nn.Module, batch_size: int = 32
     ) -> np.ndarray:
-        """Performs batch inference on in-memory data by breaking into series of mini-
-        batches.
+        """Perform batch inference.
+
+        Performsbatch inferenceon in-memory data by
+        breaking into series of mini-batches.
 
         Parameters
         ----------
@@ -454,7 +475,6 @@ class Reductor:
             the transformed data.
 
         """
-
         if isinstance(data, np.ndarray):
             X = torch.from_numpy(data.astype("float32"))
         num_samples = X.shape[0]
@@ -480,18 +500,20 @@ class Reductor:
     def batch_inference(
         self, model: nn.Module, progress=True
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Performs batched inference on the dataset.
+        """Perform batched inference on the dataset.
+
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
+
         Returns
         -------
         X_transformed: np.ndarray
             the transformed dataset.
         labels: np.ndarray
             the labels of the transformed dataset.
+
         """
         imgs_transformed = []
         all_labels = []
@@ -509,18 +531,20 @@ class Reductor:
     def xrv_clf_inference(
         self, model: nn.Module, progress=True
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Performs batched inference with the TXRV Classifier on the dataset.
+        """Perform batched inference with the TXRV Classifier on the dataset.
+
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
+
         Returns
         -------
         X_transformed: np.ndarray
             the transformed dataset.
         labels: np.ndarray
             the labels of the transformed dataset.
+
         """
         all_preds = []
         all_labels = []
@@ -541,18 +565,20 @@ class Reductor:
     def xrv_ae_inference(
         self, model: nn.Module, progress=True
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Performs batched inference with the TXRV Autoencoder on the dataset.
+        """Perform batched inference with the TXRV Autoencoder on the dataset.
+
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
+
         Returns
         -------
         X_transformed: np.ndarray
             the transformed dataset.
         labels: np.ndarray
             the labels of the transformed dataset.
+
         """
         all_preds = []
         all_labels = []

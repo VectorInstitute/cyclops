@@ -1,3 +1,4 @@
+"""SyntheticShiftApplicator class."""
 import math
 
 import numpy as np
@@ -8,9 +9,8 @@ from .utils import get_args
 
 
 class SyntheticShiftApplicator(object):
+    """The SyntheticShiftApplicator class is used induce synthetic dataset shift.
 
-    """
-    The SyntheticShiftApplicator class is used induce synthetic dataset shift.
     --------
     >>> from drift_detection.experimenter import Experimenter
     >>> from sklearn.datasets import load_diabetes
@@ -52,12 +52,11 @@ class SyntheticShiftApplicator(object):
         """apply_shift.
 
         Returns
-        ----------
+        -------
         X: numpy.matrix
-            Data to have noise added.
+            Data to have noise added
 
         """
-
         # check if X is a numpy array or dataset
         if isinstance(X, np.ndarray):
             X_shift = X.copy()
@@ -71,6 +70,27 @@ class SyntheticShiftApplicator(object):
 def categorical_shift(
     X: np.ndarray, metadata: pd.DataFrame, categorical_column: str, target_category: str
 ):
+    """Create categorical shift by changing a fraction of samples from a class.
+
+    Parameters
+    ----------
+    X: numpy.matrix
+        covariate data
+    metadata: pd.DataFrame
+        metadata data
+    categorical_column: str
+        name of the column to change
+    target_category: str
+        name of the category to change to
+
+    Returns
+    -------
+    X: numpy.matrix
+        Data to have noise added
+    y: numpy.matrix
+        placeholder for labels
+
+    """
     y_target = None
     metadata.reset_index(drop=True, inplace=True)
     target_indices = metadata.loc[
@@ -88,7 +108,7 @@ def apply_predefined_shift(
     X_ref: np.ndarray = None,
     y_ref: np.ndarray = None,
 ):
-    """apply_predefined_shift.
+    """Apply a predefined shift.
 
     Parameters
     ----------
@@ -103,8 +123,14 @@ def apply_predefined_shift(
     y_ref: list
         Target label.
 
-    """
+    Returns
+    -------
+    X_shift: numpy.matrix
+        shifted features
+    y_shift: numpy.array
+        placeholder for labels
 
+    """
     X_shift = X.copy()
     y_shift = None
 
@@ -259,7 +285,7 @@ def gaussian_noise_shift(
     delta: float = 0.5,
     clip: bool = False,
 ):
-    """Creates gaussian noise of specificed parameters in input data.
+    """Create gaussian noise of specificed parameters in input data.
 
     Parameters
     ----------
@@ -272,8 +298,14 @@ def gaussian_noise_shift(
     delta: float
         fraction of data affected
 
-    """
+    Returns
+    -------
+    X: numpy.matrix
+        covariate data with gaussian noise
+    indices: list
+        indices of data affected
 
+    """
     # add if temporal then flatten then unflatten at end
     X_df = pd.DataFrame(X)
 
@@ -302,7 +334,7 @@ def gaussian_noise_shift(
 
 # Remove instances of a single class.
 def knockout_shift(X: np.ndarray, y: np.ndarray, delta: float = 0.5, cl: int = 1):
-    """Creates class imbalance by removing a fraction of samples from a class.
+    """Create class imbalance by removing a fraction of samples from a class.
 
     Parameters
     ----------
@@ -314,6 +346,13 @@ def knockout_shift(X: np.ndarray, y: np.ndarray, delta: float = 0.5, cl: int = 1
         class (e.g. 0,1,2,3, etc.)
     delta: float
         fraction of samples removed
+
+    Returns
+    -------
+    X: numpy.matrix
+        covariate data with class imbalance
+    y: numpy.array
+        placeholer for labels
 
     """
     del_indices = np.where(y == cl)[0]
@@ -335,7 +374,7 @@ def feature_swap_shift(
     n_shuffle: float = 0.25,
     rank: bool = False,
 ):
-    """feature swap shift swaps features on a changepoint axis.
+    """Feature swap shift swaps features on a changepoint axis.
 
     Parameters
     ----------
@@ -353,6 +392,13 @@ def feature_swap_shift(
         number of features to shuffle
     rank: Bool
         should features should be ranked or not?
+
+    Returns
+    -------
+    X: numpy.matrix
+        covariate data with feature swap
+    y: numpy.array
+        labels for covariate data
 
     """
     n_feats = X_ref.shape[1]
@@ -394,7 +440,7 @@ def feature_association_shift(
     keep_rows_constant: bool = True,
     repermute_each_column: bool = True,
 ):
-    """multiway_feat_association_shift swaps individuals within features.
+    """Multiway feature association shift swaps individuals within features.
 
     Parameters
     ----------
@@ -411,8 +457,14 @@ def feature_association_shift(
     repermute_each_column:
         are the individuals selected for permutation the same across features?
 
-    """
+    Returns
+    -------
+    X: numpy.matrix
+        covariate data with feature association
+    y: numpy.array
+        placeholder for labels
 
+    """
     n_inds = X.shape[0]
     n_shuffle_inds = int(n_shuffle * n_inds)
     shuffle_start = np.random.randint(n_inds - n_shuffle_inds)
@@ -438,7 +490,7 @@ def feature_association_shift(
 
 
 def binary_noise_shift(X: np.ndarray, p: float = 0.5, delta: float = 0.5):
-    """Creates binary noise of specificed parameters in input data.
+    """Create binary noise of specificed parameters in input data.
 
     Parameters
     ----------
@@ -448,6 +500,13 @@ def binary_noise_shift(X: np.ndarray, p: float = 0.5, delta: float = 0.5):
         Proportion of case to control
     delta: float
         fraction of data affected
+
+    Returns
+    -------
+    X: numpy.matrix
+        covariate data with binary noise
+    indices: list
+        indices of data affected
 
     """
     # add if temporal then flatten then unflatten at end

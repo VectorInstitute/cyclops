@@ -1,8 +1,15 @@
+"""Train a xgboost model on the data.
+
+Train a xgboost model on the data for a series of different values of max_depth and
+gamma and returns the best model using auroc metric.
+
+"""
 from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier
 
 
 def fit_gbt(X, Y, Xv, Yv):
+    """Train a xgboost model on the data and return best model."""
     best_n = None
     best_g = None
     best_score = 0

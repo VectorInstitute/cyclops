@@ -1,8 +1,15 @@
+"""Train a random forest model on the data.
+
+Train a random forest model on the data for a series of different values of n_estimaters
+and returns the best model using auroc metric.
+
+"""
 from sklearn.ensemble import RandomForestClassifier as RF
 from sklearn.metrics import roc_auc_score
 
 
 def fit_rf(X, Y, Xv, Yv):
+    """Train a random forest model on the data and return best model."""
     best_n = None
     best_score = 0
     best_model = None

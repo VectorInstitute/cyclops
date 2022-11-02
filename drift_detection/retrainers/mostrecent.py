@@ -1,3 +1,4 @@
+"""Retrainer that uses the most recent data points to retrain the model."""
 import pandas as pd
 import torch
 from tqdm import tqdm
@@ -14,6 +15,30 @@ from drift_detection.gemini.utils import process
 
 
 class MostRecentRetrainer:
+    """Retrainer that uses the most recent data points to retrain the model.
+
+    Attributes
+    ----------
+    shift_detector : Detector
+        Detector object for detecting data shift.
+    optimizer : Optimizer
+        Optimizer object for training the model.
+    model : torch.nn.Module
+        Model to be trained.
+    model_name : str
+        Name of the model.
+    retrain_model_path : str
+        Path to save the retrained model.
+    verbose : bool
+        Whether to print out the training progress.
+
+    Methods
+    -------
+    retrain(X_s, X_t, **kwargs)
+        Retrains the model on the target data.
+
+    """
+
     def __init__(
         self,
         shift_detector: Detector = None,
@@ -44,6 +69,35 @@ class MostRecentRetrainer:
         n_epochs: int = 1,
         **kwargs
     ):
+        """Retrain the model on the target data.
+
+        Parameters
+        ----------
+        data_streams : dict
+            Dictionary of data streams.
+        retrain_window : int
+            Number of days to retrain the model.
+        sample : int
+            Number of samples to use for retraining.
+        stat_window : int
+            Number of days to compute the statistics.
+        lookup_window : int
+            Number of days to look ahead for the shift.
+        stride : int
+            Stride for the rolling window.
+        p_val_threshold : float
+            Threshold for the p-value.
+        batch_size : int
+            Batch size for training.
+        n_epochs : int
+            Number of epochs to train the model.
+
+        Returns
+        -------
+        results : dict
+            Dictionary of rolling metric results.
+
+        """
         rolling_metrics = []
         run_length = stat_window
         i = stat_window

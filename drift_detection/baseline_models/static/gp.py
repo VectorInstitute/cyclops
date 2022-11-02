@@ -1,3 +1,9 @@
+"""Train a GaussianProcessClassifier model on the data.
+
+Train a GaussianProcessClassifier model on the data for a series of different kernels
+and return the best model using auroc metric.
+
+"""
 from sklearn.gaussian_process import GaussianProcessClassifier as GPC
 from sklearn.gaussian_process.kernels import (
     RBF,
@@ -10,6 +16,7 @@ from sklearn.metrics import roc_auc_score
 
 
 def fit_gp(X, Y, Xv, Yv):
+    """Train a GaussianProcessClassifier model on the data and return best model."""
     best_c = None
     best_score = 0
     best_model = None

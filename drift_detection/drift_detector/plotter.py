@@ -1,3 +1,4 @@
+"""Plotting functions for drift detection."""
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,7 +22,7 @@ colors = [
 
 
 def clamp(val: int, minimum=0, maximum=255):
-    """Ensures colour intensity is within a specified range.
+    """Ensure colour intensity is within a specified range.
 
     Returns
     -------
@@ -37,7 +38,7 @@ def clamp(val: int, minimum=0, maximum=255):
 
 
 def colorscale(hexstr: str, scalefactor: float):
-    """Creates color scale.
+    """Create color scale.
 
     Returns
     -------
@@ -69,7 +70,7 @@ def errorfill(
     fmt="-o",
     label=None,
 ):
-    """Creates custom error fill."""
+    """Create custom error fill."""
     ax = ax if ax is not None else plt.gca()
     if color is None:
         color = next(ax._get_lines.prop_cycler)["color"]
@@ -85,7 +86,7 @@ def errorfill(
 
 
 def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
-    """Setup ROC curve.
+    """Plot ROC curve.
 
     Returns
     -------
@@ -103,7 +104,7 @@ def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
 
 
 def plot_pr(ax: mpl.axes.SubplotBase, recall: list, precision: list, roc_prc: str):
-    """Setup Precision-Recall curve.
+    """Plot Precision-Recall curve.
 
     Returns
     -------
@@ -127,7 +128,7 @@ def setup_plot(
     ylabel: str,
     legend: list,
 ):
-    """Setup plot.
+    """Plot setup.
 
     Parameters
     ----------
@@ -269,6 +270,7 @@ def plot_label_distribution(X, y, label, features):
 
 
 def plot_drift_samples_pval(results, p_val_threshold):
+    """Plot drift experiement p-values."""
     fig = plt.figure(figsize=(11, 8))
     ax = fig.add_subplot(111)
     for si, shift in enumerate(results.keys()):

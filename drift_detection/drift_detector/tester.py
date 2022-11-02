@@ -1,3 +1,4 @@
+"""Tester Module for drift detection with TSTester and DCTester submodules."""
 from alibi_detect.cd import (
     ChiSquareDrift,
     ClassifierDrift,
@@ -22,13 +23,22 @@ from drift_detection.drift_detector.utils import (
 
 
 class TSTester:
+    """Two Sample Statistical Tester.
 
-    """
-    Two Sample Statistical Tester
     Parameters
     ----------
     tester_method: str
         two-sample statistical test method
+
+    Methods
+    -------
+    get_available_test_methods()
+        Get available test methods
+    fit(X_s: np.ndarray, **kwargs)
+        Fit statistical test method to reference data
+    test_shift(X_t: np.ndarray, **kwargs)
+        Test for shift in data
+
     """
 
     def __init__(self, tester_method: str):
@@ -56,10 +66,11 @@ class TSTester:
             )
 
     def get_available_test_methods(self):
+        """Return list of available test methods."""
         return list(self.tester_methods.keys())
 
     def fit(self, X_s, **kwargs):
-
+        """Initialize test method to source data."""
         X_s = X_s.astype("float32")
 
         self.method = self.tester_methods[self.tester_method](
@@ -67,7 +78,7 @@ class TSTester:
         )
 
     def test_shift(self, X_t, **kwargs):
-
+        """Test for shift in data."""
         X_t = X_t.astype("float32")
 
         preds = self.method.predict(X_t, **get_args(self.method.predict, kwargs))
@@ -78,13 +89,23 @@ class TSTester:
 
 
 class DCTester:
-    """
-    Domain Classifier Tester
+    """Domain Classifier Tester.
+
     Parameters
     ----------
     model: str
         model to use for domain classification.
         Must be one of: "gb", "rf", "rnn", "cnn", "ffnn"
+
+    Methods
+    -------
+    get_available_model_methods()
+        Get available model methods
+    fit(X_s: np.ndarray, **kwargs)
+        Fit domain classifier to reference data
+    test_shift(X_t: np.ndarray, **kwargs)
+        Test for shift in data
+
     """
 
     def __init__(self, tester_method: str, model_method: str = None, **kwargs):
@@ -121,13 +142,15 @@ class DCTester:
             )
 
     def get_available_test_methods(self):
+        """Return list of available test methods."""
         return list(self.tester_methods.keys())
 
     def get_available_model_methods(self):
+        """Return list of available model methods."""
         return list(self.model_methods.keys())
 
     def fit(self, X_s, **kwargs):
-
+        """Initialize test method to source data."""
         X_s = X_s.astype("float32")
 
         if self.tester_method == "spot_the_diff":
@@ -145,7 +168,7 @@ class DCTester:
             )
 
     def test_shift(self, X_t, **kwargs):
-
+        """Test for shift in data."""
         X_t = X_t.astype("float32")
 
         preds = self.tester.predict(X_t)

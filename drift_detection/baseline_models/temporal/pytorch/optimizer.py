@@ -1,4 +1,4 @@
-"""Optimizer."""
+"""Optimizer to train the baseline model."""
 
 import math
 from datetime import datetime
@@ -42,6 +42,7 @@ class Optimizer:
         self.reweight_positive = reweight_positive
 
     def reweight_loss(self, loss, y):
+        """Reweight the losses."""
         if isinstance(self.reweight_positive, float) or isinstance(
             self.reweight_positive, np.float64
         ):
@@ -52,6 +53,7 @@ class Optimizer:
         return loss
 
     def train_step(self, x, y):
+        """Train model for one step."""
         # Sets model to train mode
         self.model.train(True)
 
@@ -194,6 +196,7 @@ class Optimizer:
         return y_test_labels, y_pred_values, y_pred_labels
 
     def plot_losses(self):
+        """Plot training and validation losses."""
         plt.plot(self.train_losses, label="Training loss")
         plt.plot(self.val_losses, label="Validation loss")
         plt.legend()
