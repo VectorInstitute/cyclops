@@ -1,12 +1,11 @@
 """Optimizer."""
 
-import datetime
 import math
+from datetime import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from datetime import datetime
-import matplotlib.pyplot as plt
 
 
 class Optimizer:
@@ -110,7 +109,7 @@ class Optimizer:
         """
         if model_path is None:
             model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-        best_loss = math.inf
+        math.inf
 
         for epoch in range(1, n_epochs + 1):
             batch_losses = []
@@ -151,7 +150,8 @@ class Optimizer:
 
             torch.save(self.model.state_dict(), model_path)
             print(
-                f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t Validation loss: {validation_loss:.4f}"
+                f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t \
+                Validation loss: {validation_loss:.4f}"
             )
             self.lr_scheduler.step()
 

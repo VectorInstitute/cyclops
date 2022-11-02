@@ -1,7 +1,6 @@
-from .reductor import Reductor
-from .tester import TSTester, DCTester
-from .detector import Detector
-from .synthetic_applicator import SyntheticShiftApplicator
 from .clinical_applicator import ClinicalShiftApplicator
+from .detector import Detector
 from .experimenter import Experimenter
-from .dataframe_mapping import DataFrameMapping
+from .reductor import Reductor
+from .synthetic_applicator import SyntheticShiftApplicator
+from .tester import DCTester, TSTester

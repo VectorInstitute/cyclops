@@ -1,26 +1,23 @@
-import datetime
 import os
 import sys
-from functools import reduce
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    accuracy_score,
-    auc,
-    average_precision_score,
-    confusion_matrix,
-    precision_recall_curve,
-    roc_auc_score,
-    roc_curve,
-)
 
-from drift_detector.explainer import Explainer
-from drift_detector.experiments import *
-from drift_detector.plotter import errorfill, plot_roc, plot_pr
-from gemini.utils import import_dataset_hospital, run_shift_experiment
-from gemini.constants import *
-from baseline_models.static.utils import run_model
+# from drift_detector import Experimenter
+from drift_detector.plotter import errorfill
+
+# from gemini.constants import *
+from gemini.utils import run_shift_experiment
+
+from drift_detection.drift_detector.plotter import (
+    brightness,
+    colors,
+    colorscale,
+    linestyles,
+    markers,
+)
 
 DATASET = sys.argv[1]
 SHIFT = sys.argv[2]
@@ -36,8 +33,8 @@ PATH += SHIFT + "_"
 PATH += DR_TECHNIQUE + "_"
 PATH += MD_TEST + "/"
 
-if not os.path.exists(path):
-    os.makedirs(path)
+if not os.path.exists(PATH):
+    os.makedirs(PATH)
 
 # Define shift types.
 if SHIFT == "small_gn_shift":
@@ -99,6 +96,8 @@ NA_CUTOFF = 0.6
 # PIPELINE START
 # -------------------------------------------------
 
+EXPERIMENTS = None
+
 mean_dr_md_pval = np.ones(
     (len(EXPERIMENTS), len(DR_TECHNIQUES), len(MD_TESTS), len(SAMPLES))
 ) * (-1)
@@ -140,14 +139,14 @@ for si, SHIFT in enumerate(EXPERIMENTS):
                     std_dr_md_pval[si, di, mi, :] = std_p_vals
                     mean_dr_md_dist[si, di, mi, :] = mean_dist
                     std_dr_md_dist[si, di, mi, :] = std_dist
-                except ValueError as e:
+                except ValueError:
                     print("Value Error")
-                    pass
 
 fig = plt.figure(figsize=(8, 6))
 for si, shift in enumerate(EXPERIMENTS):
     for di, dr_technique in enumerate(DR_TECHNIQUES):
         for mi, md_test in enumerate(MD_TESTS):
+            DIM_RED = None
             if dr_technique == DIM_RED and md_test == MD_TEST:
                 errorfill(
                     np.array(SAMPLES),
