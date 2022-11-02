@@ -11,11 +11,13 @@ from sklearn.utils import check_random_state
 
 
 def marginal_attack(X, attack_set, random_state=None):
-    """Performs marginal attack jointly on the features in attack_set."""
+    """Perform marginal attack jointly on the features in attack_set."""
     rng = check_random_state(random_state)
     attack_set = np.array(attack_set)
-    X = X.copy()  # just in case the original input is going to be used in later testing
-    X[:, attack_set] = rng.permutation(X[:, attack_set])  # shuffle happens inplace
+    # just in case the original input is going to be used in later testing
+    X = X.copy()
+    # shuffle happens inplace
+    X[:, attack_set] = rng.permutation(X[:, attack_set])
     return X
 
 
@@ -31,7 +33,7 @@ def create_graphical_model(
 ):
     """Creates graphical dependence models based on a target MI, random_seed, and
     target_idx."""
-    if nx_kwargs == None:
+    if nx_kwargs is None:
         nx_kwargs = {}
     n = sqrtn**2
 
@@ -86,7 +88,8 @@ def create_graphical_model(
 
     # Determine edge weights
     if alpha == "auto":
-        # Automatically find a valid edge weight that has a certain condition number
+        # Automatically find a valid edge weight
+        # that has a certain condition number
         def func_to_minimize(a):
             inv_cov = np.eye(n) + a * edge_mat
             if not is_positive_definite(inv_cov):
@@ -101,7 +104,8 @@ def create_graphical_model(
     # Form inverse covariance matrix
     inv_cov = np.eye(n) + a * edge_mat
     assert is_positive_definite(inv_cov), "Final matrix should be PD"
-    # print(f'Condition number={np.linalg.cond(inv_cov)}, Mutual information={mutual_information(inv_cov)}')
+    # print(f'Condition number={np.linalg.cond(inv_cov)},
+    # Mutual information={mutual_information(inv_cov)}')
 
     cov = np.linalg.inv(inv_cov)
 
@@ -161,7 +165,8 @@ def get_localization_metrics(true_labels_tensor, predicted_labels_tensor, n_dim)
             predicted_labels_tensor[feature_idx],
             labels=[0, 1],
         )
-    # here we will sum along the feature axis of the confusion_tensor to get the micro-precision and recall
+    # here we will sum along the feature axis of the confusion_tensor
+    # to get the micro-precision and recall
     tn, fp, fn, tp = confusion_tensor.sum(axis=0).flatten()
     micro_precision = tp / (tp + fp)
     micro_recall = tp / (tp + fn)

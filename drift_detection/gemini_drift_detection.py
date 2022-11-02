@@ -1,30 +1,26 @@
-import datetime
 import os
 import sys
-from functools import reduce
-import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
+from baseline_models.static.utils import run_model
+
+# from utils.constants import *
+# from utils.utils import (
+#     import_dataset_hospital,
+#     run_shift_experiment,
+#     run_synthetic_shift_experiment,
+# )
+from gemini.utils import import_dataset_hospital
 from sklearn.metrics import (
-    accuracy_score,
     auc,
     average_precision_score,
-    confusion_matrix,
     precision_recall_curve,
-    roc_auc_score,
     roc_curve,
 )
 
-from drift_detector.explainer import ShiftExplainer
-from experiments import *
-from utils.constants import *
-from utils.plot_utils import errorfill, plot_roc, plot_pr
-from utils.utils import (
-    import_dataset_hospital,
-    run_shift_experiment,
-    run_synthetic_shift_experiment,
-)
-from baseline_models.static.utils import run_model
+# from drift_detector import Experimenter
+
 
 DATASET = sys.argv[1]
 SHIFT = sys.argv[2]
@@ -117,8 +113,8 @@ for si, SHIFT in enumerate(shifts):
                     ) = import_dataset_hospital(
                         "baseline", OUTCOME, HOSPITAL, NA_CUTOFF, shuffle=True
                     )
-                    X_t_1, y_t_1 = X_t.copy(), y_t.copy()
-                    (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
+                    X_t_1, y_t_1 = X_train.copy(), y_train.copy()
+                    # (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
                 optimised_model = run_model(MODEL, X_train, y_train, X_val, y_val)
 
                 # calc metrics for validation set
@@ -182,51 +178,52 @@ for si, SHIFT in enumerate(shifts):
                 print(
                     "{} | {} | {} | {}".format(SHIFT, HOSPITAL, DR_TECHNIQUE, MD_TEST)
                 )
-                if np.any(mean_dr_md[si, hi, di, mi, :] == -1):
+                if np.any(mean_dr_md_pval[si, hi, di, mi, :] == -1):
                     try:
                         if SHIFT in ["covid", "seasonal"]:
-                            mean_p_vals, std_p_vals,
-                            mean_dist, std_dist = run_shift_experiment(
-                                shift=SHIFT,
-                                outcome=OUTCOME,
-                                hospital=HOSPITAL,
-                                path=PATH,
-                                dr_technique=DR_TECHNIQUE,
-                                md_test=MD_TEST,
-                                samples=SAMPLES,
-                                dataset=DATASET,
-                                sign_level=SIGN_LEVEL,
-                                na_cutoff=NA_CUTOFF,
-                                random_runs=RANDOM_RUNS,
-                                calc_acc=CALC_ACC,
-                            )
+                            # mean_p_vals, std_p_vals,
+                            # mean_dist, std_dist = run_shift_experiment(
+                            #     shift=SHIFT,
+                            #     outcome=OUTCOME,
+                            #     hospital=HOSPITAL,
+                            #     path=PATH,
+                            #     dr_technique=DR_TECHNIQUE,
+                            #     md_test=MD_TEST,
+                            #     samples=SAMPLES,
+                            #     dataset=DATASET,
+                            #     sign_level=SIGN_LEVEL,
+                            #     na_cutoff=NA_CUTOFF,
+                            #     random_runs=RANDOM_RUNS,
+                            #     calc_acc=CALC_ACC,
+                            # )
+                            pass
                         else:
-                            (
-                                mean_p_vals,
-                                std_p_vals,
-                                mean_dist,
-                                std_dist,
-                            ) = run_synthetic_shift_experiment(
-                                shift=SHIFT,
-                                outcome=OUTCOME,
-                                hospital=HOSPITAL,
-                                path=PATH,
-                                dr_technique=DR_TECHNIQUE,
-                                md_test=MD_TEST,
-                                samples=SAMPLES,
-                                dataset=DATASET,
-                                sign_level=SIGN_LEVEL,
-                                na_cutoff=NA_CUTOFF,
-                                random_runs=RANDOM_RUNS,
-                                calc_acc=CALC_ACC,
-                            )
-                        mean_dr_md_pval[si, hi, di, mi, :] = mean_p_vals
-                        std_dr_md_pval[si, hi, di, mi, :] = std_p_vals
-                        mean_dr_md_dist[si, hi, di, mi, :] = mean_dist
-                        std_dr_md_dist[si, hi, di, mi, :] = std_dist
-                    except ValueError as e:
+                            pass
+                            # (
+                            #     mean_p_vals,
+                            #     std_p_vals,
+                            #     mean_dist,
+                            #     std_dist,
+                            # ) = run_synthetic_shift_experiment(
+                            #     shift=SHIFT,
+                            #     outcome=OUTCOME,
+                            #     hospital=HOSPITAL,
+                            #     path=PATH,
+                            #     dr_technique=DR_TECHNIQUE,
+                            #     md_test=MD_TEST,
+                            #     samples=SAMPLES,
+                            #     dataset=DATASET,
+                            #     sign_level=SIGN_LEVEL,
+                            #     na_cutoff=NA_CUTOFF,
+                            #     random_runs=RANDOM_RUNS,
+                            #     calc_acc=CALC_ACC,
+                            # )
+                        # mean_dr_md_pval[si, hi, di, mi, :] = mean_p_vals
+                        # std_dr_md_pval[si, hi, di, mi, :] = std_p_vals
+                        # mean_dr_md_dist[si, hi, di, mi, :] = mean_dist
+                        # std_dr_md_dist[si, hi, di, mi, :] = std_dist
+                    except ValueError:
                         print("Value Error")
-                        pass
 
 
 means_pval_file = PATH + "/driftexp_pval_means.csv"

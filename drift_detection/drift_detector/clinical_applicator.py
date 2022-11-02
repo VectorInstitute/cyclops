@@ -1,81 +1,75 @@
 import datetime
-import random
-import sys
+
 import numpy as np
-import pandas as pd
+
 from .utils import get_args
-from sklearn.model_selection import train_test_split
+
 
 class ClinicalShiftApplicator(object):
-    
+
     """
     The ClinicalShiftApplicator class is used induce synthetic dataset shift.
     --------
-    
+
     Parameters
     ----------
     shift_type: str
-        Method used to induce shift in data. Options include: "seasonal", "hospital_type".
-    
-    """   
-    def __init__(self, 
-                 shift_type: str, 
-                 **kwargs
-                ):
-        
+        Method used to induce shift in data.
+        Options include: "seasonal", "hospital_type".
+
+    """
+
+    def __init__(self, shift_type: str, **kwargs):
+
         self.shift_type = shift_type
-        
-        self.shift_types = { 
-            'source_target': source_target,
-            "month": month, 
+
+        self.shift_types = {
+            "source_target": source_target,
+            "month": month,
             "hospital_type": hospital_type,
             "time": time,
         }
-           
+
         if self.shift_type not in self.shift_types.keys():
             raise ValueError(
                 "Shift not supported, must be one of: {}".format(
                     self.shift_types.keys()
                 )
             )
-        
-    def apply_shift(
-        self, 
-        X, 
-        admin_data,
-        **kwargs
-    ):
 
+    def apply_shift(self, X, admin_data, **kwargs):
         """apply_shift.
 
         Returns
         ----------
         X: pd.DataFrame
             Data to apply shift to.
-        y: 
+        y:
             Outcome labels.
         admin_data: pd.DataFrame
-            Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
+            Dataframe containing admin variables to filter on
+            (e.g. "hospital_id", "admit_timestamp").
+
         """
-        
-        encounter_ids = list(X.index.get_level_values(0).unique())
-        X = X[np.in1d(X.index.get_level_values(0),admin_data['encounter_id'])]
-    
+
+        list(X.index.get_level_values(0).unique())
+        X = X[np.in1d(X.index.get_level_values(0), admin_data["encounter_id"])]
+
         X_s, X_t = self.shift_types[self.shift_type](
-                X, admin_data, **get_args(self.shift_types[self.shift_type], kwargs)
-            )
-        
-        encounter_ids = list(X.index.get_level_values(0).unique())
-     
-        return (X_s, X_t)  
+            X, admin_data, **get_args(self.shift_types[self.shift_type], kwargs)
+        )
+
+        list(X.index.get_level_values(0).unique())
+
+        return (X_s, X_t)
 
 
 def source_target(
-    X, 
-    admin_data, 
-    train_frac: int = 0.5, 
-    encounter_id='encounter_id', 
-    admit_timestamp='admit_timestamp'
+    X,
+    admin_data,
+    train_frac: int = 0.5,
+    encounter_id="encounter_id",
+    admit_timestamp="admit_timestamp",
 ):
     """time.
 
@@ -84,7 +78,8 @@ def source_target(
     X: pd.DataFrame
         Data to apply shift to.
     admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
+        Dataframe containing admin variables to filter on
+        (e.g. "hospital_id", "admit_timestamp").
     start_date: datetime.date
         Start of source data.
     cutoff_date: datetime.date
@@ -97,30 +92,31 @@ def source_target(
         Column name for admission timestamps.
 
     """
-    train_size_ind=admin_data.shape[0]
+    admin_data.shape[0]
     dataset_ids = admin_data.loc[
         (
-            (admin_data[admit_timestamp].dt.date > datetime.date(2015, 1, 1)) 
+            (admin_data[admit_timestamp].dt.date > datetime.date(2015, 1, 1))
             & (admin_data[admit_timestamp].dt.date < datetime.date(2019, 1, 1)),
         ),
         encounter_id,
     ]
     X = X.loc[X.index.get_level_values(0).isin(dataset_ids)]
-    num_train = int(train_frac*len(dataset_ids))
+    num_train = int(train_frac * len(dataset_ids))
     ids_source = dataset_ids[0:num_train]
     ids_target = dataset_ids[num_train:]
-        
+
     X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
     X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
     return (X_s, X_t)
 
+
 def time(
-    X, 
-    admin_data, 
+    X,
+    admin_data,
     source,
     target,
-    admit_timestamp='admit_timestamp', 
-    encounter_id='encounter_id'
+    admit_timestamp="admit_timestamp",
+    encounter_id="encounter_id",
 ):
     """time.
 
@@ -129,7 +125,8 @@ def time(
     X: pd.DataFrame
         Data to apply shift to.
     admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
+        Dataframe containing admin variables to filter on
+        (e.g. "hospital_id", "admit_timestamp").
     source: list[datetime.date]
         Start and end of source data.
     target: list[datetime.date]
@@ -141,13 +138,15 @@ def time(
 
     """
     ids_source = admin_data.loc[
-        ((admin_data[admit_timestamp].dt.date > source[0]) 
+        (
+            (admin_data[admit_timestamp].dt.date > source[0])
             & (admin_data[admit_timestamp].dt.date < source[1]),
         ),
         encounter_id,
     ]
     ids_target = admin_data.loc[
-        ((admin_data[admit_timestamp].dt.date > target[0]) 
+        (
+            (admin_data[admit_timestamp].dt.date > target[0])
             & (admin_data[admit_timestamp].dt.date < target[1]),
         ),
         encounter_id,
@@ -156,13 +155,14 @@ def time(
     X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
     return (X_s, X_t)
 
+
 def month(
-    X, 
-    admin_data, 
+    X,
+    admin_data,
     source,
     target,
-    encounter_id='encounter_id', 
-    admit_timestamp='admit_timestamp'
+    encounter_id="encounter_id",
+    admit_timestamp="admit_timestamp",
 ):
     """month.
 
@@ -171,7 +171,8 @@ def month(
     X: pd.DataFrame
         Data to apply shift to.
     admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
+        Dataframe containing admin variables to filter on
+        (e.g. "hospital_id", "admit_timestamp").
     encounter_id: str
         Column name for encounter ids.
     admit_timestamp: str
@@ -179,30 +180,26 @@ def month(
 
     """
     ids_source = admin_data.loc[
-        (
-            (admin_data[admit_timestamp].dt.month.isin(source))
-        ),
-            encounter_id,
+        ((admin_data[admit_timestamp].dt.month.isin(source))),
+        encounter_id,
     ]
     ids_target = admin_data.loc[
-        (
-            (admin_data[admit_timestamp].dt.month.isin(target))
-        ),
+        ((admin_data[admit_timestamp].dt.month.isin(target))),
         encounter_id,
     ]
     X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
     X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
     return (X_s, X_t)
 
+
 def hospital_type(
-    X, 
+    X,
     admin_data,
-    source, 
-    target, 
-    encounter_id='encounter_id', 
-    hospital_id='hospital_id'
+    source,
+    target,
+    encounter_id="encounter_id",
+    hospital_id="hospital_id",
 ):
-    
     """hospital_type.
 
     Parameters
@@ -210,7 +207,8 @@ def hospital_type(
     X: pd.DataFrame
         Data to apply shift to.
     admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on (e.g. "hospital_id", "admit_timestamp").
+        Dataframe containing admin variables to filter on
+        (e.g. "hospital_id", "admit_timestamp").
     source_hospitals: list
         List of hospitals for source data.
     target_hospitals: list
@@ -221,19 +219,15 @@ def hospital_type(
         Column name for hospital ids.
 
     """
-    
+
     ids_source = admin_data.loc[
-        (
-            (admin_data[hospital_id].isin(source))
-        ),
+        ((admin_data[hospital_id].isin(source))),
         encounter_id,
     ]
     ids_target = admin_data.loc[
-        (
-            (admin_data[hospital_id].isin(target))
-        ),
+        ((admin_data[hospital_id].isin(target))),
         encounter_id,
     ]
     X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
     X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t)    
+    return (X_s, X_t)

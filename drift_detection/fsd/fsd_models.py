@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from deep_density_model import SingleGaussianizeStep, TorchUnitHistogram
+from deep_density_model import SingleGaussianizeStep
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_array, check_random_state
 from torch.distributions.multivariate_normal import MultivariateNormal
@@ -8,7 +8,8 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 
 class GaussianDensity:
     """
-    Fits a multivariate Gaussian Density to input data with methods for computing log gradient.
+    Fits a multivariate Gaussian Density to input data
+    with methods for computing log gradient.
     Parameters
     ----------
     None.
@@ -56,7 +57,8 @@ class GaussianDensity:
             Number of samples to generate.
         random_state: int, RandomState instance, or None, optional (default=None)
             If int, then the random state is set using np.random.RandomState(int),
-            if RandomState instance, then the instance is used directly, if None then a RandomState instance is
+            if RandomState instance, then the instance is used directly,
+            if None then a RandomState instance is
             used as if np.random() was called
         Returns
         -------
@@ -73,24 +75,29 @@ class GaussianDensity:
 
     def conditional_sample(self, x, feature_idx, n_samples=1, random_state=None):
         """
-        Computes the conditional distribution of the jth feature of the density and samples from the conditional
+        Computes the conditional distribution of the jth feature of the density
+        and samples from the conditional
         Parameters
         ----------
         x: array-like, shape (n_features)
-            The sample which we are going to be conditioning on. More specifically, we will be condtioning on the value
+            The sample which we are going to be conditioning on.
+            More specifically, we will be condtioning on the value
             of the jth feature in x.
         feature_idx: int
-            The index of the feature which we will compute the conditional distribution of (i.e. p(x_j | x_{-j}))
+            The index of the feature which we will compute the conditional
+            distribution of (i.e. p(x_j | x_{-j}))
         n_samples: int, optional (default=1)
             The number of sample to sample from the conditional distribution
         random_state: int, RandomState instance, or None, optional (default=None)
             If int, then the random state is set using np.random.RandomState(int),
-            if RandomState instance, then the instance is used directly, if None then a RandomState instance is
+            if RandomState instance, then the instance is used directly,
+            if None then a RandomState instance is
             used as if np.random() was called
         Returns
         -------
         conditional_samples: array-like, shape (n_samples,)
-            The samples from the conditional distribution. Note: These are univariate samples since this conditional
+            The samples from the conditional distribution.
+            Note: These are univariate samples since this conditional
             is a univarient distribution.
         """
         self._check_fitted()
@@ -109,7 +116,8 @@ class GaussianDensity:
 
     def gradient_log_prob(self, X):
         """
-        Computes the gradient of the log probability of the provided samples under the fitted Gaussian density
+        Computes the gradient of the log probability of the provided
+        samples under the fitted Gaussian density
         Parameters
         ----------
         X: arrray-like (n_samples, n_features)
@@ -163,15 +171,18 @@ class GaussianDensity:
         x, feature_idx, joint_mean, joint_cov, random_state=None
     ):
         """
-        Computes the conditional distribution of the ith feature of the density and samples from the conditional
-        ref: https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf   page 40.
+        Computes the conditional distribution of the ith feature of the
+        density and samples from the conditional
+        ref: https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf page 40.
         Parameters
         ----------
         x: array-like, shape (n_features)
-            The sample which we are going to be conditioning on. More specifically, we will be condtioning on the value
+            The sample which we are going to be conditioning on.
+            More specifically, we will be condtioning on the value
             of the jth feature in x.
         feature_idx: int
-            The index of the feature which we will compute the conditional distribution of (i.e. p(x_j | x_{-j}))
+            The index of the feature which we will compute the
+            conditional distribution of (i.e. p(x_j | x_{-j}))
         joint_mean: array-like, shape (n_features)
             The mean vector of the joint model
         joint_cov: array-like, shape (n_features, n_features)
@@ -184,14 +195,15 @@ class GaussianDensity:
         conditional_variance: float
             The variance of the univariate conditional distribution
         """
-        rng = check_random_state(random_state)
+        check_random_state(random_state)
         mask = np.ones(len(x), dtype=bool)
         mask[feature_idx] = False
         x_nj = x[mask]
         means = np.array(joint_mean).flatten()
 
         # making it so that j (feature_idx) is the first column
-        # i.e. \Simga = [ [var(x_j), cov(x_j, x_{-j})], [cov(x_{-j}, x_j), cov(x_j, x_j)] ]
+        # i.e. \Simga = [ [var(x_j), cov(x_j, x_{-j})], [cov(x_{-j}, x_j),
+        # cov(x_j, x_j)] ]
 
         cov_11 = joint_cov[np.ix_(~mask, ~mask)]
         cov_12 = joint_cov[np.ix_(~mask, mask)]
@@ -207,7 +219,8 @@ class GaussianDensity:
         if self.density_ is None:
             if error_message is None:
                 raise ValueError(
-                    "The density has not been fitted, please fit the density and try again"
+                    "The density has not been fitted, \
+                    please fit the density and try again"
                 )
             else:
                 raise ValueError(error_message)
@@ -259,8 +272,10 @@ class DeepDensity:
         n_samples: int, optional (default=1)
             Number of samples to generate.
         random_state: int, RandomState instance, or None, optional (default=None)
-            If int, then the random state is set using np.random.RandomState(int),
-            if RandomState instance, then the instance is used directly, if None then a RandomState instance is
+            If int, then the random state is set
+            using np.random.RandomState(int),
+            if RandomState instance, then the instance is used directly,
+            if None then a RandomState instance is
             used as if np.random() was called
         Returns
         -------
@@ -284,7 +299,8 @@ class DeepDensity:
 
     def log_prob(self, X):
         """
-        Computes and the log-probability of the samples in X under the fitted density
+        Computes and the log-probability of the samples
+        in X under the fitted density
         Parameters
         ----------
         X: array-like, shape (n_samples, n_features)
@@ -307,7 +323,8 @@ class DeepDensity:
 
     def gradient_log_prob(self, X):
         """
-        Computes the gradient of the log probability of the provided samples under the fitted density
+        Computes the gradient of the log probability of the
+        provided samples under the fitted density
         Parameters
         ----------
         X: arrray-like (n_samples, n_features)
@@ -340,7 +357,8 @@ class DeepDensity:
         if self.layers_ is None:
             if error_message is None:
                 raise ValueError(
-                    "The density has not been fitted, please fit the density and try again"
+                    "The density has not been fitted, \
+                    please fit the density and try again"
                 )
             else:
                 raise ValueError(error_message)
@@ -349,19 +367,24 @@ class DeepDensity:
 
 class Knn:
     """
-    Uses Sklearn's NearestNeighbors class to learn the neighborhood of points in the training data, and samples directly
-    from the emperical distribution or can perform an estimated conditional sample, p(x_j | x_{-j}) based on the
-    neighborhood around the point of interest (x_{-j}), without taking the feature of interest (x_j) into account.
+    Uses Sklearn's NearestNeighbors class to learn the
+    neighborhood of points in the training data, and samples directly
+    from the emperical distribution or can perform an
+    estimated conditional sample, p(x_j | x_{-j}) based on the
+    neighborhood around the point of interest (x_{-j}),
+    without taking the feature of interest (x_j) into account.
     Parameters
     ----------
     n_neighbors : int
-        The number of neighbors to consider and return for each neighborhood sample.
+        The number of neighbors to consider and return for
+        each neighborhood sample.
     Attributes
     ----------
     knn : NearestNeighbors instance
         An instance of the Sklearn NearestNeighbors class
     X_train_ : array-like, shape (n_samples, n_features)
-        During the model's fitting the training data is saved so that it can be sampled from later
+        During the model's fitting the training data is saved
+        so that it can be sampled from later
     """
 
     def __init__(self, n_neighbors=100):
@@ -391,15 +414,20 @@ class Knn:
         return self
 
     def sample(self, n_samples, random_state=None, with_replacement=True):
-        """Uniformly draws samples from the saved emperical training data
+        """
+        Uniformly draws samples from the saved emperical training data
         Parameters
         ----------
         n_samples : int
-            The number of samples to be drawn from the training data, If with_replacement is False, then n_samples must
+            The number of samples to be drawn from the training data,
+            If with_replacement is False, then n_samples must
              be less than the number of training samples
-        random_state: int, RandomState instance, or None, optional (default=None)
-            If int, then the random state is set using np.random.RandomState(int),
-            if RandomState instance, then the instance is used directly, if None then a RandomState instance is
+        random_state: int, RandomState instance, or None, optional
+        (default=None)
+            If int, then the random state is set using
+            np.random.RandomState(int), if RandomState instance,
+            then the instance is used directly,
+            if None then a RandomState instance is
             used as if np.random() was called
         with_replacement : bool
             If true, sampling is performed with replacement, and if false then without.
@@ -415,28 +443,42 @@ class Knn:
         )
         return self.X_train_[sample_idxs]
 
-    def conditional_sample(self, feature_idx, X):
+    def conditional_sample(self, feature_idx, x):
         """
-        Estimates conditional sampling by finding the k-nearest neighbors to x without taking the feature_idx^{th}
-        feature into account. In other words, if j=feature_idx, finds the k-nearest neighbors to x_{-j} (x with feature
+        Estimates conditional sampling by finding the k-nearest neighbors
+        to x without taking the feature_idx^{th}
+        feature into account. In other words, if j=feature_idx,
+        finds the k-nearest neighbors to x_{-j} (x with feature
         j dropped).
         Parameters
         ----------
         feature_idx : int
-            The index of the feature we are not conditioning on, i.e. the feature to be dropped when searching for
+            The index of the feature we are not conditioning on,
+            i.e. the feature to be dropped when searching for
              the k-nearest neighbors
-        X: array-like, shape (n_samples, n_features) or shape (n_features, )
-            The sample(s) which will be conditioned upon. If x is a single sample of shape (n_features, ), then x will
-            be reshaped to (n_samples, n_features) with n_samples = 1
+        X: array-like, shape (n_samples, n_features)
+                    or shape (n_features, )
+            The sample(s) which will be conditioned upon.
+            If x is a single sample of shape (n_features, ),
+            then x will be reshaped to (n_samples, n_features)
+            with n_samples = 1
         Returns
         -------
-        neighborhood_conditional_samples : array-like, shape (n_samples, n_neighbors, n_features)
-            A 3 dimensional array containing the neighbors for the samples conditioned upon.
-            For example, neighborhood_conditional_samples[0] will have k (k=n_neighbors) rows, which correspond to the
-            k neighbors we set out to find (k is set during this class initialization) in order of increasing distance
-            from the search point (x), and the columns are the feature values for the neighbor.
-            Note: if x is included in X_train_, then x will by construction be returned as the first neighbor. If this
-            behavior is unwanted, set the n_neighbors = n_neighbors+1, and throw out the first neighbor each time.
+        neighborhood_conditional_samples :
+        array-like, shape (n_samples, n_neighbors, n_features)
+            A 3 dimensional array containing the neighbors
+            for the samples conditioned upon.
+            For example, neighborhood_conditional_samples[0] will
+            have k (k=n_neighbors) rows, which correspond to the
+            k neighbors we set out to find (k is set during this
+            class initialization) in order of increasing distance
+            from the search point (x), and the
+            columns are the feature values for the neighbor.
+            Note: if x is included in X_train_,
+            then x will by construction be returned as the first neighbor.
+            If this behavior is unwanted,
+            set the n_neighbors = n_neighbors+1,
+            and throw out the first neighbor each time.
         """
         self._check_fitted()
         if len(x.shape) == 1:

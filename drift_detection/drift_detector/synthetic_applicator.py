@@ -1,42 +1,38 @@
 import math
-import random
-import sys
+
 import numpy as np
 import pandas as pd
-from .utils import get_args
 from sklearn.feature_selection import SelectKBest
-import torch
-from typing import Union, List, Optional, Dict, Any, Tuple
-from torch.utils.data import Subset
+
+from .utils import get_args
+
 
 class SyntheticShiftApplicator(object):
-    
+
     """
     The SyntheticShiftApplicator class is used induce synthetic dataset shift.
     --------
     >>> from drift_detection.experimenter import Experimenter
     >>> from sklearn.datasets import load_diabetes
     >>> X, y = load_diabetes(return_X_y=True)
-    >>> X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+    >>> X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
     >>> applicator = SyntheticShiftApplicator(shift_type="gn_shift")
     >>> X_shift, y_shift = applicator.apply_shift(X_train, noise_amt=0.1, delta=0.1)
-    
+
     Parameters
     ----------
     shift_type: str
-        method used to induce shift in data. Options include: "gn_shift", "ko_shift", "cp_shift", "mfa_shift", "bn_shift", 
-        "tolerance_shift"
-    
-    """   
-    def __init__(self, 
-                 shift_type: str,
-                 **kwargs
-                ):
-        
+        method used to induce shift in data. Options include:
+        "gn_shift", "ko_shift", "cp_shift", "mfa_shift", "bn_shift", "tolerance_shift"
+
+    """
+
+    def __init__(self, shift_type: str, **kwargs):
+
         self.shift_type = shift_type
-        
-        self.shift_types = { 
-            "gn_shift": gaussian_noise_shift, 
+
+        self.shift_types = {
+            "gn_shift": gaussian_noise_shift,
             "ko_shift": knockout_shift,
             "fs_shift": feature_swap_shift,
             "fa_shift": feature_association_shift,
@@ -44,59 +40,54 @@ class SyntheticShiftApplicator(object):
             "categorical_shift": categorical_shift,
         }
         self.shift_args = get_args(self.shift_types[self.shift_type], kwargs)
-           
+
         if self.shift_type not in self.shift_types.keys():
             raise ValueError(
                 "Shift not supported, must be one of: {}".format(
                     self.shift_types.keys()
                 )
             )
-        
-    def apply_shift(
-        self, 
-        X
-    ):
 
+    def apply_shift(self, X):
         """apply_shift.
 
         Returns
         ----------
         X: numpy.matrix
             Data to have noise added.
+
         """
 
         # check if X is a numpy array or dataset
         if isinstance(X, np.ndarray):
             X_shift = X.copy()
         y_shift = None
-        
 
-        X_shift, _ = self.shift_types[self.shift_type](
-                X_shift, **self.shift_args
-            )
-        
-        return (X_shift, y_shift)  
+        X_shift, _ = self.shift_types[self.shift_type](X_shift, **self.shift_args)
+
+        return (X_shift, y_shift)
 
 
-def categorical_shift(X: np.ndarray, 
-                      metadata: pd.DataFrame,
-                      categorical_column: str, 
-                      target_category: str):
+def categorical_shift(
+    X: np.ndarray, metadata: pd.DataFrame, categorical_column: str, target_category: str
+):
     y_target = None
     metadata.reset_index(drop=True, inplace=True)
-    target_indices = metadata.loc[metadata[categorical_column] == target_category].index.values
+    target_indices = metadata.loc[
+        metadata[categorical_column] == target_category
+    ].index.values
     X_target = X[target_indices]
 
     return X_target, y_target
 
+
 def apply_predefined_shift(
     predefined_shift: str,
     X: np.ndarray,
-    y: np.ndarray = None, 
-    X_ref: np.ndarray = None, 
-    y_ref: np.ndarray = None
+    y: np.ndarray = None,
+    X_ref: np.ndarray = None,
+    y_ref: np.ndarray = None,
 ):
-
     """apply_predefined_shift.
 
     Parameters
@@ -111,6 +102,7 @@ def apply_predefined_shift(
         Target data.
     y_ref: list
         Target label.
+
     """
 
     X_shift = X.copy()
@@ -118,7 +110,11 @@ def apply_predefined_shift(
 
     if predefined_shift == "large_gn_shift_1.0":
         X_shift, _ = gaussian_noise_shift(
-            X_shift, 10.0, normalization=1.0, delta=1.0, clip=False,
+            X_shift,
+            10.0,
+            normalization=1.0,
+            delta=1.0,
+            clip=False,
         )
     elif predefined_shift == "medium_gn_shift_1.0":
         X_shift, _ = gaussian_noise_shift(
@@ -249,15 +245,19 @@ def apply_predefined_shift(
     elif predefined_shift == "small_bn_shift_0.1":
         X_shift, _ = binary_noise_shift(X_shift, 0.01, 0.1)
     else:
-        raise ValueError("Not a pre-defined shift, specify custom parameters using appropriate function")
+        raise ValueError(
+            "Not a pre-defined shift, \
+            specify custom parameters using appropriate function"
+        )
     return (X_shift, y_shift)
 
+
 def gaussian_noise_shift(
-    X: np.ndarray, 
-    noise_amt: float = 0.5, 
+    X: np.ndarray,
+    noise_amt: float = 0.5,
     normalization: int = 1,
-    delta: float = 0.5, 
-    clip: bool = False
+    delta: float = 0.5,
+    clip: bool = False,
 ):
     """Creates gaussian noise of specificed parameters in input data.
 
@@ -274,18 +274,18 @@ def gaussian_noise_shift(
 
     """
 
-    ## add if temporal then flatten then unflatten at end
+    # add if temporal then flatten then unflatten at end
     X_df = pd.DataFrame(X)
 
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
     c_cols = [x for x in X_df.columns if x not in bin_cols]
-    indices = np.random.choice(
-        X.shape[0], math.ceil(X.shape[0] * delta), replace=False
-    )
+    indices = np.random.choice(X.shape[0], math.ceil(X.shape[0] * delta), replace=False)
     X_mod = X[np.ix_(indices, c_cols)]
 
     if len(c_cols) == 1:
-        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(X_mod.shape[0],1)
+        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(
+            X_mod.shape[0], 1
+        )
     else:
         noise = np.random.normal(
             0, noise_amt / normalization, (X_mod.shape[0], len(c_cols))
@@ -299,13 +299,9 @@ def gaussian_noise_shift(
 
     return X, indices
 
+
 # Remove instances of a single class.
-def knockout_shift(
-    X: np.ndarray, 
-    y: np.ndarray, 
-    delta: float = 0.5, 
-    cl: int = 1
-):
+def knockout_shift(X: np.ndarray, y: np.ndarray, delta: float = 0.5, cl: int = 1):
     """Creates class imbalance by removing a fraction of samples from a class.
 
     Parameters
@@ -331,13 +327,13 @@ def knockout_shift(
 
 
 def feature_swap_shift(
-    X: np.ndarray, 
-    y: np.ndarray, 
-    X_ref: np.ndarray = None, 
-    y_ref: np.ndarray = None, 
-    cl: int = 1, 
-    n_shuffle: float = 0.25, 
-    rank: bool = False
+    X: np.ndarray,
+    y: np.ndarray,
+    X_ref: np.ndarray = None,
+    y_ref: np.ndarray = None,
+    cl: int = 1,
+    n_shuffle: float = 0.25,
+    rank: bool = False,
 ):
     """feature swap shift swaps features on a changepoint axis.
 
@@ -362,7 +358,7 @@ def feature_swap_shift(
     n_feats = X_ref.shape[1]
     n_shuffle_feats = int(n_shuffle * n_feats)
 
-    ## Get importance values - should sub for model-specific
+    # Get importance values - should sub for model-specific
     selector = SelectKBest(k=n_feats)
     selection = selector.fit(X_ref, y_ref)
     ranked_x = sorted(
@@ -392,11 +388,11 @@ def feature_swap_shift(
 
 
 def feature_association_shift(
-    X: np.ndarray, 
-    y: np.ndarray, 
-    n_shuffle: float = 0.25, 
-    keep_rows_constant: bool = True, 
-    repermute_each_column: bool = True
+    X: np.ndarray,
+    y: np.ndarray,
+    n_shuffle: float = 0.25,
+    keep_rows_constant: bool = True,
+    repermute_each_column: bool = True,
 ):
     """multiway_feat_association_shift swaps individuals within features.
 
@@ -441,11 +437,7 @@ def feature_association_shift(
     return (X, y)
 
 
-def binary_noise_shift(
-    X: np.ndarray, 
-    p: float = 0.5, 
-    delta: float = 0.5
-):
+def binary_noise_shift(X: np.ndarray, p: float = 0.5, delta: float = 0.5):
     """Creates binary noise of specificed parameters in input data.
 
     Parameters
@@ -458,12 +450,10 @@ def binary_noise_shift(
         fraction of data affected
 
     """
-    ## add if temporal then flatten then unflatten at end
+    # add if temporal then flatten then unflatten at end
     X_df = pd.DataFrame(X)
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values
-    indices = np.random.choice(
-        X.shape[0], math.ceil(X.shape[0] * delta), replace=False
-    )
+    indices = np.random.choice(X.shape[0], math.ceil(X.shape[0] * delta), replace=False)
     X_mod = X[indices, :][:, bin_cols]
 
     if X_mod.shape[1] == 1:

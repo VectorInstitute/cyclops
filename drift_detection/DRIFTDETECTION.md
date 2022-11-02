@@ -22,7 +22,7 @@ We use multivariate tests to detect malignant shifts in the joint distribution b
 
 - MMD
 - LSDD
-- LK 
+- LK
 - Classifier
 - Context-Aware MMD
 

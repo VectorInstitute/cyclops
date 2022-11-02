@@ -1,8 +1,6 @@
 import numpy as np
 import torch
 from sklearn.decomposition import PCA
-from torch.distributions.independent import Independent
-from torch.distributions.multivariate_normal import MultivariateNormal
 from torch.distributions.normal import Normal
 
 
@@ -17,11 +15,12 @@ class SingleGaussianizeStep:
         return self
 
     def fit_transform(self, x):
-        all_latent = []
+        pass
         # 1. PCA transform
         pca = PCA(random_state=0)
         pca.fit(x.detach().numpy())
-        # assert np.isclose(np.abs(np.linalg.det(pca.components_)), 1), 'Should be close to one'
+        # assert np.isclose(np.abs(np.linalg.det(pca.components_)), 1),
+        # 'Should be close to one'
         Q_pca = torch.from_numpy(pca.components_)
         x = torch.mm(x, Q_pca.T)
 
@@ -62,7 +61,8 @@ class SingleGaussianizeStep:
 
     def log_prob(self, x, return_latent=False):
         # 1. PCA
-        log_prob = torch.zeros_like(x[:, 0])  # Orthogonal transform has logdet of 0
+        # Orthogonal transform has logdet of 0
+        log_prob = torch.zeros_like(x[:, 0])
         x = torch.mm(x, self.Q_pca_.T)
 
         # 2. Ind normal
@@ -141,7 +141,8 @@ class TorchUnitHistogram:
         x = x.numpy()
         # Do numpy stuff
         hist, bin_edges = np.histogram(x, bins=self.n_bins, range=[0, 1])
-        hist = np.array(hist, dtype=float)  # Make float so we can add non-integer alpha
+        # Make float so we can add non-integer alpha
+        hist = np.array(hist, dtype=float)
         hist += self.alpha  # Smooth histogram by alpha so no areas have 0 probability
         cum_hist = np.cumsum(hist)
         cum_hist = cum_hist / cum_hist[-1]  # Normalize cumulative histogram

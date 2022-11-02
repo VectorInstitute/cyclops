@@ -1,37 +1,38 @@
-import numpy as np
-import os
-import random
-import sys
-import pandas as pd
-from datetime import date, timedelta
 import inspect
+import pickle
+from datetime import timedelta
+
+import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
-import pickle
-from sklearn.preprocessing import StandardScaler
-from scipy.special import softmax
-from typing import Callable, Dict, List, Optional, Tuple, Union, Any
-from alibi_detect.utils.pytorch.kernels import GaussianRBF
 from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
-from alibi_detect.utils.pytorch.kernels import DeepKernel
-from drift_detection.baseline_models.temporal.pytorch.utils import get_temporal_model, get_device
+from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
+from scipy.special import softmax
+from sklearn.preprocessing import StandardScaler
+
+from drift_detection.baseline_models.temporal.pytorch.utils import (
+    get_device,
+    get_temporal_model,
+)
+
 
 def get_args(obj, kwargs):
-    '''
-    Get valid arguments from kwargs to pass to object.
-    
+    """Get valid arguments from kwargs to pass to object.
+
     Parameters
     ----------
     obj
         object to get arguments from.
-    kwargs  
+    kwargs
         Dictionary of arguments to pass to object.
-    
+
     Returns
     -------
     args
         Dictionary of valid arguments to pass to class object.
-    '''
+
+    """
     args = {}
     for key in kwargs:
         if inspect.isclass(obj):
@@ -42,16 +43,17 @@ def get_args(obj, kwargs):
                 args[key] = kwargs[key]
     return args
 
+
 def load_model(model_path: str):
-    '''Load pre-trained model from path.
-    For scikit-learn models, a pickle is loaded from disk.
-    For the torch models, the "state_dict" is loaded from disk.
-    
+    """Load pre-trained model from path. For scikit-learn models, a pickle is loaded
+    from disk. For the torch models, the "state_dict" is loaded from disk.
+
     Returns
     -------
     model
         loaded pre-trained model
-    '''
+
+    """
     file_type = model_path.split(".")[-1]
     if file_type == "pkl" or file_type == "pickle":
         model = pickle.load(open(model_path, "rb"))
@@ -61,15 +63,15 @@ def load_model(model_path: str):
 
 
 def save_model(model, output_path: str):
-    '''Saves the model to disk.
-    For scikit-learn models, a pickle is saved to disk.
-    For the torch models, the "state_dict" is saved to disk.
-    
+    """Saves the model to disk. For scikit-learn models, a pickle is saved to disk. For
+    the torch models, the "state_dict" is saved to disk.
+
     Parameters
     ----------
     output_path: String
         path to save the model to
-    '''
+
+    """
     file_type = output_path.split(".")[-1]
     if file_type == "pkl" or file_type == "pickle":
         pickle.dump(model, open(output_path, "wb"))
@@ -78,16 +80,34 @@ def save_model(model, output_path: str):
 
 
 class ContextMMDWrapper:
-    '''
-    Wrapper for ContextMMDDrift
-    
+    """Wrapper for ContextMMDDrift.
+
     Parameters
     ----------
-     
-    '''
-    def __init__(self, X_s, backend= 'pytorch', p_val = 0.05, preprocess_x_ref = True, update_ref = None, preprocess_fn = None, 
-    x_kernel = None, c_kernel = None, n_permutations= 100, prop_c_held = 0.25, n_folds = 5, batch_size = 64, device = None, 
-    input_shape = None, data_type = None, verbose = False, context_type='lstm', model_path=None):
+
+    """
+
+    def __init__(
+        self,
+        X_s,
+        backend="pytorch",
+        p_val=0.05,
+        preprocess_x_ref=True,
+        update_ref=None,
+        preprocess_fn=None,
+        x_kernel=None,
+        c_kernel=None,
+        n_permutations=100,
+        prop_c_held=0.25,
+        n_folds=5,
+        batch_size=64,
+        device=None,
+        input_shape=None,
+        data_type=None,
+        verbose=False,
+        context_type="lstm",
+        model_path=None,
+    ):
         self.context_type = context_type
         self.model_path = model_path
         self.device = get_device()
@@ -97,74 +117,124 @@ class ContextMMDWrapper:
     def predict(self, X_t, **kwargs):
         C_t = self.context(X_t)
         return self.tester.predict(X_t, C_t, **get_args(self.tester.predict, kwargs))
-    
+
     def context(self, X: np.ndarray):
-        '''
-        Get context for context mmd drift detection.
+        """Get context for context mmd drift detection.
 
         Parameters
         ----------
         X
             Data to build context for context mmd drift detection.
 
-        '''
+        """
         if self.context_type in ["rnn", "gru", "lstm"]:
             model = recurrent_neural_network(self.context_type, X.shape[-1])
-            model.load_state_dict(load_model(self.model_path)['model'])
+            model.load_state_dict(load_model(self.model_path)["model"])
             model.to(self.device).eval()
             with torch.no_grad():
                 logits = model(torch.from_numpy(X).to(self.device)).cpu().numpy()
             return softmax(logits, -1)
         elif self.context_type == "gmm":
             gmm = load_model(self.model_path)
-            c_gmm_proba = gmm.predict_proba(X) 
+            c_gmm_proba = gmm.predict_proba(X)
             return c_gmm_proba
         else:
             raise ValueError("Context not supported")
 
+
 class LKWrapper:
-    '''
-    Wrapper for LKWrapper
-    
+    """Wrapper for LKWrapper.
+
     Parameters
     ----------
-     
-    
-    '''
-    def __init__(self, X_s, *, backend = 'pytorch', p_val = 0.05, preprocess_x_ref = True, update_x_ref = None, 
-    preprocess_fn = None, n_permutations = 100, var_reg = 0.00001, reg_loss_fn = lambda kernel: 0, train_size = 0.75,
-    retrain_from_scratch = True, optimizer = None, learning_rate = 0.001, batch_size = 32, preprocess_batch = None, 
-    epochs = 3, verbose = 0, train_kwargs = None, device = None, dataset = None, dataloader = None, data_type = None, 
-    kernel_a = GaussianRBF(trainable=True), kernel_b = GaussianRBF(trainable=True), eps = 'trainable', proj_type = 'ffnn'):
+
+    """
+
+    def __init__(
+        self,
+        X_s,
+        *,
+        backend="pytorch",
+        p_val=0.05,
+        preprocess_x_ref=True,
+        update_x_ref=None,
+        preprocess_fn=None,
+        n_permutations=100,
+        var_reg=0.00001,
+        reg_loss_fn=lambda kernel: 0,
+        train_size=0.75,
+        retrain_from_scratch=True,
+        optimizer=None,
+        learning_rate=0.001,
+        batch_size=32,
+        preprocess_batch=None,
+        epochs=3,
+        verbose=0,
+        train_kwargs=None,
+        device=None,
+        dataset=None,
+        dataloader=None,
+        data_type=None,
+        kernel_a=GaussianRBF(trainable=True),
+        kernel_b=GaussianRBF(trainable=True),
+        eps="trainable",
+        proj_type="ffnn"
+    ):
 
         self.proj = self.choose_proj(X_s, proj_type)
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
         kwargs = locals()
-        args = [kwargs['backend'], kwargs['p_val'], kwargs['preprocess_x_ref'], kwargs['update_x_ref'], kwargs['preprocess_fn'],
-        kwargs['n_permutations'], kwargs['var_reg'], kwargs['reg_loss_fn'], kwargs['train_size'], kwargs['retrain_from_scratch'],
-        kwargs['optimizer'], kwargs['learning_rate'], kwargs['batch_size'], kwargs['preprocess_batch'], kwargs['epochs'], 
-        kwargs['verbose'], kwargs['train_kwargs'], kwargs['device'], kwargs['dataset'], kwargs['dataloader'], kwargs['data_type']]
+        args = [
+            kwargs["backend"],
+            kwargs["p_val"],
+            kwargs["preprocess_x_ref"],
+            kwargs["update_x_ref"],
+            kwargs["preprocess_fn"],
+            kwargs["n_permutations"],
+            kwargs["var_reg"],
+            kwargs["reg_loss_fn"],
+            kwargs["train_size"],
+            kwargs["retrain_from_scratch"],
+            kwargs["optimizer"],
+            kwargs["learning_rate"],
+            kwargs["batch_size"],
+            kwargs["preprocess_batch"],
+            kwargs["epochs"],
+            kwargs["verbose"],
+            kwargs["train_kwargs"],
+            kwargs["device"],
+            kwargs["dataset"],
+            kwargs["dataloader"],
+            kwargs["data_type"],
+        ]
         self.tester = LearnedKernelDrift(X_s, kernel, *args)
-
 
     def predict(self, X_t, **kwargs):
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
 
     def choose_proj(self, X_s, proj_type):
-        if proj_type in ["rnn","gru","lstm"]:
+        if proj_type in ["rnn", "gru", "lstm"]:
             return recurrent_neural_network(proj_type, X_s.shape[-1])
-        elif proj_type == 'ffnn':
+        elif proj_type == "ffnn":
             return feed_forward_neural_network(X_s.shape[-1])
-        elif proj_type == 'cnn':
+        elif proj_type == "cnn":
             return convolutional_neural_network(X_s.shape[-1])
         else:
             raise ValueError("Invalid projection type.")
 
-def recurrent_neural_network(model_name: str, input_dim: int, hidden_dim = 64, layer_dim = 2, dropout = 0.2, output_dim = 1, last_timestep_only = False):
-    '''
-    Creates a recurrent neural network model.
+
+def recurrent_neural_network(
+    model_name: str,
+    input_dim: int,
+    hidden_dim=64,
+    layer_dim=2,
+    dropout=0.2,
+    output_dim=1,
+    last_timestep_only=False,
+):
+    """Creates a recurrent neural network model.
 
     Parameters
     ----------
@@ -172,12 +242,13 @@ def recurrent_neural_network(model_name: str, input_dim: int, hidden_dim = 64, l
         type of rnn model, one of: "rnn", "lstm", "gru"
     input_dim
         number of features
-        
+
     Returns
     -------
     model: torch.nn.Module
         recurrent neural network model.
-    '''
+
+    """
     model_params = {
         "device": get_device(),
         "input_dim": input_dim,
@@ -192,8 +263,7 @@ def recurrent_neural_network(model_name: str, input_dim: int, hidden_dim = 64, l
 
 
 def feed_forward_neural_network(input_dim: int):
-    '''
-    Creates a feed forward neural network model.
+    """Creates a feed forward neural network model.
 
     Parameters
     ----------
@@ -204,53 +274,56 @@ def feed_forward_neural_network(input_dim: int):
     -------
     model: torch.nn.Module
         feed forward neural network model.
-    '''
+
+    """
     ffnn = nn.Sequential(
-            nn.Linear(input_dim, 16),
-            nn.SiLU(),
-            nn.Linear(16, 8),
-            nn.SiLU(),
-            nn.Linear(8, 1),
+        nn.Linear(input_dim, 16),
+        nn.SiLU(),
+        nn.Linear(16, 8),
+        nn.SiLU(),
+        nn.Linear(8, 1),
     )
     return ffnn
 
 
 def convolutional_neural_network(input_dim: int):
-    '''
-    Creates a convolutional neural network model.
-    
+    """Creates a convolutional neural network model.
+
     Parameters
     ----------
     input_dim
         number of features
-    
+
     Returns
     -------
     torch.nn.Module
         convolutional neural network.
-    '''
+
+    """
     cnn = nn.Sequential(
-            nn.Conv2d(input_dim, 4, stride=2, padding=0),
-            nn.ReLU(),
-            nn.Conv2d(8, 16, 4, stride=2, padding=0),
-            nn.ReLU(),
-            nn.Conv2d(16, 32, 4, stride=2, padding=0),
-            nn.ReLU(),
-            nn.Flatten(),
+        nn.Conv2d(input_dim, 4, stride=2, padding=0),
+        nn.ReLU(),
+        nn.Conv2d(8, 16, 4, stride=2, padding=0),
+        nn.ReLU(),
+        nn.Conv2d(16, 32, 4, stride=2, padding=0),
+        nn.ReLU(),
+        nn.Flatten(),
     )
     return cnn
-        
+
+
 def scale(x: pd.DataFrame):
-    '''
-    Scale columns of temporal dataframe.
-    
+    """Scale columns of temporal dataframe.
+
     Returns
     -------
     model: torch.nn.Module
         feed forward neural network model.
-    '''
-    numerical_cols = [col for col in x 
-             if not np.isin(x[col].dropna().unique(), [0, 1]).all()]
+
+    """
+    numerical_cols = [
+        col for col in x if not np.isin(x[col].dropna().unique(), [0, 1]).all()
+    ]
 
     for col in numerical_cols:
         scaler = StandardScaler().fit(x[col].values.reshape(-1, 1))
@@ -258,61 +331,91 @@ def scale(x: pd.DataFrame):
             np.squeeze(scaler.transform(x[col].values.reshape(-1, 1))),
             index=x[col].index,
         )
-        
-    return(x)
+
+    return x
+
 
 def daterange(start_date, end_date, stride: int, window: int):
-    '''
-    Outputs a range of dates after applying a shift of a given stride and window adjustment.
-    
+    """Outputs a range of dates after applying a shift of a given stride and window
+    adjustment.
+
     Returns
     -------
     datetime.date
         range of dates after stride and window adjustment.
-    '''
+
+    """
     for n in range(int((end_date - start_date).days)):
-        if start_date + timedelta(n*stride+window) < end_date:
-            yield start_date+ timedelta(n*stride)  
-            
-def get_serving_data(X, y, admin_data, start_date, end_date, stride=1, window=1, ids_to_exclude=None, encounter_id='encounter_id', admit_timestamp='admit_timestamp'):
-    '''
-    Transforms a static set of patient encounters with timestamps into serving data that ranges from a given start date and goes until a given end date with a constant window and stride length.
-    
+        if start_date + timedelta(n * stride + window) < end_date:
+            yield start_date + timedelta(n * stride)
+
+
+def get_serving_data(
+    X,
+    y,
+    admin_data,
+    start_date,
+    end_date,
+    stride=1,
+    window=1,
+    ids_to_exclude=None,
+    encounter_id="encounter_id",
+    admit_timestamp="admit_timestamp",
+):
+    """Transforms a static set of patient encounters with timestamps into serving data
+    that ranges from a given start date and goes until a given end date with a constant
+    window and stride length.
+
     Returns
     -------
     dictionary
         dictionary containing keys timestamp, X and y
-    '''
-    
+
+    """
+
     target_stream_X = []
-    target_stream_y = [] 
+    target_stream_y = []
     timestamps = []
 
-    admit_df = admin_data[[encounter_id,admit_timestamp]].sort_values(by=admit_timestamp)
+    admit_df = admin_data[[encounter_id, admit_timestamp]].sort_values(
+        by=admit_timestamp
+    )
     for single_date in daterange(start_date, end_date, stride, window):
-        if single_date.month ==1 and single_date.day == 1:
-            print(single_date.strftime("%Y-%m-%d"),"-",(single_date+timedelta(days=window)).strftime("%Y-%m-%d"))
-        encounters_inwindow = admit_df.loc[((single_date+timedelta(days=window)).strftime("%Y-%m-%d") > admit_df[admit_timestamp].dt.strftime("%Y-%m-%d")) 
-                            & (admit_df[admit_timestamp].dt.strftime("%Y-%m-%d") >= single_date.strftime("%Y-%m-%d")), encounter_id].unique()
+        if single_date.month == 1 and single_date.day == 1:
+            print(
+                single_date.strftime("%Y-%m-%d"),
+                "-",
+                (single_date + timedelta(days=window)).strftime("%Y-%m-%d"),
+            )
+        encounters_inwindow = admit_df.loc[
+            (
+                (single_date + timedelta(days=window)).strftime("%Y-%m-%d")
+                > admit_df[admit_timestamp].dt.strftime("%Y-%m-%d")
+            )
+            & (
+                admit_df[admit_timestamp].dt.strftime("%Y-%m-%d")
+                >= single_date.strftime("%Y-%m-%d")
+            ),
+            encounter_id,
+        ].unique()
         if ids_to_exclude is not None:
-            encounters_inwindow = [x for x in encounters_inwindow if x not in ids_to_exclude]
+            encounters_inwindow = [
+                x for x in encounters_inwindow if x not in ids_to_exclude
+            ]
         encounter_ids = X.index.get_level_values(0).unique()
         X_inwindow = X.loc[X.index.get_level_values(0).isin(encounters_inwindow)]
         y_inwindow = pd.DataFrame(y[np.in1d(encounter_ids, encounters_inwindow)])
         if not X_inwindow.empty:
             target_stream_X.append(X_inwindow)
             target_stream_y.append(y_inwindow)
-            timestamps.append((single_date+timedelta(days=window)).strftime("%Y-%m-%d"))
-    target_data = { 'timestamps': timestamps,
-                    'X': target_stream_X,
-                    'y': target_stream_y 
-                  }                 
-    return(target_data)
+            timestamps.append(
+                (single_date + timedelta(days=window)).strftime("%Y-%m-%d")
+            )
+    target_data = {"timestamps": timestamps, "X": target_stream_X, "y": target_stream_y}
+    return target_data
 
-def reshape_2d_to_3d(
-    data, 
-    num_timesteps
-):
+
+def reshape_2d_to_3d(data, num_timesteps):
     data = data.unstack()
     num_encounters = data.shape[0]
     data = data.values.reshape((num_encounters, num_timesteps, -1))

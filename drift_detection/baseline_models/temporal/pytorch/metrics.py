@@ -1,13 +1,8 @@
-from sklearn import metrics
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
 import seaborn as sns
-import pandas as pd
-import numpy as np
+from sklearn import metrics
 
 
 def plot_pretty_confusion_matrix(confusion_matrix):
@@ -84,7 +79,9 @@ def plot_auroc_across_timesteps(
     auroc_timesteps = []
     for i in range(num_timesteps):
         labels = y_test_labels[:, i]
-        pred_vals = y_pred_values[:, i]
+        # y_pred_values is not defined
+        # pred_vals = y_pred_values[:, i]
+        pred_vals = None
         preds = y_pred_labels[:, i]
         pred_vals = pred_vals[labels != -1]
         preds = preds[labels != -1]

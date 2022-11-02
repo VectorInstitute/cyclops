@@ -1,5 +1,6 @@
-from typing import Optional, List, Union, Sequence
 from dataclasses import dataclass
+from typing import List, Optional
+
 
 @dataclass
 class DataFrameMapping:
