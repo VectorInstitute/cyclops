@@ -25,9 +25,7 @@ jobs:
           sudo apt-get install libcurl4-openssl-dev libssl-dev pandoc
       - uses: actions/checkout@v3
       - name: Install dependencies, build docs and coverage report
-        run: |
-          pip install --upgrade pip
-          pip install poetry
+        run: pipx install poetry
       - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9.7
