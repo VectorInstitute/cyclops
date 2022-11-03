@@ -1,30 +1,31 @@
+"""Reductor Module."""
 import os
-import sys
-import numpy as np
 import pickle
+from typing import Tuple, Union
+
+import numpy as np
 import torch
-import torch.nn as nn
-from tqdm import tqdm
-from typing import Union, Tuple
 import torchxrayvision as xrv
+from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
-from sklearn.decomposition import PCA, KernelPCA
 from sklearn.random_projection import SparseRandomProjection
+from torch import nn
 from torch.utils.data import DataLoader
-from alibi_detect.cd.pytorch import HiddenOutput, preprocess_drift
+from tqdm import tqdm
 
 from drift_detection.baseline_models.temporal.pytorch.utils import (
-    get_temporal_model,
     get_device,
+    get_temporal_model,
 )
 
-class Reductor:
 
-    """
-    The Reductor class is used to reduce the dimensionality of the data.
+class Reductor:
+    """The Reductor class is used to reduce the dimensionality of the data.
+
     The reductor is initialized with a dimensionality reduction method.
     The reductor can then be fit to the data and used to transform the data.
+
     Example: (Data is loaded from memory)
     --------
     >>> from drift_detection.reductor import Reductor
@@ -33,6 +34,7 @@ class Reductor:
     >>> reductor = Reductor("PCA")
     >>> reductor.fit(X)
     >>> X_transformed = reductor.transform(X)
+
     Arguments
     ---------
     dr_method: String
@@ -60,14 +62,17 @@ class Reductor:
         If None, A new model is fit.
     var_ret: float
         The percentage of variance to retain for {"PCA", "SRP", "kPCA", "Isomap"}.
-            Note: This uses PCA to determine the number of components but is used for other methods (SRP, kPCA, Isomap).
+            Note: This uses PCA to determine the number of components
+                  but is used for other methods (SRP, kPCA, Isomap).
                   If this behavior is not desired, use n_components directly.
     n_components: int
-        The number of components to use for {"PCA", "SRP", "kPCA", "Isomap"}.  Must be defined for torch datasets.
+        The number of components to use for {"PCA", "SRP", "kPCA", "Isomap"}.
+        Must be defined for torch datasets.
     gmm_n_clusters: int
         The number of clusters to use for "GMM".
     random_state: int
         The global random seed.
+
     """
 
     def __init__(
@@ -77,7 +82,7 @@ class Reductor:
         var_ret: float = 0.8,
         n_components: int = None,
         n_features: int = None,
-        batch_size: int = 64,
+        # batch_size: int = 64,
         gmm_n_clusters: int = 2,
         random_state: int = 42,
     ):
@@ -91,7 +96,8 @@ class Reductor:
         self.device = get_device()
 
         self.random_state = random_state
-        np.random.seed(self.random_state)  # set global random seed for all methods
+        # set global random seed for all methods
+        np.random.seed(self.random_state)
 
         # dictionary of string methods with corresponding functions
         reductor_methods = {
@@ -115,29 +121,20 @@ class Reductor:
         }
 
         # check if dr_method is valid
-        if self.dr_method not in reductor_methods.keys():
+        if self.dr_method not in reductor_methods:
             raise ValueError(
                 "Invalid dr_method, dr_method must be one of the following: "
                 + str(self.get_available_dr_methods())
             )
 
-        if (
-            self.dr_method == "BBSDs_trained_LSTM"
-            or self.dr_method == "BBSDh_trained_LSTM"
-        ):
+        if self.dr_method in ("BBSDs_trained_LSTM", "BBSDh_trained_LSTM"):
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
-            self.model.load_state_dict(torch.load(self.model_path)['model'])
-        elif (
-            self.dr_method == "BBSDs_untrained_LSTM"
-            or self.dr_method == "BBSDh_untrained_LSTM"
-        ):
+            self.model.load_state_dict(torch.load(self.model_path)["model"])
+        elif self.dr_method in ("BBSDs_untrained_LSTM", "BBSDh_untrained_LSTM"):
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
-        elif (
-            self.dr_method == "BBSDs_untrained_FFNN"
-            or self.dr_method == "BBSDh_untrained_FFNN"
-        ):
+        elif self.dr_method in ("BBSDs_untrained_FFNN", "BBSDh_untrained_FFNN"):
             self.model = reductor_methods[self.dr_method](self.n_features)
-        elif self.dr_method == "BBSDs_txrv_CNN" or self.dr_method == "BBSDh_txrv_CNN":
+        elif self.dr_method in ("BBSDs_txrv_CNN", "BBSDh_txrv_CNN"):
             self.model = reductor_methods[self.dr_method](
                 weights="densenet121-res224-all"
             )
@@ -148,52 +145,42 @@ class Reductor:
 
     def load_model(self):
         """Load pre-trained model from path.
-        For scikit-learn models, a pickle is loaded from disk.
-        For the torch models, the "state_dict" is loaded from disk.
+
+        For scikit-learn models, a pickle is loaded from disk. For the torch models, the
+        "state_dict" is loaded from disk.
+
         """
-        if (
-            self.dr_method == "PCA"
-            or self.dr_method == "SRP"
-            or self.dr_method == "kPCA"
-            or self.dr_method == "Isomap"
-            or self.dr_method == "GMM"
-        ):
-            self.model = pickle.load(open(self.model_path, "rb"))
-        elif (
-            self.dr_method == "BBSDs_trained_LSTM"
-            or self.dr_method == "BBSDh_trained_LSTM"
-        ):
-            self.model.load_state_dict(torch.load(self.model_path)['model'])
-        print("Model loaded from {}".format(self.model_path))
+        if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
+            with open(self.model_path, "rb") as file:
+                self.model = pickle.load(file)
+        elif self.dr_method in ("BBSDs_trained_LSTM", "BBSDh_trained_LSTM"):
+            self.model.load_state_dict(torch.load(self.model_path)["model"])
+        print(f"Model loadded from {self.model_path}")
 
     def save_model(self, output_path: str):
-        """Saves the model to disk.
+        """Save the model to disk.
+
         Parameters
         ----------
         output_path: String
             path to save the model to
+
         """
-        if (
-            self.dr_method == "PCA"
-            or self.dr_method == "SRP"
-            or self.dr_method == "kPCA"
-            or self.dr_method == "Isomap"
-            or self.dr_method == "GMM"
-        ):
-            pickle.dump(self.model, open(output_path, "wb"))
-        elif (
-            self.dr_method == "BBSDs_trained_LSTM"
-            or self.dr_method == "BBSDh_trained_LSTM"
-        ):
+        if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
+            with open(output_path, "wb") as file:
+                pickle.dump(self.model, file)
+        elif self.dr_method in ("BBSDs_trained_LSTM", "BBSDh_trained_LSTM"):
             torch.save(self.model.state_dict(), output_path)
-        print("{} saved to {}".format(self.dr_method, output_path))
+        print(f"{self.dr_method} saved to {output_path}")
 
     def get_available_dr_methods(self):
-        """Returns a list of available dimensionality reduction methods.
+        """Return a list of available dimensionality reduction methods.
+
         Returns
         -------
         list
             list of available dimensionality reduction methods
+
         """
         return [
             "NoRed",
@@ -215,20 +202,24 @@ class Reductor:
         ]
 
     def get_dr_amount(self, X: np.ndarray) -> int:
-        """
-        Returns the number of components to be used to retain the variation specified.
+        """Return the number of components to be used to retain the variation specified.
+
         Returns
         -------
         int
             number of components.
+
         """
         pca = PCA(n_components=self.var_ret, svd_solver="full")
         pca.fit(X)
         return pca.n_components_
 
     def fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
-        """Fits the reductor to the data.
-        For pre-trained or untrained models, this function loads the weights or initializes the model, respectively.
+        """Fit the reductor to the data.
+
+        For pre-trained or untrained models,
+        this function loads the weights or initializes the model, respectively.
+
         Parameters
         ----------
         data:
@@ -236,20 +227,15 @@ class Reductor:
             Shape:
                 data: np.ndarray (n_samples, n_features)
                       or torch Dataset
+
         """
         # check if data is a numpy matrix or a torch dataset
         if isinstance(data, np.ndarray):
 
-            if (
-                self.dr_method == "PCA"
-                or self.dr_method == "SRP"
-                or self.dr_method == "kPCA"
-                or self.dr_method == "Isomap"
-                or self.dr_method == "GMM"
-            ):
+            if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
                 if self.n_components is None:
                     self.n_components = self.get_dr_amount(data)
-                    
+
                 self.model = self.model(n_components=self.n_components)
                 self.model.fit(data)
 
@@ -268,7 +254,8 @@ class Reductor:
         num_workers: int = None,
         progress: bool = True,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        """Transforms the data using the chosen dimensionality reduction method
+        """Transform the data using the chosen dimensionality reduction method.
+
         Parameters
         ----------
         data: np.ndarray (n_samples, n_features) or torch Dataset
@@ -277,50 +264,54 @@ class Reductor:
             batch size for LSTM inference/pytorch dataloader. Default: 32
         num_workers: int
             number of workers for pytorch dataloader. If None, uses max number of cpus.
+
         Returns
         -------
         X_transformed: numpy.matrix
             transformed data
         optionally: y: numpy.array
+            labels of the data
+
         """
         y = None
 
         if num_workers is None:
             num_workers = os.cpu_count()
 
-        if (
-            self.dr_method == "PCA"
-            or self.dr_method == "SRP"
-            or self.dr_method == "kPCA"
-            or self.dr_method == "Isomap"
-        ):
+        if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
             if isinstance(data, np.ndarray):
                 X_transformed = self.model.transform(data)
             elif isinstance(data, torch.utils.data.Dataset):
-                self.dataloader = DataLoader(
+                dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.batch_inference(self.model, progress)
+                X_transformed, y = self.batch_inference(
+                    self.model, dataloader, progress
+                )
 
         elif self.dr_method == "NoRed":
             if isinstance(data, np.ndarray):
-                return data
+                X_transformed = data
             elif isinstance(data, torch.utils.data.Dataset):
-                return NotImplementedError("NoRed not implemented for torch datasets")
+                raise NotImplementedError("NoRed not implemented for torch datasets")
         elif "BBSDs" in self.dr_method:
             if "txrv_CNN" in self.dr_method:
-                self.dataloader = DataLoader(
+                dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.xrv_clf_inference(self.model, progress)
+                X_transformed, y = self.xrv_clf_inference(
+                    self.model, dataloader, progress
+                )
             else:
                 X_transformed = self.minibatch_inference(data, self.model, progress)
         elif "BBSDh" in self.dr_method:
             if "txrv_CNN" in self.dr_method:
-                self.dataloader = DataLoader(
+                dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.xrv_clf_inference(self.model, progress)
+                X_transformed, y = self.xrv_clf_inference(
+                    self.model, dataloader, progress
+                )
                 X_transformed = np.where(X_transformed > 0.5, 1, 0)
             else:
                 X_transformed = self.minibatch_inference(data, self.model, progress)
@@ -328,22 +319,20 @@ class Reductor:
         elif self.dr_method == "GMM":
             X_transformed = self.model.predict_proba(data)
         elif self.dr_method == "TAE_txrv_CNN":
-            self.dataloader = DataLoader(
+            dataloader = DataLoader(
                 data, batch_size=batch_size, num_workers=num_workers
             )
-            X_transformed, y = self.xrv_ae_inference(self.model, progress)
-        if y is not None:
-            return X_transformed, y
-        else:
-            return X_transformed
+            X_transformed, y = self.xrv_ae_inference(self.model, dataloader, progress)
+        return X_transformed, y
 
     def feed_forward_neural_network(self, n_features: int):
-        """
-        Creates a feed forward neural network model.
+        """Create a feed forward neural network model.
+
         Returns
         -------
         model: torch.nn.Module
             feed forward neural network model.
+
         """
         ffnn = (
             nn.Sequential(
@@ -359,12 +348,13 @@ class Reductor:
         return ffnn
 
     def convolutional_neural_network(self):
-        """
-        Creates a convolutional neural network model.
+        """Create a convolutional neural network model.
+
         Returns
         -------
         torch.nn.Module
             convolutional neural network for dimensionality reduction.
+
         """
         cnn = (
             nn.Sequential(
@@ -387,12 +377,12 @@ class Reductor:
         input_dim: int,
         hidden_dim: int = 64,
         layer_dim: int = 2,
-        dropout: int = 0.2,
+        dropout: float = 0.2,
         output_dim: int = 1,
         last_timestep_only: bool = False,
     ):
-        """
-        Creates a recurrent neural network model.
+        """Create a recurrent neural network model.
+
         Parameters
         ----------
         model_name: str
@@ -409,10 +399,12 @@ class Reductor:
             number of output dimensions.
         last_timestep_only: bool
             if True, only the last timestep is used as input.
+
         Returns
         -------
         model: torch.nn.Module
             the rnn model.
+
         """
         model_params = {
             "device": self.device,
@@ -427,27 +419,31 @@ class Reductor:
         return model
 
     def gaussian_mixture_model(self):
-        """
-        Creates a gaussian mixture model.
-        """
+        """Create a gaussian mixture model."""
         gmm = GaussianMixture(n_components=self.gmm_n_clusters, covariance_type="full")
         return gmm
 
-    def minibatch_inference(self, data, model: nn.Module, batch_size: int = 32) -> np.ndarray:
-        """
-        Performs batch inference on in-memory data by breaking into series of mini-batches.
+    def minibatch_inference(
+        self, data, model: nn.Module, batch_size: int = 32
+    ) -> np.ndarray:
+        """Perform batch inference.
+
+        Performsbatch inferenceon in-memory data by
+        breaking into series of mini-batches.
+
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
+
         Returns
         -------
         X_transformed: np.ndarray
             the transformed data.
-        """
 
+        """
         if isinstance(data, np.ndarray):
-            X = torch.from_numpy(data.astype('float32'))
+            X = torch.from_numpy(data.astype("float32"))
         num_samples = X.shape[0]
         n_batches = int(np.ceil(num_samples / batch_size))
 
@@ -459,7 +455,7 @@ class Reductor:
                     i * batch_size,
                     min((i + 1) * batch_size, num_samples),
                 )
-                X_batch = X[batch_idx[0]:batch_idx[1]]
+                X_batch = X[batch_idx[0] : batch_idx[1]]
                 X_batch = X_batch.to(self.device)
                 X_transformed = model(X_batch)
                 if self.device.type == "cuda":
@@ -468,23 +464,27 @@ class Reductor:
         X_transformed = np.concatenate(X_transformed_all, axis=0)
         return X_transformed
 
-    def batch_inference(self, model: nn.Module, progress=True) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Performs batched inference on the dataset.
+    def batch_inference(
+        self, model: nn.Module, dataloader: DataLoader, progress=True
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Perform batched inference on the dataset.
+
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
+
         Returns
         -------
         X_transformed: np.ndarray
             the transformed dataset.
         labels: np.ndarray
             the labels of the transformed dataset.
+
         """
         imgs_transformed = []
         all_labels = []
-        for batch in (tqdm(self.dataloader) if progress else self.dataloader):
+        for batch in tqdm(dataloader) if progress else dataloader:
             imgs = batch["img"]
             labels = batch["lab"]
             all_labels.append(labels)
@@ -495,24 +495,28 @@ class Reductor:
         labels = np.concatenate(all_labels)
         return X_transformed, labels
 
-    def xrv_clf_inference(self, model: nn.Module, progress=True) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Performs batched inference with the TXRV Classifier on the dataset.
+    def xrv_clf_inference(
+        self, model: nn.Module, dataloader: DataLoader, progress=True
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Perform batched inference with the TXRV Classifier on the dataset.
+
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
+
         Returns
         -------
         X_transformed: np.ndarray
             the transformed dataset.
         labels: np.ndarray
             the labels of the transformed dataset.
+
         """
         all_preds = []
         all_labels = []
         model = model.to(self.device).eval()
-        for batch in (tqdm(self.dataloader) if progress else self.dataloader):
+        for batch in tqdm(dataloader) if progress else dataloader:
             imgs = batch["img"]
             labels = batch["lab"]
             imgs = imgs.to(self.device)
@@ -525,24 +529,28 @@ class Reductor:
         labels = np.concatenate(all_labels)
         return X_transformed, labels
 
-    def xrv_ae_inference(self, model: nn.Module, progress=True) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Performs batched inference with the TXRV Autoencoder on the dataset.
+    def xrv_ae_inference(
+        self, model: nn.Module, dataloader: DataLoader, progress=True
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Perform batched inference with the TXRV Autoencoder on the dataset.
+
         Parameters
         ----------
         model: torch.nn.Module
             the model to use for inference.
+
         Returns
         -------
         X_transformed: np.ndarray
             the transformed dataset.
         labels: np.ndarray
             the labels of the transformed dataset.
+
         """
         all_preds = []
         all_labels = []
         model = model.to(self.device).eval()
-        for batch in (tqdm(self.dataloader) if progress else self.dataloader):
+        for batch in tqdm(dataloader) if progress else dataloader:
             imgs = batch["img"]
             labels = batch["lab"]
             imgs = imgs.to(self.device)

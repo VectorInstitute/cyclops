@@ -1,27 +1,49 @@
+"""Deep Density Model (DDM) for FSD drift detection."""
 import numpy as np
 import torch
 from sklearn.decomposition import PCA
-from torch.distributions.independent import Independent
-from torch.distributions.multivariate_normal import MultivariateNormal
 from torch.distributions.normal import Normal
 
 
 class SingleGaussianizeStep:
+    """Single Gaussianize Step.
+
+    Parameters
+    ----------
+    n_bins : int, optional
+        Number of bins for histogram, by default 10
+    alpha : int, optional
+        Alpha for histogram, by default 10
+    lam_variance : float, optional
+        Lambda variance for normal, by default 0
+
+    Methods
+    -------
+    fit : Fit the model
+    fit_transform : Fit the model and return the transformed data
+    log_prob : Return the log probability of the data
+    inverse : Return the inverse of the transformation
+
+    """
+
     def __init__(self, n_bins=10, alpha=10, lam_variance=0):
         self.n_bins = n_bins
         self.alpha = alpha
         self.lam_variance = lam_variance
 
     def fit(self, x):
+        """Fit the model."""
         self.fit_transform(x)
         return self
 
     def fit_transform(self, x):
-        all_latent = []
+        """Fit the model and return the transformed data."""
+        pass
         # 1. PCA transform
         pca = PCA(random_state=0)
         pca.fit(x.detach().numpy())
-        # assert np.isclose(np.abs(np.linalg.det(pca.components_)), 1), 'Should be close to one'
+        # assert np.isclose(np.abs(np.linalg.det(pca.components_)), 1),
+        # 'Should be close to one'
         Q_pca = torch.from_numpy(pca.components_)
         x = torch.mm(x, Q_pca.T)
 
@@ -61,8 +83,10 @@ class SingleGaussianizeStep:
         return x
 
     def log_prob(self, x, return_latent=False):
+        """Return the log probability of the data."""
         # 1. PCA
-        log_prob = torch.zeros_like(x[:, 0])  # Orthogonal transform has logdet of 0
+        # Orthogonal transform has logdet of 0
+        log_prob = torch.zeros_like(x[:, 0])
         x = torch.mm(x, self.Q_pca_.T)
 
         # 2. Ind normal
@@ -105,6 +129,7 @@ class SingleGaussianizeStep:
             return log_prob
 
     def inverse(self, x):
+        """Return the inverse of the transformation."""
         # 4. Inverse standard normal
         if True:
             x = self.standard_normal_.cdf(
@@ -131,17 +156,19 @@ class SingleGaussianizeStep:
 
 
 class TorchUnitHistogram:
-    """Assumes all data is unit norm."""
+    """Assume all data is unit norm."""
 
     def __init__(self, n_bins, alpha):
         self.n_bins = n_bins
         self.alpha = alpha
 
     def fit(self, x):
+        """Fit the model."""
         x = x.numpy()
         # Do numpy stuff
         hist, bin_edges = np.histogram(x, bins=self.n_bins, range=[0, 1])
-        hist = np.array(hist, dtype=float)  # Make float so we can add non-integer alpha
+        # Make float so we can add non-integer alpha
+        hist = np.array(hist, dtype=float)
         hist += self.alpha  # Smooth histogram by alpha so no areas have 0 probability
         cum_hist = np.cumsum(hist)
         cum_hist = cum_hist / cum_hist[-1]  # Normalize cumulative histogram
@@ -167,6 +194,7 @@ class TorchUnitHistogram:
         return self
 
     def cdf(self, x):
+        """Return the cdf of the data."""
         assert torch.all(
             torch.logical_and(x >= 0, x <= 1)
         ), "All inputs should be between 0 and 1"
@@ -175,6 +203,7 @@ class TorchUnitHistogram:
         return self.bin_scale_[bin_idx] * x + self.bin_shift_[bin_idx]
 
     def icdf(self, x):
+        """Return the inverse cdf of the data."""
         assert torch.all(
             torch.logical_and(x >= 0, x <= 1)
         ), "All inputs should be between 0 and 1"
@@ -183,11 +212,13 @@ class TorchUnitHistogram:
         return (x - self.bin_shift_[bin_idx]) / self.bin_scale_[bin_idx]
 
     def log_prob(self, x):
+        """Return the log probability of the data."""
         # Find closest bin
         bin_idx = self._get_bin_idx(x)
         return torch.log(self.bin_scale_[bin_idx])
 
     def _get_bin_idx(self, x):
+        """Return the bin index for each x."""
         return (
             torch.floor(x.detach() * self.n_bins)
             .clamp(0, self.n_bins - 1)
@@ -195,6 +226,7 @@ class TorchUnitHistogram:
         )
 
     def _get_inverse_bin_idx(self, x):
+        """Return the inverse bin index for each x."""
         bin_idx = -torch.ones_like(x, dtype=torch.long)
         for ii, (left_edge, right_edge) in enumerate(
             zip(self.cdf_on_edges_[:-1], self.cdf_on_edges_[1:])

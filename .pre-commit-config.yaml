@@ -1,8 +1,3 @@
-exclude: |
-    (?x)(
-        ^drift_detection/|
-        ^notebooks/misc/batching_explore.ipynb
-    )
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0  # Use the ref you want to point at
@@ -44,6 +39,11 @@ repos:
       language: python
       entry: pflake8
       files: ".*.py$"
+      # ignore E203/W503 to avoid conflict with black:
+      # https://github.com/psf/black/issues/354
+      # ignore F401 to allow __init__ import to make
+      # subpackages available at package level
+      args: ['--ignore=E203, W503, F401']
 
   - repo: https://github.com/PyCQA/pydocstyle
     rev: 6.1.1
@@ -66,6 +66,9 @@ repos:
       language: python
       entry: pylint
       files: ".*.py$"
+      exclude: fsd
+      # args: ["--rcfile=./.pylintrc"]
+
 
   - repo: local
     hooks:
@@ -82,7 +85,11 @@ repos:
     - id: nbqa-black
     - id: nbqa-isort
     - id: nbqa-check-ast
+
     - id: nbqa-flake8
+      # ignore E203/W503 to avoid conflict with black:
+      # https://github.com/psf/black/issues/354
+      args: ['--ignore=E203,W503']
       # - id: nbqa-mypy
 
   - repo: https://github.com/kynan/nbstripout

@@ -4,17 +4,29 @@ from datetime import datetime
 from os import path
 from typing import Any, Dict, List, Optional, Tuple
 
-import app_query
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 import pandas as pd
-from component_utils import (
+from dash import Dash, Input, Output, State, html
+from flask_caching import Cache
+
+from cyclops.plotter import plot_histogram, plot_timeline
+from cyclops.processors.column_names import ENCOUNTER_ID
+from cyclops.utils.file import join, load_dataframe, save_dataframe
+
+# import app_query
+from . import app_query
+
+# from component_utils import (
+from .component_utils import (
     generate_table_contents,
     get_dataframe_info,
     recently_clicked,
     upload_to_dataframe,
 )
-from consts import (
+
+# from consts import (
+from .consts import (
     APP_DIAG,
     APP_ENC,
     APP_PAGE_ANALYZE,
@@ -23,20 +35,14 @@ from consts import (
     NAV_PAGES,
     TABLE_IDS,
 )
-from dash import Dash, Input, Output, State, html
-from flask_caching import Cache
-from tabs.analyze_tab import analyze_page_components
-from tabs.query_tab import query_page_components
-from tabs.visualizer_tab import (
+from .tabs.analyze_tab import analyze_page_components
+from .tabs.query_tab import query_page_components
+from .tabs.visualizer_tab import (
     encounters_events,
     events,
     timeline_plot_components,
     visualizer_page_components,
 )
-
-from cyclops.plotter import plot_histogram, plot_timeline
-from cyclops.processors.column_names import ENCOUNTER_ID
-from cyclops.utils.file import join, load_dataframe, save_dataframe
 
 ANALYZE_DATA = None
 

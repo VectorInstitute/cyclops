@@ -1,20 +1,12 @@
-import pandas as pd
-import numpy as np
-import torch
-import torch.nn as nn
-from tqdm import tqdm
-from dataclasses import dataclass
-from torch.utils.data import TensorDataset, DataLoader
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+"""Dataclass for iterable dataset of inputs and targets."""
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class Data:
     """Data class."""
 
     def __init__(self, inputs, target):
-        """
-        Initialization
-        """
+        """Initialize Data class."""
         self.inputs = inputs
         self.target = target
 

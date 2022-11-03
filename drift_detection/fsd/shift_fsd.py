@@ -1,8 +1,7 @@
+"""FSD Shift Experiments."""
 import pickle
-import sys
 from os import path
 from time import time
-from warnings import warn
 
 import numpy as np
 from divergence import FisherDivergence, KnnKS, ModelKS
@@ -10,15 +9,14 @@ from featureshiftdetector import FeatureShiftDetector
 from fsd_models import GaussianDensity, Knn
 from fsd_utils import (
     create_graphical_model,
-    get_confusion_tensor,
     get_detection_metrics,
     get_localization_metrics,
     marginal_attack,
-    plot_confusion_matrix,
 )
 
 # Experiment Parameters
-n_samples = 1000  # The number of samples in p, q (thus n_samples_total = n_samples*2)
+# The number of samples in p, q (thus n_samples_total = n_samples*2)
+n_samples = 1000
 n_bootstrap_runs = 250
 n_expectation = 30
 n_neighbors = 100
@@ -33,9 +31,7 @@ mi_list = [0.2, 0.1, 0.05, 0.01]
 graph_type_list = ["complete", "grid", "cycle", "random"]
 experiment_list = ["MB-SM", "MB-KS", "KNN-KS"]
 
-experiment_results_dict = (
-    dict()
-)  # the dictionary of results per experiment_graphtype_mi
+experiment_results_dict = {}  # the dictionary of results per experiment_graphtype_mi
 for experiment in experiment_list:
     for graph_type in graph_type_list:
         for mi in mi_list:
@@ -46,7 +42,8 @@ for experiment in experiment_list:
                 # Setting up specific experiment information
                 rng = np.random.RandomState(random_seed)
                 print(
-                    f"Starting: {experiment} on {graph_type} graph with {mi} MI and {random_seed} as the random seed"
+                    f"Starting: {experiment} on {graph_type} graph with {mi} MI \
+                        and {random_seed} as the random seed"
                 )
                 graph = create_graphical_model(
                     sqrtn=sqrtn,
@@ -64,7 +61,8 @@ for experiment in experiment_list:
                 else:
                     model = Knn(n_neighbors=n_neighbors)
                     statistic = KnnKS(model, n_expectation=n_expectation)
-                # Localization results are [did attack happen, was it localized, the statistic score] for each feature
+                # Localization results are [did attack happen, was it
+                # localized, the statistic score] for each feature
                 localization_results = np.zeros(shape=(n_dim, n_attacks * 2, 3))
                 # Detection results are [did a shift happen, was it detected]
                 detection_results = np.zeros(shape=(n_attacks * 2, 2))
@@ -85,19 +83,22 @@ for experiment in experiment_list:
                     significance_level=alpha,
                 )
 
-                ############################################################################################
-                # since we are using data always drawn from the same distribution we only need to fit once
+                ###############################################################
+                # since we are using data always drawn from the same distribution
+                # we only need to fit once
                 # TODO: #INSERT LOAD DATA FOR BASELINE
                 # X_boot, Y_boot =  #INSERT LOAD DATA FOR BASELINE
-                ############################################################################################
+                X_boot, Y_boot = None, None
+                ###############################################################
                 fsd.fit(X_boot, Y_boot)  # sets the detection threshold for us.
                 # beginning testing
                 for test_idx in range(n_attacks * 2):
 
-                    ############################################################################################
+                    ###########################################################
                     # TODO: INSERT LOAD DATA FOR CASE
                     # X_test, Y_test = # INSERT LOAD DATA FOR CASE
-                    ############################################################################################
+                    X_test, Y_test = None, None
+                    ###########################################################
                     start = time()
                     if detection_results[test_idx, 0]:  # if attack
                         j_attacked = random_feature_idxs[test_idx]
@@ -107,9 +108,8 @@ for experiment in experiment_list:
                     )
                     localization_results[:, test_idx, 2] = scores
                     detection_results[test_idx, 1] = detection
-                    if (
-                        detection
-                    ):  # if a distribution shift is detected, record localization results
+                    if detection:  # if a distribution shift is detected,
+                        # record localization results
                         localization_results[attacked_features, test_idx, 1] = 1
                     test_time_list.append(time() - start)
 
@@ -134,7 +134,8 @@ for experiment in experiment_list:
             plot_title = (
                 f"Detection for {experiment} on {graph_type} graph with {mi} MI"
             )
-            # Uncomment below if you would like a detection confusion matrix plotted for each experiment
+            # Uncomment below if you would like a detection confusion matrix
+            # plotted for each experiment
             # plot_confusion_matrix(detection_metrics["confusion_matrix"],
             #                       title=plot_title, plot=True)  # plots cm
             # recording localization results across seeds

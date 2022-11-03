@@ -1,18 +1,15 @@
-from sklearn import metrics
-import matplotlib as mpl
+"""Metrics for temporal pytorch models."""
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
 import seaborn as sns
-import pandas as pd
-import numpy as np
+from sklearn import metrics
 
 
 def plot_pretty_confusion_matrix(confusion_matrix):
+    """Plot a confusion matrix with seaborn heatmap."""
     sns.set(style="white")
-    fig, ax = plt.subplots(figsize=(9, 6))
+    _, ax = plt.subplots(figsize=(9, 6))
     sns.heatmap(
         np.eye(2),
         annot=confusion_matrix,
@@ -45,13 +42,14 @@ def plot_pretty_confusion_matrix(confusion_matrix):
             color=text_elt.get_color(),
             ha="center",
             va="top",
-            size=24
+            size=24,
         )
     plt.tight_layout()
     plt.show()
 
 
 def plot_confusion_matrix(confusion_matrix, class_names):
+    """Plot a confusion matrix with seaborn heatmap."""
     confusion_matrix = (
         confusion_matrix.astype("float") / confusion_matrix.sum(axis=1)[:, np.newaxis]
     )
@@ -80,11 +78,14 @@ def plot_auroc_across_timesteps(
     y_pred_labels,
     y_test_labels,
 ):
+    """Plot AUROC across timesteps."""
     num_timesteps = y_pred_labels.shape[1]
     auroc_timesteps = []
     for i in range(num_timesteps):
         labels = y_test_labels[:, i]
-        pred_vals = y_pred_values[:, i]
+        # y_pred_values is not defined
+        # pred_vals = y_pred_values[:, i]
+        pred_vals = []
         preds = y_pred_labels[:, i]
         pred_vals = pred_vals[labels != -1]
         preds = preds[labels != -1]
@@ -110,6 +111,7 @@ def plot_auroc_across_timesteps(
 
 
 def plot_risk_mortality(predictions, labels=None):
+    """Plot risk of mortality across timesteps."""
     prediction_hours = list(range(24, 168, 24))
     is_mortality = labels == 1
     after_mortality = labels == -1
@@ -165,13 +167,14 @@ def plot_risk_mortality(predictions, labels=None):
 
 
 def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
-    cf = metrics.confusion_matrix(y_test_labels, y_pred_labels)
+    """Print metrics for binary classification."""
+    conf_matrix = metrics.confusion_matrix(y_test_labels, y_pred_labels)
     if verbose:
         print("confusion matrix:")
-        print(cf)
-    cf = cf.astype(np.float32)
-    tn, fp, fn, tp = cf.ravel()
-    acc = (tn + tp) / np.sum(cf)
+        print(conf_matrix)
+    conf_matrix = conf_matrix.astype(np.float32)
+    tn, fp, fn, tp = conf_matrix.ravel()
+    acc = (tn + tp) / np.sum(conf_matrix)
     prec0 = tn / (tn + fn)
     prec1 = tp / (tp + fp)
     rec0 = tn / (tn + fp)
@@ -179,21 +182,21 @@ def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1)
 
     auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
 
-    (precisions, recalls, thresholds) = metrics.precision_recall_curve(
+    (precisions, recalls, _) = metrics.precision_recall_curve(
         y_test_labels, y_pred_values
     )
     auprc = metrics.auc(recalls, precisions)
     minpse = np.max([min(x, y) for (x, y) in zip(precisions, recalls)])
 
     if verbose:
-        print("accuracy = {}".format(acc))
-        print("precision class 0 = {}".format(prec0))
-        print("precision class 1 = {}".format(prec1))
-        print("recall class 0 = {}".format(rec0))
-        print("recall class 1 = {}".format(rec1))
-        print("AUC of ROC = {}".format(auroc))
-        print("AUC of PRC = {}".format(auprc))
-        print("min(+P, Se) = {}".format(minpse))
+        print(f"accuracy: {acc}")
+        print(f"precision class 0: {prec0}")
+        print(f"precision class 1: {prec1}")
+        print(f"recall class 0: {rec0}")
+        print(f"recall class 1: {rec1}")
+        print(f"AUC of ROC: {auroc}")
+        print(f"AUC of PRC: {auprc}")
+        print(f"min(+P, Se): {minpse}")
 
     return {
         "acc": acc,

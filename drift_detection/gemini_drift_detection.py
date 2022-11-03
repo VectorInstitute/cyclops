@@ -1,35 +1,33 @@
-import datetime
+"""Script to run drift detection for GEMINI use case with set of chosen parameters."""
 import os
 import sys
-from functools import reduce
-import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
-    accuracy_score,
     auc,
     average_precision_score,
-    confusion_matrix,
     precision_recall_curve,
-    roc_auc_score,
     roc_curve,
 )
 
-from drift_detector.explainer import ShiftExplainer
-from experiments import *
-from utils.constants import *
-from utils.plot_utils import errorfill, plot_roc, plot_pr
-from utils.utils import (
-    import_dataset_hospital,
-    run_shift_experiment,
-    run_synthetic_shift_experiment,
-)
-from baseline_models.static.utils import run_model
+from .baseline_models.static.utils import run_model
+
+# from utils.constants import *
+# from utils.utils import (
+#     import_dataset_hospital,
+#     run_shift_experiment,
+#     run_synthetic_shift_experiment,
+# )
+from .gemini.utils import import_dataset_hospital
+
+# from drift_detector import Experimenter
+
 
 DATASET = sys.argv[1]
 SHIFT = sys.argv[2]
 
-# Define results path and create directory.
+# Define results PATH and create directory.
 PATH = "/mnt/nfs/project/delirium/drift_exp/results/"
 PATH += DATASET + "_"
 PATH += SHIFT + "_"
@@ -95,7 +93,8 @@ for si, SHIFT in enumerate(shifts):
     for oi, OUTCOME in enumerate(OUTCOMES):
         for hi, HOSPITAL in enumerate(HOSPITALS):
             for mi, MODEL in enumerate(MODELS):
-                print("{} | {} | {} | {}".format(SHIFT, OUTCOME, HOSPITAL, MODEL))
+                print(f"Running {SHIFT} {OUTCOME} {HOSPITAL} {MODEL}")
+                admin_data, X, y = None, None, None
                 if SHIFT in ["covid", "seasonal"]:
                     (
                         (X_train, y_train),
@@ -104,7 +103,14 @@ for si, SHIFT in enumerate(shifts):
                         feats,
                         orig_dims,
                     ) = import_dataset_hospital(
-                        SHIFT, OUTCOME, HOSPITAL, NA_CUTOFF, shuffle=True
+                        admin_data,
+                        X,
+                        y,
+                        SHIFT,
+                        OUTCOME,
+                        HOSPITAL,
+                        NA_CUTOFF,
+                        shuffle=True,
                     )
 
                 else:
@@ -115,10 +121,17 @@ for si, SHIFT in enumerate(shifts):
                         feats,
                         orig_dims,
                     ) = import_dataset_hospital(
-                        "baseline", OUTCOME, HOSPITAL, NA_CUTOFF, shuffle=True
+                        admin_data,
+                        X,
+                        y,
+                        "baseline",
+                        OUTCOME,
+                        HOSPITAL,
+                        NA_CUTOFF,
+                        shuffle=True,
                     )
-                    X_t_1, y_t_1 = X_t.copy(), y_t.copy()
-                    (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
+                    X_t_1, y_t_1 = X_train.copy(), y_train.copy()
+                    # (X_t_1, y_t_1) = apply_shift(X_tr, y_tr, X_t_1, y_t_1, shift)
                 optimised_model = run_model(MODEL, X_train, y_train, X_val, y_val)
 
                 # calc metrics for validation set
@@ -146,21 +159,21 @@ for si, SHIFT in enumerate(shifts):
                 shift_auc[si, oi, hi, mi, :] = [val_roc_auc, test_roc_auc]
                 shift_pr[si, oi, hi, mi, :] = [val_avg_pr, test_avg_pr]
 
-auc_file = PATH + "/driftexp_auc.csv"
+AUC_FILE = PATH + "/driftexp_auc.csv"
 auc = np.rollaxis(shift_auc, 2, 0)
 cols = pd.MultiIndex.from_product([OUTCOMES, HOSPITALS, MODELS])
 index = pd.MultiIndex.from_product([shifts, ["VAL_ROC_AUC", "TEST_ROC_AUC"]])
 auc = auc.T.reshape(len(shifts) * 2, len(OUTCOMES) * len(HOSPITALS) * len(MODELS))
 auc = pd.DataFrame(auc, columns=cols, index=index)
-auc.to_csv(auc_file, sep="\t")
+auc.to_csv(AUC_FILE, sep="\t")
 
-pr_file = PATH + "/driftexp_pr.csv"
+PR_FILE = PATH + "/driftexp_pr.csv"
 pr = np.rollaxis(shift_pr, 2, 0)
 cols = pd.MultiIndex.from_product([OUTCOMES, HOSPITALS, MODELS])
 index = pd.MultiIndex.from_product([shifts, ["VAL_AVG_PR", "TEST_AVG_PR"]])
 pr = pr.T.reshape(len(shifts) * 2, len(OUTCOMES) * len(HOSPITALS) * len(MODELS))
 pr = pd.DataFrame(pr, columns=cols, index=index)
-pr.to_csv(pr_file, sep="\t")
+pr.to_csv(PR_FILE, sep="\t")
 
 # Run shift experiments
 mean_dr_md_pval = np.ones(
@@ -179,57 +192,56 @@ for si, SHIFT in enumerate(shifts):
     for hi, HOSPITAL in enumerate(HOSPITALS):
         for di, DR_TECHNIQUE in enumerate(DR_TECHNIQUES):
             for mi, MD_TEST in enumerate(MD_TESTS):
-                print(
-                    "{} | {} | {} | {}".format(SHIFT, HOSPITAL, DR_TECHNIQUE, MD_TEST)
-                )
-                if np.any(mean_dr_md[si, hi, di, mi, :] == -1):
+                print(f"Running {SHIFT} {HOSPITAL} {DR_TECHNIQUE} {MD_TEST} {SAMPLES}")
+                if np.any(mean_dr_md_pval[si, hi, di, mi, :] == -1):
                     try:
                         if SHIFT in ["covid", "seasonal"]:
-                            mean_p_vals, std_p_vals,
-                            mean_dist, std_dist = run_shift_experiment(
-                                shift=SHIFT,
-                                outcome=OUTCOME,
-                                hospital=HOSPITAL,
-                                path=PATH,
-                                dr_technique=DR_TECHNIQUE,
-                                md_test=MD_TEST,
-                                samples=SAMPLES,
-                                dataset=DATASET,
-                                sign_level=SIGN_LEVEL,
-                                na_cutoff=NA_CUTOFF,
-                                random_runs=RANDOM_RUNS,
-                                calc_acc=CALC_ACC,
-                            )
+                            # mean_p_vals, std_p_vals,
+                            # mean_dist, std_dist = run_shift_experiment(
+                            #     shift=SHIFT,
+                            #     outcome=OUTCOME,
+                            #     hospital=HOSPITAL,
+                            #     PATH=PATH,
+                            #     dr_technique=DR_TECHNIQUE,
+                            #     md_test=MD_TEST,
+                            #     samples=SAMPLES,
+                            #     dataset=DATASET,
+                            #     sign_level=SIGN_LEVEL,
+                            #     na_cutoff=NA_CUTOFF,
+                            #     random_runs=RANDOM_RUNS,
+                            #     calc_acc=CALC_ACC,
+                            # )
+                            pass
                         else:
-                            (
-                                mean_p_vals,
-                                std_p_vals,
-                                mean_dist,
-                                std_dist,
-                            ) = run_synthetic_shift_experiment(
-                                shift=SHIFT,
-                                outcome=OUTCOME,
-                                hospital=HOSPITAL,
-                                path=PATH,
-                                dr_technique=DR_TECHNIQUE,
-                                md_test=MD_TEST,
-                                samples=SAMPLES,
-                                dataset=DATASET,
-                                sign_level=SIGN_LEVEL,
-                                na_cutoff=NA_CUTOFF,
-                                random_runs=RANDOM_RUNS,
-                                calc_acc=CALC_ACC,
-                            )
-                        mean_dr_md_pval[si, hi, di, mi, :] = mean_p_vals
-                        std_dr_md_pval[si, hi, di, mi, :] = std_p_vals
-                        mean_dr_md_dist[si, hi, di, mi, :] = mean_dist
-                        std_dr_md_dist[si, hi, di, mi, :] = std_dist
-                    except ValueError as e:
+                            pass
+                            # (
+                            #     mean_p_vals,
+                            #     std_p_vals,
+                            #     mean_dist,
+                            #     std_dist,
+                            # ) = run_synthetic_shift_experiment(
+                            #     shift=SHIFT,
+                            #     outcome=OUTCOME,
+                            #     hospital=HOSPITAL,
+                            #     PATH=PATH,
+                            #     dr_technique=DR_TECHNIQUE,
+                            #     md_test=MD_TEST,
+                            #     samples=SAMPLES,
+                            #     dataset=DATASET,
+                            #     sign_level=SIGN_LEVEL,
+                            #     na_cutoff=NA_CUTOFF,
+                            #     random_runs=RANDOM_RUNS,
+                            #     calc_acc=CALC_ACC,
+                            # )
+                        # mean_dr_md_pval[si, hi, di, mi, :] = mean_p_vals
+                        # std_dr_md_pval[si, hi, di, mi, :] = std_p_vals
+                        # mean_dr_md_dist[si, hi, di, mi, :] = mean_dist
+                        # std_dr_md_dist[si, hi, di, mi, :] = std_dist
+                    except ValueError:
                         print("Value Error")
-                        pass
 
 
-means_pval_file = PATH + "/driftexp_pval_means.csv"
+MEANS_PVAL_FILE = PATH + "/driftexp_pval_means.csv"
 means_pval = np.moveaxis(mean_dr_md_pval, 4, 2)
 cols = pd.MultiIndex.from_product([DR_TECHNIQUES, MD_TESTS])
 index = pd.MultiIndex.from_product([shifts, HOSPITALS, SAMPLES])
@@ -238,12 +250,12 @@ means_pval = means_pval.reshape(
 )
 means_pval = pd.DataFrame(means_pval, columns=cols, index=index)
 means_pval = pd.DataFrame(means_pval, columns=cols, index=SAMPLES)
-means_pval.to_csv(means_pval_file, sep="\t")
+means_pval.to_csv(MEANS_PVAL_FILE, sep="\t")
 
-stds_pval_file = PATH + "/driftexp_pval_stds.csv"
+STDS_PVAL_FILE = PATH + "/driftexp_pval_stds.csv"
 stds_pval = np.moveaxis(std_dr_md_pval, 4, 2)
 stds_pval = stds_pval.reshape(
     len(shifts) * len(HOSPITALS) * len(SAMPLES), len(DR_TECHNIQUES) * len(MD_TESTS)
 )
 stds_pval = pd.DataFrame(stds_pval, columns=cols, index=index)
-stds_pval.to_csv(stds_pval_file, sep="\t")
+stds_pval.to_csv(STDS_PVAL_FILE, sep="\t")
