@@ -18,7 +18,6 @@ jobs:
       - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9.7
-          cache: 'poetry'
       - name: Build package
         run: poetry build
       - name: Publish package
