@@ -1,11 +1,14 @@
 [tool.poetry]
-name = "cyclops"
+name = "pycyclops"
 version = "0.1.1"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
 repository = "https://github.com/VectorInstitute/cyclops"
 documentation = "https://vectorinstitute.github.io/cyclops/"
+packages = [
+    { include = "cyclops" },
+]
 
 [tool.poetry.dependencies]
 python = "3.9.7"
@@ -26,7 +29,7 @@ nb-black = "^1.0.7"
 black = "^22.1.0"
 tables = "^3.7.0"
 numpydoc = "^1.2"
-pyproject-flake8 = "^0.0.1-alpha.2"
+pyproject-flake8 = "5.0.4"
 pytest-cov = "^3.0.0"
 pyarrow = "^7.0.0"
 llvmlite = "0.38.0"
@@ -93,6 +96,7 @@ non_interactive = true
     good-names-rgxs=["X_.+", "x_.+", "y_.+", "df_.+"]
 [tool.flake8]
 max-line-length = 88
+extend-ignore = ["E203", "W503", "F401"]
 
 [tool.coverage]
     [tool.coverage.run]
