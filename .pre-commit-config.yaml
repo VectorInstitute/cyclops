@@ -66,6 +66,9 @@ repos:
       language: python
       entry: pylint
       files: ".*.py$"
+      exclude: fsd
+      args: ["--rcfile=./.pylintrc"]
+
 
   - repo: local
     hooks:

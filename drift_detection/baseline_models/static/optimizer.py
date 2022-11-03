@@ -1,6 +1,5 @@
 """Optimizer."""
 
-import math
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -70,7 +69,7 @@ class Optimizer:
         # Returns the loss
         return loss.item()
 
-    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):
+    def train(self, train_loader, val_loader, n_epochs=50):
         """Train pytorch model.
 
         Parameters
@@ -88,7 +87,6 @@ class Optimizer:
 
         """
         model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-        math.inf
 
         for epoch in range(1, n_epochs + 1):
             batch_losses = []
@@ -97,7 +95,7 @@ class Optimizer:
                 y_batch = y_batch.to(self.device)
                 loss = self.train_step(x_batch, y_batch)
 
-                assert not (np.isnan(loss).any())
+                assert not np.isnan(loss).any()
 
                 batch_losses.append(loss)
             training_loss = np.mean(batch_losses)
@@ -113,7 +111,7 @@ class Optimizer:
                     val_loss = self.loss_fn(yhat, y_val)
                     val_loss = val_loss.sum().item()
 
-                    assert not (np.isnan(val_loss).any())
+                    assert not np.isnan(val_loss).any()
 
                     batch_val_losses.append(val_loss)
                 validation_loss = np.mean(batch_val_losses)

@@ -6,12 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# from drift_detector import Experimenter
-from drift_detector.plotter import errorfill
-
-# from gemini.constants import *
-from gemini.utils import run_shift_experiment
-
 from drift_detection.drift_detector.plotter import (
     brightness,
     colors,
@@ -19,6 +13,12 @@ from drift_detection.drift_detector.plotter import (
     linestyles,
     markers,
 )
+
+# from drift_detector import Experimenter
+from .drift_detector.plotter import errorfill
+
+# from gemini.constants import *
+from .gemini.utils import run_shift_experiment
 
 DATASET = sys.argv[1]
 SHIFT = sys.argv[2]
@@ -117,7 +117,8 @@ for si, SHIFT in enumerate(EXPERIMENTS):
         for mi, MD_TEST in enumerate(MD_TESTS):
             if np.any(mean_dr_md_pval[si, di, mi, :] == -1):
                 print(
-                    "{} | {} | {} | {}".format(SHIFT, HOSPITAL, DR_TECHNIQUE, MD_TEST)
+                    f"{SHIFT} | {HOSPITAL} | {DR_TECHNIQUE} |\
+                         {DR_TECHNIQUE} | {MD_TEST}"
                 )
                 try:
                     mean_p_vals, std_p_vals, mean_dist, std_dist = run_shift_experiment(
@@ -155,7 +156,8 @@ for si, shift in enumerate(EXPERIMENTS):
                     std_dr_md_pval[si, di, mi, :],
                     fmt=linestyles[si] + markers[si],
                     color=colorscale(colors[si], brightness[si]),
-                    label="%s" % "_".join([shift, dr_technique, md_test]),
+                    label=f"{shift}_{dr_technique}_{md_test}",
+                    # label="%s" % "_".join([shift, dr_technique, md_test]),
                 )
 plt.xlabel("Number of samples from test data")
 plt.ylabel("$p$-value")
@@ -163,7 +165,7 @@ plt.axhline(y=SIGN_LEVEL, color="k")
 plt.legend()
 plt.show()
 
-means_pval_file = PATH + "/driftexp_pval_means.csv"
+MEANS_PVAL_FILE = PATH + "/driftexp_pval_means.csv"
 means_pval = np.moveaxis(mean_dr_md_pval, 3, 1)
 cols = pd.MultiIndex.from_product([DR_TECHNIQUES, MD_TESTS])
 index = pd.MultiIndex.from_product([shifts, SAMPLES])
@@ -172,12 +174,12 @@ means_pval = means_pval.reshape(
 )
 means_pval = pd.DataFrame(means_pval, columns=cols, index=index)
 means_pval = pd.DataFrame(means_pval, columns=cols, index=SAMPLES)
-means_pval.to_csv(means_pval_file, sep="\t")
+means_pval.to_csv(MEANS_PVAL_FILE, sep="\t")
 
-stds_pval_file = PATH + "/driftexp_pval_stds.csv"
+STDS_PVAL_FILE = PATH + "/driftexp_pval_stds.csv"
 stds_pval = np.moveaxis(std_dr_md_pval, 3, 1)
 stds_pval = stds_pval.reshape(
     len(shifts) * len(SAMPLES), len(DR_TECHNIQUES) * len(MD_TESTS)
 )
 stds_pval = pd.DataFrame(stds_pval, columns=cols, index=index)
-stds_pval.to_csv(stds_pval_file, sep="\t")
+stds_pval.to_csv(STDS_PVAL_FILE, sep="\t")

@@ -5,12 +5,12 @@ from typing import Tuple, Union
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torchxrayvision as xrv
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.random_projection import SparseRandomProjection
+from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -82,7 +82,7 @@ class Reductor:
         var_ret: float = 0.8,
         n_components: int = None,
         n_features: int = None,
-        batch_size: int = 64,
+        # batch_size: int = 64,
         gmm_n_clusters: int = 2,
         random_state: int = 42,
     ):
@@ -121,29 +121,20 @@ class Reductor:
         }
 
         # check if dr_method is valid
-        if self.dr_method not in reductor_methods.keys():
+        if self.dr_method not in reductor_methods:
             raise ValueError(
                 "Invalid dr_method, dr_method must be one of the following: "
                 + str(self.get_available_dr_methods())
             )
 
-        if (
-            self.dr_method == "BBSDs_trained_LSTM"
-            or self.dr_method == "BBSDh_trained_LSTM"
-        ):
+        if self.dr_method in ("BBSDs_trained_LSTM", "BBSDh_trained_LSTM"):
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
             self.model.load_state_dict(torch.load(self.model_path)["model"])
-        elif (
-            self.dr_method == "BBSDs_untrained_LSTM"
-            or self.dr_method == "BBSDh_untrained_LSTM"
-        ):
+        elif self.dr_method in ("BBSDs_untrained_LSTM", "BBSDh_untrained_LSTM"):
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
-        elif (
-            self.dr_method == "BBSDs_untrained_FFNN"
-            or self.dr_method == "BBSDh_untrained_FFNN"
-        ):
+        elif self.dr_method in ("BBSDs_untrained_FFNN", "BBSDh_untrained_FFNN"):
             self.model = reductor_methods[self.dr_method](self.n_features)
-        elif self.dr_method == "BBSDs_txrv_CNN" or self.dr_method == "BBSDh_txrv_CNN":
+        elif self.dr_method in ("BBSDs_txrv_CNN", "BBSDh_txrv_CNN"):
             self.model = reductor_methods[self.dr_method](
                 weights="densenet121-res224-all"
             )
@@ -159,20 +150,12 @@ class Reductor:
         "state_dict" is loaded from disk.
 
         """
-        if (
-            self.dr_method == "PCA"
-            or self.dr_method == "SRP"
-            or self.dr_method == "kPCA"
-            or self.dr_method == "Isomap"
-            or self.dr_method == "GMM"
-        ):
-            self.model = pickle.load(open(self.model_path, "rb"))
-        elif (
-            self.dr_method == "BBSDs_trained_LSTM"
-            or self.dr_method == "BBSDh_trained_LSTM"
-        ):
+        if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
+            with open(self.model_path, "rb") as file:
+                self.model = pickle.load(file)
+        elif self.dr_method in ("BBSDs_trained_LSTM", "BBSDh_trained_LSTM"):
             self.model.load_state_dict(torch.load(self.model_path)["model"])
-        print("Model loaded from {}".format(self.model_path))
+        print(f"Model loadded from {self.model_path}")
 
     def save_model(self, output_path: str):
         """Save the model to disk.
@@ -183,20 +166,12 @@ class Reductor:
             path to save the model to
 
         """
-        if (
-            self.dr_method == "PCA"
-            or self.dr_method == "SRP"
-            or self.dr_method == "kPCA"
-            or self.dr_method == "Isomap"
-            or self.dr_method == "GMM"
-        ):
-            pickle.dump(self.model, open(output_path, "wb"))
-        elif (
-            self.dr_method == "BBSDs_trained_LSTM"
-            or self.dr_method == "BBSDh_trained_LSTM"
-        ):
+        if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
+            with open(output_path, "wb") as file:
+                pickle.dump(self.model, file)
+        elif self.dr_method in ("BBSDs_trained_LSTM", "BBSDh_trained_LSTM"):
             torch.save(self.model.state_dict(), output_path)
-        print("{} saved to {}".format(self.dr_method, output_path))
+        print(f"{self.dr_method} saved to {output_path}")
 
     def get_available_dr_methods(self):
         """Return a list of available dimensionality reduction methods.
@@ -257,13 +232,7 @@ class Reductor:
         # check if data is a numpy matrix or a torch dataset
         if isinstance(data, np.ndarray):
 
-            if (
-                self.dr_method == "PCA"
-                or self.dr_method == "SRP"
-                or self.dr_method == "kPCA"
-                or self.dr_method == "Isomap"
-                or self.dr_method == "GMM"
-            ):
+            if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
                 if self.n_components is None:
                     self.n_components = self.get_dr_amount(data)
 
@@ -309,39 +278,40 @@ class Reductor:
         if num_workers is None:
             num_workers = os.cpu_count()
 
-        if (
-            self.dr_method == "PCA"
-            or self.dr_method == "SRP"
-            or self.dr_method == "kPCA"
-            or self.dr_method == "Isomap"
-        ):
+        if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
             if isinstance(data, np.ndarray):
                 X_transformed = self.model.transform(data)
             elif isinstance(data, torch.utils.data.Dataset):
-                self.dataloader = DataLoader(
+                dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.batch_inference(self.model, progress)
+                X_transformed, y = self.batch_inference(
+                    self.model, dataloader, progress
+                )
 
         elif self.dr_method == "NoRed":
             if isinstance(data, np.ndarray):
-                return data
+                X_transformed = data
             elif isinstance(data, torch.utils.data.Dataset):
-                return NotImplementedError("NoRed not implemented for torch datasets")
+                raise NotImplementedError("NoRed not implemented for torch datasets")
         elif "BBSDs" in self.dr_method:
             if "txrv_CNN" in self.dr_method:
-                self.dataloader = DataLoader(
+                dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.xrv_clf_inference(self.model, progress)
+                X_transformed, y = self.xrv_clf_inference(
+                    self.model, dataloader, progress
+                )
             else:
                 X_transformed = self.minibatch_inference(data, self.model, progress)
         elif "BBSDh" in self.dr_method:
             if "txrv_CNN" in self.dr_method:
-                self.dataloader = DataLoader(
+                dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )
-                X_transformed, y = self.xrv_clf_inference(self.model, progress)
+                X_transformed, y = self.xrv_clf_inference(
+                    self.model, dataloader, progress
+                )
                 X_transformed = np.where(X_transformed > 0.5, 1, 0)
             else:
                 X_transformed = self.minibatch_inference(data, self.model, progress)
@@ -349,14 +319,11 @@ class Reductor:
         elif self.dr_method == "GMM":
             X_transformed = self.model.predict_proba(data)
         elif self.dr_method == "TAE_txrv_CNN":
-            self.dataloader = DataLoader(
+            dataloader = DataLoader(
                 data, batch_size=batch_size, num_workers=num_workers
             )
-            X_transformed, y = self.xrv_ae_inference(self.model, progress)
-        if y is not None:
-            return X_transformed, y
-        else:
-            return X_transformed
+            X_transformed, y = self.xrv_ae_inference(self.model, dataloader, progress)
+        return X_transformed, y
 
     def feed_forward_neural_network(self, n_features: int):
         """Create a feed forward neural network model.
@@ -498,7 +465,7 @@ class Reductor:
         return X_transformed
 
     def batch_inference(
-        self, model: nn.Module, progress=True
+        self, model: nn.Module, dataloader: DataLoader, progress=True
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Perform batched inference on the dataset.
 
@@ -517,7 +484,7 @@ class Reductor:
         """
         imgs_transformed = []
         all_labels = []
-        for batch in tqdm(self.dataloader) if progress else self.dataloader:
+        for batch in tqdm(dataloader) if progress else dataloader:
             imgs = batch["img"]
             labels = batch["lab"]
             all_labels.append(labels)
@@ -529,7 +496,7 @@ class Reductor:
         return X_transformed, labels
 
     def xrv_clf_inference(
-        self, model: nn.Module, progress=True
+        self, model: nn.Module, dataloader: DataLoader, progress=True
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Perform batched inference with the TXRV Classifier on the dataset.
 
@@ -549,7 +516,7 @@ class Reductor:
         all_preds = []
         all_labels = []
         model = model.to(self.device).eval()
-        for batch in tqdm(self.dataloader) if progress else self.dataloader:
+        for batch in tqdm(dataloader) if progress else dataloader:
             imgs = batch["img"]
             labels = batch["lab"]
             imgs = imgs.to(self.device)
@@ -563,7 +530,7 @@ class Reductor:
         return X_transformed, labels
 
     def xrv_ae_inference(
-        self, model: nn.Module, progress=True
+        self, model: nn.Module, dataloader: DataLoader, progress=True
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Perform batched inference with the TXRV Autoencoder on the dataset.
 
@@ -583,7 +550,7 @@ class Reductor:
         all_preds = []
         all_labels = []
         model = model.to(self.device).eval()
-        for batch in tqdm(self.dataloader) if progress else self.dataloader:
+        for batch in tqdm(dataloader) if progress else dataloader:
             imgs = batch["img"]
             labels = batch["lab"]
             imgs = imgs.to(self.device)

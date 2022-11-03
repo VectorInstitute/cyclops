@@ -1,12 +1,11 @@
 """Clinical Shift Applicator module."""
 import datetime
 
-import numpy as np
+# import numpy as np
+# from .utils import get_args
 
-from .utils import get_args
 
-
-class ClinicalShiftApplicator(object):
+class ClinicalShiftApplicator:
     """The ClinicalShiftApplicator class is used induce synthetic clinical shifts.
 
     Parameters
@@ -17,7 +16,7 @@ class ClinicalShiftApplicator(object):
 
     """
 
-    def __init__(self, shift_type: str, **kwargs):
+    def __init__(self, shift_type: str):
 
         self.shift_type = shift_type
 
@@ -28,14 +27,10 @@ class ClinicalShiftApplicator(object):
             "time": time,
         }
 
-        if self.shift_type not in self.shift_types.keys():
-            raise ValueError(
-                "Shift not supported, must be one of: {}".format(
-                    self.shift_types.keys()
-                )
-            )
+        if self.shift_type not in self.shift_types:
+            raise ValueError(f"Shift type {self.shift_type} not supported. ")
 
-    def apply_shift(self, X, **kwargs):
+    def apply_shift(self, X):
         """apply_shift.
 
         Returns
@@ -90,7 +85,6 @@ def source_target(
         Column name for admission timestamps.
 
     """
-    admin_data.shape[0]
     dataset_ids = admin_data.loc[
         (
             (admin_data[admit_timestamp].dt.date > datetime.date(2015, 1, 1))

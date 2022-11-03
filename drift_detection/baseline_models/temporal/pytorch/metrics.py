@@ -9,7 +9,7 @@ from sklearn import metrics
 def plot_pretty_confusion_matrix(confusion_matrix):
     """Plot a confusion matrix with seaborn heatmap."""
     sns.set(style="white")
-    fig, ax = plt.subplots(figsize=(9, 6))
+    _, ax = plt.subplots(figsize=(9, 6))
     sns.heatmap(
         np.eye(2),
         annot=confusion_matrix,
@@ -42,7 +42,7 @@ def plot_pretty_confusion_matrix(confusion_matrix):
             color=text_elt.get_color(),
             ha="center",
             va="top",
-            size=24
+            size=24,
         )
     plt.tight_layout()
     plt.show()
@@ -85,7 +85,7 @@ def plot_auroc_across_timesteps(
         labels = y_test_labels[:, i]
         # y_pred_values is not defined
         # pred_vals = y_pred_values[:, i]
-        pred_vals = None
+        pred_vals = []
         preds = y_pred_labels[:, i]
         pred_vals = pred_vals[labels != -1]
         preds = preds[labels != -1]
@@ -168,13 +168,13 @@ def plot_risk_mortality(predictions, labels=None):
 
 def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
     """Print metrics for binary classification."""
-    cf = metrics.confusion_matrix(y_test_labels, y_pred_labels)
+    conf_matrix = metrics.confusion_matrix(y_test_labels, y_pred_labels)
     if verbose:
         print("confusion matrix:")
-        print(cf)
-    cf = cf.astype(np.float32)
-    tn, fp, fn, tp = cf.ravel()
-    acc = (tn + tp) / np.sum(cf)
+        print(conf_matrix)
+    conf_matrix = conf_matrix.astype(np.float32)
+    tn, fp, fn, tp = conf_matrix.ravel()
+    acc = (tn + tp) / np.sum(conf_matrix)
     prec0 = tn / (tn + fn)
     prec1 = tp / (tp + fp)
     rec0 = tn / (tn + fp)
@@ -182,21 +182,21 @@ def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1)
 
     auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
 
-    (precisions, recalls, thresholds) = metrics.precision_recall_curve(
+    (precisions, recalls, _) = metrics.precision_recall_curve(
         y_test_labels, y_pred_values
     )
     auprc = metrics.auc(recalls, precisions)
     minpse = np.max([min(x, y) for (x, y) in zip(precisions, recalls)])
 
     if verbose:
-        print("accuracy = {}".format(acc))
-        print("precision class 0 = {}".format(prec0))
-        print("precision class 1 = {}".format(prec1))
-        print("recall class 0 = {}".format(rec0))
-        print("recall class 1 = {}".format(rec1))
-        print("AUC of ROC = {}".format(auroc))
-        print("AUC of PRC = {}".format(auprc))
-        print("min(+P, Se) = {}".format(minpse))
+        print(f"accuracy: {acc}")
+        print(f"precision class 0: {prec0}")
+        print(f"precision class 1: {prec1}")
+        print(f"recall class 0: {rec0}")
+        print(f"recall class 1: {rec1}")
+        print(f"AUC of ROC: {auroc}")
+        print(f"AUC of PRC: {auprc}")
+        print(f"min(+P, Se): {minpse}")
 
     return {
         "acc": acc,

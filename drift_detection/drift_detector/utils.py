@@ -7,11 +7,11 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
 from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
 from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
 from scipy.special import softmax
 from sklearn.preprocessing import StandardScaler
+from torch import nn
 
 from drift_detection.baseline_models.temporal.pytorch.utils import (
     get_device,
@@ -60,8 +60,9 @@ def load_model(model_path: str):
 
     """
     file_type = model_path.split(".")[-1]
-    if file_type == "pkl" or file_type == "pickle":
-        model = pickle.load(open(model_path, "rb"))
+    if file_type in ("pkl", "pickle"):
+        with open(model_path, "rb") as file:
+            model = pickle.load(file)
     elif file_type == "pt":
         model = torch.load(model_path)
     return model
@@ -80,8 +81,9 @@ def save_model(model, output_path: str):
 
     """
     file_type = output_path.split(".")[-1]
-    if file_type == "pkl" or file_type == "pickle":
-        pickle.dump(model, open(output_path, "wb"))
+    if file_type in ("pkl", "pickle"):
+        with open(output_path, "wb") as file:
+            pickle.dump(model, file)
     elif file_type == "pt":
         torch.save(model.state_dict(), output_path)
 
@@ -112,14 +114,33 @@ class ContextMMDWrapper:
     ):
         self.context_type = context_type
         self.model_path = model_path
-        self.device = get_device()
-        C_s = self.context(X_s)
-        self.tester = ContextMMDDrift(X_s, C_s)
+        self.device = device
+        if self.device is None:
+            self.device = get_device()
+        c_source = self.context(X_s)
+        self.tester = ContextMMDDrift(X_s, c_source)
+
+        self.backend = backend
+        self.p_val = p_val
+        self.preprocess_x_ref = preprocess_x_ref
+        self.update_ref = update_ref
+        self.preprocess_fn = preprocess_fn
+        self.x_kernel = x_kernel
+        self.c_kernel = c_kernel
+        self.n_permutations = n_permutations
+        self.prop_c_held = prop_c_held
+        self.n_folds = n_folds
+        self.batch_size = batch_size
+        self.input_shape = input_shape
+        self.data_type = data_type
+        self.verbose = verbose
 
     def predict(self, X_t, **kwargs):
         """Predict if there is drift in the data."""
-        C_t = self.context(X_t)
-        return self.tester.predict(X_t, C_t, **get_args(self.tester.predict, kwargs))
+        c_target = self.context(X_t)
+        return self.tester.predict(
+            X_t, c_target, **get_args(self.tester.predict, kwargs)
+        )
 
     def context(self, X: np.ndarray):
         """Get context for context mmd drift detection.
@@ -130,19 +151,20 @@ class ContextMMDWrapper:
             Data to build context for context mmd drift detection.
 
         """
-        if self.context_type in ["rnn", "gru", "lstm"]:
+        if self.context_type == "gmm":
+            gmm = load_model(self.model_path)
+            c_gmm_proba = gmm.predict_proba(X)
+            output = c_gmm_proba
+        elif self.context_type in ["rnn", "gru", "lstm"]:
             model = recurrent_neural_network(self.context_type, X.shape[-1])
             model.load_state_dict(load_model(self.model_path)["model"])
             model.to(self.device).eval()
             with torch.no_grad():
-                logits = model(torch.from_numpy(X).to(self.device)).cpu().numpy()
-            return softmax(logits, -1)
-        elif self.context_type == "gmm":
-            gmm = load_model(self.model_path)
-            c_gmm_proba = gmm.predict_proba(X)
-            return c_gmm_proba
+                output = model(torch.from_numpy(X).to(self.device)).cpu().numpy()
+                output = softmax(output, -1)
         else:
             raise ValueError("Context not supported")
+        return output
 
 
 class LKWrapper:
@@ -183,30 +205,30 @@ class LKWrapper:
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
-        kwargs = locals()
         args = [
-            kwargs["backend"],
-            kwargs["p_val"],
-            kwargs["preprocess_x_ref"],
-            kwargs["update_x_ref"],
-            kwargs["preprocess_fn"],
-            kwargs["n_permutations"],
-            kwargs["var_reg"],
-            kwargs["reg_loss_fn"],
-            kwargs["train_size"],
-            kwargs["retrain_from_scratch"],
-            kwargs["optimizer"],
-            kwargs["learning_rate"],
-            kwargs["batch_size"],
-            kwargs["preprocess_batch"],
-            kwargs["epochs"],
-            kwargs["verbose"],
-            kwargs["train_kwargs"],
-            kwargs["device"],
-            kwargs["dataset"],
-            kwargs["dataloader"],
-            kwargs["data_type"],
+            backend,
+            p_val,
+            preprocess_x_ref,
+            update_x_ref,
+            preprocess_fn,
+            n_permutations,
+            var_reg,
+            reg_loss_fn,
+            train_size,
+            retrain_from_scratch,
+            optimizer,
+            learning_rate,
+            batch_size,
+            preprocess_batch,
+            epochs,
+            verbose,
+            train_kwargs,
+            device,
+            dataset,
+            dataloader,
+            data_type,
         ]
+
         self.tester = LearnedKernelDrift(X_s, kernel, *args)
 
     def predict(self, X_t, **kwargs):
@@ -216,13 +238,14 @@ class LKWrapper:
     def choose_proj(self, X_s, proj_type):
         """Choose projection for learned kernel drift detection."""
         if proj_type in ["rnn", "gru", "lstm"]:
-            return recurrent_neural_network(proj_type, X_s.shape[-1])
+            proj = recurrent_neural_network(proj_type, X_s.shape[-1])
         elif proj_type == "ffnn":
-            return feed_forward_neural_network(X_s.shape[-1])
+            proj = feed_forward_neural_network(X_s.shape[-1])
         elif proj_type == "cnn":
-            return convolutional_neural_network(X_s.shape[-1])
+            proj = convolutional_neural_network(X_s.shape[-1])
         else:
             raise ValueError("Invalid projection type.")
+        return proj
 
 
 def recurrent_neural_network(
@@ -301,11 +324,11 @@ def convolutional_neural_network(input_dim: int):
 
     """
     cnn = nn.Sequential(
-        nn.Conv2d(input_dim, 4, stride=2, padding=0),
+        nn.Conv2d(input_dim, 4, 3, 2, 0),
         nn.ReLU(),
-        nn.Conv2d(8, 16, 4, stride=2, padding=0),
+        nn.Conv2d(8, 16, 4, 3, 2, 0),
         nn.ReLU(),
-        nn.Conv2d(16, 32, 4, stride=2, padding=0),
+        nn.Conv2d(16, 32, 4, 3, 2, 0),
         nn.ReLU(),
         nn.Flatten(),
     )
@@ -347,9 +370,9 @@ def daterange(start_date, end_date, stride: int, window: int):
         range of dates after stride and window adjustment.
 
     """
-    for n in range(int((end_date - start_date).days)):
-        if start_date + timedelta(n * stride + window) < end_date:
-            yield start_date + timedelta(n * stride)
+    for date in range(int((end_date - start_date).days)):
+        if start_date + timedelta(date * stride + window) < end_date:
+            yield start_date + timedelta(date * stride)
 
 
 def get_serving_data(
@@ -376,8 +399,8 @@ def get_serving_data(
         dictionary containing keys timestamp, X and y
 
     """
-    target_stream_X = []
-    target_stream_y = []
+    X_target_stream = []
+    y_target_stream = []
     timestamps = []
 
     admit_df = admin_data[[encounter_id, admit_timestamp]].sort_values(
@@ -409,12 +432,12 @@ def get_serving_data(
         X_inwindow = X.loc[X.index.get_level_values(0).isin(encounters_inwindow)]
         y_inwindow = pd.DataFrame(y[np.in1d(encounter_ids, encounters_inwindow)])
         if not X_inwindow.empty:
-            target_stream_X.append(X_inwindow)
-            target_stream_y.append(y_inwindow)
+            X_target_stream.append(X_inwindow)
+            y_target_stream.append(y_inwindow)
             timestamps.append(
                 (single_date + timedelta(days=window)).strftime("%Y-%m-%d")
             )
-    target_data = {"timestamps": timestamps, "X": target_stream_X, "y": target_stream_y}
+    target_data = {"timestamps": timestamps, "X": X_target_stream, "y": y_target_stream}
     return target_data
 
 

@@ -3,9 +3,10 @@
 import dash_bootstrap_components as dbc
 import dash_cool_components as dcool
 import dash_mantine_components as dmc
-from component_utils import flatten_2d_tuple, table_result
-from consts import APP_DIAG, APP_ENC, APP_EVENT, APP_PAGE_QUERY, TABLE_IDS, TABLES
 from dash import dcc, html
+
+from ..component_utils import flatten_2d_tuple, table_result
+from ..consts import APP_DIAG, APP_ENC, APP_EVENT, APP_PAGE_QUERY, TABLE_IDS, TABLES
 
 encounter_components = (
     dmc.Checkbox(

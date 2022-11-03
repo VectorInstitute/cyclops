@@ -1,12 +1,12 @@
 """FFNN model for static baseline model."""
-import torch.nn as nn
+from torch import nn
 
 
 class FFNNetModel(nn.Module):
     """FFNN model for static baseline model."""
 
-    def __init__(self, device, input_dim, output_dim):
-        super(FFNNetModel, self).__init__()
+    def __init__(self, input_dim, output_dim):
+        super().__init__()
         self.fc1 = nn.Linear(input_dim, 16)
         self.fc2 = nn.Linear(16, 8)
         self.fc3 = nn.Linear(8, output_dim)

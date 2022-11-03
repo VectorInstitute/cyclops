@@ -58,11 +58,10 @@ class TSTester:
             "ks": KSDrift,
         }
 
-        if self.tester_method not in self.tester_methods.keys():
+        if self.tester_method not in self.tester_methods:
             raise ValueError(
-                "Test method not supported, must be one of: {}".format(
-                    self.tester_methods.keys()
-                )
+                f"Tester method {self.tester_method} not supported. \
+                    Must be one of {self.tester_methods.keys()}"
             )
 
     def get_available_test_methods(self):
@@ -108,7 +107,7 @@ class DCTester:
 
     """
 
-    def __init__(self, tester_method: str, model_method: str = None, **kwargs):
+    def __init__(self, tester_method: str, model_method: str = None):
         self.tester_method = tester_method
         self.model_method = model_method
         self.tester = None
@@ -127,18 +126,16 @@ class DCTester:
             "ffnn": feed_forward_neural_network,
         }
 
-        if self.tester_method not in self.tester_methods.keys():
+        if self.tester_method not in self.tester_methods:
             raise ValueError(
-                "Model not supported, must be one of: {}".format(
-                    self.tester_methods.keys()
-                )
+                f"Tester method {self.tester_method} not supported. \
+                Must be one of {self.tester_methods.keys()}"
             )
 
-        if self.model_method not in self.model_methods.keys():
+        if self.model_method not in self.model_methods:
             raise ValueError(
-                "Model not supported, must be one of: {}".format(
-                    self.model_methods.keys()
-                )
+                f"Model method {self.model_method} not supported.\
+                Must be one of {self.model_methods.keys()}"
             )
 
     def get_available_test_methods(self):
@@ -164,10 +161,10 @@ class DCTester:
             self.tester = self.tester_methods[self.tester_method](
                 X_s,
                 self.model,
-                **get_args(self.tester_methods[self.tester_method], kwargs)
+                **get_args(self.tester_methods[self.tester_method], kwargs),
             )
 
-    def test_shift(self, X_t, **kwargs):
+    def test_shift(self, X_t):
         """Test for shift in data."""
         X_t = X_t.astype("float32")
 

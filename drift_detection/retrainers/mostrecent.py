@@ -9,7 +9,6 @@ from drift_detection.baseline_models.temporal.pytorch.metrics import (
 from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
 from drift_detection.baseline_models.temporal.pytorch.utils import get_data
 from drift_detection.drift_detector.detector import Detector
-from drift_detection.drift_detector.rolling_window import RollingWindow
 from drift_detection.drift_detector.utils import scale
 from drift_detection.gemini.utils import process
 
@@ -103,7 +102,7 @@ class MostRecentRetrainer:
         i = stat_window
         p_val = 1
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        n_features = data_streams["X"][0].shape[1]
+        # n_features = data_streams["X"][0].shape[1]
 
         aggregation_type = kwargs.get("aggregation_type", "mean")
 
@@ -161,10 +160,10 @@ class MostRecentRetrainer:
                     self.optimizer.train(
                         update_loader,
                         update_loader,
-                        batch_size=batch_size,
+                        # batch_size=batch_size,
                         n_epochs=n_epochs,
-                        n_features=n_features,
-                        timesteps=num_timesteps,
+                        # n_features=n_features,
+                        # timesteps=num_timesteps,
                         model_path=self.retrain_model_path,
                     )
 
@@ -217,9 +216,9 @@ class MostRecentRetrainer:
             )
             y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                 test_loader,
-                batch_size=1,
-                n_features=n_features,
-                timesteps=num_timesteps,
+                # batch_size=1,
+                # n_features=n_features,
+                # timesteps=num_timesteps,
             )
             assert y_test_labels.shape == y_pred_labels.shape == y_pred_values.shape
             y_pred_values = y_pred_values[y_test_labels != -1]

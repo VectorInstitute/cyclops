@@ -1,6 +1,6 @@
 """Model library for baseline temporal models."""
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 class RNNModel(nn.Module):
@@ -18,6 +18,8 @@ class RNNModel(nn.Module):
         Dimension of output
     dropout_prob: int
         Dropout probability for dropout layer
+    last_timestep_only: bool
+        Whether to use only the last timestep of the output
 
     """
 
@@ -31,15 +33,18 @@ class RNNModel(nn.Module):
         dropout_prob,
         last_timestep_only=False,
     ):
-        super(RNNModel, self).__init__()
+        super().__init__()
         self.device = device
-        self.hidden_dim = hidden_dim
-        self.layer_dim = layer_dim
+        self.last_timestep_only = last_timestep_only
+
         self.rnn = nn.RNN(
-            input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob
+            input_dim,
+            hidden_dim,
+            layer_dim,
+            batch_first=True,
+            dropout=dropout_prob,
         )
         self.fc = nn.Linear(hidden_dim, output_dim)
-        self.last_timestep_only = last_timestep_only
 
     def forward(self, x):
         """Forward pass.
@@ -95,7 +100,7 @@ class GRUModel(nn.Module):
         dropout_prob,
         last_timestep_only=False,
     ):
-        super(GRUModel, self).__init__()
+        super().__init__()
         self.device = device
         self.layer_dim = layer_dim
         self.hidden_dim = hidden_dim
@@ -159,7 +164,7 @@ class LSTMModel(nn.Module):
         dropout_prob,
         last_timestep_only=False,
     ):
-        super(LSTMModel, self).__init__()
+        super().__init__()
         self.device = device
         self.hidden_dim = hidden_dim
         self.layer_dim = layer_dim
@@ -194,7 +199,7 @@ class LSTMModel(nn.Module):
             .requires_grad_()
             .to(self.device)
         )
-        out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
+        out, (_, _) = self.lstm(x, (h0.detach(), c0.detach()))
         if self.last_timestep_only:
             out = out[:, -1, :]
         out = self.fc(out)

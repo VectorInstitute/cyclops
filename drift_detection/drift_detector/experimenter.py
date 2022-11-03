@@ -54,11 +54,10 @@ class Experimenter:
             "rolling_window_performance": self.rolling_window_performance,
         }
 
-        if self.experiment_type not in self.experiment_types.keys():
+        if self.experiment_type not in self.experiment_types:
             raise ValueError(
-                "Experiment not supported, must be one of: {}".format(
-                    self.experiment_types.keys()
-                )
+                f"Experiment type {self.experiment_type} not supported. \
+                Must be one of {self.experiment_types.keys()}"
             )
 
     def run(self, X: Union[np.ndarray, torch.utils.data.Dataset]):

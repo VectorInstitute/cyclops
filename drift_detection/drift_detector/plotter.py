@@ -6,7 +6,7 @@ import pandas as pd
 
 # Plotting parameters
 linestyles = ["-", "-.", "--", ":"]
-format = ["-o", "-h", "-p", "-s", "-D", "-<", "->", "-X"]
+lineformat = ["-o", "-h", "-p", "-s", "-D", "-<", "->", "-X"]
 markers = ["o", "h", "p", "s", "D", "<", ">", "X"]
 brightness = [1.5, 1.25, 1.0, 0.75, 0.5]
 colors = [
@@ -51,13 +51,13 @@ def colorscale(hexstr: str, scalefactor: float):
     if scalefactor < 0 or len(hexstr) != 6:
         return hexstr
 
-    r, g, b = int(hexstr[:2], 16), int(hexstr[2:4], 16), int(hexstr[4:], 16)
+    red, green, blue = int(hexstr[:2], 16), int(hexstr[2:4], 16), int(hexstr[4:], 16)
 
-    r = clamp(int(r * scalefactor))
-    g = clamp(int(g * scalefactor))
-    b = clamp(int(b * scalefactor))
+    red = clamp(int(red * scalefactor))
+    green = clamp(int(green * scalefactor))
+    blue = clamp(int(blue * scalefactor))
 
-    return "#%02x%02x%02x" % (int(r), int(g), int(b))
+    return f"#{red:02x}{green:02x}{blue:02x}"
 
 
 def errorfill(
@@ -73,7 +73,7 @@ def errorfill(
     """Create custom error fill."""
     ax = ax if ax is not None else plt.gca()
     if color is None:
-        color = next(ax._get_lines.prop_cycler)["color"]
+        color = next(ax._get_lines.prop_cycler)["color"]  # pylint: disable=W0212
     if np.isscalar(yerr) or len(yerr) == len(y):
         ymin = y - yerr
         ymax = y + yerr
@@ -99,7 +99,7 @@ def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
     ax.set_xlabel("False Positive Rate", fontsize=12)
     ax.set_ylabel("True Positive Rate", fontsize=12)
-    ax.set_title("ROC curve (area = %s)" % roc_auc)
+    ax.set_title(f"ROC curve (area = {roc_auc:.2f})")
     return ax
 
 
@@ -117,7 +117,7 @@ def plot_pr(ax: mpl.axes.SubplotBase, recall: list, precision: list, roc_prc: st
     ax.set_xlabel("Recall", fontsize=12)
     ax.set_ylabel("Precision", fontsize=12)
     ax.axis(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.05)
-    ax.set_title("PRC curve (area = %s)" % roc_prc)
+    ax.set_title(f"PRC curve (area = {roc_prc:.2f})")
     return ax
 
 
@@ -161,8 +161,8 @@ def set_bars_color(bars: mpl.container.BarContainer, color: str):
         Color for bars in barplot.
 
     """
-    for bar in bars:
-        bar.set_color(color)
+    for bar_item in bars:
+        bar_item.set_color(color)
 
 
 def plot_label_distribution(X, y, label, features):
@@ -185,13 +185,13 @@ def plot_label_distribution(X, y, label, features):
     data = pd.concat([X, y], axis=1)
     data_pos = data.loc[data[label] == 1]
     data_neg = data.loc[data[label] == 0]
-    fig, axs = plt.subplots(2, 2, figsize=(30, 15), tight_layout=True)
+    _, axs = plt.subplots(2, 2, figsize=(30, 15), tight_layout=True)
 
     # Across age.
-    AGE = None
-    ages = data[AGE]
-    ages_pos = data_pos[AGE]
-    ages_neg = data_neg[AGE]
+    age = None
+    ages = data[age]
+    ages_pos = data_pos[age]
+    ages_neg = data_neg[age]
     print(
         f"Mean Age: Outcome present: {np.array(ages_pos).mean()}, \
         No outcome: {np.array(ages_neg).mean()}"
@@ -208,10 +208,10 @@ def plot_label_distribution(X, y, label, features):
     )
 
     # Across sex.
-    SEX = None
-    sex = list(data[SEX].unique())
-    sex_counts = list(data[SEX].value_counts())
-    sex_counts_pos = list(data_pos[SEX].value_counts())
+    sex = None
+    sex = list(data[sex].unique())
+    sex_counts = list(data[sex].value_counts())
+    sex_counts_pos = list(data_pos[sex].value_counts())
 
     sex_bars = axs[0][1].bar(sex, sex_counts, alpha=0.5)
     set_bars_color(sex_bars, "g")
@@ -226,8 +226,8 @@ def plot_label_distribution(X, y, label, features):
     )
 
     # Across features.
-    n = len(features)
-    w = 0.04
+    len_features = len(features)
+    width = 0.04
     x = np.arange(0, len([0, 1]))
     # NUM_COLORS = 20
     # cm = plt.get_cmap('gist_rainbow')
@@ -240,11 +240,11 @@ def plot_label_distribution(X, y, label, features):
             icd_counts_pos = None
         if len(icd_counts_pos) == 1:
             feature_counts_pos.append(0)
-        position = x + (w * (1 - n) / 2) + i * w
-        feature_bars = axs[1][0].bar(position, feature_counts, width=w, alpha=0.5)
+        position = x + (width * (1 - len_features) / 2) + i * width
+        feature_bars = axs[1][0].bar(position, feature_counts, width=width, alpha=0.5)
         set_bars_color(feature_bars, "g")
         feature_bars_pos = axs[1][0].bar(
-            position, feature_counts_pos, width=w, alpha=0.5
+            position, feature_counts_pos, width=width, alpha=0.5
         )
         set_bars_color(feature_bars_pos, "r")
 
@@ -273,13 +273,13 @@ def plot_drift_samples_pval(results, p_val_threshold):
     """Plot drift experiement p-values."""
     fig = plt.figure(figsize=(11, 8))
     ax = fig.add_subplot(111)
-    for si, shift in enumerate(results.keys()):
+    for shift_iter, shift in enumerate(results.keys()):
         errorfill(
             results[shift]["samples"],
             results[shift]["mean_p_vals"],
             results[shift]["std_p_vals"],
-            fmt=linestyles[si] + markers[si],
-            color=colorscale(colors[si], brightness[si]),
+            fmt=linestyles[shift_iter] + markers[shift_iter],
+            color=colorscale(colors[shift_iter], brightness[shift_iter]),
             label=shift,
             ax=ax,
         )
@@ -301,7 +301,7 @@ def plot_drift(results, p_val_threshold=0.05):
         P-Value threshold.
 
     """
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
+    _, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
     detection = np.where(results["pval"] < p_val_threshold, 1, 0)
     cmap = mpl.colors.ListedColormap(["lightgrey", "red"])
     ax1.plot(
@@ -319,7 +319,7 @@ def plot_drift(results, p_val_threshold=0.05):
     ax1.pcolorfast(
         ax1.get_xlim(),
         ax1.get_ylim(),
-        detection.values[np.newaxis],
+        detection[np.newaxis],
         cmap=cmap,
         alpha=0.4,
     )
@@ -361,7 +361,7 @@ def plot_performance(results, metric):
         Column name of performance for plotting.
 
     """
-    fig, ax1 = plt.subplots(1, 1, figsize=(16, 10))
+    _, ax1 = plt.subplots(1, 1, figsize=(16, 10))
     ax1.plot(
         results["dates"],
         results[metric],

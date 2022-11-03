@@ -60,7 +60,7 @@ class CumulativeRetrainer:
         lookup_window: int = 0,
         stride: int = 1,
         p_val_threshold: float = 0.05,
-        batch_size: int = 64,
+        # batch_size: int = 64,
         n_epochs: int = 1,
         **kwargs
     ):
@@ -99,7 +99,7 @@ class CumulativeRetrainer:
         p_val = 1
         total_alarms = 0
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        n_features = data_streams["X"][0].shape[1]
+        # n_features = data_streams["X"][0].shape[1]
 
         aggregation_type = kwargs.get("aggregation_type", "mean")
 
@@ -150,10 +150,10 @@ class CumulativeRetrainer:
                     self.optimizer.train(
                         update_loader,
                         update_loader,
-                        batch_size=batch_size,
+                        # batch_size=batch_size,
                         n_epochs=n_epochs,
-                        n_features=n_features,
-                        timesteps=num_timesteps,
+                        # n_features=n_features,
+                        # timesteps=num_timesteps,
                         model_path=self.retrain_model_path,
                     )
 
@@ -206,9 +206,9 @@ class CumulativeRetrainer:
             )
             y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                 test_loader,
-                batch_size=1,
-                n_features=X_next.shape[-1],
-                timesteps=num_timesteps,
+                # batch_size=1,
+                # n_features=X_next.shape[-1],
+                # timesteps=num_timesteps,
             )
             assert y_test_labels.shape == y_pred_labels.shape == y_pred_values.shape
             y_pred_values = y_pred_values[y_test_labels != -1]

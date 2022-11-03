@@ -143,10 +143,7 @@ class Detector:
 
         results = self.test_shift(X_t[:sample, :], **kwargs)
 
-        if results["p_val"] < self.p_val_threshold:
-            shift_detected = True
-        else:
-            shift_detected = False
+        shift_detected = results["p_val"] < self.p_val_threshold
 
         return {
             "p_val": results["p_val"],
@@ -184,12 +181,12 @@ class Detector:
                 np.random.seed(rand_run)
                 np.random.shuffle(X_target)
 
-                for si, sample in enumerate(self.samples):
+                for sample_iter, sample in enumerate(self.samples):
 
                     drift_results = self.detect_shift(X_target, sample, **kwargs)
 
-                    p_val_samples[si, rand_run] = drift_results["p_val"]
-                    dist_samples[si, rand_run] = drift_results["distance"]
+                    p_val_samples[sample_iter, rand_run] = drift_results["p_val"]
+                    dist_samples[sample_iter, rand_run] = drift_results["distance"]
 
                     pbar.update(1)
 

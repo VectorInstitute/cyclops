@@ -5,7 +5,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from cyclops.feature_handler import FeatureHandler
+# from cyclops.feature_handler import FeatureHandler
 from cyclops.processors.column_names import (
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
@@ -15,7 +15,8 @@ from cyclops.processors.column_names import (
     EVENT_TIMESTAMP,
     EVENT_VALUE,
 )
-from cyclops.processors.events import convert_to_events
+
+# from cyclops.processors.events import convert_to_events
 from cyclops.utils.file import load_dataframe
 
 from .constants import AGGREGATION_BUCKET_SIZE, AGGREGATION_WINDOW, LOS, MORTALITY
@@ -23,12 +24,12 @@ from .constants import AGGREGATION_BUCKET_SIZE, AGGREGATION_WINDOW, LOS, MORTALI
 sys.path.append("../..")
 
 
-def get_merged_data(BASE_DATA_PATH):
+def get_merged_data(base_data_path):
     """Merge encounters and aggregated events.
 
     Parameters
     ----------
-    BASE_DATA_PATH : str
+    base_data_path : str
         Path to the base data directory
 
     Returns
@@ -43,8 +44,10 @@ def get_merged_data(BASE_DATA_PATH):
     """
     print("Load data from feature handler...")
     # Declare feature handler
-    feature_handler = FeatureHandler()
-    feature_handler.load(BASE_DATA_PATH, "features")
+    # No module named FeatureHandler in cyclops
+    # feature_handler = FeatureHandler()
+    feature_handler = callable()
+    feature_handler.load(base_data_path, "features")
 
     # Get static and temporal data
     static = feature_handler.features["static"]
@@ -52,7 +55,7 @@ def get_merged_data(BASE_DATA_PATH):
 
     # Get types of columns
     numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
-    feature_handler.get_categorical_feature_names()["temporal"]
+    # feature_handler.get_categorical_feature_names()["temporal"]
 
     # Impute numerical columns
     temporal[numerical_cols] = temporal[numerical_cols].ffill().bfill()
@@ -67,12 +70,12 @@ def get_merged_data(BASE_DATA_PATH):
     return merged_static_temporal, temporal, static
 
 
-def get_aggregated_events(BASE_DATA_PATH):
+def get_aggregated_events(base_data_path):
     """Get aggregated events.
 
     Parameters
     ----------
-    BASE_DATA_PATH : str
+    base_data_path : str
         Path to the base data directory
 
     Returns
@@ -84,11 +87,11 @@ def get_aggregated_events(BASE_DATA_PATH):
     print("Load data from aggregated events...")
     # Aggregated events
     aggregated_events = load_dataframe(
-        os.path.join(BASE_DATA_PATH, "aggregated_events")
+        os.path.join(base_data_path, "aggregated_events")
     )
     # not used
     # timestep_start_timestamps = load_dataframe(
-    #     os.path.join(BASE_DATA_PATH, "aggmeta_start_ts")
+    #     os.path.join(base_data_path, "aggmeta_start_ts")
     # )
     aggregated_events.loc[aggregated_events["timestep"] == 6][
         "event_name"
@@ -97,12 +100,12 @@ def get_aggregated_events(BASE_DATA_PATH):
     return aggregated_events
 
 
-def get_encounters(BASE_DATA_PATH):
+def get_encounters(base_data_path):
     """Get encounters.
 
     Parameters
     ----------
-    BASE_DATA_PATH : str
+    base_data_path : str
         Path to the base data directory
 
     Returns
@@ -112,7 +115,7 @@ def get_encounters(BASE_DATA_PATH):
 
     """
     print("Load data from admin data...")
-    encounters_data = pd.read_parquet(os.path.join(BASE_DATA_PATH, "admin_er.parquet"))
+    encounters_data = pd.read_parquet(os.path.join(base_data_path, "admin_er.parquet"))
     encounters_data[LOS] = (
         encounters_data[DISCHARGE_TIMESTAMP] - encounters_data[ADMIT_TIMESTAMP]
     )
@@ -122,12 +125,12 @@ def get_encounters(BASE_DATA_PATH):
     return encounters_data_atleast_los_24_hrs
 
 
-def get_gemini_data(BASE_DATA_PATH):
+def get_gemini_data(base_data_path):
     """Get GEMINI data.
 
     Parameters
     ----------
-    BASE_DATA_PATH : str
+    base_data_path : str
         Path to the base data directory
     encounters_train_val_test, X, mortality_risk_targets
     Returns
@@ -141,11 +144,11 @@ def get_gemini_data(BASE_DATA_PATH):
 
     """
     # Get aggregated events
-    aggregated_events = get_aggregated_events(BASE_DATA_PATH)
+    aggregated_events = get_aggregated_events(base_data_path)
     # Get merged static + temporal data
-    merged_static_temporal, temporal, static = get_merged_data(BASE_DATA_PATH)
+    merged_static_temporal, temporal, static = get_merged_data(base_data_path)
     # Get encounters > 24hr los
-    encounters_data_atleast_los_24_hrs = get_encounters(BASE_DATA_PATH)
+    encounters_data_atleast_los_24_hrs = get_encounters(base_data_path)
     # Get mortality events
     encounters_mortality = encounters_data_atleast_los_24_hrs.loc[
         encounters_data_atleast_los_24_hrs[MORTALITY] is True
@@ -168,12 +171,14 @@ def get_gemini_data(BASE_DATA_PATH):
         encounters_mortality[LOS]
         <= pd.to_timedelta(timeframe * 24 + AGGREGATION_WINDOW, unit="h")
     ]
-    mortality_events = convert_to_events(
-        encounters_mortality_within_risk_timeframe,
-        event_name="death",
-        event_category="general",
-        timestamp_col=DISCHARGE_TIMESTAMP,
-    )
+    # No function named convert_to_events in cyclops.processors.events
+    mortality_events = callable()
+    # mortality_events = convert_to_events(
+    #     encounters_mortality_within_risk_timeframe,
+    #     event_name="death",
+    #     event_category="general",
+    #     timestamp_col=DISCHARGE_TIMESTAMP,
+    # )
     mortality_events = pd.merge(
         mortality_events, encounters_mortality, on=ENCOUNTER_ID, how="inner"
     )
@@ -212,7 +217,7 @@ def get_gemini_data(BASE_DATA_PATH):
         ]["timestep"]
         labels[encounter_ids.index(enc_id)][int(timestep_death) + 1 :] = -1
     timestep_end_timestamps = load_dataframe(
-        os.path.join(BASE_DATA_PATH, "aggmeta_end_ts")
+        os.path.join(base_data_path, "aggmeta_end_ts")
     )
     # Lookahead for each timestep, and see if death occurs in risk timeframe.
     for enc_id in list(encounters_mortality_within_risk_timeframe[ENCOUNTER_ID]):

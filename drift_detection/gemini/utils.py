@@ -11,11 +11,16 @@ from sklearn.preprocessing import StandardScaler
 from .query import ENCOUNTER_ID
 
 
-def unison_shuffled_copies(a, b):
+def run_shift_experiment(**kwargs):
+    """Run shift experiment."""
+    raise NotImplementedError("Placeholder for shift experiment")
+
+
+def unison_shuffled_copies(array_a, array_b):
     """Shuffle two arrays in unison."""
-    assert len(a) == len(b)
-    p = np.random.permutation(len(a))
-    return a[p], b[p]
+    assert len(array_a) == len(array_b)
+    perm = np.random.permutation(len(array_a))
+    return array_a[perm], array_b[perm]
 
 
 def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
@@ -94,7 +99,6 @@ def get_numerical_cols(X: pd.DataFrame):
 
 
 def scale(X: pd.DataFrame):
-    """Scale data."""
     """Scale columns of temporal dataframe.
 
     Returns
@@ -113,7 +117,7 @@ def scale(X: pd.DataFrame):
     return X
 
 
-def normalize(admin_data, X, aggregation_type, timesteps):
+def normalize(X, aggregation_type):
     """Normalize data."""
     y = None
 
@@ -149,7 +153,7 @@ def process(X, aggregation_type, timesteps):
     return X_preprocessed
 
 
-def get_dataset_hospital(admin_data, x, y, dataset, outcome, hospitals, train_frac=0.8):
+def get_dataset_hospital(admin_data, x, y, dataset, hospitals, train_frac=0.8):
     """Get dataset for hospital."""
     # filter hospital
     admin_data = admin_data.loc[admin_data["hospital_id"].isin(hospitals)]

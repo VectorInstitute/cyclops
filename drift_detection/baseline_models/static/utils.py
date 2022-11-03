@@ -7,20 +7,20 @@ from .mlp import fit_mlp
 from .rf import fit_rf
 
 
-def run_model(model_name, X, Y, Xv, Yv):
+def run_model(model_name, X, y, X_val, y_val):
     """Choose and run a model on the data and return the best model."""
     if model_name == "mlp":
-        best_model = fit_mlp(X, Y, Xv, Yv)
+        best_model = fit_mlp(X, y, X_val, y_val)
     elif model_name == "lr":
-        best_model = fit_lr(X, Y, Xv, Yv)
+        best_model = fit_lr(X, y, X_val, y_val)
     elif model_name == "rf":
-        best_model = fit_rf(X, Y, Xv, Yv)
+        best_model = fit_rf(X, y, X_val, y_val)
     elif model_name == "xgb":
-        best_model = fit_gbt(X, Y, Xv, Yv)
+        best_model = fit_gbt(X, y, X_val, y_val)
     return best_model
 
 
-def compute_threshold_metric(y_true, pred_prob, threshold, **kwargs):
+def compute_threshold_metric(y_true, pred_prob, threshold):
     """Threshold metrics for binary prediction tasks."""
     y_pred = 1 * (pred_prob > threshold)
     TN, FP, FN, TP = confusion_matrix(y_true, y_pred).ravel()

@@ -15,6 +15,6 @@ year = {2020}
 
 """
 
-from .fsd import FeatureShiftDetector
+from .featureshiftdetector import FeatureShiftDetector
 
 __all__ = ["FeatureShiftDetector"]

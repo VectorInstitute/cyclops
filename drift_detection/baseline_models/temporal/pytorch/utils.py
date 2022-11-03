@@ -29,12 +29,13 @@ def reshape_2d_to_3d(data, num_timesteps):
 def get_device():
     """Get device."""
     if torch.cuda.is_available():
-        return torch.device("cuda")
+        device = torch.device("cuda")
     else:
-        return torch.device("cpu")
+        device = torch.device("cpu")
+    return device
 
 
-def format_dataset(X, level="features", imputation_method="simple"):
+def format_dataset(X, imputation_method="simple"):
     """Clean the data into machine-learnable matrices.
 
     Parameters
@@ -61,7 +62,7 @@ def format_dataset(X, level="features", imputation_method="simple"):
     if imputation_method == "forward":
         # X_imputed = impute_forward(X, "timestep")
         raise NotImplementedError("impute_forward does not exist.")
-    elif imputation_method == "simple":
+    if imputation_method == "simple":
         X_imputed = impute_simple(X, "timestep")
     else:
         X_imputed = X.unstack().sort_index(axis=1).copy()
@@ -98,7 +99,6 @@ def format_dataset(X, level="features", imputation_method="simple"):
     df_stds.loc[df_stds.values == 0, :] = df_means.loc[
         df_stds.values == 0, :
     ]  # If std dev is 0, replace with mean
-    (df_means, df_stds)
     X_scaled = (X_imputed[X_imputed.columns] - df_means) / df_stds
     X_final = pd.DataFrame(
         X_scaled, index=X_imputed.index.tolist(), columns=X_imputed.columns.tolist()
@@ -179,13 +179,15 @@ def process_outcome(outcome, static):
             static["discharge_disposition"].isin([7, 66, 72, 73]), 1, 0
         )
     elif outcome == "length_of_stay_in_er":
-        m1 = (static[outcome] >= 0) & (static[outcome] < 7)
-        m2 = (static[outcome] >= 7) & (static[outcome] < 14)
-        m3 = (static[outcome] >= 14) & (static[outcome] < 30)
+        mort1 = (static[outcome] >= 0) & (static[outcome] < 7)
+        mort2 = (static[outcome] >= 7) & (static[outcome] < 14)
+        mort3 = (static[outcome] >= 14) & (static[outcome] < 30)
 
         vals = [1, 2, 3]
         default = 4
-        static["los_er_derived"] = np.select([m1, m2, m3], vals, default=default)
+        static["los_er_derived"] = np.select(
+            [mort1, mort2, mort3], vals, default=default
+        )
     return static
 
 

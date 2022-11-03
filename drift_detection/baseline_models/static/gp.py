@@ -15,28 +15,28 @@ from sklearn.gaussian_process.kernels import (
 from sklearn.metrics import roc_auc_score
 
 
-def fit_gp(X, Y, Xv, Yv):
+def fit_gp(X, y, X_val, y_val):
     """Train a GaussianProcessClassifier model on the data and return best model."""
-    best_c = None
+    best_kernel = None
     best_score = 0
     best_model = None
 
-    for K in [
+    for kernel in [
         1 * RBF(),
         1 * DotProduct(),
         1 * Matern(),
         1 * RationalQuadratic(),
         1 * WhiteKernel(),
     ]:
-        m = GPC(kernel=K, n_jobs=-1)
-        m.fit(X, Y)
-        Pv = m.predict_proba(Xv)[:, 1]
-        score = roc_auc_score(Yv, Pv)
-        print("Fitted GPC with K:", K, "AUC:", score)
+        model = GPC(kernel=kernel, n_jobs=-1)
+        model.fit(X, y)
+        pred_val = model.predict_proba(X_val)[:, 1]
+        score = roc_auc_score(y_val, pred_val)
+        print("Fitted GPC with K:", kernel, "AUC:", score)
         if score > best_score:
             best_score = score
-            best_model = m
-            best_c = K
+            best_model = model
+            best_kernel = kernel
 
-    print("Best K:", best_c)
+    print("Best K:", best_kernel)
     return best_model

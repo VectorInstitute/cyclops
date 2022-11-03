@@ -29,13 +29,14 @@ class Explainer:
     def get_explainer(self):
         """Get the explainer for the model."""
         if self.explainer_type == "tree":
-            self.explainer = shap.TreeExplainer(self.model, self.data)
+            explainer = shap.TreeExplainer(self.model, self.data)
         elif self.explainer_type == "deep":
-            self.explainer = shap.DeepExplainer(self.model, self.data)
+            explainer = shap.DeepExplainer(self.model, self.data)
         elif self.explainer_type == "gradient":
-            self.explainer = shap.GradientExplainer(self.model, self.data)
+            explainer = shap.GradientExplainer(self.model, self.data)
         else:
-            self.explainer = shap.Explainer(self.model)
+            explainer = shap.Explainer(self.model)
+        return explainer
 
     def get_shap_values(self, X):
         """Get the shap values for the model."""
