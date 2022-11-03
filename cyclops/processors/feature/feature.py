@@ -2,7 +2,7 @@
 
 import copy
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -721,6 +721,35 @@ class Features:
 
         """
         return save_dataframe(self.data, save_path, file_format=file_format)
+
+    def slice(
+        self, slice_col: str, slice_values: Union[Any, List[Any]], replace: bool = False
+    ) -> np.ndarray:
+        """Slice the data across a column, given values.
+
+        Parameters
+        ----------
+        slice_col: str
+            The column across which to slice the data.
+        slice_values: Any or List[Any]
+            A single value or list of values, that the column should be sliced by.
+        replace: bool, optional
+            If set to True, the data is replaced with the sliced data, and the
+            the values (by column) of the sliced dataset are returned.
+
+        Returns
+        -------
+        np.ndarray
+            Array of the values of the by column, in the sliced dataset.
+
+        """
+        if slice_col not in self.data.columns:
+            raise ValueError(f"Provided slice_col {slice_col} not in dataset.")
+        sliced_data = self.data[self.data[slice_col].isin(to_list(slice_values))]
+        if replace:
+            self.data = sliced_data
+
+        return sliced_data[self.by[0]].values
 
 
 class TabularFeatures(Features):
