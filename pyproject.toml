@@ -73,6 +73,12 @@ non_interactive = true
 
     [tool.pylint.format]
     max-line-length=88
+    max-args=20
+    max-attributes=20
+    max-branches=15
+    max-locals=40
+    max-statements=100
+    min-public-methods=1
 
     [tool.pylint.typecheck]
     generated-members=["numpy.*", "torch.*"]
@@ -80,6 +86,9 @@ non_interactive = true
     [tool.pylint.similarities]
     ignore-imports=["yes"]
 
+    [tool.pylint.basic]
+    good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP"]
+    good-names-rgxs=["X_.+", "x_.+", "y_.+", "df_.+"]
 [tool.flake8]
 max-line-length = 88
 
