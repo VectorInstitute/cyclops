@@ -1,11 +1,14 @@
 [tool.poetry]
-name = "cyclops"
+name = "pycyclops"
 version = "0.1.1"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
 repository = "https://github.com/VectorInstitute/cyclops"
 documentation = "https://vectorinstitute.github.io/cyclops/"
+packages = [
+    { include = "cyclops" },
+]
 
 [tool.poetry.dependencies]
 python = "3.9.7"
