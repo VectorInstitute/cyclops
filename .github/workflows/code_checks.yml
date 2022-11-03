@@ -37,6 +37,8 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install poetry
+        env:
+          PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
       - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9.7
