@@ -3,8 +3,10 @@
 --------------------------------------------------------------------------------
 
 [![Code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml)
+
 [![Documentation and Coverage Report](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml)
-[![codecov.io](https://codecov.io/github/VectorInstitute/cyclops/coverage.svg?branch=main)]
+
+[![codecov](https://codecov.io/github/VectorInstitute/cyclops/coverage.svg?branch=main)]
 (https://codecov.io/github/VectorInstitute/cyclops?branch=main)
 
 ``cyclops`` is a framework for facilitating research and deployment of ML models
