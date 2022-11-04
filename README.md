@@ -2,12 +2,11 @@
 
 --------------------------------------------------------------------------------
 
+[![PyPI](https://img.shields.io/pypi/v/pycyclops)](https://pypi.org/project/pycyclops)
 [![Code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml)
-
-[![Documentation and Coverage Report](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml)
-
-[![codecov](https://codecov.io/github/VectorInstitute/cyclops/coverage.svg?branch=main)]
-(https://codecov.io/github/VectorInstitute/cyclops?branch=main)
+[![docs](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml)
+[![codecov](https://codecov.io/gh/VectorInstitute/cyclops/branch/main/graph/badge.svg)](https://codecov.io/gh/VectorInstitute/cyclops)
+[![license](https://img.shields.io/github/license/VectorInstitute/cyclops.svg)](https://github.com/VectorInstitute/cyclops/blob/main/LICENSE)
 
 ``cyclops`` is a framework for facilitating research and deployment of ML models
 in the health (or clinical) setting. It provides three high-level features:
