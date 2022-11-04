@@ -37,13 +37,6 @@ poetry install
 source $(poetry env info --path)/bin/activate
 ```
 
-> ⚠️ ``poetry`` is the preferred installation method since it also installs
-the ``cyclops`` package, and is tested. There is also an ``environment.yaml``
-and ``requirements.txt`` to install dependencies using
-[Miniconda](https://docs.conda.io/en/latest/miniconda.html) or
-[pip](https://pypi.org/project/pip/), however is not tested frequently.
-
-
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
 
 ## 🎓 Notebooks
