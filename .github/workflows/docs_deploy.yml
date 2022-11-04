@@ -33,7 +33,7 @@ jobs:
       - run: |
           poetry env use 3.9.7
           source $(poetry env info --path)/bin/activate
-          poetry install --with docs
+          poetry install --without dev,interface
           pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && make html
           cd .. && coverage run -m pytest && coverage html && coverage xml && coverage report -m
