@@ -723,15 +723,18 @@ class Features:
         return save_dataframe(self.data, save_path, file_format=file_format)
 
     def slice(
-        self, slice_col: str, slice_values: Union[Any, List[Any]], replace: bool = False
+        self,
+        slice_cols: Union[str, List[str]],
+        slice_values: Union[Any, List[Any], List[List[Any]]],
+        replace: bool = False,
     ) -> np.ndarray:
-        """Slice the data across a column, given values.
+        """Slice the data across column(s), given values.
 
         Parameters
         ----------
-        slice_col: str
-            The column across which to slice the data.
-        slice_values: Any or List[Any]
+        slice_col: str or list of str
+            The column(s) across which to slice the data.
+        slice_values: Any or List[Any] or List[List[Any]]
             A single value or list of values, that the column should be sliced by.
         replace: bool, optional
             If set to True, the data is replaced with the sliced data, and the
@@ -743,9 +746,31 @@ class Features:
             Array of the values of the by column, in the sliced dataset.
 
         """
-        if slice_col not in self.data.columns:
-            raise ValueError(f"Provided slice_col {slice_col} not in dataset.")
-        sliced_data = self.data[self.data[slice_col].isin(to_list(slice_values))]
+        slice_cols = to_list(slice_cols)
+        if len(slice_cols) > 1 and not isinstance(slice_values, List):
+            raise ValueError(
+                """If slicing by multiple columns, provide a list of slice values
+                for each column!"""
+            )
+        if len(slice_cols) > 1 and len(slice_values) != len(slice_cols):
+            raise ValueError(
+                """Trying to slice by multiple columns, provide slice values
+                for each column!"""
+            )
+        for slice_col in slice_cols:
+            if slice_col not in self.data.columns:
+                raise ValueError(f"Provided slice_col {slice_col} not in dataset.")
+
+        slice_values = to_list(slice_values)
+        sliced_indices = []
+        for idx, slice_col in enumerate(slice_cols):
+            sliced_indices.append(
+                self.data[self.data[slice_col].isin(to_list(slice_values[idx]))][
+                    self.by[0]
+                ].values
+            )
+        intersect_indices = set.intersection(*map(set, sliced_indices))
+        sliced_data = self.data[self.data[self.by[0]].isin(intersect_indices)]
         if replace:
             self.data = sliced_data
 
