@@ -1,6 +1,10 @@
 """Test feature module."""
+import os
+
+import numpy as np
 import pandas as pd
 
+from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.processors.constants import (
     BINARY,
     FEATURE_MAPPING_ATTR,
@@ -10,14 +14,8 @@ from cyclops.processors.constants import (
     ORDINAL,
     STRING,
 )
-
-from cyclops.processors.column_names import ENCOUNTER_ID
-
-from cyclops.processors.feature.feature import (
-    FeatureMeta,
-    Features,
-    TabularFeatures
-)
+from cyclops.processors.feature.feature import FeatureMeta, Features
+from cyclops.processors.feature.normalization import GroupbyNormalizer
 
 
 def test__feature_meta__get_type():
@@ -66,24 +64,24 @@ def test__feature_meta__update():
     assert feature_meta.is_target()
 
 
-def _create_feature(data, features, by):
-    return Features(data=data, features=features, by=by)
+def _create_feature(data, features, by_attribute, targets=None):
+    return Features(data=data, features=features, by=by_attribute, targets=targets)
 
 
 def test__feature__get_data():
     """Test Feature.get_data fn."""
-    data = pd.DataFrame({'fe': [1], 'f': [1], ENCOUNTER_ID: [1]})
-    feat = _create_feature(data, ['fe', 'f'], ENCOUNTER_ID)
+    data = pd.DataFrame({"fe": [1], "f": [1], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     data = data.set_index([ENCOUNTER_ID])
     returned_data = feat.get_data()
     returned_data = returned_data.reindex(returned_data.columns.sort_values(), axis=1)
     data = data.reindex(data.columns.sort_values(), axis=1)
     assert returned_data.equals(data)
 
-    boolean_data = pd.DataFrame({'fe': [True], 'f': [True], ENCOUNTER_ID: [1]})
-    feat = _create_feature(boolean_data, ['fe', 'f'], ENCOUNTER_ID)
+    boolean_data = pd.DataFrame({"fe": [True], "f": [True], ENCOUNTER_ID: [1]})
+    feat = _create_feature(boolean_data, ["fe", "f"], ENCOUNTER_ID)
     boolean_data = boolean_data.set_index([ENCOUNTER_ID])
-    boolean_data = boolean_data.astype('int')
+    boolean_data = boolean_data.astype("int")
     returned_data = feat.get_data()
     boolean_data = boolean_data.reindex(boolean_data.columns.sort_values(), axis=1)
     returned_data = returned_data.reindex(returned_data.columns.sort_values(), axis=1)
@@ -92,16 +90,16 @@ def test__feature__get_data():
 
 def test__feature__columns():
     """Test Feature.columns fn."""
-    data = pd.DataFrame({'fe': [1], 'f': [1], ENCOUNTER_ID: [1]})
-    feat = _create_feature(data, ['fe', 'f'], ENCOUNTER_ID)
+    data = pd.DataFrame({"fe": [1], "f": [1], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     returned_data = feat.columns
     assert returned_data.sort_values().equals(data.columns.sort_values())
 
 
 def test__feature__feature_names():
     """Test Feature.feature_names fn."""
-    data = pd.DataFrame({'fe': [1], 'f': [1], ENCOUNTER_ID: [1]})
-    features = ['fe', 'f']
+    data = pd.DataFrame({"fe": [1], "f": [1], ENCOUNTER_ID: [1]})
+    features = ["fe", "f"]
     feat = _create_feature(data, features, ENCOUNTER_ID)
     returned_data = feat.feature_names()
     assert sorted(returned_data) == sorted(features)
@@ -109,7 +107,147 @@ def test__feature__feature_names():
 
 def test__feature__types():
     """Test Feature.types fn."""
-    data = pd.DataFrame({'fe': [1], 'f': [1], ENCOUNTER_ID: [1]})
-    feat = _create_feature(data, ['fe', 'f'], ENCOUNTER_ID)
+    data = pd.DataFrame({"fe": [1], "f": [1], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     returned_data = feat.types
-    assert returned_data == {'fe': NUMERIC, 'f': NUMERIC}
+    assert returned_data == {"fe": NUMERIC, "f": NUMERIC}
+
+
+def test__feature__targets():
+    """Test Feature.targets fn."""
+    data = pd.DataFrame({"fe": [1], "f": [1], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    returned_data = feat.targets
+    assert returned_data == []
+
+
+def test__feature__features_by_type():
+    """Test Feature.features_by_type fn."""
+    data = pd.DataFrame({"fe": [1], "f": [1], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    returned_data = feat.features_by_type(NUMERIC)
+    assert sorted(returned_data) == ["f", "fe"]
+    data = pd.DataFrame({"fe": [True], "f": [False], ENCOUNTER_ID: [1]})
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    returned_data = feat.features_by_type(BINARY)
+    assert sorted(returned_data) == ["f", "fe"]
+    data = pd.DataFrame(
+        {
+            "fe": [True, True],
+            "f": [False, False],
+            "fea": ["hi", "hey"],
+            ENCOUNTER_ID: [1, 1],
+        }
+    )
+    feat = _create_feature(data, ["fe", "f", "fea"], ENCOUNTER_ID)
+    returned_data = feat.features_by_type(BINARY)
+    assert sorted(returned_data) == ["f", "fe", "fea"]
+
+
+def test__feature__compute_value_splits():
+    """Test Feature.compute_value_splits fn."""
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    returned_data = feat.compute_value_splits([0.5, 0.5], seed=42)
+    returned_data = [data[0] for data in returned_data]
+    assert sorted(returned_data) == [1, 2]
+
+
+def test__feature__split_by_values():
+    """Test Feature.split_by_values fn."""
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    value_splits = feat.compute_value_splits([0.5, 0.5], seed=42)
+    returned_data = feat.split_by_values(value_splits)
+    df1 = pd.DataFrame({"fe": [10] * 5, "f": [10] * 5, ENCOUNTER_ID: [1] * 5})
+    df2 = pd.DataFrame({"fe": [10] * 5, "f": [10] * 5, ENCOUNTER_ID: [2] * 5})
+    df2.index = np.arange(5, 10)
+    assert returned_data[0].data.equals(df2)
+    assert returned_data[1].data.equals(df1)
+
+
+def test__feature__split():
+    """Test Feature.split fn."""
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    returned_data = feat.split([0.5, 0.5], seed=42)
+    df1 = pd.DataFrame({"fe": [10] * 5, "f": [10] * 5, ENCOUNTER_ID: [1] * 5})
+    df2 = pd.DataFrame({"fe": [10] * 5, "f": [10] * 5, ENCOUNTER_ID: [2] * 5})
+    df2.index = np.arange(5, 10)
+    assert returned_data[0].data.equals(df2)
+    assert returned_data[1].data.equals(df1)
+
+
+def test__feature__add_normalizer():
+    """Test Feature.add_normalizer fn."""
+    normalizer = GroupbyNormalizer({"f": "standard"})
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    feat.add_normalizer("normalizer", normalizer)
+    norm = feat.normalizers
+    assert norm["normalizer"].get_map() == normalizer.get_map()
+
+
+def test__feature__remove_normalizer():
+    """Test Feature.remove_normalizer fn."""
+    normalizer = GroupbyNormalizer({"f": "standard"})
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    feat.add_normalizer("normalizer", normalizer)
+    feat.remove_normalizer("normalizer")
+    norm = feat.normalizers
+    assert not norm
+
+
+def test__feature__normalize():
+    """Test Feature.normalize fn."""
+    normalizer = GroupbyNormalizer({"f": "standard"})
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    feat.add_normalizer("normalizer", normalizer)
+    new_data = feat.normalize("normalizer")
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [0.0] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    assert new_data.equals(data)
+
+
+def test__feature__inverse_normalize():
+    """Test Feature.inverse_normalize fn."""
+    normalizer = GroupbyNormalizer({"f": "standard"})
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    feat.add_normalizer("normalizer", normalizer)
+    feat.normalize("normalizer")
+    new_data = feat.inverse_normalize("normalizer")
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10.0] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    assert new_data.equals(data)
+
+
+def test__feature__save():
+    """Test Feature.save fn."""
+    data = pd.DataFrame(
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+    )
+    feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
+    filename = os.path.join(os.getcwd(), "feature.parquet")
+    feat.save(filename)
+    assert os.path.exists(filename)
+    os.remove(filename)
+    assert not os.path.exists(filename)
