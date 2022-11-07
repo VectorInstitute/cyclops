@@ -1,9 +1,12 @@
-![cyclops Logo](https://github.com/VectorInstitute/cyclops/blob/master/docs/source/theme/static/cyclops_logo-dark.png?raw=true)
+![cyclops Logo](https://github.com/VectorInstitute/cyclops/blob/main/docs/source/theme/static/cyclops_logo-dark.png?raw=true)
 
 --------------------------------------------------------------------------------
 
+[![PyPI](https://img.shields.io/pypi/v/pycyclops)](https://pypi.org/project/pycyclops)
 [![Code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml)
-[![Documentation and Coverage Report](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml)
+[![docs](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml)
+[![codecov](https://codecov.io/gh/VectorInstitute/cyclops/branch/main/graph/badge.svg)](https://codecov.io/gh/VectorInstitute/cyclops)
+[![license](https://img.shields.io/github/license/VectorInstitute/cyclops.svg)](https://github.com/VectorInstitute/cyclops/blob/main/LICENSE)
 
 ``cyclops`` is a framework for facilitating research and deployment of ML models
 in the health (or clinical) setting. It provides three high-level features:
@@ -33,13 +36,6 @@ installed and then run:
 poetry install
 source $(poetry env info --path)/bin/activate
 ```
-
-> ⚠️ ``poetry`` is the preferred installation method since it also installs
-the ``cyclops`` package, and is tested. There is also an ``environment.yaml``
-and ``requirements.txt`` to install dependencies using
-[Miniconda](https://docs.conda.io/en/latest/miniconda.html) or
-[pip](https://pypi.org/project/pip/), however is not tested frequently.
-
 
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
 

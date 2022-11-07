@@ -22,3 +22,4 @@ _extract
 *.npz
 *.csv
 *.pickle
+dist/

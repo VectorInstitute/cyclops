@@ -5,10 +5,11 @@ import os
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 import pandas as pd
-from css import CONTENT_STYLE, SIDEBAR_LIST_STYLE, SIDEBAR_STYLE, TEXT_ALIGN_CENTER
 from dash import dcc, html
 
 from cyclops.processors.column_names import ENCOUNTER_ID
+
+from ..css import CONTENT_STYLE, SIDEBAR_LIST_STYLE, SIDEBAR_STYLE, TEXT_ALIGN_CENTER
 
 STATIC = "static"
 TEMPORAL = "temporal"

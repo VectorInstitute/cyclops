@@ -1,26 +1,24 @@
-import datetime
+"""Script to run drift detection with set of chosen parameters."""
 import os
 import sys
-from functools import reduce
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    accuracy_score,
-    auc,
-    average_precision_score,
-    confusion_matrix,
-    precision_recall_curve,
-    roc_auc_score,
-    roc_curve,
+
+from drift_detection.drift_detector.plotter import (
+    brightness,
+    colors,
+    colorscale,
+    linestyles,
+    markers,
 )
 
-from drift_detector.explainer import Explainer
-from drift_detector.experiments import *
-from drift_detector.plotter import errorfill, plot_roc, plot_pr
-from gemini.utils import import_dataset_hospital, run_shift_experiment
-from gemini.constants import *
-from baseline_models.static.utils import run_model
+# from drift_detector import Experimenter
+from .drift_detector.plotter import errorfill
+
+# from gemini.constants import *
+from .gemini.utils import run_shift_experiment
 
 DATASET = sys.argv[1]
 SHIFT = sys.argv[2]
@@ -36,8 +34,8 @@ PATH += SHIFT + "_"
 PATH += DR_TECHNIQUE + "_"
 PATH += MD_TEST + "/"
 
-if not os.path.exists(path):
-    os.makedirs(path)
+if not os.path.exists(PATH):
+    os.makedirs(PATH)
 
 # Define shift types.
 if SHIFT == "small_gn_shift":
@@ -99,6 +97,8 @@ NA_CUTOFF = 0.6
 # PIPELINE START
 # -------------------------------------------------
 
+EXPERIMENTS: list[str] = []
+
 mean_dr_md_pval = np.ones(
     (len(EXPERIMENTS), len(DR_TECHNIQUES), len(MD_TESTS), len(SAMPLES))
 ) * (-1)
@@ -117,7 +117,8 @@ for si, SHIFT in enumerate(EXPERIMENTS):
         for mi, MD_TEST in enumerate(MD_TESTS):
             if np.any(mean_dr_md_pval[si, di, mi, :] == -1):
                 print(
-                    "{} | {} | {} | {}".format(SHIFT, HOSPITAL, DR_TECHNIQUE, MD_TEST)
+                    f"{SHIFT} | {HOSPITAL} | {DR_TECHNIQUE} |\
+                         {DR_TECHNIQUE} | {MD_TEST}"
                 )
                 try:
                     mean_p_vals, std_p_vals, mean_dist, std_dist = run_shift_experiment(
@@ -140,14 +141,14 @@ for si, SHIFT in enumerate(EXPERIMENTS):
                     std_dr_md_pval[si, di, mi, :] = std_p_vals
                     mean_dr_md_dist[si, di, mi, :] = mean_dist
                     std_dr_md_dist[si, di, mi, :] = std_dist
-                except ValueError as e:
+                except ValueError:
                     print("Value Error")
-                    pass
 
 fig = plt.figure(figsize=(8, 6))
 for si, shift in enumerate(EXPERIMENTS):
     for di, dr_technique in enumerate(DR_TECHNIQUES):
         for mi, md_test in enumerate(MD_TESTS):
+            DIM_RED = None
             if dr_technique == DIM_RED and md_test == MD_TEST:
                 errorfill(
                     np.array(SAMPLES),
@@ -155,7 +156,8 @@ for si, shift in enumerate(EXPERIMENTS):
                     std_dr_md_pval[si, di, mi, :],
                     fmt=linestyles[si] + markers[si],
                     color=colorscale(colors[si], brightness[si]),
-                    label="%s" % "_".join([shift, dr_technique, md_test]),
+                    label=f"{shift}_{dr_technique}_{md_test}",
+                    # label="%s" % "_".join([shift, dr_technique, md_test]),
                 )
 plt.xlabel("Number of samples from test data")
 plt.ylabel("$p$-value")
@@ -163,7 +165,7 @@ plt.axhline(y=SIGN_LEVEL, color="k")
 plt.legend()
 plt.show()
 
-means_pval_file = PATH + "/driftexp_pval_means.csv"
+MEANS_PVAL_FILE = PATH + "/driftexp_pval_means.csv"
 means_pval = np.moveaxis(mean_dr_md_pval, 3, 1)
 cols = pd.MultiIndex.from_product([DR_TECHNIQUES, MD_TESTS])
 index = pd.MultiIndex.from_product([shifts, SAMPLES])
@@ -172,12 +174,12 @@ means_pval = means_pval.reshape(
 )
 means_pval = pd.DataFrame(means_pval, columns=cols, index=index)
 means_pval = pd.DataFrame(means_pval, columns=cols, index=SAMPLES)
-means_pval.to_csv(means_pval_file, sep="\t")
+means_pval.to_csv(MEANS_PVAL_FILE, sep="\t")
 
-stds_pval_file = PATH + "/driftexp_pval_stds.csv"
+STDS_PVAL_FILE = PATH + "/driftexp_pval_stds.csv"
 stds_pval = np.moveaxis(std_dr_md_pval, 3, 1)
 stds_pval = stds_pval.reshape(
     len(shifts) * len(SAMPLES), len(DR_TECHNIQUES) * len(MD_TESTS)
 )
 stds_pval = pd.DataFrame(stds_pval, columns=cols, index=index)
-stds_pval.to_csv(stds_pval_file, sep="\t")
+stds_pval.to_csv(STDS_PVAL_FILE, sep="\t")

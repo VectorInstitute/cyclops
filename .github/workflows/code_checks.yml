@@ -3,7 +3,7 @@ name: Code checks
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
@@ -14,7 +14,7 @@ on:
       - '**.ipynb'
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
@@ -43,5 +43,5 @@ jobs:
         run: |
           poetry env use 3.9.7
           source $(poetry env info --path)/bin/activate
-          poetry install
+          poetry install --without dev,docs,interface
           pre-commit run --all-files

@@ -1,12 +1,10 @@
-"""Optimizer."""
+"""Optimizer to train the baseline model."""
 
-import datetime
-import math
+from datetime import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from datetime import datetime
-import matplotlib.pyplot as plt
 
 
 class Optimizer:
@@ -43,9 +41,8 @@ class Optimizer:
         self.reweight_positive = reweight_positive
 
     def reweight_loss(self, loss, y):
-        if isinstance(self.reweight_positive, float) or isinstance(
-            self.reweight_positive, np.float64
-        ):
+        """Reweight the losses."""
+        if isinstance(self.reweight_positive, (float, np.float64)):
             loss[y.squeeze() == 1] *= self.reweight_positive
         elif self.reweight_positive == "mini-batch":
             loss[y.squeeze() == 1] *= (y == 0).sum() / (y == 1).sum()
@@ -53,6 +50,7 @@ class Optimizer:
         return loss
 
     def train_step(self, x, y):
+        """Train model for one step."""
         # Sets model to train mode
         self.model.train(True)
 
@@ -86,10 +84,10 @@ class Optimizer:
         self,
         train_loader,
         val_loader,
-        batch_size=64,
+        # batch_size=64,
         n_epochs=50,
-        n_features=1,
-        timesteps=-1,
+        # n_features=1,
+        # timesteps=-1,
         model_path=None,
     ):
         """Train pytorch model.
@@ -110,7 +108,6 @@ class Optimizer:
         """
         if model_path is None:
             model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-        best_loss = math.inf
 
         for epoch in range(1, n_epochs + 1):
             batch_losses = []
@@ -119,7 +116,7 @@ class Optimizer:
                 y_batch = y_batch.to(self.device)
                 loss = self.train_step(x_batch, y_batch)
 
-                assert not (np.isnan(loss).any())
+                assert not np.isnan(loss).any()
 
                 batch_losses.append(loss)
             training_loss = np.mean(batch_losses)
@@ -143,7 +140,7 @@ class Optimizer:
                     # Take mean of loss.
                     val_loss = (val_loss.sum() / (~y_val.eq(-1)).sum()).item()
 
-                    assert not (np.isnan(val_loss).any())
+                    assert not np.isnan(val_loss).any()
 
                     batch_val_losses.append(val_loss)
                 validation_loss = np.mean(batch_val_losses)
@@ -151,12 +148,18 @@ class Optimizer:
 
             torch.save(self.model.state_dict(), model_path)
             print(
-                f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t Validation loss: {validation_loss:.4f}"
+                f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t \
+                Validation loss: {validation_loss:.4f}"
             )
             self.lr_scheduler.step()
 
     def evaluate(
-        self, test_loader, batch_size=1, n_features=1, timesteps=-1, flatten=True
+        self,
+        test_loader,
+        # batch_size=1,
+        # n_features=1,
+        # timesteps=-1,
+        flatten=True,
     ):
         """Evaluate pytorch model.
 
@@ -194,6 +197,7 @@ class Optimizer:
         return y_test_labels, y_pred_values, y_pred_labels
 
     def plot_losses(self):
+        """Plot training and validation losses."""
         plt.plot(self.train_losses, label="Training loss")
         plt.plot(self.val_losses, label="Validation loss")
         plt.legend()

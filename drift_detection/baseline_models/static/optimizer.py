@@ -1,12 +1,10 @@
 """Optimizer."""
 
-import datetime
-import math
+from datetime import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from datetime import datetime
-import matplotlib.pyplot as plt
 
 
 class Optimizer:
@@ -34,6 +32,21 @@ class Optimizer:
         self.device = model.device
 
     def train_step(self, x, y):
+        """Train model for one step.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input data.
+        y: torch.Tensor
+            Target data.
+
+        Returns
+        -------
+        loss: float
+            Loss value.
+
+        """
         # Sets model to train mode
         self.model.train(True)
 
@@ -56,7 +69,7 @@ class Optimizer:
         # Returns the loss
         return loss.item()
 
-    def train(self, train_loader, val_loader, batch_size=64, n_epochs=50, n_features=1):
+    def train(self, train_loader, val_loader, n_epochs=50):
         """Train pytorch model.
 
         Parameters
@@ -74,7 +87,6 @@ class Optimizer:
 
         """
         model_path = f'checkpoint_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-        best_loss = math.inf
 
         for epoch in range(1, n_epochs + 1):
             batch_losses = []
@@ -83,7 +95,7 @@ class Optimizer:
                 y_batch = y_batch.to(self.device)
                 loss = self.train_step(x_batch, y_batch)
 
-                assert not (np.isnan(loss).any())
+                assert not np.isnan(loss).any()
 
                 batch_losses.append(loss)
             training_loss = np.mean(batch_losses)
@@ -99,7 +111,7 @@ class Optimizer:
                     val_loss = self.loss_fn(yhat, y_val)
                     val_loss = val_loss.sum().item()
 
-                    assert not (np.isnan(val_loss).any())
+                    assert not np.isnan(val_loss).any()
 
                     batch_val_losses.append(val_loss)
                 validation_loss = np.mean(batch_val_losses)
@@ -107,7 +119,8 @@ class Optimizer:
 
             torch.save(self.model.state_dict(), model_path)
             print(
-                f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t Validation loss: {validation_loss:.4f}"
+                f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t \
+                Validation loss: {validation_loss:.4f}"
             )
             self.lr_scheduler.step()
 
@@ -145,6 +158,7 @@ class Optimizer:
         return y_test_labels, y_pred_values, y_pred_labels
 
     def plot_losses(self):
+        """Plot training and validation losses."""
         plt.plot(self.train_losses, label="Training loss")
         plt.plot(self.val_losses, label="Validation loss")
         plt.legend()

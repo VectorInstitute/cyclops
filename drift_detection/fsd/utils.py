@@ -1,3 +1,4 @@
+"""Utilities for FSD drift detection."""
 from textwrap import wrap as textwrap
 
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from sklearn.utils import check_random_state
 
 
 def marginal_attack(X, attack_set, random_state=None):
-    """Performs marginal attack jointly on the features in attack_set."""
+    """Perform marginal attack jointly on the features in attack_set."""
     rng = check_random_state(random_state)
     attack_set = np.array(attack_set)
     X = X.copy()  # just in case the original input is going to be used in later testing
@@ -29,9 +30,13 @@ def create_graphical_model(
     random_seed=0,
     nx_kwargs=None,
 ):
-    """Creates graphical dependence models based on a target MI, random_seed, and
-    target_idx."""
-    if nx_kwargs == None:
+    """Create graphical dependence models.
+
+    Creates graphical dependence model based on a target MI, random_seed, and
+    target_idx.
+
+    """
+    if nx_kwargs is None:
         nx_kwargs = {}
     n = sqrtn**2
 
@@ -86,7 +91,8 @@ def create_graphical_model(
 
     # Determine edge weights
     if alpha == "auto":
-        # Automatically find a valid edge weight that has a certain condition number
+        # Automatically find a valid edge weight that has a certain condition
+        # number
         def func_to_minimize(a):
             inv_cov = np.eye(n) + a * edge_mat
             if not is_positive_definite(inv_cov):
@@ -101,7 +107,8 @@ def create_graphical_model(
     # Form inverse covariance matrix
     inv_cov = np.eye(n) + a * edge_mat
     assert is_positive_definite(inv_cov), "Final matrix should be PD"
-    # print(f'Condition number={np.linalg.cond(inv_cov)}, Mutual information={mutual_information(inv_cov)}')
+    # print(f'Condition number={np.linalg.cond(inv_cov)},
+    # Mutual information={mutual_information(inv_cov)}')
 
     cov = np.linalg.inv(inv_cov)
 
@@ -117,7 +124,7 @@ def create_graphical_model(
 
 
 def sim_copula_data(p_size, q_size, mean, cov, a, b, rng=None):
-    """Takes in a target Gaussian mean and covariance, then transforms to a copula."""
+    """Take in a target Gaussian mean and covariance, then transforms to a copula."""
     if rng is None:
         rng = np.random.RandomState(np.random.randint(10000))
     X = rng.multivariate_normal(mean=mean, cov=cov, size=p_size + q_size)
@@ -129,8 +136,12 @@ def sim_copula_data(p_size, q_size, mean, cov, a, b, rng=None):
 
 
 def get_detection_metrics(true_labels, predicted_labels):
-    """Calculates tp, fp, fn, and tn from a confusion matrix, then get precision,
-    recall, and acc."""
+    """Calculate tp, fp, fn, and tn.
+
+    Calculates tp, fp, fn, and tn from a confusion matrix, then get precision,recall,
+    and acc.
+
+    """
     tn, fp, fn, tp = sklearn_confusion_matrix(
         true_labels, predicted_labels, labels=[0, 1]
     ).flatten()
@@ -151,9 +162,12 @@ def get_detection_metrics(true_labels, predicted_labels):
 
 
 def get_localization_metrics(true_labels_tensor, predicted_labels_tensor, n_dim):
-    """Creates a confusion matrix for each feature as an array with shape (n_features,
-    2, 2), then calculates the micro-precision and micro-recall and returns as a
-    dict."""
+    """Create a confusion matrix for each feature.
+
+    Creates a confusion matrix for each feature as an array with shape (n_features, 2,
+    2), then calculates the micro-precision and micro-recall and returns as a dict.
+
+    """
     confusion_tensor = np.zeros(shape=(n_dim, 2, 2))
     for feature_idx in range(n_dim):
         confusion_tensor[feature_idx] = sklearn_confusion_matrix(
@@ -161,7 +175,8 @@ def get_localization_metrics(true_labels_tensor, predicted_labels_tensor, n_dim)
             predicted_labels_tensor[feature_idx],
             labels=[0, 1],
         )
-    # here we will sum along the feature axis of the confusion_tensor to get the micro-precision and recall
+    # here we will sum along the feature axis of the confusion_tensor to get
+    # the micro-precision and recall
     tn, fp, fn, tp = confusion_tensor.sum(axis=0).flatten()
     micro_precision = tp / (tp + fp)
     micro_recall = tp / (tp + fn)
@@ -179,7 +194,7 @@ def get_localization_metrics(true_labels_tensor, predicted_labels_tensor, n_dim)
 def plot_confusion_matrix(
     confusion_matrix, plot=False, title=None, axis=None, filename=None
 ):
-    """Plots as confusion matrix using seaborn heatmap."""
+    """Plot as confusion matrix using seaborn heatmap."""
     if axis is None:
         fig, axis = plt.subplots()
     names = ["TN", "FP", "FN", "TP"]
@@ -207,8 +222,12 @@ def plot_confusion_matrix(
 
 
 def get_confusion_tensor(true_labels_tensor, predicted_labels_tensor, n_dim):
-    """Creates a confusion matrix for each feature and returns it as an array with shape
-    (n_features, 2, 2)"""
+    """Create a confusion matrix for each feature.
+
+    Creates a confusion matrix for each featureand returns it as an array with shape
+    (n_features, 2, 2)
+
+    """
     confusion_tensor = np.zeros(shape=(n_dim, 2, 2))
     for feature_idx in range(n_dim):
         confusion_tensor[feature_idx] = sklearn_confusion_matrix(
@@ -218,5 +237,5 @@ def get_confusion_tensor(true_labels_tensor, predicted_labels_tensor, n_dim):
 
 
 def wrap(string):
-    """Wraps strings of legn."""
+    """Wrap strings of legn."""
     return "\n".join(textwrap(string, 60))
