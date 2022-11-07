@@ -2,11 +2,10 @@
 
 import os
 import unittest
-import pytest
 
 import numpy as np
 import pandas as pd
-
+import pytest
 
 from cyclops.processors.column_names import ENCOUNTER_ID
 from cyclops.processors.constants import (
