@@ -5,7 +5,6 @@ from typing import Optional
 
 import yaml
 
-from codebase_ops import get_log_file_path
 from cyclops.utils.file import join, process_dir_save_path
 from cyclops.utils.log import setup_logging
 from models.catalog import MODELS, PT_MODELS, STATIC_MODELS, _Model
@@ -22,7 +21,7 @@ from models.utils import get_device, metrics_binary
 from models.wrapper import PTModel, SKModel
 
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 # mypy: ignore-errors
 # pylint: disable=too-many-instance-attributes
