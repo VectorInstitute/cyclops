@@ -4,12 +4,11 @@ import logging
 import time
 from typing import Callable
 
-from codebase_ops import get_log_file_path
 from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 def time_function(func: Callable) -> Callable:

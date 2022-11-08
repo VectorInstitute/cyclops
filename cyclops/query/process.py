@@ -19,7 +19,6 @@ from sqlalchemy.sql.selectable import Select, Subquery
 from sqlalchemy.types import Boolean
 
 # Logging.
-from codebase_ops import get_log_file_path
 from cyclops.query.util import (
     TableTypes,
     apply_to_columns,
@@ -47,7 +46,7 @@ from cyclops.utils.common import to_datetime_format, to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 @dataclass

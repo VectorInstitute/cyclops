@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from codebase_ops import get_log_file_path
 from cyclops.processors.clean import dropna_rows
 from cyclops.processors.column_names import (
     EVENT_NAME,
@@ -28,7 +27,7 @@ from cyclops.utils.profile import time_function
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
