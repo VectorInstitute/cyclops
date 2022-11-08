@@ -1,0 +1,20 @@
+
+image_path: '/home/akore/NIHCXR/images'
+csv_path: '/home/akore/NIHCXR/Data_Entry_2017.csv'
+bbox_path: '/home/akore/NIHCXR/BBox_List_2017.csv'
+image_size: 224
+views: ['AP', 'PA']
+unique_patients: False
+subset_size: 2000
+
+
+metadata_mapping:
+  id: 'Image Index'
+  timestamp: None
+  targets: ['Atelectasis', 'Cardiomegaly', 'Consolidation', 'Edema', 'Effusion', 'Emphysema', 'Fibrosis', 'Hernia', 'Infiltration', 'Mass', 'Nodule', 'Pleural_Thickening', 'Pneumonia', 'Pneumothorax']
+  predictions: None
+  age: 'Patient Age'
+  gender: 'Patient Gender'
+  patient_id: 'patientid'
+  follow_up: 'Follow-up #'
+  view: 'view'
