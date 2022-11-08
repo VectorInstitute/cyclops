@@ -28,10 +28,11 @@ setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-arguments, invalid-name
 
-class Predictor:  
+
+class Predictor:
     """Predictor class."""
 
-    def __init__(  
+    def __init__(
         self,
         model_name: str,
         dataset_name: str,
