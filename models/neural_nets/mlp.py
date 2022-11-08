@@ -5,37 +5,24 @@ import math
 import torch
 from torch import nn
 
-from models.utils import get_activation_fn
+from models.utils import ACTIVATIONS
 
 
-class MLP(nn.Module):  # pylint: disable=too-few-public-methods
+class MLPModel(nn.Module):  # pylint: disable=too-few-public-methods
     """A Multi-Layer Perceptron (MLP).
 
-    Also known as a Fully-Connected Network (FCN). This
-    implementation assumes that all hidden layers have
-    the same hidden size and the same activation function.
-
-    Attributes
-    ----------
-        num_layers: int
-            Number of layers in the network.
-        in_dim: int
-            Size of the input sample.
-        hidden_dims: list
-            Sizes of the hidden layers.
-        out_dim: int
-            Size of the output.
-        activation: str
-            Activation function.
+    Also known as a Fully-Connected Network (FCN). This implementation assumes that all
+    hidden layers have the same hidden size and the same activation function.
 
     """
 
     def __init__(  # pylint: disable=R0913
         self,
-        num_layers: int,
-        in_dim: int,
+        device: torch.device,
+        input_dim: int,
         hidden_dims: list,
-        out_dim: int,
+        layer_dim: int,
+        output_dim: int,
         activation: str = "relu",
     ):
         """Instantiate model.
@@ -55,22 +42,23 @@ class MLP(nn.Module):  # pylint: disable=too-few-public-methods
 
         """
         super().__init__()
-        self.num_layers = num_layers
-        self.in_dim = in_dim
+        self.device = device
+        self.input_dim = input_dim
         self.hidden_dims = hidden_dims
-        self.out_dim = out_dim
-        self.activation = get_activation_fn(activation)
+        self.layer_dim = layer_dim
+        self.output_dim = output_dim
+        self.activation = ACTIVATIONS[activation]
 
         layers = []
-        for i in range(self.num_layers - 1):
+        for i in range(self.layer_dim - 1):
             layers.extend(
                 self._layer(
-                    self.hidden_dims[i] if i > 0 else in_dim,
+                    self.hidden_dims[i] if i > 0 else input_dim,
                     self.hidden_dims[i + 1],
                     activation,
                 )
             )
-        layers.extend(self._layer(hidden_dims[i + 1], out_dim))
+        layers.extend(self._layer(hidden_dims[i + 1], output_dim))
 
         self.model = nn.Sequential(*layers)
 

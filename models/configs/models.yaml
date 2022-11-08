@@ -1,0 +1,183 @@
+---
+# Parameters and hyper-parameters to train and test the models
+xgb:
+  model_params:
+    max_depth: 7
+    gamma: 1
+    objective: "binary:logistic"
+    learning_rate: 0.1
+    eval_metric: "logloss"
+    min_child_weight: 1
+    seed: 42
+    use_label_encoder: False
+  train_params:
+    best_model: True
+    best_model_params:
+      max_depth: [3, 5, 7, 9, 11]
+      gamma: [0.5, 1, 1.5, 2, 5]
+    best_model_metric: 'roc_auc'
+  test_params:
+    flatten: True
+
+lr:
+  model_params:
+    C: 1.e-1
+  train_params:
+    best_model: True
+    best_model_params:
+      C: [1.e-1, 1.e-2, 1.e-3, 1.e-4, 1.e-5, 1.e-6, 1.e-7]
+    best_model_metric: 'roc_auc'
+  test_params:
+    flatten: True
+
+
+mlp:
+  model_params:
+    alpha: 1.e-1
+    hidden_layer_sizes: [256, 256, 256, 256]
+    early_stopping: True
+    learning_rate: "adaptive"
+    batch_size: 64
+  train_params:
+    best_model: True
+    best_model_params:
+      alpha: [1.e-1, 1.e-2, 1.e-3, 1.e-4, 1.e-5, 1.e-6, 1.e-7]
+    best_model_metric: 'roc_auc'
+  test_params:
+    flatten: True
+
+rf:
+  model_params:
+    n_estimators: 10
+    n_jobs: -1
+  train_params:
+    best_model: True
+    best_model_params:
+      n_estimators: [5, 10, 50, 100, 500]
+    best_model_metric: 'roc_auc'
+  test_params:
+    flatten: True
+
+mlp_pt:
+  model_params:
+    device: ''
+    input_dim: ''
+    hidden_dims: [256, 256, 256, 256]
+    layer_dim: 2
+    output_dim: 1
+    activation: 'relu'
+  train_params:
+    activation: 'sigmoid'
+    n_epochs: 256
+    optimizer: 'adagrad'
+    criterion: 'bcelogits'
+    reweight: "mini-batch"
+    lr_scheduler: 'step'
+    per_epoch: False
+  opt_params:
+    lr: 2.e-3
+    weight_decay: 1.e-6
+  lr_params:
+    gamma: 0.5
+    step_size: 128
+  data_params:
+    batch_size: 64
+    num_workers: 2
+    shuffle: True
+    pin_memory: True
+  test_params:
+    flatten : False
+
+gru:
+  model_params:
+    device: ''
+    input_dim: ''
+    hidden_dim: 64
+    layer_dim: 2
+    output_dim: 1
+    dropout_prob: 0.2
+    last_timestep_only: False
+  train_params:
+    activation: 'sigmoid'
+    n_epochs: 256
+    optimizer: 'adagrad'
+    criterion: 'bcelogits'
+    reweight: "mini-batch"
+    lr_scheduler: 'step'
+    per_epoch: False
+  opt_params:
+    lr: 2.e-3
+    weight_decay: 1.e-6
+  lr_params:
+    gamma: 0.5
+    step_size: 128
+  data_params:
+    batch_size: 64
+    num_workers: 2
+    shuffle: True
+    pin_memory: True
+  test_params:
+    flatten : False
+
+
+lstm:
+  model_params:
+    device: ''
+    input_dim: ''
+    hidden_dim: 64
+    layer_dim: 2
+    output_dim: 1
+    dropout_prob: 0.2
+    last_timestep_only: False
+  train_params:
+    activation: 'sigmoid'
+    n_epochs: 256
+    optimizer: 'adagrad'
+    criterion: 'bcelogits'
+    reweight: "mini-batch"
+    lr_scheduler: 'step'
+    per_epoch: False
+  opt_params:
+    lr: 2.e-3
+    weight_decay: 1.e-6
+  lr_params:
+    gamma: 0.5
+    step_size: 128
+  data_params:
+    batch_size: 64
+    num_workers: 2
+    shuffle: True
+    pin_memory: True
+  test_params:
+    flatten : False
+
+rnn:
+  model_params:
+    device: ''
+    input_dim: ''
+    hidden_dim: 64
+    layer_dim: 2
+    output_dim: 1
+    dropout_prob: 0.2
+    last_timestep_only: False
+  train_params:
+    activation: 'sigmoid'
+    n_epochs: 256
+    optimizer: 'adagrad'
+    lr_scheduler: 'step'
+    criterion: 'bcelogits'
+    reweight: "mini-batch"
+    per_epoch: False
+  opt_params:
+    lr: 2.e-3
+    weight_decay: 1.e-6
+  lr_params:
+    gamma: 0.5
+    step_size: 128
+  data_params:
+    batch_size: 64
+    num_workers: 2
+    shuffle: True
+    pin_memory: True
+  test_params:
+    flatten: False
