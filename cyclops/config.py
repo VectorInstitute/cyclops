@@ -13,7 +13,7 @@ from typing import Dict, Optional
 import configargparse
 from dotenv import load_dotenv
 
-from codebase_ops import PROJECT_ROOT, get_log_file_path
+from codebase_ops import PROJECT_ROOT
 from cyclops.constants import EICU_CRD, GEMINI, GEMINI_OMOP, MIMICIV
 from cyclops.utils.log import setup_logging
 
@@ -23,7 +23,7 @@ load_dotenv()
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 DEFAULT_CONFIG_PATHS_MAP = {
