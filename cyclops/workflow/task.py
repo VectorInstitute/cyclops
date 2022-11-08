@@ -6,14 +6,13 @@ from typing import Union
 import pandas as pd
 from prefect import flow, task
 
-from codebase_ops import get_log_file_path
 from cyclops.processors.clean import normalize_events
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 @task

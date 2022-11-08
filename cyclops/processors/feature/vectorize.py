@@ -8,7 +8,6 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
-from codebase_ops import get_log_file_path
 from cyclops.processors.feature.normalization import VectorizedNormalizer
 from cyclops.processors.feature.split import split_idx
 from cyclops.utils.common import list_swap
@@ -18,7 +17,7 @@ from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 def process_axes(

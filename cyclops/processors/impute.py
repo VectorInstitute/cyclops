@@ -6,7 +6,6 @@ from typing import Any, Callable, Dict, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from codebase_ops import get_log_file_path
 from cyclops.processors.constants import (
     BFILL,
     DROP,
@@ -26,7 +25,7 @@ from cyclops.utils.profile import time_function
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 def compute_inter_range(null: pd.Series) -> Optional[Tuple[int, int]]:

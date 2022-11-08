@@ -17,7 +17,6 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.elements import BinaryExpression, BooleanClauseList
 from sqlalchemy.sql.selectable import Select, Subquery
 
-from codebase_ops import get_log_file_path
 from cyclops.query.util import (
     DBMetaclass,
     DBSchema,
@@ -38,7 +37,7 @@ from cyclops.utils.profile import time_function
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 SOCKET_CONNECTION_TIMEOUT = 5

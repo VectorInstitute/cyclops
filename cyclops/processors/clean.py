@@ -5,7 +5,6 @@ from typing import List, Optional, Union
 
 import pandas as pd
 
-from codebase_ops import get_log_file_path
 from cyclops.processors.column_names import (
     ENCOUNTER_ID,
     EVENT_CATEGORY,
@@ -34,7 +33,7 @@ from cyclops.utils.profile import time_function
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 UNSUPPORTED = [

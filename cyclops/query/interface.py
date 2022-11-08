@@ -6,7 +6,6 @@ from typing import Callable, Dict, Generator, Optional, Union
 
 import pandas as pd
 
-from codebase_ops import get_log_file_path
 from cyclops.orm import Database
 from cyclops.query.util import TableTypes
 from cyclops.utils.file import save_dataframe
@@ -14,7 +13,7 @@ from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
-setup_logging(log_path=get_log_file_path(), print_level="INFO", logger=LOGGER)
+setup_logging(print_level="INFO", logger=LOGGER)
 
 
 @dataclass
