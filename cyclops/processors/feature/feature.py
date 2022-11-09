@@ -723,7 +723,7 @@ class Features:
 
     def slice(
         self,
-        slice_map: Dict[str, Union[Any, List[Any]]] = {},
+        slice_map: Dict[str, Union[Any, List[Any]]] = None,
         slice_query: Optional[str] = None,
         replace: bool = False,
     ) -> np.ndarray:
@@ -748,6 +748,8 @@ class Features:
 
         """
         sliced_indices = []
+        if not slice_map:
+            slice_map = {}
         for slice_col, slice_vals in slice_map.items():
             sliced_indices.append(
                 self.data[self.data[slice_col].isin(to_list(slice_vals))][
