@@ -283,9 +283,8 @@ class TestFeatures(unittest.TestCase):
         sliced_by_indices = self.features.slice({}, replace=True)
         assert np.array_equal(sliced_by_indices, np.array([101, 201, 301]))
         assert len(self.features.data) == 3
-        sliced_by_indices = self.features.slice(slice_query = "feat_A == True & feat_B > 3", replace=True)
+        sliced_by_indices = self.features.slice(
+            slice_query="feat_A == True & feat_B > 3", replace=True
+        )
         assert np.array_equal(sliced_by_indices, np.array([301]))
         assert len(self.features.data) == 1
-
-
-
