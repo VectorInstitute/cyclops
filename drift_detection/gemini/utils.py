@@ -1,20 +1,32 @@
 """Utilities for loading and preprocessing gemini data."""
 import datetime
 import random
-
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-
-# unable to detect unidentified names, star import
-# from .constants import *
-from .query import ENCOUNTER_ID
+import importlib
+import types
 
 
-def run_shift_experiment(**kwargs):
-    """Run shift experiment."""
-    raise NotImplementedError("Placeholder for shift experiment")
+def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
+    """Import parameters specific to each use-case.
 
+    Parameters
+    ----------
+    dataset: str
+        Name of the dataset, e.g. mimiciv.
+    use_case: str
+        Name of the use-case, e.g. mortality_decompensation.
+
+    Returns
+    -------
+    types.ModuleType
+        Imported constants module with use-case parameters.
+
+    """
+    return importlib.import_module(
+        ".".join(['drift_detection', dataset, use_case, "constants"])
+    )
 
 def unison_shuffled_copies(array_a, array_b):
     """Shuffle two arrays in unison."""
@@ -153,12 +165,12 @@ def process(X, aggregation_type, timesteps):
     return X_preprocessed
 
 
-def get_dataset_hospital(admin_data, x, y, dataset, hospitals, train_frac=0.8):
+def get_dataset_hospital(admin_data, x, y, dataset, hospitals, train_frac=0.8, encounter_id="encounter_id"):
     """Get dataset for hospital."""
     # filter hospital
     admin_data = admin_data.loc[admin_data["hospital_id"].isin(hospitals)]
     encounter_ids = list(x.index.get_level_values(0).unique())
-    x = x[np.in1d(x.index.get_level_values(0), admin_data[ENCOUNTER_ID])]
+    x = x[np.in1d(x.index.get_level_values(0), admin_data[encounter_id])]
 
     # get source and target data
     x_s = None

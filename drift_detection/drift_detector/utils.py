@@ -87,53 +87,57 @@ def save_model(model, output_path: str):
     elif file_type == "pt":
         torch.save(model.state_dict(), output_path)
 
-
 class ContextMMDWrapper:
     """Wrapper for ContextMMDDrift."""
-
+    
     def __init__(
-        self,
-        X_s,
-        backend="pytorch",
-        p_val=0.05,
-        preprocess_x_ref=True,
-        update_ref=None,
-        preprocess_fn=None,
-        x_kernel=None,
-        c_kernel=None,
-        n_permutations=100,
-        prop_c_held=0.25,
-        n_folds=5,
-        batch_size=64,
-        device=None,
-        input_shape=None,
-        data_type=None,
-        verbose=False,
-        context_type="lstm",
-        model_path=None,
+        self, 
+        X_s, 
+        *, 
+        backend= 'pytorch', 
+        p_val = 0.05, 
+        preprocess_x_ref = True, 
+        update_ref = None, 
+        preprocess_fn = None, 
+        x_kernel = None, 
+        c_kernel = None, 
+        n_permutations = 100, 
+        prop_c_held = 0.25, 
+        n_folds = 5, 
+        batch_size = 64, 
+        device = None, 
+        input_shape = None, 
+        data_type = None, 
+        verbose = False, 
+        context_type='lstm', 
+        model_path=None
     ):
         self.context_type = context_type
         self.model_path = model_path
         self.device = device
         if self.device is None:
-            self.device = get_device()
-        c_source = self.context(X_s)
-        self.tester = ContextMMDDrift(X_s, c_source)
+            self.device = get_device()    
+        C_s = self.context(X_s)
 
-        self.backend = backend
-        self.p_val = p_val
-        self.preprocess_x_ref = preprocess_x_ref
-        self.update_ref = update_ref
-        self.preprocess_fn = preprocess_fn
-        self.x_kernel = x_kernel
-        self.c_kernel = c_kernel
-        self.n_permutations = n_permutations
-        self.prop_c_held = prop_c_held
-        self.n_folds = n_folds
-        self.batch_size = batch_size
-        self.input_shape = input_shape
-        self.data_type = data_type
-        self.verbose = verbose
+        args = [
+            backend, 
+            p_val, 
+            preprocess_x_ref, 
+            update_ref, 
+            preprocess_fn, 
+            x_kernel, 
+            c_kernel, 
+            n_permutations, 
+            prop_c_held, 
+            n_folds,
+            batch_size, 
+            device, 
+            input_shape, 
+            data_type, 
+            verbose
+        ]
+        
+        self.tester = ContextMMDDrift(X_s, C_s, *args)
 
     def predict(self, X_t, **kwargs):
         """Predict if there is drift in the data."""
@@ -151,10 +155,10 @@ class ContextMMDWrapper:
             Data to build context for context mmd drift detection.
 
         """
-        if self.context_type == "gmm":
-            gmm = load_model(self.model_path)
-            c_gmm_proba = gmm.predict_proba(X)
-            output = c_gmm_proba
+        if self.context_type == "sklearn":
+            model = load_model(self.model_path)
+            pred_proba = model.predict_proba(X)
+            output = pred_proba
         elif self.context_type in ["rnn", "gru", "lstm"]:
             model = recurrent_neural_network(self.context_type, X.shape[-1])
             model.load_state_dict(load_model(self.model_path)["model"])
@@ -165,7 +169,6 @@ class ContextMMDWrapper:
         else:
             raise ValueError("Context not supported")
         return output
-
 
 class LKWrapper:
     """Wrapper for LKWrapper."""

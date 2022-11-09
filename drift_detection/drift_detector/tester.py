@@ -81,11 +81,16 @@ class TSTester:
         X_t = X_t.astype("float32")
 
         preds = self.method.predict(X_t, **get_args(self.method.predict, kwargs))
-
+        
         p_val = preds["data"]["p_val"]
         dist = preds["data"]["distance"]
-        return p_val, dist
 
+        if isinstance(p_val, np.ndarray):
+            idx = np.argmin(p_val)
+            p_val = p_val[idx]
+            dist = dist[idx]
+        
+        return p_val, dist
 
 class DCTester:
     """Domain Classifier Tester.
