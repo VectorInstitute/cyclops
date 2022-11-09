@@ -1,4 +1,6 @@
 """Tester Module for drift detection with TSTester and DCTester submodules."""
+
+import numpy as np
 from alibi_detect.cd import (
     ChiSquareDrift,
     ClassifierDrift,
@@ -81,7 +83,7 @@ class TSTester:
         X_t = X_t.astype("float32")
 
         preds = self.method.predict(X_t, **get_args(self.method.predict, kwargs))
-        
+
         p_val = preds["data"]["p_val"]
         dist = preds["data"]["distance"]
 
@@ -89,8 +91,9 @@ class TSTester:
             idx = np.argmin(p_val)
             p_val = p_val[idx]
             dist = dist[idx]
-        
+
         return p_val, dist
+
 
 class DCTester:
     """Domain Classifier Tester.

@@ -108,11 +108,7 @@ class Detector:
         else:
             shift_detected = 0
 
-        return {
-            "p_val": p_val, 
-            "distance": dist, 
-            "shift_detected": shift_detected
-        }
+        return {"p_val": p_val, "distance": dist, "shift_detected": shift_detected}
 
     def detect_shift(
         self,

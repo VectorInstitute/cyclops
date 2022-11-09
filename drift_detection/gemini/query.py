@@ -22,17 +22,14 @@ from cyclops.processors.diagnoses import process_diagnoses
 from cyclops.processors.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
+from drift_detection.gemini.mortality.constants import BEFORE_DATE, OUTCOME_DEATH, SEXES
 from use_cases.gemini.common.constants import READMISSION_MAP
 from use_cases.gemini.common.query import (
     get_er_for_cohort,
     get_labs_for_cohort,
     join_queries_flow_fake,
 )
-from drift_detection.gemini.mortality.constants import (
-    BEFORE_DATE,
-    OUTCOME_DEATH,
-    SEXES,
-)
+
 
 def get_most_recent_encounters() -> pd.DataFrame:
     """Filter for cohort and get the most recent encounter for each patient.

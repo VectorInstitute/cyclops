@@ -1,11 +1,12 @@
 """Utilities for loading and preprocessing gemini data."""
 import datetime
+import importlib
 import random
+import types
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-import importlib
-import types
 
 
 def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
@@ -25,8 +26,9 @@ def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
 
     """
     return importlib.import_module(
-        ".".join(['drift_detection', dataset, use_case, "constants"])
+        ".".join(["drift_detection", dataset, use_case, "constants"])
     )
+
 
 def unison_shuffled_copies(array_a, array_b):
     """Shuffle two arrays in unison."""
@@ -165,7 +167,9 @@ def process(X, aggregation_type, timesteps):
     return X_preprocessed
 
 
-def get_dataset_hospital(admin_data, x, y, dataset, hospitals, train_frac=0.8, encounter_id="encounter_id"):
+def get_dataset_hospital(
+    admin_data, x, y, dataset, hospitals, train_frac=0.8, encounter_id="encounter_id"
+):
     """Get dataset for hospital."""
     # filter hospital
     admin_data = admin_data.loc[admin_data["hospital_id"].isin(hospitals)]

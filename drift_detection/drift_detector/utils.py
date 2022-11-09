@@ -87,56 +87,57 @@ def save_model(model, output_path: str):
     elif file_type == "pt":
         torch.save(model.state_dict(), output_path)
 
+
 class ContextMMDWrapper:
     """Wrapper for ContextMMDDrift."""
-    
+
     def __init__(
-        self, 
-        X_s, 
-        *, 
-        backend= 'pytorch', 
-        p_val = 0.05, 
-        preprocess_x_ref = True, 
-        update_ref = None, 
-        preprocess_fn = None, 
-        x_kernel = None, 
-        c_kernel = None, 
-        n_permutations = 100, 
-        prop_c_held = 0.25, 
-        n_folds = 5, 
-        batch_size = 64, 
-        device = None, 
-        input_shape = None, 
-        data_type = None, 
-        verbose = False, 
-        context_type='lstm', 
+        self,
+        X_s,
+        *,
+        backend="pytorch",
+        p_val=0.05,
+        preprocess_x_ref=True,
+        update_ref=None,
+        preprocess_fn=None,
+        x_kernel=None,
+        c_kernel=None,
+        n_permutations=100,
+        prop_c_held=0.25,
+        n_folds=5,
+        batch_size=64,
+        device=None,
+        input_shape=None,
+        data_type=None,
+        verbose=False,
+        context_type="lstm",
         model_path=None
     ):
         self.context_type = context_type
         self.model_path = model_path
         self.device = device
         if self.device is None:
-            self.device = get_device()    
+            self.device = get_device()
         C_s = self.context(X_s)
 
         args = [
-            backend, 
-            p_val, 
-            preprocess_x_ref, 
-            update_ref, 
-            preprocess_fn, 
-            x_kernel, 
-            c_kernel, 
-            n_permutations, 
-            prop_c_held, 
+            backend,
+            p_val,
+            preprocess_x_ref,
+            update_ref,
+            preprocess_fn,
+            x_kernel,
+            c_kernel,
+            n_permutations,
+            prop_c_held,
             n_folds,
-            batch_size, 
-            device, 
-            input_shape, 
-            data_type, 
-            verbose
+            batch_size,
+            device,
+            input_shape,
+            data_type,
+            verbose,
         ]
-        
+
         self.tester = ContextMMDDrift(X_s, C_s, *args)
 
     def predict(self, X_t, **kwargs):
@@ -169,6 +170,7 @@ class ContextMMDWrapper:
         else:
             raise ValueError("Context not supported")
         return output
+
 
 class LKWrapper:
     """Wrapper for LKWrapper."""

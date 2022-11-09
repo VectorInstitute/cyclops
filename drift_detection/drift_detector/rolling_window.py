@@ -125,7 +125,7 @@ class RollingWindow:
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
         while i + stat_window + lookup_window < len(data_streams["X"]):
             pbar.update(1)
-            
+
             X_next = pd.concat(
                 data_streams["X"][i + lookup_window : i + lookup_window + stat_window]
             )
