@@ -723,18 +723,16 @@ class Features:
 
     def slice(
         self,
-        slice_cols: Union[str, List[str]],
-        slice_values: Union[Any, List[Any], List[List[Any]]],
+        slice_map: Dict[str, Union[Any, List[Any]]],
         replace: bool = False,
     ) -> np.ndarray:
         """Slice the data across column(s), given values.
 
         Parameters
         ----------
-        slice_col: str or list of str
-            The column(s) across which to slice the data.
-        slice_values: Any or List[Any] or List[List[Any]]
-            A single value or list of values, that the column should be sliced by.
+        slice_map: Dict
+            Dictionary with column name(s) as keys, and value or list of values
+            to filter on as values.
         replace: bool, optional
             If set to True, the data is replaced with the sliced data, and the
             the values (by column) of the sliced dataset are returned.
@@ -745,26 +743,10 @@ class Features:
             Array of the values of the by column, in the sliced dataset.
 
         """
-        slice_cols = to_list(slice_cols)
-        if len(slice_cols) > 1 and not isinstance(slice_values, List):
-            raise ValueError(
-                """If slicing by multiple columns, provide a list of slice values
-                for each column!"""
-            )
-        if len(slice_cols) > 1 and len(slice_values) != len(slice_cols):
-            raise ValueError(
-                """Trying to slice by multiple columns, provide slice values
-                for each column!"""
-            )
-        for slice_col in slice_cols:
-            if slice_col not in self.data.columns:
-                raise ValueError(f"Provided slice_col {slice_col} not in dataset.")
-
-        slice_values = to_list(slice_values)
         sliced_indices = []
-        for idx, slice_col in enumerate(slice_cols):
+        for slice_col, slice_vals in slice_map.items():
             sliced_indices.append(
-                self.data[self.data[slice_col].isin(to_list(slice_values[idx]))][
+                self.data[self.data[slice_col].isin(to_list(slice_vals))][
                     self.by[0]
                 ].values
             )
