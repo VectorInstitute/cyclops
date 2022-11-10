@@ -84,7 +84,7 @@ class Experimenter:
                 X_source, X_target = self.shiftapplicator.apply_shift(
                     X, metadata, metadata_mapping
                 )
-                self.detector.fit(X_source)
+                self.detector.fit(X_source, progress=False)
             else:
                 self.detector.fit(X, progress=False)
                 if isinstance(X, torch.utils.data.Dataset):
@@ -93,6 +93,9 @@ class Experimenter:
                     X, metadata, metadata_mapping
                 )
         else:
+            self.detector.fit(X, progress=False)
+            if isinstance(X, torch.utils.data.Dataset):
+                X, _ = self.detector.transform(X)
             X_target = X
 
         drift_sample_results = self.experiment_types[self.experiment_type](X_target)

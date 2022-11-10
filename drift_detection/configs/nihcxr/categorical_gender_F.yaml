@@ -6,10 +6,10 @@ dataset:
 shift: "categorical_shift_gender_F"
 hydra:
   run:
-    dir: ./outputs/${dataset.name}/${shift}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: "./outputs/${dataset.name}/${shift}/${now:%Y-%m-%d_%H-%M-%S}"
   sweep:
-    dir: ./multirun/${dataset.name}/${shift}
-    subdir: {now:%Y-%m-%d_%H-%M-%S}
+    dir: "./multirun/${dataset.name}/${shift}"
+    subdir: "{now:%Y-%m-%d_%H-%M-%S}"
   job:
     chdir: True
 

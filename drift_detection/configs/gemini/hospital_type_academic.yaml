@@ -1,4 +1,4 @@
-dataset: 
+dataset:
   object: drift_detection.datasets.GEMINIDataset
   cfg_path: 'drift_detection/datasets/configs/gemini.yaml'
 
@@ -29,5 +29,3 @@ shiftapplicator:
 
 Experimenter:
   experiment_type: sensitivity_test
-
-
