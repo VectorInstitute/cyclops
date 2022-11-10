@@ -723,16 +723,20 @@ class Features:
 
     def slice(
         self,
-        slice_map: Dict[str, Union[Any, List[Any]]],
+        slice_map: Dict[str, Union[Any, List[Any]]] = None,
+        slice_query: Optional[str] = None,
         replace: bool = False,
     ) -> np.ndarray:
         """Slice the data across column(s), given values.
 
         Parameters
         ----------
-        slice_map: Dict
+        slice_map: Dict, optional
             Dictionary with column name(s) as keys, and value or list of values
             to filter on as values.
+        slice_query: str, optional
+            A string to specify conditions that uses the Pandas DataFrame query API.
+            If specified along with slice_map, the slice_map is applied first.
         replace: bool, optional
             If set to True, the data is replaced with the sliced data, and the
             the values (by column) of the sliced dataset are returned.
@@ -744,14 +748,23 @@ class Features:
 
         """
         sliced_indices = []
+        if not slice_map:
+            slice_map = {}
         for slice_col, slice_vals in slice_map.items():
             sliced_indices.append(
                 self.data[self.data[slice_col].isin(to_list(slice_vals))][
                     self.by[0]
                 ].values
             )
-        intersect_indices = set.intersection(*map(set, sliced_indices))
-        sliced_data = self.data[self.data[self.by[0]].isin(intersect_indices)]
+        if sliced_indices:
+            intersect_indices = set.intersection(*map(set, sliced_indices))
+            sliced_data = self.data[self.data[self.by[0]].isin(intersect_indices)]
+        else:
+            sliced_data = self.data
+
+        if slice_query:
+            sliced_data = sliced_data.query(slice_query)
+
         if replace:
             self.data = sliced_data
 
