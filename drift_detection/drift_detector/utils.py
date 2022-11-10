@@ -1,5 +1,6 @@
 """Utilities for the drift detector module."""
 
+import importlib
 import inspect
 import pickle
 from datetime import timedelta
@@ -44,6 +45,15 @@ def get_args(obj, kwargs):
             if key in obj.__code__.co_varnames:
                 args[key] = kwargs[key]
     return args
+
+
+def get_obj_from_str(string, reload=False):
+    """Get object from string."""
+    module, cls = string.rsplit(".", 1)
+    if reload:
+        module_imp = importlib.import_module(module)
+        importlib.reload(module_imp)
+    return getattr(importlib.import_module(module, package=None), cls)
 
 
 def load_model(model_path: str):

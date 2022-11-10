@@ -1,8 +1,7 @@
 """Clinical Shift Applicator module."""
-import datetime
 
-# import numpy as np
-# from .utils import get_args
+import pandas as pd
+from drift_detector.utils import get_args
 
 
 class ClinicalShiftApplicator:
@@ -16,21 +15,22 @@ class ClinicalShiftApplicator:
 
     """
 
-    def __init__(self, shift_type: str):
+    def __init__(self, shift_type: str, **kwargs):
 
         self.shift_type = shift_type
 
+        self.method_args = kwargs
+
         self.shift_types = {
-            "source_target": source_target,
-            "month": month,
-            "hospital_type": hospital_type,
-            "time": time,
+            "time": self.time,
+            "month": self.month,
+            "hospital_type": self.hospital_type,
         }
 
         if self.shift_type not in self.shift_types:
             raise ValueError(f"Shift type {self.shift_type} not supported. ")
 
-    def apply_shift(self, X):
+    def apply_shift(self, X, metadata: pd.DataFrame, metadata_mapping: dict):
         """apply_shift.
 
         Returns
@@ -39,186 +39,149 @@ class ClinicalShiftApplicator:
             Data to apply shift to.
         y:
             Outcome labels.
-        admin_data: pd.DataFrame
+        metadata: pd.DataFrame
             Dataframe containing admin variables to filter on
             (e.g. "hospital_id", "admit_timestamp").
 
         """
         # list(X.index.get_level_values(0).unique())
-        X_s, X_t = X, X
-        # X = X[np.in1d(X.index.get_level_values(0), admin_data["encounter_id"])]
+        # X = X[np.in1d(X.index.get_level_values(0), metadata["encounter_id"])]
 
-        # X_s, X_t = self.shift_types[self.shift_type](
-        #     X, admin_data, **get_args(self.shift_types[self.shift_type], kwargs)
-        # )
+        X_s, X_t = self.shift_types[self.shift_type](
+            X,
+            metadata,
+            metadata_mapping,
+            **get_args(self.shift_types[self.shift_type], self.method_args),
+        )
 
         # list(X.index.get_level_values(0).unique())
 
         return (X_s, X_t)
 
+    def time(
+        self,
+        X: pd.DataFrame,
+        metadata: pd.DataFrame,
+        metadata_mapping: dict,
+        source,
+        target,
+    ):
+        """Shift in time.
 
-def source_target(
-    X,
-    admin_data,
-    train_frac: float = 0.5,
-    encounter_id="encounter_id",
-    admit_timestamp="admit_timestamp",
-):
-    """Shift in time across source and target data.
+        Parameters
+        ----------
+        X: pd.DataFrame
+            Data to apply shift to.
+        metadata: pd.DataFrame
+            Dataframe containing admin variables to filter on
+            (e.g. "hospital_id", "admit_timestamp").
+        source: list[datetime.date]
+            Start and end of source data.
+        target: list[datetime.date]
+            Start and end of target data.
+        encounter_id: str
+            Column name for encounter ids.
+        admit_timestamp: str
+            Column name for admission timestamps.
 
-    Parameters
-    ----------
-    X: pd.DataFrame
-        Data to apply shift to.
-    admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on
-        (e.g. "hospital_id", "admit_timestamp").
-    start_date: datetime.date
-        Start of source data.
-    cutoff_date: datetime.date
-        Cutoff to separate source and target data.
-    end_date: datetime.date
-        End of target data.
-    encounter_id: str
-        Column name for encounter ids.
-    admit_timestamp: str
-        Column name for admission timestamps.
+        """
+        encounter_id = metadata_mapping["id"]
+        admit_timestamp = metadata_mapping["timestamp"]
 
-    """
-    dataset_ids = admin_data.loc[
-        (
-            (admin_data[admit_timestamp].dt.date > datetime.date(2015, 1, 1))
-            & (admin_data[admit_timestamp].dt.date < datetime.date(2019, 1, 1)),
-        ),
-        encounter_id,
-    ]
-    X = X.loc[X.index.get_level_values(0).isin(dataset_ids)]
-    num_train = int(train_frac * len(dataset_ids))
-    ids_source = dataset_ids[0:num_train]
-    ids_target = dataset_ids[num_train:]
+        ids_source = metadata.loc[
+            (
+                (metadata[admit_timestamp].dt.date > source[0])
+                & (metadata[admit_timestamp].dt.date < source[1]),
+            ),
+            encounter_id,
+        ]
+        ids_target = metadata.loc[
+            (
+                (metadata[admit_timestamp].dt.date > target[0])
+                & (metadata[admit_timestamp].dt.date < target[1]),
+            ),
+            encounter_id,
+        ]
+        X_source = X.loc[X.index.get_level_values(0).isin(ids_source)]
+        X_target = X.loc[X.index.get_level_values(0).isin(ids_target)]
+        return (X_source, X_target)
 
-    X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
-    X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t)
+    def month(
+        self,
+        X: pd.DataFrame,
+        metadata: pd.DataFrame,
+        metadata_mapping: dict,
+        source,
+        target,
+    ):
+        """Shift for selection of months.
 
+        Parameters
+        ----------
+        X: pd.DataFrame
+            Data to apply shift to.
+        metadata: pd.DataFrame
+            Dataframe containing admin variables to filter on
+            (e.g. "hospital_id", "admit_timestamp").
+        encounter_id: str
+            Column name for encounter ids.
+        admit_timestamp: str
+            Column name for admission timestamps.
 
-def time(
-    X,
-    admin_data,
-    source,
-    target,
-    admit_timestamp="admit_timestamp",
-    encounter_id="encounter_id",
-):
-    """Shift in time.
+        """
+        encounter_id = metadata_mapping["id"]
+        admit_timestamp = metadata_mapping["timestamp"]
 
-    Parameters
-    ----------
-    X: pd.DataFrame
-        Data to apply shift to.
-    admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on
-        (e.g. "hospital_id", "admit_timestamp").
-    source: list[datetime.date]
-        Start and end of source data.
-    target: list[datetime.date]
-        Start and end of target data.
-    encounter_id: str
-        Column name for encounter ids.
-    admit_timestamp: str
-        Column name for admission timestamps.
+        ids_source = metadata.loc[
+            ((metadata[admit_timestamp].dt.month.isin(source))),
+            encounter_id,
+        ]
+        ids_target = metadata.loc[
+            ((metadata[admit_timestamp].dt.month.isin(target))),
+            encounter_id,
+        ]
+        X_source = X.loc[X.index.get_level_values(0).isin(ids_source)]
+        X_target = X.loc[X.index.get_level_values(0).isin(ids_target)]
+        return (X_source, X_target)
 
-    """
-    ids_source = admin_data.loc[
-        (
-            (admin_data[admit_timestamp].dt.date > source[0])
-            & (admin_data[admit_timestamp].dt.date < source[1]),
-        ),
-        encounter_id,
-    ]
-    ids_target = admin_data.loc[
-        (
-            (admin_data[admit_timestamp].dt.date > target[0])
-            & (admin_data[admit_timestamp].dt.date < target[1]),
-        ),
-        encounter_id,
-    ]
-    X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
-    X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t)
+    def hospital_type(
+        self,
+        X: pd.DataFrame,
+        metadata: pd.DataFrame,
+        metadata_mapping: dict,
+        source,
+        target,
+    ):
+        """Shift against hospital type.
 
+        Parameters
+        ----------
+        X: pd.DataFrame
+            Data to apply shift to.
+        metadata: pd.DataFrame
+            Dataframe containing admin variables to filter on
+            (e.g. "hospital_id", "admit_timestamp").
+        source_hospitals: list
+            List of hospitals for source data.
+        target_hospitals: list
+            List of hospitals for target data.
+        encounter_id: str
+            Column name for encounter ids.
+        hospital_id: str
+            Column name for hospital ids.
 
-def month(
-    X,
-    admin_data,
-    source,
-    target,
-    encounter_id="encounter_id",
-    admit_timestamp="admit_timestamp",
-):
-    """Shift for selection of months.
+        """
+        encounter_id = metadata_mapping["id"]
+        hospital_id = metadata_mapping["hospital_id"]
 
-    Parameters
-    ----------
-    X: pd.DataFrame
-        Data to apply shift to.
-    admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on
-        (e.g. "hospital_id", "admit_timestamp").
-    encounter_id: str
-        Column name for encounter ids.
-    admit_timestamp: str
-        Column name for admission timestamps.
-
-    """
-    ids_source = admin_data.loc[
-        ((admin_data[admit_timestamp].dt.month.isin(source))),
-        encounter_id,
-    ]
-    ids_target = admin_data.loc[
-        ((admin_data[admit_timestamp].dt.month.isin(target))),
-        encounter_id,
-    ]
-    X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
-    X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t)
-
-
-def hospital_type(
-    X,
-    admin_data,
-    source,
-    target,
-    encounter_id="encounter_id",
-    hospital_id="hospital_id",
-):
-    """Shift against hospital type.
-
-    Parameters
-    ----------
-    X: pd.DataFrame
-        Data to apply shift to.
-    admin_data: pd.DataFrame
-        Dataframe containing admin variables to filter on
-        (e.g. "hospital_id", "admit_timestamp").
-    source_hospitals: list
-        List of hospitals for source data.
-    target_hospitals: list
-        List of hospitals for target data.
-    encounter_id: str
-        Column name for encounter ids.
-    hospital_id: str
-        Column name for hospital ids.
-
-    """
-    ids_source = admin_data.loc[
-        ((admin_data[hospital_id].isin(source))),
-        encounter_id,
-    ]
-    ids_target = admin_data.loc[
-        ((admin_data[hospital_id].isin(target))),
-        encounter_id,
-    ]
-    X_s = X.loc[X.index.get_level_values(0).isin(ids_source)]
-    X_t = X.loc[X.index.get_level_values(0).isin(ids_target)]
-    return (X_s, X_t)
+        ids_source = metadata.loc[
+            ((metadata[hospital_id].isin(source))),
+            encounter_id,
+        ]
+        ids_target = metadata.loc[
+            ((metadata[hospital_id].isin(target))),
+            encounter_id,
+        ]
+        X_source = X.loc[X.index.get_level_values(0).isin(ids_source)]
+        X_target = X.loc[X.index.get_level_values(0).isin(ids_target)]
+        return (X_source, X_target)

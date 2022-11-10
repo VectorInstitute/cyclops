@@ -1,9 +1,9 @@
 path: "/mnt/nfs/project/delirium/drift_exp/JULY-04-2022/"
-shuffle: True
-seed: 1
-dataset: "simulated_deployment"
-shuffle: False
-train_frac: 0.8
+# shuffle: True
+# seed: 1
+# dataset: "simulated_deployment"
+# shuffle: False
+# train_frac: 0.8
 
 
 metadata_mapping:
@@ -22,4 +22,3 @@ metadata_mapping:
   hospital_type: ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW", "PMH", "SBK"]
   hospital_type_academic: ["MSH", "PMH", "SMH", "UHNTW", "UHNTG", "SBK"]
   hospital_type_community: ["THPC", "THPM"]
-  

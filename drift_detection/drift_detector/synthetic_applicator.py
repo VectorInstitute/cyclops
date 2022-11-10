@@ -44,7 +44,7 @@ class SyntheticShiftApplicator:
         if self.shift_type not in self.shift_types:
             raise ValueError(f"shift_type must be one of {self.shift_types.keys()}")
 
-    def apply_shift(self, X):
+    def apply_shift(self, X, metadata, metadata_mapping):
         """apply_shift.
 
         Returns
@@ -58,13 +58,19 @@ class SyntheticShiftApplicator:
             X_shift = X.copy()
         y_shift = None
 
-        X_shift, _ = self.shift_types[self.shift_type](X_shift, **self.shift_args)
+        X_shift, _ = self.shift_types[self.shift_type](
+            X_shift, metadata, metadata_mapping, **self.shift_args
+        )
 
         return (X_shift, y_shift)
 
 
 def categorical_shift(
-    X: np.ndarray, metadata: pd.DataFrame, categorical_column: str, target_category: str
+    X: np.ndarray,
+    metadata: pd.DataFrame,
+    metadata_mapping: dict,
+    categorical_column: str,
+    target_category: str,
 ):
     """Create categorical shift by changing a fraction of samples from a class.
 
@@ -88,10 +94,9 @@ def categorical_shift(
 
     """
     y_target = None
+    cat_col = metadata_mapping[categorical_column]
     metadata.reset_index(drop=True, inplace=True)
-    target_indices = metadata.loc[
-        metadata[categorical_column] == target_category
-    ].index.values
+    target_indices = metadata.loc[metadata[cat_col] == target_category].index.values
     X_target = X[target_indices]
 
     return X_target, y_target

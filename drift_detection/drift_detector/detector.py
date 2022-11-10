@@ -63,7 +63,7 @@ class Detector:
         if isinstance(X_transformed, tuple):
             X_transformed = X_transformed[0]
 
-        self.tester.fit(X_transformed, **kwargs)
+        self.tester.fit(X_transformed, **get_args(self.tester.fit, kwargs))
 
     def transform(self, X, **kwargs):
         """Transform data.

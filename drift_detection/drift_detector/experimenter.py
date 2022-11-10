@@ -60,7 +60,12 @@ class Experimenter:
                 Must be one of {self.experiment_types.keys()}"
             )
 
-    def run(self, X: Union[np.ndarray, torch.utils.data.Dataset]):
+    def run(
+        self,
+        X: Union[np.ndarray, torch.utils.data.Dataset],
+        metadata: pd.DataFrame,
+        metadata_mapping: dict,
+    ):
         """Run experiment.
 
         Parameters
@@ -74,27 +79,25 @@ class Experimenter:
             Dictionary of experiment results.
 
         """
-        if isinstance(X, torch.utils.data.Dataset):
-            X, _ = self.detector.transform(X)
         if self.shiftapplicator is not None:
-            X_target, _ = self.shiftapplicator.apply_shift(X)
+            if isinstance(self.shiftapplicator, ClinicalShiftApplicator):
+                X_source, X_target = self.shiftapplicator.apply_shift(
+                    X, metadata, metadata_mapping
+                )
+                self.detector.fit(X_source)
+            else:
+                self.detector.fit(X, progress=False)
+                if isinstance(X, torch.utils.data.Dataset):
+                    X, _ = self.detector.transform(X)
+                X_target, _ = self.shiftapplicator.apply_shift(
+                    X, metadata, metadata_mapping
+                )
         else:
             X_target = X
 
         drift_sample_results = self.experiment_types[self.experiment_type](X_target)
 
         return drift_sample_results
-
-    def apply_clinical_shift(self, X: pd.DataFrame, **kwargs):
-        """Apply clinical shift to target data."""
-        X_source = None
-        X_target = None
-
-        if self.shiftapplicator is not None:
-            X_source, X_target = self.shiftapplicator.apply_shift(X, **kwargs)
-        else:
-            raise ValueError("No ClinicalShiftApplicator detected.")
-        return X_source, X_target
 
     def sensitivity_test(self, X_target):
         """Sensitivity test for drift detection."""
