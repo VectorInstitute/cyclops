@@ -22,7 +22,7 @@ from drift_detection.drift_detector.utils import get_args, get_obj_from_str
 def run_experiment(cfg: DictConfig):
     """Run experiment."""
     cfg = cfg[list(cfg.keys())[0]]
-    
+
     dataset = get_obj_from_str(cfg.dataset.object)
     dataset_cfg = os.path.join(get_original_cwd(), cfg.dataset.cfg_path)
     x, metadata, metadata_mapping = dataset(dataset_cfg).get_data()

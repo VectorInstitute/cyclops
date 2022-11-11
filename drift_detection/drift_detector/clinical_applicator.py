@@ -1,6 +1,7 @@
 """Clinical Shift Applicator module."""
 
 import pandas as pd
+
 from .utils import get_args
 
 
