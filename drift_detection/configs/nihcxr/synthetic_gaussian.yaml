@@ -3,15 +3,7 @@ dataset:
   object: drift_detection.datasets.NIHCXRDataset
   cfg_path: drift_detection/datasets/configs/nihcxr.yaml
 
-shift: "categorical_shift_gender_F"
-hydra:
-  run:
-    dir: "./outputs/${dataset.name}/${shift}/${now:%Y-%m-%d_%H-%M-%S}"
-  sweep:
-    dir: "./multirun/${dataset.name}/${shift}"
-    subdir: "{now:%Y-%m-%d_%H-%M-%S}"
-  job:
-    chdir: True
+shift: synthetic_shift_gaussian
 
 reductor:
   dr_method: TAE_txrv_CNN
@@ -22,7 +14,7 @@ tester:
   type: TSTester
   tester_method: mmd
   backend: pytorch
-  n_permutations: 1000
+  n_permutations: 1
   device: None
 
 detector:
@@ -30,9 +22,7 @@ detector:
 
 shiftapplicator:
   type: SyntheticShiftApplicator
-  shift_type: "categorical_shift"
-  categorical_column: "gender"
-  target_category: "F"
+  shift_type: gn_shift
 
 experimenter:
   experiment_type: sensitivity_test

@@ -3,7 +3,7 @@ dataset:
   object: drift_detection.datasets.NIHCXRDataset
   cfg_path: drift_detection/datasets/configs/nihcxr.yaml
 
-shift: "categorical_shift_gender_F"
+shift: categorical_shift_targets_Mass
 hydra:
   run:
     dir: "./outputs/${dataset.name}/${shift}/${now:%Y-%m-%d_%H-%M-%S}"
@@ -30,9 +30,9 @@ detector:
 
 shiftapplicator:
   type: SyntheticShiftApplicator
-  shift_type: "categorical_shift"
-  categorical_column: "gender"
-  target_category: "F"
+  shift_type: categorical_shift
+  categorical_column: targets
+  target_category: Mass:1
 
 experimenter:
   experiment_type: sensitivity_test

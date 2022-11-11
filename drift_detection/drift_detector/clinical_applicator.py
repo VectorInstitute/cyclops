@@ -1,7 +1,7 @@
 """Clinical Shift Applicator module."""
 
 import pandas as pd
-from drift_detector.utils import get_args
+from .utils import get_args
 
 
 class ClinicalShiftApplicator:

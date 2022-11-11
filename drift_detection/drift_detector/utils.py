@@ -19,6 +19,10 @@ from drift_detection.baseline_models.temporal.pytorch.utils import (
     get_temporal_model,
 )
 
+from itertools import cycle
+from shutil import get_terminal_size
+from threading import Thread
+from time import sleep
 
 def get_args(obj, kwargs):
     """Get valid arguments from kwargs to pass to object.
@@ -457,3 +461,57 @@ def reshape_2d_to_3d(data, num_timesteps):
     num_encounters = data.shape[0]
     data = data.values.reshape((num_encounters, num_timesteps, -1))
     return data
+
+# from https://stackoverflow.com/a/66558182
+class Loader:
+    def __init__(self, desc="Loading...", end="Done!", timeout=0.1):
+        """A loader-like context manager
+
+        Parameters
+        ----------
+            desc (str, optional): The loader's description. Defaults to "Loading...".
+            end (str, optional): Final print. Defaults to "Done!".
+            timeout (float, optional): Sleep time between prints. Defaults to 0.1.
+        """
+        self.desc = desc
+        self.end = end
+        self.timeout = timeout
+
+        self._thread = Thread(target=self._animate, daemon=True)
+        self.steps = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"]
+        self.done = False
+
+    def start(self):
+        self._thread.start()
+        return self
+
+    def _animate(self):
+        for c in cycle(self.steps):
+            if self.done:
+                break
+            print(f"\r{self.desc} {c}", flush=True, end="")
+            sleep(self.timeout)
+
+    def __enter__(self):
+        self.start()
+
+    def stop(self):
+        self.done = True
+        cols = get_terminal_size((80, 20)).columns
+        print("\r" + " " * cols, end="", flush=True)
+        print(f"\r{self.end}", flush=True)
+
+    def __exit__(self, exc_type, exc_value, tb):
+        # handle exceptions with those variables ^
+        self.stop()
+
+
+if __name__ == "__main__":
+    with Loader("Loading with context manager..."):
+        for i in range(10):
+            sleep(0.25)
+
+    loader = Loader("Loading with object...", "That was fast!", 0.05).start()
+    for i in range(10):
+        sleep(0.25)
+    loader.stop()

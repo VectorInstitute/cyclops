@@ -22,7 +22,7 @@ tester:
   type: TSTester
   tester_method: mmd
   backend: pytorch
-  n_permutations: 10
+  n_permutations: 1000
   device: None
 
 detector:
