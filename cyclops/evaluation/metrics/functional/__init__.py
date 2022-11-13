@@ -43,6 +43,12 @@ from cyclops.evaluation.metrics.functional.roc import (  # noqa: F401
     multilabel_roc_curve,
     roc_curve,
 )
+from cyclops.evaluation.metrics.functional.sensitivity import (  # noqa: F401
+    binary_sensitivity,
+    multiclass_sensitivity,
+    multilabel_sensitivity,
+    sensitivity,
+)
 from cyclops.evaluation.metrics.functional.specificity import (  # noqa: F401
     binary_specificity,
     multiclass_specificity,

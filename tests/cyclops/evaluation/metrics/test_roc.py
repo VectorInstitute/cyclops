@@ -4,7 +4,7 @@ from typing import Any, List, Tuple
 import numpy as np
 import pytest
 import scipy as sp
-from metrics.helpers import _functional_test
+from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
@@ -15,6 +15,7 @@ from metrics.inputs import (
 from sklearn.metrics import roc_curve as sk_roc_curve
 
 from cyclops.evaluation.metrics.functional import roc_curve as cyclops_roc_curve
+from cyclops.evaluation.metrics.roc import ROCCurve
 from cyclops.evaluation.metrics.utils import sigmoid
 
 
@@ -37,18 +38,32 @@ def _sk_binary_roc_curve(
 
 @pytest.mark.parametrize("inputs", _binary_cases[1:])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # np.nan_to_num warning
-def test_binary_roc_curve(inputs):
-    """Test binary ROC curve."""
-    target, preds = inputs
+class TestBinaryROCCurve(MetricTester):
+    """Test function and class for computing the ROC curve for binary targets."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_roc_curve,
-        _sk_binary_roc_curve,
-        {"task": "binary"},
-    )
+    def test_binary_roc_curve_functional(self, inputs):
+        """Test function for computing the ROC curve for binary targets."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_roc_curve,
+            sk_metric=_sk_binary_roc_curve,
+            metric_args={"task": "binary"},
+        )
+
+    def test_binary_roc_curve_class(self, inputs):
+        """Test class for computing the ROC curve for binary targets."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=ROCCurve,
+            sk_metric=_sk_binary_roc_curve,
+            metric_args={"task": "binary"},
+        )
 
 
 def _sk_multiclass_roc_curve(
@@ -56,15 +71,11 @@ def _sk_multiclass_roc_curve(
     preds: np.ndarray,
 ) -> List:
     """Compute ROC curve for multiclass case using sklearn."""
-    # preds = np.moveaxis(preds.numpy(), 1, -1).reshape((-1, preds.shape[1]))
-    # target = target.numpy().flatten()
     if not ((0 < preds) & (preds < 1)).all():
         preds = sp.special.softmax(preds, 1)
 
     fpr, tpr, thresholds = [], [], []
     for i in range(NUM_CLASSES):
-        # target_temp = np.zeros_like(target)
-        # target_temp[target == i] = 1
         res = sk_roc_curve(target, preds[:, i], pos_label=i, drop_intermediate=False)
         res[2][0] = 1.0
 
@@ -76,18 +87,32 @@ def _sk_multiclass_roc_curve(
 
 @pytest.mark.parametrize("inputs", _multiclass_cases[1:])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # np.nan_to_num warning
-def test_multiclass_roc_curve(inputs):
-    """Test multiclass ROC curve."""
-    target, preds = inputs
+class TestMulticlassROCCurve(MetricTester):
+    """Test function and class for computing the ROC curve for multiclass input."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_roc_curve,
-        _sk_multiclass_roc_curve,
-        {"task": "multiclass", "num_classes": NUM_CLASSES},
-    )
+    def test_multiclass_roc_curve_functional(self, inputs) -> None:
+        """Test function for computing the ROC curve for multiclass input."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_roc_curve,
+            sk_metric=_sk_multiclass_roc_curve,
+            metric_args={"task": "multiclass", "num_classes": NUM_CLASSES},
+        )
+
+    def test_multiclass_roc_curve_class(self, inputs) -> None:
+        """Test class for computing the ROC curve for multiclass input."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=ROCCurve,
+            sk_metric=_sk_multiclass_roc_curve,
+            metric_args={"task": "multiclass", "num_classes": NUM_CLASSES},
+        )
 
 
 def _sk_multilabel_roc_curve(
@@ -107,15 +132,29 @@ def _sk_multilabel_roc_curve(
 
 @pytest.mark.parametrize("inputs", _multilabel_cases[1:])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # no positive samples
-def test_multilabel_roc_curve(inputs):
-    """Test multilabel ROC curve."""
-    target, preds = inputs
+class TestMultilabelROCCurve(MetricTester):
+    """Test function and class for computing ROC curve for multilabel targets."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_roc_curve,
-        _sk_multilabel_roc_curve,
-        {"task": "multilabel", "num_labels": NUM_LABELS},
-    )
+    def test_multilabel_roc_curve_functional(self, inputs) -> None:
+        """Test function for computing the ROC curve for multilabel targets."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_roc_curve,
+            sk_metric=_sk_multilabel_roc_curve,
+            metric_args={"task": "multilabel", "num_labels": NUM_LABELS},
+        )
+
+    def test_multilabel_roc_curve_class(self, inputs) -> None:
+        """Test class for computing the ROC curve for multilabel targets."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=ROCCurve,
+            sk_metric=_sk_multilabel_roc_curve,
+            metric_args={"task": "multilabel", "num_labels": NUM_LABELS},
+        )

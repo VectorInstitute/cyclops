@@ -4,7 +4,7 @@ from typing import Literal
 
 import numpy as np
 import pytest
-from metrics.helpers import _functional_test
+from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
@@ -15,6 +15,7 @@ from metrics.inputs import (
 )
 from sklearn.metrics import fbeta_score as sk_fbeta_score
 
+from cyclops.evaluation.metrics.f_beta import F1Score, FbetaScore
 from cyclops.evaluation.metrics.functional.f_beta import f1_score, fbeta_score
 from cyclops.evaluation.metrics.utils import sigmoid
 
@@ -39,29 +40,54 @@ def _sk_binary_fbeta_score(
 
 @pytest.mark.parametrize("inputs", _binary_cases)
 @pytest.mark.parametrize("beta", [0.5, 1.0, 2.0])
-def test_binary_fbeta(inputs, beta):
-    """Test binary fbeta."""
-    target, preds = inputs
+class TestBinaryFbetaScore(MetricTester):
+    """Test binary F-beta function and class."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        f1_score
-        if beta == 1.0
-        else partial(
-            fbeta_score,
-            beta=beta,
-            task="binary",
-        ),
-        partial(
-            _sk_binary_fbeta_score,
-            beta=beta,
-            threshold=THRESHOLD,
-            zero_division=0,
-        ),
-        {"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
-    )
+    def test_binary_fbeta_score_functional(self, inputs, beta) -> None:
+        """Test binary F-beta function."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=f1_score
+            if beta == 1.0
+            else partial(
+                fbeta_score,
+                beta=beta,
+                task="binary",
+            ),
+            sk_metric=partial(
+                _sk_binary_fbeta_score,
+                beta=beta,
+                threshold=THRESHOLD,
+                zero_division=0,
+            ),
+            metric_args={"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
+        )
+
+    def test_binary_fbeta_score_class(self, inputs, beta) -> None:
+        """Test class binary F-beta score."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=F1Score
+            if beta == 1.0
+            else partial(
+                FbetaScore,
+                beta=beta,
+                task="binary",
+            ),
+            sk_metric=partial(
+                _sk_binary_fbeta_score,
+                beta=beta,
+                threshold=THRESHOLD,
+                zero_division=0,
+            ),
+            metric_args={"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
+        )
 
 
 def _sk_multiclass_fbeta_score(
@@ -87,28 +113,54 @@ def _sk_multiclass_fbeta_score(
 @pytest.mark.parametrize("inputs", _multiclass_cases)
 @pytest.mark.parametrize("beta", [0.5, 1.0, 2.0])
 @pytest.mark.parametrize("average", ["micro", "macro", "weighted"])
-def test_multiclass_fbeta(inputs, beta, average):
-    """Test multiclass fbeta."""
-    target, preds = inputs
+class TestMulticlassFbetaScore(MetricTester):
+    """Test multiclass F-beta function and class."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        f1_score if beta == 1.0 else partial(fbeta_score, beta=beta),
-        partial(
-            _sk_multiclass_fbeta_score,
-            beta=beta,
-            average=average,
-            zero_division=0,
-        ),
-        {
-            "task": "multiclass",
-            "num_classes": NUM_CLASSES,
-            "average": average,
-            "zero_division": 0,
-        },
-    )
+    def test_multiclass_fbeta_functional(self, inputs, beta, average) -> None:
+        """Test multiclass F-beta function."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=f1_score
+            if beta == 1.0
+            else partial(fbeta_score, beta=beta),
+            sk_metric=partial(
+                _sk_multiclass_fbeta_score,
+                beta=beta,
+                average=average,
+                zero_division=0,
+            ),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
+
+    def test_multiclass_fbeta_class(self, inputs, beta, average) -> None:
+        """Test class for multiclass F-beta score."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=F1Score if beta == 1.0 else partial(FbetaScore, beta=beta),
+            sk_metric=partial(
+                _sk_multiclass_fbeta_score,
+                beta=beta,
+                average=average,
+                zero_division=0,
+            ),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
 
 
 def _sk_multilabel_fbeta_score(  # pylint: disable=too-many-arguments
@@ -137,27 +189,55 @@ def _sk_multilabel_fbeta_score(  # pylint: disable=too-many-arguments
 @pytest.mark.parametrize("inputs", _multilabel_cases)
 @pytest.mark.parametrize("beta", [0.5, 1.0, 2.0])
 @pytest.mark.parametrize("average", ["micro", "macro", "weighted"])
-def test_multilabel_fbeta(inputs, beta, average):
-    """Test multilabel fbeta."""
-    target, preds = inputs
+class TestMultilabelFbetaScore(MetricTester):
+    """Test function and class for multilabel F-beta score."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        f1_score if beta == 1.0 else partial(fbeta_score, beta=beta),
-        partial(
-            _sk_multilabel_fbeta_score,
-            beta=beta,
-            average=average,
-            threshold=THRESHOLD,
-            zero_division=0,
-        ),
-        {
-            "task": "multilabel",
-            "num_labels": NUM_LABELS,
-            "average": average,
-            "threshold": THRESHOLD,
-            "zero_division": 0,
-        },
-    )
+    def test_multilabel_fbeta_score_functional(self, inputs, beta, average) -> None:
+        """Test function for multilabel F-beta score."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=f1_score
+            if beta == 1.0
+            else partial(fbeta_score, beta=beta),
+            sk_metric=partial(
+                _sk_multilabel_fbeta_score,
+                beta=beta,
+                average=average,
+                threshold=THRESHOLD,
+                zero_division=0,
+            ),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "average": average,
+                "threshold": THRESHOLD,
+                "zero_division": 0,
+            },
+        )
+
+    def test_multilabel_fbeta_score_class(self, inputs, beta, average) -> None:
+        """Test class for multilabel F-beta score."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=F1Score if beta == 1.0 else partial(FbetaScore, beta=beta),
+            sk_metric=partial(
+                _sk_multilabel_fbeta_score,
+                beta=beta,
+                average=average,
+                threshold=THRESHOLD,
+                zero_division=0,
+            ),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "average": average,
+                "threshold": THRESHOLD,
+                "zero_division": 0,
+            },
+        )

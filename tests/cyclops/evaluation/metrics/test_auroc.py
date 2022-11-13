@@ -5,7 +5,7 @@ from typing import Literal
 import numpy as np
 import pytest
 import scipy as sp
-from metrics.helpers import _functional_test
+from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
@@ -15,6 +15,7 @@ from metrics.inputs import (
 )
 from sklearn.metrics import roc_auc_score as sk_roc_auc_score
 
+from cyclops.evaluation.metrics.auroc import AUROC
 from cyclops.evaluation.metrics.functional import auroc as cyclops_auroc
 from cyclops.evaluation.metrics.utils import sigmoid
 
@@ -33,18 +34,32 @@ def _sk_binary_auroc(
 
 @pytest.mark.parametrize("inputs", _binary_cases[1:])
 @pytest.mark.parametrize("max_fpr", [None, 0.7])
-def test_binary_auroc(inputs, max_fpr):
-    """Test binary AUROC."""
-    target, preds = inputs
+class TestBinaryAUROC(MetricTester):
+    """Test function and class for computing AUCROC for binary targets."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_auroc,
-        partial(_sk_binary_auroc, max_fpr=max_fpr),
-        {"task": "binary", "max_fpr": max_fpr},
-    )
+    def test_binary_auroc_functional(self, inputs, max_fpr) -> None:
+        """Test function for computing binary AUROC."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_auroc,
+            sk_metric=partial(_sk_binary_auroc, max_fpr=max_fpr),
+            metric_args={"task": "binary", "max_fpr": max_fpr},
+        )
+
+    def test_binary_auroc_classl(self, inputs, max_fpr) -> None:
+        """Test class for computing binary AUROC."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=AUROC,
+            sk_metric=partial(_sk_binary_auroc, max_fpr=max_fpr),
+            metric_args={"task": "binary", "max_fpr": max_fpr},
+        )
 
 
 def _sk_multiclass_auroc(
@@ -71,22 +86,40 @@ def _sk_multiclass_auroc(
 @pytest.mark.parametrize("inputs", _multiclass_cases[1:])
 @pytest.mark.parametrize("average", ["macro", "weighted"])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # no positive samples
-def test_multiclass_auroc(inputs, average):
-    """Test multiclass AUROC."""
-    target, preds = inputs
+class TestMulticlassAUROC(MetricTester):
+    """Test function and class for computing multiclass AUROC."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_auroc,
-        partial(_sk_multiclass_auroc, average=average),
-        {
-            "task": "multiclass",
-            "num_classes": NUM_CLASSES,
-            "average": average,
-        },
-    )
+    def test_multiclass_auroc_functional(self, inputs, average) -> None:
+        """Test function for computing multiclass AUROC."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_auroc,
+            sk_metric=partial(_sk_multiclass_auroc, average=average),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+            },
+        )
+
+    def test_multiclass_auroc_class(self, inputs, average) -> None:
+        """Test class for computing multiclass AUROC."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=AUROC,
+            sk_metric=partial(_sk_multiclass_auroc, average=average),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+            },
+        )
 
 
 def _sk_multilabel_auroc(
@@ -106,19 +139,37 @@ def _sk_multilabel_auroc(
 @pytest.mark.parametrize("inputs", _multilabel_cases[1:])
 @pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # no positive samples
-def test_multilabel_auroc(inputs, average):
-    """Test multilabel AUROC."""
-    target, preds = inputs
+class TestMultilabelAUROC(MetricTester):
+    """Test function and class for computing AUROC for multilabel targets."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_auroc,
-        partial(_sk_multilabel_auroc, average=average),
-        {
-            "task": "multilabel",
-            "num_labels": NUM_LABELS,
-            "average": average,
-        },
-    )
+    def test_multilabel_auroc_functional(self, inputs, average) -> None:
+        """Test function for computing multilabel AUROC."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_auroc,
+            sk_metric=partial(_sk_multilabel_auroc, average=average),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "average": average,
+            },
+        )
+
+    def test_multilabel_auroc_class(self, inputs, average) -> None:
+        """Test class for computing multilabel AUROC."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=AUROC,
+            sk_metric=partial(_sk_multilabel_auroc, average=average),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "average": average,
+            },
+        )
