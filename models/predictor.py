@@ -1,4 +1,5 @@
 """Predictor class to train and test models per use-case."""
+
 import logging
 from os import path
 from typing import Optional

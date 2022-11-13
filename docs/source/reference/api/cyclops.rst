@@ -1,7 +1,10 @@
-cyclops namespace
-=================
+cyclops package
+===============
 
-.. py:module:: cyclops
+.. automodule:: cyclops
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Subpackages
 -----------
@@ -21,6 +24,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cyclops.config
-   cyclops.orm
    cyclops.plotter

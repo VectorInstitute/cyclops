@@ -17,7 +17,7 @@ def test_data():
     return pd.DataFrame([[1, "a", 1], [5.1, "b", 0]], columns=["col1", "col2", "col3"])
 
 
-@patch("cyclops.orm.Database")
+@patch("cyclops.query.orm.Database")
 @patch("sqlalchemy.sql.selectable.Subquery")
 def test_query_interface(
     database, query, test_data  # pylint: disable=redefined-outer-name
@@ -47,7 +47,7 @@ def test_query_interface(
     query_interface.save_in_grouped_batches("test_save", id_col="donkey", batch_size=10)
 
 
-@patch("cyclops.orm.Database")
+@patch("cyclops.query.orm.Database")
 @patch("sqlalchemy.sql.selectable.Subquery")
 def test_query_interface_processed(
     database, query, test_data  # pylint: disable=redefined-outer-name

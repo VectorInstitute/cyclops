@@ -1,1 +1,1 @@
-"""Temporal models."""
+"""Neural network models implemented using PyTorch."""

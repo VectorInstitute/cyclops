@@ -6,7 +6,7 @@ from typing import Callable, Dict, Generator, Optional, Union
 
 import pandas as pd
 
-from cyclops.orm import Database
+from cyclops.query.orm import Database
 from cyclops.query.util import TableTypes
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging

@@ -1,4 +1,5 @@
 """Model library constants."""
+
 from cyclops.utils.file import join
 
 USE_CASES = {
