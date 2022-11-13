@@ -1,4 +1,5 @@
 """Functions to compute the specificity metric."""
+
 from typing import Literal, Optional, Union
 
 import numpy as np

@@ -1,4 +1,5 @@
 """Classes for computing precision-recall curves."""
+
 from typing import List, Literal, Tuple, Union
 
 import numpy as np
@@ -18,6 +19,8 @@ from cyclops.evaluation.metrics.functional.precision_recall_curve import (
     _multilabel_precision_recall_curve_update,
 )
 from cyclops.evaluation.metrics.metric import Metric
+
+# mypy: ignore-errors
 
 
 class BinaryPrecisionRecallCurve(Metric):
@@ -443,22 +446,21 @@ class PrecisionRecallCurve(Metric):
             return BinaryPrecisionRecallCurve(
                 thresholds=thresholds, pos_label=pos_label
             )
-        elif task == "multiclass":
+        if task == "multiclass":
             assert (
                 isinstance(num_classes, int) and num_classes > 0
             ), "Number of classes must be a positive integer."
             return MulticlassPrecisionRecallCurve(
                 num_classes=num_classes, thresholds=thresholds
             )
-        elif task == "multilabel":
+        if task == "multilabel":
             assert (
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be a positive integer."
             return MultilabelPrecisionRecallCurve(
                 num_labels=num_labels, thresholds=thresholds
             )
-        else:
-            raise ValueError(
-                "Expected argument `task` to be either 'binary', 'multiclass' or "
-                f"'multilabel', but got {task}"
-            )
+        raise ValueError(
+            "Expected argument `task` to be either 'binary', 'multiclass' or "
+            f"'multilabel', but got {task}"
+        )

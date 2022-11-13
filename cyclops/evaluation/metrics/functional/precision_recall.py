@@ -1,4 +1,5 @@
 """Functions for computing precision and recall scores on different input types."""
+
 from typing import Literal, Optional, Union
 
 import numpy as np

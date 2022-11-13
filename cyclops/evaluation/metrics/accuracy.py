@@ -1,4 +1,5 @@
 """Classes for computing accuracy metrics."""
+
 from typing import Literal, Optional
 
 from cyclops.evaluation.metrics.functional.accuracy import _accuracy_reduce
@@ -316,7 +317,7 @@ class Accuracy(Metric):
             return BinaryAccuracy(
                 threshold=threshold, pos_label=pos_label, zero_division=zero_division
             )
-        elif task == "multiclass":
+        if task == "multiclass":
             assert (
                 isinstance(num_classes, int) and num_classes > 0
             ), "Number of classes must be specified for multiclass classification."
@@ -326,7 +327,7 @@ class Accuracy(Metric):
                 average=average,
                 zero_division=zero_division,
             )
-        elif task == "multilabel":
+        if task == "multilabel":
             assert (
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be specified for multilabel classification."
@@ -336,8 +337,7 @@ class Accuracy(Metric):
                 average=average,
                 zero_division=zero_division,
             )
-        else:
-            raise ValueError(
-                f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-                " or 'multilabel'"
-            )
+        raise ValueError(
+            f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
+            " or 'multilabel'"
+        )

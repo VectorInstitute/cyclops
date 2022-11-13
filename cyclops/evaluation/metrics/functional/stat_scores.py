@@ -5,6 +5,7 @@ false negatives. Binary, multiclass and multilabel data are supported, including
 and probabilities.
 
 """
+
 from typing import Literal, Optional, Tuple, Union
 
 import numpy as np

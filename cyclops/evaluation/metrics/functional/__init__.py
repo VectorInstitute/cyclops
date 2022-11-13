@@ -1,4 +1,5 @@
 """Metrics functional package."""
+
 from cyclops.evaluation.metrics.functional.accuracy import (  # noqa: F401
     accuracy,
     binary_accuracy,

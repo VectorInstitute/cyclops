@@ -1,4 +1,5 @@
 """Classes for computing area under the ROC curve."""
+
 from typing import List, Literal, Union
 
 import numpy as np
@@ -15,6 +16,8 @@ from cyclops.evaluation.metrics.precision_recall_curve import (
     MultilabelPrecisionRecallCurve,
 )
 from cyclops.evaluation.metrics.utils import _check_average_arg
+
+# mypy: ignore-errors
 
 
 class BinaryAUROC(BinaryPrecisionRecallCurve):
@@ -313,7 +316,7 @@ class AUROC(Metric):
         """Create a task-specific instance of the AUROC metric."""
         if task == "binary":
             return BinaryAUROC(max_fpr=max_fpr, thresholds=thresholds)
-        elif task == "multiclass":
+        if task == "multiclass":
             assert (
                 isinstance(num_classes, int) and num_classes > 0
             ), "Number of classes must be a positive integer."
@@ -322,15 +325,14 @@ class AUROC(Metric):
                 thresholds=thresholds,
                 average=average,  # type: ignore
             )
-        elif task == "multilabel":
+        if task == "multilabel":
             assert (
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be a positive integer."
             return MultilabelAUROC(
                 num_labels=num_labels, thresholds=thresholds, average=average
             )
-        else:
-            raise ValueError(
-                "Expected argument `task` to be either 'binary', 'multiclass' or "
-                f"'multilabel', but got {task}"
-            )
+        raise ValueError(
+            "Expected argument `task` to be either 'binary', 'multiclass' or "
+            f"'multilabel', but got {task}"
+        )

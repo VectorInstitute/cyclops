@@ -1,4 +1,5 @@
 """Functions for computing the precision-recall curve for different input types."""
+
 from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np

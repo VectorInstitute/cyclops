@@ -1,4 +1,5 @@
 """Classes for computing stat scores."""
+
 from typing import Callable, Literal, Optional, Tuple
 
 import numpy as np
@@ -15,6 +16,8 @@ from cyclops.evaluation.metrics.functional.stat_scores import (
     _stat_scores_compute,
 )
 from cyclops.evaluation.metrics.metric import Metric
+
+# mypy: ignore-errors
 
 
 class _AbstractScores(Metric):
@@ -469,14 +472,14 @@ class StatScores(Metric):
         """Create a task-specific instance of the StatScores metric."""
         if task == "binary":
             return BinaryStatScores(threshold=threshold, pos_label=pos_label)
-        elif task == "multiclass":
+        if task == "multiclass":
             assert (
                 isinstance(num_classes, int) and num_classes > 0
             ), "Number of classes must be a positive integer."
             return MulticlassStatScores(
                 num_classes=num_classes, top_k=top_k, classwise=classwise
             )
-        elif task == "multilabel":
+        if task == "multilabel":
             assert (
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be a positive integer."
@@ -486,8 +489,7 @@ class StatScores(Metric):
                 top_k=top_k,
                 labelwise=labelwise,
             )
-        else:
-            raise ValueError(
-                f"Unsupported task: {task}, expected one of 'binary', 'multiclass' or "
-                f"'multilabel'."
-            )
+        raise ValueError(
+            f"Unsupported task: {task}, expected one of 'binary', 'multiclass' or "
+            f"'multilabel'."
+        )

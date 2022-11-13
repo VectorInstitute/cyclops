@@ -1,4 +1,5 @@
 """Functions for computing accuracy scores for classification tasks."""
+
 from typing import Literal, Optional, Union
 
 import numpy as np

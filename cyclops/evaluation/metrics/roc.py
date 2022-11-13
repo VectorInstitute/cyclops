@@ -1,4 +1,5 @@
 """Classes for computing ROC metrics."""
+
 from typing import List, Literal, Tuple, Union
 
 import numpy as np
@@ -14,6 +15,8 @@ from cyclops.evaluation.metrics.functional.roc import (
     _multilabel_roc_compute,
 )
 from cyclops.evaluation.metrics.metric import Metric
+
+# mypy: ignore-errors
 
 
 class BinaryROCCurve(BinaryPrecisionRecallCurve):
@@ -317,18 +320,17 @@ class ROCCurve(Metric):
         """Create a task-specific instance of the ROC curve metric."""
         if task == "binary":
             return BinaryROCCurve(thresholds=thresholds, pos_label=pos_label)
-        elif task == "multiclass":
+        if task == "multiclass":
             assert isinstance(
                 num_classes, int
             ), "Number of classes must be a positive integer."
             return MulticlassROCCurve(num_classes=num_classes, thresholds=thresholds)
-        elif task == "multilabel":
+        if task == "multilabel":
             assert isinstance(
                 num_labels, int
             ), "Number of labels must be a positive integer."
             return MultilabelROCCurve(num_labels=num_labels, thresholds=thresholds)
-        else:
-            raise ValueError(
-                "Expected argument `task` to be either 'binary', 'multiclass' or "
-                f"'multilabel', but got {task}"
-            )
+        raise ValueError(
+            "Expected argument `task` to be either 'binary', 'multiclass' or "
+            f"'multilabel', but got {task}"
+        )

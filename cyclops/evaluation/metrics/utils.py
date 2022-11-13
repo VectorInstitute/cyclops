@@ -1,4 +1,5 @@
 """Utility functions for metrics."""
+
 from typing import (
     Any,
     Callable,

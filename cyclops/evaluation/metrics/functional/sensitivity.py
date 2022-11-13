@@ -1,4 +1,5 @@
 """Functions for computing sensitivity scores on different input types."""
+
 from typing import Literal, Optional, Union
 
 import numpy as np

@@ -1,4 +1,5 @@
 """Classes for computing precision and recall metrics."""
+
 from typing import Literal, Optional
 
 from cyclops.evaluation.metrics.functional.precision_recall import (
@@ -344,7 +345,7 @@ class Precision(Metric):
             return BinaryPrecision(
                 threshold=threshold, pos_label=pos_label, zero_division=zero_division
             )
-        elif task == "multiclass":
+        if task == "multiclass":
             assert (
                 isinstance(num_classes, int) and num_classes > 0
             ), "Number of classes must be specified for multiclass classification."
@@ -354,7 +355,7 @@ class Precision(Metric):
                 average=average,
                 zero_division=zero_division,
             )
-        elif task == "multilabel":
+        if task == "multilabel":
             assert (
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be specified for multilabel classification."
@@ -365,11 +366,10 @@ class Precision(Metric):
                 average=average,
                 zero_division=zero_division,
             )
-        else:
-            raise ValueError(
-                f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
-                f"'multilabel'."
-            )
+        raise ValueError(
+            f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
+            f"'multilabel'."
+        )
 
 
 class BinaryRecall(BinaryStatScores):
@@ -691,7 +691,7 @@ class Recall(Metric):
             return BinaryRecall(
                 threshold=threshold, pos_label=pos_label, zero_division=zero_division
             )
-        elif task == "multiclass":
+        if task == "multiclass":
             assert (
                 isinstance(num_classes, int) and num_classes > 0
             ), "Number of classes must be specified for multiclass classification."
@@ -701,7 +701,7 @@ class Recall(Metric):
                 average=average,
                 zero_division=zero_division,
             )
-        elif task == "multilabel":
+        if task == "multilabel":
             assert (
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be specified for multilabel classification."
@@ -712,8 +712,7 @@ class Recall(Metric):
                 average=average,
                 zero_division=zero_division,
             )
-        else:
-            raise ValueError(
-                f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
-                f"'multilabel'."
-            )
+        raise ValueError(
+            f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
+            f"'multilabel'."
+        )
