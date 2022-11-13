@@ -12,7 +12,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   cyclops.evaluation
+   cyclops.evaluate
    cyclops.processors
    cyclops.query
    cyclops.utils

@@ -1,7 +1,7 @@
-cyclops.evaluation.metrics.utils module
+cyclops.evaluate.metrics.f\_beta module
 =======================================
 
-.. automodule:: cyclops.evaluation.metrics.utils
+.. automodule:: cyclops.evaluate.metrics.f_beta
    :members:
    :undoc-members:
    :show-inheritance:
