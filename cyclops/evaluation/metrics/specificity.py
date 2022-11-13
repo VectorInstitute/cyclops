@@ -83,8 +83,7 @@ class MulticlassSpecificity(MulticlassStatScores):
         average : Literal["micro", "macro", "weighted", None], default=None
             If None, return the specificity for each class, otherwise return the
             average specificity. Average options are:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives, false negatives, false positives and true negatives.
+                - ``micro``: Calculate metrics globally.
                 - ``macro``: Calculate metrics for each class, and find their unweighted
                   mean. This does not take class imbalance into account.
                 - ``weighted``: Calculate metrics for each class, and find their
@@ -157,8 +156,7 @@ class MultilabelSpecificity(MultilabelStatScores):
         average : Literal["micro", "macro", "weighted", None], default=None
             If None, return the specificity for each class, otherwise return the
             average specificity. Average options are:
-            - ``micro``: Calculate metrics globally by counting the total true
-              positives, false negatives and false positives.
+            - ``micro``: Calculate metrics globally.
             - ``macro``: Calculate metrics for each label, and find their unweighted
               mean. This does not take label imbalance into account.
             - ``weighted``: Calculate metrics for each label, and find their average,
@@ -243,8 +241,7 @@ class Specificity(Metric):
         average : Literal["micro", "macro", "weighted", None], default=None
             If ``None``, return the score for each label/class. Otherwise,
             use one of the following options to compute the average score:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives, false positives and false negatives.
+                - ``micro``: Calculate metrics globally.
                 - ``macro``: Calculate metrics for each class/label, and find their
                   unweighted mean. This does not take label/class imbalance into
                   account.

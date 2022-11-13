@@ -183,7 +183,8 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
         average : Literal["micro", "macro", "weighted", None], default=None
             If not None, this determines the type of averaging performed on the data:
                 - ``micro``: Calculate metrics globally by counting the total
-                  true positives, false negatives and false positives.
+                  true positives, false negatives, false positives and true
+                  negatives.
                 - ``macro``: Calculate metrics for each class, and find their
                   unweighted mean. This does not take class imbalance into account.
                 - ``weighted``: Calculate metrics for each class, and find their
@@ -273,7 +274,7 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
             If None, return the accuracy score per label, otherwise this determines
             the type of averaging performed on the data:
                 - ``micro``: Calculate metrics globally by counting the total
-                  true positives, false negatives and false positives.
+                  true positives, false negatives, true negatives and false positives.
                 - ``macro``: Calculate metrics for each label, and find their unweighted
                   mean. This does not take label imbalance into account.
                 - ``weighted``: Calculate metrics for each label, and find their

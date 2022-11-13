@@ -80,8 +80,7 @@ class MulticlassAccuracy(MulticlassStatScores):
             computing the accuracy score.
         average : Literal["micro", "macro", "weighted", None], default=None
             If not None, this determines the type of averaging performed on the data:
-                - ``micro``: Calculate metrics globally by counting the total
-                  true positives, false negatives and false positives.
+                - ``micro``: Calculate metrics globally.
                 - ``macro``: Calculate metrics for each class, and find their
                   unweighted mean. This does not take class imbalance into account.
                 - ``weighted``: Calculate metrics for each class, and find their
@@ -153,8 +152,7 @@ class MultilabelAccuracy(MultilabelStatScores):
         average : Literal['micro', 'macro', 'weighted', None], default=None
             If None, return the accuracy score per label, otherwise this determines
             the type of averaging performed on the data:
-                - ``micro``: Calculate metrics globally by counting the total
-                  true positives, false negatives and false positives.
+                - ``micro``: Calculate metrics globally.
                 - ``macro``: Calculate metrics for each label, and find their unweighted
                   mean. This does not take label imbalance into account.
                 - ``weighted``: Calculate metrics for each label, and find their
@@ -237,8 +235,7 @@ class Accuracy(Metric):
         average : Literal["micro", "macro", "weighted", None], default=None
             If ``None``, return the recall score for each label/class. Otherwise,
             use one of the following options to compute the average score:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives. false positives, true negatives and false negatives.
+                - ``micro``: Calculate metrics globally.
                 - ``macro``: Calculate metrics for each class/label, and find their
                   unweighted mean. This does not take label imbalance into account.
                 - ``weighted``: Calculate metrics for each label/class, and find

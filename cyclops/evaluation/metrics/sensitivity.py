@@ -207,7 +207,7 @@ class Sensitivity(Metric):
             If ``None``, return the sensitivity score for each label/class. Otherwise,
             use one of the following options to compute the average score:
                 - ``micro``: Calculate metrics globally by counting the total true
-                  positives and false positives.
+                  positives and false negatives.
                 - ``macro``: Calculate metrics for each class/label, and find their
                   unweighted mean. This does not take label imbalance into account.
                 - ``weighted``: Calculate metrics for each label/class, and find

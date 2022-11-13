@@ -88,7 +88,7 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
             Average to apply. If None, return scores for each class. Otherwise,
             use one of the following options to compute the average score:
                 - ``micro``: Calculate metrics globally by counting the total true
-                  positives, false negatives and false positives.
+                  positives and false negatives.
                 - ``macro``: Calculate metrics for each label, and find their
                   unweighted mean. This does not take label imbalance into
                   account.
@@ -248,7 +248,7 @@ def sensitivity(  # pylint: disable=too-many-arguments
             Average to apply. If None, return scores for each class/label. Otherwise,
             use one of the following options to compute the average score:
                 - ``micro``: Calculate metrics globally by counting the total true
-                  positives, false negatives and false positives.
+                  positives and false negatives.
                 - ``macro``: Calculate metrics for each class/label, and find their
                   unweighted mean. This does not take class/label imbalance into
                   account.

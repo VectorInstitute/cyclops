@@ -274,9 +274,9 @@ def multiclass_auroc(
             If ``None``, then the scores for each class are returned. Otherwise,
             this determines the type of averaging performed on the scores. One of
             - `macro`: Calculate metrics for each class, and find their unweighted
-                mean. This does not take class imbalance into account.
+              mean. This does not take class imbalance into account.
             - `weighted`: Calculate metrics for each class, and find their average,
-                weighted by support (the number of true instances for each class).
+              weighted by support (the number of true instances for each class).
 
     Returns
     -------
@@ -341,16 +341,15 @@ def _multilabel_auroc_compute(
         average : Literal["micro", "macro", "weighted"], default=None
             If ``None``, then the scores for each label are returned. Otherwise,
             this determines the type of averaging performed on the scores. One of
-            - `micro`: Calculate metrics globally by counting the total true
-                positives, false negatives and false positives.
+            - `micro`: Calculate metrics globally.
             - `macro`: Calculate metrics for each label, and find their unweighted
-                mean. This does not take label imbalance into account.
+              mean. This does not take label imbalance into account.
             - `weighted`: Calculate metrics for each label, and find their average,
-                weighted by support (the number of true instances for each label).
+              weighted by support (the number of true instances for each label).
 
     Returns
     -------
-        auroc : Union[float, numpy.ndarray]
+        float or numpy.ndarray
             Area under the ROC curve. If ``average`` is ``None``, then a numpy array
             of shape (num_labels,) is returned, otherwise a float is returned.
 
@@ -410,7 +409,7 @@ def multilabel_auroc(
 
     Returns
     -------
-        auroc : Union[float, numpy.ndarray]
+        float or numpy.ndarray
             Area under the ROC curve. If ``average`` is ``None``, then a numpy array
             of shape (num_labels,) is returned, otherwise a float is returned.
 
@@ -486,12 +485,12 @@ def auroc(  # pylint: disable=too-many-arguments
             If not None, apply the method to compute the average area under the
             ROC curve. Only applicable for the ``multiclass`` and ``multilabel``
             tasks. One of:
-            - ``micro``: Calculate metrics globally by counting the total true
-            positives, false negatives and false positives.
-            - ``macro``: Calculate metrics for each label, and find their unweighted
-            mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metrics for each label, and find their average,
-            weighted by support (accounting for label imbalance).
+                - ``micro``: Calculate metrics globally by counting the total true
+                  positives, false negatives and false positives.
+                - ``macro``: Calculate metrics for each label, and find their unweighted
+                  mean. This does not take label imbalance into account.
+                - ``weighted``: Calculate metrics for each label, and find their
+                  average, weighted by support (accounting for label imbalance).
 
     Returns
     -------

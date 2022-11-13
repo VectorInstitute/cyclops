@@ -476,14 +476,14 @@ def roc_curve(  # pylint: disable=too-many-arguments
             or 'multilabel'.
         thresholds : int or list of floats or numpy.ndarray of floats, default=None
             Thresholds used for computing the ROC curve. Can be one of:
-            - None: use the unique values of ``preds`` as thresholds
-            - int: generate ``thresholds`` number of evenly spaced values between
-            0 and 1 as thresholds.
-            - list of floats: use the values in the list as thresholds. The list
-            of values should be monotonically increasing. The list will be converted
-            into a numpy array.
-            - numpy.ndarray of floats: use the values in the array as thresholds. The
-            array should be 1d and monotonically increasing.
+                - None: use the unique values of ``preds`` as thresholds
+                - int: generate ``thresholds`` number of evenly spaced values between
+                  0 and 1 as thresholds.
+                - list of floats: use the values in the list as thresholds. The list
+                  of values should be monotonically increasing. The list will be
+                  converted into a numpy array.
+                - numpy.ndarray of floats: use the values in the array as thresholds.
+                  The array should be 1d and monotonically increasing.
         pos_label : int, default=1
             The label of the positive class.
         num_classes : int, optional
