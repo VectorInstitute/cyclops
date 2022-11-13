@@ -1,4 +1,5 @@
 """GRU Models."""
+
 from typing import Optional
 
 import torch

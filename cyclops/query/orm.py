@@ -1,6 +1,5 @@
 """Object Relational Mapper (ORM) using sqlalchemy."""
 
-import argparse
 import csv
 import logging
 import os
@@ -10,6 +9,7 @@ from typing import Generator, List, Optional, Union
 import pandas as pd
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
+from omegaconf import DictConfig
 from sqlalchemy import MetaData, and_, create_engine, func, inspect, select
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker
@@ -70,13 +70,13 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
 
     """
 
-    def __init__(self, config: argparse.Namespace):
+    def __init__(self, config: DictConfig):
         """Instantiate.
 
         Parameters
         ----------
-        config: argparse.Namespace
-            Configuration stored in object.
+        config: omegaconf.dictconfig.DictConfig
+            Path to directory with config file, for overrides.
 
         """
         self.config = config
@@ -84,7 +84,7 @@ class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(SOCKET_CONNECTION_TIMEOUT)
         try:
-            is_port_open = sock.connect_ex((config.host, config.port))
+            is_port_open = sock.connect_ex((self.config.host, self.config.port))
         except socket.gaierror:
             LOGGER.error("""Server name not known, cannot establish connection!""")
             return

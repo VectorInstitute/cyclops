@@ -1,4 +1,5 @@
 """LSTM models."""
+
 from typing import Optional
 
 import torch
