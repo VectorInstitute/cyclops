@@ -1,10 +1,9 @@
 """Test stat_scores functions."""
 from functools import partial
-from typing import Literal
 
 import numpy as np
 import pytest
-from metrics.helpers import _functional_test
+from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
@@ -19,6 +18,7 @@ from sklearn.metrics import (
 )
 
 from cyclops.evaluation.metrics.functional.stat_scores import stat_scores
+from cyclops.evaluation.metrics.stat_scores import StatScores
 from cyclops.evaluation.metrics.utils import sigmoid
 
 
@@ -39,18 +39,32 @@ def _sk_stat_scores_binary(
 
 
 @pytest.mark.parametrize("inputs", _binary_cases)
-def test_binary_stat_scores(inputs):
-    """Test binary case."""
-    target, preds = inputs
+class TestBinaryStatScores(MetricTester):
+    """Test function and class for binary stat scores."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        stat_scores,
-        partial(_sk_stat_scores_binary, threshold=THRESHOLD),
-        {"task": "binary", "threshold": THRESHOLD},
-    )
+    def test_binary_stat_scores_functional(self, inputs) -> None:
+        """Test function for binary stat scores."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=stat_scores,
+            sk_metric=partial(_sk_stat_scores_binary, threshold=THRESHOLD),
+            metric_args={"task": "binary", "threshold": THRESHOLD},
+        )
+
+    def test_binary_stat_scores_class(self, inputs) -> None:
+        """Test class for binary stat scores."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=StatScores,
+            sk_metric=partial(_sk_stat_scores_binary, threshold=THRESHOLD),
+            metric_args={"task": "binary", "threshold": THRESHOLD},
+        )
 
 
 def _sk_stat_scores_multiclass(
@@ -80,25 +94,47 @@ def _sk_stat_scores_multiclass(
 
 @pytest.mark.parametrize("inputs", _multiclass_cases)
 @pytest.mark.parametrize("classwise", [True, False])
-def test_multiclass_stat_scores(inputs, classwise):
-    """Test multiclass case."""
-    target, preds = inputs
+class TestMulticlassStatScores(MetricTester):
+    """Test function and class for multiclass stat scores."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        stat_scores,
-        partial(_sk_stat_scores_multiclass, classwise=classwise),
-        {"task": "multiclass", "num_classes": NUM_CLASSES, "classwise": classwise},
-    )
+    def test_multiclass_stat_scores_functional(self, inputs, classwise) -> None:
+        """Test function for multiclass stat scores."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=stat_scores,
+            sk_metric=partial(_sk_stat_scores_multiclass, classwise=classwise),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "classwise": classwise,
+            },
+        )
+
+    def test_multiclass_stat_scores_class(self, inputs, classwise) -> None:
+        """Test class for multiclass stat scores."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=StatScores,
+            sk_metric=partial(_sk_stat_scores_multiclass, classwise=classwise),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "classwise": classwise,
+            },
+        )
 
 
 def _sk_stat_scores_multilabel(
     target: np.ndarray,
     preds: np.ndarray,
     threshold: float,
-    reduce: Literal["micro", "macro", "samples"],
+    labelwise: bool,
 ) -> np.ndarray:
     """Compute stat scores for multilabel case using sklearn."""
     # pylint: disable=invalid-name
@@ -111,7 +147,6 @@ def _sk_stat_scores_multilabel(
         y_true=target,
         y_pred=preds,
         labels=list(range(NUM_LABELS)),
-        samplewise=reduce == "samples",
     )
 
     tn = confmat[:, 0, 0]
@@ -119,7 +154,7 @@ def _sk_stat_scores_multilabel(
     tp = confmat[:, 1, 1]
     fp = confmat[:, 0, 1]
 
-    if reduce == "micro":
+    if not labelwise:
         tp = tp.sum(keepdims=True)
         fp = fp.sum(keepdims=True)
         tn = tn.sum(keepdims=True)
@@ -129,21 +164,44 @@ def _sk_stat_scores_multilabel(
 
 
 @pytest.mark.parametrize("inputs", _multilabel_cases)
-@pytest.mark.parametrize("reduce", ["micro", "macro", "samples"])
-def test_multilabel_stat_scores(inputs, reduce):
-    """Test multilabel case."""
-    target, preds = inputs
+@pytest.mark.parametrize("labelwise", [True, False])
+class TestMultilabelStatScores(MetricTester):
+    """Test function and class for multilabel stat scores."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        stat_scores,
-        partial(_sk_stat_scores_multilabel, threshold=THRESHOLD, reduce=reduce),
-        {
-            "task": "multilabel",
-            "num_labels": NUM_LABELS,
-            "threshold": THRESHOLD,
-            "reduce": reduce,
-        },
-    )
+    def test_multilabel_stat_scores_functional(self, inputs, labelwise) -> None:
+        """Test function for multilabel stat scores."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=stat_scores,
+            sk_metric=partial(
+                _sk_stat_scores_multilabel, threshold=THRESHOLD, labelwise=labelwise
+            ),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "threshold": THRESHOLD,
+                "labelwise": labelwise,
+            },
+        )
+
+    def test_multilabel_stat_scores_class(self, inputs, labelwise) -> None:
+        """Test class for multilabel stat scores."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=StatScores,
+            sk_metric=partial(
+                _sk_stat_scores_multilabel, threshold=THRESHOLD, labelwise=labelwise
+            ),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "threshold": THRESHOLD,
+                "labelwise": labelwise,
+            },
+        )

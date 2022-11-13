@@ -1,4 +1,5 @@
 """Metrics functional package."""
+
 from cyclops.evaluation.metrics.functional.accuracy import (  # noqa: F401
     accuracy,
     binary_accuracy,
@@ -42,6 +43,12 @@ from cyclops.evaluation.metrics.functional.roc import (  # noqa: F401
     multiclass_roc_curve,
     multilabel_roc_curve,
     roc_curve,
+)
+from cyclops.evaluation.metrics.functional.sensitivity import (  # noqa: F401
+    binary_sensitivity,
+    multiclass_sensitivity,
+    multilabel_sensitivity,
+    sensitivity,
 )
 from cyclops.evaluation.metrics.functional.specificity import (  # noqa: F401
     binary_specificity,

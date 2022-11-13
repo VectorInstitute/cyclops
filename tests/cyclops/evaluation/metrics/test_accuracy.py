@@ -4,7 +4,7 @@ from typing import Literal
 
 import numpy as np
 import pytest
-from metrics.helpers import _functional_test
+from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
@@ -17,10 +17,10 @@ from metrics.test_stat_scores import (
     _sk_stat_scores_multiclass,
     _sk_stat_scores_multilabel,
 )
-from numpy.typing import ArrayLike
 from sklearn.metrics import accuracy_score as sk_accuracy_score
 from sklearn.metrics import top_k_accuracy_score as sk_top_k_accuracy_score
 
+from cyclops.evaluation.metrics.accuracy import Accuracy
 from cyclops.evaluation.metrics.functional.accuracy import accuracy
 from cyclops.evaluation.metrics.utils import sigmoid
 
@@ -40,17 +40,32 @@ def _sk_binary_accuracy(
 
 
 @pytest.mark.parametrize("inputs", _binary_cases)
-def test_binary_accuracy(inputs):
-    """Test binary accuracy."""
-    target, preds = inputs
+class TestBinaryAccuracy(MetricTester):
+    """Test binary accuracy metric."""
 
-    _functional_test(
-        target,
-        preds,
-        accuracy,
-        partial(_sk_binary_accuracy, threshold=THRESHOLD),
-        {"task": "binary", "threshold": THRESHOLD},
-    )
+    def test_binary_accuracy_functional(self, inputs) -> None:
+        """Test metric function."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=accuracy,
+            sk_metric=partial(_sk_binary_accuracy, threshold=THRESHOLD),
+            metric_args={"task": "binary", "threshold": THRESHOLD},
+        )
+
+    def test_binary_accuracy_class(self, inputs) -> None:
+        """Test metric class."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=Accuracy,
+            sk_metric=partial(_sk_binary_accuracy, threshold=THRESHOLD),
+            metric_args={"task": "binary", "threshold": THRESHOLD},
+        )
 
 
 def _sk_multiclass_accuracy(
@@ -88,19 +103,60 @@ def _sk_multiclass_accuracy(
 
 @pytest.mark.parametrize("inputs", _multiclass_cases)
 @pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
-def test_multiclass_accuracy(inputs, average):
-    """Test multiclass case."""
+class TestMulticlassAccuracy(MetricTester):
+    """Test multiclass accuracy metric."""
+
+    def test_multiclass_accuracy_functional(self, inputs, average) -> None:
+        """Test metric function."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=accuracy,
+            sk_metric=partial(_sk_multiclass_accuracy, average=average),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
+
+    def test_multiclass_accuracy_class(self, inputs, average) -> None:
+        """Test metric class."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=Accuracy,
+            sk_metric=partial(_sk_multiclass_accuracy, average=average),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
+
+
+@pytest.mark.parametrize("inputs", _multiclass_cases[1:])
+@pytest.mark.parametrize("top_k", list(range(1, 10)))
+def test_topk(inputs, top_k) -> None:
+    """Test top-k multiclass accuracy function."""
     target, preds = inputs
 
-    _functional_test(
+    MetricTester.run_functional_test(
         target,
         preds,
         accuracy,
-        partial(_sk_multiclass_accuracy, average=average),
+        partial(sk_top_k_accuracy_score, labels=list(range(NUM_CLASSES)), k=top_k),
         {
             "task": "multiclass",
             "num_classes": NUM_CLASSES,
-            "average": average,
+            "average": "micro",
+            "top_k": top_k,
             "zero_division": 0,
         },
     )
@@ -109,8 +165,7 @@ def test_multiclass_accuracy(inputs, average):
 def _sk_multilabel_accuracy(
     target: np.ndarray,
     preds: np.ndarray,
-    average: Literal["micro", "macro", "weighted", "samples", None],
-    sample_weight: ArrayLike = None,
+    average: Literal["micro", "macro", "weighted", None],
 ) -> np.ndarray:
     """Compute accuracy for multilabel input using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
@@ -131,15 +186,13 @@ def _sk_multilabel_accuracy(
 
     res = np.stack(accuracy_per_class, axis=0)
 
-    if average in ["macro", "weighted", "samples"]:
+    if average in ["macro", "weighted"]:
         weights = None
         if average == "weighted":
             confmat = _sk_stat_scores_multilabel(
-                target, preds, threshold=THRESHOLD, reduce="macro"
+                target, preds, threshold=THRESHOLD, labelwise=True
             )
             weights = confmat[:, 4]
-        elif average == "samples":
-            weights = sample_weight
 
         if weights is None:
             return np.average(res, weights=weights)
@@ -151,43 +204,43 @@ def _sk_multilabel_accuracy(
     return res
 
 
-@pytest.mark.parametrize("inputs", _multiclass_cases[1:])
-@pytest.mark.parametrize("top_k", list(range(1, 10)))
-def test_topk(inputs, top_k):
-    """Test top-k multiclass accuracy."""
-    target, preds = inputs
-
-    _functional_test(
-        target,
-        preds,
-        accuracy,
-        partial(sk_top_k_accuracy_score, labels=list(range(NUM_CLASSES)), k=top_k),
-        {
-            "task": "multiclass",
-            "num_classes": NUM_CLASSES,
-            "average": "micro",
-            "top_k": top_k,
-            "zero_division": 0,
-        },
-    )
-
-
 @pytest.mark.parametrize("inputs", _multilabel_cases)
-@pytest.mark.parametrize("average", ["micro", "macro", "samples", "weighted", None])
-def test_multilabel_accuracy(inputs, average):
-    """Test multilabel case."""
-    target, preds = inputs
+@pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
+class TestMultilabelAccuracy(MetricTester):
+    """Test multilabel accuracy metric."""
 
-    _functional_test(
-        target,
-        preds,
-        accuracy,
-        partial(_sk_multilabel_accuracy, average=average),
-        {
-            "task": "multilabel",
-            "num_labels": NUM_LABELS,
-            "threshold": THRESHOLD,
-            "average": average,
-            "zero_division": 0,
-        },
-    )
+    def test_multilabel_accuracy_functional(self, inputs, average) -> None:
+        """Test metric function."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target,
+            preds,
+            accuracy,
+            partial(_sk_multilabel_accuracy, average=average),
+            {
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "threshold": THRESHOLD,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
+
+    def test_multilabel_accuracy_class(self, inputs, average) -> None:
+        """Test metric class."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target,
+            preds,
+            Accuracy,
+            partial(_sk_multilabel_accuracy, average=average),
+            {
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "threshold": THRESHOLD,
+                "average": average,
+                "zero_division": 0,
+            },
+        )

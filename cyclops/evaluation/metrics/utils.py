@@ -1,5 +1,6 @@
 """Utility functions for metrics."""
-from typing import List, Optional, Tuple, Union
+
+from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -164,7 +165,7 @@ def check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) ->
     if type_target == "binary":
         raise ValueError("You can not use `top_k` parameter with binary data.")
     if type_preds not in ["continuous", "continuous-multioutput"]:
-        raise ValueError("You can only use top_k with continuous predictions.")
+        raise ValueError("You can only use `top_k` with continuous predictions.")
     if not isinstance(top_k, int) or top_k <= 0:
         raise ValueError("The `top_k` has to be an integer larger than 0.")
     if top_k >= n_classes:
@@ -178,14 +179,15 @@ def select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray
 
     Parameters
     ----------
-        prob_scores: np.ndarray
+        prob_scores : np.ndarray
             The probability scores. Must be a 2D array.
-        top_k: int
-            The number of top predictions to select. Defaults to 1.
+        top_k : int, default=1
+            The number of top predictions to select.
 
     Returns
     -------
-        A binary ndarray of the same shape as the input ndarray of type np.int32
+        np.ndarray
+            A binary ndarray of the same shape as the input array.
 
     """
     if top_k == 1:
@@ -198,7 +200,7 @@ def select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray
     topk_array = np.zeros_like(prob_scores)
     np.put_along_axis(topk_array, topk_indices, 1.0, axis=1)
 
-    return topk_array.astype(np.int32)
+    return topk_array.astype(np.int_)
 
 
 def _check_thresholds(thresholds: Union[int, List[float], np.ndarray]) -> None:
@@ -257,3 +259,54 @@ def _check_thresholds(thresholds: Union[int, List[float], np.ndarray]) -> None:
             "Expected argument `thresholds` to be monotonically increasing,"
             f" but got {thresholds}"
         )
+
+
+def _check_average_arg(average: Literal["micro", "macro", "weighted", None]) -> None:
+    """Validate the ``average`` argument."""
+    if average not in ["micro", "macro", "weighted", None]:
+        raise ValueError(
+            f"Argument average has to be one of 'micro', 'macro', 'weighted', "
+            f"or None, got {average}."
+        )
+
+
+def _apply_function_recursively(
+    data: Any, func: Callable, *args: Any, **kwargs: Any
+) -> Any:
+    """Apply a function recursively to a given data structure.
+
+    Parameters
+    ----------
+        data : Any
+            The data structure to apply the function to.
+        func : Callable
+            The function to apply to the data structure.
+        *args : Any
+            Additional positional arguments to pass to the function.
+        **kwargs : Any
+            Additional keyword arguments to pass to the function.
+
+    Returns
+    -------
+        The data structure with the function applied to it.
+
+    """
+    data_type = type(data)
+    if isinstance(data, (list, tuple, set)):
+        return data_type(
+            [_apply_function_recursively(el, func, *args, **kwargs) for el in data]
+        )
+    if isinstance(data, Mapping):
+        return data_type(
+            {
+                k: _apply_function_recursively(v, func, *args, **kwargs)
+                for k, v in data.items()
+            }
+        )
+    return func(data)
+
+
+def _get_value_if_singleton_array(data: ArrayLike):
+    """Return element if input is 0d or 1d singleton array-like object."""
+    data_arr = np.asanyarray(data)
+    return data_arr.item() if (data_arr.ndim == 0 or data_arr.size == 1) else data

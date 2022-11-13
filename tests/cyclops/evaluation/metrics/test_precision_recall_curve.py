@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 import scipy as sp
-from metrics.helpers import _functional_test
+from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
@@ -17,6 +17,7 @@ from sklearn.metrics import precision_recall_curve as sk_precision_recall_curve
 from cyclops.evaluation.metrics.functional import (
     precision_recall_curve as cyclops_precision_recall_curve,
 )
+from cyclops.evaluation.metrics.precision_recall_curve import PrecisionRecallCurve
 from cyclops.evaluation.metrics.utils import sigmoid
 
 
@@ -30,23 +31,37 @@ def _sk_binary_precision_recall_curve(
         preds = sigmoid(preds)
 
     return sk_precision_recall_curve(
-        y_true=target, probas_pred=preds, pos_label=pos_label, sample_weight=None
+        y_true=target, probas_pred=preds, pos_label=pos_label
     )
 
 
 @pytest.mark.parametrize("inputs", _binary_cases[1:])
-def test_binary_precision_recall_curve(inputs):
-    """Test binary precision-recall curve."""
-    target, preds = inputs
+class TestBinaryPrecisionRecallCurve(MetricTester):
+    """Test function and class for computing binary precision-recall curve."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_precision_recall_curve,
-        _sk_binary_precision_recall_curve,
-        {"task": "binary"},
-    )
+    def test_binary_precision_recall_curve_functional(self, inputs):
+        """Test function for computing binary precision-recall curve."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_precision_recall_curve,
+            sk_metric=_sk_binary_precision_recall_curve,
+            metric_args={"task": "binary"},
+        )
+
+    def test_binary_precision_recall_curve_class(self, inputs):
+        """Test class for computing binary precision-recall curve."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=PrecisionRecallCurve,
+            sk_metric=_sk_binary_precision_recall_curve,
+            metric_args={"task": "binary"},
+        )
 
 
 def _sk_multiclass_precision_recall_curve(
@@ -69,18 +84,32 @@ def _sk_multiclass_precision_recall_curve(
 
 @pytest.mark.parametrize("inputs", _multiclass_cases[1:])
 @pytest.mark.filterwarnings("ignore::UserWarning")
-def test_multiclass_precision_recall_curve(inputs):
-    """Test multiclass precision-recall curve."""
-    target, preds = inputs
+class TestMulticlassPrecisionRecallCurve(MetricTester):
+    """Test function and class for computing multiclass precision-recall curve."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_precision_recall_curve,
-        _sk_multiclass_precision_recall_curve,
-        {"task": "multiclass", "num_classes": NUM_CLASSES},
-    )
+    def test_multiclass_precision_recall_curve_functional(self, inputs) -> None:
+        """Test function for computing multiclass precision-recall curve."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_precision_recall_curve,
+            sk_metric=_sk_multiclass_precision_recall_curve,
+            metric_args={"task": "multiclass", "num_classes": NUM_CLASSES},
+        )
+
+    def test_multiclass_precision_recall_curve_class(self, inputs) -> None:
+        """Test class for computing multiclass precision-recall curve."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=PrecisionRecallCurve,
+            sk_metric=_sk_multiclass_precision_recall_curve,
+            metric_args={"task": "multiclass", "num_classes": NUM_CLASSES},
+        )
 
 
 def _sk_multilabel_precision_recall_curve(
@@ -97,15 +126,29 @@ def _sk_multilabel_precision_recall_curve(
 
 
 @pytest.mark.parametrize("inputs", _multilabel_cases[1:])
-def test_multilabel_precision_recall_curve(inputs):
-    """Test multilabel precision-recall curve."""
-    target, preds = inputs
+class TestMultilabelPrecisionRecallCurve(MetricTester):
+    """Test function and class for computing multilabel precision-recall curve."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        cyclops_precision_recall_curve,
-        _sk_multilabel_precision_recall_curve,
-        {"task": "multilabel", "num_labels": NUM_LABELS},
-    )
+    def test_multilabel_precision_recall_curve_functional(self, inputs) -> None:
+        """Test function for computing multilabel precision-recall curve."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_precision_recall_curve,
+            sk_metric=_sk_multilabel_precision_recall_curve,
+            metric_args={"task": "multilabel", "num_labels": NUM_LABELS},
+        )
+
+    def test_multilabel_precision_recall_curve_class(self, inputs) -> None:
+        """Test class for computing multilabel precision-recall curve."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=PrecisionRecallCurve,
+            sk_metric=_sk_multilabel_precision_recall_curve,
+            metric_args={"task": "multilabel", "num_labels": NUM_LABELS},
+        )

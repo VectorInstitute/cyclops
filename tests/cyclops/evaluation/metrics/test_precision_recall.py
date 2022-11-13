@@ -4,7 +4,7 @@ from typing import Callable, Literal
 
 import numpy as np
 import pytest
-from metrics.helpers import _functional_test
+from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
@@ -22,6 +22,7 @@ from cyclops.evaluation.metrics.functional.precision_recall import (
 from cyclops.evaluation.metrics.functional.precision_recall import (
     recall as cyclops_recall,
 )
+from cyclops.evaluation.metrics.precision_recall import Precision, Recall
 from cyclops.evaluation.metrics.utils import sigmoid
 
 
@@ -42,28 +43,56 @@ def _sk_binary_precision_recall(
 
 
 @pytest.mark.parametrize("inputs", _binary_cases)
-@pytest.mark.parametrize(
-    "functional, sk_fn",
-    [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
-    ids=["precision", "recall"],
-)
-def test_binary_precision(inputs, functional, sk_fn):
-    """Test binary precision."""
-    target, preds = inputs
+class TestBinaryPrecisionRecall(MetricTester):
+    """Test function and class for binary precision and recall."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        functional,
-        partial(
-            _sk_binary_precision_recall,
-            sk_fn=sk_fn,
-            threshold=THRESHOLD,
-            zero_division=0,
-        ),
-        {"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
+    @pytest.mark.parametrize(
+        "cyclops_func, sk_func",
+        [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
+        ids=["precision", "recall"],
     )
+    def test_binary_precision_recall_functional(
+        self, inputs, cyclops_func, sk_func
+    ) -> None:
+        """Test function for binary precision and recall."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_func,
+            sk_metric=partial(
+                _sk_binary_precision_recall,
+                sk_fn=sk_func,
+                threshold=THRESHOLD,
+                zero_division=0,
+            ),
+            metric_args={"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
+        )
+
+    @pytest.mark.parametrize(
+        "cyclops_class, sk_func",
+        [(Precision, sk_precision_score), (Recall, sk_recall_score)],
+        ids=["precision", "recall"],
+    )
+    def test_binary_precision_recall_class(
+        self, inputs, cyclops_class, sk_func
+    ) -> None:
+        """Test class for binary precision and recall."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=cyclops_class,
+            sk_metric=partial(
+                _sk_binary_precision_recall,
+                sk_fn=sk_func,
+                threshold=THRESHOLD,
+                zero_division=0,
+            ),
+            metric_args={"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
+        )
 
 
 def _sk_multiclass_precision_recall(
@@ -88,33 +117,66 @@ def _sk_multiclass_precision_recall(
 
 @pytest.mark.parametrize("inputs", _multiclass_cases)
 @pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
-@pytest.mark.parametrize(
-    "functional, sk_fn",
-    [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
-    ids=["precision", "recall"],
-)
-def test_multiclass_precision(inputs, average, functional, sk_fn):
-    """Test multiclass precision."""
-    target, preds = inputs
+class TestMulticlassPrecisionRecall(MetricTester):
+    """Test function and class for multiclass precision and recall."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        functional,
-        partial(
-            _sk_multiclass_precision_recall,
-            sk_fn=sk_fn,
-            average=average,
-            zero_division=0,
-        ),
-        {
-            "task": "multiclass",
-            "num_classes": NUM_CLASSES,
-            "average": average,
-            "zero_division": 0,
-        },
+    @pytest.mark.parametrize(
+        "cyclops_func, sk_func",
+        [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
+        ids=["precision", "recall"],
     )
+    def test_multiclass_precision_recall_functional(
+        self, inputs, average, cyclops_func, sk_func
+    ) -> None:
+        """Test functions for multiclass precision and recall."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_func,
+            sk_metric=partial(
+                _sk_multiclass_precision_recall,
+                sk_fn=sk_func,
+                average=average,
+                zero_division=0,
+            ),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
+
+    @pytest.mark.parametrize(
+        "cyclops_class, sk_func",
+        [(Precision, sk_precision_score), (Recall, sk_recall_score)],
+        ids=["precision", "recall"],
+    )
+    def test_multiclass_precision_recall_class(
+        self, inputs, average, cyclops_class, sk_func
+    ) -> None:
+        """Test classes for multiclass precision and recall."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=cyclops_class,
+            sk_metric=partial(
+                _sk_multiclass_precision_recall,
+                sk_fn=sk_func,
+                average=average,
+                zero_division=0,
+            ),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
 
 
 def _sk_multilabel_precision_recall(  # pylint: disable=too-many-arguments
@@ -122,7 +184,7 @@ def _sk_multilabel_precision_recall(  # pylint: disable=too-many-arguments
     preds: np.ndarray,
     sk_fn: Callable,
     threshold: float,
-    average: Literal["samples", "micro", "macro", "weighted", None],
+    average: Literal["micro", "macro", "weighted", None],
     zero_division: Literal["warn", 0, 1],
 ):
     """Compute precision score for multilabel case using sklearn."""
@@ -141,33 +203,66 @@ def _sk_multilabel_precision_recall(  # pylint: disable=too-many-arguments
 
 
 @pytest.mark.parametrize("inputs", _multilabel_cases)
-@pytest.mark.parametrize("average", ["samples", "micro", "macro", "weighted", None])
-@pytest.mark.parametrize(
-    "functional, sk_fn",
-    [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
-    ids=["precision", "recall"],
-)
-def test_multilabel_precision(inputs, average, functional, sk_fn):
-    """Test multilabel precision."""
-    target, preds = inputs
+@pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
+class TestMultilabelPrecisionRecall(MetricTester):
+    """Test classes and functions for multilabel precision and recall."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        functional,
-        partial(
-            _sk_multilabel_precision_recall,
-            sk_fn=sk_fn,
-            threshold=THRESHOLD,
-            average=average,
-            zero_division=0,
-        ),
-        {
-            "task": "multilabel",
-            "num_labels": NUM_LABELS,
-            "threshold": THRESHOLD,
-            "average": average,
-            "zero_division": 0,
-        },
+    @pytest.mark.parametrize(
+        "cyclops_func, sk_func",
+        [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
+        ids=["precision", "recall"],
     )
+    def test_multilabel_precision_recall_functional(
+        self, inputs, average, cyclops_func, sk_func
+    ) -> None:
+        """Test multilabel precision."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=cyclops_func,
+            sk_metric=partial(
+                _sk_multilabel_precision_recall,
+                sk_fn=sk_func,
+                threshold=THRESHOLD,
+                average=average,
+                zero_division=0,
+            ),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "threshold": THRESHOLD,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
+
+    @pytest.mark.parametrize(
+        "cyclops_class, sk_func",
+        [(Precision, sk_precision_score), (Recall, sk_recall_score)],
+        ids=["precision", "recall"],
+    )
+    def test_multilabel_precision(self, inputs, average, cyclops_class, sk_func):
+        """Test classes for multilabel precision and recall."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=cyclops_class,
+            sk_metric=partial(
+                _sk_multilabel_precision_recall,
+                sk_fn=sk_func,
+                threshold=THRESHOLD,
+                average=average,
+                zero_division=0,
+            ),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "threshold": THRESHOLD,
+                "average": average,
+                "zero_division": 0,
+            },
+        )

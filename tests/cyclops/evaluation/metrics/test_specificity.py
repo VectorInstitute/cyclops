@@ -4,7 +4,7 @@ from typing import Literal, Union
 
 import numpy as np
 import pytest
-from metrics.helpers import _functional_test
+from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
     NUM_LABELS,
@@ -18,17 +18,16 @@ from metrics.test_stat_scores import (
     _sk_stat_scores_multiclass,
     _sk_stat_scores_multilabel,
 )
-from numpy.typing import ArrayLike
 
 from cyclops.evaluation.metrics.functional.specificity import specificity
+from cyclops.evaluation.metrics.specificity import Specificity
 
 
 def _reduce_specificity(
     tn: np.ndarray,
     fp: np.ndarray,
     support: np.ndarray,
-    average: Literal["micro", "macro", "weighted", "samples", None],
-    sample_weight: ArrayLike = None,
+    average: Literal["micro", "macro", "weighted", None],
 ) -> Union[float, np.ndarray]:
     """Compute specificity and apply `average`.
 
@@ -40,10 +39,8 @@ def _reduce_specificity(
             False positives.
         support : np.ndarray
             Support. Number of true instances for each class.
-        average : Literal["micro", "macro", "weighted", "samples", None]
+        average : Literal["micro", "macro", "weighted", None]
             If not None, return the average specificity.
-        sample_weight : ArrayLike, optional
-            Sample weights, by default None
 
     Returns
     -------
@@ -59,8 +56,6 @@ def _reduce_specificity(
         weights = None
         if average == "weighted":
             weights = support
-        elif average == "samples":
-            weights = sample_weight
 
         if weights is not None and np.sum(weights) == 0:
             return np.zeros_like(res)
@@ -117,18 +112,32 @@ def _sk_binary_specificity(
 
 
 @pytest.mark.parametrize("inputs", _binary_cases)
-def test_binary_specificity(inputs):
-    """Test binary case."""
-    target, preds = inputs
+class TestBinarySpecificity(MetricTester):
+    """Test class and function for binary specificity metric."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        specificity,
-        partial(_sk_binary_specificity, threshold=THRESHOLD),
-        {"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
-    )
+    def test_binary_specificity_functional(self, inputs) -> None:
+        """Test function for binary specificity."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=specificity,
+            sk_metric=partial(_sk_binary_specificity, threshold=THRESHOLD),
+            metric_args={"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
+        )
+
+    def test_binary_specificity_class(self, inputs) -> None:
+        """Test class for binary specificity."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=Specificity,
+            sk_metric=partial(_sk_binary_specificity, threshold=THRESHOLD),
+            metric_args={"task": "binary", "threshold": THRESHOLD, "zero_division": 0},
+        )
 
 
 def _sk_multiclass_specificity(
@@ -148,30 +157,48 @@ def _sk_multiclass_specificity(
 
 @pytest.mark.parametrize("inputs", _multiclass_cases)
 @pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
-def test_multiclass_specificity(inputs, average):
-    """Test multiclass case."""
-    target, preds = inputs
+class TestMulticlassSpecificity(MetricTester):
+    """Test function and class for multiclass specificity metric."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        specificity,
-        partial(_sk_multiclass_specificity, average=average),
-        {
-            "task": "multiclass",
-            "num_classes": NUM_CLASSES,
-            "average": average,
-            "zero_division": 0,
-        },
-    )
+    def test_multiclass_specificity_functional(self, inputs, average) -> None:
+        """Test function for multiclass specificity metric."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=specificity,
+            sk_metric=partial(_sk_multiclass_specificity, average=average),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
+
+    def test_multiclass_specificity_class(self, inputs, average) -> None:
+        """Test class for multiclass specificity metric."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=Specificity,
+            sk_metric=partial(_sk_multiclass_specificity, average=average),
+            metric_args={
+                "task": "multiclass",
+                "num_classes": NUM_CLASSES,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
 
 
 def _sk_multilabel_specificity(
     target: np.ndarray,
     preds: np.ndarray,
-    average: Literal["micro", "macro", "weighted", "samples", None],
-    sample_weight: ArrayLike = None,
+    average: Literal["micro", "macro", "weighted", None],
 ) -> np.ndarray:
     """Compute specificity for multilabel case using sklearn."""
     # pylint: disable=invalid-name
@@ -179,32 +206,52 @@ def _sk_multilabel_specificity(
         target,
         preds,
         threshold=THRESHOLD,
-        reduce="samples" if average == "samples" else "macro",
+        labelwise=True,
     )
     tn = scores[:, 2]
     fp = scores[:, 1]
     support = scores[:, 4]
 
-    return _reduce_specificity(tn, fp, support, average, sample_weight)
+    return _reduce_specificity(tn, fp, support, average)
 
 
 @pytest.mark.parametrize("inputs", _multilabel_cases)
-@pytest.mark.parametrize("average", ["micro", "macro", "samples", "weighted", None])
-def test_multilabel_specificity(inputs, average):
-    """Test multilabel case."""
-    target, preds = inputs
+@pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
+class TestMultilabelSpecificity(MetricTester):
+    """Test function and class for multilabel specificity metric."""
 
-    # test functional
-    _functional_test(
-        target,
-        preds,
-        specificity,
-        partial(_sk_multilabel_specificity, average=average),
-        {
-            "task": "multilabel",
-            "num_labels": NUM_LABELS,
-            "threshold": THRESHOLD,
-            "average": average,
-            "zero_division": 0,
-        },
-    )
+    def test_multilabel_specificity_functional(self, inputs, average) -> None:
+        """Test function for multilabel specificity."""
+        target, preds = inputs
+
+        self.run_functional_test(
+            target=target,
+            preds=preds,
+            metric_functional=specificity,
+            sk_metric=partial(_sk_multilabel_specificity, average=average),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "threshold": THRESHOLD,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
+
+    def test_multilabel_specificity_class(self, inputs, average) -> None:
+        """Test class for multilabel specificity."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=Specificity,
+            sk_metric=partial(_sk_multilabel_specificity, average=average),
+            metric_args={
+                "task": "multilabel",
+                "num_labels": NUM_LABELS,
+                "threshold": THRESHOLD,
+                "average": average,
+                "zero_division": 0,
+            },
+        )
