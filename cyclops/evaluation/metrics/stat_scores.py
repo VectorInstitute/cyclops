@@ -138,9 +138,9 @@ class BinaryStatScores(_AbstractScores):
 
         self._create_state(size=1)
 
-    def update_state(
+    def update_state(  # pylint: disable=arguments-differ
         self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore # pylint: disable=arguments-differ
+    ) -> None:  # type: ignore
         """Update the state variables."""
         target, preds = _binary_stat_scores_format(
             target, preds, threshold=self.threshold
@@ -231,9 +231,9 @@ class MulticlassStatScores(_AbstractScores):
 
         self._create_state(size=1 if not classwise else num_classes)
 
-    def update_state(
+    def update_state(  # pylint: disable=arguments-differ
         self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore # pylint: disable=arguments-differ
+    ) -> None:  # type: ignore
         """Update the state variables."""
         target, preds = _multiclass_stat_scores_format(
             target, preds, num_classes=self.num_classes, top_k=self.top_k
@@ -318,9 +318,9 @@ class MultilabelStatScores(_AbstractScores):
 
         self._create_state(size=1 if not self.labelwise else num_labels)
 
-    def update_state(
+    def update_state(  # pylint: disable=arguments-differ
         self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore # pylint: disable=arguments-differ
+    ) -> None:  # type: ignore
         """Update the state variables."""
         target, preds = _multilabel_stat_scores_format(
             target,

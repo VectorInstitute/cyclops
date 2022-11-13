@@ -1,16 +1,6 @@
 """Utility functions for metrics."""
 
-from typing import (
-    Any,
-    Callable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -302,9 +292,7 @@ def _apply_function_recursively(
 
     """
     data_type = type(data)
-    if not isinstance(data, (Sequence, Mapping)) and not isinstance(data, str):
-        return func(data)
-    if isinstance(data, Sequence):
+    if isinstance(data, (list, tuple, set)):
         return data_type(
             [_apply_function_recursively(el, func, *args, **kwargs) for el in data]
         )
@@ -315,6 +303,7 @@ def _apply_function_recursively(
                 for k, v in data.items()
             }
         )
+    return func(data)
 
 
 def _get_value_if_singleton_array(data: ArrayLike):

@@ -86,7 +86,9 @@ class Metric(ABC):
                 setattr(self, attr, [])
 
     @abstractmethod
-    def update_state(self, *_: Any, **__: Any) -> None:  # pylint: disable=method-hidden
+    def update_state(  # pylint: disable=method-hidden
+        self, *args: Any, **kwargs: Any
+    ) -> None:
         """Update the state of the metric."""
 
     @abstractmethod

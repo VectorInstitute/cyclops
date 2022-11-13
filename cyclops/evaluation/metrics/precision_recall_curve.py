@@ -75,9 +75,9 @@ class BinaryPrecisionRecallCurve(Metric):
         self.thresholds = thresholds
         self.pos_label = pos_label
 
-    def update_state(
+    def update_state(  # pylint: disable=arguments-differ
         self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore # pylint: disable=arguments-differ
+    ) -> None:  # type: ignore
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
@@ -182,9 +182,9 @@ class MulticlassPrecisionRecallCurve(Metric):
         self.thresholds = thresholds
         self.num_classes = num_classes
 
-    def update_state(
+    def update_state(  # pylint: disable=arguments-differ
         self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore # pylint: disable=arguments-differ
+    ) -> None:  # type: ignore
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
@@ -289,9 +289,9 @@ class MultilabelPrecisionRecallCurve(Metric):
         self.thresholds = thresholds
         self.num_labels = num_labels
 
-    def update_state(
+    def update_state(  # pylint: disable=arguments-differ
         self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore # pylint: disable=arguments-differ
+    ) -> None:  # type: ignore
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
