@@ -48,12 +48,10 @@ jobs:
   integration-tests:
     runs-on: self-hosted
     steps:
-      - name: Install apt dependencies
+      - name: Entrypoint
         run: |
           pwd
           ls
-          apt-get update
-          apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v3
       - name: Install poetry
         run: pipx install poetry
