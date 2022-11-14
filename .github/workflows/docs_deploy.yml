@@ -36,9 +36,7 @@ jobs:
           poetry install --without dev,interface
           pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && make html
-          cd .. && coverage run -m pytest && coverage html && coverage xml && coverage report -m
-          cp htmlcov/* docs/build/html/_static/
-          mv docs/build/html/_static/index.html docs/build/html/_static/coverage_report.html
+          cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:

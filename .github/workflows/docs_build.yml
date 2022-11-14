@@ -35,4 +35,4 @@ jobs:
           poetry install --without dev,interface
           pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && make html
-          cd .. && coverage run -m pytest && coverage html && coverage xml && coverage report -m
+          cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
