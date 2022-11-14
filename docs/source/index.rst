@@ -10,7 +10,6 @@ Welcome to cyclops's documentation!
    design
    gemini_hpc
    contributing
-   coverage
    api
 
 

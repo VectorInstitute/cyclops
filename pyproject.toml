@@ -103,6 +103,11 @@ non_interactive = true
 max-line-length = 88
 extend-ignore = ["E203", "W503", "F401"]
 
+[tool.pytest.ini_options]
+markers = [
+    "integration_test: marks tests as integration tests",
+]
+
 [tool.coverage]
     [tool.coverage.run]
     source=["cyclops"]

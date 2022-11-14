@@ -1,7 +1,7 @@
 """OMOP Query API."""
 
 import logging
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from sqlalchemy.sql.selectable import Subquery
 
@@ -25,17 +25,6 @@ MEASUREMENT = "measurement"
 CONCEPT = "concept"
 OBSERVATION = "observation"
 CARE_SITE = "care_site"
-
-# Table map.
-TABLE_MAP = {
-    VISIT_OCCURRENCE: lambda db: db.ods.visit_occurrence,
-    VISIT_DETAIL: lambda db: db.ods.visit_detail,
-    PERSON: lambda db: db.ods.person,
-    MEASUREMENT: lambda db: db.ods.measurement,
-    OBSERVATION: lambda db: db.ods.observation,
-    CONCEPT: lambda db: db.ods.concept,
-    CARE_SITE: lambda db: db.ods.care_site,
-}
 
 # OMOP column names.
 VISIT_OCCURRENCE_ID = "visit_occurrence_id"
@@ -76,10 +65,39 @@ ID = "id"
 NAME = "name"
 
 
+def _get_table_map(schema_name: str) -> Dict:
+    """Get table map.
+
+    Parameters
+    ----------
+    schema_name: str
+        Name of schema.
+
+    Returns
+    -------
+    Dict
+        A mapping of table names to the ORM table objects.
+
+    """
+    return {
+        VISIT_OCCURRENCE: lambda db: getattr(db, schema_name).visit_occurrence,
+        VISIT_DETAIL: lambda db: getattr(db, schema_name).visit_detail,
+        PERSON: lambda db: getattr(db, schema_name).person,
+        MEASUREMENT: lambda db: getattr(db, schema_name).measurement,
+        OBSERVATION: lambda db: getattr(db, schema_name).observation,
+        CONCEPT: lambda db: getattr(db, schema_name).concept,
+        CARE_SITE: lambda db: getattr(db, schema_name).care_site,
+    }
+
+
 class OMOPQuerier(DatasetQuerier):
     """OMOP querier."""
 
-    def __init__(self, config_overrides: Optional[List] = None):
+    def __init__(
+        self,
+        schema_name: str,
+        config_overrides: Optional[List] = None,
+    ):
         """Initialize.
 
         Parameters
@@ -90,7 +108,7 @@ class OMOPQuerier(DatasetQuerier):
         """
         if not config_overrides:
             config_overrides = []
-        super().__init__(TABLE_MAP, COLUMN_MAP, config_overrides)
+        super().__init__(_get_table_map(schema_name), COLUMN_MAP, config_overrides)
 
     def _map_concept_ids_to_name(
         self, source_table: Subquery, source_cols: Union[str, List[str]]
