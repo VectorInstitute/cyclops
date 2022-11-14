@@ -46,7 +46,7 @@ jobs:
           poetry install --without dev,docs,interface
           pre-commit run --all-files
   integration-tests:
-    runs-on: cyclops
+    runs-on: self-hosted
     steps:
       - name: Install apt dependencies
         run: |
