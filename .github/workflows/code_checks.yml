@@ -50,6 +50,8 @@ jobs:
     steps:
       - name: Install apt dependencies
         run: |
+          pwd
+          ls
           sudo apt-get update
           sudo apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v3
