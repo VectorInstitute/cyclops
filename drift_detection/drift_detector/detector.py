@@ -135,11 +135,7 @@ class Detector:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
 
         """
-        # check if reductor_method contains 'txrv'
-        if "txrv" not in self.reductor.dr_method:
-            X_t = self.transform(X_target, **get_args(self.reductor.transform, kwargs))
-        else:
-            X_t = X_target
+        X_t = X_target
 
         results = self.test_shift(X_t[:sample, :], **kwargs)
 
