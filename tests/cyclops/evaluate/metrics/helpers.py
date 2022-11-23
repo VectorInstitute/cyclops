@@ -23,32 +23,32 @@ class MetricTester:
 
         Parameters
         ----------
-            target: np.ndarray
-                The target.
-            preds: np.ndarray
-                The predictions.
-            metric_functional: Callable
-                The functional metric function.
-            sk_metric: Callable
-                The sklearn metric function.
-            metric_args: Dict[str, Any]
-                The arguments to pass to the metric function.
-            atol: float
-                The absolute tolerance.
-            **kwargs_update: Any
-                The keyword arguments pass to the metric update function.
+        target: np.ndarray
+            The target.
+        preds: np.ndarray
+            The predictions.
+        metric_functional: Callable
+            The functional metric function.
+        sk_metric: Callable
+            The sklearn metric function.
+        metric_args: Dict[str, Any]
+            The arguments to pass to the metric function.
+        atol: float
+            The absolute tolerance.
+        **kwargs_update: Any
+            The keyword arguments pass to the metric update function.
 
         Returns
         -------
-            None
+        None
 
         Raises
         ------
-            AssertionError
-                If predictions and targets do not have the same number of
-                samples.
-            AssertionError
-                If the metric values are not equal.
+        AssertionError
+            If predictions and targets do not have the same number of
+            samples.
+        AssertionError
+            If the metric values are not equal.
 
         """
         assert preds.shape[0] == target.shape[0]
@@ -80,32 +80,32 @@ class MetricTester:
 
         Parameters
         ----------
-            target: np.ndarray
-                The target.
-            preds: np.ndarray
-                The predictions.
-            metric_class: Callable
-                The wrapper class for the metric.
-            sk_metric: Callable
-                The sklearn metric function.
-            metric_args: Dict[str, Any]
-                The arguments to pass to the metric function.
-            atol: float
-                The absolute tolerance.
-            **kwargs_update: Any
-                The keyword arguments pass to the metric update function.
+        target: np.ndarray
+            The target.
+        preds: np.ndarray
+            The predictions.
+        metric_class: Callable
+            The wrapper class for the metric.
+        sk_metric: Callable
+            The sklearn metric function.
+        metric_args: Dict[str, Any]
+            The arguments to pass to the metric function.
+        atol: float
+            The absolute tolerance.
+        **kwargs_update: Any
+            The keyword arguments pass to the metric update function.
 
         Returns
         -------
-            None
+        None
 
         Raises
         ------
-            AssertionError
-                If predictions and targets do not have the same number of
-                samples.
-            AssertionError
-                If the metric values are not equal.
+        AssertionError
+            If predictions and targets do not have the same number of
+            samples.
+        AssertionError
+            If the metric values are not equal.
 
         """
         assert preds.shape[0] == target.shape[0]

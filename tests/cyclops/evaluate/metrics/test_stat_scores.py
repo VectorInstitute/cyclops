@@ -27,7 +27,6 @@ def _sk_stat_scores_binary(
     target: np.ndarray, preds: np.ndarray, threshold: float
 ) -> np.ndarray:
     """Compute stat scores for binary case using sklearn."""
-    # pylint: disable=invalid-name
     if np.issubdtype(preds.dtype, np.floating):
         if not ((0 < preds) & (preds < 1)).all():
             preds = sigmoid(preds)
@@ -72,7 +71,6 @@ def _sk_stat_scores_multiclass(
     target: np.ndarray, preds: np.ndarray, classwise: bool
 ) -> np.ndarray:
     """Compute stat scores for multiclass case using sklearn."""
-    # pylint: disable=invalid-name
     if preds.ndim == target.ndim + 1:
         preds = np.argmax(preds, axis=1)
     confmat = sk_multilabel_confusion_matrix(
@@ -138,7 +136,6 @@ def _sk_stat_scores_multilabel(
     labelwise: bool,
 ) -> np.ndarray:
     """Compute stat scores for multilabel case using sklearn."""
-    # pylint: disable=invalid-name
     if np.issubdtype(preds.dtype, np.floating):
         if not ((0 < preds) & (preds < 1)).all():
             preds = sigmoid(preds)

@@ -48,7 +48,6 @@ def _reduce_specificity(
         specificity : float or np.ndarray (if average is None).
 
     """
-    # pylint: disable=invalid-name
     if average == "micro":
         return _calc_specificity(tn.sum(), fp.sum())
 
@@ -66,7 +65,7 @@ def _reduce_specificity(
     return res
 
 
-def _calc_specificity(  # pylint: disable=invalid-name
+def _calc_specificity(
     tn: Union[int, np.ndarray], fp: Union[int, np.ndarray]
 ) -> Union[float, np.ndarray]:
     """Calculate specificity.
@@ -85,7 +84,6 @@ def _calc_specificity(  # pylint: disable=invalid-name
         specificity : np.ndarray
 
     """
-    # pylint: disable=invalid-name
     denominator = tn + fp
     if np.isscalar(tn):
         if denominator == 0.0:
@@ -106,7 +104,6 @@ def _sk_binary_specificity(
     target: np.ndarray, preds: np.ndarray, threshold: float
 ) -> np.ndarray:
     """Compute specificity for binary case using sklearn."""
-    # pylint: disable=invalid-name
     _, fp, tn, _, _ = _sk_stat_scores_binary(target, preds, threshold=threshold)
 
     return _calc_specificity(tn, fp)
@@ -147,7 +144,6 @@ def _sk_multiclass_specificity(
     average: Literal["micro", "macro", "weighted", None],
 ) -> np.ndarray:
     """Compute specificity for multiclass case using sklearn."""
-    # pylint: disable=invalid-name
     scores = _sk_stat_scores_multiclass(target, preds, classwise=True)
     tn = scores[:, 2]
     fp = scores[:, 1]
@@ -202,7 +198,6 @@ def _sk_multilabel_specificity(
     average: Literal["micro", "macro", "weighted", None],
 ) -> np.ndarray:
     """Compute specificity for multilabel case using sklearn."""
-    # pylint: disable=invalid-name
     scores = _sk_stat_scores_multilabel(
         target,
         preds,

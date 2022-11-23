@@ -66,21 +66,21 @@ class Metric(ABC):
 
         Parameters
         ----------
-            name: str
-                The name of the state variable.
-            default: Union[List, numpy.ndarray]
-                The default value of the state variable.
+        name: str
+            The name of the state variable.
+        default: Union[List, numpy.ndarray]
+            The default value of the state variable.
 
         Returns
         -------
-            None
+        None
 
         Raises
         ------
-            AttributeError
-                If the state variable already exists.
-            ValueError
-                If the state variable is not a numpy.ndarray or an empty list.
+        AttributeError
+            If the state variable already exists.
+        ValueError
+            If the state variable is not a numpy.ndarray or an empty list.
 
         """
         if hasattr(self, name):
@@ -106,7 +106,7 @@ class Metric(ABC):
 
         Returns
         -------
-            None
+        None
 
         """
         self._update_count = 0
@@ -156,13 +156,13 @@ class Metric(ABC):
 
         Parameters
         ----------
-            update: Callable
-                The update method of the metric.
+        update: Callable
+            The update method of the metric.
 
         Returns
         -------
-            wrapped_func: Callable
-                The wrapped update method.
+        wrapped_func: Callable
+            The wrapped update method.
 
         """
 
@@ -184,18 +184,18 @@ class Metric(ABC):
 
         Parameters
         ----------
-            compute: Callable
-                The compute method of the metric.
+        compute: Callable
+            The compute method of the metric.
 
         Returns
         -------
-            wrapped_func: Callable
-                The wrapped compute method.
+        wrapped_func: Callable
+            The wrapped compute method.
 
         Warns
         -----
-            UserWarning
-                If the ``compute`` method has not been called at least once.
+        UserWarning
+            If the ``compute`` method has not been called at least once.
 
         """
 
@@ -228,15 +228,15 @@ def create_metric(metric_name: str, **kwargs: Optional[Dict[str, Any]]) -> Metri
 
     Parameters
     ----------
-        metric_name: str
-            The name of the metric.
-        **kwargs: Optional[Dict[str, Any]]
-            The keyword arguments to pass to the metric constructor.
+    metric_name: str
+        The name of the metric.
+    **kwargs: Optional[Dict[str, Any]]
+        The keyword arguments to pass to the metric constructor.
 
     Returns
     -------
-        metric: Metric
-            The metric instance.
+    metric: Metric
+        The metric instance.
 
     """
     metric_class = _METRIC_REGISTRY.get(metric_name, None)

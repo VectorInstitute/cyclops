@@ -85,7 +85,6 @@ def _sk_multiclass_accuracy(
             normalize=True,
         )
 
-    # pylint: disable=invalid-name
     scores = _sk_stat_scores_multiclass(target, preds, classwise=True)
     tp = scores[:, 0]
     support = scores[:, 4]

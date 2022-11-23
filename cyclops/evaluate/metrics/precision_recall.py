@@ -19,29 +19,29 @@ class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
 
     Parameters
     ----------
-        pos_label : int, default=1
-            The label of the positive class.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    pos_label : int, default=1
+        The label of the positive class.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import BinaryPrecision
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0, 1, 1, 1]
-        >>> metric = BinaryPrecision()
-        >>> metric(target, preds)
-        0.6666666666666666
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
-        >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        0.6666666666666666
+    >>> from cyclops.evaluation.metrics import BinaryPrecision
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0, 1, 1, 1]
+    >>> metric = BinaryPrecision()
+    >>> metric(target, preds)
+    0.6666666666666666
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
+    >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    0.6666666666666666
 
     """
 
@@ -72,51 +72,51 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
 
     Parameters
     ----------
-        num_classes : int
-            Number of classes in the dataset.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None], default=None
-           If ``None``, return the score for each class. Otherwise, use one of the
-           following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives and false positives.
-                - ``macro``: Calculate metric for each class, and find their
-                  unweighted mean. This does not take class imbalance into account.
-                - ``weighted``: Calculate metric for each class, and find their
-                  average weighted by the support (the number of true instances
-                  for each class). This alters "macro" to account for class
-                  imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    num_classes : int
+        Number of classes in the dataset.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each class. Otherwise, use one of the
+        following options to compute the average score:
+            - ``micro``: Calculate metric globally from the total count of true
+                positives and false positives.
+            - ``macro``: Calculate metric for each class, and find their
+                unweighted mean. This does not take class imbalance into account.
+            - ``weighted``: Calculate metric for each class, and find their
+                average weighted by the support (the number of true instances
+                for each class). This alters "macro" to account for class
+                imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import MulticlassPrecision
-        >>> target = [0, 1, 2, 0]
-        >>> preds = [0, 2, 1, 0]
-        >>> metric = MulticlassPrecision(num_classes=3, average=None)
-        >>> metric(target, preds)
-        array([1. , 0. , 0.])
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
-        >>> preds = [
-        ...     [[0.1, 0.6, 0.3],
-        ...      [0.05, 0.1, 0.85],
-        ...      [0.2, 0.7, 0.1],
-        ...      [0.9, 0.05, 0.05]],
-        ...     [[0.1, 0.6, 0.3],
-        ...      [0.05, 0.1, 0.85],
-        ...      [0.2, 0.7, 0.1],
-        ...      [0.9, 0.05, 0.05]]
-        ... ]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([1., 0., 0.])
+    >>> from cyclops.evaluation.metrics import MulticlassPrecision
+    >>> target = [0, 1, 2, 0]
+    >>> preds = [0, 2, 1, 0]
+    >>> metric = MulticlassPrecision(num_classes=3, average=None)
+    >>> metric(target, preds)
+    array([1. , 0. , 0.])
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
+    >>> preds = [
+    ...     [[0.1, 0.6, 0.3],
+    ...      [0.05, 0.1, 0.85],
+    ...      [0.2, 0.7, 0.1],
+    ...      [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3],
+    ...      [0.05, 0.1, 0.85],
+    ...      [0.2, 0.7, 0.1],
+    ...      [0.9, 0.05, 0.05]]
+    ... ]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([1., 0., 0.])
 
     """
 
@@ -151,47 +151,47 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
 
     Parameters
     ----------
-        num_labels : int
-            Number of labels for the task.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the precision score for each label. Otherwise,
-            use one of the following options to compute the average precision score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives and false positives.
-                - ``macro``: Calculate metric for each label, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each label, and find their
-                  average weighted by the support (the number of true instances
-                  for each label). This alters "macro" to account for label
-                  imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    num_labels : int
+        Number of labels for the task.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the precision score for each label. Otherwise,
+        use one of the following options to compute the average precision score:
+            - ``micro``: Calculate metric globally from the total count of true
+                positives and false positives.
+            - ``macro``: Calculate metric for each label, and find their
+                unweighted mean. This does not take label imbalance into account.
+            - ``weighted``: Calculate metric for each label, and find their
+                average weighted by the support (the number of true instances
+                for each label). This alters "macro" to account for label
+                imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import MultilabelPrecision
-        >>> target = [[0, 1], [1, 1]]
-        >>> preds = [[0.1, 0.9], [0.2, 0.8]]
-        >>> metric = MultilabelPrecision(num_labels=2, average=None)
-        >>> metric(target, preds)
-        array([0., 1.])
-        >>> metric.reset_state()
-        >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
-        >>> preds = [
-        ...     [[0.1, 0.7], [0.2, 0.8]],
-        ...     [[0.5, 0.9], [0.3, 0.4]]
-        ... ]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([1., 1.])
+    >>> from cyclops.evaluation.metrics import MultilabelPrecision
+    >>> target = [[0, 1], [1, 1]]
+    >>> preds = [[0.1, 0.9], [0.2, 0.8]]
+    >>> metric = MultilabelPrecision(num_labels=2, average=None)
+    >>> metric(target, preds)
+    array([0., 1.])
+    >>> metric.reset_state()
+    >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
+    >>> preds = [
+    ...     [[0.1, 0.7], [0.2, 0.8]],
+    ...     [[0.5, 0.9], [0.3, 0.4]]
+    ... ]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([1., 1.])
 
     """
 
@@ -235,97 +235,97 @@ class Precision(Metric, registry_key="precision", force_register=True):
 
     Parameters
     ----------
-        task : Literal["binary", "multiclass", "multilabel"]
-            Type of classification task.
-        pos_label : int, default=1
-            Label to consider as positive for binary classification tasks.
-        num_classes : int, default=None
-            Number of classes for the task. Required if ``task`` is ``"multiclass"``.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class. Only used if ``task`` is
-            ``"binary"`` or ``"multilabel"``.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
-        num_labels : int, default=None
-            Number of labels for the task. Required if ``task`` is ``"multilabel"``.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the precision score for each label/class. Otherwise,
-            use one of the following options to compute the average precision score:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives and false positives.
-                - ``macro``: Calculate metrics for each class/label, and find their
-                  unweighted mean. This does not take label/class imbalance into
-                  account.
-                - ``weighted``: Calculate metrics for each label/class, and find
-                  their average weighted by support (the number of true instances
-                  for each label/class). This alters ``macro`` to account for
-                  label/class imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    task : Literal["binary", "multiclass", "multilabel"]
+        Type of classification task.
+    pos_label : int, default=1
+        Label to consider as positive for binary classification tasks.
+    num_classes : int, default=None
+        Number of classes for the task. Required if ``task`` is ``"multiclass"``.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class. Only used if ``task`` is
+        ``"binary"`` or ``"multilabel"``.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
+    num_labels : int, default=None
+        Number of labels for the task. Required if ``task`` is ``"multilabel"``.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the precision score for each label/class. Otherwise,
+        use one of the following options to compute the average precision score:
+            - ``micro``: Calculate metrics globally by counting the total true
+                positives and false positives.
+            - ``macro``: Calculate metrics for each class/label, and find their
+                unweighted mean. This does not take label/class imbalance into
+                account.
+            - ``weighted``: Calculate metrics for each label/class, and find
+                their average weighted by support (the number of true instances
+                for each label/class). This alters ``macro`` to account for
+                label/class imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Examples (binary)
     -----------------
-        >>> from cyclops.evaluation.metrics import Precision
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0, 1, 1, 1]
-        >>> metric = Precision(task="binary")
-        >>> metric(target, preds)
-        0.6666666666666666
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
-        >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        0.6666666666666666
+    >>> from cyclops.evaluation.metrics import Precision
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0, 1, 1, 1]
+    >>> metric = Precision(task="binary")
+    >>> metric(target, preds)
+    0.6666666666666666
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
+    >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    0.6666666666666666
 
     Examples (multiclass)
     ---------------------
-        >>> from cyclops.evaluation.metrics import Precision
-        >>> target = [0, 1, 2, 0]
-        >>> preds = [0, 2, 1, 0]
-        >>> metric = Precision(task="multiclass", num_classes=3)
-        >>> metric(target, preds)
-        array([1. , 0. , 0.])
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
-        >>> preds = [
-        ...     [[0.1, 0.6, 0.3],
-        ...      [0.05, 0.1, 0.85],
-        ...      [0.2, 0.7, 0.1],
-        ...      [0.9, 0.05, 0.05]],
-        ...     [[0.1, 0.6, 0.3],
-        ...      [0.05, 0.1, 0.85],
-        ...      [0.2, 0.7, 0.1],
-        ...      [0.9, 0.05, 0.05]]
-        ... ]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([1., 0., 0.])
+    >>> from cyclops.evaluation.metrics import Precision
+    >>> target = [0, 1, 2, 0]
+    >>> preds = [0, 2, 1, 0]
+    >>> metric = Precision(task="multiclass", num_classes=3)
+    >>> metric(target, preds)
+    array([1. , 0. , 0.])
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
+    >>> preds = [
+    ...     [[0.1, 0.6, 0.3],
+    ...      [0.05, 0.1, 0.85],
+    ...      [0.2, 0.7, 0.1],
+    ...      [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3],
+    ...      [0.05, 0.1, 0.85],
+    ...      [0.2, 0.7, 0.1],
+    ...      [0.9, 0.05, 0.05]]
+    ... ]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([1., 0., 0.])
 
     Examples (multilabel)
     ---------------------
-        >>> from cyclops.evaluation.metrics import Precision
-        >>> target = [[0, 1], [1, 1]]
-        >>> preds = [[0.1, 0.9], [0.2, 0.8]]
-        >>> metric = Precision(task="multilabel", num_labels=2)
-        >>> metric.update_state(target, preds)
-        >>> metric.compute()
-        array([0., 1.])
-        >>> metric.reset_state()
-        >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
-        >>> preds = [
-        ...     [[0.1, 0.7], [0.2, 0.8]],
-        ...     [[0.5, 0.9], [0.3, 0.4]]
-        ... ]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([1., 1.])
+    >>> from cyclops.evaluation.metrics import Precision
+    >>> target = [[0, 1], [1, 1]]
+    >>> preds = [[0.1, 0.9], [0.2, 0.8]]
+    >>> metric = Precision(task="multilabel", num_labels=2)
+    >>> metric.update_state(target, preds)
+    >>> metric.compute()
+    array([0., 1.])
+    >>> metric.reset_state()
+    >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
+    >>> preds = [
+    ...     [[0.1, 0.7], [0.2, 0.8]],
+    ...     [[0.5, 0.9], [0.3, 0.4]]
+    ... ]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([1., 1.])
 
     """
 
@@ -377,29 +377,29 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
 
     Parameters
     ----------
-        pos_label : int, default=1
-            Label of the positive class.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    pos_label : int, default=1
+        Label of the positive class.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import BinaryRecall
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0, 1, 1, 0]
-        >>> metric = Recall()
-        >>> metric(target, preds)
-        0.5
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
-        >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        0.5
+    >>> from cyclops.evaluation.metrics import BinaryRecall
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0, 1, 1, 0]
+    >>> metric = Recall()
+    >>> metric(target, preds)
+    0.5
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
+    >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    0.5
 
     """
 
@@ -430,51 +430,51 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
 
     Parameters
     ----------
-        num_classes : int
-            Number of classes in the dataset.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the recall will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None], default=None
-           If ``None``, return the recall score for each class. Otherwise,
-           use one of the following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives and false negatives.
-                - ``macro``: Calculate metric for each class, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each class, and find their
-                  average weighted by the support (the number of true instances
-                  for each class). This alters "macro" to account for class
-                  imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    num_classes : int
+        Number of classes in the dataset.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the recall will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the recall score for each class. Otherwise,
+        use one of the following options to compute the average score:
+            - ``micro``: Calculate metric globally from the total count of true
+                positives and false negatives.
+            - ``macro``: Calculate metric for each class, and find their
+                unweighted mean. This does not take label imbalance into account.
+            - ``weighted``: Calculate metric for each class, and find their
+                average weighted by the support (the number of true instances
+                for each class). This alters "macro" to account for class
+                imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import MulticlassRecall
-        >>> target = [0, 1, 2, 0]
-        >>> preds = [2, 0, 2, 1]
-        >>> metric = MulticlassRecall(num_classes=3)
-        >>> metric(target, preds)
-        array([0., 0., 1.])
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
-        >>> preds = [
-        ...     [[0.1, 0.6, 0.3],
-        ...      [0.05, 0.1, 0.85],
-        ...      [0.2, 0.7, 0.1],
-        ...      [0.9, 0.05, 0.05]],
-        ...     [[0.1, 0.6, 0.3],
-        ...      [0.05, 0.1, 0.85],
-        ...      [0.2, 0.7, 0.1],
-        ...      [0.9, 0.05, 0.05]]
-        ... ]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([0.66666667, 0.        , 0.        ])
+    >>> from cyclops.evaluation.metrics import MulticlassRecall
+    >>> target = [0, 1, 2, 0]
+    >>> preds = [2, 0, 2, 1]
+    >>> metric = MulticlassRecall(num_classes=3)
+    >>> metric(target, preds)
+    array([0., 0., 1.])
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
+    >>> preds = [
+    ...     [[0.1, 0.6, 0.3],
+    ...      [0.05, 0.1, 0.85],
+    ...      [0.2, 0.7, 0.1],
+    ...      [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3],
+    ...      [0.05, 0.1, 0.85],
+    ...      [0.2, 0.7, 0.1],
+    ...      [0.9, 0.05, 0.05]]
+    ... ]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([0.66666667, 0.        , 0.        ])
 
     """
 
@@ -507,41 +507,41 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
 
     Parameters
     ----------
-        num_labels : int
-            Number of labels in the dataset.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the score for each class. Otherwise,
-            use one of the following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                    positives and false negatives.
-                - ``macro``: Calculate metric for each label, and find their
-                    unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each label, and find their
-                    average weighted by the support (the number of true instances
-                    for each label). This alters "macro" to account for label
-                    imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    num_labels : int
+        Number of labels in the dataset.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each class. Otherwise,
+        use one of the following options to compute the average score:
+            - ``micro``: Calculate metric globally from the total count of true
+                positives and false negatives.
+            - ``macro``: Calculate metric for each label, and find their
+                unweighted mean. This does not take label imbalance into account.
+            - ``weighted``: Calculate metric for each label, and find their
+                average weighted by the support (the number of true instances
+                for each label). This alters "macro" to account for label
+                imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import MultilabelRecall
-        >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
-        >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
-        >>> metric = MultilabelRecall(num_labels=4)
-        >>> metric(target, preds)
-        array([0., 1., 1. , 0. ])
-        >>> metric.reset_state()
-        >>> target = [[[0, 1, 0, 1], [0, 0, 1, 1]], [[0, 1, 0, 1], [0, 0, 1, 1]]]
-        >>> preds = [[[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
-        ...          [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([0., 1., 1., 0.])
+    >>> from cyclops.evaluation.metrics import MultilabelRecall
+    >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
+    >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
+    >>> metric = MultilabelRecall(num_labels=4)
+    >>> metric(target, preds)
+    array([0., 1., 1. , 0. ])
+    >>> metric.reset_state()
+    >>> target = [[[0, 1, 0, 1], [0, 0, 1, 1]], [[0, 1, 0, 1], [0, 0, 1, 1]]]
+    >>> preds = [[[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
+    ...          [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([0., 1., 1., 0.])
 
     """
 
@@ -583,95 +583,95 @@ class Recall(Metric, registry_key="recall", force_register=True):
 
     Parameters
     ----------
-        task : Literal["binary", "multiclass", "multilabel"]
-            Type of classification task.
-        pos_label : int, default=1
-            Label to consider as positive for binary classification tasks.
-        num_classes : int, default=None
-            Number of classes for the task. Required if ``task`` is ``"multiclass"``.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class. Only used if ``task`` is
-            ``"binary"`` or ``"multilabel"``.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
-        num_labels : int, default=None
-            Number of labels for the task. Required if ``task`` is ``"multilabel"``.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the recall score for each label/class. Otherwise,
-            use one of the following options to compute the average score:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives and false negatives.
-                - ``macro``: Calculate metrics for each class/label, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metrics for each label/class, and find
-                  their average weighted by support (the number of true instances
-                  for each label/class). This alters ``macro`` to account for
-                  label/class imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    task : Literal["binary", "multiclass", "multilabel"]
+        Type of classification task.
+    pos_label : int, default=1
+        Label to consider as positive for binary classification tasks.
+    num_classes : int, default=None
+        Number of classes for the task. Required if ``task`` is ``"multiclass"``.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class. Only used if ``task`` is
+        ``"binary"`` or ``"multilabel"``.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
+    num_labels : int, default=None
+        Number of labels for the task. Required if ``task`` is ``"multilabel"``.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the recall score for each label/class. Otherwise,
+        use one of the following options to compute the average score:
+            - ``micro``: Calculate metrics globally by counting the total true
+                positives and false negatives.
+            - ``macro``: Calculate metrics for each class/label, and find their
+                unweighted mean. This does not take label imbalance into account.
+            - ``weighted``: Calculate metrics for each label/class, and find
+                their average weighted by support (the number of true instances
+                for each label/class). This alters ``macro`` to account for
+                label/class imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Examples (binary)
     -----------------
-        >>> from cyclops.evaluation.metrics import Recall
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0, 1, 1, 1]
-        >>> metric = Recall(task="binary")
-        >>> metric(target, preds)
-        1.
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
-        >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        0.5
+    >>> from cyclops.evaluation.metrics import Recall
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0, 1, 1, 1]
+    >>> metric = Recall(task="binary")
+    >>> metric(target, preds)
+    1.
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
+    >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    0.5
 
     Examples (multiclass)
     ---------------------
-        >>> from cyclops.evaluation.metrics import Recall
-        >>> target = [0, 1, 2, 0]
-        >>> preds = [0, 2, 1, 0]
-        >>> metric = Recall(task="multiclass", num_classes=3)
-        >>> metric(target, preds)
-        array([1. , 0. , 0.])
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
-        >>> preds = [
-        ...     [[0.1, 0.6, 0.3],
-        ...      [0.05, 0.1, 0.85],
-        ...      [0.2, 0.7, 0.1],
-        ...      [0.9, 0.05, 0.05]],
-        ...     [[0.1, 0.6, 0.3],
-        ...      [0.05, 0.1, 0.85],
-        ...      [0.2, 0.7, 0.1],
-        ...      [0.9, 0.05, 0.05]]
-        ... ]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-       array([0.66666667, 0.        , 0.        ])
+    >>> from cyclops.evaluation.metrics import Recall
+    >>> target = [0, 1, 2, 0]
+    >>> preds = [0, 2, 1, 0]
+    >>> metric = Recall(task="multiclass", num_classes=3)
+    >>> metric(target, preds)
+    array([1. , 0. , 0.])
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
+    >>> preds = [
+    ...     [[0.1, 0.6, 0.3],
+    ...      [0.05, 0.1, 0.85],
+    ...      [0.2, 0.7, 0.1],
+    ...      [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3],
+    ...      [0.05, 0.1, 0.85],
+    ...      [0.2, 0.7, 0.1],
+    ...      [0.9, 0.05, 0.05]]
+    ... ]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([0.66666667, 0.        , 0.        ])
 
     Examples (multilabel)
     ---------------------
-        >>> from cyclops.evaluation.metrics import Recall
-        >>> target = [[0, 1], [1, 1]]
-        >>> preds = [[0.1, 0.9], [0.2, 0.8]]
-        >>> metric = Recall(task="multilabel", num_labels=2)
-        >>> metric(target, preds)
-        array([0., 1.])
-        >>> metric.reset_state()
-        >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
-        >>> preds = [
-        ...     [[0.1, 0.7], [0.2, 0.8]],
-        ...     [[0.5, 0.9], [0.3, 0.4]]
-        ... ]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([0.33333333, 1.        ])
+    >>> from cyclops.evaluation.metrics import Recall
+    >>> target = [[0, 1], [1, 1]]
+    >>> preds = [[0.1, 0.9], [0.2, 0.8]]
+    >>> metric = Recall(task="multilabel", num_labels=2)
+    >>> metric(target, preds)
+    array([0., 1.])
+    >>> metric.reset_state()
+    >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
+    >>> preds = [
+    ...     [[0.1, 0.7], [0.2, 0.8]],
+    ...     [[0.5, 0.9], [0.3, 0.4]]
+    ... ]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([0.33333333, 1.        ])
 
     """
 
