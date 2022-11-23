@@ -8,7 +8,7 @@ import yaml
 
 from cyclops.utils.file import join, process_dir_save_path
 from cyclops.utils.log import setup_logging
-from models.catalog import MODELS, PT_MODELS, STATIC_MODELS, _Model
+from models.catalog import _Model, _model_catalog, _pt_model_keys, _static_model_keys
 from models.constants import (
     CONFIG_FILE,
     DATA_TYPES,
@@ -84,7 +84,7 @@ class Predictor:
         save_path = join(SAVE_DIR, self.model_name, self.dataset_name, self.data_type)
         process_dir_save_path(save_path)
 
-        if self.model_name in PT_MODELS:
+        if self.model_name in _pt_model_keys:
             params["model_params"]["input_dim"] = self.dataset.n_features
             params["model_params"]["device"] = self.device
             if params["train_params"]["reweight"] == "total":
@@ -97,7 +97,7 @@ class Predictor:
 
     def _validate(self) -> None:
         """Validate the input arguments."""
-        assert self.model_name in MODELS, "[!] Invalid model name"
+        assert self.model_name in _model_catalog, "[!] Invalid model name"
         assert self.dataset_name in DATASETS, "[!] Invalid dataset name"
         assert (
             self.use_case in USE_CASES.keys()  # pylint: disable=C0201
@@ -106,7 +106,7 @@ class Predictor:
             self.dataset_name in USE_CASES[self.use_case]
         ), "[!] Unsupported use case for this dataset"
         assert self.data_type in DATA_TYPES, "[!] Invalid data type"
-        if self.model_name in STATIC_MODELS:
+        if self.model_name in _static_model_keys:
             assert (
                 self.data_type == "tabular"
             ), "[!] The data type and model are not compatiable"

@@ -1,13 +1,13 @@
 """Model Wrappers for PyTorch and Scikit-learn."""
-
 import logging
 import math
-from ctypes import Union
-from typing import Optional
+from inspect import signature
+from typing import Any, Literal, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import GridSearchCV, PredefinedSplit
 from torch import nn
 from torch.optim import Optimizer, lr_scheduler
@@ -15,7 +15,6 @@ from torch.utils.data import DataLoader
 
 from cyclops.utils.file import join, load_pickle, save_pickle
 from cyclops.utils.log import setup_logging
-from models.catalog import MODELS, _PTModel, _SKModel
 from models.data import PTDataset
 from models.utils import (
     ACTIVATIONS,
@@ -24,6 +23,9 @@ from models.utils import (
     SCHEDULERS,
     LossMeter,
     get_device,
+    is_pytorch_instance,
+    is_sklearn_instance,
+    is_sklearn_model,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -36,18 +38,20 @@ setup_logging(print_level="INFO", logger=LOGGER)
 class PTModel:
     """PyTorch model wrapper."""
 
-    def __init__(self, model_name: str, save_path: str, **kwargs) -> None:
+    def __init__(self, model: nn.Module, save_path: str, **kwargs) -> None:
         """Initialize wrapper.
 
         Parameters
         ----------
-        model_name : str
-            pyTorch model name (rnn, gru, etc.)
+        model : torch.nn.Module
+            pyTorch model
         save_path : str
             path to save and/or load trained model
 
         """
-        self.model_name = model_name
+        assert is_pytorch_instance(model), "[!] Invalid model."
+        self._model = model
+
         self.save_path = save_path
 
         self.model_params: dict = kwargs.get("model_params")
@@ -67,30 +71,15 @@ class PTModel:
         self.train_loss = LossMeter("train")
         self.val_loss = LossMeter("val")
 
-        self.model = self._init_model()
         self.criterion = self._init_criterion()
         self.activation = self._init_activation()
         self.optimizer = self._init_optimizer()
         self.lr_scheduler = self._init_lr_scheduler()
 
-    def _init_model(self) -> _PTModel:
-        """Initialize model.
-
-        Returns
-        -------
-        _PTModel
-            the PyTorch model
-
-        Raises
-        ------
-        ValueError
-            Invalid model name
-
-        """
-        model = self.model_name.lower()
-        if model not in MODELS:
-            raise ValueError("[!] Invalid Model name.")
-        return MODELS[model](**self.model_params).to(self.device)
+    @property
+    def model(self) -> nn.Module:
+        """Get the model."""
+        return self._model
 
     def _init_criterion(self) -> nn.modules.loss:
         """Initialize the criterion.
@@ -337,7 +326,7 @@ class PTModel:
         y_train: np.ndarray,
         X_val: np.ndarray,
         y_val: np.ndarray,
-    ) -> _PTModel:
+    ):
         """Train the model.
 
         Parameters
@@ -353,7 +342,6 @@ class PTModel:
 
         Returns
         -------
-        _PTModel
             trained pyTorch model
 
         """
@@ -400,7 +388,7 @@ class PTModel:
 
         """
         if not model_path:
-            model_path = join(self.save_path, f"{self.model_name}_{epoch}.pt")
+            model_path = join(self.save_path, f"{self.model.__name__}_{epoch}.pt")
         torch.save(
             {
                 "epoch": epoch,
@@ -420,7 +408,7 @@ class PTModel:
             current epoch number
 
         """
-        model_path = join(self.save_path, f"{self.model_name}_best.pt")
+        model_path = join(self.save_path, f"{self.model.__name__}_best.pt")
         self.save_model(epoch, model_path)
 
     def _save_last(self, epoch: int) -> None:
@@ -432,10 +420,10 @@ class PTModel:
             current epoch number
 
         """
-        model_path = join(self.save_path, f"{self.model_name}_last.pt")
+        model_path = join(self.save_path, f"{self.model.__name__}_last.pt")
         self.save_model(epoch, model_path)
 
-    def load_model(self, model_path: Optional[str]) -> _PTModel:
+    def load_model(self, model_path: Optional[str]):
         """Load a model from checkpoint.
 
         Parameters
@@ -445,12 +433,11 @@ class PTModel:
 
         Returns
         -------
-        _PTModel
             pyTorch model
 
         """
         if not model_path:
-            model_path = join(self.save_path, f"{self.model_name}_best.pt")
+            model_path = join(self.save_path, f"{self.model.__name__}_best.pt")
         checkpoint = torch.load(model_path)
         model = self.model.__class__(**checkpoint["hyper_params"]).to(self.device)
         model.load_state_dict(checkpoint["model"])
@@ -479,7 +466,7 @@ class PTModel:
 
     def predict(
         self,
-        model: _PTModel,
+        model,
         X_test: np.ndarray,
         y_test: np.ndarray,
     ) -> tuple:
@@ -487,7 +474,6 @@ class PTModel:
 
         Parameters
         ----------
-        model : _PTModel
             pyTorch model object
         X_test : np.ndarray
             test data features
@@ -537,85 +523,62 @@ class PTModel:
 class SKModel:
     """Scikit-learn model wrapper."""
 
-    def __init__(self, model_name: str, save_path, **kwargs) -> None:
+    def __init__(self, model, save_path, **kwargs) -> None:
         """Initialize wrapper.
 
         Parameters
         ----------
-        model_name : str
-            sklearn model name (xgb, lr, etc.)
+        model : object
+            sklearn model.
         save_path : _type_
             path to save and/or load trained model
 
         """
-        self.model_name = model_name
+        assert is_sklearn_model(model), "``model`` must be a sklearn model"
+        self._model = model
         self.save_path = save_path
+        # update_wrapper(self, model)
 
-        self.model_params: dict = kwargs.get("model_params")
-        self.best_model: bool = kwargs.get("train_params")["best_model"]
-        self.best_model_params: dict = kwargs.get("train_params")["best_model_params"]
-        self.best_model_metric: dict = kwargs.get("train_params")["best_model_metric"]
         self.test_params: dict = kwargs.get("test_params")
 
     @property
-    def model(self) -> _SKModel:
-        """Get model as an attribute.
+    def model(self):
+        """Get model."""
+        return self._model
 
-        Returns
-        -------
-        _SKModel
-            scikit-learn model object
-
-        Raises
-        ------
-        ValueError
-            Invalid model name
-
-        """
-        model = self.model_name.lower()
-        if model not in MODELS:
-            raise ValueError("[!] Invalid Model name.")
-        return MODELS[model]
-
-    def fit(
-        self,
-        X_train: np.ndarray,
-        y_train: np.ndarray,
-        X_val: np.ndarray,
-        y_val: np.ndarray,
-    ) -> _SKModel:
+    def fit(self, X: np.ndarray, y: np.ndarray, **kwargs: dict) -> Any:
         """Train the model.
 
         Parameters
         ----------
-        X_train : np.ndarray
-            train data features
-        y_train : np.ndarray
-            train data labels
-        X_val : np.ndarray
-            test data features
-        y_val : np.ndarray
-            test data labels
+        X : np.ndarray
+            train data features of shape (n_samples, n_features).
+        y : np.ndarray
+            train data labels of shape (n_samples, n_classes) or (n_samples,).
+            It will be flattened by default.
+        kwargs : dict
+            additional parameters for the ``model.fit`` method
 
         Returns
         -------
-        _SKModel
             trained pyTorch model
 
         """
-        y_train = y_train.ravel()
-        y_val = y_val.ravel()
+        y = y.ravel()
 
-        if self.best_model:
-            model = self.find_best(X_train, y_train, X_val, y_val)
+        fit_sig = signature(self._model.fit)
+        fit_params = fit_sig.parameters
+        if len(fit_params) == 2:
+            self._model.fit(X)
+        elif len(fit_params) == 3:
+            self._model.fit(X, y)
         else:
-            model = self.model(**self.model_params)
-            model.fit(X_train, y_train)
+            self._model.fit(X, y, **kwargs)
 
-        self.save_model(model)
+        self.save_model(self._model)
         LOGGER.info("Model saved in %s", self.save_path)
 
-        return model
+        return self._model
 
     def find_best(
         self,
@@ -623,7 +586,8 @@ class SKModel:
         y_train: np.ndarray,
         X_val: np.ndarray,
         y_val: np.ndarray,
-    ) -> _SKModel:
+        **kwargs: dict,
+    ):
         """Find the best model by grid search.
 
         Parameters
@@ -639,19 +603,22 @@ class SKModel:
 
         Returns
         -------
-        _SKModel
             best-performing sklearn model
 
         """
-        model = self.model(**self.model_params)
+        best_model_params: dict = kwargs[
+            "best_model_params"
+        ]  # required for grid search
+        best_model_metric: dict = kwargs.get("best_model_metric")
+
         split_index = [-1] * len(X_train) + [0] * len(X_val)
         X = np.concatenate((X_train, X_val), axis=0)
         y = np.concatenate((y_train, y_val), axis=0)
         pds = PredefinedSplit(test_fold=split_index)
         clf = GridSearchCV(
-            model,
-            param_grid=self.best_model_params,
-            scoring=self.best_model_metric,
+            self._model,
+            param_grid=best_model_params,
+            scoring=best_model_metric,
             cv=pds,
             n_jobs=2,
             verbose=2,
@@ -662,19 +629,41 @@ class SKModel:
 
         return clf.best_estimator_
 
-    def save_model(self, model: _SKModel) -> None:
-        """Save model to file.
+    def predict(self, X: np.ndarray, out_format: Literal["proba", "log_proba"] = None):
+        """Make prediction by a trained model.
 
         Parameters
         ----------
-        model : _SKModel
-            model to save
+        X : np.ndarray
+            test data features.
+        format : Literal["proba", "log_proba"], optional
+            format of the predictions. Defaults to None, which calls ``predict``
+            method of underlying sklearn model.
+
+        Returns
+        -------
+        preds : np.ndarray
+            predicted values
 
         """
-        model_path = join(self.save_path, f"{self.model_name}.pkl")
-        save_pickle(model, model_path)
+        if out_format == "log_proba" and hasattr(self.model, "predict_log_proba"):
+            preds = self._model.predict_log_proba(X)
+        elif out_format == "proba" and hasattr(self.model, "predict_proba"):
+            preds = self._model.predict_proba(X)
+        else:
+            preds = self._model.predict(X)
 
-    def load_model(self, model_path: Optional[str] = None) -> _SKModel:
+        if self.test_params["flatten"]:
+            preds = preds.ravel()
+
+        return preds
+
+    def save_model(self, log: bool = True) -> None:
+        """Save model to file."""
+        model_path = join(self.save_path, f"{self._model.__name__}.pkl")
+        save_pickle(self._model, model_path, log=log)
+
+    def load_model(self, model_path: Optional[str] = None, log: bool = True) -> None:
         """Load a saved model.
 
         Parameters
@@ -684,48 +673,58 @@ class SKModel:
 
         Returns
         -------
-        _SKModel
             loaded model
 
         """
         if not model_path:
-            model_path = join(self.save_path, f"{self.model_name}.pkl")
+            model_path = join(self.save_path, f"{self._model.__name__}.pkl")
 
         try:
-            model = load_pickle(model_path)
+            self._model = load_pickle(model_path, log=log)
         except FileNotFoundError:
             LOGGER.error("No saved model was found to load!")
 
-        return model
+        return self._model
 
-    def predict(
-        self,
-        model,
-        X_test: np.ndarray,
-        y_test: np.ndarray,
-    ) -> tuple:
-        """Make prediction by a trained model.
+    # dynamically offer every method and attribute of the sklearn model
+    def __getattr__(self, name: str):
+        """Get attribute."""
+        return getattr(self.__dict__["_model"], name)
 
-        Parameters
-        ----------
-        model : _type_
-            sklearn model object
-        X_test : np.ndarray
-            test data features
-        y_test : np.ndarray
-            test data labels
+    def __setattr__(self, name, value):
+        """Set attribute."""
+        if name == "_model":
+            self.__dict__[name] = value
+        else:
+            setattr(self.__dict__["_model"], name, value)
 
-        Returns
-        -------
-        tuple
-            data labels, predicted values (probabilities), predicted labels
+    def __delattr__(self, name):
+        """Delete attribute."""
+        delattr(self.__dict__["_model"], name)
 
-        """
-        y_pred_values = model.predict_proba(X_test)[:, 1]
-        y_pred_labels = model.predict(X_test)
-        if self.test_params["flatten"]:
-            y_test = y_test.ravel()
-            y_pred_values = y_pred_values.ravel()
-            y_pred_labels = y_pred_labels.ravel()
 
-        return (y_test, y_pred_values, y_pred_labels)
+# define function to wrap given model with SKModel or PTModel
+def wrap_model_instance(
+    model: Union[nn.Module, BaseEstimator],
+    save_path: str,
+    **kwargs: dict,
+) -> Union[SKModel, PTModel]:
+    """Wrap a model with SKModel or PTModel.
+
+    Parameters
+    ----------
+    model : Union[torch.nn.Module, sklearn.base.BaseEstimator]
+        model to be wrapped
+    save_path : str
+        path to save and/or load trained model
+
+    Returns
+    -------
+        wrapped model
+
+    """
+    if is_pytorch_instance(model):
+        return PTModel(model, save_path, **kwargs)
+    if is_sklearn_instance(model):
+        return SKModel(model, save_path, **kwargs)
+    raise TypeError("``model`` must be a pyTorch or sklearn model")

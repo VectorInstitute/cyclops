@@ -1,76 +1,136 @@
 """Model catalog."""
+import logging
+from typing import Any, Callable, Dict, Literal, TypeVar, Union
 
-from typing import Optional, TypeVar, Union
+from cyclops.utils.log import setup_logging
+from models.utils import is_pytorch_model, is_sklearn_model
+from models.wrapper import PTModel, SKModel, wrap_model_instance
 
-from sklearn.ensemble import RandomForestClassifier as RF
-from sklearn.linear_model import LogisticRegression as LR
-from sklearn.neural_network import MLPClassifier as MLP
-from xgboost import XGBClassifier
+LOGGER = logging.getLogger(__name__)
+setup_logging(print_level="WARN", logger=LOGGER)
 
-from models.neural_nets.gru import GRUModel
-from models.neural_nets.lstm import LSTMModel
-from models.neural_nets.mlp import MLPModel
-from models.neural_nets.rnn import RNNModel
+_Model = TypeVar("_Model", PTModel, SKModel)
 
-MODELS = {
-    "gru": GRUModel,
-    "lstm": LSTMModel,
-    "rnn": RNNModel,
-    "mlp_pt": MLPModel,
-    "lr": LR,
-    "mlp": MLP,
-    "rf": RF,
-    "xgb": XGBClassifier,
-}
-
-_PTModel = TypeVar("_PTModel", GRUModel, LSTMModel, RNNModel, MLPModel)
-_SKModel = TypeVar("_SKModel", LR, MLP, RF, XGBClassifier)
-_Model = Union[_PTModel, _SKModel]
-
-STATIC_MODELS = ["lr", "mlp", "mlp_pt", "rf", "xgb"]
-TEMPORAL_MODELS = ["gru", "rnn", "lstm"]
-
-PT_MODELS = ["gru", "mlp_pt", "rnn", "lstm"]
-SK_MODELS = ["lr", "mlp", "rf", "xgb"]
-
-MODEL_CATALOG = {}
+_model_catalog: Dict[str, Any] = {}
+_temporal_model_keys: set[str] = set()
+_static_model_keys: set[str] = set()
+_pt_model_keys: set[str] = set()
+_sk_model_keys: set[str] = set()
 
 
-def register_model(model: type, name: Optional[str] = None):
-    """Register model with dict.
-
-    Parameters
-    ----------
-    model: type
-        Model implementation wrapped in a class.
-    name: str, optional
-
-    """
-    if not name:
-        name = model.__name__
-    if name not in MODEL_CATALOG:
-        MODEL_CATALOG[name] = model
-
-
-def get_model(name: str) -> Optional[type]:
-    """Get model from catalog.
+def register_model(name: str, model_type: Literal["static", "temporal"]) -> Callable:
+    """Register model in the catalog.
 
     Parameters
     ----------
     name: str
         Model name.
+    model_type: Literal["static", "temporal"]
+        Model type.
 
     Returns
     -------
-    type
-        Model class.
+    Callable
+        Decorator.
 
     Raises
     ------
     NotImplementedError
-        If model name provided is not in the catalog.
+        If model type or model library is not supported.
 
     """
-    if name not in MODEL_CATALOG:
-        raise NotImplementedError
-    return MODEL_CATALOG.get(name)
+
+    def decorator(model_obj: type) -> type:
+        if name in _model_catalog:
+            LOGGER.warning(
+                "Model with name %s is already registered. "
+                "It will be replaced by the new model.",
+                name,
+            )
+
+        _model_catalog[name] = model_obj
+
+        if model_type == "static":
+            _static_model_keys.add(name)
+        elif model_type == "temporal":
+            _temporal_model_keys.add(name)
+        else:
+            raise NotImplementedError(f"Model type {model_type} is not supported.")
+
+        # infer model library
+        if is_pytorch_model(model_obj):
+            _pt_model_keys.add(name)
+        elif is_sklearn_model(model_obj):
+            _sk_model_keys.add(name)
+        else:
+            raise NotImplementedError(
+                "Model library is not supported. Only PyTorch and scikit-learn "
+                " mmodels are supported."
+            )
+
+        return model_obj
+
+    return decorator
+
+
+def list_models(
+    category: Literal["static", "temporal", "pytorch", "sklearn"] = None
+) -> list[str]:
+    """List models.
+
+    Parameters
+    ----------
+    category: Literal["static", "temporal", "pytorch", "sklearn"], optional
+        Model category.
+
+    Returns
+    -------
+    list[str]
+        List of models.
+
+    """
+    if category == "static":
+        model_list = list(_static_model_keys)
+    elif category == "temporal":
+        model_list = list(_temporal_model_keys)
+    elif category == "pytorch":
+        model_list = list(_pt_model_keys)
+    elif category == "sklearn":
+        model_list = list(_sk_model_keys)
+    else:
+        model_list = list(_model_catalog.keys())
+
+    return model_list
+
+
+def create_model(
+    model_name: str,
+    model_kwargs: Dict[str, Any] = None,
+    **kwargs,
+) -> Union[PTModel, SKModel]:
+    """Create model.
+
+    Parameters
+    ----------
+    model_name: str
+        Model name.
+    model_kwargs
+        Keyword arguments for model initialization.
+    kwargs
+        Keyword arguments passed to the wrapper class.
+
+    Returns
+    -------
+    Union[PTModel, SKModel]
+        Model instance in a wrapper class.
+
+    """
+    model_class = _model_catalog.get(model_name, None)
+    if model_class is None:
+        raise NotImplementedError(f"Model {model_name} is not registered.")
+
+    if model_kwargs is None:
+        model_kwargs = {}
+    model = model_class(**model_kwargs)
+
+    return wrap_model_instance(model, save_path=kwargs.get("save_path", None), **kwargs)

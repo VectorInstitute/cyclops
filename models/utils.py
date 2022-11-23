@@ -1,8 +1,10 @@
 """Utility functions for building models."""
+import inspect
 
 import numpy as np
 import torch
 from sklearn import metrics
+from sklearn.base import BaseEstimator
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
@@ -54,6 +56,133 @@ METRICS = {
     "recall": recall_score,
     "confusion": confusion_matrix,
 }
+
+
+def _has_sklearn_api(model: object) -> bool:
+    """Check if model has a sklearn signature.
+
+    Parameters
+    ----------
+    model : object
+        The model to check.
+
+    Returns
+    -------
+    bool
+        True if ``model`` has a sklearn signature.
+
+    """
+    return (
+        hasattr(model, "fit")
+        and hasattr(model, "predict")
+        and hasattr(model, "predict_proba")
+    )
+
+
+def is_sklearn_instance(model: object) -> bool:
+    """Check if model is an instance of a sklearn model.
+
+    Parameters
+    ----------
+    model : object
+        The model to check.
+
+    Returns
+    -------
+    bool
+        True if ``model`` is an instance of a sklearn model.
+
+    """
+    return isinstance(model, BaseEstimator) and _has_sklearn_api(model)
+
+
+def is_sklearn_class(model: object) -> bool:
+    """Check if model is a sklearn class.
+
+    Parameters
+    ----------
+    model : object
+        The model to check.
+
+    Returns
+    -------
+    bool
+        True if ``model`` is a sklearn class
+
+    """
+    return (
+        inspect.isclass(model)
+        and issubclass(model, BaseEstimator)
+        and _has_sklearn_api(model)
+    )
+
+
+def is_sklearn_model(model: object) -> bool:
+    """Check if model is a sklearn model.
+
+    Parameters
+    ----------
+    model : object
+        The model to check.
+
+    Returns
+    -------
+    bool
+        True if ``model`` is an sklearn model.
+
+    """
+    return is_sklearn_class(model) or is_sklearn_instance(model)
+
+
+def is_pytorch_instance(model: object) -> bool:
+    """Check if model is an instance of a PyTorch model.
+
+    Parameters
+    ----------
+    model : object
+        The model to check.
+
+    Returns
+    -------
+    bool
+        True if ``model`` is an instance of a PyTorch model.
+
+    """
+    return isinstance(model, nn.Module)
+
+
+def is_pytorch_class(model: object) -> bool:
+    """Check if model is a PyTorch class.
+
+    Parameters
+    ----------
+    model : object
+        The model to check.
+
+    Returns
+    -------
+    bool
+        True if ``model`` is a PyTorch class
+
+    """
+    return inspect.isclass(model) and issubclass(model, nn.Module)
+
+
+def is_pytorch_model(model: object) -> bool:
+    """Check if model is a PyTorch model.
+
+    Parameters
+    ----------
+    model : object
+        The model to check.
+
+    Returns
+    -------
+    bool
+        True if ``model`` is a PyTorch model
+
+    """
+    return is_pytorch_class(model) or is_pytorch_instance(model)
 
 
 def get_device() -> torch.device:

@@ -5,9 +5,11 @@ import math
 import torch
 from torch import nn
 
+from models.catalog import register_model
 from models.utils import ACTIVATIONS
 
 
+@register_model("mlp_pt", model_type="static")
 class MLPModel(nn.Module):  # pylint: disable=too-few-public-methods
     """A Multi-Layer Perceptron (MLP).
 

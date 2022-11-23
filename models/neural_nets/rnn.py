@@ -5,9 +5,12 @@ from typing import Optional
 import torch
 from torch import nn
 
+from models.catalog import register_model
+
 # pylint: disable=invalid-name, too-many-arguments
 
 
+@register_model("rnn", model_type="temporal")
 class RNNModel(nn.Module):
     """RNN Class."""
 
