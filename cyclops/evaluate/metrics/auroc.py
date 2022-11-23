@@ -20,7 +20,7 @@ from cyclops.evaluate.metrics.utils import _check_average_arg
 # mypy: ignore-errors
 
 
-class BinaryAUROC(BinaryPrecisionRecallCurve):
+class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
     """Compute the area under the ROC curve for binary classification tasks.
 
     Parameters
@@ -77,7 +77,7 @@ class BinaryAUROC(BinaryPrecisionRecallCurve):
         )
 
 
-class MulticlassAUROC(MulticlassPrecisionRecallCurve):
+class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_auroc"):
     """Compute the area under the ROC curve for multiclass classification tasks.
 
     Parameters
@@ -147,7 +147,7 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve):
         )
 
 
-class MultilabelAUROC(MultilabelPrecisionRecallCurve):
+class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_auroc"):
     """Compute the area under the ROC curve for multilabel classification tasks.
 
     Parameters
@@ -216,7 +216,7 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve):
         )
 
 
-class AUROC(Metric):
+class AUROC(Metric, registry_key="auroc", force_register=True):
     """Compute the AUROC curve for different types of classification tasks.
 
     Parameters

@@ -23,7 +23,7 @@ from cyclops.evaluate.metrics.metric import Metric
 # mypy: ignore-errors
 
 
-class BinaryPrecisionRecallCurve(Metric):
+class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_curve"):
     """Compute precision-recall curve for binary input.
 
     Parameters
@@ -114,7 +114,9 @@ class BinaryPrecisionRecallCurve(Metric):
         )
 
 
-class MulticlassPrecisionRecallCurve(Metric):
+class MulticlassPrecisionRecallCurve(
+    Metric, registry_key="multiclass_precision_recall_curve"
+):
     """Compute the precision-recall curve for multiclass problems.
 
     Parameters
@@ -229,7 +231,9 @@ class MulticlassPrecisionRecallCurve(Metric):
         )
 
 
-class MultilabelPrecisionRecallCurve(Metric):
+class MultilabelPrecisionRecallCurve(
+    Metric, registry_key="multilabel_precision_recall_curve"
+):
     """Check and format the multilabel precision-recall curve input/data.
 
     Parameters
@@ -328,7 +332,9 @@ class MultilabelPrecisionRecallCurve(Metric):
         )
 
 
-class PrecisionRecallCurve(Metric):
+class PrecisionRecallCurve(
+    Metric, registry_key="precision_recall_curve", force_register=True
+):
     """Compute the precision-recall curve for different classification tasks.
 
     Parameters

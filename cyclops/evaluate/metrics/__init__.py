@@ -22,6 +22,7 @@ from cyclops.evaluate.metrics.f_beta import (  # noqa: F401
     MultilabelF1Score,
     MultilabelFbetaScore,
 )
+from cyclops.evaluate.metrics.metric import create_metric  # noqa: F401
 from cyclops.evaluate.metrics.precision_recall import (  # noqa: F401
     BinaryPrecision,
     MulticlassPrecision,

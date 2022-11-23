@@ -98,7 +98,7 @@ class _AbstractScores(Metric):
         return tp, fp, tn, fn
 
 
-class BinaryStatScores(_AbstractScores):
+class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
     """Compute binary stat scores.
 
     Parameters
@@ -166,7 +166,7 @@ class BinaryStatScores(_AbstractScores):
         return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
 
 
-class MulticlassStatScores(_AbstractScores):
+class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores"):
     """Compute multiclass stat scores.
 
     Parameters
@@ -262,7 +262,7 @@ class MulticlassStatScores(_AbstractScores):
         return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
 
 
-class MultilabelStatScores(_AbstractScores):
+class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores"):
     """Compute stat scores for multilabel problems.
 
     Parameters
@@ -353,7 +353,7 @@ class MultilabelStatScores(_AbstractScores):
         return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
 
 
-class StatScores(Metric):
+class StatScores(Metric, registry_key="stat_scores", force_register=True):
     """Compute stat scores for binary, multiclass and multilabel problems.
 
     Parameters

@@ -10,7 +10,7 @@ from cyclops.evaluate.metrics.precision_recall import (
 )
 
 
-class BinarySensitivity(BinaryRecall):
+class BinarySensitivity(BinaryRecall, registry_key="binary_sensitivity"):
     """Computes sensitivity score for binary classification.
 
     Parameters
@@ -52,7 +52,7 @@ class BinarySensitivity(BinaryRecall):
         )
 
 
-class MulticlassSensitivity(MulticlassRecall):
+class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivity"):
     """Compute the sensitivity score for multiclass classification tasks.
 
     Parameters
@@ -120,7 +120,7 @@ class MulticlassSensitivity(MulticlassRecall):
         )
 
 
-class MultilabelSensitivity(MultilabelRecall):
+class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivity"):
     """Compute the sensitivity score for multilabel classification tasks.
 
     Parameters
@@ -180,7 +180,7 @@ class MultilabelSensitivity(MultilabelRecall):
         )
 
 
-class Sensitivity(Metric):
+class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     """Compute the sensitivity score for different types of classification tasks.
 
     This metric can be used for binary, multiclass, and multilabel classification

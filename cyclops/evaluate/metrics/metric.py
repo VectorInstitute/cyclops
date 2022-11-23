@@ -1,10 +1,11 @@
 """Base abstract class for all metrics."""
 
 import functools
+import logging
 import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 
@@ -12,6 +13,12 @@ from cyclops.evaluate.metrics.utils import (
     _apply_function_recursively,
     _get_value_if_singleton_array,
 )
+from cyclops.utils.log import setup_logging
+
+LOGGER = logging.getLogger(__name__)
+setup_logging(print_level="WARN", logger=LOGGER)
+
+_METRIC_REGISTRY = {}
 
 
 class Metric(ABC):
@@ -27,6 +34,32 @@ class Metric(ABC):
         self._update_count: int = 0
         self._computed: Any = None
         self._defaults: Dict[str, Union[List, np.ndarray]] = {}
+
+    def __init_subclass__(
+        cls, registry_key: str = None, force_register: bool = False, **kwargs
+    ):
+        """Register the subclass in the registry."""
+        super().__init_subclass__(**kwargs)
+
+        # check that the subclass has implemented the abstract methods
+        if (
+            not (
+                cls.update_state is Metric.update_state or cls.compute is Metric.compute
+            )
+            or force_register
+        ):
+            if registry_key is None:
+                LOGGER.warning(
+                    "Metric subclass %s has not defined a name. "
+                    "It will not be registered in the metric registry.",
+                    cls.__name__,
+                )
+            else:
+                if registry_key in _METRIC_REGISTRY:
+                    raise ValueError(
+                        f"Metric with name {registry_key} is already registered."
+                    )
+                _METRIC_REGISTRY[registry_key] = cls
 
     def add_state(self, name: str, default: Union[List, np.ndarray]) -> None:
         """Add a state variable to the metric.
@@ -188,3 +221,28 @@ class Metric(ABC):
             return self._computed
 
         return wrapped_func
+
+
+def create_metric(metric_name: str, **kwargs: Optional[Dict[str, Any]]) -> Metric:
+    """Create a metric instance from a name.
+
+    Parameters
+    ----------
+        metric_name: str
+            The name of the metric.
+        **kwargs: Optional[Dict[str, Any]]
+            The keyword arguments to pass to the metric constructor.
+
+    Returns
+    -------
+        metric: Metric
+            The metric instance.
+
+    """
+    metric_class = _METRIC_REGISTRY.get(metric_name, None)
+    if metric_class is None:
+        raise KeyError(f"Metric with name {metric_name} is not registered.")
+
+    metric = metric_class(**kwargs)
+
+    return metric

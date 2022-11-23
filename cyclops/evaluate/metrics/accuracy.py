@@ -12,7 +12,7 @@ from cyclops.evaluate.metrics.stat_scores import (
 from cyclops.evaluate.metrics.utils import _check_average_arg
 
 
-class BinaryAccuracy(BinaryStatScores):
+class BinaryAccuracy(BinaryStatScores, registry_key="binary_accuracy"):
     """Compute accuracy score for binary classification tasks.
 
     Parameters
@@ -68,7 +68,7 @@ class BinaryAccuracy(BinaryStatScores):
         )
 
 
-class MulticlassAccuracy(MulticlassStatScores):
+class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy"):
     """Compute the accuracy score for multiclass classification problems.
 
     Parameters
@@ -136,7 +136,7 @@ class MulticlassAccuracy(MulticlassStatScores):
         )
 
 
-class MultilabelAccuracy(MultilabelStatScores):
+class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy"):
     """Compute the accuracy score for multilabel-indicator targets.
 
     Parameters
@@ -211,7 +211,7 @@ class MultilabelAccuracy(MultilabelStatScores):
         )
 
 
-class Accuracy(Metric):
+class Accuracy(Metric, registry_key="accuracy", force_register=True):
     """Compute accuracy score for different classification tasks.
 
     Parameters

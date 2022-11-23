@@ -12,7 +12,7 @@ from cyclops.evaluate.metrics.stat_scores import (
 from cyclops.evaluate.metrics.utils import _check_average_arg
 
 
-class BinaryFbetaScore(BinaryStatScores):
+class BinaryFbetaScore(BinaryStatScores, registry_key="binary_fbeta_score"):
     """Compute the F-beta score for binary classification tasks.
 
     Parameters
@@ -73,7 +73,7 @@ class BinaryFbetaScore(BinaryStatScores):
         )
 
 
-class MulticlassFbetaScore(MulticlassStatScores):
+class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_score"):
     """Compute the F-beta score for multiclass classification tasks.
 
     Parameters
@@ -157,7 +157,7 @@ class MulticlassFbetaScore(MulticlassStatScores):
         )
 
 
-class MultilabelFbetaScore(MultilabelStatScores):
+class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_score"):
     """Compute the F-beta score for multilabel classification tasks.
 
     Parameters
@@ -239,7 +239,7 @@ class MultilabelFbetaScore(MultilabelStatScores):
         )
 
 
-class FbetaScore(Metric):
+class FbetaScore(Metric, registry_key="fbeta_score"):
     """Compute the F-beta score for different types of classification tasks.
 
     Parameters
@@ -375,7 +375,7 @@ class FbetaScore(Metric):
         )
 
 
-class BinaryF1Score(BinaryFbetaScore):
+class BinaryF1Score(BinaryFbetaScore, registry_key="binary_f1_score"):
     """Compute the F1 score for binary classification tasks.
 
     Parameters
@@ -421,7 +421,7 @@ class BinaryF1Score(BinaryFbetaScore):
         )
 
 
-class MulticlassF1Score(MulticlassFbetaScore):
+class MulticlassF1Score(MulticlassFbetaScore, registry_key="multiclass_f1_score"):
     """Compute the F1 score for multiclass classification tasks.
 
     Parameters
@@ -482,7 +482,7 @@ class MulticlassF1Score(MulticlassFbetaScore):
         )
 
 
-class MultilabelF1Score(MultilabelFbetaScore):
+class MultilabelF1Score(MultilabelFbetaScore, registry_key="multilabel_f1_score"):
     """Compute the F1 score for multilabel classification tasks.
 
     Parameters
@@ -555,7 +555,7 @@ class MultilabelF1Score(MultilabelFbetaScore):
         )
 
 
-class F1Score(FbetaScore):
+class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     """Compute the F1 score for different types of classification tasks.
 
     Parameters

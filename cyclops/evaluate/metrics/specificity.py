@@ -12,7 +12,7 @@ from cyclops.evaluate.metrics.stat_scores import (
 from cyclops.evaluate.metrics.utils import _check_average_arg
 
 
-class BinarySpecificity(BinaryStatScores):
+class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
     """Compute specificity for binary classification tasks.
 
     Parameters
@@ -69,7 +69,9 @@ class BinarySpecificity(BinaryStatScores):
         )
 
 
-class MulticlassSpecificity(MulticlassStatScores):
+class MulticlassSpecificity(
+    MulticlassStatScores, registry_key="multiclass_specificity"
+):
     """Compute specificity for multiclass classification tasks.
 
     Parameters
@@ -138,7 +140,9 @@ class MulticlassSpecificity(MulticlassStatScores):
         )
 
 
-class MultilabelSpecificity(MultilabelStatScores):
+class MultilabelSpecificity(
+    MultilabelStatScores, registry_key="multilabel_specificity"
+):
     """Compute specificity for multilabel classification tasks.
 
     Parameters
@@ -215,7 +219,7 @@ class MultilabelSpecificity(MultilabelStatScores):
         )
 
 
-class Specificity(Metric):
+class Specificity(Metric, registry_key="specificity", force_register=True):
     """Compute specificity score for different classification tasks.
 
     The specificity is the ratio of true negatives to the sum of true negatives and

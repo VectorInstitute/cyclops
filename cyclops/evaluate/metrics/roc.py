@@ -19,7 +19,7 @@ from cyclops.evaluate.metrics.metric import Metric
 # mypy: ignore-errors
 
 
-class BinaryROCCurve(BinaryPrecisionRecallCurve):
+class BinaryROCCurve(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"):
     """Compute the ROC curve for binary classification tasks.
 
     Parameters
@@ -71,7 +71,9 @@ class BinaryROCCurve(BinaryPrecisionRecallCurve):
         )
 
 
-class MulticlassROCCurve(MulticlassPrecisionRecallCurve):
+class MulticlassROCCurve(
+    MulticlassPrecisionRecallCurve, registry_key="multiclass_roc_curve"
+):
     """Compute the ROC curve for multiclass classification tasks.
 
     Parameters
@@ -141,7 +143,9 @@ class MulticlassROCCurve(MulticlassPrecisionRecallCurve):
         )
 
 
-class MultilabelROCCurve(MultilabelPrecisionRecallCurve):
+class MultilabelROCCurve(
+    MultilabelPrecisionRecallCurve, registry_key="multilabel_roc_curve"
+):
     """Compute the ROC curve for multilabel classification tasks.
 
     Parameters
@@ -202,7 +206,7 @@ class MultilabelROCCurve(MultilabelPrecisionRecallCurve):
         )
 
 
-class ROCCurve(Metric):
+class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     """Compute the ROC curve for different types of classification tasks.
 
     Parameters

@@ -14,7 +14,7 @@ from cyclops.evaluate.metrics.stat_scores import (
 from cyclops.evaluate.metrics.utils import _check_average_arg
 
 
-class BinaryPrecision(BinaryStatScores):
+class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
     """Compute the precision score for binary classification tasks.
 
     Parameters
@@ -67,7 +67,7 @@ class BinaryPrecision(BinaryStatScores):
         )
 
 
-class MulticlassPrecision(MulticlassStatScores):
+class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precision"):
     """Compute the precision score for multiclass classification tasks.
 
     Parameters
@@ -146,7 +146,7 @@ class MulticlassPrecision(MulticlassStatScores):
         )
 
 
-class MultilabelPrecision(MultilabelStatScores):
+class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precision"):
     """Compute the precision score for multilabel classification tasks.
 
     Parameters
@@ -227,7 +227,7 @@ class MultilabelPrecision(MultilabelStatScores):
         )
 
 
-class Precision(Metric):
+class Precision(Metric, registry_key="precision", force_register=True):
     """Compute the precision score for different types of classification tasks.
 
     This metric can be used for binary, multiclass, and multilabel classification
@@ -372,7 +372,7 @@ class Precision(Metric):
         )
 
 
-class BinaryRecall(BinaryStatScores):
+class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
     """Computes recall score for binary classification.
 
     Parameters
@@ -425,7 +425,7 @@ class BinaryRecall(BinaryStatScores):
         )
 
 
-class MulticlassRecall(MulticlassStatScores):
+class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
     """Compute the recall score for multiclass classification tasks.
 
     Parameters
@@ -502,7 +502,7 @@ class MulticlassRecall(MulticlassStatScores):
         )
 
 
-class MultilabelRecall(MultilabelStatScores):
+class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
     """Compute the recall score for multilabel classification tasks.
 
     Parameters
@@ -575,7 +575,7 @@ class MultilabelRecall(MultilabelStatScores):
         )
 
 
-class Recall(Metric):
+class Recall(Metric, registry_key="recall", force_register=True):
     """Compute the recall score for different types of classification tasks.
 
     This metric can be used for binary, multiclass, and multilabel classification
