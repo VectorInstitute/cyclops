@@ -79,7 +79,7 @@ non_interactive = true
 
 [tool.pylint]
     [tool.pylint.master]
-    disable=["import-error", "duplicate-code"]
+    disable=["import-error", "duplicate-code", "no-value-for-parameter"]
 
     [tool.pylint.format]
     max-line-length=88
