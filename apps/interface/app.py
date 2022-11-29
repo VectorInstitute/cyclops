@@ -11,7 +11,7 @@ from dash import Dash, Input, Output, State, html
 from flask_caching import Cache
 
 from cyclops.plotter import plot_histogram, plot_timeline
-from cyclops.processors.column_names import ENCOUNTER_ID
+from cyclops.process.column_names import ENCOUNTER_ID
 from cyclops.utils.file import join, load_dataframe, save_dataframe
 
 # import app_query

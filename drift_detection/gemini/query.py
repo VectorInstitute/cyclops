@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 # from cyclops.feature_handler import FeatureHandler
-from cyclops.processors.column_names import (
+from cyclops.process.column_names import (
     ADMIT_TIMESTAMP,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,

@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
 from sqlalchemy.sql.selectable import Subquery
 
-from cyclops.processors.column_names import (
+from cyclops.process.column_names import (
     ADMIT_TIMESTAMP,
     CARE_UNIT,
     DIAGNOSIS_CODE,
@@ -26,7 +26,7 @@ from cyclops.processors.column_names import (
     SEX,
     SUBJECT_ID,
 )
-from cyclops.processors.constants import EMPTY_STRING
+from cyclops.process.constants import EMPTY_STRING
 from cyclops.query import process as qp
 from cyclops.query.base import DatasetQuerier
 from cyclops.query.interface import QueryInterface

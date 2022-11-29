@@ -6,7 +6,7 @@ from typing import Union
 import pandas as pd
 from prefect import flow, task
 
-from cyclops.processors.clean import normalize_events
+from cyclops.process.clean import normalize_events
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.utils.log import setup_logging
 

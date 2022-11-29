@@ -7,7 +7,7 @@ import dash_mantine_components as dmc
 import pandas as pd
 from dash import dcc, html
 
-from cyclops.processors.column_names import ENCOUNTER_ID
+from cyclops.process.column_names import ENCOUNTER_ID
 
 from ..css import CONTENT_STYLE, SIDEBAR_LIST_STYLE, SIDEBAR_STYLE, TEXT_ALIGN_CENTER
 
