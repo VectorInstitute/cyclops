@@ -325,7 +325,7 @@ class Reductor:
             X_transformed, y = self.xrv_ae_inference(self.model, dataloader, progress)
         return X_transformed, y
 
-    def feed_forward_neural_network(self, n_features: int):
+    def feed_forward_neural_network(self, num_features: int, num_classes: int, ff_dim: int = 256) -> nn.Module:
         """Create a feed forward neural network model.
 
         Returns
@@ -336,18 +336,18 @@ class Reductor:
         """
         ffnn = (
             nn.Sequential(
-                nn.Linear(n_features, 16),
+                nn.Linear(num_features, ff_dim),
                 nn.SiLU(),
-                nn.Linear(16, 8),
+                nn.Linear(ff_dim, ff_dim),
                 nn.SiLU(),
-                nn.Linear(8, 1),
+                nn.Linear(ff_dim, num_classes),
             )
             .to(self.device)
             .eval()
         )
         return ffnn
 
-    def convolutional_neural_network(self):
+    def convolutional_neural_network(self, num_channels, num_classes, cnn_dim=256) -> nn.Module:
         """Create a convolutional neural network model.
 
         Returns
@@ -358,13 +358,14 @@ class Reductor:
         """
         cnn = (
             nn.Sequential(
-                nn.Conv2d(3, 8, 4, stride=2, padding=0),
+                nn.Conv2d(num_channels, cnn_dim, 4, stride=2, padding=0),
                 nn.ReLU(),
-                nn.Conv2d(8, 16, 4, stride=2, padding=0),
+                nn.Conv2d(cnn_dim, cnn_dim, 4, stride=2, padding=0),
                 nn.ReLU(),
-                nn.Conv2d(16, 32, 4, stride=2, padding=0),
+                nn.Conv2d(cnn_dim, cnn_dim, 4, stride=2, padding=0),
                 nn.ReLU(),
-                nn.Flatten(),
+                nn.AdaptiveAvgPool2d(1),
+                nn.Linear(cnn_dim, num_classes)
             )
             .to(self.device)
             .eval()
