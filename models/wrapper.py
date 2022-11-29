@@ -1,8 +1,9 @@
 """Model Wrappers for PyTorch and Scikit-learn."""
 import logging
 import math
-from inspect import signature
-from typing import Any, Literal, Optional, Union
+import os
+from functools import wraps
+from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,6 +25,8 @@ from models.utils import (
     LossMeter,
     get_device,
     is_pytorch_instance,
+    is_pytorch_model,
+    is_sklearn_class,
     is_sklearn_instance,
     is_sklearn_model,
 )
@@ -523,62 +526,48 @@ class PTModel:
 class SKModel:
     """Scikit-learn model wrapper."""
 
-    def __init__(self, model, save_path, **kwargs) -> None:
+    def __init__(self, model, **kwargs) -> None:
         """Initialize wrapper.
 
         Parameters
         ----------
         model : object
-            sklearn model.
-        save_path : _type_
-            path to save and/or load trained model
+            sklearn model instance or class.
+        **kwargs : dict
+            model parameters to be passed to the model class.
 
         """
-        assert is_sklearn_model(model), "``model`` must be a sklearn model"
-        self._model = model
-        self.save_path = save_path
-        # update_wrapper(self, model)
+        self.model = model  # possibly uninstantiated class
+        self.initialize_model(**kwargs)
 
-        self.test_params: dict = kwargs.get("test_params")
-
-    @property
-    def model(self):
-        """Get model."""
-        return self._model
-
-    def fit(self, X: np.ndarray, y: np.ndarray, **kwargs: dict) -> Any:
-        """Train the model.
+    def initialize_model(self, **kwargs):
+        """Initialize model.
 
         Parameters
         ----------
-        X : np.ndarray
-            train data features of shape (n_samples, n_features).
-        y : np.ndarray
-            train data labels of shape (n_samples, n_classes) or (n_samples,).
-            It will be flattened by default.
         kwargs : dict
-            additional parameters for the ``model.fit`` method
+            model parameters
 
         Returns
         -------
-            trained pyTorch model
+        self
+
+        Raises
+        ------
+        ValueError
+            if model is not an sklearn model instance or class.
 
         """
-        y = y.ravel()
-
-        fit_sig = signature(self._model.fit)
-        fit_params = fit_sig.parameters
-        if len(fit_params) == 2:
-            self._model.fit(X)
-        elif len(fit_params) == 3:
-            self._model.fit(X, y)
+        if is_sklearn_instance(self.model) and not kwargs:
+            self.model_ = self.model
+        elif is_sklearn_instance(self.model) and kwargs:
+            self.model_ = type(self.model)(**kwargs)
+        elif is_sklearn_class(self.model):
+            self.model_ = self.model(**kwargs)
         else:
-            self._model.fit(X, y, **kwargs)
+            raise ValueError("Model must be an sklearn model instance or class.")
 
-        self.save_model(self._model)
-        LOGGER.info("Model saved in %s", self.save_path)
-
-        return self._model
+        return self
 
     def find_best(
         self,
@@ -616,7 +605,7 @@ class SKModel:
         y = np.concatenate((y_train, y_val), axis=0)
         pds = PredefinedSplit(test_fold=split_index)
         clf = GridSearchCV(
-            self._model,
+            self.model_,
             param_grid=best_model_params,
             scoring=best_model_metric,
             cv=pds,
@@ -627,87 +616,96 @@ class SKModel:
         for k, v in clf.best_params_.items():
             LOGGER.info("Best %s: %f", k, v)
 
-        return clf.best_estimator_
+        self.model_ = (  # pylint: disable=attribute-defined-outside-init
+            clf.best_estimator_
+        )
 
-    def predict(self, X: np.ndarray, out_format: Literal["proba", "log_proba"] = None):
-        """Make prediction by a trained model.
+        return self
 
-        Parameters
-        ----------
-        X : np.ndarray
-            test data features.
-        format : Literal["proba", "log_proba"], optional
-            format of the predictions. Defaults to None, which calls ``predict``
-            method of underlying sklearn model.
-
-        Returns
-        -------
-        preds : np.ndarray
-            predicted values
-
-        """
-        if out_format == "log_proba" and hasattr(self.model, "predict_log_proba"):
-            preds = self._model.predict_log_proba(X)
-        elif out_format == "proba" and hasattr(self.model, "predict_proba"):
-            preds = self._model.predict_proba(X)
-        else:
-            preds = self._model.predict(X)
-
-        if self.test_params["flatten"]:
-            preds = preds.ravel()
-
-        return preds
-
-    def save_model(self, log: bool = True) -> None:
+    def save_model(self, save_path: str, log: bool = True) -> None:
         """Save model to file."""
-        model_path = join(self.save_path, f"{self._model.__name__}.pkl")
-        save_pickle(self._model, model_path, log=log)
+        if not save_path.endswith(".pkl"):
+            save_path = os.path.join(save_path, "model.pkl")
 
-    def load_model(self, model_path: Optional[str] = None, log: bool = True) -> None:
+        save_pickle(self.model_, save_path, log=log)
+
+    def load_model(self, model_path: str, log: bool = True):
         """Load a saved model.
 
         Parameters
         ----------
-        model_path : Optional[str], optional
-            path to the saved model file, by default None
+        model_path : str
+            path to the saved model file.
+        log : bool, default=True
+            whether to log the model loading.
 
         Returns
         -------
-            loaded model
+        self
 
         """
-        if not model_path:
-            model_path = join(self.save_path, f"{self._model.__name__}.pkl")
-
         try:
-            self._model = load_pickle(model_path, log=log)
+            model = load_pickle(model_path, log=log)
+            assert is_sklearn_instance(self.model_)
+            self.model_ = model  # pylint: disable=attribute-defined-outside-init
         except FileNotFoundError:
             LOGGER.error("No saved model was found to load!")
 
-        return self._model
+        return self
 
     # dynamically offer every method and attribute of the sklearn model
-    def __getattr__(self, name: str):
-        """Get attribute."""
-        return getattr(self.__dict__["_model"], name)
+    def __getattr__(self, name: str) -> Any:
+        """Get attribute.
 
-    def __setattr__(self, name, value):
-        """Set attribute."""
-        if name == "_model":
-            self.__dict__[name] = value
+        Parameters
+        ----------
+        name : str
+            attribute name.
+
+        Returns
+        -------
+        The attribute value. If the attribute is a method that returns self,
+        the wrapper instance is returned instead.
+
+        """
+        attr = getattr(self.__dict__["model_"], name)
+        if callable(attr):
+
+            @wraps(attr)
+            def wrapper(*args, **kwargs):
+                result = attr(*args, **kwargs)
+                if result is self.__dict__["model_"]:
+                    self.__dict__["model_"] = result
+                return result
+
+            return wrapper
+        return attr
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute.
+
+        If setting the model_ attribute, ensure that it is an sklearn model instance. If
+        model has been instantiated and the attribute being set is in the model's
+        __dict__, set the attribute in the model. Otherwise, set the attribute in the
+        wrapper.
+
+        """
+        if "model_" in self.__dict__ and name == "model_":
+            if not is_sklearn_instance(value):
+                raise ValueError("Model must be an sklearn model instance.")
+            self.__dict__["model_"] = value
+        elif "model_" in self.__dict__ and name in self.__dict__["model_"].__dict__:
+            setattr(self.__dict__["model_"], name, value)
         else:
-            setattr(self.__dict__["_model"], name, value)
+            self.__dict__[name] = value
 
-    def __delattr__(self, name):
+    def __delattr__(self, name: str) -> None:
         """Delete attribute."""
-        delattr(self.__dict__["_model"], name)
+        delattr(self.__dict__["model_"], name)
 
 
-# define function to wrap given model with SKModel or PTModel
-def wrap_model_instance(
-    model: Union[nn.Module, BaseEstimator],
-    save_path: str,
-    **kwargs: dict,
+def wrap_model(
+    model: Union[nn.Module, BaseEstimator], **kwargs
 ) -> Union[SKModel, PTModel]:
     """Wrap a model with SKModel or PTModel.
 
@@ -720,11 +718,12 @@ def wrap_model_instance(
 
     Returns
     -------
+    Union[SKModel, PTModel]
         wrapped model
 
     """
-    if is_pytorch_instance(model):
-        return PTModel(model, save_path, **kwargs)
-    if is_sklearn_instance(model):
-        return SKModel(model, save_path, **kwargs)
+    if is_pytorch_model(model):
+        return PTModel(model, save_path=None, **kwargs)
+    if is_sklearn_model(model):
+        return SKModel(model, **kwargs)
     raise TypeError("``model`` must be a pyTorch or sklearn model")

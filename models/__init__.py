@@ -10,7 +10,7 @@ from models.neural_nets.lstm import LSTMModel
 from models.neural_nets.mlp import MLPModel
 from models.neural_nets.rnn import RNNModel
 
-register_model("rf", model_type="static")(RandomForestClassifier)
+register_model("random_forest", model_type="static")(RandomForestClassifier)
 register_model("xgb", model_type="static")(XGBClassifier)
-register_model("lr", model_type="static")(LogisticRegression)
+register_model("logistic_regression", model_type="static")(LogisticRegression)
 register_model("mlp", model_type="static")(MLPClassifier)

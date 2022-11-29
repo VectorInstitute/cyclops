@@ -17,9 +17,9 @@ xgb:
       gamma: [0.5, 1, 1.5, 2, 5]
     best_model_metric: 'roc_auc'
   test_params:
-    flatten: True
+    flatten: False
 
-lr:
+logistic_regression:
   model_params:
     C: 1.e-1
   train_params:
@@ -46,7 +46,7 @@ mlp:
   test_params:
     flatten: True
 
-rf:
+random_forest:
   model_params:
     n_estimators: 10
     n_jobs: -1

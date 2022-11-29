@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Literal, TypeVar, Union
 
 from cyclops.utils.log import setup_logging
 from models.utils import is_pytorch_model, is_sklearn_model
-from models.wrapper import PTModel, SKModel, wrap_model_instance
+from models.wrapper import PTModel, SKModel, wrap_model
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
@@ -104,33 +104,32 @@ def list_models(
 
 
 def create_model(
-    model_name: str,
-    model_kwargs: Dict[str, Any] = None,
-    **kwargs,
-) -> Union[PTModel, SKModel]:
+    model_name: str, wrap: bool = True, **kwargs
+) -> Union[SKModel, PTModel]:
     """Create model.
 
     Parameters
     ----------
     model_name: str
         Model name.
-    model_kwargs
-        Keyword arguments for model initialization.
+    wrap: bool, optional
+        Whether to wrap model.
     kwargs
-        Keyword arguments passed to the wrapper class.
+        Keyword arguments passed to the wrapper class or model class.
 
     Returns
     -------
-    Union[PTModel, SKModel]
-        Model instance in a wrapper class.
+    Union[_Model, type]
+        Model.
 
     """
     model_class = _model_catalog.get(model_name, None)
     if model_class is None:
         raise NotImplementedError(f"Model {model_name} is not registered.")
 
-    if model_kwargs is None:
-        model_kwargs = {}
-    model = model_class(**model_kwargs)
+    if wrap:
+        model = wrap_model(model_class, **kwargs)
+    else:
+        model = model_class(**kwargs)
 
-    return wrap_model_instance(model, save_path=kwargs.get("save_path", None), **kwargs)
+    return model
