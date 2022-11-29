@@ -10,15 +10,16 @@
 [![license](https://img.shields.io/github/license/VectorInstitute/cyclops.svg)](https://github.com/VectorInstitute/cyclops/blob/main/LICENSE)
 
 ``cyclops`` is a framework for facilitating research and deployment of ML models
-in the health (or clinical) setting. It provides three high-level features:
+in the health (or clinical) setting. It provides a few high-level APIs namely:
 
 
-* Data Querying and Processing
-* Rigorous Evaluation
-* Drift Detection toolkit
+* query API - Querying EHR databases (such as MIMIC-IV)
+* process API - Process static and temporal EHR data
+* evaluate API - Evaluate models on clinical prediction tasks
+* monitor API - Detect data drift relevant for clinical use cases
 
 ``cyclops`` also provides a library of use-cases on clinical datasets. The implemented
-use-cases include:
+use cases include:
 
 * Mortality decompensation prediction
 
