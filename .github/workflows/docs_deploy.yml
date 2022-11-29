@@ -38,13 +38,13 @@ jobs:
           cd docs && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@3.1.1
         with:
           file: ./coverage.xml
           name: codecov-umbrella
           fail_ci_if_error: true
       - name: Deploy to Github pages
-        uses: JamesIves/github-pages-deploy-action@4.1.1
+        uses: JamesIves/github-pages-deploy-action@4.4.1
         with:
           branch: github_pages
           folder: docs/build/html
