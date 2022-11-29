@@ -1,4 +1,4 @@
-name: Deploy documentation
+name: docs
 
 on:
   push:
