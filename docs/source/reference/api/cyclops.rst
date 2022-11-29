@@ -13,7 +13,7 @@ Subpackages
    :maxdepth: 4
 
    cyclops.evaluate
-   cyclops.processors
+   cyclops.process
    cyclops.query
    cyclops.utils
    cyclops.workflow

@@ -1,0 +1,24 @@
+path: "/mnt/nfs/project/delirium/drift_exp/JULY-04-2022/"
+# shuffle: True
+# seed: 1
+# dataset: "simulated_deployment"
+# shuffle: False
+# train_frac: 0.8
+
+
+metadata_mapping:
+  id: encounter_id
+  timestamp: admit_timestamp
+  targets: 'mortality'
+  predictions: None
+  numericals: None
+  categoricals: None
+
+  aggregation_type: "time"
+  timesteps: 6
+  outcome: "mortality"
+
+  hospital_id: hospital_id
+  hospital_type: ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW", "PMH", "SBK"]
+  hospital_type_academic: ["MSH", "PMH", "SMH", "UHNTW", "UHNTG", "SBK"]
+  hospital_type_community: ["THPC", "THPM"]

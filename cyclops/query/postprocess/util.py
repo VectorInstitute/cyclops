@@ -9,8 +9,8 @@ from matplotlib.cm import get_cmap
 from matplotlib.pyplot import figure
 from pandas import Timestamp
 
-from cyclops.processors.column_names import CARE_UNIT
-from cyclops.processors.util import has_columns
+from cyclops.process.column_names import CARE_UNIT
+from cyclops.process.util import has_columns
 
 
 def to_timestamp(data: Union[pd.Series, np.ndarray]) -> pd.Series:

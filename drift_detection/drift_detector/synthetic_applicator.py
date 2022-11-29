@@ -3,6 +3,7 @@ import math
 
 import numpy as np
 import pandas as pd
+from omegaconf import ListConfig, OmegaConf
 from sklearn.feature_selection import SelectKBest
 
 from .utils import get_args
@@ -44,7 +45,7 @@ class SyntheticShiftApplicator:
         if self.shift_type not in self.shift_types:
             raise ValueError(f"shift_type must be one of {self.shift_types.keys()}")
 
-    def apply_shift(self, X):
+    def apply_shift(self, X, metadata, metadata_mapping):
         """apply_shift.
 
         Returns
@@ -58,19 +59,26 @@ class SyntheticShiftApplicator:
             X_shift = X.copy()
         y_shift = None
 
-        X_shift, _ = self.shift_types[self.shift_type](X_shift, **self.shift_args)
+        X_shift, _ = self.shift_types[self.shift_type](
+            X_shift, metadata, metadata_mapping, **self.shift_args
+        )
 
         return (X_shift, y_shift)
 
 
 def categorical_shift(
-    X: np.ndarray, metadata: pd.DataFrame, categorical_column: str, target_category: str
+    X: np.ndarray,
+    metadata: pd.DataFrame,
+    metadata_mapping: dict,
+    categorical_column: str,
+    target_category: str,
 ):
     """Create categorical shift by changing a fraction of samples from a class.
 
     Parameters
     ----------
-    X: numpy.matrix
+    X: numpy.matrix    # import ListConfig from Omegaconf
+
         covariate data
     metadata: pd.DataFrame
         metadata data
@@ -88,12 +96,31 @@ def categorical_shift(
 
     """
     y_target = None
-    metadata.reset_index(drop=True, inplace=True)
-    target_indices = metadata.loc[
-        metadata[categorical_column] == target_category
-    ].index.values
-    X_target = X[target_indices]
+    cat_col = metadata_mapping[categorical_column]
 
+    # check if cat_col is a list or ListConfig
+    if isinstance(cat_col, (list, ListConfig)):
+        if isinstance(cat_col, ListConfig):
+            cat_col = OmegaConf.to_object(cat_col)
+        name, value = str.split(target_category, ":")
+        # check if target_name in cat_col, if not throw error
+        if name not in cat_col:
+            raise ValueError(f"target_name {name} not in categorical_column {cat_col}")
+        metadata.reset_index(drop=True, inplace=True)
+        target_indices = metadata.loc[metadata[name] == int(value)].index.values
+
+    elif "-" in target_category:
+        lower, upper = str.split(target_category, "-")
+        lower, upper = int(lower), int(upper)
+        metadata.reset_index(drop=True, inplace=True)
+        target_indices = metadata.loc[
+            (metadata[cat_col] >= lower) & (metadata[cat_col] <= upper)
+        ].index.values
+    else:
+        metadata.reset_index(drop=True, inplace=True)
+        target_indices = metadata.loc[metadata[cat_col] == target_category].index.values
+
+    X_target = X[target_indices]
     return X_target, y_target
 
 
@@ -276,6 +303,8 @@ def categorical_shift(
 
 def gaussian_noise_shift(
     X: np.ndarray,
+    metadata: pd.DataFrame,
+    metadata_mapping: dict,
     noise_amt: float = 0.5,
     normalization: float = 1,
     delta: float = 0.5,
@@ -302,6 +331,9 @@ def gaussian_noise_shift(
         indices of data affected
 
     """
+    # unused variables
+    _, _ = metadata, metadata_mapping
+
     # add if temporal then flatten then unflatten at end
     X_df = pd.DataFrame(X)
 
@@ -330,7 +362,12 @@ def gaussian_noise_shift(
 
 # Remove instances of a single class.
 def knockout_shift(
-    X: np.ndarray, y: np.ndarray, delta: float = 0.5, shift_class: int = 1
+    X: np.ndarray,
+    metadata: pd.DataFrame,
+    metadata_mapping: dict,
+    y: np.ndarray,
+    delta: float = 0.5,
+    shift_class: int = 1,
 ):
     """Create class imbalance by removing a fraction of samples from a class.
 
@@ -353,6 +390,9 @@ def knockout_shift(
         placeholer for labels
 
     """
+    # unused variables
+    _, _ = metadata, metadata_mapping
+
     del_indices = np.where(y == shift_class)[0]
     until_index = math.ceil(delta * len(del_indices))
     if until_index % 2 != 0:
@@ -365,6 +405,8 @@ def knockout_shift(
 
 def feature_swap_shift(
     X: np.ndarray,
+    metadata: pd.DataFrame,
+    metadata_mapping: dict,
     y: np.ndarray,
     X_ref: np.ndarray = None,
     y_ref: np.ndarray = None,
@@ -399,6 +441,9 @@ def feature_swap_shift(
         labels for covariate data
 
     """
+    # unused variables
+    _, _ = metadata, metadata_mapping
+
     if isinstance(X_ref, np.ndarray):
         n_feats = X_ref.shape[1]
     n_shuffle_feats = int(n_shuffle * n_feats)
@@ -434,6 +479,8 @@ def feature_swap_shift(
 
 def feature_association_shift(
     X: np.ndarray,
+    metadata: pd.DataFrame,
+    metadata_mapping: dict,
     y: np.ndarray,
     n_shuffle: float = 0.25,
     keep_rows_constant: bool = True,
@@ -464,6 +511,9 @@ def feature_association_shift(
         placeholder for labels
 
     """
+    # unused variables
+    _, _ = metadata, metadata_mapping
+
     n_inds = X.shape[0]
     n_shuffle_inds = int(n_shuffle * n_inds)
     shuffle_start = np.random.randint(n_inds - n_shuffle_inds)
@@ -488,7 +538,13 @@ def feature_association_shift(
     return (X, y)
 
 
-def binary_noise_shift(X: np.ndarray, prob: float = 0.5, delta: float = 0.5):
+def binary_noise_shift(
+    X: np.ndarray,
+    metadata: pd.DataFrame,
+    metadata_mapping: dict,
+    prob: float = 0.5,
+    delta: float = 0.5,
+):
     """Create binary noise of specificed parameters in input data.
 
     Parameters
@@ -508,6 +564,9 @@ def binary_noise_shift(X: np.ndarray, prob: float = 0.5, delta: float = 0.5):
         indices of data affected
 
     """
+    # unused variables
+    _, _ = metadata, metadata_mapping
+
     # add if temporal then flatten then unflatten at end
     X_df = pd.DataFrame(X)
     bin_cols = X_df.loc[:, (X_df.isin([0, 1])).all()].columns.values

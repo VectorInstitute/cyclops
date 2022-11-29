@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 # unable to detect unidentified names, star import
 # from .constants import *
-from .query import ENCOUNTER_ID
+# from .query import ENCOUNTER_ID
 
 
 def run_shift_experiment(**kwargs):
@@ -153,12 +153,14 @@ def process(X, aggregation_type, timesteps):
     return X_preprocessed
 
 
-def get_dataset_hospital(admin_data, x, y, dataset, hospitals, train_frac=0.8):
+def get_dataset_hospital(
+    admin_data, x, y, dataset, hospitals, encounter_id="encounter_id", train_frac=0.8
+):
     """Get dataset for hospital."""
     # filter hospital
     admin_data = admin_data.loc[admin_data["hospital_id"].isin(hospitals)]
     encounter_ids = list(x.index.get_level_values(0).unique())
-    x = x[np.in1d(x.index.get_level_values(0), admin_data[ENCOUNTER_ID])]
+    x = x[np.in1d(x.index.get_level_values(0), admin_data[encounter_id])]
 
     # get source and target data
     x_s = None
@@ -362,12 +364,20 @@ def get_dataset_hospital(admin_data, x, y, dataset, hospitals, train_frac=0.8):
 
 
 def import_dataset_hospital(
-    admin_data, x, y, dataset, outcome, hospital, seed=1, shuffle=True, train_frac=0.8
+    admin_data,
+    x,
+    y,
+    dataset,
+    hospital,
+    encounter_id,
+    seed=1,
+    shuffle=True,
+    train_frac=0.8,
 ):
     """Import dataset for hospital-level analysis."""
     # get source and target data
     x_source, y_source, x_test, y_test, feats, admin_data = get_dataset_hospital(
-        admin_data, x, y, dataset, outcome, hospital
+        admin_data, x, y, dataset, hospital, encounter_id
     )
 
     # get train, validation and test set

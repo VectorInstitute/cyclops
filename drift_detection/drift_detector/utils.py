@@ -1,8 +1,13 @@
 """Utilities for the drift detector module."""
 
+import importlib
 import inspect
 import pickle
 from datetime import timedelta
+from itertools import cycle
+from shutil import get_terminal_size
+from threading import Thread
+from time import sleep
 
 import numpy as np
 import pandas as pd
@@ -44,6 +49,15 @@ def get_args(obj, kwargs):
             if key in obj.__code__.co_varnames:
                 args[key] = kwargs[key]
     return args
+
+
+def get_obj_from_str(string, reload=False):
+    """Get object from string."""
+    module, cls = string.rsplit(".", 1)
+    if reload:
+        module_imp = importlib.import_module(module)
+        importlib.reload(module_imp)
+    return getattr(importlib.import_module(module, package=None), cls)
 
 
 def load_model(model_path: str):
@@ -198,7 +212,7 @@ class LKWrapper:
         kernel_a=GaussianRBF(trainable=True),
         kernel_b=GaussianRBF(trainable=True),
         eps="trainable",
-        proj_type="ffnn"
+        proj_type="ffnn",
     ):
 
         self.proj = self.choose_proj(X_s, proj_type)
@@ -447,3 +461,66 @@ def reshape_2d_to_3d(data, num_timesteps):
     num_encounters = data.shape[0]
     data = data.values.reshape((num_encounters, num_timesteps, -1))
     return data
+
+
+# from https://stackoverflow.com/a/66558182
+class Loader:
+    """Loaing animation."""
+
+    def __init__(self, desc="Loading...", end="Done!", timeout=0.1):
+        """Loader-like context manager.
+
+        Parameters
+        ----------
+            desc (str, optional): The loader's description. Defaults to "Loading...".
+            end (str, optional): Final print. Defaults to "Done!".
+            timeout (float, optional): Sleep time between prints. Defaults to 0.1.
+
+        """
+        self.desc = desc
+        self.end = end
+        self.timeout = timeout
+
+        self._thread = Thread(target=self._animate, daemon=True)
+        self.steps = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"]
+        self.done = False
+
+    def start(self):
+        """Start the loader."""
+        self._thread.start()
+        return self
+
+    def _animate(self):
+        """Animate the loader."""
+        for cycle_itr in cycle(self.steps):
+            if self.done:
+                break
+            print(f"\r{self.desc} {cycle_itr}", flush=True, end="")
+            sleep(self.timeout)
+
+    def __enter__(self):
+        """Start the thread."""
+        self.start()
+
+    def stop(self):
+        """Stop the loader."""
+        self.done = True
+        cols = get_terminal_size((80, 20)).columns
+        print("\r" + " " * cols, end="", flush=True)
+        print(f"\r{self.end}", flush=True)
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        """Stop the thread."""
+        # handle exceptions with those variables ^
+        self.stop()
+
+
+if __name__ == "__main__":
+    with Loader("Loading with context manager..."):
+        for i in range(10):
+            sleep(0.25)
+
+    loader = Loader("Loading with object...", "That was fast!", 0.05).start()
+    for i in range(10):
+        sleep(0.25)
+    loader.stop()

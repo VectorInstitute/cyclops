@@ -18,7 +18,6 @@ from sqlalchemy.sql.elements import BinaryExpression, BooleanClauseList
 from sqlalchemy.sql.selectable import Select, Subquery
 
 from cyclops.query.util import (
-    DBMetaclass,
     DBSchema,
     DBTable,
     TableTypes,
@@ -55,8 +54,8 @@ def _get_attr_name(name: str) -> str:
     return name.split(".")[-1]
 
 
-class Database(metaclass=DBMetaclass):  # pylint: disable=too-few-public-methods
-    """Database class (singleton).
+class Database:
+    """Database class.
 
     Attributes
     ----------
