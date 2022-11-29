@@ -1,4 +1,4 @@
-name: Build documentation and coverage report
+name: docs (build)
 
 on:
   pull_request:
