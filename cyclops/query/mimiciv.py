@@ -12,7 +12,7 @@ from typing import List, Optional
 from sqlalchemy import Integer, func, select
 from sqlalchemy.sql.selectable import Subquery
 
-from cyclops.processors.column_names import (
+from cyclops.process.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
     DATE_OF_DEATH,

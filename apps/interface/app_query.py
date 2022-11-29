@@ -5,7 +5,7 @@ from typing import Dict
 import pandas as pd
 from sqlalchemy import and_, select
 
-from cyclops.processors.column_names import AGE, ENCOUNTER_ID, SUBJECT_ID
+from cyclops.process.column_names import AGE, ENCOUNTER_ID, SUBJECT_ID
 from cyclops.query.mimiciv import MIMICIVQuerier
 from cyclops.query.util import get_column
 
