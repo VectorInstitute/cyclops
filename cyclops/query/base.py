@@ -55,7 +55,7 @@ class DatasetQuerier:
             version_base=None, config_path="configs", job_name="DatasetQuerier"
         ):
             config = compose(config_name="config", overrides=config_overrides)
-            LOGGER.info(OmegaConf.to_yaml(config))
+            LOGGER.debug(OmegaConf.to_yaml(config))
 
         self._db = Database(config)
         self._table_map = table_map
