@@ -53,6 +53,9 @@ RACE_CONCEPT_NAME = "race_concept_name"
 ETHNICITY_CONCEPT_NAME = "ethnicity_concept_name"
 
 # Column map.
+<<<<<<< HEAD
+OMOP_COLUMN_MAP: dict = {}
+=======
 COLUMN_MAP: dict = {}
 
 # Other constants
@@ -480,3 +483,4 @@ class OMOPQuerier(DatasetQuerier):
         table = qp.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
+>>>>>>> main
