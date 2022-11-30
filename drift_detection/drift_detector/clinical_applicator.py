@@ -1,5 +1,8 @@
 """Clinical Shift Applicator module."""
 
+from typing import Union
+
+import numpy as np
 import pandas as pd
 
 from .utils import get_args
@@ -16,11 +19,11 @@ class ClinicalShiftApplicator:
 
     """
 
-    def __init__(self, shift_type: str, **kwargs):
+    def __init__(self, shift_type: str, source, target):
 
         self.shift_type = shift_type
 
-        self.method_args = kwargs
+        self.method_args = {"source": source, "target": target}
 
         self.shift_types = {
             "time": self.time,
@@ -57,11 +60,11 @@ class ClinicalShiftApplicator:
 
         # list(X.index.get_level_values(0).unique())
 
-        return (X_s, X_t)
+        return (X_s.values, X_t.values)
 
     def time(
         self,
-        X: pd.DataFrame,
+        X: Union[np.ndarray, pd.DataFrame],
         metadata: pd.DataFrame,
         metadata_mapping: dict,
         source,
@@ -86,20 +89,26 @@ class ClinicalShiftApplicator:
             Column name for admission timestamps.
 
         """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X)
         encounter_id = metadata_mapping["id"]
         admit_timestamp = metadata_mapping["timestamp"]
 
         ids_source = metadata.loc[
             (
-                (metadata[admit_timestamp].dt.date > source[0])
-                & (metadata[admit_timestamp].dt.date < source[1]),
+                (metadata[admit_timestamp].dt.date > pd.to_datetime(source[0]).date())
+                & (
+                    metadata[admit_timestamp].dt.date < pd.to_datetime(source[1]).date()
+                ),
             ),
             encounter_id,
         ]
         ids_target = metadata.loc[
             (
-                (metadata[admit_timestamp].dt.date > target[0])
-                & (metadata[admit_timestamp].dt.date < target[1]),
+                (metadata[admit_timestamp].dt.date > pd.to_datetime(target[0]).date())
+                & (
+                    metadata[admit_timestamp].dt.date < pd.to_datetime(target[1]).date()
+                ),
             ),
             encounter_id,
         ]
@@ -109,7 +118,7 @@ class ClinicalShiftApplicator:
 
     def month(
         self,
-        X: pd.DataFrame,
+        X: Union[np.ndarray, pd.DataFrame],
         metadata: pd.DataFrame,
         metadata_mapping: dict,
         source,
@@ -130,6 +139,8 @@ class ClinicalShiftApplicator:
             Column name for admission timestamps.
 
         """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X)
         encounter_id = metadata_mapping["id"]
         admit_timestamp = metadata_mapping["timestamp"]
 
@@ -147,7 +158,7 @@ class ClinicalShiftApplicator:
 
     def hospital_type(
         self,
-        X: pd.DataFrame,
+        X: Union[np.ndarray, pd.DataFrame],
         metadata: pd.DataFrame,
         metadata_mapping: dict,
         source,
@@ -172,6 +183,8 @@ class ClinicalShiftApplicator:
             Column name for hospital ids.
 
         """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X)
         encounter_id = metadata_mapping["id"]
         hospital_id = metadata_mapping["hospital_id"]
 
