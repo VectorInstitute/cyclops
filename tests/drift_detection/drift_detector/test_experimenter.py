@@ -49,7 +49,7 @@ def fixture_txrv_dataset():
 
 # test gemini use-case with pca reductor and mmd tester and
 # clinical shift applicator for hospital_type w/ synthetic_gemini_dataset
-@pytest.mark.integtest
+@pytest.mark.integration_test
 def test_experimenter_gemini_pca_mmd(gemini_dataset):
     """Test Experimenter."""
     X, metadata, metadata_mapping = gemini_dataset
@@ -73,7 +73,7 @@ def test_experimenter_gemini_pca_mmd(gemini_dataset):
 
 # test nih use-case with tae_trxv_cnn reductor and mmd tester and
 # synthetic shift applicator for gaussian noise w/ txrv_dataset
-@pytest.mark.integtest
+@pytest.mark.integration_test
 def test_experimenter_nih_tae_trxv_cnn_mmd(txrv_dataset):
     """Test Experimenter."""
     reductor = Reductor("TAE_txrv_CNN")

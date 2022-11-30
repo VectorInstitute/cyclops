@@ -34,6 +34,7 @@ seaborn = "^0.11.2"
 torchxrayvision = "^0.0.37"
 hydra-core = "^1.2.0"
 dask = {extras = ["dataframe"], version = "^2022.9.1"}
+protobuf = "3.20.0"
 
 [tool.poetry.group.dev.dependencies]
 evidently = "0.1.45.dev0"
@@ -99,6 +100,7 @@ non_interactive = true
     [tool.pylint.basic]
     good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP"]
     good-names-rgxs=["X_.+", "x_.+", "y_.+", "df_.+"]
+
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203", "W503", "F401"]
