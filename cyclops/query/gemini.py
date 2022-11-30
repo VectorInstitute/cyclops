@@ -345,15 +345,7 @@ def diagnoses(include_description: bool = True, **process_kwargs) -> QueryInterf
         lookup_table = get_table(LOOKUP_DIAGNOSIS)
         lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(lookup_table)
         table = qp.Join(
-<<<<<<< HEAD
             lookup_table, on=("diagnosis_type", "value"), join_table_cols="description"
-=======
-            lookup_table,
-            on=("discharge_disposition", "value"),
-            on_to_type="int",
-            join_table_cols="description",
-            isouter=True,
->>>>>>> main
         )(table)
         table = qp.Drop("value")(table)
         table = qp.Rename({"description": "diagnosis_type_description"})(table)
@@ -490,77 +482,6 @@ def care_units(
             "discharge",
             CARE_UNIT,
         ]
-<<<<<<< HEAD
-=======
-
-        table = qp.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    def diagnoses(self, **process_kwargs) -> QueryInterface:
-        """Query diagnosis data.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        diagnosis_codes: str or list of str, optional
-            Get only the specified ICD codes.
-        diagnosis_types: list of str, optional
-            Include only those diagnoses that are of certain type.
-        limit: int, optional
-            Limit the number of rows returned.
-
-        Warnings
-        --------
-        Setting the ``include_description`` parameter would join diagnosis types
-        with descriptions and if the diagnosis type is None, then those rows would
-        be dropped.
-
-        """
-        table = self.get_table(DIAGNOSIS)
-
-        lookup_table = self.get_table(LOOKUP_DIAGNOSIS)
-        lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(lookup_table)
-        table = qp.Join(
-            lookup_table,
-            on=("diagnosis_type", "value"),
-            join_table_cols="description",
-            isouter=True,
-        )(table)
-        table = qp.Drop("value")(table)
-        table = qp.Rename({"description": "diagnosis_type_description"})(table)
-        table = qp.ReorderAfter("diagnosis_type_description", "diagnosis_type")(table)
-
-        # Trim whitespace from ICD codes.
-        table = qp.Trim(DIAGNOSIS_CODE)(table)
-
-        # Process optional operations
-        operations: List[tuple] = [
-            (
-                qp.ConditionIn,
-                [DIAGNOSIS_CODE, qp.QAP("diagnosis_codes")],
-                {"to_str": True},
-            ),
-            (
-                qp.ConditionIn,
-                ["diagnosis_type", qp.QAP("diagnosis_types")],
-                {"to_str": True},
-            ),
-            (qp.Limit, [qp.QAP("limit")], {}),
-        ]
-        table = qp.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    @table_params_to_type(Subquery)
-    @assert_table_has_columns(
-        diagnoses_table=[ENCOUNTER_ID, DIAGNOSIS_CODE],
-        patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID],
->>>>>>> main
     )
 
     # In-patient table.
@@ -615,15 +536,8 @@ def care_units(
         select(rt_table),
     ).subquery()
 
-<<<<<<< HEAD
     if patient_encounters_table is not None:
         table = qp.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
-=======
-        # Join on patient encounters
-        table = qp.Join(diagnoses_table, on=ENCOUNTER_ID, isouter=True)(
-            patient_encounters_table
-        )
->>>>>>> main
 
     # Process optional operations
     operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
@@ -660,7 +574,6 @@ def events(
         Constructed table, wrapped in an interface object.
 
 
-<<<<<<< HEAD
     Other Parameters
     ----------------
     event_names: str or list of str, optional
@@ -669,15 +582,6 @@ def events(
         Get only event names with some substring(s).
     limit: int, optional
         Limit the number of rows returned.
-=======
-        table = qp.Join(
-            lookup_table,
-            on=("medical_service", "value"),
-            join_table_cols="description",
-            isouter=True,
-        )(table)
-        table = qp.Rename({"description": "transfer_description"})(table)
->>>>>>> main
 
     """
     if event_category not in EVENT_CATEGORIES:

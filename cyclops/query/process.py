@@ -990,8 +990,6 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         Filters to keep only these columns from the table.
     join_table_cols:
         Filters to keep only these columns from the join_table.
-    isouter:
-        Flag to say if the join is a left outer join.
 
     """
 
@@ -1006,7 +1004,6 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         cond: Union[BinaryExpression, None] = None,
         table_cols: Union[str, List[str], None] = None,
         join_table_cols: Union[str, List[str], None] = None,
-        isouter: Optional[bool] = False,
     ):
         """Initialize."""
         if on is not None and cond is not None:
@@ -1018,7 +1015,6 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         self.on_to_type = to_list_optional(on_to_type)
         self.table_cols = to_list_optional(table_cols)
         self.join_table_cols = to_list_optional(join_table_cols)
-        self.isouter = isouter
 
     @table_params_to_type(Subquery)
     def __call__(self, table: TableTypes) -> Subquery:
@@ -1046,15 +1042,18 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
                 col_obj if isinstance(col_obj, str) else col_obj[1]
                 for col_obj in self.on_
             ]
+
             table = process_checks(table, cols=none_add(self.table_cols, on_table_cols))
             self.join_table = process_checks(
                 self.join_table, cols=none_add(self.join_table_cols, on_join_table_cols)
             )
+
             # Filter columns, keeping those being joined on
             table = append_if_missing(table, self.table_cols, on_table_cols)
             self.join_table = append_if_missing(
                 self.join_table, self.join_table_cols, on_join_table_cols
             )
+
             # Perform type conversions if given
             if self.on_to_type is not None:
                 for i, type_ in enumerate(self.on_to_type):
@@ -1062,6 +1061,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
                     self.join_table = Cast(on_join_table_cols[i], type_)(
                         self.join_table
                     )
+
             cond = and_(
                 *[
                     get_column(table, on_table_cols[i])
@@ -1069,7 +1069,10 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
                     for i in range(len(on_table_cols))
                 ]
             )
-            table = select(table.join(self.join_table, cond, isouter=self.isouter))
+
+            # table.c.discharge_disposition == self.join_table.c.value
+
+            table = select(table.join(self.join_table, cond))
 
         else:
             # Filter columns
@@ -1082,11 +1085,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
             # Join on a specified condition
             if self.cond is not None:
-                table = select(
-                    table.join(  # type: ignore
-                        self.join_table, self.cond, isouter=self.isouter
-                    )
-                )
+                table = select(table.join(self.join_table, self.cond))  # type: ignore
 
             # Join on no condition, i.e., a Cartesian product
             else:
