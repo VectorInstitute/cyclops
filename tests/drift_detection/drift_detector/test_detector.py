@@ -19,7 +19,7 @@ def fixture_source_target():
 # test detector with pca reductor and mmd tester
 
 
-@pytest.mark.integtest
+@pytest.mark.integration_test
 def test_detector_pca_mmd(source_target):
     """Test Detector."""
     reductor = Reductor("PCA", n_components=2)
