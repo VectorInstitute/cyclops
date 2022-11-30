@@ -82,8 +82,7 @@ class Reductor:
         var_ret: float = 0.8,
         n_components: int = None,
         n_features: int = None,
-        # batch_size: int = 64,
-        gmm_n_clusters: int = 2,
+        n_classes: int = None,
         random_state: int = 42,
     ):
 
@@ -92,7 +91,7 @@ class Reductor:
         self.var_ret = var_ret
         self.n_components = n_components
         self.n_features = n_features
-        self.gmm_n_clusters = gmm_n_clusters
+        self.n_classes = n_classes
         self.device = get_device()
 
         self.random_state = random_state
@@ -133,7 +132,13 @@ class Reductor:
         elif self.dr_method in ("BBSDs_untrained_LSTM", "BBSDh_untrained_LSTM"):
             self.model = reductor_methods[self.dr_method]("lstm", self.n_features)
         elif self.dr_method in ("BBSDs_untrained_FFNN", "BBSDh_untrained_FFNN"):
-            self.model = reductor_methods[self.dr_method](self.n_features)
+            self.model = reductor_methods[self.dr_method](
+                self.n_features, self.n_classes
+            )
+        elif self.dr_method in ("BBSDs_untrained_CNN", "BBSDh_untrained_CNN"):
+            self.model = reductor_methods[self.dr_method](
+                self.n_features, self.n_classes
+            )
         elif self.dr_method in ("BBSDs_txrv_CNN", "BBSDh_txrv_CNN"):
             self.model = reductor_methods[self.dr_method](
                 weights="densenet121-res224-all"
@@ -278,7 +283,7 @@ class Reductor:
         if num_workers is None:
             num_workers = os.cpu_count()
 
-        if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
+        if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap"):
             if isinstance(data, np.ndarray):
                 X_transformed = self.model.transform(data)
             elif isinstance(data, torch.utils.data.Dataset):
@@ -325,7 +330,9 @@ class Reductor:
             X_transformed, y = self.xrv_ae_inference(self.model, dataloader, progress)
         return X_transformed, y
 
-    def feed_forward_neural_network(self, num_features: int, num_classes: int, ff_dim: int = 256) -> nn.Module:
+    def feed_forward_neural_network(
+        self, num_features: int, num_classes: int, ff_dim: int = 256
+    ) -> nn.Module:
         """Create a feed forward neural network model.
 
         Returns
@@ -347,7 +354,9 @@ class Reductor:
         )
         return ffnn
 
-    def convolutional_neural_network(self, num_channels, num_classes, cnn_dim=256) -> nn.Module:
+    def convolutional_neural_network(
+        self, num_channels, num_classes, cnn_dim=256
+    ) -> nn.Module:
         """Create a convolutional neural network model.
 
         Returns
@@ -362,10 +371,9 @@ class Reductor:
                 nn.ReLU(),
                 nn.Conv2d(cnn_dim, cnn_dim, 4, stride=2, padding=0),
                 nn.ReLU(),
-                nn.Conv2d(cnn_dim, cnn_dim, 4, stride=2, padding=0),
-                nn.ReLU(),
                 nn.AdaptiveAvgPool2d(1),
-                nn.Linear(cnn_dim, num_classes)
+                nn.Flatten(1, -1),
+                nn.Linear(cnn_dim, num_classes),
             )
             .to(self.device)
             .eval()
@@ -418,11 +426,6 @@ class Reductor:
         }
         model = get_temporal_model(model_name, model_params).to(self.device).eval()
         return model
-
-    def gaussian_mixture_model(self):
-        """Create a gaussian mixture model."""
-        gmm = GaussianMixture(n_components=self.gmm_n_clusters, covariance_type="full")
-        return gmm
 
     def minibatch_inference(
         self, data, model: nn.Module, batch_size: int = 32

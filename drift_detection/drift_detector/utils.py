@@ -213,9 +213,11 @@ class LKWrapper:
         kernel_b=GaussianRBF(trainable=True),
         eps="trainable",
         proj_type="ffnn",
+        num_features=None,
+        num_classes=None,
     ):
 
-        self.proj = self.choose_proj(X_s, proj_type)
+        self.proj = self.choose_proj(X_s, proj_type, num_features, num_classes)
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
@@ -249,14 +251,16 @@ class LKWrapper:
         """Predict if there is drift in the data."""
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
 
-    def choose_proj(self, X_s, proj_type):
+    def choose_proj(self, X_s, proj_type, num_features, num_classes):
         """Choose projection for learned kernel drift detection."""
+        num_features = num_features or X_s.shape[-1]
+        num_classes = num_classes or X_s.shape[-1]
         if proj_type in ["rnn", "gru", "lstm"]:
-            proj = recurrent_neural_network(proj_type, X_s.shape[-1])
+            proj = recurrent_neural_network(proj_type, num_features, num_classes)
         elif proj_type == "ffnn":
-            proj = feed_forward_neural_network(X_s.shape[-1])
+            proj = feed_forward_neural_network(num_features, num_classes)
         elif proj_type == "cnn":
-            proj = convolutional_neural_network(X_s.shape[-1])
+            proj = convolutional_neural_network(num_features, num_classes)
         else:
             raise ValueError("Invalid projection type.")
         return proj
@@ -299,13 +303,10 @@ def recurrent_neural_network(
     return model
 
 
-def feed_forward_neural_network(input_dim: int):
+def feed_forward_neural_network(
+    num_features: int, num_classes: int, ff_dim: int = 256
+) -> nn.Module:
     """Create a feed forward neural network model.
-
-    Parameters
-    ----------
-    input_dim
-        number of features
 
     Returns
     -------
@@ -314,38 +315,33 @@ def feed_forward_neural_network(input_dim: int):
 
     """
     ffnn = nn.Sequential(
-        nn.Linear(input_dim, 16),
+        nn.Linear(num_features, ff_dim),
         nn.SiLU(),
-        nn.Linear(16, 8),
+        nn.Linear(ff_dim, ff_dim),
         nn.SiLU(),
-        nn.Linear(8, 1),
-    )
+        nn.Linear(ff_dim, num_classes),
+    ).eval()
     return ffnn
 
 
-def convolutional_neural_network(input_dim: int):
+def convolutional_neural_network(num_channels, num_classes, cnn_dim=256) -> nn.Module:
     """Create a convolutional neural network model.
-
-    Parameters
-    ----------
-    input_dim
-        number of features
 
     Returns
     -------
     torch.nn.Module
-        convolutional neural network.
+        convolutional neural network for dimensionality reduction.
 
     """
     cnn = nn.Sequential(
-        nn.Conv2d(input_dim, 4, 3, 2, 0),
+        nn.Conv2d(num_channels, cnn_dim, 4, stride=2, padding=0),
         nn.ReLU(),
-        nn.Conv2d(8, 16, 4, 3, 2, 0),
+        nn.Conv2d(cnn_dim, cnn_dim, 4, stride=2, padding=0),
         nn.ReLU(),
-        nn.Conv2d(16, 32, 4, 3, 2, 0),
-        nn.ReLU(),
-        nn.Flatten(),
-    )
+        nn.AdaptiveAvgPool2d(1),
+        nn.Flatten(1, -1),
+        nn.Linear(cnn_dim, num_classes),
+    ).eval()
     return cnn
 
 
