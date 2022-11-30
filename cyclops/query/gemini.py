@@ -240,7 +240,7 @@ class GEMINIQuerier(DatasetQuerier):
 
         # Join on ER data only if specified
         if er_admin_table is not None:
-            table = qp.Join(er_admin_table, on=ENCOUNTER_ID, isouter=True)(table)
+            table = qp.Join(er_admin_table, on=ENCOUNTER_ID)(table)
 
         # Process optional operations
         if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
