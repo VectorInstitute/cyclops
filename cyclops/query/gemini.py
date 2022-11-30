@@ -233,6 +233,7 @@ class GEMINIQuerier(DatasetQuerier):
             on=("discharge_disposition", "value"),
             on_to_type="int",
             join_table_cols="description",
+            isouter=True,
         )(table)
         table = qp.Rename({"description": "discharge_description"})(table)
         table = qp.Drop("value")(table)
@@ -267,15 +268,8 @@ class GEMINIQuerier(DatasetQuerier):
 
         return QueryInterface(self._db, table)
 
-    def diagnoses(
-        self, include_description: bool = True, **process_kwargs
-    ) -> QueryInterface:
+    def diagnoses(self, **process_kwargs) -> QueryInterface:
         """Query diagnosis data.
-
-        Parameters
-        ----------
-        include_description: bool, optional
-            Join with lookup table to get diagnosis_type description.
 
         Returns
         -------
@@ -300,22 +294,17 @@ class GEMINIQuerier(DatasetQuerier):
         """
         table = self.get_table(DIAGNOSIS)
 
-        # Get diagnosis type description
-        if include_description:
-            lookup_table = self.get_table(LOOKUP_DIAGNOSIS)
-            lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(
-                lookup_table
-            )
-            table = qp.Join(
-                lookup_table,
-                on=("diagnosis_type", "value"),
-                join_table_cols="description",
-            )(table)
-            table = qp.Drop("value")(table)
-            table = qp.Rename({"description": "diagnosis_type_description"})(table)
-            table = qp.ReorderAfter("diagnosis_type_description", "diagnosis_type")(
-                table
-            )
+        lookup_table = self.get_table(LOOKUP_DIAGNOSIS)
+        lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(lookup_table)
+        table = qp.Join(
+            lookup_table,
+            on=("diagnosis_type", "value"),
+            join_table_cols="description",
+            isouter=True,
+        )(table)
+        table = qp.Drop("value")(table)
+        table = qp.Rename({"description": "diagnosis_type_description"})(table)
+        table = qp.ReorderAfter("diagnosis_type_description", "diagnosis_type")(table)
 
         # Trim whitespace from ICD codes.
         table = qp.Trim(DIAGNOSIS_CODE)(table)
@@ -378,7 +367,9 @@ class GEMINIQuerier(DatasetQuerier):
             patient_encounters_table = self.patient_encounters().query
 
         # Join on patient encounters
-        table = qp.Join(diagnoses_table, on=ENCOUNTER_ID)(patient_encounters_table)
+        table = qp.Join(diagnoses_table, on=ENCOUNTER_ID, isouter=True)(
+            patient_encounters_table
+        )
 
         # Process optional operations
         operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
@@ -410,6 +401,7 @@ class GEMINIQuerier(DatasetQuerier):
             lookup_table,
             on=("medical_service", "value"),
             join_table_cols="description",
+            isouter=True,
         )(table)
         table = qp.Rename({"description": "transfer_description"})(table)
 

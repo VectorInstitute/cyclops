@@ -13,10 +13,10 @@
 in the health (or clinical) setting. It provides a few high-level APIs namely:
 
 
-* query API - Querying EHR databases (such as MIMIC-IV)
-* process API - Process static and temporal EHR data
-* evaluate API - Evaluate models on clinical prediction tasks
-* monitor API - Detect data drift relevant for clinical use cases
+* `query` - Querying EHR databases (such as MIMIC-IV)
+* `process` - Process static and temporal EHR data
+* `evaluate` - Evaluate models on clinical prediction tasks
+* `monitor` - Detect data drift relevant for clinical use cases
 
 ``cyclops`` also provides a library of use-cases on clinical datasets. The implemented
 use cases include:
