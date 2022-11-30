@@ -133,7 +133,10 @@ class OMOPQuerier(DatasetQuerier):
             if ID not in col:
                 raise ValueError("Specified column not a concept ID column!")
             source_table = qp.Join(
-                concept_table, on=(col, CONCEPT_ID), join_table_cols=[CONCEPT_NAME]
+                concept_table,
+                on=(col, CONCEPT_ID),
+                join_table_cols=[CONCEPT_NAME],
+                isouter=True,
             )(source_table)
             source_table = qp.Rename({CONCEPT_NAME: col.replace(ID, NAME)})(
                 source_table
@@ -160,6 +163,7 @@ class OMOPQuerier(DatasetQuerier):
             care_site_table,
             on=CARE_SITE_ID,
             join_table_cols=[CARE_SITE_NAME, CARE_SITE_SOURCE_VALUE],
+            isouter=True,
         )(source_table)
 
         return source_table
