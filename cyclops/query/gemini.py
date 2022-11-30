@@ -345,11 +345,15 @@ def diagnoses(include_description: bool = True, **process_kwargs) -> QueryInterf
         lookup_table = get_table(LOOKUP_DIAGNOSIS)
         lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(lookup_table)
         table = qp.Join(
+<<<<<<< HEAD
+            lookup_table, on=("diagnosis_type", "value"), join_table_cols="description"
+=======
             lookup_table,
             on=("discharge_disposition", "value"),
             on_to_type="int",
             join_table_cols="description",
             isouter=True,
+>>>>>>> main
         )(table)
         table = qp.Drop("value")(table)
         table = qp.Rename({"description": "diagnosis_type_description"})(table)
@@ -486,6 +490,8 @@ def care_units(
             "discharge",
             CARE_UNIT,
         ]
+<<<<<<< HEAD
+=======
 
         table = qp.process_operations(table, operations, process_kwargs)
 
@@ -554,6 +560,7 @@ def care_units(
     @assert_table_has_columns(
         diagnoses_table=[ENCOUNTER_ID, DIAGNOSIS_CODE],
         patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID],
+>>>>>>> main
     )
 
     # In-patient table.
@@ -608,10 +615,15 @@ def care_units(
         select(rt_table),
     ).subquery()
 
+<<<<<<< HEAD
+    if patient_encounters_table is not None:
+        table = qp.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
+=======
         # Join on patient encounters
         table = qp.Join(diagnoses_table, on=ENCOUNTER_ID, isouter=True)(
             patient_encounters_table
         )
+>>>>>>> main
 
     # Process optional operations
     operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
@@ -648,6 +660,16 @@ def events(
         Constructed table, wrapped in an interface object.
 
 
+<<<<<<< HEAD
+    Other Parameters
+    ----------------
+    event_names: str or list of str, optional
+        Get only certain event names.
+    event_name_substring: str, optional
+        Get only event names with some substring(s).
+    limit: int, optional
+        Limit the number of rows returned.
+=======
         table = qp.Join(
             lookup_table,
             on=("medical_service", "value"),
@@ -655,6 +677,7 @@ def events(
             isouter=True,
         )(table)
         table = qp.Rename({"description": "transfer_description"})(table)
+>>>>>>> main
 
     """
     if event_category not in EVENT_CATEGORIES:
