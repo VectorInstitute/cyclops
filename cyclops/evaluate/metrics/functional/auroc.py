@@ -146,6 +146,7 @@ def binary_auroc(
     preds: ArrayLike,
     max_fpr: float = None,
     thresholds: Union[int, List[float], np.ndarray] = None,
+    pos_label: int = 1,
 ) -> float:
     """Compute the area under the ROC curve for binary classification tasks.
 
@@ -166,6 +167,8 @@ def binary_auroc(
         If list or array, then the thresholds to use.
         If None, then the thresholds are automatically determined by the
         unique values in ``preds``.
+    pos_label : int, default=1
+        The label of the positive class.
 
     Returns
     -------
@@ -195,12 +198,16 @@ def binary_auroc(
                 f" {max_fpr}"
             )
 
-    target, preds = _binary_precision_recall_curve_format(target, preds)
+    target, preds = _binary_precision_recall_curve_format(
+        target, preds, pos_label=pos_label
+    )
     thresholds = _format_thresholds(thresholds)
 
     state = _binary_precision_recall_curve_update(target, preds, thresholds)
 
-    return _binary_auroc_compute(state, thresholds=thresholds, max_fpr=max_fpr)
+    return _binary_auroc_compute(
+        state, thresholds=thresholds, max_fpr=max_fpr, pos_label=pos_label
+    )
 
 
 def _multiclass_auroc_compute(

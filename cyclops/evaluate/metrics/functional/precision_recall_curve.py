@@ -75,8 +75,7 @@ def _precision_recall_curve_compute_from_confmat(
 
 
 def _binary_precision_recall_curve_format(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: ArrayLike, preds: ArrayLike, pos_label: int
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Check and format binary precision-recall curve input/data.
 
@@ -87,6 +86,8 @@ def _binary_precision_recall_curve_format(
     preds : ArrayLike
         Estimated probabilities or non-thresholded output of decision function.
         A sigmoid function is applied if ``preds`` are not in [0, 1].
+    pos_label : int
+        Label of the positive class.
 
     Returns
     -------
@@ -99,16 +100,26 @@ def _binary_precision_recall_curve_format(
     Raises
     ------
     ValueError
-        If ``target`` and ``preds`` are not of the same shape.
-    ValueError
-        If ``target`` is not binary or ``preds`` is not continuous.
-    ValueError
-        If ``target`` does not contain only 0s and 1s.
+        If ``target`` is not binary, with only 1 and 0 as values; If ``target`` and
+        ``preds`` are not of the same shape; If ``preds`` is not continuous.
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
         target, preds
     )
+
+    if pos_label not in [0, 1]:
+        raise ValueError(f"Positive label must be 0 or 1, got {pos_label}.")
+
+    if type_preds == "continuous-multioutput":
+        assert preds.shape[-1] == 2, (
+            "The argument `preds` must either be a 1D array or a 2D array with "
+            f"exactly 2 columns, got an array with shape: {preds.shape}."
+        )
+        preds = preds[
+            ..., pos_label
+        ]  # keep only the probabilities for the positive class
+        type_preds = "continuous"
 
     if preds.shape != target.shape:
         raise ValueError(
@@ -295,7 +306,9 @@ def binary_precision_recall_curve(
     """
     _check_thresholds(thresholds)
 
-    target, preds = _binary_precision_recall_curve_format(target, preds)
+    target, preds = _binary_precision_recall_curve_format(
+        target, preds, pos_label=pos_label
+    )
     thresholds = _format_thresholds(thresholds)
 
     state = _binary_precision_recall_curve_update(target, preds, thresholds)
@@ -330,23 +343,16 @@ def _multiclass_precision_recall_curve_format(
     preds : numpy.ndarray
         The predicted probabilities as a numpy array.
     thresholds : numpy.ndarray
-        Thresholds used for computing the precision and recall scores as a
-        numpy array.
+        Thresholds used for computing the precision and recall scores as a numpy array.
 
     Raises
     ------
     ValueError
-        If ``target`` does not have one more dimension than ``preds``.
-    ValueError
-        If ``preds`` is not a 2D array of floats.
-    ValueError
-        If ``target`` is not a 1D array of integers.
-    ValueError
-        If ``preds`` does not have the same number of classes as ``num_classes``.
-    ValueError
-        If ``target`` and ``preds`` have different number of samples.
-    ValueError
-        If ``target`` contains values outside of the range [0, num_classes).
+        If ``target`` is not a 1D array of integers or contains values outside the
+        range [0, num_classes) or does not have one more dimension than ``preds``;
+        if ``preds`` is not a 2D array of floats or does not have the same number
+        of classes as ``num_classes``; if ``preds and ``target`` do not have the
+        same number of samples.
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
@@ -482,15 +488,15 @@ def _multiclass_precision_recall_curve_compute(
     Returns
     -------
     precision : numpy.ndarray or list of numpy.ndarray
-        Precision scores where element i is the precision score corresponding
-        to the threshold i. If state is a tuple of the target and predicted
-        probabilities, then precision is a list of arrays, where each array
-        corresponds to the precision scores for a class.
+        Precision scores where element i is the precision score corresponding to the
+        threshold i. If state is a tuple of the target and predicted probabilities,
+        then precision is a list of arrays, where each array corresponds to the
+        precision scores for a class.
     recall : numpy.ndarray or list of numpy.ndarray
-        Recall scores where element i is the recall score corresponding to
-        the threshold i. If state is a tuple of the target and predicted
-        probabilities, then recall is a list of arrays, where each array
-        corresponds to the recall scores for a class.
+        Recall scores where element `i` is the recall score corresponding to the
+        threshold  `i`. If state is a tuple of the target and predicted probabilities,
+        then recall is a list of arrays, where each array corresponds to the recall
+        scores for a class.
     thresholds : numpy.ndarray or list of numpy.ndarray
         Thresholds used for computing the precision and recall scores.
 
@@ -538,9 +544,8 @@ def multiclass_precision_recall_curve(
     target : ArrayLike
         Ground truth (correct) target values.
     preds : ArrayLike
-        Estimated probabilities or decision function. If ``preds`` is a
-        logit, it will be converted to a probability using the softmax
-        function.
+        Estimated probabilities or decision function. If ``preds`` is a logit, it
+        will be converted to a probability using the softmax function.
     num_classes : int
         The number of classes in the dataset.
     thresholds : Union[int, List[float], numpy.ndarray], default=None
@@ -892,11 +897,9 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
     pos_label : int, default=1
         The label of the positive class.
     num_classes : int, optional
-        The number of classes in the dataset. Required if ``task`` is
-        ``"multiclass"``.
+        The number of classes in the dataset. Required if ``task`` is ``"multiclass"``.
     num_labels : int, optional
-        The number of labels in the dataset. Required if ``task`` is
-        ``"multilabel"``.
+        The number of labels in the dataset. Required if ``task`` is ``"multilabel"``.
 
     Returns
     -------

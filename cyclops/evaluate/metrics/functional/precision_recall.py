@@ -136,7 +136,9 @@ def binary_precision(  # pylint: disable=too-many-arguments
     """
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
-    target, preds = _binary_stat_scores_format(target, preds, threshold)
+    target, preds = _binary_stat_scores_format(
+        target, preds, threshold=threshold, pos_label=pos_label
+    )
 
     tp, fp, _, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
 
@@ -486,7 +488,9 @@ def binary_recall(  # pylint: disable=too-many-arguments
     0.5
 
     """
-    target, preds = _binary_stat_scores_format(target, preds, threshold)
+    target, preds = _binary_stat_scores_format(
+        target, preds, threshold=threshold, pos_label=pos_label
+    )
 
     tp, fp, _, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
 

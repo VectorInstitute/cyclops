@@ -57,8 +57,9 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
         self,
         max_fpr: float = None,
         thresholds: Union[int, List[float], np.ndarray] = None,
+        pos_label: int = 1,
     ) -> None:
-        super().__init__(thresholds=thresholds)
+        super().__init__(thresholds=thresholds, pos_label=pos_label)
         self.max_fpr = max_fpr
 
     def compute(self) -> float:  # type: ignore # super().compute() returns Tuple
@@ -73,7 +74,10 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
             state = self.confmat
 
         return _binary_auroc_compute(
-            state, thresholds=self.thresholds, max_fpr=self.max_fpr
+            state,
+            thresholds=self.thresholds,
+            max_fpr=self.max_fpr,
+            pos_label=self.pos_label,
         )
 
 

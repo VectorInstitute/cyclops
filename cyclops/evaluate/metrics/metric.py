@@ -5,6 +5,7 @@ import logging
 import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from difflib import get_close_matches
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
@@ -241,7 +242,16 @@ def create_metric(metric_name: str, **kwargs: Optional[Dict[str, Any]]) -> Metri
     """
     metric_class = _METRIC_REGISTRY.get(metric_name, None)
     if metric_class is None:
-        raise KeyError(f"Metric with name {metric_name} is not registered.")
+        similar_keys_list: List[str] = get_close_matches(
+            metric_name, _METRIC_REGISTRY.keys(), n=5
+        )
+        similar_keys: str = ", ".join(similar_keys_list)
+        similar_keys = (
+            f" Did you mean one of: {similar_keys}?"
+            if similar_keys
+            else " It may not be registered."
+        )
+        raise ValueError(f"Metric {metric_name} not found.{similar_keys}")
 
     metric = metric_class(**kwargs)
 

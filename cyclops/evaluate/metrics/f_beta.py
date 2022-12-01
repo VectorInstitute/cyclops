@@ -239,7 +239,7 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
         )
 
 
-class FbetaScore(Metric, registry_key="fbeta_score"):
+class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     """Compute the F-beta score for different types of classification tasks.
 
     Parameters

@@ -85,7 +85,7 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
         """
         target, preds = _binary_precision_recall_curve_format(
-            target=target, preds=preds
+            target=target, preds=preds, pos_label=self.pos_label
         )
         state = _binary_precision_recall_curve_update(
             target=target, preds=preds, thresholds=self.thresholds

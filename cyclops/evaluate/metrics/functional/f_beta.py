@@ -162,7 +162,7 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold
+        target=target, preds=preds, threshold=threshold, pos_label=pos_label
     )
 
     tp, fp, _, fn = _binary_stat_scores_update(

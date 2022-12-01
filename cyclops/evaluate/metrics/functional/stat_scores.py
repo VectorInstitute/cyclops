@@ -146,7 +146,7 @@ def _binary_stat_scores_args_check(threshold: float, pos_label: int) -> None:
 
 
 def _binary_stat_scores_format(
-    target: ArrayLike, preds: ArrayLike, threshold: float
+    target: ArrayLike, preds: ArrayLike, threshold: float, pos_label: int
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Format the input for computing binary stat scores.
 
@@ -163,6 +163,8 @@ def _binary_stat_scores_format(
     threshold : float
         Threshold for converting logits and probability predictions to binary
         [1, 0].
+    pos_label : int
+        The positive label to report.
 
     Returns
     -------
@@ -182,10 +184,22 @@ def _binary_stat_scores_format(
         target, preds
     )
 
-    if type_target != "binary" or type_preds not in ["binary", "continuous"]:
+    if type_target != "binary":
+        raise ValueError(f"The argument `target` must be binary, got {type_target}")
+
+    if type_preds == "continuous-multioutput":
+        assert preds.shape[-1] == 2, (
+            "The argument `preds` must either be a 1D array or a 2D array with "
+            f"exactly 2 columns, got an array with shape: {preds.shape}."
+        )
+        preds = preds[
+            ..., pos_label
+        ]  # keep only the probabilities for the positive class
+        type_preds = "continuous"
+
+    if type_preds not in ["binary", "continuous"]:
         raise ValueError(
-            "The arguments `target` and `preds` must be binary or continuous, "
-            f"got {type_target} and {type_preds} respectively."
+            f"The arguments `preds` must be binary or continuous, got {type_preds}"
         )
 
     # check the number of classes
@@ -295,7 +309,7 @@ def binary_stat_scores(
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold
+        target=target, preds=preds, threshold=threshold, pos_label=pos_label
     )
 
     tp, fp, tn, fn = _binary_stat_scores_update(

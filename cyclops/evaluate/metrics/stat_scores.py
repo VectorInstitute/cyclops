@@ -143,7 +143,7 @@ class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
     ) -> None:  # type: ignore
         """Update the state variables."""
         target, preds = _binary_stat_scores_format(
-            target, preds, threshold=self.threshold
+            target, preds, threshold=self.threshold, pos_label=self.pos_label
         )
 
         tp, fp, tn, fn = _binary_stat_scores_update(

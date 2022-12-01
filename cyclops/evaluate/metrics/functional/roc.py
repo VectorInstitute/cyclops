@@ -177,7 +177,9 @@ def binary_roc_curve(
     """
     _check_thresholds(thresholds)
 
-    target, preds = _binary_precision_recall_curve_format(target, preds)
+    target, preds = _binary_precision_recall_curve_format(
+        target, preds, pos_label=pos_label
+    )
     thresholds = _format_thresholds(thresholds)
 
     state = _binary_precision_recall_curve_update(target, preds, thresholds)
