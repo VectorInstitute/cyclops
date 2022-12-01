@@ -58,6 +58,8 @@ class TSTester:
         }
 
         self.method_args = kwargs
+        if "backend" not in self.method_args:
+            self.method_args["backend"] = "pytorch"
 
         if self.tester_method not in self.tester_methods:
             raise ValueError(
@@ -82,9 +84,9 @@ class TSTester:
         if self.tester_method == "fet":
             if "alternative" not in self.method_args:
                 self.method_args["alternative"] = "two-sided"
-
         self.method = self.tester_methods[self.tester_method](
-            X_s, **get_args(self.tester_methods[self.tester_method], self.method_args)
+            X_s,
+            **get_args(self.tester_methods[self.tester_method], self.method_args),
         )
 
     def test_shift(self, X_t):
@@ -166,7 +168,9 @@ class DCTester:
 
         if self.tester_method == "spot_the_diff":
             self.tester = self.tester_methods[self.tester_method](
-                X_s, **get_args(self.tester_methods[self.tester_method], kwargs)
+                X_s,
+                backend="pytorch",
+                **get_args(self.tester_methods[self.tester_method], kwargs),
             )
         else:
             if self.model_method in ["rnn", "cnn", "ffnn"]:
