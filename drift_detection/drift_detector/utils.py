@@ -8,6 +8,7 @@ from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
+from typing import Callable, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -43,7 +44,8 @@ def get_args(obj, kwargs):
     args = {}
     for key in kwargs:
         if inspect.isclass(obj):
-            if key in obj.__init__.__code__.co_varnames:
+            # if key in obj.__init__.__code__.co_varnames:
+            if key in inspect.signature(obj).parameters:
                 args[key] = kwargs[key]
         elif inspect.ismethod(obj) or inspect.isfunction(obj):
             if key in obj.__code__.co_varnames:
@@ -108,46 +110,54 @@ class ContextMMDWrapper:
     def __init__(
         self,
         X_s,
-        backend="pytorch",
-        p_val=0.05,
-        preprocess_x_ref=True,
-        update_ref=None,
-        preprocess_fn=None,
-        x_kernel=None,
-        c_kernel=None,
-        n_permutations=100,
-        prop_c_held=0.25,
-        n_folds=5,
-        batch_size=64,
-        device=None,
-        input_shape=None,
-        data_type=None,
-        verbose=False,
+        backend: str = "pytorch",
+        p_val: float = 0.05,
+        x_ref_preprocessed: bool = False,
+        preprocess_at_init: bool = True,
+        update_ref: Optional[Dict[str, int]] = None,
+        preprocess_fn: Optional[Callable] = None,
+        x_kernel: Callable = None,
+        c_kernel: Callable = None,
+        n_permutations: int = 1000,
+        prop_c_held: float = 0.25,
+        n_folds: int = 5,
+        batch_size: Optional[int] = 256,
+        device: Optional[str] = None,
+        input_shape: Optional[tuple] = None,
+        data_type: Optional[str] = None,
+        verbose: bool = False,
         context_type="lstm",
         model_path=None,
     ):
         self.context_type = context_type
         self.model_path = model_path
+
         self.device = device
         if self.device is None:
             self.device = get_device()
-        c_source = self.context(X_s)
-        self.tester = ContextMMDDrift(X_s, c_source)
 
-        self.backend = backend
-        self.p_val = p_val
-        self.preprocess_x_ref = preprocess_x_ref
-        self.update_ref = update_ref
-        self.preprocess_fn = preprocess_fn
-        self.x_kernel = x_kernel
-        self.c_kernel = c_kernel
-        self.n_permutations = n_permutations
-        self.prop_c_held = prop_c_held
-        self.n_folds = n_folds
-        self.batch_size = batch_size
-        self.input_shape = input_shape
-        self.data_type = data_type
-        self.verbose = verbose
+        c_source = self.context(X_s)
+
+        args = [
+            backend,
+            p_val,
+            x_ref_preprocessed,
+            preprocess_at_init,
+            update_ref,
+            preprocess_fn,
+            x_kernel,
+            c_kernel,
+            n_permutations,
+            prop_c_held,
+            n_folds,
+            batch_size,
+            device,
+            input_shape,
+            data_type,
+            verbose,
+        ]
+
+        self.tester = ContextMMDDrift(X_s, c_source, *args)
 
     def predict(self, X_t, **kwargs):
         """Predict if there is drift in the data."""
@@ -188,27 +198,29 @@ class LKWrapper:
         self,
         X_s,
         *,
-        backend="pytorch",
-        p_val=0.05,
-        preprocess_x_ref=True,
-        update_x_ref=None,
-        preprocess_fn=None,
-        n_permutations=100,
-        var_reg=0.00001,
-        reg_loss_fn=lambda kernel: 0,
-        train_size=0.75,
-        retrain_from_scratch=True,
-        optimizer=None,
-        learning_rate=0.001,
-        batch_size=32,
-        preprocess_batch=None,
-        epochs=3,
-        verbose=0,
-        train_kwargs=None,
-        device=None,
-        dataset=None,
-        dataloader=None,
-        data_type=None,
+        backend: str = "tensorflow",
+        p_val: float = 0.05,
+        x_ref_preprocessed: bool = False,
+        preprocess_at_init: bool = True,
+        update_x_ref: Optional[Dict[str, int]] = None,
+        preprocess_fn: Optional[Callable] = None,
+        n_permutations: int = 100,
+        var_reg: float = 1e-5,
+        reg_loss_fn: Callable = (lambda kernel: 0),
+        train_size: Optional[float] = 0.75,
+        retrain_from_scratch: bool = True,
+        optimizer: Optional[Callable] = None,
+        learning_rate: float = 1e-3,
+        batch_size: int = 32,
+        preprocess_batch_fn: Optional[Callable] = None,
+        epochs: int = 3,
+        verbose: int = 0,
+        train_kwargs: Optional[dict] = None,
+        device: Optional[str] = None,
+        dataset: Optional[Callable] = None,
+        dataloader: Optional[Callable] = None,
+        input_shape: Optional[tuple] = None,
+        data_type: Optional[str] = None,
         kernel_a=GaussianRBF(trainable=True),
         kernel_b=GaussianRBF(trainable=True),
         eps="trainable",
@@ -224,7 +236,8 @@ class LKWrapper:
         args = [
             backend,
             p_val,
-            preprocess_x_ref,
+            x_ref_preprocessed,
+            preprocess_at_init,
             update_x_ref,
             preprocess_fn,
             n_permutations,
@@ -235,13 +248,14 @@ class LKWrapper:
             optimizer,
             learning_rate,
             batch_size,
-            preprocess_batch,
+            preprocess_batch_fn,
             epochs,
             verbose,
             train_kwargs,
             device,
             dataset,
             dataloader,
+            input_shape,
             data_type,
         ]
 

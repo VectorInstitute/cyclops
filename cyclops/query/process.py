@@ -1094,7 +1094,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 
         # Filter to include no duplicate columns
         return select(
-            *[col for col in table.columns if "%(" not in col.name]
+            *[col for col in table.subquery().columns if "%(" not in col.name]
         ).subquery()
 
 
