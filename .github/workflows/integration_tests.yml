@@ -6,7 +6,18 @@ on:
       - main
     paths:
       - .pre-commit-config.yaml
-      - .github/workflows/code_checks.yml
+      - .github/workflows/integration_tests.yml
+      - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - requirements.txt
+      - '**.ipynb'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/integration_tests.yml
       - '**.py'
       - poetry.lock
       - pyproject.toml
