@@ -29,14 +29,14 @@ use cases include:
 ### Installing the core cyclops package using pip
 
 ```bash
-pip install pycyclops
+python3 -m pip install pycyclops
 ```
 
 ### Setup Python virtual environment and install dependencies for development
 
 The development environment has been tested on ``python = 3.9.7``.
 
-The python virtual environment can be setup using
+The python virtual environment can be set up using
 [poetry](https://python-poetry.org/docs/#installation). Hence, make sure it is
 installed and then run:
 
@@ -50,7 +50,7 @@ source $(poetry env info --path)/bin/activate
 ## 🎓 Notebooks
 
 To use jupyter notebooks, the python virtual environment can be installed and
-used inside an Ipython kernel. After activating the virtual environment, run:
+used inside an IPython kernel. After activating the virtual environment, run:
 
 ```bash
 python3 -m ipykernel install --user --name <name_of_kernel>

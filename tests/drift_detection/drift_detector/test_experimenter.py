@@ -41,8 +41,8 @@ def fixture_txrv_dataset():
         def __len__(self):
             return self.len
 
-    dataset = TXRVDataset(100, 1, 224, 224)
-    metadata = pd.DataFrame(np.random.randint(0, 2, size=(100, 2)), columns=list("AB"))
+    dataset = TXRVDataset(8, 1, 224, 224)
+    metadata = pd.DataFrame(np.random.randint(0, 2, size=(8, 2)), columns=list("AB"))
     metadata_mapping = {"A": "A", "B": "B"}
     return dataset, metadata, metadata_mapping
 
