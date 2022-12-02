@@ -1,4 +1,4 @@
-"""Mimiciv processor."""
+"""MIMICIV processor."""
 
 import logging
 from os import path
@@ -40,8 +40,8 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-class MimicivProcessor:
-    """Mimiciv processor."""
+class MIMICIVProcessor:
+    """MIMICIV processor."""
 
     def __init__(self, use_case: str, data_type: str) -> None:
         """Init processor.
@@ -49,10 +49,10 @@ class MimicivProcessor:
         Parameters
         ----------
         use_case : str
-            The use-case to process the data for
+            The use-case to process the data for.
 
         data_type : str
-            type of data (tabular, temporal, or combined)
+            Type of data (tabular, temporal, or combined).
 
         """
         self.params = get_use_case_params("mimiciv", use_case)
@@ -87,7 +87,7 @@ class MimicivProcessor:
         self.unaligned_path = self.params.UNALIGNED_PATH
 
     def _setup_params(self) -> None:
-        """Set up data processing parameters."""
+        """Set up the data processing parameters."""
         self.common_feature = (
             self.params.COMMON_FEATURE if self.params.COMMON_FEATURE else None
         )
@@ -140,7 +140,7 @@ class MimicivProcessor:
         Returns
         -------
         Aggregator
-            Aggregator object
+            The aggregator object.
 
         """
         return Aggregator(
@@ -157,12 +157,12 @@ class MimicivProcessor:
     ###################
 
     def _load_batches(self, data_dir: str) -> Generator[pd.DataFrame, None, None]:
-        """Load data files saved as dataframes.
+        """Load the data files saved as dataframes.
 
         Parameters
         ----------
         data_dir : str
-            directory path of files
+            The directory path of files.
 
         Yields
         ------
@@ -178,12 +178,12 @@ class MimicivProcessor:
         Parameters
         ----------
         vectorized : Vectorized
-            Vectorized object
+            Vectorized data.
 
         Returns
         -------
         Vectorized
-            Vectorized object after normalization
+            Vectorized data after normalization.
 
         """
         vectorized.fit_normalizer()
@@ -195,28 +195,28 @@ class MimicivProcessor:
     ###################
 
     def _load_cohort(self) -> pd.DataFrame:
-        """Load tabular cohort.
+        """Load the tabular cohort.
 
         Returns
         -------
         pd.DataFrame
-            tabular dataframe
+            Tabular data.
 
         """
         return load_dataframe(self.tabular_file)
 
     def _get_tabular_features(self, tab_data: pd.DataFrame) -> TabularFeatures:
-        """Get tabular features as an object.
+        """Get the tabular features as an object.
 
         Parameters
         ----------
         tab_data : pd.DataFrame
-            tabular dataframe
+            Tabular data.
 
         Returns
         -------
         TabularFeatures
-            tabular features object
+            The tabular features object.
 
         """
         tab_features = TabularFeatures(
@@ -229,17 +229,17 @@ class MimicivProcessor:
         return tab_features
 
     def _slice_tabular(self, tab_features: TabularFeatures) -> np.ndarray:
-        """Slice tabular data.
+        """Slice the tabular data.
 
         Parameters
         ----------
         tab_features : TabularFeatures
-            tabular features object
+            The tabular features object.
 
         Returns
         -------
         np.ndarray
-             Array of the values of the column, in the sliced dataset.
+            Array of the values of the "by" column, in the sliced dataset.
 
         """
         sliced_tab = tab_features.slice(
@@ -252,33 +252,33 @@ class MimicivProcessor:
         return sliced_tab
 
     def _get_tab_ordinal(self, tab_features: TabularFeatures) -> List[str]:
-        """Get names of ordinal features in tabular data.
+        """Get the names of ordinal features in the tabular data.
 
         Parameters
         ----------
         tab_features : TabularFeatures
-            tabular features object
+            The tabular features object.
 
         Returns
         -------
         List[str]
-            list of ordinal features
+            List of ordinal features.
 
         """
         return tab_features.features_by_type(ORDINAL)
 
     def _get_tab_numeric(self, tab_features: TabularFeatures) -> List[str]:
-        """Get names of numeric features in tabular data.
+        """Get the names of numeric features in the tabular data.
 
         Parameters
         ----------
         tab_features : TabularFeatures
-            tabular features object
+            The tabular features object.
 
         Returns
         -------
         List[str]
-            list of numeric features
+            List of numeric features.
 
         """
         return tab_features.features_by_type(NUMERIC)
@@ -291,14 +291,14 @@ class MimicivProcessor:
         Parameters
         ----------
         tab_features : TabularFeatures
-            tabular features object
+            The tabular features object.
         normalize : bool
-            to normalize
+            Whether to normalize numeric features.
 
         Returns
         -------
         Vectorized
-            vectorized data
+            Vectorized tabular data.
 
         """
         tab_vectorized = tab_features.vectorize(
@@ -321,26 +321,25 @@ class MimicivProcessor:
     def _aggregate_tabular(
         self, tab_features: TabularFeatures, temp_vectorized: Vectorized
     ) -> pd.DataFrame:
-        """Aggregate tabular data to pose as timeseries.
+        """Aggregate the tabular data to pose as timeseries.
 
         Parameters
         ----------
         tab_features : TabularFeatures
-            tabular features object
+            The tabular features object.
         temp_vectorized : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
 
         Returns
         -------
         pd.DataFrame
-            aggregated dataframe
+            Aggregated tabular data.
 
         """
         tab = tab_features.get_data(
             to_binary_indicators=self._get_tab_ordinal(tab_features)
         ).reset_index()
 
-        # Take only the encounters with temporal events
         tab = tab[
             np.in1d(
                 tab[self.common_feature].values,
@@ -348,7 +347,6 @@ class MimicivProcessor:
             )
         ]
 
-        # Aggregate tabular
         tab_aggregated = tabular_as_aggregated(
             tab=tab,
             index=self.tab_agg_params["index"],
@@ -367,28 +365,28 @@ class MimicivProcessor:
         Parameters
         ----------
         tab_aggregated : pd.DataFrame
-            aggregated tabular data
+            Aggregated tabular data.
 
         Returns
         -------
         Vectorized
-            vectorized data
+            Vectorized tabular data.
 
         """
         return self.aggregator.vectorize(tab_aggregated)
 
     def _split_tabular(self, tab_vectorized: Vectorized) -> Tuple:
-        """Split vectorized tabular data to train, validation, and test sets.
+        """Split tabular data to train, validation, and test sets.
 
         Parameters
         ----------
         tab_vectorized : Vectorized
-            vectorized tabular data
+            Vectorized tabular data.
 
         Returns
         -------
         Tuple
-            tabular train, val, and test sets
+            A tuple of datasets of splits. All splits are Vectorized objects.
 
         """
         fractions = self.split_fractions.copy()
@@ -400,19 +398,19 @@ class MimicivProcessor:
         return tab_train, tab_val, tab_test
 
     def _get_tab_train(self, tab_train: Vectorized, normalize: bool) -> Tuple:
-        """Get tabular train features (normalized) and target.
+        """Get the tabular train features (normalized) and the targets.
 
         Parameters
         ----------
         tab_train : Vectorized
-            vectorized tabular data
+            Vectorized tabular data.
         normalize : bool
-            to normalize
+            Whether to normalize the numeric features.
 
         Returns
         -------
         Tuple
-            train features and targets
+            Tuple of train features and targets.
 
         """
         tab_train_X, tab_train_y = tab_train.split_out(
@@ -424,19 +422,19 @@ class MimicivProcessor:
         return tab_train_X, tab_train_y
 
     def _get_tab_val(self, tab_val: Vectorized, normalize: bool) -> Tuple:
-        """Get tabular validation features (normalized) and target.
+        """Get the tabular validation features (normalized) and the targets.
 
         Parameters
         ----------
         tab_val : Vectorized
-            vectorized tabular data
+            Vectorized tabular data.
         normalize : bool
-            to normalize
+            Whether to normalize the numeric features.
 
         Returns
         -------
         Tuple
-            validation features and targets
+            Tuple of validation features and targets.
 
         """
         tab_val_X, tab_val_y = tab_val.split_out(
@@ -447,19 +445,19 @@ class MimicivProcessor:
         return tab_val_X, tab_val_y
 
     def _get_tab_test(self, tab_test: Vectorized, normalize: bool):
-        """Get tabular test features (normalized) and target.
+        """Get the tabular test features (normalized) and the targets.
 
         Parameters
         ----------
         tab_test : Vectorized
-            vectorized tabular data
+            Vectorized tabular data.
         normalize : bool
-            to normalize
+            Whether to normalize the numeric features.
 
         Returns
         -------
         Tuple
-            test features and targets
+           Tuple of test features and targets.
 
         """
         tab_test_X, tab_test_y = tab_test.split_out(
@@ -479,24 +477,24 @@ class MimicivProcessor:
         tab_test_y: Vectorized,
         aligned: bool,
     ) -> None:
-        """Save tabular features and targets for all data splits.
+        """Save the tabular features and targets for all data splits.
 
         Parameters
         ----------
         tab_train_X : Vectorized
-            vectorized tabular train features
+            Vectorized tabular features from the train set.
         tab_train_y : Vectorized
-            vectorized tabular train targets
+            Vectorized tabular targets from the train set.
         tab_val_X : Vectorized
-            vectorized tabular val features
+            Vectorized tabular features from the validation set.
         tab_val_y : Vectorized
-             vectorized tabular val targets
+             Vectorized tabular targets from the validation set.
         tab_test_X : Vectorized
-            vectorized tabular test features
+            Vectorized tabular features from the test set.
         tab_test_y : Vectorized
-             vectorized tabular test targets
+            Vectorized tabular targets from the test set.
         aligned : bool
-            is aligned with temporal
+            Whether data is aligned with the temporal data.
 
         """
         vectorized = [
@@ -518,17 +516,17 @@ class MimicivProcessor:
     ####################
 
     def _get_temporal_features(self, data: pd.DataFrame) -> TemporalFeatures:
-        """Get temporal features as an object.
+        """Get the temporal features as an object.
 
         Parameters
         ----------
         data : pd.DataFrame
-            temporal dataframe
+            Temporal data.
 
         Returns
         -------
         TemporalFeatures
-            temporal features object
+            The temporal features object.
 
         """
         return TemporalFeatures(
@@ -539,18 +537,18 @@ class MimicivProcessor:
             aggregator=self.aggregator,
         )
 
-    def _get_timestaps(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    def _get_timestamps(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         """Get relevant timestamps either from tabular data or the input dataframe.
 
         Parameters
         ----------
         data : Optional[pd.DataFrame], optional
-            the dataframe to extract the timestamp from, by default None
+            The dataframe to extract the timestamp from, by default None.
 
         Returns
         -------
         pd.DataFrame
-            timestamps data
+            Timestamps data.
 
         """
         if not data:
@@ -563,10 +561,10 @@ class MimicivProcessor:
         Returns
         -------
         pd.DataFrame
-            start timestamps
+            The start timestamps.
 
         """
-        timestamps = self._get_timestaps()
+        timestamps = self._get_timestamps()
         start_timestamps = (
             timestamps[self.timestamp_params["start_columns"]]
             .set_index(self.timestamp_params["start_index"])
@@ -579,14 +577,14 @@ class MimicivProcessor:
         generator: Generator[pd.DataFrame, None, None],
         filter_fn: Optional[Callable] = None,
     ) -> None:
-        """Aggregat the temporal data saved as batches.
+        """Aggregate the temporal data saved in batches.
 
         Parameters
         ----------
         generator : Generator[pd.DataFrame, None, None]
-            generator to yeild saved data files
+            Generator to yield the saved data files.
         filter_fn : Optional[Callable], optional
-            filter the data records before aggregating, by default None
+            Filter the data records before aggregating, by default None.
 
         """
         start_timestamps = self._get_start_timestamps()
@@ -603,12 +601,12 @@ class MimicivProcessor:
             del batch
 
     def _vectorize_temporal_batches(self, generator: Generator) -> None:
-        """Vectorize the temporal features saved as batches.
+        """Vectorize the temporal features saved in batches.
 
         Parameters
         ----------
         generator : Generator
-            generator to yeild saved data files
+            Generator to yield the saved data files.
 
         """
         for save_count, batch in enumerate(generator):
@@ -621,17 +619,17 @@ class MimicivProcessor:
     def _vectorize_temporal_features(
         self, generator: Generator[pd.DataFrame, None, None]
     ) -> Vectorized:
-        """Vectorize temporal features (no targets).
+        """Vectorize temporal features (no targets included).
 
         Parameters
         ----------
         generator: Generator[pd.DataFrame, None, None]
-            generator to yeild saved data files
+            Generator to yield the saved data files.
 
         Returns
         -------
         Vectorized
-            vectorized data
+            Vectorized temporal data.
 
         """
         vecs = list(generator)
@@ -651,14 +649,14 @@ class MimicivProcessor:
         Parameters
         ----------
         timestamps : pd.DataFrame
-            timestamps data
+            The timestamps data.
         timestamp_col : str
-            the timestamp for which the timestep is computed
+            The timestamp for which the timestep is to be computed.
 
         Returns
         -------
         pd.DataFrame
-            dataframe with added timestep
+            Timestamps with the new timestep.
 
         """
         timestep_size = self.temp_params["timestep_size"]
@@ -678,19 +676,19 @@ class MimicivProcessor:
         temp_vectorized: Vectorized,
         timestamps: pd.DataFrame,
     ) -> np.ndarray:
-        """Create targets for temporal data based on window duration.
+        """Create targets for temporal data based on the window duration.
 
         Parameters
         ----------
         temp_vectorized : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
         timestamps : pd.DataFrame
-            timestamps data
+            The timestamps data.
 
         Returns
         -------
         np.ndarray
-            arraye of target values
+            Array of the target values.
 
         """
         index_order = pd.Series(temp_vectorized.get_index(self.common_feature))
@@ -750,16 +748,16 @@ class MimicivProcessor:
         Parameters
         ----------
         temp_vectorized : Vectorized
-            vectorized temporal features
+            Vectorized temporal features.
         targets: np.ndarray
-            array of temporal targets
+            Array of temporal targets.
         normalize : bool
-            to normalize
+            Whether to normalize the data.
 
         Returns
         -------
         Vectorized
-            vectorized data
+            Vectorized temporal data containing features and targets.
 
         """
         temp_vectorized = temp_vectorized.concat_over_axis(
@@ -778,17 +776,17 @@ class MimicivProcessor:
         return temp_vectorized
 
     def _split_temporal(self, temp_vectorized: Vectorized) -> Tuple:
-        """Split vectorized temporal data to train, validation, and test sets.
+        """Split the temporal data to train, validation, and test sets.
 
         Parameters
         ----------
         temp_vectorized : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
 
         Returns
         -------
         Tuple
-            temporal train, val, and test sets
+            A tuple of datasets of splits. All splits are Vectorized objects.
 
         """
         fractions = self.split_fractions.copy()
@@ -805,21 +803,21 @@ class MimicivProcessor:
         normalize: bool,
         impute: Optional[bool] = True,
     ) -> Tuple:
-        """Get temporal train features (normalized) and target.
+        """Get the temporal train features (normalized) and the targets.
 
         Parameters
         ----------
         temp_train : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
         normalize : bool
-            to normalize
+            Whether to normalize the data.
         impute : bool
-            to impute values
+            Whether to impute values.
 
         Returns
         -------
         Tuple
-            train features and targets
+            Tuple of train features and targets.
 
         """
         temp_train_X, temp_train_y = temp_train.split_out(
@@ -844,21 +842,21 @@ class MimicivProcessor:
         normalize: bool,
         impute: Optional[bool] = True,
     ) -> Tuple:
-        """Get temporal validation features (normalized) and target.
+        """Get the temporal validation features (normalized) and the targets.
 
         Parameters
         ----------
         temp_val : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
         normalize : bool
-            to normalize
+            Whether to normalize the data.
         impute : bool
-            to impute values
+            Whether to impute values.
 
         Returns
         -------
         Tuple
-            validation features and targets
+            Tuple of validation features and targets.
 
         """
         temp_val_X, temp_val_y = temp_val.split_out(
@@ -881,21 +879,21 @@ class MimicivProcessor:
         normalize: bool,
         impute: Optional[bool] = True,
     ) -> Tuple:
-        """Get temporal test features (normalized) and target.
+        """Get the temporal test features (normalized) and the targets.
 
         Parameters
         ----------
         temp_test : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
         normalize : bool
-            to normalize
+            Whether to normalize the data.
         impute : bool
-            to impute values
+            Whether to impute values.
 
         Returns
         -------
         Tuple
-            test features and targets
+            Tuple of test features and targets.
 
         """
         temp_test_X, temp_test_y = temp_test.split_out(
@@ -922,24 +920,24 @@ class MimicivProcessor:
         temp_test_y,
         aligned,
     ):
-        """Save temporal features and targets for all data splits.
+        """Save the temporal features and targets for all data splits.
 
         Parameters
         ----------
         temp_train_X : Vectorized
-            vectorized temporal train features
+            Vectorized temporal features from the train set.
         temp_train_y : Vectorized
-            vectorized temporal train targets
+            Vectorized temporal targets from the train set.
         temp_val_X : Vectorized
-            vectorized temporal val features
+            Vectorized temporal features from the validation set.
         temp_val_y : Vectorized
-            vectorized temporal val targets
+            Vectorized temporal targets from the validation set.
         temp_test_X : Vectorized
-            vectorized temporal test features
+            Vectorized temporal features from the test set.
         temp_test_y : Vectorized
-            vectorized temporal test targets
+            Vectorized temporal targets from the test set.
         aligned : bool
-            is aligned with tabular
+            Whether data is aligned with the tabular data.
 
         """
         vectorized = [
@@ -970,14 +968,14 @@ class MimicivProcessor:
         Parameters
         ----------
         temp_vectorized : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
         tab_aggregated_vec : Vectorized
-             vectorized aggregated tabular data
+            Vectorized aggregated tabular data.
 
         Returns
         -------
         Vectorized
-            vectorized data
+            Vectorized combined data.
 
         """
         comb_vectorized = temp_vectorized.concat_over_axis(
@@ -1004,21 +1002,21 @@ class MimicivProcessor:
         temp_vectorized: Vectorized,
         comb_vectorized: Vectorized,
     ) -> Tuple:
-        """Get only the records available in all datasets.
+        """Get the records that are available in all datasets.
 
         Parameters
         ----------
         tab_vectorized : Vectorized
-            vectorized tabular data
+            Vectorized tabular data.
         temp_vectorized : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
         comb_vectorized : Vectorized
-            vectorized combined data
+            Vectorized combined data.
 
         Returns
         -------
         Tuple
-            vectorized tabular, temporal, and combined data
+            Vectorized tabular, temporal, and combined data.
 
         """
         tab_vectorized, temp_vectorized, comb_vectorized = intersect_vectorized(
@@ -1028,17 +1026,17 @@ class MimicivProcessor:
         return tab_vectorized, temp_vectorized, comb_vectorized
 
     def _split_combined(self, comb_vectorized: Vectorized) -> Tuple:
-        """Split vectorized combined data to train, validation, and test sets.
+        """Split combined data to train, validation, and test sets.
 
         Parameters
         ----------
         tab_vectorized : Vectorized
-            vectorized combined data
+            Vectorized combined data.
 
         Returns
         -------
         Tuple
-            combined train, val, and test sets
+            A tuple of datasets of splits. All splits are Vectorized objects.
 
         """
         fractions = self.split_fractions.copy()
@@ -1055,21 +1053,21 @@ class MimicivProcessor:
         normalize: bool,
         impute: Optional[bool] = True,
     ) -> Tuple:
-        """Get combined train features (normalized) and target.
+        """Get combined train features (normalized) and the targets.
 
         Parameters
         ----------
         comb_train : Vectorized
-            vectorized combined data
+            Vectorized combined data.
         normalize : bool
-            to normalize
+            Whether to normalize the data.
         impute : bool
-            to impute values
+            Whether to impute values.
 
         Returns
         -------
         Tuple
-            train features and targets
+            Tuple of train features and targets.
 
         """
         comb_train_X, comb_train_y = comb_train.split_out(
@@ -1094,21 +1092,21 @@ class MimicivProcessor:
         normalize: bool,
         impute: Optional[bool] = True,
     ) -> Tuple:
-        """Get combined validation features (normalized) and target.
+        """Get combined validation features (normalized) and the targets.
 
         Parameters
         ----------
         comb_validation : Vectorized
-            vectorized combined data
+            Vectorized combined data.
         normalize : bool
-            to normalize
+            Whether to normalize the data.
         impute : bool
-            to impute values
+            Whether to impute values.
 
         Returns
         -------
         Tuple
-            validation features and targets
+            Tuple of validation features and targets.
 
         """
         comb_val_X, comb_val_y = comb_val.split_out(
@@ -1138,16 +1136,16 @@ class MimicivProcessor:
         Parameters
         ----------
         comb_test : Vectorized
-            vectorized combined data
+            Vectorized combined data.
         normalize : bool
-            to normalize
+            Whether to normalize the data.
         impute : bool
-            to impute values
+            Whether to impute values.
 
         Returns
         -------
         Tuple
-            test features and targets
+            Tuple of test features and targets.
 
         """
         comb_test_X, comb_test_y = comb_test.split_out(
@@ -1180,17 +1178,17 @@ class MimicivProcessor:
         Parameters
         ----------
         comb_train_X : Vectorized
-            vectorized combined train features
+            Vectorized combined features from the train set.
         comb_train_y : Vectorized
-            vectorized combined train targets
+            Vectorized combined targets from the train set.
         comb_val_X : Vectorized
-            vectorized combined val features
+            Vectorized combined features from the validation set.
         comb_val_y : Vectorized
-            vectorized combined val targets
+            Vectorized combined targets from the validation set.
         comb_test_X : Vectorized
-            vectorized combined test features
+            Vectorized combined features from the test set.
         comb_test_y : Vectorized
-            vectorized combined test targets
+            Vectorized combined targets from the test set.
 
         """
         vectorized = [
@@ -1211,26 +1209,26 @@ class MimicivProcessor:
     def process_tabular_one(self) -> Tuple:
         """First step of tabular processing.
 
-            1. load data
-            2. get tabular features object
-            3. slice if required
-            4. vectorize
+            1. Load data.
+            2. Get tabular features as an object.
+            3. Slice the data if required.
+            4. Vectorize.
 
         Returns
         -------
         Tuple
-            vectorized tabular and tabular features object
+            Tuple of vectorized tabular data and tabular features object.
 
         """
-        LOGGER.info("Loading tabular data")
+        LOGGER.info("Loading the tabular data.")
         cohort = self._load_cohort().reset_index(drop=True)
         tab_features = self._get_tabular_features(cohort)
 
         if self.tab_slice_params["slice"]:
-            LOGGER.info("Slicing tabular data")
+            LOGGER.info("Slicing the tabular data.")
             _ = self._slice_tabular(tab_features)
 
-        LOGGER.info("Vectorizing tabular data")
+        LOGGER.info("Vectorizing the tabular data.")
         tab_vectorized = self._vectorize_tabular(
             tab_features, self.tab_norm_params["normalize"]
         )
@@ -1239,19 +1237,19 @@ class MimicivProcessor:
     def process_tabular_two(self, tab_vectorized: Vectorized, aligned: bool) -> None:
         """Second step of tabular processing.
 
-            1. split
-            2. get the features and targets for each split
-            3. save the finalized vectorized data
+            1. Split.
+            2. Get the features and targets for each split.
+            3. Save the finalized vectorized data.
 
         Parameters
         ----------
         tab_vectorized : Vectorized
-            vectorized tabular data
+            Vectorized tabular data.
         aligned : bool
-            is aligned with temporal
+            Whether data is aligned with the temporal data.
 
         """
-        LOGGER.info("Splitting tabular data")
+        LOGGER.info("Splitting the tabular data.")
         tab_train, tab_val, tab_test = self._split_tabular(tab_vectorized)
 
         tab_train_X, tab_train_y = self._get_tab_train(
@@ -1264,7 +1262,7 @@ class MimicivProcessor:
             tab_test, self.tab_norm_params["normalize"]
         )
 
-        LOGGER.info("Saving tabular features and targets for data splits")
+        LOGGER.info("Saving the tabular features and targets for all data splits.")
         self._save_tabular(
             tab_train_X,
             tab_train_y,
@@ -1283,15 +1281,15 @@ class MimicivProcessor:
     def process_temporal_one(self) -> Vectorized:
         """First step of temporal processing.
 
-            1. aggreagate temporal batches
-            2. vectorize temporal features
-            3. create targets
-            4. vectorize the whole temporal data
+            1. Aggregate temporal data.
+            2. Vectorize temporal features.
+            3. Create targets.
+            4. Vectorize the whole temporal data.
 
         Returns
         -------
         Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
 
         """
         cleaned_generator = self._load_batches(self.cleaned_dir)
@@ -1307,21 +1305,21 @@ class MimicivProcessor:
             )
             filter_fn = lambda events: valid_events(events, top_events)  # noqa: E731
 
-        LOGGER.info("Aggregating temporal features in batches")
+        LOGGER.info("Aggregating the temporal features in batches.")
         self._aggregate_temporal_batches(cleaned_generator, filter_fn)
 
-        LOGGER.info("Vectorizing temporal features in batches")
+        LOGGER.info("Vectorizing the temporal features in batches.")
         agg_generator = self._load_batches(self.aggregated_dir)
         self._vectorize_temporal_batches(agg_generator)
 
         vec_generator = yield_pickled_files(self.vectorized_dir)
         temp_vectorized = self._vectorize_temporal_features(vec_generator)
 
-        LOGGER.info("Creating temporal targets")
-        timestamps = self._get_timestaps()
+        LOGGER.info("Creating the temporal targets.")
+        timestamps = self._get_timestamps()
         targets = self._create_target(temp_vectorized, timestamps)
 
-        LOGGER.info("Vectorizing temporal data")
+        LOGGER.info("Vectorizing the temporal data.")
         temp_vectorized = self._vectorize_temporal(
             temp_vectorized, targets, self.temp_norm_params["normalize"]
         )
@@ -1330,19 +1328,19 @@ class MimicivProcessor:
     def process_temporal_two(self, temp_vectorized: Vectorized, aligned: bool) -> None:
         """Second step of temporal processing.
 
-            1. split
-            2. get features and targets for each split
-            3. save the finalized vectorized data
+            1. Split.
+            2. Get the features and targets for each split.
+            3. Save the finalized vectorized data.
 
         Parameters
         ----------
         temp_vectorized : Vectorized
-            vectorized temporal data
+            Vectorized temporal data.
         aligned : bool
-            is aligned with tabular
+            Whether the data is aligned with the tabular data.
 
         """
-        LOGGER.info("Splitting temporal data")
+        LOGGER.info("Splitting the temporal data.")
         temp_train, temp_val, temp_test = self._split_temporal(temp_vectorized)
         temp_train_X, temp_train_y = self._get_temp_train(
             temp_train, self.temp_norm_params["normalize"]
@@ -1354,7 +1352,7 @@ class MimicivProcessor:
             temp_test, self.temp_norm_params["normalize"]
         )
 
-        LOGGER.info("Saving temporal features and targets for data splits")
+        LOGGER.info("Saving the temporal features and targets for data splits.")
         self._save_temporal(
             temp_train_X,
             temp_train_y,
@@ -1373,33 +1371,33 @@ class MimicivProcessor:
     def process_combined_one(self) -> Tuple:
         """First step of combined processing.
 
-            1. load or process tabular data
-            2. load or process temporal data
-            3. aggregate tabular data
-            4. vectorize aggregated tabular data
-            5. vectorize the combined data
-            6. get intersection among the three datasets
+            1. Process tabular data or load from a file.
+            2. Process temporal data or load from a file.
+            3. Aggregate tabular data.
+            4. Vectorize aggregated tabular data.
+            5. Vectorize the combined data.
+            6. Get the intersection of the three datasets.
 
         Returns
         -------
         Tuple
-            vectorized tabular, temporal, and combined data
+            Vectorized tabular, temporal, and combined data.
 
         """
-        LOGGER.info("Getting vectorized tabular data")
+        LOGGER.info("Getting the vectorized tabular data.")
         if path.exists(self.tab_vectorized_file):
             tab_vectorized = load_pickle(self.tab_vectorized_file)
             tab_features = load_pickle(self.tab_features_file)
         else:
             tab_vectorized, tab_features = self.process_tabular_one()
 
-        LOGGER.info("Getting vectorized temporal data")
+        LOGGER.info("Getting the vectorized temporal data.")
         if path.exists(self.temp_vectorized_file):
             temp_vectorized = load_pickle(self.temp_vectorized_file)
         else:
             temp_vectorized = self.process_temporal_one()
 
-        LOGGER.info("Combining tabular and temporal data")
+        LOGGER.info("Combining tabular and temporal data.")
         tab_aggregated = self._aggregate_tabular(tab_features, temp_vectorized)
         tab_aggregated_vec = self._vectorize_agg_tabular(tab_aggregated)
         comb_vectorized = self._vectorize_combined(temp_vectorized, tab_aggregated_vec)
@@ -1411,17 +1409,17 @@ class MimicivProcessor:
     def process_combined_two(self, comb_vectorized: Vectorized) -> None:
         """Second step of combined processing.
 
-            1. split
-            2. get features and targets for each split
-            3. save the finalized vectorized data
+            1. Split.
+            2. Get the features and targets for each split.
+            3. Save the finalized vectorized data.
 
         Parameters
         ----------
         comb_vectorized : Vectorized
-            vectorized combined data
+            Vectorized combined data.
 
         """
-        LOGGER.info("Splitting combined data")
+        LOGGER.info("Splitting the combined data.")
         comb_train, comb_val, comb_test = self._split_combined(comb_vectorized)
         comb_train_X, comb_train_y = self._get_comb_train(
             comb_train, self.temp_norm_params["normalize"]
@@ -1433,7 +1431,7 @@ class MimicivProcessor:
             comb_test, self.temp_norm_params["normalize"]
         )
 
-        LOGGER.info("Saving combined features and targets for data splits")
+        LOGGER.info("Saving the combined features and targets for all data splits.")
         self._save_combined(
             comb_train_X,
             comb_train_y,
