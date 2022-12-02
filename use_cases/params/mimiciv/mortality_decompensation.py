@@ -1,4 +1,4 @@
-"""Mimiciv parameters for mortality decompensation data preprocessing."""
+"""MIMICIV parameters for mortality decompensation data processing."""
 
 from cyclops.process.column_names import (
     ADMIT_TIMESTAMP,
@@ -84,9 +84,9 @@ TABULAR_AGG = {
 TEMPORAL_PARAMS = {
     "query": EVENTS,
     "top_n_events": 150,
-    "timestep_size": 24,
-    "window_duration": 144,  # 24 * 6
-    "predict_offset": 336,  # 24 * 14
+    "timestep_size": 24,  # Make a prediction every day
+    "window_duration": 144,  # Predict for the first 6 days of admission
+    "predict_offset": 336,  # Death occurs in the next 2 weeks
 }
 
 TEMPORAL_NORM = {
@@ -131,7 +131,7 @@ TEMPORAL_AGG = {
     "time_by": ENCOUNTER_ID,
     "agg_by": [ENCOUNTER_ID, EVENT_NAME],
     "timestep_size": 24,
-    "window_duration": 144,  # 24 * 6
+    "window_duration": 144,
 }
 
 TEMPORAL_IMPUTE = {
