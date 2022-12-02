@@ -63,14 +63,12 @@ repos:
       entry: pylint
       files: ".*.py$"
       exclude: fsd
-      # args: ["--rcfile=./.pylintrc"]
-
 
   - repo: local
     hooks:
     - id: pytest
       name: pytest
-      entry: pytest
+      entry: pytest -m "not integration_test"
       language: system
       pass_filenames: false
       always_run: true
@@ -81,7 +79,6 @@ repos:
     - id: nbqa-black
     - id: nbqa-isort
     - id: nbqa-check-ast
-
     - id: nbqa-flake8
       # ignore E203/W503 to avoid conflict with black:
       # https://github.com/psf/black/issues/354

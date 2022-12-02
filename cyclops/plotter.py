@@ -10,7 +10,7 @@ from matplotlib.axes import SubplotBase
 from matplotlib.container import BarContainer
 from plotly.subplots import make_subplots
 
-from cyclops.processors.column_names import (
+from cyclops.process.column_names import (
     EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,

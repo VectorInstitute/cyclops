@@ -61,19 +61,6 @@ class DBTable:
     data: sqlalchemy.sql.schema.MetaData
 
 
-class DBMetaclass(type):
-    """Meta class for Database, keeps track of instances for singleton."""
-
-    __instances: dict = {}
-
-    def __call__(cls, *args, **kwargs):
-        """Call."""
-        if cls not in cls.__instances:
-            cls.__instances[cls] = super().__call__(*args, **kwargs)
-
-        return cls.__instances[cls]
-
-
 TABLE_OBJECTS = [Table, Select, Subquery, DBTable]
 TableTypes = Union[Select, Subquery, Table, DBTable]
 

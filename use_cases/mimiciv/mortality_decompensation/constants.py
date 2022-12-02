@@ -1,7 +1,7 @@
 """MIMICIV mortality decompensation use case constants."""
 
-from cyclops.processors.column_names import AGE, SEX
-from cyclops.processors.constants import TARGETS
+from cyclops.process.column_names import AGE, SEX
+from cyclops.process.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "mortality_decompensation"

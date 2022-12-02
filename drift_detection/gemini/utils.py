@@ -8,6 +8,9 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
+# unable to detect unidentified names, star import
+# from .constants import *
+# from .query import ENCOUNTER_ID
 
 def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
     """Import parameters specific to each use-case.
@@ -168,7 +171,7 @@ def process(X, aggregation_type, timesteps):
 
 
 def get_dataset_hospital(
-    admin_data, x, y, dataset, hospitals, train_frac=0.8, encounter_id="encounter_id"
+    admin_data, x, y, dataset, hospitals, encounter_id="encounter_id", train_frac=0.8
 ):
     """Get dataset for hospital."""
     # filter hospital
@@ -378,12 +381,20 @@ def get_dataset_hospital(
 
 
 def import_dataset_hospital(
-    admin_data, x, y, dataset, outcome, hospital, seed=1, shuffle=True, train_frac=0.8
+    admin_data,
+    x,
+    y,
+    dataset,
+    hospital,
+    encounter_id,
+    seed=1,
+    shuffle=True,
+    train_frac=0.8,
 ):
     """Import dataset for hospital-level analysis."""
     # get source and target data
     x_source, y_source, x_test, y_test, feats, admin_data = get_dataset_hospital(
-        admin_data, x, y, dataset, outcome, hospital
+        admin_data, x, y, dataset, hospital, encounter_id
     )
 
     # get train, validation and test set

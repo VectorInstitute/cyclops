@@ -1,8 +1,14 @@
 """Utilities for the drift detector module."""
 
+import importlib
 import inspect
 import pickle
 from datetime import timedelta
+from itertools import cycle
+from shutil import get_terminal_size
+from threading import Thread
+from time import sleep
+from typing import Callable, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -38,12 +44,22 @@ def get_args(obj, kwargs):
     args = {}
     for key in kwargs:
         if inspect.isclass(obj):
-            if key in obj.__init__.__code__.co_varnames:
+            # if key in obj.__init__.__code__.co_varnames:
+            if key in inspect.signature(obj).parameters:
                 args[key] = kwargs[key]
         elif inspect.ismethod(obj) or inspect.isfunction(obj):
             if key in obj.__code__.co_varnames:
                 args[key] = kwargs[key]
     return args
+
+
+def get_obj_from_str(string, reload=False):
+    """Get object from string."""
+    module, cls = string.rsplit(".", 1)
+    if reload:
+        module_imp = importlib.import_module(module)
+        importlib.reload(module_imp)
+    return getattr(importlib.import_module(module, package=None), cls)
 
 
 def load_model(model_path: str):
@@ -115,6 +131,7 @@ class ContextMMDWrapper:
     ):
         self.context_type = context_type
         self.model_path = model_path
+
         self.device = device
         if self.device is None:
             self.device = get_device()
@@ -179,41 +196,46 @@ class LKWrapper:
         self,
         X_s,
         *,
-        backend="pytorch",
-        p_val=0.05,
-        preprocess_x_ref=True,
-        update_x_ref=None,
-        preprocess_fn=None,
-        n_permutations=100,
-        var_reg=0.00001,
-        reg_loss_fn=lambda kernel: 0,
-        train_size=0.75,
-        retrain_from_scratch=True,
-        optimizer=None,
-        learning_rate=0.001,
-        batch_size=32,
-        preprocess_batch=None,
-        epochs=3,
-        verbose=0,
-        train_kwargs=None,
-        device=None,
-        dataset=None,
-        dataloader=None,
-        data_type=None,
+        backend: str = "tensorflow",
+        p_val: float = 0.05,
+        x_ref_preprocessed: bool = False,
+        preprocess_at_init: bool = True,
+        update_x_ref: Optional[Dict[str, int]] = None,
+        preprocess_fn: Optional[Callable] = None,
+        n_permutations: int = 100,
+        var_reg: float = 1e-5,
+        reg_loss_fn: Callable = (lambda kernel: 0),
+        train_size: Optional[float] = 0.75,
+        retrain_from_scratch: bool = True,
+        optimizer: Optional[Callable] = None,
+        learning_rate: float = 1e-3,
+        batch_size: int = 32,
+        preprocess_batch_fn: Optional[Callable] = None,
+        epochs: int = 3,
+        verbose: int = 0,
+        train_kwargs: Optional[dict] = None,
+        device: Optional[str] = None,
+        dataset: Optional[Callable] = None,
+        dataloader: Optional[Callable] = None,
+        input_shape: Optional[tuple] = None,
+        data_type: Optional[str] = None,
         kernel_a=GaussianRBF(trainable=True),
         kernel_b=GaussianRBF(trainable=True),
         eps="trainable",
-        proj_type="ffnn"
+        proj_type="ffnn",
+        num_features=None,
+        num_classes=None,
     ):
 
-        self.proj = self.choose_proj(X_s, proj_type)
+        self.proj = self.choose_proj(X_s, proj_type, num_features, num_classes)
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
         args = [
             backend,
             p_val,
-            preprocess_x_ref,
+            x_ref_preprocessed,
+            preprocess_at_init,
             update_x_ref,
             preprocess_fn,
             n_permutations,
@@ -224,13 +246,14 @@ class LKWrapper:
             optimizer,
             learning_rate,
             batch_size,
-            preprocess_batch,
+            preprocess_batch_fn,
             epochs,
             verbose,
             train_kwargs,
             device,
             dataset,
             dataloader,
+            input_shape,
             data_type,
         ]
 
@@ -240,14 +263,16 @@ class LKWrapper:
         """Predict if there is drift in the data."""
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
 
-    def choose_proj(self, X_s, proj_type):
+    def choose_proj(self, X_s, proj_type, num_features, num_classes):
         """Choose projection for learned kernel drift detection."""
+        num_features = num_features or X_s.shape[-1]
+        num_classes = num_classes or X_s.shape[-1]
         if proj_type in ["rnn", "gru", "lstm"]:
-            proj = recurrent_neural_network(proj_type, X_s.shape[-1])
+            proj = recurrent_neural_network(proj_type, num_features, num_classes)
         elif proj_type == "ffnn":
-            proj = feed_forward_neural_network(X_s.shape[-1])
+            proj = feed_forward_neural_network(num_features, num_classes)
         elif proj_type == "cnn":
-            proj = convolutional_neural_network(X_s.shape[-1])
+            proj = convolutional_neural_network(num_features, num_classes)
         else:
             raise ValueError("Invalid projection type.")
         return proj
@@ -290,13 +315,10 @@ def recurrent_neural_network(
     return model
 
 
-def feed_forward_neural_network(input_dim: int):
+def feed_forward_neural_network(
+    num_features: int, num_classes: int, ff_dim: int = 256
+) -> nn.Module:
     """Create a feed forward neural network model.
-
-    Parameters
-    ----------
-    input_dim
-        number of features
 
     Returns
     -------
@@ -305,38 +327,33 @@ def feed_forward_neural_network(input_dim: int):
 
     """
     ffnn = nn.Sequential(
-        nn.Linear(input_dim, 16),
+        nn.Linear(num_features, ff_dim),
         nn.SiLU(),
-        nn.Linear(16, 8),
+        nn.Linear(ff_dim, ff_dim),
         nn.SiLU(),
-        nn.Linear(8, 1),
-    )
+        nn.Linear(ff_dim, num_classes),
+    ).eval()
     return ffnn
 
 
-def convolutional_neural_network(input_dim: int):
+def convolutional_neural_network(num_channels, num_classes, cnn_dim=256) -> nn.Module:
     """Create a convolutional neural network model.
-
-    Parameters
-    ----------
-    input_dim
-        number of features
 
     Returns
     -------
     torch.nn.Module
-        convolutional neural network.
+        convolutional neural network for dimensionality reduction.
 
     """
     cnn = nn.Sequential(
-        nn.Conv2d(input_dim, 4, 3, 2, 0),
+        nn.Conv2d(num_channels, cnn_dim, 4, stride=2, padding=0),
         nn.ReLU(),
-        nn.Conv2d(8, 16, 4, 3, 2, 0),
+        nn.Conv2d(cnn_dim, cnn_dim, 4, stride=2, padding=0),
         nn.ReLU(),
-        nn.Conv2d(16, 32, 4, 3, 2, 0),
-        nn.ReLU(),
-        nn.Flatten(),
-    )
+        nn.AdaptiveAvgPool2d(1),
+        nn.Flatten(1, -1),
+        nn.Linear(cnn_dim, num_classes),
+    ).eval()
     return cnn
 
 
@@ -452,3 +469,66 @@ def reshape_2d_to_3d(data, num_timesteps):
     num_encounters = data.shape[0]
     data = data.values.reshape((num_encounters, num_timesteps, -1))
     return data
+
+
+# from https://stackoverflow.com/a/66558182
+class Loader:
+    """Loaing animation."""
+
+    def __init__(self, desc="Loading...", end="Done!", timeout=0.1):
+        """Loader-like context manager.
+
+        Parameters
+        ----------
+            desc (str, optional): The loader's description. Defaults to "Loading...".
+            end (str, optional): Final print. Defaults to "Done!".
+            timeout (float, optional): Sleep time between prints. Defaults to 0.1.
+
+        """
+        self.desc = desc
+        self.end = end
+        self.timeout = timeout
+
+        self._thread = Thread(target=self._animate, daemon=True)
+        self.steps = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"]
+        self.done = False
+
+    def start(self):
+        """Start the loader."""
+        self._thread.start()
+        return self
+
+    def _animate(self):
+        """Animate the loader."""
+        for cycle_itr in cycle(self.steps):
+            if self.done:
+                break
+            print(f"\r{self.desc} {cycle_itr}", flush=True, end="")
+            sleep(self.timeout)
+
+    def __enter__(self):
+        """Start the thread."""
+        self.start()
+
+    def stop(self):
+        """Stop the loader."""
+        self.done = True
+        cols = get_terminal_size((80, 20)).columns
+        print("\r" + " " * cols, end="", flush=True)
+        print(f"\r{self.end}", flush=True)
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        """Stop the thread."""
+        # handle exceptions with those variables ^
+        self.stop()
+
+
+if __name__ == "__main__":
+    with Loader("Loading with context manager..."):
+        for i in range(10):
+            sleep(0.25)
+
+    loader = Loader("Loading with object...", "That was fast!", 0.05).start()
+    for i in range(10):
+        sleep(0.25)
+    loader.stop()

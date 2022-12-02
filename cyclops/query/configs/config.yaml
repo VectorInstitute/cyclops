@@ -1,0 +1,6 @@
+dbms: "postgresql"
+port: 5432
+host: "localhost"
+database: "mimiciv-2.0"
+user: "postgres"
+password: "pwd"

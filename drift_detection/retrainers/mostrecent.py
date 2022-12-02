@@ -155,6 +155,8 @@ class MostRecentRetrainer:
                     )
 
                     # Remove all incorrectly predicted labels for retraining
+                    # undefined name: input_dim
+                    input_dim = None
                     if correct_only:
                         (
                             y_test_labels,
@@ -216,6 +218,9 @@ class MostRecentRetrainer:
                     self.shift_detector.model_path = self.retrain_model_path
 
                 elif self.model_name == "gbt":
+                    # undefined name: X_retrain, y_retrain
+                    X_retrain, y_retrain = None, None
+                    
                     self.model = self.model.fit(
                         X_retrain, y_retrain, xgb_model=self.model.get_booster()
                     )

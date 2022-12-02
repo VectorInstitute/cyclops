@@ -18,7 +18,7 @@ class RollingWindow:
 
     Parameters
     ----------
-    shift_detector: Detectpr
+    shift_detector: Detector
         Shift detector object to use in rolling window.
     optimizer: Optimizer
         Deep learning model optimizer to use in rolling window.

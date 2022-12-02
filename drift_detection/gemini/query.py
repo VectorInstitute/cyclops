@@ -2,9 +2,8 @@
 
 import pandas as pd
 
-import cyclops.query.process as qp
-from cyclops.processors.clean import combine_events
-from cyclops.processors.column_names import (
+# from cyclops.feature_handler import FeatureHandler
+from cyclops.process.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
     DIAGNOSIS_CODE,
