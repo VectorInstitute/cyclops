@@ -19,6 +19,10 @@ class GEMINIDataset:
 
         self.cfg = OmegaConf.load(cfg_path)
 
+        self.features = None
+        self.metadata = None
+        self.metadata_mapping = self.cfg.metadata_mapping
+
         # admin_data, x, y = get_gemini_data(self.cfg.path)
         # admin_data[self.cfg.metadata_mapping["targets"]] = y
 
