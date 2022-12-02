@@ -37,8 +37,8 @@ class CumulativeRetrainer:
 
     def __init__(
         self,
-        shift_detector: Detector = None,
-        optimizer: Optimizer = None,
+        shift_detector: Detector,
+        optimizer: Optimizer,
         model=None,
         model_name: str = None,
         retrain_model_path: str = None,
@@ -54,13 +54,13 @@ class CumulativeRetrainer:
 
     def retrain(
         self,
-        data_streams: dict = None,
+        # datastreams is dictionary of numpy arrays, static typing
+        data_streams,
         sample: int = 1000,
         stat_window: int = 30,
         lookup_window: int = 0,
         stride: int = 1,
         p_val_threshold: float = 0.05,
-        batch_size: int = 64,
         n_epochs: int = 1,
         correct_only: bool = False,
         aggregation_type="time",
@@ -105,7 +105,7 @@ class CumulativeRetrainer:
         i = stat_window
         p_val = 1
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        n_features = data_streams["X"][0].shape[1]
+        # n_features = data_streams["X"][0].shape[1]
 
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
@@ -148,9 +148,6 @@ class CumulativeRetrainer:
                         update_dataset, batch_size=1, shuffle=False
                     )
 
-                    # Remove all incorrectly predicted labels for retraining
-                    # undefined name: input_dim
-                    input_dim = None
                     if correct_only:
                         (
                             y_test_labels,
@@ -158,9 +155,6 @@ class CumulativeRetrainer:
                             y_pred_labels,
                         ) = self.optimizer.evaluate(
                             update_loader,
-                            batch_size=1,
-                            n_features=input_dim,
-                            timesteps=num_timesteps,
                         )
 
                         y_pred_values = y_pred_values[y_pred_labels != y_test_labels]
@@ -193,16 +187,12 @@ class CumulativeRetrainer:
                     self.optimizer.train(
                         update_loader,
                         update_loader,
-                        batch_size=batch_size,
                         n_epochs=n_epochs,
-                        n_features=n_features,
-                        timesteps=num_timesteps,
-                        model_path=self.retrain_model_path,
                     )
 
                     self.model.load_state_dict(torch.load(self.retrain_model_path))
                     self.optimizer.model = self.model
-                    self.shift_detector.model_path = self.retrain_model_path
+                    setattr(self.shift_detector, "model_path", self.retrain_model_path)
 
                 elif self.model_name == "gbt":
                     # undefined name: X_retrain, y_retrain
@@ -244,11 +234,9 @@ class CumulativeRetrainer:
 
             # Check performance of next window
             test_dataset = get_data(X_next, y_next)
-            test_loader = torch.utils.data.DataLoader(
-                test_dataset, batch_size=1, shuffle=False
-            )
+            test_loader = torch.utils.data.DataLoader(test_dataset, shuffle=False)
             y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
-                test_loader, batch_size=1, n_features=input_dim, timesteps=num_timesteps
+                test_loader
             )
             assert y_test_labels.shape == y_pred_labels.shape == y_pred_values.shape
             y_pred_values = y_pred_values[y_test_labels != -1]
@@ -285,9 +273,9 @@ class CumulativeRetrainer:
 
         pbar.close()
 
-        rolling_metrics = {
+        rolling_metrics_final = {
             k: [d.get(k) for d in rolling_metrics]
             for k in set().union(*rolling_metrics)
         }
 
-        return rolling_metrics
+        return rolling_metrics_final

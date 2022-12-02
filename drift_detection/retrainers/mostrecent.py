@@ -59,14 +59,13 @@ class MostRecentRetrainer:
 
     def retrain(
         self,
-        data_streams: dict = None,
+        data_streams,
         retrain_window: int = 30,
         sample: int = 1000,
         stat_window: int = 30,
         lookup_window: int = 0,
         stride: int = 1,
         p_val_threshold: float = 0.05,
-        batch_size: int = 64,
         n_epochs: int = 1,
         correct_only: bool = False,
         aggregation_type="time",
@@ -111,7 +110,7 @@ class MostRecentRetrainer:
         i = stat_window
         p_val = 1
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        n_features = data_streams["X"][0].shape[1]
+        # n_features = data_streams["X"][0].shape[1]
 
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
@@ -156,7 +155,6 @@ class MostRecentRetrainer:
 
                     # Remove all incorrectly predicted labels for retraining
                     # undefined name: input_dim
-                    input_dim = None
                     if correct_only:
                         (
                             y_test_labels,
@@ -164,9 +162,6 @@ class MostRecentRetrainer:
                             y_pred_labels,
                         ) = self.optimizer.evaluate(
                             update_loader,
-                            batch_size=1,
-                            n_features=input_dim,
-                            timesteps=num_timesteps,
                         )
 
                         y_pred_values = y_pred_values[y_pred_labels != y_test_labels]
@@ -206,21 +201,18 @@ class MostRecentRetrainer:
                     self.optimizer.train(
                         update_loader,
                         update_loader,
-                        batch_size=batch_size,
                         n_epochs=n_epochs,
-                        n_features=n_features,
-                        timesteps=num_timesteps,
                         model_path=self.retrain_model_path,
                     )
 
                     self.model.load_state_dict(torch.load(self.retrain_model_path))
                     self.optimizer.model = self.model
-                    self.shift_detector.model_path = self.retrain_model_path
+                    setattr(self.shift_detector, "model_path", self.retrain_model_path)
 
                 elif self.model_name == "gbt":
                     # undefined name: X_retrain, y_retrain
                     X_retrain, y_retrain = None, None
-                    
+
                     self.model = self.model.fit(
                         X_retrain, y_retrain, xgb_model=self.model.get_booster()
                     )
@@ -263,9 +255,6 @@ class MostRecentRetrainer:
             )
             y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                 test_loader,
-                batch_size=1,
-                n_features=n_features,
-                timesteps=num_timesteps,
             )
             assert y_test_labels.shape == y_pred_labels.shape == y_pred_values.shape
             y_pred_values = y_pred_values[y_test_labels != -1]

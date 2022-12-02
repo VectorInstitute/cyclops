@@ -120,7 +120,7 @@ class RollingWindow:
         performance_metrics = []
         i = 0
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        n_features = data_streams["X"][0].shape[1]
+        # n_features = data_streams["X"][0].shape[1]
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
         while i + stat_window + lookup_window < len(data_streams["X"]):
@@ -152,9 +152,6 @@ class RollingWindow:
                 )
                 y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                     test_loader,
-                    batch_size=1,
-                    n_features=n_features,
-                    timesteps=num_timesteps,
                 )
                 y_pred_values = y_pred_values[y_test_labels != -1]
                 y_pred_labels = y_pred_labels[y_test_labels != -1]

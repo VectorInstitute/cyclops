@@ -9,8 +9,6 @@ import numpy as np
 import pandas as pd
 from omegaconf import OmegaConf
 
-from ..gemini.query import get_gemini_data
-
 # from gemini.utils import get_label, import_dataset_hospital, normalize, process, scale
 
 
@@ -21,8 +19,8 @@ class GEMINIDataset:
 
         self.cfg = OmegaConf.load(cfg_path)
 
-        admin_data, x, y = get_gemini_data(self.cfg.path)
-        admin_data[self.cfg.metadata_mapping["targets"]] = y
+        # admin_data, x, y = get_gemini_data(self.cfg.path)
+        # admin_data[self.cfg.metadata_mapping["targets"]] = y
 
         # (x_train, y_train), (x_valid, y_valid), (x_test, y_test), _, admin_data =
         # import_dataset_hospital(admin_data,
@@ -77,9 +75,9 @@ class GEMINIDataset:
         #      'y_test': y_test
         #                   }
 
-        self.features = x
-        self.metadata = admin_data
-        self.metadata_mapping = self.cfg.metadata_mapping
+        # self.features = x
+        # self.metadata = admin_data
+        # self.metadata_mapping = self.cfg.metadata_mapping
 
     def get_data(self) -> Tuple[np.ndarray, pd.DataFrame, dict]:
         """Get data.

@@ -127,7 +127,7 @@ class ContextMMDWrapper:
         data_type=None,
         verbose=False,
         context_type="lstm",
-        model_path=None
+        model_path=None,
     ):
         self.context_type = context_type
         self.model_path = model_path
@@ -135,7 +135,7 @@ class ContextMMDWrapper:
         self.device = device
         if self.device is None:
             self.device = get_device()
-        C_s = self.context(X_s)
+        c_source = self.context(X_s)
 
         args = [
             backend,
@@ -155,7 +155,7 @@ class ContextMMDWrapper:
             verbose,
         ]
 
-        self.tester = ContextMMDDrift(X_s, C_s, *args)
+        self.tester = ContextMMDDrift(X_s, c_source, *args)
 
     def predict(self, X_t, **kwargs):
         """Predict if there is drift in the data."""
