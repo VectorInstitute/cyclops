@@ -1,7 +1,7 @@
 """Data Processor class to process data per use-case."""
 
 from use_cases.constants import DATA_TYPES, DATASETS, USE_CASES
-from use_cases.data_processors.mimiciv import MimicivProcessor
+from use_cases.data_processors.mimiciv import MIMICIVProcessor
 
 
 class DataProcessor:
@@ -18,11 +18,11 @@ class DataProcessor:
         Parameters
         ----------
         dataset_name : str
-            dataset name to process its data
+            Dataset name to process the data from.
         use_case : str
-            use-case to process the data for
+            Use-case to process the data for.
         data_type : str
-            type of data (tabular, temporal, or combined)
+            Type of data (tabular, temporal, or combined).
 
         """
         self.dataset_name = dataset_name.lower()
@@ -44,9 +44,9 @@ class DataProcessor:
         assert self.data_type in DATA_TYPES, "[!] Invalid data type"
 
     def _init_processor(self) -> None:
-        """Initialize the specific processor based on dataset name and use-case."""
+        """Initialize the processor based on the dataset name and the use-case."""
         if self.dataset_name == "mimiciv":
-            self.processor = MimicivProcessor(self.use_case, self.data_type)
+            self.processor = MIMICIVProcessor(self.use_case, self.data_type)
 
     def process_data(self):
         """Process the data based on its type."""
