@@ -110,22 +110,22 @@ class ContextMMDWrapper:
     def __init__(
         self,
         X_s,
-        backend: str = "pytorch",
-        p_val: float = 0.05,
-        x_ref_preprocessed: bool = False,
-        preprocess_at_init: bool = True,
-        update_ref: Optional[Dict[str, int]] = None,
-        preprocess_fn: Optional[Callable] = None,
-        x_kernel: Callable = None,
-        c_kernel: Callable = None,
-        n_permutations: int = 1000,
-        prop_c_held: float = 0.25,
-        n_folds: int = 5,
-        batch_size: Optional[int] = 256,
-        device: Optional[str] = None,
-        input_shape: Optional[tuple] = None,
-        data_type: Optional[str] = None,
-        verbose: bool = False,
+        *,
+        backend="pytorch",
+        p_val=0.05,
+        preprocess_x_ref=True,
+        update_ref=None,
+        preprocess_fn=None,
+        x_kernel=None,
+        c_kernel=None,
+        n_permutations=100,
+        prop_c_held=0.25,
+        n_folds=5,
+        batch_size=64,
+        device=None,
+        input_shape=None,
+        data_type=None,
+        verbose=False,
         context_type="lstm",
         model_path=None,
     ):
@@ -135,14 +135,12 @@ class ContextMMDWrapper:
         self.device = device
         if self.device is None:
             self.device = get_device()
-
         c_source = self.context(X_s)
 
         args = [
             backend,
             p_val,
-            x_ref_preprocessed,
-            preprocess_at_init,
+            preprocess_x_ref,
             update_ref,
             preprocess_fn,
             x_kernel,
@@ -175,10 +173,10 @@ class ContextMMDWrapper:
             Data to build context for context mmd drift detection.
 
         """
-        if self.context_type == "gmm":
-            gmm = load_model(self.model_path)
-            c_gmm_proba = gmm.predict_proba(X)
-            output = c_gmm_proba
+        if self.context_type == "sklearn":
+            model = load_model(self.model_path)
+            pred_proba = model.predict_proba(X)
+            output = pred_proba
         elif self.context_type in ["rnn", "gru", "lstm"]:
             model = recurrent_neural_network(self.context_type, X.shape[-1])
             model.load_state_dict(load_model(self.model_path)["model"])

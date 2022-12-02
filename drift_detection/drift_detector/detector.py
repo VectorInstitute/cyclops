@@ -139,7 +139,10 @@ class Detector:
 
         results = self.test_shift(X_t[:sample, :], **kwargs)
 
-        shift_detected = results["p_val"] < self.p_val_threshold
+        if results["p_val"] < self.p_val_threshold:
+            shift_detected = 1
+        else:
+            shift_detected = 0
 
         return {
             "p_val": results["p_val"],
