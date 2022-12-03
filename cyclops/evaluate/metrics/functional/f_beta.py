@@ -248,7 +248,7 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
     )
 
     tp, fp, _, fn = _multiclass_stat_scores_update(
-        target=target, preds=preds, num_classes=num_classes, classwise=True
+        target=target, preds=preds, num_classes=num_classes
     )
 
     return _fbeta_reduce(
@@ -333,7 +333,7 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
     )
 
     tp, fp, _, fn = _multilabel_stat_scores_update(
-        target=target, preds=preds, num_labels=num_labels, labelwise=True
+        target=target, preds=preds, num_labels=num_labels
     )
 
     return _fbeta_reduce(

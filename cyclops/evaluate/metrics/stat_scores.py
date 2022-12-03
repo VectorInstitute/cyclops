@@ -163,7 +163,7 @@ class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
 
         """
         tp, fp, tn, fn = self._final_state()
-        return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
+        return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=True)
 
 
 class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores"):
@@ -229,7 +229,7 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
         self.top_k = top_k
         self.classwise = classwise
 
-        self._create_state(size=1 if not classwise else num_classes)
+        self._create_state(size=num_classes)
 
     def update_state(  # pylint: disable=arguments-differ
         self, target: ArrayLike, preds: ArrayLike
@@ -239,10 +239,7 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
             target, preds, num_classes=self.num_classes, top_k=self.top_k
         )
         tp, fp, tn, fn = _multiclass_stat_scores_update(
-            target,
-            preds,
-            num_classes=self.num_classes,
-            classwise=self.classwise,
+            target, preds, num_classes=self.num_classes
         )
         self._update_state(tp, fp, tn, fn)
 
@@ -259,7 +256,9 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
 
         """
         tp, fp, tn, fn = self._final_state()
-        return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
+        return _stat_scores_compute(
+            tp=tp, fp=fp, tn=tn, fn=fn, classwise=self.classwise
+        )
 
 
 class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores"):
@@ -274,7 +273,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         If given, and predictions are probabilities/logits, the score will
         be computed only for the top k classes. Otherwise, ``top_k`` will be
         set to 1.
-    labelwise : bool, default=False
+    labelwise : bool, default=True
         Whether to return the stat scores for each label or sum over all labels.
 
     Examples
@@ -305,7 +304,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         num_labels: int,
         threshold: float = 0.5,
         top_k: int = None,
-        labelwise: bool = False,
+        labelwise: bool = True,
     ) -> None:
         super().__init__()
 
@@ -316,7 +315,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         self.top_k = top_k
         self.labelwise = labelwise
 
-        self._create_state(size=1 if not self.labelwise else num_labels)
+        self._create_state(size=num_labels)
 
     def update_state(  # pylint: disable=arguments-differ
         self, target: ArrayLike, preds: ArrayLike
@@ -330,10 +329,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
             top_k=self.top_k,
         )
         tp, fp, tn, fn = _multilabel_stat_scores_update(
-            target,
-            preds,
-            num_labels=self.num_labels,
-            labelwise=self.labelwise,
+            target, preds, num_labels=self.num_labels
         )
         self._update_state(tp, fp, tn, fn)
 
@@ -350,7 +346,9 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
 
         """
         tp, fp, tn, fn = self._final_state()
-        return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
+        return _stat_scores_compute(
+            tp=tp, fp=fp, tn=tn, fn=fn, classwise=self.labelwise
+        )
 
 
 class StatScores(Metric, registry_key="stat_scores", force_register=True):

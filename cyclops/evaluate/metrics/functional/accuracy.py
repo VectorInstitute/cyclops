@@ -227,12 +227,7 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
     )
 
     # pylint: disable=invalid-name
-    tp, fp, tn, fn = _multiclass_stat_scores_update(
-        target,
-        preds,
-        num_classes,
-        classwise=True,
-    )
+    tp, fp, tn, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
     return _accuracy_reduce(
         tp,
@@ -314,12 +309,7 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
     )
 
     # pylint: disable=invalid-name
-    tp, fp, tn, fn = _multilabel_stat_scores_update(
-        target,
-        preds,
-        num_labels,
-        labelwise=True,
-    )
+    tp, fp, tn, fn = _multilabel_stat_scores_update(target, preds, num_labels)
 
     return _accuracy_reduce(
         tp,

@@ -208,12 +208,7 @@ def multiclass_specificity(  # pylint: disable=too-many-arguments
         target, preds, num_classes=num_classes, top_k=top_k
     )
 
-    tp, fp, tn, fn = _multiclass_stat_scores_update(
-        target,
-        preds,
-        num_classes,
-        classwise=True,
-    )
+    tp, fp, tn, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
     return _specificity_reduce(
         tp,
@@ -289,12 +284,7 @@ def multilabel_specificity(  # pylint: disable=too-many-arguments
         target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
     )
 
-    tp, fp, tn, fn = _multilabel_stat_scores_update(
-        target,
-        preds,
-        num_labels,
-        labelwise=True,
-    )
+    tp, fp, tn, fn = _multilabel_stat_scores_update(target, preds, num_labels)
 
     return _specificity_reduce(
         tp,

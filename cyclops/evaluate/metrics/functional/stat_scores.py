@@ -27,6 +27,7 @@ def _stat_scores_compute(
     fp: Union[np.ndarray, np.int_],
     tn: Union[np.ndarray, np.int_],
     fn: Union[np.ndarray, np.int_],
+    classwise: Optional[bool] = True,
 ) -> np.ndarray:
     """Compute true positives, false positives, true negatives and false negatives.
 
@@ -42,12 +43,21 @@ def _stat_scores_compute(
         True negatives.
     fn : numpy.ndarray or numpy.int_
         False negatives.
+    classwise : bool, default=True
+        If True, compute the stat scores for each class separately. Otherwise,
+        compute the stat scores for the whole array.
 
     Returns
     -------
     The stat scores.
 
     """
+    if not classwise:
+        tp = tp.sum()
+        fp = fp.sum()
+        tn = tn.sum()
+        fn = fn.sum()
+
     if tp.ndim == 1 and tp.size == 1:  # 1D array with 1 element
         stats = [tp, fp, tn, fn, tp + fn]
     else:
@@ -68,7 +78,6 @@ def _stat_scores_from_confmat(
     target: np.ndarray,
     preds: np.ndarray,
     labels: Optional[ArrayLike] = None,
-    classwise: Optional[bool] = False,
 ) -> Tuple[
     Union[np.ndarray, np.int_],
     Union[np.ndarray, np.int_],
@@ -85,9 +94,6 @@ def _stat_scores_from_confmat(
         Ground truth.
     labels : numpy.ndarray, default=None
         The set of labels to include.
-    classwise : bool, default=True
-        If True, compute the stat scores for each class separately. Otherwise,
-        compute the stat scores for the whole array.
 
     Returns
     -------
@@ -102,12 +108,6 @@ def _stat_scores_from_confmat(
     fn = confmat[:, 1, 0]
     tp = confmat[:, 1, 1]
     fp = confmat[:, 0, 1]
-
-    if not classwise:
-        tp = tp.sum()
-        fp = fp.sum()
-        tn = tn.sum()
-        fn = fn.sum()
 
     return (
         tp.astype(np.int_),
@@ -262,7 +262,7 @@ def _binary_stat_scores_update(
         If the target and preds are not numeric.
 
     """
-    return _stat_scores_from_confmat(target, preds, labels=[pos_label], classwise=True)
+    return _stat_scores_from_confmat(target, preds, labels=[pos_label])
 
 
 def binary_stat_scores(
@@ -316,7 +316,7 @@ def binary_stat_scores(
         target=target, preds=preds, pos_label=pos_label
     )
 
-    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
+    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=True)
 
 
 def _multiclass_stat_scores_format(
@@ -420,7 +420,6 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
     target: np.ndarray,
     preds: np.ndarray,
     num_classes: int,
-    classwise: Optional[bool] = True,
 ) -> Tuple[
     Union[np.ndarray, np.int_],
     Union[np.ndarray, np.int_],
@@ -437,8 +436,6 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
         Predictions.
     num_classes : int
         The total number of classes for the problem.
-    classwise : bool, default=True
-        Whether to return the statistics for each class or sum over all classes.
 
     Returns
     -------
@@ -452,9 +449,7 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
         If the input target and preds are not numeric.
 
     """
-    return _stat_scores_from_confmat(
-        target, preds, labels=np.arange(num_classes), classwise=classwise
-    )
+    return _stat_scores_from_confmat(target, preds, labels=np.arange(num_classes))
 
 
 def multiclass_stat_scores(  # pylint: disable=too-many-arguments
@@ -505,13 +500,10 @@ def multiclass_stat_scores(  # pylint: disable=too-many-arguments
     )
 
     tp, fp, tn, fn = _multiclass_stat_scores_update(
-        target=target,
-        preds=preds,
-        num_classes=num_classes,
-        classwise=classwise,
+        target=target, preds=preds, num_classes=num_classes
     )
 
-    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
+    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=classwise)
 
 
 def _multilabel_stat_scores_format(
@@ -596,7 +588,6 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     num_labels: int,
-    labelwise: Optional[bool] = False,
 ) -> Tuple[
     Union[np.ndarray, np.int_],
     Union[np.ndarray, np.int_],
@@ -628,9 +619,7 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
         If the input target and preds are not numeric.
 
     """
-    return _stat_scores_from_confmat(
-        target, preds, labels=np.arange(num_labels), classwise=labelwise
-    )
+    return _stat_scores_from_confmat(target, preds, labels=np.arange(num_labels))
 
 
 def multilabel_stat_scores(  # pylint: disable=too-many-arguments
@@ -693,13 +682,10 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
     )
 
     tp, fp, tn, fn = _multilabel_stat_scores_update(
-        target=target,
-        preds=preds,
-        num_labels=num_labels,
-        labelwise=labelwise,
+        target=target, preds=preds, num_labels=num_labels
     )
 
-    return _stat_scores_compute(tp, fp, tn, fn)
+    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=labelwise)
 
 
 def stat_scores(  # pylint: disable=too-many-arguments

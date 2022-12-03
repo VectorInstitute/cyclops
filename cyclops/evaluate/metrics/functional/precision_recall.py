@@ -216,12 +216,7 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
         target, preds, num_classes=num_classes, top_k=top_k
     )
 
-    tp, fp, _, fn = _multiclass_stat_scores_update(
-        target,
-        preds,
-        num_classes,
-        classwise=True,
-    )
+    tp, fp, _, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
     return _precision_recall_reduce(
         tp,
@@ -301,12 +296,7 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
         target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
     )
 
-    tp, fp, _, fn = _multilabel_stat_scores_update(
-        target,
-        preds,
-        num_labels,
-        labelwise=True,
-    )
+    tp, fp, _, fn = _multilabel_stat_scores_update(target, preds, num_labels)
 
     return _precision_recall_reduce(
         tp,
@@ -571,12 +561,7 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
         target, preds, num_classes=num_classes, top_k=top_k
     )
 
-    tp, fp, _, fn = _multiclass_stat_scores_update(
-        target,
-        preds,
-        num_classes,
-        classwise=True,
-    )
+    tp, fp, _, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
     return _precision_recall_reduce(
         tp,
@@ -657,12 +642,7 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
         target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
     )
 
-    tp, fp, _, fn = _multilabel_stat_scores_update(
-        target,
-        preds,
-        num_labels,
-        labelwise=True,
-    )
+    tp, fp, _, fn = _multilabel_stat_scores_update(target, preds, num_labels)
 
     return _precision_recall_reduce(
         tp,
