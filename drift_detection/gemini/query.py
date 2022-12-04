@@ -1,240 +1,316 @@
-"""Querying functions for GEMINI Use-case."""
-import os
-import sys
+"""GEMINI mortality decompensation use case querying."""
 
-import numpy as np
+# flake8: noqa
+# mypy: ignore-errors
+# pylint: skip-file
+
 import pandas as pd
 
-# from cyclops.feature_handler import FeatureHandler
+import cyclops.query.process as qp
 from cyclops.process.column_names import (
     ADMIT_TIMESTAMP,
+    AGE,
+    DIAGNOSIS_CODE,
     DISCHARGE_TIMESTAMP,
     ENCOUNTER_ID,
     EVENT_CATEGORY,
     EVENT_NAME,
     EVENT_TIMESTAMP,
     EVENT_VALUE,
+    HOSPITAL_ID,
+    SEX,
+    SUBJECT_ID,
 )
+from cyclops.process.diagnoses import process_diagnoses
+from cyclops.process.util import assert_has_columns
+from cyclops.query import gemini
+from cyclops.query.gemini import get_interface
+from drift_detection.gemini.mortality.constants import BEFORE_DATE, OUTCOME_DEATH, SEXES
 
-# from cyclops.processors.events import convert_to_events
-from cyclops.utils.file import load_dataframe
-
-from .constants import AGGREGATION_BUCKET_SIZE, AGGREGATION_WINDOW, LOS, MORTALITY
-
-sys.path.append("../..")
-
-
-def get_merged_data(base_data_path):
-    """Merge encounters and aggregated events.
-
-    Parameters
-    ----------
-    base_data_path : str
-        Path to the base data directory
-
-    Returns
-    -------
-    pd.DataFrame
-        Merged data
-    temporal: pd.DataFrame
-        Temporal data
-    static: pd.DataFrame
-        Static data
-
-    """
-    print("Load data from feature handler...")
-    # Declare feature handler
-    # No module named FeatureHandler in cyclops
-    # feature_handler = FeatureHandler()
-    feature_handler = callable()
-    feature_handler.load(base_data_path, "features")
-
-    # Get static and temporal data
-    static = feature_handler.features["static"]
-    temporal = feature_handler.features["temporal"]
-
-    # Get types of columns
-    numerical_cols = feature_handler.get_numerical_feature_names()["temporal"]
-    # feature_handler.get_categorical_feature_names()["temporal"]
-
-    # Impute numerical columns
-    temporal[numerical_cols] = temporal[numerical_cols].ffill().bfill()
-
-    # Check no more missingness!
-    assert not temporal.isna().sum().sum() and not static.isna().sum().sum()
-
-    # Combine static and temporal
-    merged_static_temporal = temporal.combine_first(static)
-    numerical_cols += ["age"]
-
-    return merged_static_temporal, temporal, static
+# from use_cases.gemini.common.constants import READMISSION_MAP
+# from use_cases.gemini.common.query import (
+#     get_er_for_cohort,
+#     get_labs_for_cohort,
+#     join_queries_flow_fake,
+# )
 
 
-def get_aggregated_events(base_data_path):
-    """Get aggregated events.
-
-    Parameters
-    ----------
-    base_data_path : str
-        Path to the base data directory
+def get_most_recent_encounters() -> pd.DataFrame:
+    """Filter for cohort and get the most recent encounter for each patient.
 
     Returns
     -------
-    pd.DataFrame
-        Aggregated events
+    pandas.DataFrame
+        The recent patient encounters.
 
     """
-    print("Load data from aggregated events...")
-    # Aggregated events
-    aggregated_events = load_dataframe(
-        os.path.join(base_data_path, "aggregated_events")
+    table = gemini.patient_encounters(
+        sex=SEXES,
+        before_date=BEFORE_DATE,
+        died=True,
+        died_binarize_col=OUTCOME_DEATH,
+    ).query
+
+    # Do not do any further filtering before this point since
+    # we count previous encounters below.
+
+    # Get most recent admission for each patient
+    recent_admits = qp.GroupByAggregate(
+        SUBJECT_ID,
+        {ADMIT_TIMESTAMP: "max", SUBJECT_ID: ("count", "prev_encounter_count")},
+    )(table)
+
+    # Subtract one from encounter count to get the count of count previous encounters
+    recent_admits = qp.AddNumeric("prev_encounter_count", -1)(recent_admits)
+
+    # Only keep encounters where most responsible physician is GIM
+    table = qp.ConditionEquals("mrp_gim", "y")(table)
+
+    # Filter columns
+    keep = [
+        ENCOUNTER_ID,
+        SUBJECT_ID,
+        ADMIT_TIMESTAMP,
+        DISCHARGE_TIMESTAMP,
+        AGE,
+        SEX,
+        HOSPITAL_ID,
+        OUTCOME_DEATH,
+        "readmission",
+        "from_nursing_home_mapped",
+        "from_acute_care_institution_mapped",
+        "los_derived",
+    ]
+    table = qp.FilterColumns(keep)(table)
+
+    table = qp.ReorderAfter(ADMIT_TIMESTAMP, SUBJECT_ID)(table)
+
+    # Keep only most recent encounter
+    cohort = join_queries_flow_fake(
+        get_interface(table),
+        get_interface(recent_admits),
+        on=[SUBJECT_ID, ADMIT_TIMESTAMP],
     )
-    # not used
-    # timestep_start_timestamps = load_dataframe(
-    #     os.path.join(base_data_path, "aggmeta_start_ts")
-    # )
-    aggregated_events.loc[aggregated_events["timestep"] == 6][
-        "event_name"
-    ].value_counts()
-    aggregated_events = aggregated_events.loc[aggregated_events["timestep"] != 6]
-    return aggregated_events
+
+    for key, value in READMISSION_MAP.items():
+        cohort["readmission"] = cohort["readmission"].replace(value, key)
+
+    return cohort
 
 
-def get_encounters(base_data_path):
-    """Get encounters.
-
-    Parameters
-    ----------
-    base_data_path : str
-        Path to the base data directory
+def get_diagnoses() -> pd.DataFrame:
+    """Get diagnoses.
 
     Returns
     -------
-    pd.DataFrame
-        Encounters
+    pandas.DataFrame
+        The table.
 
     """
-    print("Load data from admin data...")
-    encounters_data = pd.read_parquet(os.path.join(base_data_path, "admin_er.parquet"))
-    encounters_data[LOS] = (
-        encounters_data[DISCHARGE_TIMESTAMP] - encounters_data[ADMIT_TIMESTAMP]
-    )
-    encounters_data_atleast_los_24_hrs = encounters_data.loc[
-        encounters_data[LOS] >= pd.to_timedelta(24, unit="h")
-    ]
-    return encounters_data_atleast_los_24_hrs
+    table = gemini.diagnoses(diagnosis_types="M").query
+
+    # Drop ER diagnoses
+    table = qp.ConditionEquals("is_er_diagnosis", False)(table)
+
+    # Filter columns
+    keep = [ENCOUNTER_ID, DIAGNOSIS_CODE, "ccsr_default", "ccsr_1", "ccsr_2"]
+    table = qp.FilterColumns(keep)(table)
+
+    return get_interface(table).run()
 
 
-def get_gemini_data(base_data_path):
-    """Get GEMINI data.
+def get_cohort() -> pd.DataFrame:
+    """Get cohort.
+
+    Get cohort of pre-Covid, GIM patients admitted for non-cardiac main diagnoses.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The table.
+
+    """
+    encounters = get_most_recent_encounters()
+    diagnoses = get_diagnoses()
+    cohort = pd.merge(encounters, diagnoses, on=ENCOUNTER_ID)
+
+    # Include diagnosis code groupings (trajectories)
+    trajectory = process_diagnoses(cohort[DIAGNOSIS_CODE])
+    cohort[trajectory.name] = trajectory
+
+    return cohort
+
+
+@assert_has_columns(ENCOUNTER_ID)
+def get_imaging_for_cohort(cohort: pd.DataFrame):
+    """Get imaging data for the cohort.
 
     Parameters
     ----------
-    base_data_path : str
-        Path to the base data directory
-    encounters_train_val_test, X, mortality_risk_targets
+    cohort: pandas.DataFrame
+        Cohort data.
+
     Returns
     -------
-    encounters_train_val_test : pd.DataFrame
-        encounters metadata
-    X : pd.DataFrame
-        features
-    mortality_risk_targets : pd.DataFrame
-        mortality risk targets
+    pandas.DataFrame
+        Imaging data for cohort.
 
     """
-    # Get aggregated events
-    aggregated_events = get_aggregated_events(base_data_path)
-    # Get merged static + temporal data
-    merged_static_temporal, temporal, static = get_merged_data(base_data_path)
-    # Get encounters > 24hr los
-    encounters_data_atleast_los_24_hrs = get_encounters(base_data_path)
-    # Get mortality events
-    encounters_mortality = encounters_data_atleast_los_24_hrs.loc[
-        encounters_data_atleast_los_24_hrs[MORTALITY] is True
-    ]
-    # Get non-mortality events
-    encounters_not_mortality = encounters_data_atleast_los_24_hrs.loc[
-        encounters_data_atleast_los_24_hrs[MORTALITY] is False
-    ]
-    num_encounters_not_mortality = len(encounters_mortality)
-    encounters_not_mortality_subset = encounters_not_mortality[
-        0:num_encounters_not_mortality
-    ]
-    # Combine mortality + non-mortality events
-    encounters_train_val_test = pd.concat(
-        [encounters_mortality, encounters_not_mortality_subset], ignore_index=True
+    imaging = gemini.imaging().run()
+    imaging = imaging.rename(
+        columns={
+            "imaging_test_description": EVENT_NAME,
+            "performed_date_time": EVENT_TIMESTAMP,
+        }
     )
-    # Get events the result in mortality within 2 weeks
-    timeframe = 14  # days
-    encounters_mortality_within_risk_timeframe = encounters_mortality.loc[
-        encounters_mortality[LOS]
-        <= pd.to_timedelta(timeframe * 24 + AGGREGATION_WINDOW, unit="h")
-    ]
-    # No function named convert_to_events in cyclops.processors.events
-    mortality_events = callable()
-    # mortality_events = convert_to_events(
-    #     encounters_mortality_within_risk_timeframe,
-    #     event_name="death",
-    #     event_category="general",
-    #     timestamp_col=DISCHARGE_TIMESTAMP,
-    # )
-    mortality_events = pd.merge(
-        mortality_events, encounters_mortality, on=ENCOUNTER_ID, how="inner"
-    )
-    mortality_events = mortality_events[
-        [
-            ENCOUNTER_ID,
-            EVENT_NAME,
-            EVENT_TIMESTAMP,
-            ADMIT_TIMESTAMP,
-            EVENT_VALUE,
-            EVENT_CATEGORY,
-        ]
-    ]
-    mortality_events[EVENT_VALUE] = 1
-    # Get mortality labels
-    num_timesteps = int(AGGREGATION_WINDOW / AGGREGATION_BUCKET_SIZE)
-    encounter_ids = list(merged_static_temporal.index.get_level_values(0).unique())
-    num_encounters = len(encounter_ids)
-    # All zeroes.
-    labels = np.zeros((num_encounters, num_timesteps))
-    # Set mortality within timeframe encounters to all 1s.
-    labels[
-        [
-            encounter_ids.index(enc_id)
-            for enc_id in list(encounters_mortality_within_risk_timeframe[ENCOUNTER_ID])
-        ]
-    ] = 1
-    # Get which timestep death occurs and set those and following timesteps
-    # label values to be -1.
-    aggregated_mortality_events = aggregated_events.loc[
-        aggregated_events[EVENT_NAME] == "death"
-    ]
-    for enc_id in list(aggregated_mortality_events[ENCOUNTER_ID]):
-        timestep_death = aggregated_mortality_events.loc[
-            aggregated_mortality_events[ENCOUNTER_ID] == enc_id
-        ]["timestep"]
-        labels[encounter_ids.index(enc_id)][int(timestep_death) + 1 :] = -1
-    timestep_end_timestamps = load_dataframe(
-        os.path.join(base_data_path, "aggmeta_end_ts")
-    )
-    # Lookahead for each timestep, and see if death occurs in risk timeframe.
-    for enc_id in list(encounters_mortality_within_risk_timeframe[ENCOUNTER_ID]):
-        mortality_encounter = mortality_events.loc[
-            mortality_events[ENCOUNTER_ID] == enc_id
-        ]
-        ts_ends = timestep_end_timestamps.loc[enc_id]["timestep_end_timestamp"]
-        mortality_ts = mortality_encounter["event_timestamp"]
-        for ts_idx, ts_end in enumerate(ts_ends):
-            if not (
-                mortality_ts <= ts_end + pd.to_timedelta(timeframe * 24, unit="h")
-            ).all():
-                labels[encounter_ids.index(enc_id)][ts_idx] = 0
-    mortality_risk_targets = labels
-
-    X = merged_static_temporal[
-        np.in1d(temporal.index.get_level_values(0), static.index.get_level_values(0))
+    imaging[EVENT_VALUE] = 1
+    imaging[EVENT_CATEGORY] = "imaging"
+    imaging = imaging.loc[imaging[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])]
+    imaging = imaging[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
     ]
 
-    return encounters_train_val_test, X, mortality_risk_targets
+    return imaging
+
+
+@assert_has_columns(ENCOUNTER_ID)
+def get_bt_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
+    """Get blood transfusion data for the cohort.
+
+    Parameters
+    ----------
+    cohort: pandas.DataFrame
+        Cohort data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Blood transfusions data for cohort.
+
+    """
+    transfusions = gemini.blood_transfusions().run()
+    transfusions = transfusions.rename(columns={"issue_date_time": EVENT_TIMESTAMP})
+    transfusions[EVENT_NAME] = transfusions["rbc_mapped"]
+    transfusions[EVENT_NAME] = transfusions[EVENT_NAME].apply(
+        lambda x: "rbc" if x else "non-rbc"
+    )
+    transfusions[EVENT_VALUE] = 1
+    transfusions[EVENT_CATEGORY] = "transfusions"
+    transfusions = transfusions.loc[
+        transfusions[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])
+    ]
+    transfusions = transfusions[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
+    ]
+
+    return transfusions
+
+
+@assert_has_columns(ENCOUNTER_ID)
+def get_interventions_for_cohort(cohort: pd.DataFrame) -> pd.DataFrame:
+    """Get interventions data for the cohort.
+
+    Parameters
+    ----------
+    cohort: pandas.DataFrame
+        Cohort data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Interventions data for cohort.
+
+    """
+    interventions = gemini.interventions().run()
+    interventions = interventions.loc[
+        interventions[ENCOUNTER_ID].isin(cohort[ENCOUNTER_ID])
+    ].copy()
+    interventions[EVENT_VALUE] = 1
+    interventions[EVENT_CATEGORY] = "interventions"
+    binary_mapped_cols = [
+        "endoscopy_mapped",
+        "gi_endoscopy_mapped",
+        "bronch_endoscopy_mapped",
+        "dialysis_mapped",
+        "inv_mech_vent_mapped",
+        "surgery_mapped",
+    ]
+    interventions = interventions[
+        ~interventions["intervention_episode_start_date"].isna()
+    ]
+    interventions["intervention_episode_start_time"].loc[
+        interventions["intervention_episode_start_time"].isna()
+    ] = "12:00:00"
+    interventions[EVENT_TIMESTAMP] = pd.to_datetime(
+        interventions["intervention_episode_start_date"].astype(str)
+        + " "
+        + interventions["intervention_episode_start_time"].astype(str)
+    )
+    interventions[EVENT_TIMESTAMP] = interventions[EVENT_TIMESTAMP].astype(
+        "datetime64[ns]"
+    )
+    interventions["unmapped_intervention"] = ~(
+        interventions["endoscopy_mapped"]
+        | interventions["gi_endoscopy_mapped"]
+        | interventions["bronch_endoscopy_mapped"]
+        | interventions["dialysis_mapped"]
+        | interventions["inv_mech_vent_mapped"]
+        | interventions["surgery_mapped"]
+    )
+    interventions[EVENT_NAME] = interventions[
+        binary_mapped_cols + ["unmapped_intervention"]
+    ].idxmax(axis=1)
+    interventions = interventions[
+        [ENCOUNTER_ID, EVENT_NAME, EVENT_CATEGORY, EVENT_VALUE, EVENT_TIMESTAMP]
+    ]
+
+    return interventions
+
+
+def main(drop_admin_cols=True):
+    """Get and process the cohort.
+
+    Parameters
+    ----------
+    drop_admin_cols: bool, default = True
+        Whether to drop the cohort adminstrative columns.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Processed cohort.
+
+    """
+    # Get cohort
+    cohort = get_cohort()
+
+    # Get ER data for the cohort
+    cohort = get_er_for_cohort(cohort)
+
+    if drop_admin_cols:
+        cohort = cohort.drop(
+            ["subject_id", "ccsr_default", "ccsr_1", "ccsr_2"],
+            axis=1,
+        )
+
+    # Get blood transfusion data for the cohort
+    transfusions = get_bt_for_cohort(cohort)
+
+    # Get imaging data for the cohort
+    imaging = get_imaging_for_cohort(cohort)
+
+    # Get interventions data for the cohort
+    interventions = get_interventions_for_cohort(cohort)
+
+    # Get lab data for the cohort
+    labs = get_labs_for_cohort(cohort)
+
+    # Combine events
+    events = combine_events([labs, transfusions, imaging, interventions])
+    events["event_value"] = events["event_value"].astype(str)
+
+    return cohort, events
+
+
+if __name__ == "__main__":
+    main()

@@ -85,6 +85,7 @@ class Experimenter:
                     X, metadata, metadata_mapping
                 )
                 self.detector.fit(X_source, progress=False)
+                X_target, _ = self.detector.transform(X_target)
             else:
                 self.detector.fit(X, progress=False)
                 if isinstance(X, torch.utils.data.Dataset):

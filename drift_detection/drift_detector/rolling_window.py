@@ -152,9 +152,6 @@ class RollingWindow:
                 )
                 y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                     test_loader,
-                    # batch_size=1,
-                    # n_features=n_features,
-                    # timesteps=num_timesteps,
                 )
                 y_pred_values = y_pred_values[y_test_labels != -1]
                 y_pred_labels = y_pred_labels[y_test_labels != -1]

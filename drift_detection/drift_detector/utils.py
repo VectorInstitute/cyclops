@@ -8,6 +8,7 @@ from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
+from typing import Callable, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -43,7 +44,8 @@ def get_args(obj, kwargs):
     args = {}
     for key in kwargs:
         if inspect.isclass(obj):
-            if key in obj.__init__.__code__.co_varnames:
+            # if key in obj.__init__.__code__.co_varnames:
+            if key in inspect.signature(obj).parameters:
                 args[key] = kwargs[key]
         elif inspect.ismethod(obj) or inspect.isfunction(obj):
             if key in obj.__code__.co_varnames:
@@ -108,6 +110,7 @@ class ContextMMDWrapper:
     def __init__(
         self,
         X_s,
+        *,
         backend="pytorch",
         p_val=0.05,
         preprocess_x_ref=True,
@@ -128,26 +131,31 @@ class ContextMMDWrapper:
     ):
         self.context_type = context_type
         self.model_path = model_path
+
         self.device = device
         if self.device is None:
             self.device = get_device()
         c_source = self.context(X_s)
-        self.tester = ContextMMDDrift(X_s, c_source)
 
-        self.backend = backend
-        self.p_val = p_val
-        self.preprocess_x_ref = preprocess_x_ref
-        self.update_ref = update_ref
-        self.preprocess_fn = preprocess_fn
-        self.x_kernel = x_kernel
-        self.c_kernel = c_kernel
-        self.n_permutations = n_permutations
-        self.prop_c_held = prop_c_held
-        self.n_folds = n_folds
-        self.batch_size = batch_size
-        self.input_shape = input_shape
-        self.data_type = data_type
-        self.verbose = verbose
+        args = [
+            backend,
+            p_val,
+            preprocess_x_ref,
+            update_ref,
+            preprocess_fn,
+            x_kernel,
+            c_kernel,
+            n_permutations,
+            prop_c_held,
+            n_folds,
+            batch_size,
+            device,
+            input_shape,
+            data_type,
+            verbose,
+        ]
+
+        self.tester = ContextMMDDrift(X_s, c_source, *args)
 
     def predict(self, X_t, **kwargs):
         """Predict if there is drift in the data."""
@@ -165,10 +173,10 @@ class ContextMMDWrapper:
             Data to build context for context mmd drift detection.
 
         """
-        if self.context_type == "gmm":
-            gmm = load_model(self.model_path)
-            c_gmm_proba = gmm.predict_proba(X)
-            output = c_gmm_proba
+        if self.context_type == "sklearn":
+            model = load_model(self.model_path)
+            pred_proba = model.predict_proba(X)
+            output = pred_proba
         elif self.context_type in ["rnn", "gru", "lstm"]:
             model = recurrent_neural_network(self.context_type, X.shape[-1])
             model.load_state_dict(load_model(self.model_path)["model"])
@@ -188,41 +196,46 @@ class LKWrapper:
         self,
         X_s,
         *,
-        backend="pytorch",
-        p_val=0.05,
-        preprocess_x_ref=True,
-        update_x_ref=None,
-        preprocess_fn=None,
-        n_permutations=100,
-        var_reg=0.00001,
-        reg_loss_fn=lambda kernel: 0,
-        train_size=0.75,
-        retrain_from_scratch=True,
-        optimizer=None,
-        learning_rate=0.001,
-        batch_size=32,
-        preprocess_batch=None,
-        epochs=3,
-        verbose=0,
-        train_kwargs=None,
-        device=None,
-        dataset=None,
-        dataloader=None,
-        data_type=None,
+        backend: str = "tensorflow",
+        p_val: float = 0.05,
+        x_ref_preprocessed: bool = False,
+        preprocess_at_init: bool = True,
+        update_x_ref: Optional[Dict[str, int]] = None,
+        preprocess_fn: Optional[Callable] = None,
+        n_permutations: int = 100,
+        var_reg: float = 1e-5,
+        reg_loss_fn: Callable = (lambda kernel: 0),
+        train_size: Optional[float] = 0.75,
+        retrain_from_scratch: bool = True,
+        optimizer: Optional[Callable] = None,
+        learning_rate: float = 1e-3,
+        batch_size: int = 32,
+        preprocess_batch_fn: Optional[Callable] = None,
+        epochs: int = 3,
+        verbose: int = 0,
+        train_kwargs: Optional[dict] = None,
+        device: Optional[str] = None,
+        dataset: Optional[Callable] = None,
+        dataloader: Optional[Callable] = None,
+        input_shape: Optional[tuple] = None,
+        data_type: Optional[str] = None,
         kernel_a=GaussianRBF(trainable=True),
         kernel_b=GaussianRBF(trainable=True),
         eps="trainable",
         proj_type="ffnn",
+        num_features=None,
+        num_classes=None,
     ):
 
-        self.proj = self.choose_proj(X_s, proj_type)
+        self.proj = self.choose_proj(X_s, proj_type, num_features, num_classes)
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
         args = [
             backend,
             p_val,
-            preprocess_x_ref,
+            x_ref_preprocessed,
+            preprocess_at_init,
             update_x_ref,
             preprocess_fn,
             n_permutations,
@@ -233,13 +246,14 @@ class LKWrapper:
             optimizer,
             learning_rate,
             batch_size,
-            preprocess_batch,
+            preprocess_batch_fn,
             epochs,
             verbose,
             train_kwargs,
             device,
             dataset,
             dataloader,
+            input_shape,
             data_type,
         ]
 
@@ -249,14 +263,16 @@ class LKWrapper:
         """Predict if there is drift in the data."""
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
 
-    def choose_proj(self, X_s, proj_type):
+    def choose_proj(self, X_s, proj_type, num_features, num_classes):
         """Choose projection for learned kernel drift detection."""
+        num_features = num_features or X_s.shape[-1]
+        num_classes = num_classes or X_s.shape[-1]
         if proj_type in ["rnn", "gru", "lstm"]:
-            proj = recurrent_neural_network(proj_type, X_s.shape[-1])
+            proj = recurrent_neural_network(proj_type, num_features, num_classes)
         elif proj_type == "ffnn":
-            proj = feed_forward_neural_network(X_s.shape[-1])
+            proj = feed_forward_neural_network(num_features, num_classes)
         elif proj_type == "cnn":
-            proj = convolutional_neural_network(X_s.shape[-1])
+            proj = convolutional_neural_network(num_features, num_classes)
         else:
             raise ValueError("Invalid projection type.")
         return proj
@@ -299,13 +315,10 @@ def recurrent_neural_network(
     return model
 
 
-def feed_forward_neural_network(input_dim: int):
+def feed_forward_neural_network(
+    num_features: int, num_classes: int, ff_dim: int = 256
+) -> nn.Module:
     """Create a feed forward neural network model.
-
-    Parameters
-    ----------
-    input_dim
-        number of features
 
     Returns
     -------
@@ -314,38 +327,33 @@ def feed_forward_neural_network(input_dim: int):
 
     """
     ffnn = nn.Sequential(
-        nn.Linear(input_dim, 16),
+        nn.Linear(num_features, ff_dim),
         nn.SiLU(),
-        nn.Linear(16, 8),
+        nn.Linear(ff_dim, ff_dim),
         nn.SiLU(),
-        nn.Linear(8, 1),
-    )
+        nn.Linear(ff_dim, num_classes),
+    ).eval()
     return ffnn
 
 
-def convolutional_neural_network(input_dim: int):
+def convolutional_neural_network(num_channels, num_classes, cnn_dim=256) -> nn.Module:
     """Create a convolutional neural network model.
-
-    Parameters
-    ----------
-    input_dim
-        number of features
 
     Returns
     -------
     torch.nn.Module
-        convolutional neural network.
+        convolutional neural network for dimensionality reduction.
 
     """
     cnn = nn.Sequential(
-        nn.Conv2d(input_dim, 4, 3, 2, 0),
+        nn.Conv2d(num_channels, cnn_dim, 4, stride=2, padding=0),
         nn.ReLU(),
-        nn.Conv2d(8, 16, 4, 3, 2, 0),
+        nn.Conv2d(cnn_dim, cnn_dim, 4, stride=2, padding=0),
         nn.ReLU(),
-        nn.Conv2d(16, 32, 4, 3, 2, 0),
-        nn.ReLU(),
-        nn.Flatten(),
-    )
+        nn.AdaptiveAvgPool2d(1),
+        nn.Flatten(1, -1),
+        nn.Linear(cnn_dim, num_classes),
+    ).eval()
     return cnn
 
 

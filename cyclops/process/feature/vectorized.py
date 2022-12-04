@@ -10,6 +10,7 @@ import numpy as np
 
 from cyclops.process.feature.normalize import VectorizedNormalizer
 from cyclops.process.feature.split import split_idx
+from cyclops.process.impute import np_fill_null_num
 from cyclops.utils.common import list_swap
 from cyclops.utils.file import save_array
 from cyclops.utils.indexing import take_indices_over_axis
@@ -822,6 +823,37 @@ class Vectorized:  # pylint: disable=too-many-public-methods
 
         else:
             self.data = np.apply_along_axis(impute_fn, axis_index, self.data)
+
+    def impute(
+        self,
+        impute_axis: Union[str, int],
+        data_axis: Union[str, int],
+        impute_fn: Callable,
+    ):
+        """Impute values with forward fill and/or backward fill and fill null values \
+        with feature mean.
+
+        Parameters
+        ----------
+        impute_axis : Union[str, int]
+            Axis index or name over which to impute.
+        data_axis : Union[str, int]
+            Axis index or name over which to iterate.
+        impute_fn : Callable
+            An imputation function, which takes in and outputs a same-size 1D array.
+
+        """
+        self.impute_over_axis(impute_axis, impute_fn)
+
+        axis = self.get_axis(data_axis)
+
+        for i in range(self.data.shape[axis]):
+            index_exp = vec_index_exp[:, :, i]
+            data_slice = self.data[index_exp]
+            mean = np.nanmean(data_slice)
+            # pylint: disable=C3001, W0640
+            func = lambda x: np_fill_null_num(x, mean)  # noqa: E731
+            self.impute_over_axis(impute_axis, func, index_exp=index_exp)
 
     def concat_over_axis(
         self,

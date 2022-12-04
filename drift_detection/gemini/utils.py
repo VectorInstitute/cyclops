@@ -1,6 +1,8 @@
 """Utilities for loading and preprocessing gemini data."""
 import datetime
+import importlib
 import random
+import types
 
 import numpy as np
 import pandas as pd
@@ -11,9 +13,25 @@ from sklearn.preprocessing import StandardScaler
 # from .query import ENCOUNTER_ID
 
 
-def run_shift_experiment(**kwargs):
-    """Run shift experiment."""
-    raise NotImplementedError("Placeholder for shift experiment")
+def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
+    """Import parameters specific to each use-case.
+
+    Parameters
+    ----------
+    dataset: str
+        Name of the dataset, e.g. mimiciv.
+    use_case: str
+        Name of the use-case, e.g. mortality_decompensation.
+
+    Returns
+    -------
+    types.ModuleType
+        Imported constants module with use-case parameters.
+
+    """
+    return importlib.import_module(
+        ".".join(["drift_detection", dataset, use_case, "constants"])
+    )
 
 
 def unison_shuffled_copies(array_a, array_b):

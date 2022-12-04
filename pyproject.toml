@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.1.4"
+version = "0.1.5"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -12,14 +12,12 @@ packages = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.9.7"
+python = ">= 3.9, <3.11"
 pandas = "^1.4.1"
 SQLAlchemy = "^1.4.32"
 python-dotenv = "^0.19.2"
 matplotlib = "^3.5.1"
 torch = "^1.11.0"
-alibi-detect = "^0.9.1"
-alibi = "^0.6.5"
 shap = "^0.40.0"
 xgboost = "^1.5.2"
 tables = "^3.7.0"
@@ -34,6 +32,9 @@ seaborn = "^0.11.2"
 torchxrayvision = "^0.0.37"
 hydra-core = "^1.2.0"
 dask = {extras = ["dataframe"], version = "^2022.9.1"}
+protobuf = "3.20.0"
+alibi = {version = "^0.8.0", extras = ["shap"]}
+alibi-detect = {version = "^0.10.4", extras = ["torch"]}
 
 [tool.poetry.group.dev.dependencies]
 evidently = "0.1.45.dev0"
@@ -99,6 +100,7 @@ non_interactive = true
     [tool.pylint.basic]
     good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP"]
     good-names-rgxs=["X_.+", "x_.+", "y_.+", "df_.+"]
+
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203", "W503", "F401"]
