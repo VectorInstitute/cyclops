@@ -27,16 +27,19 @@ on:
 jobs:
   integration-tests:
     runs-on: self-hosted
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
       - name: Install poetry
         run: pip install poetry
       - uses: actions/setup-python@v4.3.0
         with:
-          python-version: 3.9.7
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies and check code
         run: |
-          poetry env use 3.9.7
+          poetry env use ${{ matrix.python-version }}
           source $(poetry env info --path)/bin/activate
           poetry install --without dev,docs,interface
           pytest -m integration_test
