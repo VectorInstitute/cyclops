@@ -1,5 +1,7 @@
 """Utility functions for building models."""
 
+from typing import List
+
 import numpy as np
 import torch
 from sklearn import metrics
@@ -83,7 +85,7 @@ class LossMeter:
 
         """
         self.name = name
-        self.losses: list[float] = []
+        self.losses: List[float] = []
 
     def reset(self) -> None:
         """Reset the list of losses."""
