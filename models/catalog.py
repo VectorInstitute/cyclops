@@ -1,6 +1,7 @@
 """Model catalog."""
 import logging
-from typing import Any, Callable, Dict, Literal, TypeVar, Union
+from difflib import get_close_matches
+from typing import Any, Callable, Dict, List, Literal, TypeVar, Union
 
 from cyclops.utils.log import setup_logging
 from models.utils import is_pytorch_model, is_sklearn_model
@@ -89,6 +90,8 @@ def list_models(
         List of models.
 
     """
+    if category is None:
+        model_list = list(_model_catalog.keys())
     if category == "static":
         model_list = list(_static_model_keys)
     elif category == "temporal":
@@ -98,7 +101,10 @@ def list_models(
     elif category == "sklearn":
         model_list = list(_sk_model_keys)
     else:
-        model_list = list(_model_catalog.keys())
+        raise ValueError(
+            f"Category {category} not supported."
+            " Choose from: `static`, `temporal`, `pytorch` or `sklearn`."
+        )
 
     return model_list
 
@@ -125,7 +131,16 @@ def create_model(
     """
     model_class = _model_catalog.get(model_name, None)
     if model_class is None:
-        raise NotImplementedError(f"Model {model_name} is not registered.")
+        similar_keys_list: List[str] = get_close_matches(
+            model_name, _model_catalog.keys(), n=5
+        )
+        similar_keys: str = ", ".join(similar_keys_list)
+        similar_keys = (
+            f" Did you mean one of: {similar_keys}?"
+            if similar_keys
+            else "It may not be in the catalog."
+        )
+        raise ValueError(f"Model {model_name} not found.{similar_keys}")
 
     if wrap:
         model = wrap_model(model_class, **kwargs)
