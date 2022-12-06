@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset
 
 from cyclops.utils.file import load_pickle
-from use_cases.common.util import get_use_case_params
+from use_cases.util import get_use_case_params
 
 # pylint: disable=invalid-name, too-many-instance-attributes
 
@@ -58,9 +58,9 @@ class VectorizedLoader:
 
         """
         if self.data_type == "tabular":
-            return self.use_case_params.TAB_TARGETS
+            return self.use_case_params.TABULAR_FEATURES["targets"]
         if self.data_type in ["temporal", "combined"]:
-            return self.use_case_params.TEMP_TARGETS
+            return self.use_case_params.TEMPORAL_FEATURES["targets"]
         return []
 
     @property
@@ -190,12 +190,12 @@ class VectorizedLoader:
             tuple: features and labels for train, validation, and test
 
         """
-        X_train_vec = load_pickle(self.use_case_params.TAB_UNALIGNED + "tab_train_X")
-        y_train_vec = load_pickle(self.use_case_params.TAB_UNALIGNED + "tab_train_y")
-        X_val_vec = load_pickle(self.use_case_params.TAB_UNALIGNED + "tab_val_X")
-        y_val_vec = load_pickle(self.use_case_params.TAB_UNALIGNED + "tab_val_y")
-        X_test_vec = load_pickle(self.use_case_params.TAB_UNALIGNED + "tab_test_X")
-        y_test_vec = load_pickle(self.use_case_params.TAB_UNALIGNED + "tab_test_y")
+        X_train_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_train_X")
+        y_train_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_train_y")
+        X_val_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_val_X")
+        y_val_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_val_y")
+        X_test_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_test_X")
+        y_test_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_test_y")
         return (X_train_vec, y_train_vec, X_val_vec, y_val_vec, X_test_vec, y_test_vec)
 
     def _load_temporal(self) -> tuple:
@@ -207,12 +207,12 @@ class VectorizedLoader:
             features and labels for train, validation, and test
 
         """
-        X_train_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "temp_train_X")
-        y_train_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "temp_train_y")
-        X_val_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "temp_val_X")
-        y_val_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "temp_val_y")
-        X_test_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "temp_test_X")
-        y_test_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "temp_test_y")
+        X_train_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_train_X")
+        y_train_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_train_y")
+        X_val_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_val_X")
+        y_val_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_val_y")
+        X_test_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_test_X")
+        y_test_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_test_y")
         return (X_train_vec, y_train_vec, X_val_vec, y_val_vec, X_test_vec, y_test_vec)
 
     def _load_combined(self) -> tuple:
@@ -224,12 +224,12 @@ class VectorizedLoader:
             features and labels for train, validation, and test
 
         """
-        X_train_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "comb_train_X")
-        y_train_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "comb_train_y")
-        X_val_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "comb_val_X")
-        y_val_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "comb_val_y")
-        X_test_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "comb_test_X")
-        y_test_vec = load_pickle(self.use_case_params.TAB_VEC_COMB + "comb_test_y")
+        X_train_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_train_X")
+        y_train_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_train_y")
+        X_val_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_val_X")
+        y_val_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_val_y")
+        X_test_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_test_X")
+        y_test_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_test_y")
         return (X_train_vec, y_train_vec, X_val_vec, y_val_vec, X_test_vec, y_test_vec)
 
     def _get_tabular_data(self) -> tuple:

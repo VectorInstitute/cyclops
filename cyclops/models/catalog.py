@@ -7,10 +7,10 @@ from sklearn.linear_model import LogisticRegression as LR
 from sklearn.neural_network import MLPClassifier as MLP
 from xgboost import XGBClassifier
 
-from models.neural_nets.gru import GRUModel
-from models.neural_nets.lstm import LSTMModel
-from models.neural_nets.mlp import MLPModel
-from models.neural_nets.rnn import RNNModel
+from cyclops.models.neural_nets.gru import GRUModel
+from cyclops.models.neural_nets.lstm import LSTMModel
+from cyclops.models.neural_nets.mlp import MLPModel
+from cyclops.models.neural_nets.rnn import RNNModel
 
 MODELS = {
     "gru": GRUModel,

@@ -13,11 +13,9 @@ from torch import nn
 from torch.optim import Optimizer, lr_scheduler
 from torch.utils.data import DataLoader
 
-from cyclops.utils.file import join, load_pickle, save_pickle
-from cyclops.utils.log import setup_logging
-from models.catalog import MODELS, _PTModel, _SKModel
-from models.data import PTDataset
-from models.utils import (
+from cyclops.models.catalog import MODELS, _PTModel, _SKModel
+from cyclops.models.data import PTDataset
+from cyclops.models.util import (
     ACTIVATIONS,
     CRITERIONS,
     OPTIMIZERS,
@@ -25,6 +23,8 @@ from models.utils import (
     LossMeter,
     get_device,
 )
+from cyclops.utils.file import join, load_pickle, save_pickle
+from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
