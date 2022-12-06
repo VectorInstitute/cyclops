@@ -5,7 +5,7 @@ import numpy as np
 import plotly.graph_objects as go
 import seaborn as sns
 
-from models.utils import metrics_binary
+from cyclops.models.util import metrics_binary
 
 # pylint: disable=invalid-name
 

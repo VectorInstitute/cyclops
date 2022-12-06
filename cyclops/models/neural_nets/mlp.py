@@ -5,7 +5,7 @@ import math
 import torch
 from torch import nn
 
-from models.utils import ACTIVATIONS
+from cyclops.models.util import ACTIVATIONS
 
 
 class MLPModel(nn.Module):  # pylint: disable=too-few-public-methods
