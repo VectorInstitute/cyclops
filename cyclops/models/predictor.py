@@ -6,10 +6,8 @@ from typing import Optional
 
 import yaml
 
-from cyclops.utils.file import join, process_dir_save_path
-from cyclops.utils.log import setup_logging
-from models.catalog import MODELS, PT_MODELS, STATIC_MODELS, _Model
-from models.constants import (
+from cyclops.models.catalog import MODELS, PT_MODELS, STATIC_MODELS, _Model
+from cyclops.models.constants import (
     CONFIG_FILE,
     DATA_TYPES,
     DATASETS,
@@ -17,9 +15,11 @@ from models.constants import (
     TASKS,
     USE_CASES,
 )
-from models.data import VectorizedLoader
-from models.utils import get_device, metrics_binary
-from models.wrapper import PTModel, SKModel
+from cyclops.models.data import VectorizedLoader
+from cyclops.models.util import get_device, metrics_binary
+from cyclops.models.wrapper import PTModel, SKModel
+from cyclops.utils.file import join, process_dir_save_path
+from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
