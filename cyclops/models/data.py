@@ -4,8 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from cyclops.utils.file import load_pickle
-from use_cases.util import get_use_case_params
+from cyclops.utils.file import join, load_pickle
 
 # pylint: disable=invalid-name, too-many-instance-attributes
 
@@ -13,29 +12,36 @@ from use_cases.util import get_use_case_params
 class VectorizedLoader:
     """Vectorized data loader."""
 
-    def __init__(self, dataset_name: str, use_case: str, data_type: str) -> None:
+    def __init__(
+        self, dataset_name: str, use_case: str, data_type: str, data_dir: str
+    ) -> None:
         """Initialize loader.
 
         Parameters
         ----------
         dataset_name : str
-            Name of the dataset
+            Name of the dataset.
         use_case : str
-            Use-case to be predicted
+            Use-case to be predicted.
         data_type : str
-            Type of data (tabular, temporal, or combined)
+            Type of data (tabular, temporal, or combined).
+        data_dir : str
+            Path to the directory of final vectorized data.
 
         """
         self.dataset_name = dataset_name
         self.use_case = use_case
         self.data_type = data_type
-        self.use_case_params = get_use_case_params(dataset_name, use_case)
+        self.data_dir = data_dir
 
         if self.data_type == "tabular":
+            self.data_path = join(self.data_dir, "unaligned_")
             self.data = self._get_tabular_data()
         elif self.data_type == "temporal":
+            self.data_path = join(self.data_dir, "unaligned_")
             self.data = self._get_temporal_data()
         else:
+            self.data_path = join(self.data_dir, "aligned_")
             self.data = self._get_combined_data()
 
         (
@@ -48,29 +54,13 @@ class VectorizedLoader:
         ) = self.data
 
     @property
-    def targets(self) -> list:
-        """Get the targets feature names, as an attribute.
-
-        Returns
-        -------
-        list
-            list of target features
-
-        """
-        if self.data_type == "tabular":
-            return self.use_case_params.TABULAR_FEATURES["targets"]
-        if self.data_type in ["temporal", "combined"]:
-            return self.use_case_params.TEMPORAL_FEATURES["targets"]
-        return []
-
-    @property
     def n_features(self) -> int:
         """Get the number of features, as an attribute.
 
         Returns
         -------
         int
-            number of features
+            The number of features in the dataset.
 
         """
         return self.X_train.shape[-1]
@@ -82,7 +72,7 @@ class VectorizedLoader:
         Returns
         -------
         int
-            number of classes
+            The number of classes in the dataset.
 
         """
         return len(np.unique(self.y_train))
@@ -94,7 +84,7 @@ class VectorizedLoader:
         Returns
         -------
         np.ndarray
-             list of classes
+            The list of classes in the dataset.
 
         """
         return np.unique(self.y_train)
@@ -106,7 +96,7 @@ class VectorizedLoader:
         Returns
         -------
         int
-            length of the train set
+            The length of the train set.
 
         """
         return len(self.y_train)
@@ -118,7 +108,7 @@ class VectorizedLoader:
         Returns
         -------
         int
-            length of the validation set
+            The length of the validation set.
 
         """
         return len(self.y_val)
@@ -130,7 +120,7 @@ class VectorizedLoader:
         Returns
         -------
         int
-            length of the test set
+            The length of the test set.
 
         """
         return len(self.y_test)
@@ -142,7 +132,7 @@ class VectorizedLoader:
         Returns
         -------
         dict
-            counts of instances per class
+            The counts of instances per class.
 
         """
         counts = {}
@@ -158,7 +148,7 @@ class VectorizedLoader:
         Returns
         -------
         dict
-            counts of instances per class
+            The counts of instances per class.
 
         """
         counts = {}
@@ -173,7 +163,7 @@ class VectorizedLoader:
         Returns
         -------
         dict
-            counts of the instances per class
+            The counts of the instances per class.
 
         """
         counts = {}
@@ -187,15 +177,15 @@ class VectorizedLoader:
         Returns
         -------
         tuple
-            tuple: features and labels for train, validation, and test
+            Tuple of features and labels for train, validation, and test sets.
 
         """
-        X_train_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_train_X")
-        y_train_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_train_y")
-        X_val_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_val_X")
-        y_val_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_val_y")
-        X_test_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_test_X")
-        y_test_vec = load_pickle(self.use_case_params.UNALIGNED_PATH + "tab_test_y")
+        X_train_vec = load_pickle(self.data_path + "tab_train_X")
+        y_train_vec = load_pickle(self.data_path + "tab_train_y")
+        X_val_vec = load_pickle(self.data_path + "tab_val_X")
+        y_val_vec = load_pickle(self.data_path + "tab_val_y")
+        X_test_vec = load_pickle(self.data_path + "tab_test_X")
+        y_test_vec = load_pickle(self.data_path + "tab_test_y")
         return (X_train_vec, y_train_vec, X_val_vec, y_val_vec, X_test_vec, y_test_vec)
 
     def _load_temporal(self) -> tuple:
@@ -204,15 +194,15 @@ class VectorizedLoader:
         Returns
         -------
         tuple
-            features and labels for train, validation, and test
+            The features and labels for train, validation, and test sets.
 
         """
-        X_train_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_train_X")
-        y_train_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_train_y")
-        X_val_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_val_X")
-        y_val_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_val_y")
-        X_test_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_test_X")
-        y_test_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "temp_test_y")
+        X_train_vec = load_pickle(self.data_path + "temp_train_X")
+        y_train_vec = load_pickle(self.data_path + "temp_train_y")
+        X_val_vec = load_pickle(self.data_path + "temp_val_X")
+        y_val_vec = load_pickle(self.data_path + "temp_val_y")
+        X_test_vec = load_pickle(self.data_path + "temp_test_X")
+        y_test_vec = load_pickle(self.data_path + "temp_test_y")
         return (X_train_vec, y_train_vec, X_val_vec, y_val_vec, X_test_vec, y_test_vec)
 
     def _load_combined(self) -> tuple:
@@ -221,15 +211,15 @@ class VectorizedLoader:
         Returns
         -------
         tuple
-            features and labels for train, validation, and test
+            The features and labels for train, validation, and test
 
         """
-        X_train_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_train_X")
-        y_train_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_train_y")
-        X_val_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_val_X")
-        y_val_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_val_y")
-        X_test_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_test_X")
-        y_test_vec = load_pickle(self.use_case_params.ALIGNED_PATH + "comb_test_y")
+        X_train_vec = load_pickle(self.data_path + "comb_train_X")
+        y_train_vec = load_pickle(self.data_path + "comb_train_y")
+        X_val_vec = load_pickle(self.data_path + "comb_val_X")
+        y_val_vec = load_pickle(self.data_path + "comb_val_y")
+        X_test_vec = load_pickle(self.data_path + "comb_test_X")
+        y_test_vec = load_pickle(self.data_path + "comb_test_y")
         return (X_train_vec, y_train_vec, X_val_vec, y_val_vec, X_test_vec, y_test_vec)
 
     def _get_tabular_data(self) -> tuple:
@@ -238,7 +228,7 @@ class VectorizedLoader:
         Returns
         -------
         tuple
-            features and labels for train, validation, and test
+            The features and labels for train, validation, and test sets.
 
         """
         data_vectors = self._load_tabular()
@@ -257,12 +247,12 @@ class VectorizedLoader:
         Parameters
         ----------
         vec : np.ndarray
-            input data vector
+            The input data vector.
 
         Returns
         -------
         np.ndarray
-            output data vector
+            The output data vector.
 
         """
         arr = np.squeeze(vec.data, 0)
@@ -276,7 +266,7 @@ class VectorizedLoader:
         Returns
         -------
         tuple
-            features and labels for train, validation, and test
+            The features and labels for train, validation, and test.
 
         """
         data_vectors = self._load_temporal()
@@ -295,7 +285,7 @@ class VectorizedLoader:
         Returns
         -------
         tuple
-            features and labels for train, validation, and test
+            The features and labels for train, validation, and test.
 
         """
         data_vectors = self._load_combined()
@@ -318,9 +308,9 @@ class PTDataset(Dataset):
         Parameters
         ----------
         inputs : np.ndarray
-            data features
+            Data features.
         target : np.ndarray
-            data labels
+            Data labels.
 
         """
         self.inputs = torch.from_numpy(inputs).float()
@@ -332,12 +322,12 @@ class PTDataset(Dataset):
         Parameters
         ----------
         idx : int
-            index of the data instance
+            The index of the data instance.
 
         Returns
         -------
         tuple
-            features and labels for the instance
+            The features and labels for the instance.
 
         """
         return self.inputs[idx], self.target[idx]
@@ -348,7 +338,7 @@ class PTDataset(Dataset):
         Returns
         -------
         int
-            length of the dataset
+            The length of the dataset.
 
         """
         return len(self.target)
