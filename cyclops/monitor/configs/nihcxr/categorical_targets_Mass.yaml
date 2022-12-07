@@ -1,0 +1,40 @@
+dataset:
+  name: nihcxr
+  object: drift_detection.datasets.NIHCXRDataset
+  cfg_path: drift_detection/datasets/configs/nihcxr.yaml
+
+shift: categorical_shift_targets_Mass
+hydra:
+  run:
+    dir: "./outputs/${dataset.name}/${shift}/${now:%Y-%m-%d_%H-%M-%S}"
+  sweep:
+    dir: "./multirun/${dataset.name}/${shift}"
+    subdir: "{now:%Y-%m-%d_%H-%M-%S}"
+  job:
+    chdir: True
+
+reductor:
+  dr_method: TAE_txrv_CNN
+  # batch_size: 64
+  # num_workers: 4
+
+tester:
+  type: TSTester
+  tester_method: mmd
+  backend: pytorch
+  n_permutations: 1000
+  device: None
+
+detector:
+  p_val_threshold: 0.05
+
+shiftapplicator:
+  type: SyntheticShiftApplicator
+  shift_type: categorical_shift
+  categorical_column: targets
+  target_category: Mass:1
+
+experimenter:
+  experiment_type: sensitivity_test
+
+results_path: ./results.pickle

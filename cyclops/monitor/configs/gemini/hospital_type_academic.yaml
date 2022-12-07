@@ -1,0 +1,31 @@
+dataset:
+  object: drift_detection.datasets.GEMINIDataset
+  cfg_path: 'drift_detection/datasets/configs/gemini.yaml'
+
+shift: "hospital_type_academic"
+hydra.job.chdir: True
+hydra:
+  run:
+    dir: ./outputs/${shift}/${now:%Y-%m-%d_%H-%M-%S}
+
+reductor:
+  dr_method: pca
+  var_ret: 0.8
+
+tester:
+  type: TSTester
+  test_method: ctx_mmd
+  model_path: /mnt/nfs/project/delirium/drift_exp/JULY-04-2022/saved_models/${shift}_lstm.pt
+  backend: pytorch
+
+Detector:
+  p_val_threshold: 0.05
+
+shiftapplicator:
+  type: ClinicalShiftApplicator
+  shift_type: "hospital_type"
+  source: "academic"
+  target: "community"
+
+Experimenter:
+  experiment_type: sensitivity_test
