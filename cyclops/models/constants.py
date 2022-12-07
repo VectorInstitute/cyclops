@@ -1,4 +1,5 @@
 """Model library constants."""
+import os
 
 from cyclops.utils.file import join
 
@@ -11,5 +12,7 @@ DATA_TYPES = ["tabular", "temporal", "combined"]
 
 TASKS = {"binary_classification": ["mortality_decompensation", "delirium"]}
 
-CONFIG_FILE = join("configs", "models.yaml")
-SAVE_DIR = join("/mnt", "cyclops", "checkpoints")
+CONFIG_FILE = join(os.path.dirname(__file__), "configs", "models.yaml")
+
+DATA_DIR = join("/mnt/data", "cyclops", "use_cases")
+SAVE_DIR = join("/mnt/exp", "cyclops", "checkpoints")
