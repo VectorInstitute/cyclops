@@ -2,8 +2,8 @@
 
 import pytest
 
-from drift_detection.datasets.utils import synthetic_gemini_dataset
-from drift_detection.drift_detector.clinical_applicator import ClinicalShiftApplicator
+from cyclops.monitor.clinical_applicator import ClinicalShiftApplicator
+from cyclops.monitor.datasets.utils import synthetic_gemini_dataset
 
 
 @pytest.fixture(name="dataset")

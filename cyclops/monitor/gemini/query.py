@@ -5,6 +5,7 @@
 # pylint: skip-file
 
 import pandas as pd
+from drift_detection.gemini.mortality.constants import BEFORE_DATE, OUTCOME_DEATH, SEXES
 
 import cyclops.query.process as qp
 from cyclops.process.column_names import (
@@ -25,7 +26,6 @@ from cyclops.process.diagnoses import process_diagnoses
 from cyclops.process.util import assert_has_columns
 from cyclops.query import gemini
 from cyclops.query.gemini import get_interface
-from drift_detection.gemini.mortality.constants import BEFORE_DATE, OUTCOME_DEATH, SEXES
 
 # from use_cases.gemini.common.constants import READMISSION_MAP
 # from use_cases.gemini.common.query import (

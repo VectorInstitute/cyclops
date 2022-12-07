@@ -2,8 +2,8 @@
 
 import pytest
 
-from drift_detection.datasets.utils import synthetic_gemini_dataset
-from drift_detection.drift_detector.synthetic_applicator import SyntheticShiftApplicator
+from cyclops.monitor.datasets.utils import synthetic_gemini_dataset
+from cyclops.monitor.synthetic_applicator import SyntheticShiftApplicator
 
 
 @pytest.fixture(name="dataset")

@@ -13,7 +13,7 @@ from alibi_detect.cd import (
 )
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 
-from drift_detection.drift_detector.utils import (
+from cyclops.monitor.utils import (
     ContextMMDWrapper,
     LKWrapper,
     convolutional_neural_network,

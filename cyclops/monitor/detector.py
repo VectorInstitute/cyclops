@@ -5,8 +5,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from drift_detection.drift_detector.reductor import Reductor
-from drift_detection.drift_detector.tester import DCTester, TSTester
+from cyclops.monitor.reductor import Reductor
+from cyclops.monitor.tester import DCTester, TSTester
 
 from .utils import get_args
 

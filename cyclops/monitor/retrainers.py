@@ -5,14 +5,14 @@ import pandas as pd
 import torch
 from tqdm import tqdm
 
-from drift_detection.baseline_models.temporal.pytorch.metrics import (
+from cyclops.monitor.baseline_models.temporal.pytorch.metrics import (
     print_metrics_binary,
 )
-from drift_detection.baseline_models.temporal.pytorch.optimizer import Optimizer
-from drift_detection.baseline_models.temporal.pytorch.utils import get_data
-from drift_detection.drift_detector.detector import Detector
-from drift_detection.drift_detector.utils import scale
-from drift_detection.gemini.utils import process
+from cyclops.monitor.baseline_models.temporal.pytorch.optimizer import Optimizer
+from cyclops.monitor.baseline_models.temporal.pytorch.utils import get_data
+from cyclops.monitor.detector import Detector
+from cyclops.monitor.gemini.utils import process
+from cyclops.monitor.utils import scale
 
 
 class CumulativeRetrainer:

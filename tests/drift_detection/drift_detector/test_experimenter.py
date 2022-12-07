@@ -6,13 +6,13 @@ import pytest
 import torch
 from torch.utils.data import Dataset
 
-from drift_detection.datasets.utils import synthetic_gemini_dataset
-from drift_detection.drift_detector.clinical_applicator import ClinicalShiftApplicator
-from drift_detection.drift_detector.detector import Detector
-from drift_detection.drift_detector.experimenter import Experimenter
-from drift_detection.drift_detector.reductor import Reductor
-from drift_detection.drift_detector.synthetic_applicator import SyntheticShiftApplicator
-from drift_detection.drift_detector.tester import TSTester
+from cyclops.monitor.clinical_applicator import ClinicalShiftApplicator
+from cyclops.monitor.datasets.utils import synthetic_gemini_dataset
+from cyclops.monitor.detector import Detector
+from cyclops.monitor.experimenter import Experimenter
+from cyclops.monitor.reductor import Reductor
+from cyclops.monitor.synthetic_applicator import SyntheticShiftApplicator
+from cyclops.monitor.tester import TSTester
 
 
 @pytest.fixture(name="gemini_dataset")

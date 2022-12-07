@@ -19,7 +19,7 @@ from scipy.special import softmax
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 
-from drift_detection.baseline_models.temporal.pytorch.utils import (
+from cyclops.monitor.baseline_models.temporal.pytorch.utils import (
     get_device,
     get_temporal_model,
 )

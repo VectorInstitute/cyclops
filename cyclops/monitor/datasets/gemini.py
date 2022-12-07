@@ -15,7 +15,7 @@ from omegaconf import OmegaConf
 class GEMINIDataset:
     """GEMINI dataset."""
 
-    def __init__(self, cfg_path: str = "drift_detection/datasets/configs/gemini.yaml"):
+    def __init__(self, cfg_path: str = "cyclops/monitor/datasets/configs/gemini.yaml"):
 
         self.cfg = OmegaConf.load(cfg_path)
 

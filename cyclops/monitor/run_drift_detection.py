@@ -15,7 +15,7 @@ from drift_detector import (
 from hydra.utils import get_original_cwd
 from omegaconf import DictConfig, open_dict
 
-from drift_detection.drift_detector.utils import get_args, get_obj_from_str
+from cyclops.monitor.utils import get_args, get_obj_from_str
 
 
 @hydra.main(config_path="./configs")

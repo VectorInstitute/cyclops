@@ -5,12 +5,12 @@
 import numpy as np
 import pytest
 
-from drift_detection.drift_detector.tester import DCTester, TSTester
+from cyclops.monitor.tester import DCTester, TSTester
 
 # import torch
 
 
-# from drift_detection.drift_detector.utils import recurrent_neural_network
+# from cyclops.monitor.utils import recurrent_neural_network
 
 
 @pytest.fixture(name="source_target")

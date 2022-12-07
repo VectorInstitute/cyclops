@@ -3,9 +3,9 @@
 import numpy as np
 import pytest
 
-from drift_detection.drift_detector.detector import Detector
-from drift_detection.drift_detector.reductor import Reductor
-from drift_detection.drift_detector.tester import TSTester
+from cyclops.monitor.detector import Detector
+from cyclops.monitor.reductor import Reductor
+from cyclops.monitor.tester import TSTester
 
 
 @pytest.fixture(name="source_target")

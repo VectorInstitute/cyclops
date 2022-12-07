@@ -63,7 +63,7 @@ def synthetic_gemini_dataset(size=1000):
 
     # get dataframe mapping from gemini.yaml
     gemini_mapping = OmegaConf.load(
-        "drift_detection/datasets/configs/gemini.yaml"
+        "cyclops/monitor/datasets/configs/gemini.yaml"
     ).metadata_mapping
 
     df = pd.DataFrame(columns=gemini_columns)

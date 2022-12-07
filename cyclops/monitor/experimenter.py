@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 import torch
 
-from drift_detection.drift_detector.clinical_applicator import ClinicalShiftApplicator
-from drift_detection.drift_detector.detector import Detector
-from drift_detection.drift_detector.synthetic_applicator import SyntheticShiftApplicator
+from cyclops.monitor.clinical_applicator import ClinicalShiftApplicator
+from cyclops.monitor.detector import Detector
+from cyclops.monitor.synthetic_applicator import SyntheticShiftApplicator
 
 
 class Experimenter:

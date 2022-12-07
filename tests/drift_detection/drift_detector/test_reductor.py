@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch.utils.data import Dataset
 
-from drift_detection.drift_detector import Reductor
+from cyclops.monitor import Reductor
 
 
 @pytest.fixture(name="X")
