@@ -61,3 +61,18 @@ Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 
 Tutorial notebooks in ``tutorials`` can be useful to view the
 functionality of the framework.
+
+## Reference
+Reference to cite when you use CyclOps in a project or a research paper:
+```
+@article {Krishnan2022.12.02.22283021,
+	author = {Krishnan, Amrit and Subasri, Vallijah and McKeen, Kaden and Kore, Ali and Ogidi, Franklin and Alinoori, Mahshid and Verma, Amol and Razak, Fahad and Dhalla, Azra and Lalani, Nadim and Pandya, Deval and Dolatabadi, Elham},
+	title = {CYCLOPS: CYCLICAL DEVELOPMENT TOWARDS OPERATIONALIZING ML MODELS FOR HEALTH},
+	elocation-id = {2022.12.02.22283021},
+	year = {2022},
+	doi = {10.1101/2022.12.02.22283021},
+	publisher = {Cold Spring Harbor Laboratory Press},
+	URL = {https://www.medrxiv.org/content/early/2022/12/06/2022.12.02.22283021},
+	journal = {medRxiv}
+}
+```
