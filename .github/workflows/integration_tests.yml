@@ -33,10 +33,10 @@ jobs:
         run: pip install poetry
       - uses: actions/setup-python@v4.3.0
         with:
-          python-version: 3.9.7
+          python-version: 3.9
       - name: Install dependencies and check code
         run: |
-          poetry env use 3.9.7
+          poetry env use 3.9
           source $(poetry env info --path)/bin/activate
           poetry install --without dev,docs,interface
           pytest -m integration_test
