@@ -21,5 +21,5 @@ def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
 
     """
     return importlib.import_module(
-        ".".join(["use_cases", dataset, use_case, "constants"])
+        ".".join(["use_cases", "params", dataset, use_case, "constants_v1"])
     )
