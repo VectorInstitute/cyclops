@@ -32,9 +32,9 @@ use cases include:
 python3 -m pip install pycyclops
 ```
 
-### Setup Python virtual environment and install dependencies for development
+## 🧑🏿‍💻 Developing
 
-The development environment has been tested on ``python = 3.9.7``.
+The development environment has been tested on ``python = 3.9``.
 
 The python virtual environment can be set up using
 [poetry](https://python-poetry.org/docs/#installation). Hence, make sure it is
