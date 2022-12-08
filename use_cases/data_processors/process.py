@@ -1,6 +1,6 @@
 """Data Processor class to process data per use-case."""
 
-from use_cases.constants import DATA_TYPES, DATASETS, USE_CASES
+from cyclops.models.constants import DATA_TYPES, DATASETS, USE_CASES
 from use_cases.data_processors.mimiciv import MIMICIVProcessor
 
 
