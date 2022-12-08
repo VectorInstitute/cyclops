@@ -32,9 +32,9 @@ use cases include:
 python3 -m pip install pycyclops
 ```
 
-### Setup Python virtual environment and install dependencies for development
+## 🧑🏿‍💻 Developing
 
-The development environment has been tested on ``python = 3.9.7``.
+The development environment has been tested on ``python = 3.9``.
 
 The python virtual environment can be set up using
 [poetry](https://python-poetry.org/docs/#installation). Hence, make sure it is
@@ -66,13 +66,13 @@ functionality of the framework.
 Reference to cite when you use CyclOps in a project or a research paper:
 ```
 @article {Krishnan2022.12.02.22283021,
-	author = {Krishnan, Amrit and Subasri, Vallijah and McKeen, Kaden and Kore, Ali and Ogidi, Franklin and Alinoori, Mahshid and Verma, Amol and Razak, Fahad and Dhalla, Azra and Lalani, Nadim and Pandya, Deval and Dolatabadi, Elham},
-	title = {CYCLOPS: CYCLICAL DEVELOPMENT TOWARDS OPERATIONALIZING ML MODELS FOR HEALTH},
+	author = {Krishnan, Amrit and Subasri, Vallijah and McKeen, Kaden and Kore, Ali and Ogidi, Franklin and Alinoori, Mahshid and Lalani, Nadim and Dhalla, Azra and Verma, Amol and Razak, Fahad and Pandya, Deval and Dolatabadi, Elham},
+	title = {CyclOps: Cyclical development towards operationalizing ML models for health},
 	elocation-id = {2022.12.02.22283021},
 	year = {2022},
 	doi = {10.1101/2022.12.02.22283021},
 	publisher = {Cold Spring Harbor Laboratory Press},
-	URL = {https://www.medrxiv.org/content/early/2022/12/06/2022.12.02.22283021},
+	URL = {https://www.medrxiv.org/content/early/2022/12/08/2022.12.02.22283021},
 	journal = {medRxiv}
 }
 ```
