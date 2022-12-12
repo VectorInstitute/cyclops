@@ -3,12 +3,15 @@
 import pytest
 from sqlalchemy import column, select
 
+from cyclops.query.omop import OMOPQuerier
 from cyclops.query.process import (
     QAP,
     ConditionIn,
     ConditionSubstring,
     Drop,
+    Literal,
     Rename,
+    ckwarg,
     process_checks,
     process_operations,
 )
@@ -20,6 +23,19 @@ def test_table():
     """Test table input."""
     column_a = process_column(column("a"), to_timestamp=True)
     return select(column_a, column("b"), column("c"))
+
+
+def test_ckwarg():
+    """Test ckwarg."""
+    assert ckwarg({"arg1": 1}, "arg1") == 1
+    assert ckwarg({"arg1": 1}, "arg2") is None
+
+
+def test_qap():
+    """Test QAP."""
+    args = QAP("arg1", required=False, transform_fn=int)
+    test_arg = args(arg1="2")
+    assert isinstance(test_arg, int) and test_arg == 2
 
 
 def test_process_checks(test_table):  # pylint: disable=redefined-outer-name
@@ -46,13 +62,18 @@ def test_process_operations(test_table):  # pylint: disable=redefined-outer-name
     assert query_lines[-1] == "WHERE lower(CAST(anon_1.c AS VARCHAR)) LIKE :lower_1"
 
 
-def test_drop(test_table):  # pylint: disable=redefined-outer-name
+@pytest.mark.integration_test
+def test_operations():
     """Test Drop operation."""
-    table = Drop("a")(test_table)
-    assert str(table).splitlines()[0] == "SELECT anon_1.b, anon_1.c "
+    synthea = OMOPQuerier("cdm_synthea10", ["database=synthea"])
+    visits = synthea.visit_occurrence().query
+    visits = Drop("care_site_source_value")(visits)
+    visits = Rename({"care_site_name": "hospital_name"})(visits)
+    visits = Literal(1, "new_col")(visits)
+    visits = synthea.get_interface(visits).run()
 
-
-def test_rename(test_table):  # pylint: disable=redefined-outer-name
-    """Test Rename operation."""
-    table = Rename({"a": "d"})(test_table)
-    assert str(table).splitlines()[0] == "SELECT anon_1.a AS d, anon_1.b, anon_1.c "
+    assert "care_site_source_value" not in visits.columns
+    assert "care_site_name" not in visits.columns
+    assert "hospital_name" in visits.columns
+    assert "new_col" in visits.columns
+    assert visits["new_col"].unique() == 1
