@@ -16,6 +16,12 @@ from cyclops.process.feature.split import (
 def test_fractions_to_split():
     """Test fractions_to_split function."""
     assert fractions_to_split(0.8, 100) == [80]
+
+    # Ensure no mutation
+    lst = [0.8, 0.2]
+    fractions_to_split(lst, 100)
+    assert lst == [0.8, 0.2]
+
     with pytest.raises(ValueError):
         fractions_to_split("donkey", 12)
     with pytest.raises(ValueError):
