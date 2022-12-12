@@ -55,20 +55,25 @@ def fractions_to_split(
     fractions: Union[float, List[float]],
     data_len: int,
 ) -> np.ndarray:
-    """Turn a number of fractions into a dividing list of lengths at which to split.
+    """Create an array of index split points useful for dataset splitting.
+
+    Created using the length of the data and the desired split fractions.
 
     Parameters
     ----------
     fractions: float or list of float
         Fraction(s) of samples between 0 and 1 to use for each split.
+        If fractions is a list, the elements must sum to 1.
     data_len: int
         The total number of samples in the data being split.
 
     """
+    frac_list: List[float]
     if isinstance(fractions, float):
-        frac_list = to_list(fractions)
+        frac_list = [fractions]
     elif isinstance(fractions, list):
-        frac_list = fractions
+        # Necessary so as to not mutate the original fractions list
+        frac_list = list(fractions)
     else:
         raise ValueError("fractions must be a float or a list of floats.")
 
@@ -83,7 +88,9 @@ def fractions_to_split(
 
     if sum(frac_list) != 1:
         if sum(frac_list) < 1:
-            frac_list.append(1 - sum(frac_list))
+            # Meant to handle floats e.g., 0.8 -> [0.8], which is actually [0.8, 0.2]
+            # Doing it this way allows for directly entering [0.8] in list form
+            frac_list.append(1.0 - sum(frac_list))
         else:
             raise ValueError("fractions must sum to 1.")
 
