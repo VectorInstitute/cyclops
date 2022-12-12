@@ -1,26 +1,17 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
----
-
-**Describe the bug**
+### Describe the bug
 A clear and concise description of what the bug is.
 
-**To Reproduce**
+### To Reproduce
 Code snippet or clear steps to reproduce behaviour.
 
-**Expected behavior**
+### Expected behavior
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
+### Screenshots
 If applicable, add screenshots to help explain your problem.
 
-**Version**
+### Version
  - Version info such as v0.1.5
 
-**Additional context**
+### Additional context
 Add any other context about the problem here.
