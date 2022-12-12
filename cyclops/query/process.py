@@ -80,13 +80,13 @@ class QAP:
         """
         return self.kwarg_name
 
-    def __call__(self, kwargs):
+    def __call__(self, **kwargs):
         """Recover the value of the placeholder argument.
 
-        Attributes
+        Parameters
         ----------
-        kwargs: dict
-            Dictionary containing self.kwarg_name as a key with a
+        **kwargs: Any
+            kwarg which corresponds to self.kwarg_name as a key with a
             corresponding value.
 
         Returns
@@ -189,7 +189,7 @@ def process_operations(  # pylint: disable=too-many-locals
         return qap_kwargs
 
     def process_args(args):
-        return [arg(user_kwargs) if isinstance(arg, QAP) else arg for arg in args]
+        return [arg(**user_kwargs) if isinstance(arg, QAP) else arg for arg in args]
 
     def process_kwargs(kwargs):
         for key, value in kwargs.items():
@@ -273,19 +273,27 @@ def col_name_remove(lst, remove_names):
     return [x for x in lst if x.name not in remove_names]
 
 
-def append_if_missing(table, keep_cols, force_include_cols):
+def append_if_missing(
+    table: TableTypes,
+    keep_cols: Optional[Union[str, List[str]]] = None,
+    force_include_cols: Optional[Union[str, List[str]]] = None,
+):
     """Keep only certain columns in a table, but must include certain columns.
 
     Parameters
     ----------
-    table:
-    keep_cols
-    force_include_cols
+    table : cyclops.query.util.TableTypes
+        Table on which to perform the operation.
+    keep_cols: str or list of str, optional
+        Columns to keep.
+    force_include_cols: str or list of str, optional
+        Columns to include (forcefully).
 
     """
     if keep_cols is None:
         return table
-
+    keep_cols = to_list(keep_cols)
+    force_include_cols = to_list(force_include_cols)
     extend_cols = [col for col in force_include_cols if col not in keep_cols]
     keep_cols = extend_cols + keep_cols
     return FilterColumns(keep_cols)(table)
