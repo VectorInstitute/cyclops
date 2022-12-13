@@ -13,7 +13,10 @@ def test_omop_querier():
     persons = synthea.person().run()
     observations = synthea.observation().run()
     measurements = synthea.measurement().run()
+    visit_details = synthea.visit_detail().run()
     assert len(visits) == 4856
+    assert len(visit_details) == 4856
     assert len(persons) == 109
     assert len(observations) == 19671
     assert len(measurements) == 20233
+    assert 1 == 0
