@@ -19,4 +19,3 @@ def test_omop_querier():
     assert len(persons) == 109
     assert len(observations) == 19671
     assert len(measurements) == 20233
-    assert 1 == 0
