@@ -233,7 +233,7 @@ def test_split_vectorized(  # pylint: disable=redefined-outer-name
     vec_split = split_vectorized([vectorized], [0.8, 0.2], axes="C", seed=4)
     split1_data, split2_data = vec_split[0]
     assert np.array_equal(
-        split1_data.data, np.array([[[2, 1], [4, 3]], [[2, 3], [2, 3]]])
+        split1_data.data, np.array([[[1, 2], [3, 4]], [[3, 2], [3, 2]]])
     )
     assert np.array_equal(split2_data.data, np.array([[[3], [6]], [[1], [1]]]))
     split1_data1, split1_data2 = vec_split1
