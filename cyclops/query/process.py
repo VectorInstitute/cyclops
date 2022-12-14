@@ -102,7 +102,7 @@ class QAP:
         return val
 
 
-def ckwarg(kwargs, kwarg):
+def ckwarg(kwargs: dict, kwarg: str):
     """Get the value of a conditional keyword argument.
 
     A keyword argument may or may not be specified in some
@@ -127,7 +127,7 @@ def ckwarg(kwargs, kwarg):
     return None
 
 
-def remove_kwargs(process_kwargs, kwargs: Union[str, List[str]]):
+def remove_kwargs(process_kwargs: dict, kwargs: Union[str, List[str]]):
     """Remove some keyword arguments from process_kwargs if they exist.
 
     Parameters
@@ -268,11 +268,6 @@ def process_operations(  # pylint: disable=too-many-locals
     return table
 
 
-def col_name_remove(lst, remove_names):
-    """Remove any Column from lst if its name is in remove_names."""
-    return [x for x in lst if x.name not in remove_names]
-
-
 def append_if_missing(
     table: TableTypes,
     keep_cols: Optional[Union[str, List[str]]] = None,
@@ -299,7 +294,7 @@ def append_if_missing(
     return FilterColumns(keep_cols)(table)
 
 
-def none_add(obj1, obj2):
+def none_add(obj1: Any, obj2: Any):
     """Add two objects together while ignoring None values.
 
     If both objects are None, returns None.
