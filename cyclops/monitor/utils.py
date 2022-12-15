@@ -16,13 +16,185 @@ import torch
 from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
 from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
 from scipy.special import softmax
+from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
 
-from cyclops.monitor.baseline_models.temporal.pytorch.utils import (
-    get_device,
-    get_temporal_model,
-)
+from cyclops.models.neural_nets.gru import GRUModel
+from cyclops.models.neural_nets.lstm import LSTMModel
+from cyclops.models.neural_nets.rnn import RNNModel
+from cyclops.models.wrapper import SKModel
+
+
+def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
+    """Print metrics for binary classification."""
+    conf_matrix = metrics.confusion_matrix(y_test_labels, y_pred_labels)
+    if verbose:
+        print("confusion matrix:")
+        print(conf_matrix)
+    conf_matrix = conf_matrix.astype(np.float32)
+    tn, fp, fn, tp = conf_matrix.ravel()
+    acc = (tn + tp) / np.sum(conf_matrix)
+    prec0 = tn / (tn + fn)
+    prec1 = tp / (tp + fp)
+    rec0 = tn / (tn + fp)
+    rec1 = tp / (tp + fn)
+
+    auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
+
+    (precisions, recalls, _) = metrics.precision_recall_curve(
+        y_test_labels, y_pred_values
+    )
+    auprc = metrics.auc(recalls, precisions)
+    minpse = np.max([min(x, y) for (x, y) in zip(precisions, recalls)])
+
+    if verbose:
+        print(f"accuracy: {acc}")
+        print(f"precision class 0: {prec0}")
+        print(f"precision class 1: {prec1}")
+        print(f"recall class 0: {rec0}")
+        print(f"recall class 1: {rec1}")
+        print(f"AUC of ROC: {auroc}")
+        print(f"AUC of PRC: {auprc}")
+        print(f"min(+P, Se): {minpse}")
+
+    return {
+        "acc": acc,
+        "prec0": prec0,
+        "prec1": prec1,
+        "rec0": rec0,
+        "rec1": rec1,
+        "auroc": auroc,
+        "auprc": auprc,
+        "minpse": minpse,
+    }
+
+
+def load_ckp(checkpoint_fpath, model):
+    """Load checkpoint."""
+    checkpoint = torch.load(checkpoint_fpath)
+    model.load_state_dict(checkpoint["model"])
+    optimizer = checkpoint["optimizer"]
+    return model, optimizer, checkpoint["n_epochs"]
+
+
+def get_device():
+    """Get device."""
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+    return device
+
+
+def get_temporal_model(model, model_params):
+    """Get temporal model.
+
+    Parameters
+    ----------
+    model: string
+        String with model name (e.g. rnn, lstm, gru).
+
+    """
+    models = {"rnn": RNNModel, "lstm": LSTMModel, "gru": GRUModel}
+    return models.get(model.lower())(**model_params)
+
+
+def get_data(X, y):
+    """Convert pandas dataframe to dataset.
+
+    Parameters
+    ----------
+    X: numpy matrix
+        Data containing features in the form of [samples, timesteps, features].
+    y: list
+        List of labels.
+
+    """
+    inputs = torch.tensor(X, dtype=torch.float32)
+    target = torch.tensor(y, dtype=torch.float32)
+    return Data(inputs, target)
+
+
+class Data:
+    """Data class."""
+
+    def __init__(self, inputs, target):
+        """Initialize Data class."""
+        self.inputs = inputs
+        self.target = target
+
+    def __getitem__(self, idx: int) -> tuple:
+        """Get item for iterator.
+
+        Parameters
+        ----------
+        idx: int
+            Index of sample to fetch from dataset.
+
+        Returns
+        -------
+        tuple
+            Input and target.
+
+        """
+        return self.inputs[idx], self.target[idx]
+
+    def __len__(self) -> int:
+        """Return size of dataset, i.e. no. of samples.
+
+        Returns
+        -------
+        int
+            Size of dataset.
+
+        """
+        return len(self.target)
+
+    def dim(self) -> int:
+        """Get dataset dimensions (no. of features).
+
+        Returns
+        -------
+        int
+            Number of features.
+
+        """
+        return self.inputs.size(dim=1)
+
+    def to_loader(self, batch_size, num_workers=0, shuffle=False, pin_memory=True):
+        """Create dataloader.
+
+        Returns
+        -------
+            DataLoader with input data
+
+        """
+        return DataLoader(
+            TensorDataset(self.inputs, self.target),
+            batch_size=batch_size,
+            num_workers=num_workers,
+            shuffle=shuffle,
+            pin_memory=pin_memory,
+        )
+
+
+def run_model(model_name, X, y, X_val, y_val):
+    """Choose and run a model on the data and return the best model."""
+    if model_name == "mlp":
+        model = SKModel("mlp", save_path="./mlp.pkl")
+        model.fit(X, y, X_val, y_val)
+    elif model_name == "lr":
+        model = SKModel("lr", save_path="./lr.pkl")
+        model.fit(X, y, X_val, y_val)
+    elif model_name == "rf":
+        model = SKModel("rf", save_path="./rf.pkl")
+        model.fit(X, y, X_val, y_val)
+    elif model_name == "xgb":
+        model = SKModel("xgb", save_path="./xgb.pkl")
+        model.fit(X, y, X_val, y_val)
+    return model
 
 
 def get_args(obj, kwargs):
