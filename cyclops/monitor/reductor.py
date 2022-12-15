@@ -14,10 +14,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from cyclops.monitor.baseline_models.temporal.pytorch.utils import (
-    get_device,
-    get_temporal_model,
-)
+from cyclops.monitor.utils import get_device, get_temporal_model
 
 
 class Reductor:

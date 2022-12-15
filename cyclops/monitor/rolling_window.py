@@ -3,14 +3,10 @@ import pandas as pd
 import torch
 from tqdm import tqdm
 
-from cyclops.monitor.baseline_models.temporal.pytorch.metrics import (
-    print_metrics_binary,
-)
-from cyclops.monitor.baseline_models.temporal.pytorch.optimizer import Optimizer
-from cyclops.monitor.baseline_models.temporal.pytorch.utils import get_data
 from cyclops.monitor.detector import Detector
 from cyclops.monitor.gemini.utils import get_label, process
-from cyclops.monitor.utils import scale
+from cyclops.monitor.optimizer import Optimizer
+from cyclops.monitor.utils import get_data, print_metrics_binary, scale
 
 
 class RollingWindow:
