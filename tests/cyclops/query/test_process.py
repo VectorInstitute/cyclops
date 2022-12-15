@@ -12,7 +12,9 @@ from cyclops.query.process import (
     Drop,
     ExtractTimestampComponent,
     GroupByAggregate,
+    Limit,
     Literal,
+    OrderBy,
     Rename,
     ReorderAfter,
     Substring,
@@ -100,11 +102,27 @@ def test_operations():
         visits
     )
     visits = AddNumeric("new_col", 2, "new_col_add")(visits)
-    visits_agg = GroupByAggregate("person_id", {"person_id": ("count", "visit_count")})(
-        visits
-    )
-    visits_agg = synthea.get_interface(visits_agg).run()
+    visits_ordered = OrderBy("person_id", ascending=True)(visits)
+    visits_limited = Limit(100)(visits)
+    visits_agg_count = GroupByAggregate(
+        "person_id", {"person_id": ("count", "visit_count")}
+    )(visits)
+    with pytest.raises(ValueError):
+        visits_agg_count = GroupByAggregate(
+            "person_id", {"person_id": ("donkey", "visit_count")}
+        )(visits)
+    with pytest.raises(ValueError):
+        visits_agg_count = GroupByAggregate(
+            "person_id", {"person_id": ("count", "person_id")}
+        )(visits)
+    visits_agg_median = GroupByAggregate(
+        "person_id", {"visit_concept_name": ("median", "visit_concept_name_median")}
+    )(visits)
+    visits_agg_count = synthea.get_interface(visits_agg_count).run()
+    visits_agg_median = synthea.get_interface(visits_agg_median).run()
     visits = synthea.get_interface(visits).run()
+    visits_ordered = synthea.get_interface(visits_ordered).run()
+    visits_limited = synthea.get_interface(visits_limited).run()
 
     assert "care_site_source_value" not in visits.columns
     assert "care_site_name" not in visits.columns
@@ -121,4 +139,7 @@ def test_operations():
     assert visits["trimmed_col"].unique() == "test"
     assert 2018 in visits["visit_year"]
     assert visits["new_col_add"].unique() == 3
-    assert visits_agg[visits_agg["person_id"] == 33]["visit_count"][0] == 25
+    assert visits_agg_count[visits_agg_count["person_id"] == 33]["visit_count"][0] == 25
+    assert visits_agg_median["visit_concept_name_median"].value_counts()[0] == 107
+    assert visits_ordered["person_id"][0] == 1
+    assert len(visits_limited) == 100
