@@ -8,11 +8,11 @@ which can be used in high-level query API functions specific to datasets.
 # pylint: disable=too-many-lines
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
-from sqlalchemy import and_, cast, extract, func, or_, select
+from sqlalchemy import and_, cast, extract, func, literal_column, or_, select
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select, Subquery
@@ -1791,14 +1791,26 @@ class GroupByAggregate:
     aggfuncs: dict
         Specify a dictionary of key-value pairs:
         column name: aggfunc string or
-        column name: (aggfunc string, new column label)
+        column name: (aggfunc string, new column label) or
         This labelling allows for the aggregation of the same column with
         different functions.
+    aggseps: dict, optional
+        Specify a dictionary of key-value pairs:
+        column name: string_aggfunc separator
+        If string_agg used as aggfunc for a column, then a separator must be provided
+        for the same column.
+
+    Examples
+    --------
+    >>> GroupByAggregate("person_id", {"person_id": "count"})(table)
+    >>> GroupByAggregate("person_id", {"person_id": ("count", "visit_count")})(table)
+    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
 
     """
 
     groupby_cols: Union[str, List[str]]
     aggfuncs: Union[Dict[str, Sequence[str]], Dict[str, str]]
+    aggseps: Dict[str, str] = field(default_factory=dict)
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -1821,6 +1833,7 @@ class GroupByAggregate:
             "max": func.max,
             "count": func.count,
             "median": func.percentile_disc(0.5).within_group,
+            "string_agg": func.string_agg,
         }
 
         aggfunc_tuples = list(self.aggfuncs.items())
@@ -1841,12 +1854,17 @@ class GroupByAggregate:
         table = process_checks(table, cols=groupby_names + aggfunc_cols)
 
         # Error checking
-        for aggfunc_str in aggfunc_strs:
+        for i, aggfunc_str in enumerate(aggfunc_strs):
             if aggfunc_str not in str_to_aggfunc:
                 allowed_strs = ", ".join(list(str_to_aggfunc.keys()))
                 raise ValueError(
                     f"Invalid aggfuncs specified. Allowed values are {allowed_strs}."
                 )
+            if aggfunc_str == "string_agg":
+                if not bool(self.aggseps) or aggfunc_cols[i] not in self.aggseps:
+                    raise ValueError(
+                        f"""Column {aggfunc_cols[i]} needs to be aggregated as string, must specify a separator!"""  # noqa: E501, pylint: disable=line-too-long
+                    )
 
         all_names = groupby_names + aggfunc_names
         if len(all_names) != len(set(all_names)):
@@ -1857,10 +1875,15 @@ class GroupByAggregate:
 
         # Perform group by
         groupby_cols = get_columns(table, groupby_names)
-        agg_cols = get_columns(table, aggfunc_cols)
-        agg_cols = [
-            str_to_aggfunc[aggfunc_strs[i]](col).label(aggfunc_names[i])
-            for i, col in enumerate(agg_cols)
-        ]
+        to_agg_cols = get_columns(table, aggfunc_cols)
+        agg_cols = []
+        for i, to_agg_col in enumerate(to_agg_cols):
+            if aggfunc_strs[i] == "string_agg":
+                agg_col = str_to_aggfunc[aggfunc_strs[i]](
+                    to_agg_col, literal_column(f"'{self.aggseps[aggfunc_cols[i]]}'")
+                )
+            else:
+                agg_col = str_to_aggfunc[aggfunc_strs[i]](to_agg_col)
+            agg_cols.append(agg_col.label(aggfunc_names[i]))
 
         return select(*groupby_cols, *agg_cols).group_by(*groupby_cols).subquery()
