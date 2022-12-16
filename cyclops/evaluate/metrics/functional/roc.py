@@ -521,8 +521,9 @@ def roc_curve(  # pylint: disable=too-many-arguments
     AssertionError
         If ``task`` is ``multilabel`` and ``num_labels`` is not provided.
 
-    Example (binary)
-    ----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import roc_curve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
@@ -534,8 +535,9 @@ def roc_curve(  # pylint: disable=too-many-arguments
     >>> thresholds
     array([1.  , 0.8 , 0.4 , 0.35, 0.1 ])
 
-    Example (multiclass)
-    --------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics.functional import roc_curve
     >>> target = [0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06], [0.02, 0.03, 0.95]]
@@ -553,8 +555,9 @@ def roc_curve(  # pylint: disable=too-many-arguments
     array([1.  , 0.89, 0.05, 0.03]),
     array([1.  , 0.95, 0.06, 0.05])]
 
-    Example (multilabel)
-    --------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics.functional import roc_curve
     >>> target = [[1, 1], [0, 1], [1, 0]]
     >>> preds = [[0.9, 0.8], [0.2, 0.7], [0.8, 0.3]]

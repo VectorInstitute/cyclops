@@ -390,23 +390,26 @@ def accuracy(  # pylint: disable=too-many-arguments
         If ``task`` is ``multilabel`` and ``num_labels`` is not provided or is
         less than 0.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import accuracy
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> accuracy(target, preds, task="binary")
     0.75
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 0, 2, 2, 1]
     >>> accuracy(target, preds, task="multiclass", num_classes=3, average="micro")
     0.6
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]
     >>> accuracy(target, preds, task="multilabel", num_labels=3, average="mcro")

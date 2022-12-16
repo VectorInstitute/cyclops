@@ -744,16 +744,18 @@ def stat_scores(  # pylint: disable=too-many-arguments
         True, otherwise (5,). For multilabel tasks, the shape is (n_labels, 5)
         if ``labelwise`` is True, otherwise (n_classes, 5).
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import tat_scores
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
     >>> stat_scores(target, preds, task="binary")
     array([1, 0, 2, 1, 2])
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics.functional import multiclass_stat_scores
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 2, 1, 2, 0]
@@ -762,8 +764,9 @@ def stat_scores(  # pylint: disable=too-many-arguments
             [0, 1, 3, 1, 1],
             [1, 1, 1, 2, 3]])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics.functional import stat_scores
     >>> target = [[0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]

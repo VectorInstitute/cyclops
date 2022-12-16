@@ -505,16 +505,18 @@ def auroc(  # pylint: disable=too-many-arguments
         Area under the ROC curve. If ``average`` is None or task is ``binary``,
         ``auroc`` is a float. Otherwise, ``auroc`` is a numpy array.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.35, 0.4, 0.8]
     >>> auroc(target, preds, task="binary")
     0.75
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2],
@@ -522,8 +524,9 @@ def auroc(  # pylint: disable=too-many-arguments
     >>> auroc(target, preds, task="multiclass", num_classes=3, average=None)
     array([0.5, 1. , 0.5])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [[0, 1], [1, 1], [0, 0], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2], [0.4, 0.6], [0.2, 0.8]]

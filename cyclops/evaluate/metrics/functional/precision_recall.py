@@ -718,24 +718,27 @@ def recall(  # pylint: disable=too-many-arguments
     ValueError
         If ``task`` is not one of ``binary``, ``multiclass`` or ``multilabel``.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import recall
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.4, 0.2, 0.0, 0.6, 0.9]
     >>> recall(target, preds, task="binary")
     0.3333333333333333
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics.functional import recall
     >>> target = [1, 1, 2, 0, 2, 2]
     >>> preds = [1, 2, 2, 0, 2, 0]
     >>> recall(target, preds, task="multiclass", num_classes=3)
     array([1.        , 0.5       , 0.66666667])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics.functional import recall
     >>> target = [[1, 0, 1], [0, 1, 0]]
     >>> preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]

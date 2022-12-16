@@ -276,8 +276,9 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics import FbetaScore
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
@@ -292,8 +293,9 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     >>> metric.compute()
     0.9090909090909091
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics import FbetaScore
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.1, 0.8, 0.1], [0.1, 0.1, 0.8], [0.1, 0.1, 0.8], [0.8, 0.1, 0.1]]
@@ -309,8 +311,9 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     >>> metric.compute()
     array([0.83333333, 0.5       , 0.        ])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics import FbetaScore
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
@@ -584,8 +587,9 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics import F1Score
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
@@ -600,8 +604,9 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     >>> metric.compute()
     0.8
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics import F1Score
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.95, 0.05, 0]]
@@ -618,8 +623,9 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     array([0.        , 0.85714286, 0.        ])
 
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics import F1Score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]

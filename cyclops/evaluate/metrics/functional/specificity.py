@@ -362,16 +362,18 @@ def specificity(  # pylint: disable=too-many-arguments
     ValueError
         If ``task`` is not one of ``binary``, ``multiclass``, or ``multilabel``.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import specificity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.9, 0.05, 0.05, 0.35, 0.05]
     >>> specificity(target, preds, task="binary")
     0.5
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics.functional import specificity
     >>> target = [0, 1, 2, 0, 1]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
@@ -379,8 +381,9 @@ def specificity(  # pylint: disable=too-many-arguments
     >>> specificity(target, preds, task="multiclass", num_classes=3)
     array([0.5, 0., 0.5])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics.functional import specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],

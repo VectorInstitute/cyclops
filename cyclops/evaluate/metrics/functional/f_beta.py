@@ -412,24 +412,27 @@ def fbeta_score(  # pylint: disable=too-many-arguments
         If ``task`` is not one of ``binary``, ``multiclass``, or
         ``multilabel``.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import fbeta_score
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
     >>> fbeta_score(target, preds, beta=0.5, task="binary")
     0.8333333333333334
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics.functional import fbeta_score
     >>> target = [0, 1, 2, 2]
     >>> preds = [1 2, 2, 0]
     >>> fbeta_score(target, preds, beta=0.5, task="multiclass", num_classes=3)
     array([0.83333333, 0.        , 0.55555556])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics.functional import fbeta_score
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
@@ -719,24 +722,27 @@ def f1_score(  # pylint: disable=too-many-arguments
         The F1 score. If ``average`` is ``None`` and ``task`` is not ``binary``,
         a numpy.ndarray of shape (``num_classes`` or ``num_labels``,) is returned.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.9, 0.8, 0.2]
     >>> f1_score(target, preds, task="binary")
     0.5
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
     >>> f1_score(target, preds, task="multiclass", num_classes=3)
     array([0.66666667, 0.8       , 0.        ])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]

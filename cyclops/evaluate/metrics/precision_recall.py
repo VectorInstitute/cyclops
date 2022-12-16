@@ -266,8 +266,9 @@ class Precision(Metric, registry_key="precision", force_register=True):
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics import Precision
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
@@ -282,8 +283,9 @@ class Precision(Metric, registry_key="precision", force_register=True):
     >>> metric.compute()
     0.6666666666666666
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics import Precision
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
@@ -307,8 +309,9 @@ class Precision(Metric, registry_key="precision", force_register=True):
     >>> metric.compute()
     array([1., 0., 0.])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics import Precision
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
@@ -613,8 +616,9 @@ class Recall(Metric, registry_key="recall", force_register=True):
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
 
-    Examples (binary)
-    -----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
@@ -629,8 +633,9 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.compute()
     0.5
 
-    Examples (multiclass)
-    ---------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
@@ -654,8 +659,9 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.compute()
     array([0.66666667, 0.        , 0.        ])
 
-    Examples (multilabel)
-    ---------------------
+    Examples
+    --------
+    (multilabel)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]

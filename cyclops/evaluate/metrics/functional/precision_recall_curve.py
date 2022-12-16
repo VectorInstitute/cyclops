@@ -925,8 +925,9 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
     AssertionError
         If ``task`` is ``multilabel`` and ``num_labels`` is not provided.
 
-    Example (binary)
-    ----------------
+    Examples
+    --------
+    (binary)
     >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
@@ -939,8 +940,9 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
     >>> thresholds
     array([0.35, 0.4 , 0.8 ])
 
-    Example (multiclass)
-    --------------------
+    Examples
+    --------
+    (multiclass)
     >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
     >>> target = [0, 1, 2, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2], [0.3, 0.4, 0.3]]
@@ -955,8 +957,9 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
     >>> thresholds
     [array([0.1, 0.3, 0.5]), array([0.95]), array([0.2, 0.3])]
 
-    Example (multilabel)
-    --------------------
+    Example
+    -------
+    (multilabel)
     >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]
