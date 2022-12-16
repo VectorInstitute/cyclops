@@ -241,7 +241,7 @@ def _binary_precision_recall_curve_compute(
 
         # stop when full recall attained
         # and reverse the outputs so recall is decreasing
-        last_ind = tps.searchsorted(tps[-1])
+        last_ind = tps.searchsorted(tps[-1], side="right")
         sliced = slice(last_ind, None, -1)
 
         precision = np.hstack((precision[sliced], 1))

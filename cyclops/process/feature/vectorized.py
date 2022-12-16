@@ -136,7 +136,7 @@ def split_vectorized(
 
     index_splits = split_idx(
         fractions=fractions,
-        data_len=index_lens[0],
+        n_samples=index_lens[0],
         randomize=randomize,
         seed=seed,
     )
@@ -636,7 +636,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
 
         indices = split_idx(
             fractions=fractions,
-            data_len=self.data.shape[axis_index],
+            n_samples=self.data.shape[axis_index],
             randomize=randomize,
             seed=seed,
         )

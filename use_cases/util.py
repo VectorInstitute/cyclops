@@ -27,7 +27,9 @@ def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
         Imported constants module with use-case parameters.
 
     """
-    return importlib.import_module(".".join(["use_cases", "params", dataset, use_case]))
+    return importlib.import_module(
+        ".".join(["use_cases", "params", dataset, use_case, "constants"])
+    )
 
 
 def get_top_events(events_path: str, n_events: int) -> np.ndarray:
@@ -36,14 +38,14 @@ def get_top_events(events_path: str, n_events: int) -> np.ndarray:
     Parameters
     ----------
     events_path : str
-        path to the directory of saved events
+        Path to the directory of saved events.
     n_events : int
-        number of top events
+        The number of top events.
 
     Returns
     -------
     np.ndarray
-        array of the top events names
+        The array of the top events names.
 
     """
     all_top_events = []
@@ -69,14 +71,14 @@ def valid_events(events: pd.DataFrame, top_events: np.ndarray) -> pd.DataFrame:
     Parameters
     ----------
     events : pd.DataFrame
-        events dataframe
+        The events dataframe.
     top_events : np.ndarray
-        list of top events
+        The list of top events.
 
     Returns
     -------
     pd.DataFrame
-        events dataframe including only top events
+        The events dataframe including only top events.
 
     """
     return events[events[EVENT_NAME].isin(top_events)]

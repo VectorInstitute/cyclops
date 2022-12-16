@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.1.5"
+version = "0.1.6"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -12,7 +12,7 @@ packages = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">= 3.9, <3.11"
+python = ">= 3.8, <3.11"
 pandas = "^1.4.1"
 SQLAlchemy = "^1.4.32"
 python-dotenv = "^0.19.2"
@@ -47,7 +47,6 @@ pytest = "^7.1.1"
 pylint = "^2.12.2"
 pre-commit = "^2.17.0"
 black = "^22.1.0"
-nb-black = "^1.0.7"
 pyproject-flake8 = "5.0.4"
 pytest-cov = "^3.0.0"
 codecov = "^2.1.12"
@@ -98,7 +97,7 @@ non_interactive = true
     ignore-imports=["yes"]
 
     [tool.pylint.basic]
-    good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP"]
+    good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP", "lr"]
     good-names-rgxs=["X_.+", "x_.+", "y_.+", "df_.+"]
 
 [tool.flake8]

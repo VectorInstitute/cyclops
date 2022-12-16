@@ -17,7 +17,7 @@ jobs:
         run: pipx install poetry
       - uses: actions/setup-python@v4.3.0
         with:
-          python-version: 3.9.7
+          python-version: 3.9
       - name: Build package
         run: poetry build
       - name: Publish package

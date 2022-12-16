@@ -80,13 +80,13 @@ class QAP:
         """
         return self.kwarg_name
 
-    def __call__(self, kwargs):
+    def __call__(self, **kwargs):
         """Recover the value of the placeholder argument.
 
-        Attributes
+        Parameters
         ----------
-        kwargs: dict
-            Dictionary containing self.kwarg_name as a key with a
+        **kwargs: Any
+            kwarg which corresponds to self.kwarg_name as a key with a
             corresponding value.
 
         Returns
@@ -102,7 +102,7 @@ class QAP:
         return val
 
 
-def ckwarg(kwargs, kwarg):
+def ckwarg(kwargs: dict, kwarg: str):
     """Get the value of a conditional keyword argument.
 
     A keyword argument may or may not be specified in some
@@ -127,7 +127,7 @@ def ckwarg(kwargs, kwarg):
     return None
 
 
-def remove_kwargs(process_kwargs, kwargs: Union[str, List[str]]):
+def remove_kwargs(process_kwargs: dict, kwargs: Union[str, List[str]]):
     """Remove some keyword arguments from process_kwargs if they exist.
 
     Parameters
@@ -189,7 +189,7 @@ def process_operations(  # pylint: disable=too-many-locals
         return qap_kwargs
 
     def process_args(args):
-        return [arg(user_kwargs) if isinstance(arg, QAP) else arg for arg in args]
+        return [arg(**user_kwargs) if isinstance(arg, QAP) else arg for arg in args]
 
     def process_kwargs(kwargs):
         for key, value in kwargs.items():
@@ -268,30 +268,33 @@ def process_operations(  # pylint: disable=too-many-locals
     return table
 
 
-def col_name_remove(lst, remove_names):
-    """Remove any Column from lst if its name is in remove_names."""
-    return [x for x in lst if x.name not in remove_names]
-
-
-def append_if_missing(table, keep_cols, force_include_cols):
+def append_if_missing(
+    table: TableTypes,
+    keep_cols: Optional[Union[str, List[str]]] = None,
+    force_include_cols: Optional[Union[str, List[str]]] = None,
+):
     """Keep only certain columns in a table, but must include certain columns.
 
     Parameters
     ----------
-    table:
-    keep_cols
-    force_include_cols
+    table : cyclops.query.util.TableTypes
+        Table on which to perform the operation.
+    keep_cols: str or list of str, optional
+        Columns to keep.
+    force_include_cols: str or list of str, optional
+        Columns to include (forcefully).
 
     """
     if keep_cols is None:
         return table
-
+    keep_cols = to_list(keep_cols)
+    force_include_cols = to_list(force_include_cols)
     extend_cols = [col for col in force_include_cols if col not in keep_cols]
     keep_cols = extend_cols + keep_cols
     return FilterColumns(keep_cols)(table)
 
 
-def none_add(obj1, obj2):
+def none_add(obj1: Any, obj2: Any):
     """Add two objects together while ignoring None values.
 
     If both objects are None, returns None.
@@ -365,7 +368,7 @@ class Drop:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -399,7 +402,7 @@ class Rename:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
         or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
@@ -440,7 +443,7 @@ class Substring:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
         or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
@@ -479,7 +482,7 @@ class Reorder:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -512,7 +515,7 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -548,7 +551,7 @@ class FilterColumns:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -583,7 +586,7 @@ class Trim:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -617,7 +620,7 @@ class Literal:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -654,7 +657,7 @@ class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -702,7 +705,7 @@ class AddNumeric:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -745,7 +748,7 @@ class AddDeltaConstant:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -797,7 +800,7 @@ class AddColumn:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -839,7 +842,7 @@ class AddColumn:  # pylint: disable=too-few-public-methods
 class AddDeltaColumns:  # pylint: disable=too-few-public-methods
     """Construct and add an interval column to some columns.
 
-    Attributes
+    Parameters
     ----------
     add_to: str or list of str
         Column names specifying to which columns is being added.
@@ -871,7 +874,7 @@ class AddDeltaColumns:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -925,7 +928,7 @@ class Cast:
     def __call__(self, table: TableTypes):
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -970,7 +973,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
     Warning: If neither on nor cond parameters are specified, an
     expensive Cartesian product is performed.
 
-    Attributes
+    Parameters
     ----------
     join_table: cyclops.query.util.TableTypes
         Table on which to join.
@@ -1023,7 +1026,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1101,7 +1104,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
 class ConditionEquals:  # pylint: disable=too-few-public-methods
     """Filter rows based on being equal, or not equal, to some value.
 
-    Attributes
+    Parameters
     ----------
     col: str
         Column name on which to condition.
@@ -1134,7 +1137,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1161,7 +1164,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
 class ConditionIn:  # pylint: disable=too-few-public-methods
     """Filter rows based on having a value in list of values.
 
-    Attributes
+    Parameters
     ----------
     col: str
         Column name on which to condition.
@@ -1194,7 +1197,7 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1228,7 +1231,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
     Can be specified whether it must have any or all of the specified substrings.
     This makes no difference when only one substring is provided
 
-    Attributes
+    Parameters
     ----------
     col: str
         Column name on which to condition.
@@ -1266,7 +1269,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1302,7 +1305,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
 class ConditionStartsWith:  # pylint: disable=too-few-public-methods
     """Filter rows based on starting with some string.
 
-    Attributes
+    Parameters
     ----------
     col: str
         Column name on which to condition.
@@ -1335,7 +1338,7 @@ class ConditionStartsWith:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1362,7 +1365,7 @@ class ConditionStartsWith:  # pylint: disable=too-few-public-methods
 class ConditionEndsWith:  # pylint: disable=too-few-public-methods
     """Filter rows based on ending with some string.
 
-    Attributes
+    Parameters
     ----------
     col: str
         Column name on which to condition.
@@ -1395,7 +1398,7 @@ class ConditionEndsWith:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1422,7 +1425,7 @@ class ConditionEndsWith:  # pylint: disable=too-few-public-methods
 class ConditionInYears:  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp column being in a list of years.
 
-    Attributes
+    Parameters
     ----------
     timestamp_col: str
         Timestamp column name.
@@ -1451,7 +1454,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1483,7 +1486,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
 class ConditionInMonths:  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being in a list of years.
 
-    Attributes
+    Parameters
     ----------
     timestamp_col: str
         Timestamp column name.
@@ -1512,7 +1515,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1544,7 +1547,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
 class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being before some date.
 
-    Attributes
+    Parameters
     ----------
     timestamp_col: str
         Timestamp column name.
@@ -1561,7 +1564,7 @@ class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1589,7 +1592,7 @@ class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
 class ConditionAfterDate:  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being after some date.
 
-    Attributes
+    Parameters
     ----------
     timestamp_col: str
         Timestamp column name.
@@ -1606,7 +1609,7 @@ class ConditionAfterDate:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1648,7 +1651,7 @@ class Limit:  # pylint: disable=too-few-public-methods
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1677,7 +1680,7 @@ class RandomizeOrder:
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1708,7 +1711,7 @@ class DropNulls:
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1730,7 +1733,7 @@ class DropNulls:
 class OrderBy:
     """Order, or sort, the rows of a table by some columns.
 
-    Attributes
+    Parameters
     ----------
     cols: str or list of str
         Columns by which to order.
@@ -1746,7 +1749,7 @@ class OrderBy:
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1781,7 +1784,7 @@ class OrderBy:
 class GroupByAggregate:
     """Aggregate over a group by object.
 
-    Attributes
+    Parameters
     ----------
     groupby_cols: str or list of str
         Columns by which to group.
@@ -1800,7 +1803,7 @@ class GroupByAggregate:
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
-        Paramaters
+        Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
@@ -1817,6 +1820,7 @@ class GroupByAggregate:
             "min": func.min,
             "max": func.max,
             "count": func.count,
+            "median": func.percentile_disc(0.5).within_group,
         }
 
         aggfunc_tuples = list(self.aggfuncs.items())
