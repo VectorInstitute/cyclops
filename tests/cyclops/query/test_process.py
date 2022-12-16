@@ -107,6 +107,11 @@ def test_operations():
     visits_agg_count = GroupByAggregate(
         "person_id", {"person_id": ("count", "visit_count")}
     )(visits)
+    visits_string_agg = GroupByAggregate(
+        "person_id",
+        {"visit_concept_name": ("string_agg", "visit_concept_names")},
+        {"visit_concept_name": ", "},
+    )(visits)
     with pytest.raises(ValueError):
         visits_agg_count = GroupByAggregate(
             "person_id", {"person_id": ("donkey", "visit_count")}
@@ -123,6 +128,7 @@ def test_operations():
     visits = synthea.get_interface(visits).run()
     visits_ordered = synthea.get_interface(visits_ordered).run()
     visits_limited = synthea.get_interface(visits_limited).run()
+    visits_string_agg = synthea.get_interface(visits_string_agg).run()
 
     assert "care_site_source_value" not in visits.columns
     assert "care_site_name" not in visits.columns
@@ -143,3 +149,11 @@ def test_operations():
     assert visits_agg_median["visit_concept_name_median"].value_counts()[0] == 107
     assert visits_ordered["person_id"][0] == 1
     assert len(visits_limited) == 100
+    test_visit_concept_names = visits_string_agg[visits_string_agg["person_id"] == 33][
+        "visit_concept_names"
+    ][0].split(",")
+    test_visit_concept_names = [item.strip() for item in test_visit_concept_names]
+    assert (
+        len(test_visit_concept_names) == 25
+        and "Outpatient Visit" in test_visit_concept_names
+    )
