@@ -1,17 +1,22 @@
 """Model catalog."""
 import logging
 from difflib import get_close_matches
-from typing import Any, Callable, Dict, List, Literal, TypeVar, Union
+from typing import Any, Callable, Dict, List, Literal, Union
+
+import torch.nn.modules
+import torch.optim
+from sklearn.base import BaseEstimator
 
 from cyclops.utils.log import setup_logging
 from models.utils import is_pytorch_model, is_sklearn_model
-from models.wrapper import PTModel, SKModel, wrap_model
+from models.wrappers import PTModel, SKModel, WrappedModel
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
-_Model = TypeVar("_Model", PTModel, SKModel)
-
+####################
+# Model catalogs   #
+####################
 _model_catalog: Dict[str, Any] = {}
 _temporal_model_keys: set[str] = set()
 _static_model_keys: set[str] = set()
@@ -24,15 +29,15 @@ def register_model(name: str, model_type: Literal["static", "temporal"]) -> Call
 
     Parameters
     ----------
-    name: str
-        Model name.
-    model_type: Literal["static", "temporal"]
-        Model type.
+    name : str
+        The name of the model.
+    model_type : "static", "temporal"
+        The temporal or static nature of the model.
 
     Returns
     -------
     Callable
-        Decorator.
+        A decorator that registers the model.
 
     Raises
     ------
@@ -81,18 +86,18 @@ def list_models(
 
     Parameters
     ----------
-    category: Literal["static", "temporal", "pytorch", "sklearn"], optional
-        Model category.
+    category : "static", "temporal", "pytorch", "sklearn", optional
+        The type of model to list. If None, all models are listed.
 
     Returns
     -------
-    list[str]
-        List of models.
+    model_list : list[str]
+        List of model names.
 
     """
     if category is None:
         model_list = list(_model_catalog.keys())
-    if category == "static":
+    elif category == "static":
         model_list = list(_static_model_keys)
     elif category == "temporal":
         model_list = list(_temporal_model_keys)
@@ -109,24 +114,48 @@ def list_models(
     return model_list
 
 
-def create_model(
-    model_name: str, wrap: bool = True, **kwargs
-) -> Union[SKModel, PTModel]:
-    """Create model.
+def wrap_model(model: Union[torch.nn.Module, BaseEstimator], **kwargs) -> WrappedModel:
+    """Wrap a model with SKModel or PTModel.
 
     Parameters
     ----------
-    model_name: str
+    model : Union[torch.nn.Module, sklearn.base.BaseEstimator]
+        The model to wrap.
+
+    Returns
+    -------
+    SKModel or PTModel
+        The wrapped model.
+
+    Raises
+    ------
+    TypeError
+        If model is not a pyTorch or sklearn model.
+
+    """
+    if is_pytorch_model(model):
+        return PTModel(model, **kwargs)
+    if is_sklearn_model(model):
+        return SKModel(model, **kwargs)
+    raise TypeError("``model`` must be a pyTorch or sklearn model")
+
+
+def create_model(model_name: str, wrap: bool = True, **kwargs) -> WrappedModel:
+    """Create model and optionally wrap it.
+
+    Parameters
+    ----------
+    model_name : str
         Model name.
-    wrap: bool, optional
+    wrap : bool, optional
         Whether to wrap model.
-    kwargs
+    **kwargs : dict, optional
         Keyword arguments passed to the wrapper class or model class.
 
     Returns
     -------
-    Union[_Model, type]
-        Model.
+    model : PTModel or SKModel
+        An instance of the model.
 
     """
     model_class = _model_catalog.get(model_name, None)

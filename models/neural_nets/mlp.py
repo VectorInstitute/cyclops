@@ -1,16 +1,16 @@
 """MLP models."""
-
 import math
+from typing import List, Union
 
 import torch
 from torch import nn
 
 from models.catalog import register_model
-from models.utils import ACTIVATIONS
+from models.utils import get_module
 
 
 @register_model("mlp_pt", model_type="static")
-class MLPModel(nn.Module):  # pylint: disable=too-few-public-methods
+class MLPModel(nn.Module):
     """A Multi-Layer Perceptron (MLP).
 
     Also known as a Fully-Connected Network (FCN). This implementation assumes that all
@@ -18,41 +18,35 @@ class MLPModel(nn.Module):  # pylint: disable=too-few-public-methods
 
     """
 
-    def __init__(  # pylint: disable=R0913
+    def __init__(
         self,
-        device: torch.device,
         input_dim: int,
-        hidden_dims: list,
-        layer_dim: int,
-        output_dim: int,
-        activation: str = "relu",
-    ):
+        hidden_dims: List = [64, 64],
+        output_dim: int = 1,
+        activation: Union[str, nn.Module] = "ReLU",
+    ) -> None:
         """Instantiate model.
 
         Parameters
         ----------
-        num_layers: int
-            Number of layers in the network.
-        in_dim: int
-            Size of the input sample.
-        hidden_dims: list
-            Sizes of the hidden layers.
-        out_dim: int
-            Size of the output.
-        activation: str, optional
-            Activation function.
+        input_dim : int
+            Number of input features to the model.
+        hidden_dims : list, default=[64, 64]
+            A list of dimensions for each hidden layer.
+        output_dim : int, default=1
+            Dimension of the output.
+        activation : str or torch.nn.modules.activation, default="ReLU"
+            Activation function to use.
 
         """
         super().__init__()
-        self.device = device
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
-        self.layer_dim = layer_dim
         self.output_dim = output_dim
-        self.activation = ACTIVATIONS[activation]
+        self.activation = get_module("activation", activation)
 
-        layers = []
-        for i in range(self.layer_dim - 1):
+        layers = [self._layer(input_dim, hidden_dims[0], self.activation)]
+        for i in range(len(hidden_dims) - 1):
             layers.extend(
                 self._layer(
                     self.hidden_dims[i] if i > 0 else input_dim,
@@ -60,7 +54,7 @@ class MLPModel(nn.Module):  # pylint: disable=too-few-public-methods
                     activation,
                 )
             )
-        layers.extend(self._layer(hidden_dims[i + 1], output_dim))
+        layers.extend(self._layer(self.hidden_dims[-1], output_dim, activation=None))
 
         self.model = nn.Sequential(*layers)
 

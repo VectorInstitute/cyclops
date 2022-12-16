@@ -1,13 +1,10 @@
 """GRU Models."""
-
 from typing import Optional
 
 import torch
 from torch import nn
 
 from models.catalog import register_model
-
-# pylint: disable=invalid-name, too-many-arguments
 
 
 @register_model("gru", model_type="temporal")
@@ -16,36 +13,32 @@ class GRUModel(nn.Module):
 
     def __init__(
         self,
-        device: torch.device,
         input_dim: int,
-        hidden_dim: int,
-        layer_dim: int,
-        output_dim: int,
-        dropout_prob: float,
+        hidden_dim: int = 64,
+        layer_dim: int = 2,
+        output_dim: int = 1,
+        dropout_prob: float = 0.2,
         last_timestep_only: Optional[bool] = False,
     ) -> None:
         """Initialize model.
 
         Parameters
         ----------
-        device : torch.device
-            The device to allocate
         input_dim : int
-            Number of input features
-        hidden_dim : int
-            Number of features in the hidden state
-        layer_dim : int
-            Number of hidden layers
-        output_dim : int
-            Dimension of output
-        dropout_prob : float
-            Dropout probability for dropout layer
-        last_timestep_only : Optional[bool], optional
-            Keep the last timestep, by default False
+            Number of input features to the model.
+        hidden_dim : int, default=64
+            Number of features in the hidden state.
+        layer_dim : int, default=2
+            Number of hidden layer.
+        output_dim : int, default=1
+            Dimension of the output.
+        dropout_prob : float, default=0.2
+            Dropout probability for dropout layer.
+        last_timestep_only : bool, default=False
+            Whether to use only the last timestep of the output.
 
         """
         super().__init__()
-        self.device = device
         self.layer_dim = layer_dim
         self.hidden_dim = hidden_dim
         self.gru = nn.GRU(
@@ -60,18 +53,18 @@ class GRUModel(nn.Module):
         Parameters
         ----------
         x : torch.Tensor
-            Input to the model
+            Input to the model.
 
         Returns
         -------
         torch.Tensor
-            Model output
+            Model output.
 
         """
         h0 = (
             torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
             .requires_grad_()
-            .to(self.device)
+            .to(x.device)
         )
         out, _ = self.gru(x, h0.detach())
         if self.last_timestep_only:

@@ -1,61 +1,140 @@
 """Utility functions for building models."""
 import inspect
+from difflib import get_close_matches
+from typing import Dict, List
 
 import numpy as np
 import torch
 from sklearn import metrics
 from sklearn.base import BaseEstimator
-from sklearn.metrics import (
-    accuracy_score,
-    average_precision_score,
-    confusion_matrix,
-    f1_score,
-    recall_score,
-    roc_auc_score,
+
+
+def _get_class_members(
+    module, include_only: List[str] = None, exclude: List[str] = None
+) -> dict:
+    """Get class members from module.
+
+    Parameters
+    ----------
+    module : module
+        Module to get class members from.
+    include_only : list[str], optional
+        List of class names to include.
+    exclude : list[str], optional
+        List of class names to exclude.
+
+    Returns
+    -------
+    dict
+        Dictionary of class members.
+
+    """
+    if include_only is None:
+        include_only = []
+    if exclude is None:
+        exclude = []
+    return {
+        name: cls
+        for name, cls in inspect.getmembers(module, inspect.isclass)
+        if name in include_only or (not include_only and name not in exclude)
+    }
+
+
+####################
+# Loss catalog     #
+####################
+_criterion_catalog: Dict[str, torch.nn.modules.loss._Loss] = _get_class_members(
+    torch.nn.modules.loss, include_only=["BCELoss", "BCEWithLogitsLoss"]
 )
-from torch import nn
-from torch.optim import SGD, Adagrad, Adam
-from torch.optim.lr_scheduler import ExponentialLR, StepLR
 
-ACTIVATIONS = {
-    "none": None,
-    "hardtanh": nn.Hardtanh(),
-    "sigmoid": nn.Sigmoid(),
-    "relu6": nn.ReLU6(),
-    "tanh": nn.Tanh(),
-    "tanhshrink": nn.Tanhshrink(),
-    "hardshrink": nn.Hardshrink(),
-    "leakyreluleakyrelu": nn.LeakyReLU(),
-    "softshrink": nn.Softshrink(),
-    "relu": nn.ReLU(),
-    "prelu": nn.PReLU(),
-    "softplus": nn.Softplus(),
-    "elu": nn.ELU(),
-    "selu": nn.SELU(),
-    "silu": nn.SiLU(),
-}
+#####################
+# Optimizer catalog #
+#####################
+_optimizer_catalog: Dict[str, torch.optim.Optimizer] = _get_class_members(
+    torch.optim, exclude=["Optimizer"]
+)
 
-CRITERIONS = {
-    "bce": nn.BCELoss(),
-    "bcelogits": nn.BCEWithLogitsLoss,
-}
+#####################
+# Scheduler catalog #
+#####################
+_lr_scheduler_catalog: Dict[
+    str, torch.optim.lr_scheduler._LRScheduler
+] = _get_class_members(
+    torch.optim.lr_scheduler,
+    exclude=["_LRScheduler", "Optimizer", "Counter", "ChainedScheduler"],
+)
 
-OPTIMIZERS = {
-    "adam": Adam,
-    "adagrad": Adagrad,
-    "sgd": SGD,
-}
+######################
+# Activation catalog #
+######################
+_activation_catalog = _get_class_members(
+    torch.nn.modules.activation,
+    include_only=[
+        "Hardtanh",
+        "Sigmoid",
+        "ReLU6",
+        "Tanh",
+        "Tanhshrink",
+        "Hardshrink",
+        "LeakyReLU",
+        "Softshrink",
+        "ReLU",
+        "PReLU",
+        "Softplus",
+        "ELU",
+        "SELU",
+        "SiLU",
+    ],
+)
+_activation_catalog.update(Id=torch.nn.Identity)
 
-SCHEDULERS = {"step": StepLR, "expo": ExponentialLR}
 
-METRICS = {
-    "accuracy": accuracy_score,
-    "precision": average_precision_score,
-    "roc_auc": roc_auc_score,
-    "f1": f1_score,
-    "recall": recall_score,
-    "confusion": confusion_matrix,
-}
+def get_module(module_type: str, module_name: str):
+    """Get module.
+
+    Parameters
+    ----------
+    module_type : str
+        Module type.
+    module_name : str
+        Module name.
+
+    Returns
+    -------
+    Any
+        Module.
+
+    Raises
+    ------
+    ValueError
+        If module type is not supported.
+
+    """
+    if module_type == "criterion":
+        catalog = _criterion_catalog
+    elif module_type == "optimizer":
+        catalog = _optimizer_catalog
+    elif module_type == "lr_scheduler":
+        catalog = _lr_scheduler_catalog
+    elif module_type == "activation":
+        catalog = _activation_catalog
+    else:
+        raise ValueError(f"Module type {module_type} is not supported.")
+
+    module = catalog.get(module_name, None)
+    if module is None:
+        similar_keys_list: List[str] = get_close_matches(
+            module_name, catalog.keys(), n=5
+        )
+        similar_keys: str = ", ".join(similar_keys_list)
+        similar_keys = (
+            f" Did you mean one of: {similar_keys}?"
+            if similar_keys
+            else "It may not be in the catalog."
+        )
+        raise ValueError(f"Module {module_name} not found.{similar_keys}")
+
+    return module
 
 
 def _has_sklearn_api(model: object) -> bool:
@@ -134,8 +213,8 @@ def is_sklearn_model(model: object) -> bool:
     return is_sklearn_class(model) or is_sklearn_instance(model)
 
 
-def is_pytorch_instance(model: object) -> bool:
-    """Check if model is an instance of a PyTorch model.
+def is_pytorch_instance(module: object) -> bool:
+    """Check if object is an instance of a PyTorch module.
 
     Parameters
     ----------
@@ -148,7 +227,7 @@ def is_pytorch_instance(model: object) -> bool:
         True if ``model`` is an instance of a PyTorch model.
 
     """
-    return isinstance(model, nn.Module)
+    return isinstance(module, torch.nn.Module)
 
 
 def is_pytorch_class(model: object) -> bool:
@@ -165,7 +244,7 @@ def is_pytorch_class(model: object) -> bool:
         True if ``model`` is a PyTorch class
 
     """
-    return inspect.isclass(model) and issubclass(model, nn.Module)
+    return inspect.isclass(model) and issubclass(model, torch.nn.Module)
 
 
 def is_pytorch_model(model: object) -> bool:
@@ -208,7 +287,7 @@ class LossMeter:
         Parameters
         ----------
         name : str
-            loss name, train or val
+            Loss name. Used for logging.
 
         """
         self.name = name
@@ -224,7 +303,7 @@ class LossMeter:
         Parameters
         ----------
         val : float
-            loss value
+            Loss value.
 
         """
         self.losses.append(val)
@@ -235,7 +314,7 @@ class LossMeter:
         Returns
         -------
         float
-            mean values
+            Mean values.
 
         """
         if not self.losses:
@@ -248,7 +327,7 @@ class LossMeter:
         Returns
         -------
         float
-            loss value
+            Loss value.
 
         """
         return self.losses[-1]
@@ -259,7 +338,7 @@ class LossMeter:
         Returns
         -------
         float
-            sum value
+            Sum value.
 
         """
         return sum(self.losses)

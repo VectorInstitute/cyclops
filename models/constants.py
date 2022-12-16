@@ -11,5 +11,4 @@ DATA_TYPES = ["tabular", "temporal", "combined"]
 
 TASKS = {"binary_classification": ["mortality_decompensation", "delirium"]}
 
-CONFIG_FILE = join("configs", "models.yaml")
 SAVE_DIR = join("/mnt", "cyclops", "checkpoints")

@@ -4,7 +4,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 
-from models.catalog import register_model
+from models.catalog import create_model, list_models, register_model, wrap_model
+from models.neural_nets import GRUModel, LSTMModel, MLPModel, RNNModel
 
 register_model("random_forest", model_type="static")(RandomForestClassifier)
 register_model("xgb_classifier", model_type="static")(XGBClassifier)
