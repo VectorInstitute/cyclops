@@ -514,8 +514,6 @@ def auroc(  # pylint: disable=too-many-arguments
     >>> auroc(target, preds, task="binary")
     0.75
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [0, 1, 2, 0, 1, 2]
@@ -524,8 +522,6 @@ def auroc(  # pylint: disable=too-many-arguments
     >>> auroc(target, preds, task="multiclass", num_classes=3, average=None)
     array([0.5, 1. , 0.5])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [[0, 1], [1, 1], [0, 0], [1, 0]]

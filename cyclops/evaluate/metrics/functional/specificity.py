@@ -371,8 +371,6 @@ def specificity(  # pylint: disable=too-many-arguments
     >>> specificity(target, preds, task="binary")
     0.5
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics.functional import specificity
     >>> target = [0, 1, 2, 0, 1]
@@ -381,8 +379,6 @@ def specificity(  # pylint: disable=too-many-arguments
     >>> specificity(target, preds, task="multiclass", num_classes=3)
     array([0.5, 0., 0.5])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics.functional import specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]

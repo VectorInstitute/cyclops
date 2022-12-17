@@ -753,8 +753,6 @@ def stat_scores(  # pylint: disable=too-many-arguments
     >>> stat_scores(target, preds, task="binary")
     array([1, 0, 2, 1, 2])
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics.functional import multiclass_stat_scores
     >>> target = [0, 1, 2, 2, 2]
@@ -764,8 +762,6 @@ def stat_scores(  # pylint: disable=too-many-arguments
             [0, 1, 3, 1, 1],
             [1, 1, 1, 2, 3]])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics.functional import stat_scores
     >>> target = [[0, 1, 1], [1, 0, 1]]

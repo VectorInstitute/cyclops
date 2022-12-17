@@ -940,8 +940,6 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
     >>> thresholds
     array([0.35, 0.4 , 0.8 ])
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
     >>> target = [0, 1, 2, 2]
@@ -957,8 +955,6 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
     >>> thresholds
     [array([0.1, 0.3, 0.5]), array([0.95]), array([0.2, 0.3])]
 
-    Example
-    -------
     (multilabel)
     >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
     >>> target = [[1, 1, 0], [0, 1, 0]]

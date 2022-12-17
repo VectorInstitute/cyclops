@@ -263,8 +263,6 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     >>> metric.compute()
     0.5
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import Accuracy
     >>> target = [0, 1, 2, 2, 2]
@@ -281,8 +279,6 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     >>> metric.compute()
     array([0., 1., 0.])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import Accuracy
     >>> target = [[0, 1, 1], [1, 0, 0]]

@@ -87,15 +87,13 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         Average to apply. If None, return scores for each class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metrics globally by counting the total true
-                positives and false negatives.
-            - ``macro``: Calculate metrics for each label, and find their
-                unweighted mean. This does not take label imbalance into
-                account.
-            - ``weighted``: Calculate metrics for each label, and find their
-                average weighted by support (the number of true instances
-                for each label). This alters "macro" to account for label
-                imbalance.
+        - ``micro``: Calculate metrics globally by counting the total true
+        positives and false negatives.
+        - ``macro``: Calculate metrics for each label, and find their
+        unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their
+        average weighted by support (the number of true instances for each label).
+        This alters "macro" to account for label imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there are no true positives or true negatives.
         If set to ``warn``, this acts as 0, but warnings are also raised.
@@ -162,14 +160,13 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the sensitivity score for each class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metric globally from the total count of true
-                positives and false negatives.
-            - ``macro``: Calculate metric for each label, and find their
-                unweighted mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metric for each label, and find their
-                average weighted by the support (the number of true instances
-                for each label). This alters "macro" to account for label
-                imbalance.
+        - ``micro``: Calculate metric globally from the total count of true
+        positives and false negatives.
+        - ``macro``: Calculate metric for each label, and find their
+        unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their
+        average weighted by the support (the number of true instances
+        for each label). This alters "macro" to account for label imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -247,15 +244,14 @@ def sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         Average to apply. If None, return scores for each class/label. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metrics globally by counting the total true
-                positives and false negatives.
-            - ``macro``: Calculate metrics for each class/label, and find their
-                unweighted mean. This does not take class/label imbalance into
-                account.
-            - ``weighted``: Calculate metrics for each class/label, and find
-                their average weighted by support (the number of true instances
-                for each class/label). This alters ``macro`` to account for
-                class/label imbalance.
+        - ``micro``: Calculate metrics globally by counting the total true
+        positives and false negatives.
+        - ``macro``: Calculate metrics for each class/label, and find their
+        unweighted mean. This does not take class/label imbalance into account.
+        - ``weighted``: Calculate metrics for each class/label, and find
+        their average weighted by support (the number of true instances
+        for each class/label). This alters ``macro`` to account for
+        class/label imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there are no true positives or true negatives.
         If set to ``warn``, this acts as 0, but warnings are also raised.
@@ -281,8 +277,6 @@ def sensitivity(  # pylint: disable=too-many-arguments
     >>> sensitivity(target, preds, task="binary")
     0.3333333333333333
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics.functional import sensitivity
     >>> target = [1, 1, 2, 0, 2, 2]
@@ -290,8 +284,6 @@ def sensitivity(  # pylint: disable=too-many-arguments
     >>> sensitivity(target, preds, task="multiclass", num_classes=3)
     array([1.        , 0.5       , 0.66666667])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics.functional import sensitivity
     >>> target = [[1, 0, 1], [0, 1, 0]]

@@ -421,8 +421,6 @@ def fbeta_score(  # pylint: disable=too-many-arguments
     >>> fbeta_score(target, preds, beta=0.5, task="binary")
     0.8333333333333334
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics.functional import fbeta_score
     >>> target = [0, 1, 2, 2]
@@ -430,8 +428,6 @@ def fbeta_score(  # pylint: disable=too-many-arguments
     >>> fbeta_score(target, preds, beta=0.5, task="multiclass", num_classes=3)
     array([0.83333333, 0.        , 0.55555556])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics.functional import fbeta_score
     >>> target = [[0, 1], [1, 1]]

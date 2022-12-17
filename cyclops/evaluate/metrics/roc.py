@@ -254,8 +254,6 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]),
     array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import ROCCurve
     >>> target = [[1, 1, 0], [0, 1, 0]]
@@ -284,8 +282,6 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
             [0., 0., 0., 0.]]),
     array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import ROCCurve
     >>> target = [[1, 1, 0], [0, 1, 0]]

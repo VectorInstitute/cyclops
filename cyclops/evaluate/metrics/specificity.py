@@ -274,8 +274,6 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     >>> metric.compute()
     0.0
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import Specificity
     >>> target = [0, 1, 2, 0, 1, 2]
@@ -293,8 +291,6 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     >>> metric.compute()
     array([0.8, 0.5, 0.8])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import Specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]

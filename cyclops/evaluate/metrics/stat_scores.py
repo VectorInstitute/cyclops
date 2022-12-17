@@ -399,8 +399,6 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     >>> metric.compute()
     array([4, 2, 5, 1, 5])
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import StatScores
     >>> target = [0, 1, 2, 2, 2]
@@ -435,8 +433,6 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
             [0, 4, 3, 3, 3],
             [1, 2, 3, 4, 5]])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import StatScores
     >>> target = [[0, 1, 1], [1, 0, 1]]

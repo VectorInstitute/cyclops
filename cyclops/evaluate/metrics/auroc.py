@@ -270,8 +270,6 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     >>> metric.compute()
     0.6111111111111112
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import MulticlassAUROC
     >>> target = [0, 1, 2, 0]
@@ -289,9 +287,6 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     >>> metric.compute()
     array([0.5       , 0.22222222, 0.        ])
 
-
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import MultilabelAUROC
     >>> target = [[0, 1], [1, 1], [1, 0]]

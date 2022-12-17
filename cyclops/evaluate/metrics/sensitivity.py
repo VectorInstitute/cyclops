@@ -236,8 +236,6 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     >>> metric.compute()
     0.5
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import Sensitivity
     >>> target = [0, 1, 2, 0]
@@ -262,8 +260,6 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     >>> metric.compute()
     array([0.66666667, 0.        , 0.        ])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import Sensitivity
     >>> target = [[0, 1], [1, 1]]

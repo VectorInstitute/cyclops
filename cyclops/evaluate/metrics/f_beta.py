@@ -293,8 +293,6 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     >>> metric.compute()
     0.9090909090909091
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import FbetaScore
     >>> target = [0, 1, 2, 0]
@@ -311,8 +309,6 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     >>> metric.compute()
     array([0.83333333, 0.5       , 0.        ])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import FbetaScore
     >>> target = [[0, 1], [1, 1]]

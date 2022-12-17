@@ -535,8 +535,6 @@ def roc_curve(  # pylint: disable=too-many-arguments
     >>> thresholds
     array([1.  , 0.8 , 0.4 , 0.35, 0.1 ])
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics.functional import roc_curve
     >>> target = [0, 1, 2]
@@ -555,8 +553,6 @@ def roc_curve(  # pylint: disable=too-many-arguments
     array([1.  , 0.89, 0.05, 0.03]),
     array([1.  , 0.95, 0.06, 0.05])]
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics.functional import roc_curve
     >>> target = [[1, 1], [0, 1], [1, 0]]

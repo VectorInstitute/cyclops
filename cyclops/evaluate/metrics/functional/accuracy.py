@@ -399,16 +399,12 @@ def accuracy(  # pylint: disable=too-many-arguments
     >>> accuracy(target, preds, task="binary")
     0.75
 
-    Examples
-    --------
     (multiclass)
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 0, 2, 2, 1]
     >>> accuracy(target, preds, task="multiclass", num_classes=3, average="micro")
     0.6
 
-    Examples
-    --------
     (multilabel)
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]

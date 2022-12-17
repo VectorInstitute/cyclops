@@ -283,8 +283,6 @@ class Precision(Metric, registry_key="precision", force_register=True):
     >>> metric.compute()
     0.6666666666666666
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import Precision
     >>> target = [0, 1, 2, 0]
@@ -309,8 +307,6 @@ class Precision(Metric, registry_key="precision", force_register=True):
     >>> metric.compute()
     array([1., 0., 0.])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import Precision
     >>> target = [[0, 1], [1, 1]]
@@ -633,8 +629,6 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.compute()
     0.5
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [0, 1, 2, 0]
@@ -659,8 +653,6 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.compute()
     array([0.66666667, 0.        , 0.        ])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [[0, 1], [1, 1]]
