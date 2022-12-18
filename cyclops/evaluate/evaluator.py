@@ -1,15 +1,14 @@
 """Evaluator class."""
 from typing import Dict, NamedTuple, Sequence, Union, get_args
 
-from models.wrappers import WrappedModel
-
 from cyclops.evaluate.metrics.metric import Metric, MetricCollection
+from cyclops.models.wrappers import WrappedModel
+
+# pylint: disable=fixme
 
 
 class Evaluator:
     """Evaluate one or more models on a dataset.
-
-    warning:: This class is experimental and will change in the future.
 
     Parameters
     ----------
@@ -20,19 +19,21 @@ class Evaluator:
     metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection]
         Metric(s) to use for evaluation.
 
+    warning:: This class is experimental and will change in the future.
+
     """
 
     def __init__(
         self,
-        model: Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]],
+        models: Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]],
         data: NamedTuple,
         metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
     ):
-        self.model = self.prepare_model(model)
+        self.models = self._prepare_models(models)
         self.data = data
-        self.metrics = self.prepare_metric(metrics)
+        self.metrics = self._prepare_metrics(metrics)
 
-    def prepare_model(
+    def _prepare_models(
         self,
         model: Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]],
     ) -> Dict[str, WrappedModel]:
@@ -50,7 +51,8 @@ class Evaluator:
 
         """
         if isinstance(model, get_args(WrappedModel)):
-            model = {model.model_.__class__.__name__: model}
+            model_name = model.model_.__class__.__name__  # type: ignore
+            model = {model_name: model}  # type: ignore
         elif isinstance(model, (list, tuple)):
             assert all(isinstance(m, get_args(WrappedModel)) for m in model)
             model = {m.getattr("model_").__class__.__name__: m for m in model}
@@ -61,7 +63,7 @@ class Evaluator:
 
         return model
 
-    def prepare_metric(
+    def _prepare_metrics(
         self,
         metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
     ) -> MetricCollection:
@@ -90,19 +92,21 @@ class Evaluator:
 
         return metrics
 
-    def evaluate(self) -> Dict[str, Dict[str, float]]:
+    def compute(self) -> Dict[str, Dict[str, float]]:
         """Evaluate the model(s) on the dataset.
 
         Returns
         -------
-        Dict[str, Dict[str, float]]
+        scores : Dict[str, Dict[str, float]]
             Dictionary containing the evaluation results.
 
         """
         predictions = {}
-        for model_name, model in self.model.items():
+        for model_name, model in self.models.items():
             # TODO: Add support for predict_proba kwargs
-            predictions[model_name] = model.predict_proba(self.data.features)
+            predictions[model_name] = model.predict_proba(
+                self.data.features,  # type: ignore[attr-defined]
+            )
 
         # XXX: post-process predictions?
 
@@ -111,7 +115,10 @@ class Evaluator:
         # compute metrics for each dataset slice and model
         scores = {}
         for model_name, model_predictions in predictions.items():
-            scores[model_name] = self.metrics(self.data.target, model_predictions)
+            scores[model_name] = self.metrics(
+                self.data.target,  # type: ignore[attr-defined]
+                model_predictions,
+            )
 
         return scores
 
