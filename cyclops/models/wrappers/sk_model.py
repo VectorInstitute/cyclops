@@ -4,16 +4,18 @@ import os
 from functools import wraps
 from typing import Any, Callable, Dict, List, Literal, Sequence, Union
 
-import numpy as np
+from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator as SKBaseEstimator
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
-from cyclops.models.util import is_sklearn_class, is_sklearn_instance
-from cyclops.utils.file import load_pickle, save_pickle
+from cyclops.models.utils import is_sklearn_class, is_sklearn_instance
+from cyclops.utils.file import join, load_pickle, save_pickle
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
+
+# pylint: disable=fixme
 
 
 class SKModel:
@@ -70,9 +72,9 @@ class SKModel:
 
     def find_best(
         self,
+        X: ArrayLike,
+        y: ArrayLike,
         parameters: Union[Dict, List[Dict]],
-        X: np.ndarray,
-        y: np.ndarray = None,
         metric: Union[str, Callable, Sequence, Dict] = None,
         method: Literal["grid", "random"] = "grid",
         **kwargs,
@@ -81,12 +83,12 @@ class SKModel:
 
         Parameters
         ----------
+        X : ArrayLike
+            The feature matrix.
+        y : ArrayLike
+            The target vector.
         parameters : dict or list of dicts
             The hyperparameters to be tuned.
-        X : np.ndarray
-            The feature matrix.
-        y : np.ndarray, optional
-            The target vector.
         metric : str, callable, sequence, dict, optional
             The metric to be used for model evaluation.
         method : Literal["grid", "random"], default="grid"
@@ -142,9 +144,7 @@ class SKModel:
         """Save model to file."""
         # filepath could be a directory or a file
         if os.path.isdir(filepath):
-            filepath = os.path.join(
-                filepath, self.model_.__class__.__name__, "model.pkl"
-            )
+            filepath = join(filepath, self.model_.__class__.__name__, "model.pkl")
 
         if os.path.exists(filepath) and not overwrite:
             LOGGER.warning("The file already exists and will not be overwritten.")

@@ -1,5 +1,8 @@
 """Base class for model wrappers."""
 from abc import ABC, abstractmethod
+from typing import Any, Callable, Dict, List, Literal, Sequence, Union
+
+import cyclops.models.wrappers.utils as wrapper_utils
 
 
 class ModelWrapper(ABC):
@@ -44,6 +47,39 @@ class ModelWrapper(ABC):
         Returns
         -------
             The fitted model.
+
+        """
+
+    @abstractmethod
+    def find_best(
+        self,
+        X,
+        y,
+        parameters: Union[Dict, List[Dict]],
+        metric: Union[str, Callable, Sequence, Dict] = None,
+        method: Literal["grid", "random"] = "grid",
+        **kwargs,
+    ):
+        """Find the best model from hyperparameter search.
+
+        Parameters
+        ----------
+        X : np.ndarray or torch.utils.data.Dataset
+            The features of the data.
+        y : np.ndarray
+            The labels of the data.
+        parameters : dict or list of dicts
+            The parameters to search over.
+        metric : str or callable, optional
+            The metric to use for scoring.
+        method : str, default="grid"
+            The method to use for hyperparameter search.
+        **kwargs : dict, optional
+            Additional parameters.
+
+        Returns
+        -------
+        self
 
         """
 
@@ -118,3 +154,29 @@ class ModelWrapper(ABC):
         self
 
         """
+
+    def get_params(self) -> Dict[str, Any]:
+        """Get parameters for the wrapper.
+
+        Returns
+        -------
+        dict
+            Parameter names mapped to their values.
+
+        """
+        return wrapper_utils.get_params(self)
+
+    def set_params(self, **params):
+        """Set the parameters of this wrapper.
+
+        Parameters
+        ----------
+        **params : dict
+            Wrapper parameters.
+
+        Returns
+        -------
+        self
+
+        """
+        wrapper_utils.set_params(self, **params)

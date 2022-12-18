@@ -12,24 +12,31 @@ from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset as TorchDataset
 
-import cyclops.models.wrappers.util as wrapper_utils
 from cyclops.models.data import PTDataset
-from cyclops.models.util import (
+from cyclops.models.utils import (
     LossMeter,
     get_module,
     is_pytorch_instance,
     is_pytorch_model,
 )
 from cyclops.models.wrappers.base import ModelWrapper
-from cyclops.models.wrappers.util import check_is_fitted, to_numpy, to_tensor
+from cyclops.models.wrappers.utils import (
+    check_is_fitted,
+    set_random_seed,
+    to_numpy,
+    to_tensor,
+)
 from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
+# ignore errors about attributes defined dynamically
+# pylint: disable=no-member, fixme
 
-class PTModel(ModelWrapper):
+
+class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
     """PyTorch model wrapper.
 
     Parameters
@@ -89,6 +96,12 @@ class PTModel(ModelWrapper):
         Whether to save only the best model based on the validation loss.
     device : str or torch.device, default="cpu"
         The device to use for training.
+    seed : int, default=None
+        The random seed to use for reproducibility. If `None`, runs will be
+        stochastic.
+    deterministic : bool, default=False
+        Whether to use deterministic algorithms for training. This will make
+        runs reproducible but will be slower. It is ignored if `seed` is `None`.
 
     """
 
@@ -110,6 +123,8 @@ class PTModel(ModelWrapper):
         save_every: int = -1,
         save_best_only: bool = True,
         device: Union[str, torch.device] = "cpu",
+        seed: int = None,
+        deterministic: bool = False,
         **kwargs,
     ):
         assert is_pytorch_model(
@@ -132,6 +147,8 @@ class PTModel(ModelWrapper):
         self.save_every = save_every
         self.save_best_only = save_best_only
         self.device = device
+        self.seed = seed
+        self.deterministic = deterministic
 
         vars(self).update(kwargs)  # add any additional kwargs to the class
 
@@ -145,12 +162,12 @@ class PTModel(ModelWrapper):
         Parameters
         ----------
         prefix : str
-            prefix to collect parameters for
+            The prefix to collect parameters for.
 
         Returns
         -------
         Dict
-            parameters for given prefix
+            A dictionary of parameters for the given prefix.
 
         """
         if not prefix.endswith("__"):
@@ -338,7 +355,9 @@ class PTModel(ModelWrapper):
 
         """
         return self._initialize_module(
-            "lr_scheduler", default="ConstantLR", optimizer=self.optimizer_
+            "lr_scheduler",
+            default="ConstantLR",
+            optimizer=self.optimizer_,  # type: ignore[attr-defined]
         )
 
     def initialize(self):
@@ -349,6 +368,7 @@ class PTModel(ModelWrapper):
         self
 
         """
+        set_random_seed(self.seed, self.deterministic)
         self.initialize_model()
         self.initialize_criterion()
         self.initialize_activation()
@@ -371,7 +391,7 @@ class PTModel(ModelWrapper):
         if not self.initialized_:
             self.initialize()
 
-        self.model_.train(training)
+        self.model_.train(training)  # type: ignore[attr-defined]
 
     def _forward_pass(self, batch, **fit_params):
         """Run the forward pass.
@@ -390,7 +410,7 @@ class PTModel(ModelWrapper):
 
         """
         X = to_tensor(batch, device=self.device)
-        return self.model_(X, **fit_params)
+        return self.model_(X, **fit_params)  # type: ignore[attr-defined]
 
     def _reweight_loss(self, loss: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Reweight loss for unbalanced data.
@@ -428,7 +448,10 @@ class PTModel(ModelWrapper):
             Loss tensor.
 
         """
-        loss = self.criterion_(preds.squeeze(), target.squeeze())
+        loss = self.criterion_(  # type: ignore[attr-defined]
+            preds.squeeze(),
+            target.squeeze(),
+        )
         # TODO: loss reweighting + post-processing?
         # loss = self._reweight_loss(loss, target)
         # loss *= ~target.eq(-1).squeeze()
@@ -452,7 +475,7 @@ class PTModel(ModelWrapper):
 
         """
         self._set_mode(training=True)
-        self.optimizer_.zero_grad(set_to_none=True)
+        self.optimizer_.zero_grad(set_to_none=True)  # type: ignore[attr-defined]
 
         # XXX: batch may not always be a tuple of two elements
         X, target = batch
@@ -461,10 +484,10 @@ class PTModel(ModelWrapper):
         preds = self._forward_pass(X, **fit_params)
         loss = self._get_loss(target, preds)
         loss.backward()
-        self.optimizer_.step()
+        self.optimizer_.step()  # type: ignore[attr-defined]
 
         if self.lr_update_per_batch:
-            self.lr_scheduler_.step()
+            self.lr_scheduler_.step()  # type: ignore[attr-defined]
 
         return {"loss": loss}
 
@@ -537,7 +560,7 @@ class PTModel(ModelWrapper):
             self.val_loss_.add(np.mean(batch_losses))
 
         if training and not self.lr_update_per_batch:
-            self.lr_scheduler_.step()
+            self.lr_scheduler_.step()  # type: ignore[attr-defined]
 
     def _get_dataset(self, X, y=None) -> TorchDataset:
         """Get dataset.
@@ -719,9 +742,9 @@ class PTModel(ModelWrapper):
 
     def find_best(
         self,
-        parameters: Union[Dict, List[Dict]],
         X,
-        y=None,
+        y,
+        parameters: Union[Dict, List[Dict]],
         metric: Union[str, Callable, Sequence, Dict] = None,
         method: Literal["grid", "random"] = "grid",
         **kwargs,
@@ -730,12 +753,12 @@ class PTModel(ModelWrapper):
 
         Parameters
         ----------
-        parameters : dict or list of dicts
-            The parameters to search over.
         X : np.ndarray or torch.utils.data.Dataset
             The features of the data.
         y : np.ndarray, optional
             The labels of the data.
+        parameters : dict or list of dicts
+            The parameters to search over.
         metric : str or callable, optional
             The metric to use for scoring.
         method : str, default="grid"
@@ -873,15 +896,19 @@ class PTModel(ModelWrapper):
             return
 
         # prepare the state dictionary
-        state_dict = {"model": self.model_.state_dict()}
+        state_dict = {"model": self.model_.state_dict()}  # type: ignore[attr-defined]
 
         include_optimizer = kwargs.get("include_optimizer", True)
         if include_optimizer:
-            state_dict["optimizer"] = self.optimizer_.state_dict()
+            state_dict[
+                "optimizer"
+            ] = self.optimizer_.state_dict()  # type: ignore[attr-defined]
 
         include_lr_scheduler = kwargs.get("include_lr_scheduler", True)
         if include_lr_scheduler:
-            state_dict["lr_scheduler"] = self.lr_scheduler_.state_dict()
+            state_dict[
+                "lr_scheduler"
+            ] = self.lr_scheduler_.state_dict()  # type: ignore[attr-defined]
 
         epoch = kwargs.get("epoch", None)
         if epoch is not None:
@@ -942,9 +969,6 @@ class PTModel(ModelWrapper):
 
         """
         state_dict = torch.load(filepath, map_location=self.device)
-        if not self.initialized_:
-            self.initialize()
-
         if not isinstance(state_dict, dict):
             raise ValueError(
                 "Expected the file to be a checkpoint file."
@@ -952,38 +976,13 @@ class PTModel(ModelWrapper):
                 " Please call `save_model` instead of `torch.save`."
             )
 
+        if not self.initialized_:
+            self.initialize()
+
         to_load = ["model", "optimizer", "lr_scheduler"]
         for key in to_load:
             if key in state_dict:
                 getattr(self, f"{key}_").load_state_dict(state_dict[key])
-
-        return self
-
-    def get_params(self) -> Dict[str, Any]:
-        """Get parameters for the wrapper.
-
-        Returns
-        -------
-        dict
-            Parameter names mapped to their values.
-
-        """
-        return wrapper_utils.get_params(self)
-
-    def set_params(self, **params):
-        """Set the parameters of this wrapper.
-
-        Parameters
-        ----------
-        **params : dict
-            Wrapper parameters.
-
-        Returns
-        -------
-        self
-
-        """
-        wrapper_utils.set_params(self, **params)
 
         return self
 
