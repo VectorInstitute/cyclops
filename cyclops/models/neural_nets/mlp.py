@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from cyclops.models.catalog import register_model
-from cyclops.models.util import get_module
+from cyclops.models.utils import get_module
 
 
 @register_model("mlp_pt", model_type="static")
@@ -18,7 +18,7 @@ class MLPModel(nn.Module):
 
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=dangerous-default-value
         self,
         input_dim: int,
         hidden_dims: List = [64, 64],

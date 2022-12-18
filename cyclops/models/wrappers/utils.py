@@ -1,5 +1,7 @@
 """Utility functions for the wrappers."""
 import inspect
+import os
+import random
 from collections import defaultdict
 from typing import Mapping, Sequence, Union
 
@@ -159,11 +161,9 @@ def _get_param_names(cls):
     for param in parameters:
         if param.kind == param.VAR_POSITIONAL:
             raise RuntimeError(
-                "Model wrappers should always "
-                "specify their parameters in the signature"
-                " of their __init__ (no varargs)."
-                " %s with constructor %s doesn't "
-                " follow this convention." % (cls, init_signature)
+                "Model wrappers should always specify their parameters in the signature"
+                f" of their __init__ (no varargs). {cls} with constructor"
+                f" {init_signature} doesn't follow this convention."
             )
     # Extract and sort argument names excluding 'self'
     return sorted([param.name for param in parameters])
@@ -231,3 +231,25 @@ def set_params(cls, **params):
         valid_params[key].set_params(**sub_params)
 
     return cls
+
+
+def set_random_seed(seed: int, deterministic: bool = False) -> None:
+    """Set a random seed for python, numpy and PyTorch globally.
+
+    Parameters
+    ----------
+    seed: int
+        Value of random seed to set.
+    deterministic: bool, default=False
+        Turn on CuDNN deterministic settings. This will slow down training.
+
+    """
+    if seed is not None and isinstance(seed, int):
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)  # does nothing if no GPU
+        os.environ["PYTHONHASHSEED"] = str(seed)
+        torch.use_deterministic_algorithms(mode=deterministic)
+        if not deterministic and torch.backends.cudnn.is_available():
+            torch.backends.cudnn.benchmark = True

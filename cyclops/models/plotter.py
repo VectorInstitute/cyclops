@@ -1,13 +1,10 @@
 """Plotting functions."""
-
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
 import seaborn as sns
 
-from cyclops.models.util import metrics_binary
-
-# pylint: disable=invalid-name
+from cyclops.models.utils import metrics_binary
 
 
 def plot_pretty_confusion_matrix(confusion_matrix: np.ndarray) -> None:

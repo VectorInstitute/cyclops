@@ -3,6 +3,7 @@ import logging
 from os import path
 from typing import Optional
 
+import numpy as np
 import yaml
 
 from cyclops.models.catalog import _model_catalog, _static_model_keys, create_model
@@ -16,17 +17,13 @@ from cyclops.models.constants import (
     USE_CASES,
 )
 from cyclops.models.data import PTDataset, VectorizedLoader
-from cyclops.models.util import metrics_binary
+from cyclops.models.utils import metrics_binary
 from cyclops.models.wrappers import PTModel, WrappedModel
 from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
-
-# mypy: ignore-errors
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=invalid-name
 
 
 class Predictor:
@@ -124,7 +121,7 @@ class Predictor:
         assert path.exists(self.data_dir), "[!] Data path does not exist."
         assert path.exists(self.config_file), "[!] Config path does not exist."
 
-    def fit(self) -> WrappedModel:
+    def fit(self):
         """Train the model through appropriate wrapper.
 
         Returns
@@ -135,7 +132,7 @@ class Predictor:
         self.model = self.model.fit(self.X_train, self.y_train)
         return self
 
-    def predict(self) -> tuple:
+    def predict(self) -> np.ndarray:
         """Make prediction by a trained model.
 
         Returns
@@ -149,13 +146,15 @@ class Predictor:
             return self.model.predict(test_dataset)
         return self.model.predict(self.X_test)
 
-    def load_model(self, model_path: Optional[str] = None) -> WrappedModel:
+    def load_model(self, filepath: str, **kwargs) -> WrappedModel:
         """Load model from a file.
 
         Parameters
         ----------
-        model_path : Optional[str], optional
-            The path to the model file, by default None.
+        filepath : str
+            Path to the model file.
+        **kwargs
+            Additional arguments.
 
         Returns
         -------
@@ -163,7 +162,7 @@ class Predictor:
             The loaded model object.
 
         """
-        return self.model.load_model(model_path)
+        return self.model.load_model(filepath, **kwargs)
 
     def evaluate(self, verbose: bool) -> dict:
         """Evaluate a trained model based on various metrics.

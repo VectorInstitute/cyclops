@@ -7,7 +7,7 @@ import torch.nn.modules
 import torch.optim
 from sklearn.base import BaseEstimator
 
-from cyclops.models.util import is_pytorch_model, is_sklearn_model
+from cyclops.models.utils import is_pytorch_model, is_sklearn_model
 from cyclops.models.wrappers import PTModel, SKModel, WrappedModel
 from cyclops.utils.log import setup_logging
 
