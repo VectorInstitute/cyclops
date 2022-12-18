@@ -1,12 +1,9 @@
 """Data classes."""
-
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
 from cyclops.utils.file import join, load_pickle
-
-# pylint: disable=invalid-name, too-many-instance-attributes
 
 
 class VectorizedLoader:
@@ -136,8 +133,8 @@ class VectorizedLoader:
 
         """
         counts = {}
-        for c in self.classes:
-            counts["c"] = (self.y_train == c).sum()
+        for klass in self.classes:
+            counts["c"] = (self.y_train == klass).sum()
         return counts
 
     @property
@@ -152,8 +149,8 @@ class VectorizedLoader:
 
         """
         counts = {}
-        for c in self.classes:
-            counts["c"] = (self.y_val == c).sum()
+        for klass in self.classes:
+            counts["c"] = (self.y_val == klass).sum()
         return counts
 
     @property
@@ -167,8 +164,8 @@ class VectorizedLoader:
 
         """
         counts = {}
-        for c in self.classes:
-            counts["c"] = (self.y_test == c).sum()
+        for klass in self.classes:
+            counts["c"] = (self.y_test == klass).sum()
         return counts
 
     def _load_tabular(self) -> tuple:
