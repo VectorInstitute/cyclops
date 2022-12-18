@@ -80,12 +80,12 @@ class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy
         computing the accuracy score.
     average : Literal["micro", "macro", "weighted", None], default=None
         If not None, this determines the type of averaging performed on the data:
-            - ``micro``: Calculate metrics globally.
-            - ``macro``: Calculate metrics for each class, and find their
-                unweighted mean. This does not take class imbalance into account.
-            - ``weighted``: Calculate metrics for each class, and find their
-                average, weighted by support (the number of true instances for
-                each class). This alters ``macro`` to account for class imbalance.
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each class, and find their unweighted
+            mean. This does not take class imbalance into account.
+        - ``weighted``: Calculate metrics for each class, and find their average,
+            weighted by support (the number of true instances for each class).
+            This alters ``macro`` to account for class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Sets the value to return when there is a zero division. If set to ``warn``,
         this acts as 0, but warnings are also raised.
@@ -152,12 +152,12 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
     average : Literal['micro', 'macro', 'weighted', None], default=None
         If None, return the accuracy score per label, otherwise this determines
         the type of averaging performed on the data:
-            - ``micro``: Calculate metrics globally.
-            - ``macro``: Calculate metrics for each label, and find their unweighted
-                mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metrics for each label, and find their
-                average, weighted by support (the number of true instances for
-                each label).
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each label, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their
+            average, weighted by support (the number of true instances for
+            each label).
     zero_division : Literal['warn', 0, 1], default="warn"
         Sets the value to return when there is a zero division. If set to ``warn``,
         this acts as 0, but warnings are also raised.

@@ -371,7 +371,6 @@ class PrecisionRecallCurve(
     >>> preds = [[0.5, 0.4, 0.1, 0.3], [0.9, 0.6, 0.45, 0.8]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
-    ...
     >>> metric.compute()
     (array([0.5       , 0.42857143, 0.33333333, 0.4       , 0.5       ,
         0.33333333, 0.5       , 0.        , 1.        ]),

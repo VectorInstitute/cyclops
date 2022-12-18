@@ -85,12 +85,12 @@ class MulticlassSpecificity(
     average : Literal["micro", "macro", "weighted", None], default=None
         If None, return the specificity for each class, otherwise return the
         average specificity. Average options are:
-            - ``micro``: Calculate metrics globally.
-            - ``macro``: Calculate metrics for each class, and find their unweighted
-                mean. This does not take class imbalance into account.
-            - ``weighted``: Calculate metrics for each class, and find their
-                average, weighted by support (the number of true instances for each
-                label).
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each class, and find their unweighted
+            mean. This does not take class imbalance into account.
+        - ``weighted``: Calculate metrics for each class, and find their
+            average, weighted by support (the number of true instances for each
+            label).
     zero_division : Literal["warn", 0, 1], default="warn"
         Sets the value to return when there is a zero division. If set to ``warn``,
         this acts as 0, but warnings are also raised.
@@ -245,14 +245,14 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metrics globally.
-            - ``macro``: Calculate metrics for each class/label, and find their
-                unweighted mean. This does not take label/class imbalance into
-                account.
-            - ``weighted``: Calculate metrics for each label/class, and find
-                their average weighted by support (the number of true instances
-                for each label/class). This alters ``macro`` to account for
-                label/class imbalance.
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label/class imbalance into
+            account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.

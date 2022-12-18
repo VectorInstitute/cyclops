@@ -467,37 +467,34 @@ def auroc(  # pylint: disable=too-many-arguments
     target : ArrayLike
         Ground truth (correct) target values.
     preds : ArrayLike
-        Estimated probabilities or decision function. If ``preds`` is not in
-        the range [0, 1], a sigmoid function is applied to transform it to
-        the range [0, 1].
+        Estimated probabilities or decision function. If ``preds`` is not in the
+        range [0, 1], a sigmoid function is applied to transform it to the range
+        [0, 1].
     task : Literal["binary", "multiclass", "multilabel"]
         Task type. One of ``binary``, ``multiclass``, ``multilabel``.
     max_fpr : float, default=None
-        The maximum value of the false positive rate. If not None, the
-        a partial AUC in the range [0, max_fpr] is returned. Only used for
-        binary classification.
+        The maximum value of the false positive rate. If not None, a partial AUC
+        in the range [0, max_fpr] is returned. Only used for binary classification.
     thresholds : int or list of floats or numpy.ndarray of floats, default=None
         Thresholds used for binarizing the values of ``preds``.
         If int, then the number of thresholds to use.
         If list or array, then the thresholds to use.
-        If None, then the thresholds are automatically determined by the
-        unique values in ``preds``.
+        If None, then the thresholds are automatically determined by the unique
+        values in ``preds``.
     num_classes : int, default=None
-        Number of classes. This parameter is required for the ``multiclass``
-        task.
+        Number of classes. This parameter is required for the ``multiclass`` task.
     num_labels : int, default=None
-        Number of labels. This parameter is required for the ``multilabel``
-        task.
+        Number of labels. This parameter is required for the ``multilabel`` task.
     average : Literal["micro", "macro", "weighted"], default=None
         If not None, apply the method to compute the average area under the
         ROC curve. Only applicable for the ``multiclass`` and ``multilabel``
         tasks. One of:
-            - ``micro``: Calculate metrics globally by counting the total true
-                positives, false negatives and false positives.
-            - ``macro``: Calculate metrics for each label, and find their unweighted
-                mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metrics for each label, and find their
-                average, weighted by support (accounting for label imbalance).
+        - ``micro``: Calculate metrics globally by counting the total true
+            positives, false negatives and false positives.
+        - ``macro``: Calculate metrics for each label, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their
+            average, weighted by support (accounting for label imbalance).
 
     Returns
     -------

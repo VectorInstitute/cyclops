@@ -96,7 +96,7 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
         unique values in ``preds``.
     average : Literal["macro", "weighted"], default=None
         If ``None``, then the scores for each class are returned. Otherwise,
-        this determines the type of averaging performed on the scores. One of
+        this determines the type of averaging performed on the scores. One of:
         - `macro`: Calculate metrics for each class, and find their unweighted
             mean. This does not take class imbalance into account.
         - `weighted`: Calculate metrics for each class, and find their average,
@@ -166,7 +166,7 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_a
         unique values in ``preds``.
     average : Literal["micro", "macro", "weighted"], default=None
         If ``None``, then the scores for each label are returned. Otherwise,
-        this determines the type of averaging performed on the scores. One of
+        this determines the type of averaging performed on the scores. One of:
         - `micro`: Calculate metrics globally.
         - `macro`: Calculate metrics for each label, and find their unweighted
             mean. This does not take label imbalance into account.
@@ -228,9 +228,8 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     task : Literal["binary", "multiclass", "multilabel"]
         Task type. One of ``binary``, ``multiclass``, ``multilabel``.
     max_fpr : float, default=None
-        The maximum value of the false positive rate. If not None, the
-        a partial AUC in the range [0, max_fpr] is returned. Only used for
-        binary classification.
+        The maximum value of the false positive rate. If not None, a partial AUC
+        in the range [0, max_fpr] is returned. Only used for binary classification.
     thresholds : int or list of floats or numpy.ndarray of floats, default=None
         Thresholds used for binarizing the values of ``preds``.
         If int, then the number of thresholds to use.
@@ -238,11 +237,9 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
         If None, then the thresholds are automatically determined by the
         unique values in ``preds``.
     num_classes : int, default=None
-        Number of classes. This parameter is required for the ``multiclass``
-        task.
+        Number of classes. This parameter is required for the ``multiclass`` task.
     num_labels : int, default=None
-        Number of labels. This parameter is required for the ``multilabel``
-        task.
+        Number of labels. This parameter is required for the ``multilabel`` task.
     average : Literal["micro", "macro", "weighted"], default=None
         If not None, apply the method to compute the average area under the
         ROC curve. Only applicable for the ``multiclass`` and ``multilabel``

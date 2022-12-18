@@ -89,13 +89,13 @@ class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metric globally.
-            - ``macro``: Calculate metric for each class, and find their
-                unweighted mean. This does not take class imbalance into account.
-            - ``weighted``: Calculate metric for each class, and find their
-                average weighted by the support (the number of true instances
-                for each class). This alters "macro" to account for class
-                imbalance.
+        - ``micro``: Calculate metric globally.
+        - ``macro``: Calculate metric for each class, and find their
+            unweighted mean. This does not take class imbalance into account.
+        - ``weighted``: Calculate metric for each class, and find their
+            average weighted by the support (the number of true instances
+            for each class). This alters "macro" to account for class
+            imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -177,13 +177,12 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metric globally.
-            - ``macro``: Calculate metric for each label, and find their
-                unweighted mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metric for each label, and find their
-                average weighted by the support (the number of true instances
-                for each label). This alters "macro" to account for label
-                imbalance.
+        - ``micro``: Calculate metric globally.
+        - ``macro``: Calculate metric for each label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their
+            average weighted by the support (the number of true instances
+            for each label). This alters "macro" to account for label imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -264,14 +263,14 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metrics globally.
-            - ``macro``: Calculate metrics for each class/label, and find their
-                unweighted mean. This does not take label/class imbalance into
-                account.
-            - ``weighted``: Calculate metrics for each label/class, and find
-                their average weighted by support (the number of true instances
-                for each label/class). This alters ``macro`` to account for
-                label/class imbalance.
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label/class imbalance into
+            account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -434,14 +433,14 @@ class MulticlassF1Score(MulticlassFbetaScore, registry_key="multiclass_f1_score"
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise, use one of
         the following options to compute the average score:
-            - ``micro``: Calculate metric globally.
-            - ``macro``: Calculate metric for each class, and find their
-                unweighted mean. This does not take class imbalance into account.
-            - ``weighted``: Calculate metric for each class, and find their
-                average weighted by the support (the number of true instances
-                for each class). This alters "macro" to account for class
-                imbalance. It can result in an F-score that is not between
-                precision and recall.
+        - ``micro``: Calculate metric globally.
+        - ``macro``: Calculate metric for each class, and find their
+            unweighted mean. This does not take class imbalance into account.
+        - ``weighted``: Calculate metric for each class, and find their
+            average weighted by the support (the number of true instances
+            for each class). This alters "macro" to account for class
+            imbalance. It can result in an F-score that is not between
+            precision and recall.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -497,14 +496,13 @@ class MultilabelF1Score(MultilabelFbetaScore, registry_key="multilabel_f1_score"
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label. Otherwise, use one of
         the following options to compute the average score:
-            - ``micro``: Calculate metric globally from the total count of true
-                positives and false positives.
-            - ``macro``: Calculate metric for each label, and find their
-                unweighted mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metric for each label, and find their
-                average weighted by the support (the number of true instances
-                for each label). This alters "macro" to account for label
-                imbalance.
+        - ``micro``: Calculate metric globally from the total count of true
+            positives and false positives.
+        - ``macro``: Calculate metric for each label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their
+            average weighted by the support (the number of true instances
+            for each label). This alters "macro" to account for label imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -571,14 +569,14 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metrics globally.
-            - ``macro``: Calculate metrics for each class/label, and find their
-                unweighted mean. This does not take label/class imbalance into
-                account.
-            - ``weighted``: Calculate metrics for each label/class, and find
-                their average weighted by support (the number of true instances
-                for each label/class). This alters ``macro`` to account for
-                label/class imbalance.
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label/class imbalance into
+            account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -600,8 +598,6 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     >>> metric.compute()
     0.8
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics import F1Score
     >>> target = [0, 1, 2, 0]
@@ -618,9 +614,6 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     >>> metric.compute()
     array([0.        , 0.85714286, 0.        ])
 
-
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics import F1Score
     >>> target = [[0, 1, 1], [1, 0, 0]]

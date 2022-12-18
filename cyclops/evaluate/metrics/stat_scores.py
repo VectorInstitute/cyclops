@@ -357,8 +357,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     Parameters
     ----------
     task : Literal["binary", "multiclass", "multilabel"]
-        The task type. Can be either ``binary``, ``multiclass`` or
-        ``multilabel``.
+        The task type. Can be either ``binary``, ``multiclass`` or ``multilabel``.
     pos_label : int, default=1
         The positive label to report. Only used for binary tasks.
     threshold : float, default=0.5

@@ -81,14 +81,13 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise, use one of the
         following options to compute the average score:
-            - ``micro``: Calculate metric globally from the total count of true
-                positives and false positives.
-            - ``macro``: Calculate metric for each class, and find their
-                unweighted mean. This does not take class imbalance into account.
-            - ``weighted``: Calculate metric for each class, and find their
-                average weighted by the support (the number of true instances
-                for each class). This alters "macro" to account for class
-                imbalance.
+        - ``micro``: Calculate metric globally from the total count of true
+            positives and false positives.
+        - ``macro``: Calculate metric for each class, and find their
+            unweighted mean. This does not take class imbalance into account.
+        - ``weighted``: Calculate metric for each class, and find their
+            average weighted by the support (the number of true instances
+            for each class). This alters "macro" to account for class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -162,14 +161,13 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the precision score for each label. Otherwise,
         use one of the following options to compute the average precision score:
-            - ``micro``: Calculate metric globally from the total count of true
-                positives and false positives.
-            - ``macro``: Calculate metric for each label, and find their
-                unweighted mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metric for each label, and find their
-                average weighted by the support (the number of true instances
-                for each label). This alters "macro" to account for label
-                imbalance.
+        - ``micro``: Calculate metric globally from the total count of true
+            positives and false positives.
+        - ``macro``: Calculate metric for each label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their
+            average weighted by the support (the number of true instances
+            for each label). This alters "macro" to account for label imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -253,15 +251,15 @@ class Precision(Metric, registry_key="precision", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the precision score for each label/class. Otherwise,
         use one of the following options to compute the average precision score:
-            - ``micro``: Calculate metrics globally by counting the total true
-                positives and false positives.
-            - ``macro``: Calculate metrics for each class/label, and find their
-                unweighted mean. This does not take label/class imbalance into
-                account.
-            - ``weighted``: Calculate metrics for each label/class, and find
-                their average weighted by support (the number of true instances
-                for each label/class). This alters ``macro`` to account for
-                label/class imbalance.
+        - ``micro``: Calculate metrics globally by counting the total true
+            positives and false positives.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label/class imbalance into
+            account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -438,14 +436,14 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metric globally from the total count of true
-                positives and false negatives.
-            - ``macro``: Calculate metric for each class, and find their
-                unweighted mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metric for each class, and find their
-                average weighted by the support (the number of true instances
-                for each class). This alters "macro" to account for class
-                imbalance.
+        - ``micro``: Calculate metric globally from the total count of true
+            positives and false negatives.
+        - ``macro``: Calculate metric for each class, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each class, and find their
+            average weighted by the support (the number of true instances
+            for each class). This alters "macro" to account for class
+            imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -513,14 +511,14 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metric globally from the total count of true
-                positives and false negatives.
-            - ``macro``: Calculate metric for each label, and find their
-                unweighted mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metric for each label, and find their
-                average weighted by the support (the number of true instances
-                for each label). This alters "macro" to account for label
-                imbalance.
+        - ``micro``: Calculate metric globally from the total count of true
+            positives and false negatives.
+        - ``macro``: Calculate metric for each label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their
+            average weighted by the support (the number of true instances
+            for each label). This alters "macro" to account for label
+            imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -600,14 +598,14 @@ class Recall(Metric, registry_key="recall", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each label/class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metrics globally by counting the total true
-                positives and false negatives.
-            - ``macro``: Calculate metrics for each class/label, and find their
-                unweighted mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metrics for each label/class, and find
-                their average weighted by support (the number of true instances
-                for each label/class). This alters ``macro`` to account for
-                label/class imbalance.
+        - ``micro``: Calculate metrics globally by counting the total true
+            positives and false negatives.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.

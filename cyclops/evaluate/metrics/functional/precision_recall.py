@@ -178,12 +178,12 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
         If ``None``, return the precision score for each class. Otherwise,
         use one of the following options to compute the average precision score:
         - ``micro``: Calculate metric globally from the total count of true
-        positives and false positives.
+            positives and false positives.
         - ``macro``: Calculate metric for each class, and find their unweighted
-        mean. This does not take label imbalance into account.
+            mean. This does not take label imbalance into account.
         - ``weighted``: Calculate metric for each class, and find their average
-        weighted by the support (the number of true instances for each class).
-        This alters "macro" to account for class imbalance.
+            weighted by the support (the number of true instances for each class).
+            This alters "macro" to account for class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -257,12 +257,12 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
         If ``None``, return the precision score for each label. Otherwise,
         use one of the following options to compute the average precision score:
         - ``micro``: Calculate metric globally from the total count of true
-        positives and false positives.
+            positives and false positives.
         - ``macro``: Calculate metric for each label, and find their unweighted
-        mean. This does not take label imbalance into account.
+            mean. This does not take label imbalance into account.
         - ``weighted``: Calculate metric for each label, and find their average
-        weighted by the support (the number of true instances for each label).
-        This alters "macro" to account for label imbalance.
+            weighted by the support (the number of true instances for each label).
+            This alters "macro" to account for label imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
@@ -347,12 +347,12 @@ def precision(  # pylint: disable=too-many-arguments
         None.
         One of:
         - ``micro``: Calculate metrics globally by counting the total true
-        positives and and false positives.
+            positives and and false positives.
         - ``macro``: Calculate metrics for each label/class, and find their
-        unweighted mean. This does not take label imbalance into account.
+            unweighted mean. This does not take label imbalance into account.
         - ``weighted``: Calculate metrics for each label, and find their
-        average weighted by support (the number of true instances for
-        each label). This alters ``macro`` to account for label imbalance.
+            average weighted by support (the number of true instances for
+            each label). This alters ``macro`` to account for label imbalance.
     zero_division : Literal["warn", 0, 1]
         Value to return when there are no true positives or true negatives.
         If set to ``warn``, this acts as 0, but warnings are also raised.
@@ -517,12 +517,12 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
         Average to apply. If None, return scores for each class. Default is
         None. One of:
         - ``micro``: Calculate metrics globally by counting the total true
-        positives and false negatives.
+            positives and false negatives.
         - ``macro``: Calculate metrics for each label, and find their unweighted
-        mean. This does not take label imbalance into account.
+            mean. This does not take label imbalance into account.
         - ``weighted``: Calculate metrics for each label, and find their
-        average weighted by support (the number of true instances for each label).
-        This alters "macro" to account for label imbalance.
+            average weighted by support (the number of true instances for each label).
+            This alters "macro" to account for label imbalance.
     zero_division : Literal["warn", 0, 1]
         Value to return when there are no true positives or true negatives.
         If set to ``warn``, this acts as 0, but warnings are also raised.
@@ -598,13 +598,12 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
         If ``None``, return the recall score for each class. Otherwise,
         use one of the following options to compute the average score:
         - ``micro``: Calculate metric globally from the total count of true
-        positives and false negatives.
+            positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
-        unweighted mean. This does not take label imbalance into account.
+            unweighted mean. This does not take label imbalance into account.
         - ``weighted``: Calculate metric for each label, and find their
-        average weighted by the support (the number of true instances
-        for each label). This alters "macro" to account for label
-        imbalance.
+            average weighted by the support (the number of true instances
+            for each label). This alters "macro" to account for label imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Value to return when there is a zero division. If set to "warn", this
         acts as 0, but warnings are also raised.
