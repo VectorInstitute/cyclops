@@ -1,0 +1,14 @@
+model_params:
+  max_depth: 7
+  gamma: 1
+  objective: "binary:logistic"
+  learning_rate: 0.1
+  eval_metric: "logloss"
+  min_child_weight: 1
+  seed: 42
+fit_params:
+  early_stopping_rounds: 10
+best_model_params:
+  max_depth: [3, 5, 7, 9, 11]
+  gamma: [0.5, 1, 1.5, 2, 5]
+  metric: 'roc_auc'

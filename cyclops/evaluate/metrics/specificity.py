@@ -12,37 +12,37 @@ from cyclops.evaluate.metrics.stat_scores import (
 from cyclops.evaluate.metrics.utils import _check_average_arg
 
 
-class BinarySpecificity(BinaryStatScores):
+class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
     """Compute specificity for binary classification tasks.
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Estimated targets (predictions) as returned by a classifier.
-        pos_label : int, default=1
-            The label to use for the positive class.
-        threshold : float, default=0.5
-            The threshold to use for converting the predictions to binary
-            values. Logits will be converted to probabilities using the sigmoid
-            function.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Estimated targets (predictions) as returned by a classifier.
+    pos_label : int, default=1
+        The label to use for the positive class.
+    threshold : float, default=0.5
+        The threshold to use for converting the predictions to binary
+        values. Logits will be converted to probabilities using the sigmoid
+        function.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import BinarySpecificity
-        >>> target = [0, 1, 1, 0]
-        >>> preds = [0, 1, 0, 0]
-        >>> metric = BinarySpecificity()
-        >>> metric(target, preds)
-        1.0
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 1, 0], [1, 1, 0, 0]]
-        >>> preds = [[0, 1, 0, 0], [1, 0, 0, 0]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        1.0
+    >>> from cyclops.evaluation.metrics import BinarySpecificity
+    >>> target = [0, 1, 1, 0]
+    >>> preds = [0, 1, 0, 0]
+    >>> metric = BinarySpecificity()
+    >>> metric(target, preds)
+    1.0
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 1, 0], [1, 1, 0, 0]]
+    >>> preds = [[0, 1, 0, 0], [1, 0, 0, 0]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    1.0
 
     """
 
@@ -69,46 +69,48 @@ class BinarySpecificity(BinaryStatScores):
         )
 
 
-class MulticlassSpecificity(MulticlassStatScores):
+class MulticlassSpecificity(
+    MulticlassStatScores, registry_key="multiclass_specificity"
+):
     """Compute specificity for multiclass classification tasks.
 
     Parameters
     ----------
-        num_classes : int
-            The number of classes in the dataset.
-        top_k : int, optional
-            Number of highest probability or logit score predictions considered
-            to find the correct label. Only works when ``preds`` contain
-            probabilities/logits.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If None, return the specificity for each class, otherwise return the
-            average specificity. Average options are:
-                - ``micro``: Calculate metrics globally.
-                - ``macro``: Calculate metrics for each class, and find their unweighted
-                  mean. This does not take class imbalance into account.
-                - ``weighted``: Calculate metrics for each class, and find their
-                  average, weighted by support (the number of true instances for each
-                  label).
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Sets the value to return when there is a zero division. If set to ``warn``,
-            this acts as 0, but warnings are also raised.
+    num_classes : int
+        The number of classes in the dataset.
+    top_k : int, optional
+        Number of highest probability or logit score predictions considered
+        to find the correct label. Only works when ``preds`` contain
+        probabilities/logits.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If None, return the specificity for each class, otherwise return the
+        average specificity. Average options are:
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each class, and find their unweighted
+            mean. This does not take class imbalance into account.
+        - ``weighted``: Calculate metrics for each class, and find their
+            average, weighted by support (the number of true instances for each
+            label).
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Sets the value to return when there is a zero division. If set to ``warn``,
+        this acts as 0, but warnings are also raised.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import MulticlassSpecificity
-        >>> target = [0, 1, 2, 0, 1, 2]
-        >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
-        ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]
-        >>> metric = MulticlassSpecificity(num_classes=3)
-        >>> metric(target, preds)
-        array([1.  , 0.75, 1.  ])
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 2, 0, 1, 2], [1, 1, 2, 0, 0, 1]]
-        >>> preds = [[0, 2, 1, 2, 0, 1], [1, 0, 1, 2, 2, 0]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([0.625     , 0.57142857, 0.55555556])
+    >>> from cyclops.evaluation.metrics import MulticlassSpecificity
+    >>> target = [0, 1, 2, 0, 1, 2]
+    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
+    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]
+    >>> metric = MulticlassSpecificity(num_classes=3)
+    >>> metric(target, preds)
+    array([1.  , 0.75, 1.  ])
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 2, 0, 1, 2], [1, 1, 2, 0, 0, 1]]
+    >>> preds = [[0, 2, 1, 2, 0, 1], [1, 0, 1, 2, 2, 0]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([0.625     , 0.57142857, 0.55555556])
 
     """
 
@@ -138,51 +140,53 @@ class MulticlassSpecificity(MulticlassStatScores):
         )
 
 
-class MultilabelSpecificity(MultilabelStatScores):
+class MultilabelSpecificity(
+    MultilabelStatScores, registry_key="multilabel_specificity"
+):
     """Compute specificity for multilabel classification tasks.
 
     Parameters
     ----------
-        num_labels : int
-            The number of labels in the dataset.
-        threshold : float, default=0.5
-            The threshold value for converting probability or logit scores to
-            binary. A sigmoid function is first applied to logits to convert them
-            to probabilities.
-        top_k : int, optional
-            Number of highest probability or logit score predictions considered
-            to find the correct label. Only works when ``preds`` contains
-            probabilities/logits.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If None, return the specificity for each class, otherwise return the
-            average specificity. Average options are:
-            - ``micro``: Calculate metrics globally.
-            - ``macro``: Calculate metrics for each label, and find their unweighted
-              mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metrics for each label, and find their average,
-              weighted by support (the number of true instances for each label).
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Sets the value to return when there is a zero division. If set to ``warn``,
-            this acts as 0, but warnings are also raised.
+    num_labels : int
+        The number of labels in the dataset.
+    threshold : float, default=0.5
+        The threshold value for converting probability or logit scores to
+        binary. A sigmoid function is first applied to logits to convert them
+        to probabilities.
+    top_k : int, optional
+        Number of highest probability or logit score predictions considered
+        to find the correct label. Only works when ``preds`` contains
+        probabilities/logits.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If None, return the specificity for each class, otherwise return the
+        average specificity. Average options are:
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each label, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their average,
+            weighted by support (the number of true instances for each label).
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Sets the value to return when there is a zero division. If set to ``warn``,
+        this acts as 0, but warnings are also raised.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics import MultilabelSpecificity
-        >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]
-        >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
-        ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
-        >>> metric = MultilabelSpecificity(num_labels=3)
-        >>> metric(target, preds)
-        array([0.5, 0. , 0.5])
-        >>> metric.reset_state()
-        >>> target = [[[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]],
-        ...           [[1, 0, 1], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 0]]]
-        >>> preds = [[[1, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1], [1, 0, 0]],
-        ...          [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([0.5       , 0.66666667, 0.6       ])
+    >>> from cyclops.evaluation.metrics import MultilabelSpecificity
+    >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]
+    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
+    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
+    >>> metric = MultilabelSpecificity(num_labels=3)
+    >>> metric(target, preds)
+    array([0.5, 0. , 0.5])
+    >>> metric.reset_state()
+    >>> target = [[[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]],
+    ...           [[1, 0, 1], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 0]]]
+    >>> preds = [[[1, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1], [1, 0, 0]],
+    ...          [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([0.5       , 0.66666667, 0.6       ])
 
     """
 
@@ -215,7 +219,7 @@ class MultilabelSpecificity(MultilabelStatScores):
         )
 
 
-class Specificity(Metric):
+class Specificity(Metric, registry_key="specificity", force_register=True):
     """Compute specificity score for different classification tasks.
 
     The specificity is the ratio of true negatives to the sum of true negatives and
@@ -223,88 +227,87 @@ class Specificity(Metric):
 
     Parameters
     ----------
-        task : Literal["binary", "multiclass", "multilabel"]
-            Type of classification task.
-        pos_label : int, default=1
-            Label to consider as positive for binary classification tasks.
-        num_classes : int
-            Number of classes for the task. Required if ``task`` is ``"multiclass"``.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class. Only used if ``task`` is
-            ``"binary"`` or ``"multilabel"``.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
-        num_labels : int
-            Number of labels for the task. Required if ``task`` is ``"multilabel"``.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the score for each label/class. Otherwise,
-            use one of the following options to compute the average score:
-                - ``micro``: Calculate metrics globally.
-                - ``macro``: Calculate metrics for each class/label, and find their
-                  unweighted mean. This does not take label/class imbalance into
-                  account.
-                - ``weighted``: Calculate metrics for each label/class, and find
-                  their average weighted by support (the number of true instances
-                  for each label/class). This alters ``macro`` to account for
-                  label/class imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    task : Literal["binary", "multiclass", "multilabel"]
+        Type of classification task.
+    pos_label : int, default=1
+        Label to consider as positive for binary classification tasks.
+    num_classes : int
+        Number of classes for the task. Required if ``task`` is ``"multiclass"``.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class. Only used if ``task`` is
+        ``"binary"`` or ``"multilabel"``.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
+    num_labels : int
+        Number of labels for the task. Required if ``task`` is ``"multilabel"``.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each label/class. Otherwise,
+        use one of the following options to compute the average score:
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label/class imbalance into
+            account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
-    Examples (binary)
-    -----------------
-        >>> from cyclops.evaluation.metrics import Specificity
-        >>> target = [0, 1, 1, 0, 1]
-        >>> preds = [0.9, 0.05, 0.05, 0.35, 0.05]
-        >>> metric = Specificity(task="binary")
-        >>> metric(target, preds)
-        0.5
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 1], [1, 0, 1]]
-        >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        0.0
+    Examples
+    --------
+    (binary)
+    >>> from cyclops.evaluation.metrics import Specificity
+    >>> target = [0, 1, 1, 0, 1]
+    >>> preds = [0.9, 0.05, 0.05, 0.35, 0.05]
+    >>> metric = Specificity(task="binary")
+    >>> metric(target, preds)
+    0.5
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 1], [1, 0, 1]]
+    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    0.0
 
-    Examples (multiclass)
-    ---------------------
-        >>> from cyclops.evaluation.metrics import Specificity
-        >>> target = [0, 1, 2, 0, 1, 2]
-        >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
-        ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]
-        >>> metric = Specificity(task="multiclass", num_classes=3)
-        >>> metric(target, preds)
-        array([1.  , 0.75, 1.  ])
-        >>> metric.reset_state()
-        >>> target = [[0, 1, 1], [1, 2, 1]]
-        >>> preds = [[[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75]],
-        ...          [[0.35, 0.5, 0.15], [0.25, 0.5, 0.25], [0.5, 0.05, 0.45]]]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([0.8, 0.5, 0.8])
+    (multiclass)
+    >>> from cyclops.evaluation.metrics import Specificity
+    >>> target = [0, 1, 2, 0, 1, 2]
+    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
+    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]
+    >>> metric = Specificity(task="multiclass", num_classes=3)
+    >>> metric(target, preds)
+    array([1.  , 0.75, 1.  ])
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 1], [1, 2, 1]]
+    >>> preds = [[[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75]],
+    ...          [[0.35, 0.5, 0.15], [0.25, 0.5, 0.25], [0.5, 0.05, 0.45]]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([0.8, 0.5, 0.8])
 
-    Examples (multilabel)
-    ---------------------
-        >>> from cyclops.evaluation.metrics import Specificity
-        >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
-        >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.2, 0.75], [0.35, 0.5, 0.15]]
-        >>> metric = Specificity(task="multilabel", num_labels=3)
-        >>> metric(target, preds)
-        array([0., 1., 1.])
-        >>> metric.reset_state()
-        >>> target = [[[0, 1, 0], [1, 0, 1]], [[0, 1, 1], [1, 0, 0]]]
-        >>> preds = [
-        ...     [[0.1, 0.7, 0.2], [0.2, 0.8, 0.3]],
-        ...     [[0.5, 0.9, 0.0], [0.3, 0.4, 0.2]],
-        ... ]
-        >>> for t, p in zip(target, preds):
-        ...     metric.update_state(t, p)
-        >>> metric.compute()
-        array([0.5, 0.5, 1. ])
+    (multilabel)
+    >>> from cyclops.evaluation.metrics import Specificity
+    >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
+    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.2, 0.75], [0.35, 0.5, 0.15]]
+    >>> metric = Specificity(task="multilabel", num_labels=3)
+    >>> metric(target, preds)
+    array([0., 1., 1.])
+    >>> metric.reset_state()
+    >>> target = [[[0, 1, 0], [1, 0, 1]], [[0, 1, 1], [1, 0, 0]]]
+    >>> preds = [
+    ...     [[0.1, 0.7, 0.2], [0.2, 0.8, 0.3]],
+    ...     [[0.5, 0.9, 0.0], [0.3, 0.4, 0.2]],
+    ... ]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    array([0.5, 0.5, 1. ])
 
     """
 

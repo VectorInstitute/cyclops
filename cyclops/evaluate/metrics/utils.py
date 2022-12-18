@@ -51,15 +51,15 @@ def _check_muldim_input(target: np.ndarray, preds: np.ndarray) -> None:
 
     Parameters
     ----------
-        preds: np.ndarray
-            The predictions.
-        target: np.ndarray
-            The target.
+    preds: np.ndarray
+        The predictions.
+    target: np.ndarray
+        The target.
 
     Raises
     ------
-        ValueError
-            If the input is multidimensional.
+    ValueError
+        If the input is multidimensional.
 
     """
     if preds.ndim > 2 or target.ndim > 2:
@@ -79,44 +79,44 @@ def common_input_checks_and_format(
 
     Parameters
     ----------
-        target: ArrayLike
-            The target.
-        preds: ArrayLike
-            The predictions.
+    target: ArrayLike
+        The target.
+    preds: ArrayLike
+        The predictions.
 
     Returns
     -------
-        target: np.ndarray
-            The target as a numpy array.
-        preds: np.ndarray
-            The predictions as a numpy array.
-        type_target: str
-            The type of the target. One of:
+    target: np.ndarray
+        The target as a numpy array.
+    preds: np.ndarray
+        The predictions as a numpy array.
+    type_target: str
+        The type of the target. One of:
 
-        * 'continuous': ``target`` is an array-like of floats that are not all
-          integers, and is 1d or a column vector.
-        * 'continuous-multioutput': ``target`` is a 2d array of floats that are
-          not all integers, and both dimensions are of size > 1.
-        * 'binary': ``target`` contains <= 2 discrete values and is 1d or a column
-          vector.
-        * 'multiclass': ``target`` contains more than two discrete values, is not a
-          sequence of sequences, and is 1d or a column vector.
-        * 'multiclass-multioutput': ``target`` is a 2d array that contains more
-          than two discrete values, is not a sequence of sequences, and both
-          dimensions are of size > 1.
-        * 'multilabel-indicator': ``target`` is a label indicator matrix, an array
-          of two dimensions with at least two columns, and at most 2 unique
-          values.
-        * 'unknown': ``target`` is array-like but none of the above, such as a 3d
-          array, sequence of sequences, or an array of non-sequence objects.
+    * 'continuous': ``target`` is an array-like of floats that are not all
+        integers, and is 1d or a column vector.
+    * 'continuous-multioutput': ``target`` is a 2d array of floats that are
+        not all integers, and both dimensions are of size > 1.
+    * 'binary': ``target`` contains <= 2 discrete values and is 1d or a column
+        vector.
+    * 'multiclass': ``target`` contains more than two discrete values, is not a
+        sequence of sequences, and is 1d or a column vector.
+    * 'multiclass-multioutput': ``target`` is a 2d array that contains more
+        than two discrete values, is not a sequence of sequences, and both
+        dimensions are of size > 1.
+    * 'multilabel-indicator': ``target`` is a label indicator matrix, an array
+        of two dimensions with at least two columns, and at most 2 unique
+        values.
+    * 'unknown': ``target`` is array-like but none of the above, such as a 3d
+        array, sequence of sequences, or an array of non-sequence objects.
 
-        type_preds: str
-            The type of the predictions.
+    type_preds: str
+        The type of the predictions.
 
     Raises
     ------
-        ValueError
-            If the input has more than two dimensions.
+    ValueError
+        If the input has more than two dimensions.
 
     """
     target, preds = np.asanyarray(target), np.asanyarray(preds)
@@ -147,19 +147,19 @@ def check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) ->
 
     Parameters
     ----------
-        top_k: int
-            The number of classes to select.
-        type_preds: str
-            The type of the predictions.
-        type_target: str
-            The type of the target.
-        n_classes: int
-            The number of classes.
+    top_k: int
+        The number of classes to select.
+    type_preds: str
+        The type of the predictions.
+    type_target: str
+        The type of the target.
+    n_classes: int
+        The number of classes.
 
     Raises
     ------
-        ValueError
-            If top_k is not valid.
+    ValueError
+        If top_k is not valid.
 
     """
     if type_target == "binary":
@@ -179,15 +179,15 @@ def select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray
 
     Parameters
     ----------
-        prob_scores : np.ndarray
-            The probability scores. Must be a 2D array.
-        top_k : int, default=1
-            The number of top predictions to select.
+    prob_scores : np.ndarray
+        The probability scores. Must be a 2D array.
+    top_k : int, default=1
+        The number of top predictions to select.
 
     Returns
     -------
-        np.ndarray
-            A binary ndarray of the same shape as the input array.
+    np.ndarray
+        A binary ndarray of the same shape as the input array.
 
     """
     if top_k == 1:
@@ -208,29 +208,29 @@ def _check_thresholds(thresholds: Union[int, List[float], np.ndarray]) -> None:
 
     Parameters
     ----------
-        thresholds : Union[int, List[float], np.ndarray]
-            Thresholds used for computing the precision and recall scores.
-            Can be either an integer, a list of floats, a numpy array or None.
+    thresholds : Union[int, List[float], np.ndarray]
+        Thresholds used for computing the precision and recall scores.
+        Can be either an integer, a list of floats, a numpy array or None.
 
     Returns
     -------
-        None
+    None
 
     Raises
     ------
-        ValueError
-            If ``thresholds`` is not None, an integer, a list of floats or a numpy
-            array.
-        ValueError
-            If ``thresholds`` is an integer and is less than 2.
-        ValueError
-            If ``thresholds`` is a list or numpy array and does not contain floats
-            in the range [0, 1].
-        ValueError
-            If ``thresholds`` is a numpy array and is not a 1D array.
-        ValueError
-            If ``thresholds`` is a list or numpy array and the values are not
-            monotonically increasing.
+    ValueError
+        If ``thresholds`` is not None, an integer, a list of floats or a numpy
+        array.
+    ValueError
+        If ``thresholds`` is an integer and is less than 2.
+    ValueError
+        If ``thresholds`` is a list or numpy array and does not contain floats
+        in the range [0, 1].
+    ValueError
+        If ``thresholds`` is a numpy array and is not a 1D array.
+    ValueError
+        If ``thresholds`` is a list or numpy array and the values are not
+        monotonically increasing.
 
     """
     if thresholds is not None and not isinstance(thresholds, (int, list, np.ndarray)):
@@ -277,18 +277,18 @@ def _apply_function_recursively(
 
     Parameters
     ----------
-        data : Any
-            The data structure to apply the function to.
-        func : Callable
-            The function to apply to the data structure.
-        *args : Any
-            Additional positional arguments to pass to the function.
-        **kwargs : Any
-            Additional keyword arguments to pass to the function.
+    data : Any
+        The data structure to apply the function to.
+    func : Callable
+        The function to apply to the data structure.
+    *args : Any
+        Additional positional arguments to pass to the function.
+    **kwargs : Any
+        Additional keyword arguments to pass to the function.
 
     Returns
     -------
-        The data structure with the function applied to it.
+    The data structure with the function applied to it.
 
     """
     data_type = type(data)

@@ -1,7 +1,7 @@
 """Helper functions for testing metrics."""
 
 from functools import partial
-from typing import Any, Callable, Dict, Sequence
+from typing import Any, Callable, Dict, Mapping, Sequence
 
 import numpy as np
 
@@ -23,32 +23,32 @@ class MetricTester:
 
         Parameters
         ----------
-            target: np.ndarray
-                The target.
-            preds: np.ndarray
-                The predictions.
-            metric_functional: Callable
-                The functional metric function.
-            sk_metric: Callable
-                The sklearn metric function.
-            metric_args: Dict[str, Any]
-                The arguments to pass to the metric function.
-            atol: float
-                The absolute tolerance.
-            **kwargs_update: Any
-                The keyword arguments pass to the metric update function.
+        target: np.ndarray
+            The target.
+        preds: np.ndarray
+            The predictions.
+        metric_functional: Callable
+            The functional metric function.
+        sk_metric: Callable
+            The sklearn metric function.
+        metric_args: Dict[str, Any]
+            The arguments to pass to the metric function.
+        atol: float
+            The absolute tolerance.
+        **kwargs_update: Any
+            The keyword arguments pass to the metric update function.
 
         Returns
         -------
-            None
+        None
 
         Raises
         ------
-            AssertionError
-                If predictions and targets do not have the same number of
-                samples.
-            AssertionError
-                If the metric values are not equal.
+        AssertionError
+            If predictions and targets do not have the same number of
+            samples.
+        AssertionError
+            If the metric values are not equal.
 
         """
         assert preds.shape[0] == target.shape[0]
@@ -80,32 +80,32 @@ class MetricTester:
 
         Parameters
         ----------
-            target: np.ndarray
-                The target.
-            preds: np.ndarray
-                The predictions.
-            metric_class: Callable
-                The wrapper class for the metric.
-            sk_metric: Callable
-                The sklearn metric function.
-            metric_args: Dict[str, Any]
-                The arguments to pass to the metric function.
-            atol: float
-                The absolute tolerance.
-            **kwargs_update: Any
-                The keyword arguments pass to the metric update function.
+        target: np.ndarray
+            The target.
+        preds: np.ndarray
+            The predictions.
+        metric_class: Callable
+            The wrapper class for the metric.
+        sk_metric: Callable
+            The sklearn metric function.
+        metric_args: Dict[str, Any]
+            The arguments to pass to the metric function.
+        atol: float
+            The absolute tolerance.
+        **kwargs_update: Any
+            The keyword arguments pass to the metric update function.
 
         Returns
         -------
-            None
+        None
 
         Raises
         ------
-            AssertionError
-                If predictions and targets do not have the same number of
-                samples.
-            AssertionError
-                If the metric values are not equal.
+        AssertionError
+            If predictions and targets do not have the same number of
+            samples.
+        AssertionError
+            If the metric values are not equal.
 
         """
         assert preds.shape[0] == target.shape[0]
@@ -132,15 +132,18 @@ class MetricTester:
         _assert_allclose(cyclops_global_result, sk_global_result, atol=atol)
 
 
-def _assert_allclose(cyclops_result: Any, sk_result: Any, atol: float = 1e-8):
+def _assert_allclose(data_a: Any, data_b: Any, atol: float = 1e-8):
     """Assert allclose."""
-    if isinstance(cyclops_result, (np.ndarray, np.ScalarType)):
-        np.allclose(cyclops_result, sk_result, atol=atol)
-    elif isinstance(cyclops_result, Sequence):
-        for cyclops_result_, sk_result_ in zip(cyclops_result, sk_result):
-            _assert_allclose(cyclops_result_, sk_result_, atol=atol)
+    if isinstance(data_a, (np.ndarray, np.ScalarType)):
+        np.allclose(data_a, data_b, atol=atol)
+    elif isinstance(data_a, Sequence):
+        for element_a, element_b in zip(data_a, data_b):
+            _assert_allclose(element_a, element_b, atol=atol)
+    elif isinstance(data_a, Mapping):
+        assert data_a.keys() == data_b.keys()
+        for value_a, value_b in zip(data_a.values(), data_b.values()):
+            _assert_allclose(value_a, value_b, atol=atol)
     else:
         raise ValueError(
-            f"Unknown format for comparison: {type(cyclops_result)} and"
-            f" {type(sk_result)}"
+            f"Unknown format for comparison: {type(data_a)} and" f" {type(data_b)}"
         )

@@ -20,7 +20,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 
 
-def _fbeta_reduce(  # pylint: disable=too-many-arguments, invalid-name
+def _fbeta_reduce(  # pylint: disable=too-many-arguments
     tp: np.ndarray,
     fp: np.ndarray,
     fn: np.ndarray,
@@ -32,40 +32,40 @@ def _fbeta_reduce(  # pylint: disable=too-many-arguments, invalid-name
 
     Parameters
     ----------
-        tp : numpy.ndarray
-            True positives per class.
-        fp : numpy.ndarray
-            False positives per class.
-        fn : numpy.ndarray
-            False negatives per class.
-        beta : float
-            Weight of precision in harmonic mean (beta < 1 lends more weight to
-            precision, beta > 1 favors recall).
-       average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the score for each class. Otherwise,
-            use one of the following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives, false positives and false negatives.
-                - ``macro``: Calculate metric for each label, and find their
-                  unweighted mean. This does not take label/class imbalance
-                  into account.
-                - ``weighted``: Calculate metric for each label/class, and find their
-                  average weighted by the support (the number of true instances
-                  for each label/class). This alters "macro" to account for
-                  label/class imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    tp : numpy.ndarray
+        True positives per class.
+    fp : numpy.ndarray
+        False positives per class.
+    fn : numpy.ndarray
+        False negatives per class.
+    beta : float
+        Weight of precision in harmonic mean (beta < 1 lends more weight to
+        precision, beta > 1 favors recall).
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each class. Otherwise,
+        use one of the following options to compute the average score:
+        - ``micro``: Calculate metric globally from the total count of true
+            positives, false positives and false negatives.
+        - ``macro``: Calculate metric for each label, and find their
+            unweighted mean. This does not take label/class imbalance
+            into account.
+        - ``weighted``: Calculate metric for each label/class, and find their
+            average weighted by the support (the number of true instances
+            for each label/class). This alters "macro" to account for
+            label/class imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        result : float or numpy.ndarray
-            F-beta score or array of scores if ``average=None``.
+    result : float or numpy.ndarray
+        F-beta score or array of scores if ``average=None``.
 
     Raises
     ------
-        ValueError
-            if beta is less than 0.
+    ValueError
+        if beta is less than 0.
 
     """
     _check_beta(beta=beta)
@@ -125,47 +125,46 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        beta : float
-            Weight of precision in harmonic mean.
-        pos_label : int, default=1
-            The positive class label. One of [0, 1].
-        threshold : float, default=0.5
-            Threshold value for converting probabilities and logits to binary.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there are no true positives or true negatives.
-            If set to ``warn``, this acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    beta : float
+        Weight of precision in harmonic mean.
+    pos_label : int, default=1
+        The positive class label. One of [0, 1].
+    threshold : float, default=0.5
+        Threshold value for converting probabilities and logits to binary.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there are no true positives or true negatives.
+        If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float
-            The binary F-beta score.
+    float
+        The binary F-beta score.
 
     Raises
     ------
-        ValueError
-            beta is less than 0.
+    ValueError
+        beta is less than 0.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import binary_fbeta_score
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0, 1, 1, 1]
-        >>> binary_fbeta_score(target, preds, beta=0.5)
-        0.7142857142857143
+    >>> from cyclops.evaluation.metrics.functional import binary_fbeta_score
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0, 1, 1, 1]
+    >>> binary_fbeta_score(target, preds, beta=0.5)
+    0.7142857142857143
 
     """
     _check_beta(beta=beta)
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold
+        target=target, preds=preds, threshold=threshold, pos_label=pos_label
     )
 
-    # pylint: disable=invalid-name
     tp, fp, _, fn = _binary_stat_scores_update(
         target=target, preds=preds, pos_label=pos_label
     )
@@ -193,52 +192,51 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        beta : float
-            Weight of precision in harmonic mean.
-        num_classes : int
-            The number of classes in the dataset.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the score will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None], default=None
-           If ``None``, return the score for each class. Otherwise,
-           use one of the following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives, false positives and false negatives.
-                - ``macro``: Calculate metric for each class, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each class, and find their
-                  average weighted by the support (the number of true instances
-                  for each class). This alters "macro" to account for class
-                  imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    beta : float
+        Weight of precision in harmonic mean.
+    num_classes : int
+        The number of classes in the dataset.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the score will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each class. Otherwise,
+        use one of the following options to compute the average score:
+        - ``micro``: Calculate metric globally from the total count of true
+            positives, false positives and false negatives.
+        - ``macro``: Calculate metric for each class, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each class, and find their
+            average weighted by the support (the number of true instances
+            for each class). This alters "macro" to account for class imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float or numpy.ndarray
-            The multiclass F-beta score. If ``average`` is ``None``, a numpy array
-            of shape (num_classes,) is returned.
+    float or numpy.ndarray
+        The multiclass F-beta score. If ``average`` is ``None``, a numpy array
+        of shape (num_classes,) is returned.
 
     Raises
     ------
-        ValueError
-            ``average`` is not one of ``micro``, ``macro``, ``weighted``, or ``None``,
-            or ``beta`` is less than 0.
+    ValueError
+        ``average`` is not one of ``micro``, ``macro``, ``weighted``, or ``None``,
+        or ``beta`` is less than 0.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multiclass_fbeta_score
-        >>> target = [0, 1, 2, 0]
-        >>> preds = [0, 2, 1, 0]
-        >>> multiclass_fbeta_score(target, preds, beta=0.5, num_classes=3)
-        array([1., 0., 0.])
+    >>> from cyclops.evaluation.metrics.functional import multiclass_fbeta_score
+    >>> target = [0, 1, 2, 0]
+    >>> preds = [0, 2, 1, 0]
+    >>> multiclass_fbeta_score(target, preds, beta=0.5, num_classes=3)
+    array([1., 0., 0.])
 
     """
     _check_beta(beta=beta)
@@ -248,9 +246,8 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
         target, preds, num_classes=num_classes, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
     tp, fp, _, fn = _multiclass_stat_scores_update(
-        target=target, preds=preds, num_classes=num_classes, classwise=True
+        target=target, preds=preds, num_classes=num_classes
     )
 
     return _fbeta_reduce(
@@ -277,54 +274,54 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        beta : float
-            Weight of precision in harmonic mean.
-        num_labels : int
-            Number of labels for the task.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the score will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the score for each label. Otherwise,
-            use one of the following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives, false positives and false negatives.
-                - ``macro``: Calculate metric for each label, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each label, and find their
-                  average weighted by the support (the number of true instances
-                  for each label). This alters "macro" to account for label
-                  imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    beta : float
+        Weight of precision in harmonic mean.
+    num_labels : int
+        Number of labels for the task.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the score will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each label. Otherwise,
+        use one of the following options to compute the average score:
+        - ``micro``: Calculate metric globally from the total count of true
+            positives, false positives and false negatives.
+        - ``macro``: Calculate metric for each label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their
+            average weighted by the support (the number of true instances
+            for each label). This alters "macro" to account for label
+            imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float or numpy.ndarray
-            The multilabel F-beta score. If ``average`` is ``None``, a numpy array
-            of shape (num_labels,) is returned.
+    float or numpy.ndarray
+        The multilabel F-beta score. If ``average`` is ``None``, a numpy array
+        of shape (num_labels,) is returned.
 
     Raises
     ------
-        ValueError
-            ``average`` is not one of ``micro``, ``macro``, ``weighted``, or ``None``,
-            or ``beta`` is less than 0.
+    ValueError
+        ``average`` is not one of ``micro``, ``macro``, ``weighted``, or ``None``,
+        or ``beta`` is less than 0.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multilabel_fbeta_score
-        >>> target = [[0, 1], [1, 1]]
-        >>> preds = [[0.1, 0.9], [0.8, 0.2]]
-        >>> multilabel_fbeta_score(target, preds, beta=0.5, num_labels=2)
-        array([1.        , 0.83333333])
+    >>> from cyclops.evaluation.metrics.functional import multilabel_fbeta_score
+    >>> target = [[0, 1], [1, 1]]
+    >>> preds = [[0.1, 0.9], [0.8, 0.2]]
+    >>> multilabel_fbeta_score(target, preds, beta=0.5, num_labels=2)
+    array([1.        , 0.83333333])
 
     """
     _check_beta(beta=beta)
@@ -334,9 +331,8 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
         target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
     tp, fp, _, fn = _multilabel_stat_scores_update(
-        target=target, preds=preds, num_labels=num_labels, labelwise=True
+        target=target, preds=preds, num_labels=num_labels
     )
 
     return _fbeta_reduce(
@@ -366,78 +362,77 @@ def fbeta_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Estimated targets as returned by a classifier.
-        beta : float
-            Weight of precision in harmonic mean.
-        task : Literal["binary", "multiclass", "multilabel"]
-            Type of classification task.
-        pos_label : int, default=1
-            Label to consider as positive for binary classification tasks.
-        num_classes : int
-            Number of classes for the task. Required if ``task`` is ``"multiclass"``.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class. Only used if ``task`` is
-            ``"binary"`` or ``"multilabel"``.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
-        num_labels : int
-            Number of labels for the task. Required if ``task`` is ``"multilabel"``.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the score for each label/class. Otherwise,
-            use one of the following options to compute the average score:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives, false positives and false negatives.
-                - ``macro``: Calculate metrics for each class/label, and find their
-                  unweighted mean. This does not take label/class imbalance into
-                  account.
-                - ``weighted``: Calculate metrics for each label/class, and find
-                  their average weighted by support (the number of true instances
-                  for each label/class). This alters ``macro`` to account for
-                  label/class imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Estimated targets as returned by a classifier.
+    beta : float
+        Weight of precision in harmonic mean.
+    task : Literal["binary", "multiclass", "multilabel"]
+        Type of classification task.
+    pos_label : int, default=1
+        Label to consider as positive for binary classification tasks.
+    num_classes : int
+        Number of classes for the task. Required if ``task`` is ``"multiclass"``.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class. Only used if ``task`` is
+        ``"binary"`` or ``"multilabel"``.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
+    num_labels : int
+        Number of labels for the task. Required if ``task`` is ``"multilabel"``.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each label/class. Otherwise,
+        use one of the following options to compute the average score:
+        - ``micro``: Calculate metrics globally by counting the total true
+            positives, false positives and false negatives.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label/class imbalance into
+            account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        score: float or numpy.ndarray
-            The F-beta score. If ``average`` is not ``None`` and ``task`` is not
-            ``binary``, a numpy array of shape (num_classes,) is returned.
+    score: float or numpy.ndarray
+        The F-beta score. If ``average`` is not ``None`` and ``task`` is not
+        ``binary``, a numpy array of shape (num_classes,) is returned.
 
     Raises
     ------
-        ValueError
-            If ``task`` is not one of ``binary``, ``multiclass``, or
-            ``multilabel``.
+    ValueError
+        If ``task`` is not one of ``binary``, ``multiclass``, or
+        ``multilabel``.
 
-    Examples (binary)
-    -----------------
-        >>> from cyclops.evaluation.metrics.functional import fbeta_score
-        >>> target = [0, 1, 1, 0]
-        >>> preds = [0.1, 0.8, 0.4, 0.3]
-        >>> fbeta_score(target, preds, beta=0.5, task="binary")
-        0.8333333333333334
+    Examples
+    --------
+    (binary)
+    >>> from cyclops.evaluation.metrics.functional import fbeta_score
+    >>> target = [0, 1, 1, 0]
+    >>> preds = [0.1, 0.8, 0.4, 0.3]
+    >>> fbeta_score(target, preds, beta=0.5, task="binary")
+    0.8333333333333334
 
-    Examples (multiclass)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import fbeta_score
-        >>> target = [0, 1, 2, 2]
-        >>> preds = [1 2, 2, 0]
-        >>> fbeta_score(target, preds, beta=0.5, task="multiclass", num_classes=3)
-        array([0.83333333, 0.        , 0.55555556])
+    (multiclass)
+    >>> from cyclops.evaluation.metrics.functional import fbeta_score
+    >>> target = [0, 1, 2, 2]
+    >>> preds = [1 2, 2, 0]
+    >>> fbeta_score(target, preds, beta=0.5, task="multiclass", num_classes=3)
+    array([0.83333333, 0.        , 0.55555556])
 
-    Examples (multilabel)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import fbeta_score
-        >>> target = [[0, 1], [1, 1]]
-        >>> preds = [[0.1, 0.9], [0.8, 0.2]]
-        >>> fbeta_score(target, preds, beta=0.5, task="multilabel", num_labels=2)
-        array([1.        , 0.83333333])
+    (multilabel)
+    >>> from cyclops.evaluation.metrics.functional import fbeta_score
+    >>> target = [[0, 1], [1, 1]]
+    >>> preds = [[0.1, 0.9], [0.8, 0.2]]
+    >>> fbeta_score(target, preds, beta=0.5, task="multilabel", num_labels=2)
+    array([1.        , 0.83333333])
 
     """
     if task == "binary":
@@ -496,31 +491,31 @@ def binary_f1_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        pos_label: int, default=1
-            The label of the positive class.
-        threshold : float, default=0.5
-            Threshold value for binarizing predictions in form of logits or
-            probability scores.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    pos_label: int, default=1
+        The label of the positive class.
+    threshold : float, default=0.5
+        Threshold value for binarizing predictions in form of logits or
+        probability scores.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float
-            The F1 score.
+    float
+        The F1 score.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import binary_f1_score
-        >>> target = [0, 1, 1, 0]
-        >>> preds = [0.1, 0.8, 0.4, 0.3]
-        >>> binary_f1_score(target, preds)
-        0.6666666666666666
+    >>> from cyclops.evaluation.metrics.functional import binary_f1_score
+    >>> target = [0, 1, 1, 0]
+    >>> preds = [0.1, 0.8, 0.4, 0.3]
+    >>> binary_f1_score(target, preds)
+    0.6666666666666666
 
     """
     return binary_fbeta_score(
@@ -545,45 +540,45 @@ def multiclass_f1_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        num_classes : int
-            Number of classes in the dataset.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None], default=None
-           If ``None``, return the score for each class. Otherwise, use one of
-           the following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives, false positives and false negatives.
-                - ``macro``: Calculate metric for each class, and find their
-                  unweighted mean. This does not take class imbalance into account.
-                - ``weighted``: Calculate metric for each class, and find their
-                  average weighted by the support (the number of true instances
-                  for each class). This alters "macro" to account for class
-                  imbalance. It can result in an F-score that is not between
-                  precision and recall.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    num_classes : int
+        Number of classes in the dataset.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each class. Otherwise, use one of
+        the following options to compute the average score:
+        - ``micro``: Calculate metric globally from the total count of true
+            positives, false positives and false negatives.
+        - ``macro``: Calculate metric for each class, and find their
+            unweighted mean. This does not take class imbalance into account.
+        - ``weighted``: Calculate metric for each class, and find their
+            average weighted by the support (the number of true instances
+            for each class). This alters "macro" to account for class
+            imbalance. It can result in an F-score that is not between
+            precision and recall.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float or numpy.ndarray
-            The F1 score. If ``average`` is ``None``, a numpy.ndarray of shape
-            (``num_classes``,) is returned.
+    float or numpy.ndarray
+        The F1 score. If ``average`` is ``None``, a numpy.ndarray of shape
+        (``num_classes``,) is returned.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multiclass_f1_score
-        >>> target = [0, 1, 2, 0]
-        >>> preds = [1, 1, 1, 0]
-        >>> multiclass_f1_score(target, preds, num_classes=3)
-        array([0.66666667, 0.5       , 0.        ])
+    >>> from cyclops.evaluation.metrics.functional import multiclass_f1_score
+    >>> target = [0, 1, 2, 0]
+    >>> preds = [1, 1, 1, 0]
+    >>> multiclass_f1_score(target, preds, num_classes=3)
+    array([0.66666667, 0.5       , 0.        ])
 
     """
     return multiclass_fbeta_score(
@@ -610,46 +605,45 @@ def multilabel_f1_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        num_labels : int
-            Number of labels for the task.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the score for each label. Otherwise, use one of
-            the following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives, false positives and false negatives.
-                - ``macro``: Calculate metric for each label, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each label, and find their
-                  average weighted by the support (the number of true instances
-                  for each label). This alters "macro" to account for label
-                  imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    num_labels : int
+        Number of labels for the task.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each label. Otherwise, use one of
+        the following options to compute the average score:
+        - ``micro``: Calculate metric globally from the total count of true
+            positives, false positives and false negatives.
+        - ``macro``: Calculate metric for each label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their
+            average weighted by the support (the number of true instances
+            for each label). This alters "macro" to account for label imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float or numpy.ndarray
-            The F1 score. If ``average`` is ``None``, a numpy.ndarray of shape
-            (``num_labels``,) is returned.
+    float or numpy.ndarray
+        The F1 score. If ``average`` is ``None``, a numpy.ndarray of shape
+        (``num_labels``,) is returned.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multilabel_f1_score
-        >>> target = [[0, 1, 1], [1, 0, 0]]
-        >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
-        >>> multilabel_f1_score(target, preds, num_labels=3)
-        array([0., 1., 1.])
+    >>> from cyclops.evaluation.metrics.functional import multilabel_f1_score
+    >>> target = [[0, 1, 1], [1, 0, 0]]
+    >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
+    >>> multilabel_f1_score(target, preds, num_labels=3)
+    array([0., 1., 1.])
 
     """
     return multilabel_fbeta_score(
@@ -680,71 +674,70 @@ def f1_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Estimated targets as returned by a classifier.
-        task : Literal["binary", "multiclass", "multilabel"]
-            Type of classification task.
-        pos_label : int, default=1
-            Label to consider as positive for binary classification tasks.
-        num_classes : int, default=None
-            Number of classes for the task. Required if ``task`` is ``"multiclass"``.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class. Only used if ``task`` is
-            ``"binary"`` or ``"multilabel"``.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
-        num_labels : int, default=None
-            Number of labels for the task. Required if ``task`` is ``"multilabel"``.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the score for each label/class. Otherwise,
-            use one of the following options to compute the average score:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives, false positives and false negatives.
-                - ``macro``: Calculate metrics for each class/label, and find their
-                  unweighted mean. This does not take label/class imbalance into
-                  account.
-                - ``weighted``: Calculate metrics for each label/class, and find
-                  their average weighted by support (the number of true instances
-                  for each label/class). This alters ``macro`` to account for
-                  label/class imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Estimated targets as returned by a classifier.
+    task : Literal["binary", "multiclass", "multilabel"]
+        Type of classification task.
+    pos_label : int, default=1
+        Label to consider as positive for binary classification tasks.
+    num_classes : int, default=None
+        Number of classes for the task. Required if ``task`` is ``"multiclass"``.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class. Only used if ``task`` is
+        ``"binary"`` or ``"multilabel"``.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1. Only used if ``task`` is ``"multiclass"`` or ``"multilabel"``.
+    num_labels : int, default=None
+        Number of labels for the task. Required if ``task`` is ``"multilabel"``.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the score for each label/class. Otherwise,
+        use one of the following options to compute the average score:
+        - ``micro``: Calculate metrics globally by counting the total true
+            positives, false positives and false negatives.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label/class imbalance into
+            account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
 
     Returns
     -------
-        float or numpy.ndarray
-            The F1 score. If ``average`` is ``None`` and ``task`` is not ``binary``,
-            a numpy.ndarray of shape (``num_classes`` or ``num_labels``,) is returned.
+    float or numpy.ndarray
+        The F1 score. If ``average`` is ``None`` and ``task`` is not ``binary``,
+        a numpy.ndarray of shape (``num_classes`` or ``num_labels``,) is returned.
 
-    Examples (binary)
-    -----------------
-        >>> from cyclops.evaluation.metrics.functional import f1_score
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0.1, 0.9, 0.8, 0.2]
-        >>> f1_score(target, preds, task="binary")
-        0.5
+    Examples
+    --------
+    (binary)
+    >>> from cyclops.evaluation.metrics.functional import f1_score
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0.1, 0.9, 0.8, 0.2]
+    >>> f1_score(target, preds, task="binary")
+    0.5
 
-    Examples (multiclass)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import f1_score
-        >>> target = [0, 1, 2, 0]
-        >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
-        >>> f1_score(target, preds, task="multiclass", num_classes=3)
-        array([0.66666667, 0.8       , 0.        ])
+    (multiclass)
+    >>> from cyclops.evaluation.metrics.functional import f1_score
+    >>> target = [0, 1, 2, 0]
+    >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
+    >>> f1_score(target, preds, task="multiclass", num_classes=3)
+    array([0.66666667, 0.8       , 0.        ])
 
-    Examples (multilabel)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import f1_score
-        >>> target = [[0, 1, 1], [1, 0, 0]]
-        >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
-        >>> f1_score(target, preds, task="multilabel", num_labels=3)
-        array([0., 1., 1.])
+    (multilabel)
+    >>> from cyclops.evaluation.metrics.functional import f1_score
+    >>> target = [[0, 1, 1], [1, 0, 0]]
+    >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
+    >>> f1_score(target, preds, task="multilabel", num_labels=3)
+    array([0., 1., 1.])
 
     """
     return fbeta_score(

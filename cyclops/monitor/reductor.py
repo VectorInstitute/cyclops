@@ -413,7 +413,6 @@ class Reductor:
 
         """
         model_params = {
-            "device": self.device,
             "input_dim": input_dim,
             "hidden_dim": hidden_dim,
             "layer_dim": layer_dim,

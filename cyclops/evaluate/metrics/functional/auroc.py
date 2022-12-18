@@ -34,27 +34,27 @@ def _reduce_auroc(
 
     Parameters
     ----------
-        fpr : numpy.ndarray or list of numpy.ndarray
-            False positive rate.
-        tpr : numpy.ndarray or list of numpy.ndarray
-            True positive rate.
-        average : Literal["macro", "weighted"], default=None
-            If not None, apply the method to compute the average area under the
-            ROC curve.
-        weights : numpy.ndarray, default=None
-            Sample weights.
+    fpr : numpy.ndarray or list of numpy.ndarray
+        False positive rate.
+    tpr : numpy.ndarray or list of numpy.ndarray
+        True positive rate.
+    average : Literal["macro", "weighted"], default=None
+        If not None, apply the method to compute the average area under the
+        ROC curve.
+    weights : numpy.ndarray, default=None
+        Sample weights.
 
     Returns
     -------
-        auroc : float or numpy.ndarray
-            Area under the ROC curve. If ``average`` is not None, ``auroc`` is a
-            numpy array.
+    auroc : float or numpy.ndarray
+        Area under the ROC curve. If ``average`` is not None, ``auroc`` is a
+        numpy array.
 
     Raises
     ------
-        ValueError
-            If ``average`` is not one of ``macro`` or ``weighted`` or if
-            ``average`` is ``weighted`` and ``weights`` is None.
+    ValueError
+        If ``average`` is not one of ``macro`` or ``weighted`` or if
+        ``average`` is ``weighted`` and ``weights`` is None.
 
     """
     result = [
@@ -99,25 +99,25 @@ def _binary_auroc_compute(
 
     Parameters
     ----------
-        state : Union[Tuple[numpy.ndarray, numpy.ndarray], numpy.ndarray]
-            If ``state`` is a tuple, then it must be a tuple of two numpy arrays
-            ``(target, preds)``. If ``state`` is a numpy array, then it is a multi-
-            threshold confusion matrix.
-        thresholds : numpy.ndarray, default=None
-            Thresholds used for computing binarizing the predictions. If None,
-            then the thresholds are automatically determined by the unique values
-            in ``preds``.
-        max_fpr : float, default=None
-            The maximum value of the false positive rate. If ``None``, the
-            false positive rate is set to the complement of the true positive
-            rate.
-        pos_label : int, default=1
-            The label of the positive class.
+    state : Union[Tuple[numpy.ndarray, numpy.ndarray], numpy.ndarray]
+        If ``state`` is a tuple, then it must be a tuple of two numpy arrays
+        ``(target, preds)``. If ``state`` is a numpy array, then it is a multi-
+        threshold confusion matrix.
+    thresholds : numpy.ndarray, default=None
+        Thresholds used for computing binarizing the predictions. If None,
+        then the thresholds are automatically determined by the unique values
+        in ``preds``.
+    max_fpr : float, default=None
+        The maximum value of the false positive rate. If ``None``, the
+        false positive rate is set to the complement of the true positive
+        rate.
+    pos_label : int, default=1
+        The label of the positive class.
 
     Returns
     -------
-        auroc : float
-            Area under the ROC curve.
+    auroc : float
+        Area under the ROC curve.
 
     """
     fpr, tpr, _ = _binary_roc_compute(state, thresholds=thresholds, pos_label=pos_label)
@@ -146,39 +146,42 @@ def binary_auroc(
     preds: ArrayLike,
     max_fpr: float = None,
     thresholds: Union[int, List[float], np.ndarray] = None,
+    pos_label: int = 1,
 ) -> float:
     """Compute the area under the ROC curve for binary classification tasks.
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Estimated probabilities or decision function. If the values in ``preds``
-            are not in the range [0, 1], then they will be transformed to this range
-            via a sigmoid function.
-        max_fpr : float, default=None
-            The maximum value of the false positive rate. If not None, then
-            the partial AUCROC in the range [0, max_fpr] is returned.
-        thresholds : Union[int, List[float], numpy.ndarray], default=None
-            Thresholds used for binarizing the values of ``preds``.
-            If int, then the number of thresholds to use.
-            If list or array, then the thresholds to use.
-            If None, then the thresholds are automatically determined by the
-            unique values in ``preds``.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Estimated probabilities or decision function. If the values in ``preds``
+        are not in the range [0, 1], then they will be transformed to this range
+        via a sigmoid function.
+    max_fpr : float, default=None
+        The maximum value of the false positive rate. If not None, then
+        the partial AUCROC in the range [0, max_fpr] is returned.
+    thresholds : Union[int, List[float], numpy.ndarray], default=None
+        Thresholds used for binarizing the values of ``preds``.
+        If int, then the number of thresholds to use.
+        If list or array, then the thresholds to use.
+        If None, then the thresholds are automatically determined by the
+        unique values in ``preds``.
+    pos_label : int, default=1
+        The label of the positive class.
 
     Returns
     -------
-        auroc : float
-            Area under the ROC curve.
+    auroc : float
+        Area under the ROC curve.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import binary_auroc
-        >>> target = [1, 0, 0, 1]
-        >>> preds = [0.1, 0.9, 0.4, 0.6]
-        >>> binary_auroc(target, preds, thresholds=5)
-        0.25
+    >>> from cyclops.evaluation.metrics.functional import binary_auroc
+    >>> target = [1, 0, 0, 1]
+    >>> preds = [0.1, 0.9, 0.4, 0.6]
+    >>> binary_auroc(target, preds, thresholds=5)
+    0.25
 
     """
     _check_thresholds(thresholds)
@@ -195,12 +198,16 @@ def binary_auroc(
                 f" {max_fpr}"
             )
 
-    target, preds = _binary_precision_recall_curve_format(target, preds)
+    target, preds = _binary_precision_recall_curve_format(
+        target, preds, pos_label=pos_label
+    )
     thresholds = _format_thresholds(thresholds)
 
     state = _binary_precision_recall_curve_update(target, preds, thresholds)
 
-    return _binary_auroc_compute(state, thresholds=thresholds, max_fpr=max_fpr)
+    return _binary_auroc_compute(
+        state, thresholds=thresholds, max_fpr=max_fpr, pos_label=pos_label
+    )
 
 
 def _multiclass_auroc_compute(
@@ -213,25 +220,25 @@ def _multiclass_auroc_compute(
 
     Parameters
     ----------
-        state : Union[numpy.ndarray, Tuple[numpy.ndarray, numpy.ndarray]]
-            If ``state`` is a numpy array, then it is a multi-threshold confusion
-            matrix. If ``state`` is a tuple, then it must be a tuple of two numpy
-            arrays ``(target, preds)``.
-        num_classes : int
-            Number of classes.
-        thresholds : numpy.ndarray, default=None
-            Thresholds used for computing binarizing the predictions. If None,
-            then the thresholds are automatically determined by the unique values
-            in ``preds``.
-        average : Literal["macro", "weighted"], default=None
-            If ``None``, then the scores for each class are returned. Otherwise,
-            this determines the type of averaging performed on the scores.
+    state : Union[numpy.ndarray, Tuple[numpy.ndarray, numpy.ndarray]]
+        If ``state`` is a numpy array, then it is a multi-threshold confusion
+        matrix. If ``state`` is a tuple, then it must be a tuple of two numpy
+        arrays ``(target, preds)``.
+    num_classes : int
+        Number of classes.
+    thresholds : numpy.ndarray, default=None
+        Thresholds used for computing binarizing the predictions. If None,
+        then the thresholds are automatically determined by the unique values
+        in ``preds``.
+    average : Literal["macro", "weighted"], default=None
+        If ``None``, then the scores for each class are returned. Otherwise,
+        this determines the type of averaging performed on the scores.
 
     Returns
     -------
-        auroc : Union[float, numpy.ndarray]
-            Area under the ROC curve. If ``average`` is ``None``, then a numpy array
-            of shape (num_classes,) is returned, otherwise a float is returned.
+    auroc : Union[float, numpy.ndarray]
+        Area under the ROC curve. If ``average`` is ``None``, then a numpy array
+        of shape (num_classes,) is returned, otherwise a float is returned.
 
     """
     fpr, tpr, _ = _multiclass_roc_compute(state, num_classes, thresholds=thresholds)
@@ -256,44 +263,44 @@ def multiclass_auroc(
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Estimated probabilities or decision function. If the values in ``preds``
-            are not in the range [0, 1], then they will be transformed to this range
-            via a softmax function.
-        num_classes : int
-            Number of classes.
-        thresholds : Union[int, List[float], numpy.ndarray], default=None
-            Thresholds used for binarizing the values of ``preds``.
-            If int, then the number of thresholds to use.
-            If list or array, then the thresholds to use.
-            If None, then the thresholds are automatically determined by the
-            unique values in ``preds``.
-        average : Literal["macro", "weighted"], default=None
-            If ``None``, then the scores for each class are returned. Otherwise,
-            this determines the type of averaging performed on the scores. One of
-            - `macro`: Calculate metrics for each class, and find their unweighted
-              mean. This does not take class imbalance into account.
-            - `weighted`: Calculate metrics for each class, and find their average,
-              weighted by support (the number of true instances for each class).
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Estimated probabilities or decision function. If the values in ``preds``
+        are not in the range [0, 1], then they will be transformed to this range
+        via a softmax function.
+    num_classes : int
+        Number of classes.
+    thresholds : Union[int, List[float], numpy.ndarray], default=None
+        Thresholds used for binarizing the values of ``preds``.
+        If int, then the number of thresholds to use.
+        If list or array, then the thresholds to use.
+        If None, then the thresholds are automatically determined by the
+        unique values in ``preds``.
+    average : Literal["macro", "weighted"], default=None
+        If ``None``, then the scores for each class are returned. Otherwise,
+        this determines the type of averaging performed on the scores. One of
+        - `macro`: Calculate metrics for each class, and find their unweighted
+            mean. This does not take class imbalance into account.
+        - `weighted`: Calculate metrics for each class, and find their average,
+            weighted by support (the number of true instances for each class).
 
     Returns
     -------
-        auroc : Union[float, numpy.ndarray]
-            Area under the ROC curve. If ``average`` is ``None``, then a numpy array
-            of shape (num_classes,) is returned, otherwise a float is returned.
+    auroc : Union[float, numpy.ndarray]
+        Area under the ROC curve. If ``average`` is ``None``, then a numpy array
+        of shape (num_classes,) is returned, otherwise a float is returned.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multiclass_auroc
-        >>> target = [1, 0, 2, 0]
-        >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05],
-        ...         [0.05, 0.05, 0.9], [0.9, 0.05, 0.05]]
-        >>> multiclass_auroc(target, preds, num_classes=3, thresholds=5,
-        ...     average=None
-        ... )
-        array([0.5       , 0.33333333, 1.        ])
+    >>> from cyclops.evaluation.metrics.functional import multiclass_auroc
+    >>> target = [1, 0, 2, 0]
+    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05],
+    ...         [0.05, 0.05, 0.9], [0.9, 0.05, 0.05]]
+    >>> multiclass_auroc(target, preds, num_classes=3, thresholds=5,
+    ...     average=None
+    ... )
+    array([0.5       , 0.33333333, 1.        ])
 
     """
     _check_thresholds(thresholds)
@@ -328,30 +335,30 @@ def _multilabel_auroc_compute(
 
     Parameters
     ----------
-        state : Union[Tuple[numpy.ndarray, numpy.ndarray], numpy.ndarray]
-            If ``state`` is a numpy array, then it is a multi-threshold confusion
-            matrix. If ``state`` is a tuple, then it must be a tuple of two numpy
-            arrays ``(target, preds)``.
-        num_labels : int
-            Number of labels.
-        thresholds : numpy.ndarray, default=None
-            Thresholds used for computing binarizing the predictions. If None,
-            then the thresholds are automatically determined by the unique values
-            in ``preds``.
-        average : Literal["micro", "macro", "weighted"], default=None
-            If ``None``, then the scores for each label are returned. Otherwise,
-            this determines the type of averaging performed on the scores. One of
-            - `micro`: Calculate metrics globally.
-            - `macro`: Calculate metrics for each label, and find their unweighted
-              mean. This does not take label imbalance into account.
-            - `weighted`: Calculate metrics for each label, and find their average,
-              weighted by support (the number of true instances for each label).
+    state : Union[Tuple[numpy.ndarray, numpy.ndarray], numpy.ndarray]
+        If ``state`` is a numpy array, then it is a multi-threshold confusion
+        matrix. If ``state`` is a tuple, then it must be a tuple of two numpy
+        arrays ``(target, preds)``.
+    num_labels : int
+        Number of labels.
+    thresholds : numpy.ndarray, default=None
+        Thresholds used for computing binarizing the predictions. If None,
+        then the thresholds are automatically determined by the unique values
+        in ``preds``.
+    average : Literal["micro", "macro", "weighted"], default=None
+        If ``None``, then the scores for each label are returned. Otherwise,
+        this determines the type of averaging performed on the scores. One of
+        - `micro`: Calculate metrics globally.
+        - `macro`: Calculate metrics for each label, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - `weighted`: Calculate metrics for each label, and find their average,
+            weighted by support (the number of true instances for each label).
 
     Returns
     -------
-        float or numpy.ndarray
-            Area under the ROC curve. If ``average`` is ``None``, then a numpy array
-            of shape (num_labels,) is returned, otherwise a float is returned.
+    float or numpy.ndarray
+        Area under the ROC curve. If ``average`` is ``None``, then a numpy array
+        of shape (num_labels,) is returned, otherwise a float is returned.
 
     """
     if average == "micro":
@@ -383,44 +390,44 @@ def multilabel_auroc(
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Estimated probabilities or decision function. If the values in ``preds``
-            are not in the range [0, 1], then they will be transformed to this range
-            via a softmax function.
-        num_labels : int
-            Number of labels.
-        thresholds : Union[int, List[float], numpy.ndarray], default=None
-            Thresholds used for binarizing the values of ``preds``.
-            If int, then the number of thresholds to use.
-            If list or array, then the thresholds to use.
-            If None, then the thresholds are automatically determined by the
-            unique values in ``preds``.
-        average : Literal["micro", "macro", "weighted"], default=None
-            If ``None``, then the scores for each label are returned. Otherwise,
-            this determines the type of averaging performed on the scores. One of
-            - `micro`: Calculate metrics globally by counting the total true
-                positives, false negatives and false positives.
-            - `macro`: Calculate metrics for each label, and find their unweighted
-                mean. This does not take label imbalance into account.
-            - `weighted``: Calculate metrics for each label, and find their average,
-                weighted by support (the number of true instances for each label).
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Estimated probabilities or decision function. If the values in ``preds``
+        are not in the range [0, 1], then they will be transformed to this range
+        via a softmax function.
+    num_labels : int
+        Number of labels.
+    thresholds : Union[int, List[float], numpy.ndarray], default=None
+        Thresholds used for binarizing the values of ``preds``.
+        If int, then the number of thresholds to use.
+        If list or array, then the thresholds to use.
+        If None, then the thresholds are automatically determined by the
+        unique values in ``preds``.
+    average : Literal["micro", "macro", "weighted"], default=None
+        If ``None``, then the scores for each label are returned. Otherwise,
+        this determines the type of averaging performed on the scores. One of
+        - `micro`: Calculate metrics globally by counting the total true
+            positives, false negatives and false positives.
+        - `macro`: Calculate metrics for each label, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - `weighted``: Calculate metrics for each label, and find their average,
+            weighted by support (the number of true instances for each label).
 
     Returns
     -------
-        float or numpy.ndarray
-            Area under the ROC curve. If ``average`` is ``None``, then a numpy array
-            of shape (num_labels,) is returned, otherwise a float is returned.
+    float or numpy.ndarray
+        Area under the ROC curve. If ``average`` is ``None``, then a numpy array
+        of shape (num_labels,) is returned, otherwise a float is returned.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multilabel_auroc
-        >>> target = [[0, 1, 0], [0, 1, 1], [1, 0, 1]]
-        >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.9], [0.8, 0.2, 0.3]]
-        >>> multilabel_auroc(target, preds, num_labels=3, thresholds=5,
-        ...     average=None)
-        array([1.  , 0.75, 0.25])
+    >>> from cyclops.evaluation.metrics.functional import multilabel_auroc
+    >>> target = [[0, 1, 0], [0, 1, 1], [1, 0, 1]]
+    >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.9], [0.8, 0.2, 0.3]]
+    >>> multilabel_auroc(target, preds, num_labels=3, thresholds=5,
+    ...     average=None)
+    array([1.  , 0.75, 0.25])
 
     """
     _check_thresholds(thresholds)
@@ -457,71 +464,67 @@ def auroc(  # pylint: disable=too-many-arguments
 ) -> Union[float, np.ndarray]:
     """Compute the area under the ROC curve for different tasks.
 
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Estimated probabilities or decision function. If ``preds`` is not in
-            the range [0, 1], a sigmoid function is applied to transform it to
-            the range [0, 1].
-        task : Literal["binary", "multiclass", "multilabel"]
-            Task type. One of ``binary``, ``multiclass``, ``multilabel``.
-        max_fpr : float, default=None
-            The maximum value of the false positive rate. If not None, the
-            a partial AUC in the range [0, max_fpr] is returned. Only used for
-            binary classification.
-        thresholds : int or list of floats or numpy.ndarray of floats, default=None
-            Thresholds used for binarizing the values of ``preds``.
-            If int, then the number of thresholds to use.
-            If list or array, then the thresholds to use.
-            If None, then the thresholds are automatically determined by the
-            unique values in ``preds``.
-        num_classes : int, default=None
-            Number of classes. This parameter is required for the ``multiclass``
-            task.
-        num_labels : int, default=None
-            Number of labels. This parameter is required for the ``multilabel``
-            task.
-        average : Literal["micro", "macro", "weighted"], default=None
-            If not None, apply the method to compute the average area under the
-            ROC curve. Only applicable for the ``multiclass`` and ``multilabel``
-            tasks. One of:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives, false negatives and false positives.
-                - ``macro``: Calculate metrics for each label, and find their unweighted
-                  mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metrics for each label, and find their
-                  average, weighted by support (accounting for label imbalance).
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Estimated probabilities or decision function. If ``preds`` is not in the
+        range [0, 1], a sigmoid function is applied to transform it to the range
+        [0, 1].
+    task : Literal["binary", "multiclass", "multilabel"]
+        Task type. One of ``binary``, ``multiclass``, ``multilabel``.
+    max_fpr : float, default=None
+        The maximum value of the false positive rate. If not None, a partial AUC
+        in the range [0, max_fpr] is returned. Only used for binary classification.
+    thresholds : int or list of floats or numpy.ndarray of floats, default=None
+        Thresholds used for binarizing the values of ``preds``.
+        If int, then the number of thresholds to use.
+        If list or array, then the thresholds to use.
+        If None, then the thresholds are automatically determined by the unique
+        values in ``preds``.
+    num_classes : int, default=None
+        Number of classes. This parameter is required for the ``multiclass`` task.
+    num_labels : int, default=None
+        Number of labels. This parameter is required for the ``multilabel`` task.
+    average : Literal["micro", "macro", "weighted"], default=None
+        If not None, apply the method to compute the average area under the
+        ROC curve. Only applicable for the ``multiclass`` and ``multilabel``
+        tasks. One of:
+        - ``micro``: Calculate metrics globally by counting the total true
+            positives, false negatives and false positives.
+        - ``macro``: Calculate metrics for each label, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their
+            average, weighted by support (accounting for label imbalance).
 
     Returns
     -------
-        auroc_score : float or numpy.ndarray
-            Area under the ROC curve. If ``average`` is None or task is ``binary``,
-            ``auroc`` is a float. Otherwise, ``auroc`` is a numpy array.
+    auroc_score : float or numpy.ndarray
+        Area under the ROC curve. If ``average`` is None or task is ``binary``,
+        ``auroc`` is a float. Otherwise, ``auroc`` is a numpy array.
 
-    Examples (binary)
-    -----------------
-        >>> from cyclops.evaluation.metrics.functional import auroc
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0.1, 0.35, 0.4, 0.8]
-        >>> auroc(target, preds, task="binary")
-        0.75
+    Examples
+    --------
+    (binary)
+    >>> from cyclops.evaluation.metrics.functional import auroc
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0.1, 0.35, 0.4, 0.8]
+    >>> auroc(target, preds, task="binary")
+    0.75
 
-    Examples (multiclass)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import auroc
-        >>> target = [0, 1, 2, 0, 1, 2]
-        >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2],
-        ...          [0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2]]
-        >>> auroc(target, preds, task="multiclass", num_classes=3, average=None)
-        array([0.5, 1. , 0.5])
+    (multiclass)
+    >>> from cyclops.evaluation.metrics.functional import auroc
+    >>> target = [0, 1, 2, 0, 1, 2]
+    >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2],
+    ...          [0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2]]
+    >>> auroc(target, preds, task="multiclass", num_classes=3, average=None)
+    array([0.5, 1. , 0.5])
 
-    Examples (multilabel)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import auroc
-        >>> target = [[0, 1], [1, 1], [0, 0], [1, 0]]
-        >>> preds = [[0.1, 0.9], [0.8, 0.2], [0.4, 0.6], [0.2, 0.8]]
-        >>> auroc(target, preds, task="multilabel", num_labels=2, average=None)
-        array([0.25, 0.5 ])
+    (multilabel)
+    >>> from cyclops.evaluation.metrics.functional import auroc
+    >>> target = [[0, 1], [1, 1], [0, 0], [1, 0]]
+    >>> preds = [[0.1, 0.9], [0.8, 0.2], [0.4, 0.6], [0.2, 0.8]]
+    >>> auroc(target, preds, task="multilabel", num_labels=2, average=None)
+    array([0.25, 0.5 ])
 
     """
     if task == "binary":

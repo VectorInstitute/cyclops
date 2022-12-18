@@ -97,7 +97,7 @@ non_interactive = true
     ignore-imports=["yes"]
 
     [tool.pylint.basic]
-    good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP"]
+    good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP", "lr"]
     good-names-rgxs=["X_.+", "x_.+", "y_.+", "df_.+"]
 
 [tool.flake8]

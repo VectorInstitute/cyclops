@@ -21,7 +21,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 
 
-def _precision_recall_reduce(  # pylint: disable=invalid-name, too-many-arguments
+def _precision_recall_reduce(  # pylint: disable=too-many-arguments
     tp: np.ndarray,
     fp: np.ndarray,
     fn: np.ndarray,
@@ -33,26 +33,26 @@ def _precision_recall_reduce(  # pylint: disable=invalid-name, too-many-argument
 
     Parameters
     ----------
-        tp : numpy.ndarray
-            True positives.
-        fp : numpy.ndarray
-            False positives.
-        fn : numpy.ndarray
-            False negatives.
-        metric : Literal["precision", "recall"]
-            Metric to compute.
-        average : Literal["micro", "macro", "weighted", None]
-            Average to apply. If None, return scores for each class.
-        zero_division : Literal["warn", 0, 1]
-            Value to return when there are no true positives or true negatives.
-            If set to "warn", this acts as 0, but warnings are also raised.
+    tp : numpy.ndarray
+        True positives.
+    fp : numpy.ndarray
+        False positives.
+    fn : numpy.ndarray
+        False negatives.
+    metric : Literal["precision", "recall"]
+        Metric to compute.
+    average : Literal["micro", "macro", "weighted", None]
+        Average to apply. If None, return scores for each class.
+    zero_division : Literal["warn", 0, 1]
+        Value to return when there are no true positives or true negatives.
+        If set to "warn", this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        scores : numpy.ndarray or float
-            Precision or recall scores. If ``average`` is None, return scores for
-            each class as a numpy.ndarray. Otherwise, return the average as a
-            float.
+    scores : numpy.ndarray or float
+        Precision or recall scores. If ``average`` is None, return scores for
+        each class as a numpy.ndarray. Otherwise, return the average as a
+        float.
 
     """
     numerator = tp
@@ -104,41 +104,42 @@ def binary_precision(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        pos_label : int, default=1
-            The label of the positive class.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    pos_label : int, default=1
+        The label of the positive class.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float
-            Precision score.
+    float
+        Precision score.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import binary_precision
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0, 1, 1, 1]
-        >>> binary_precision(target, preds)
-        0.6666666666666666
-        >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
-        >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
-        >>> binary_precision(target, preds)
-        0.6666666666666666
+    >>> from cyclops.evaluation.metrics.functional import binary_precision
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0, 1, 1, 1]
+    >>> binary_precision(target, preds)
+    0.6666666666666666
+    >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
+    >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
+    >>> binary_precision(target, preds)
+    0.6666666666666666
 
     """
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
-    target, preds = _binary_stat_scores_format(target, preds, threshold)
+    target, preds = _binary_stat_scores_format(
+        target, preds, threshold=threshold, pos_label=pos_label
+    )
 
-    # pylint: disable=invalid-name
     tp, fp, _, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
 
     return _precision_recall_reduce(
@@ -163,50 +164,49 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        num_classes : int
-            Number of classes in the dataset.
-        top_k : int, optional
-            If given, and predictions are probabilities/logits, the precision will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None], default=None
-           If ``None``, return the precision score for each class. Otherwise,
-           use one of the following options to compute the average precision score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives and false positives.
-                - ``macro``: Calculate metric for each class, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each class, and find their
-                  average weighted by the support (the number of true instances
-                  for each class). This alters "macro" to account for class
-                  imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    num_classes : int
+        Number of classes in the dataset.
+    top_k : int, optional
+        If given, and predictions are probabilities/logits, the precision will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the precision score for each class. Otherwise,
+        use one of the following options to compute the average precision score:
+        - ``micro``: Calculate metric globally from the total count of true
+            positives and false positives.
+        - ``macro``: Calculate metric for each class, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each class, and find their average
+            weighted by the support (the number of true instances for each class).
+            This alters "macro" to account for class imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        precision : float or numpy.ndarray
-            Precision score. If ``average`` is None, return a numpy.ndarray of
-            precision scores for each class.
+    precision : float or numpy.ndarray
+        Precision score. If ``average`` is None, return a numpy.ndarray of
+        precision scores for each class.
 
     Raises
     ------
-        ValueError
-            If ``average`` is not one of ``micro``, ``macro``, ``weighted``
-            or ``None``.
+    ValueError
+        If ``average`` is not one of ``micro``, ``macro``, ``weighted``
+        or ``None``.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multiclass_precision
-        >>> target = [0, 1, 2, 0]
-        >>> preds = [0, 2, 1, 0]
-        >>> multiclass_precision(target, preds, num_classes=3)
-        array([1., 0., 0.])
+    >>> from cyclops.evaluation.metrics.functional import multiclass_precision
+    >>> target = [0, 1, 2, 0]
+    >>> preds = [0, 2, 1, 0]
+    >>> multiclass_precision(target, preds, num_classes=3)
+    array([1., 0., 0.])
 
     """
     _check_average_arg(average)
@@ -215,13 +215,7 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
         target, preds, num_classes=num_classes, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
-    tp, fp, _, fn = _multiclass_stat_scores_update(
-        target,
-        preds,
-        num_classes,
-        classwise=True,
-    )
+    tp, fp, _, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
     return _precision_recall_reduce(
         tp,
@@ -251,48 +245,47 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        num_labels : int
-            Number of labels for the task.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the precision score for each label. Otherwise,
-            use one of the following options to compute the average precision score:
-                - ``micro``: Calculate metric globally from the total count of true
-                  positives and false positives.
-                - ``macro``: Calculate metric for each label, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each label, and find their
-                  average weighted by the support (the number of true instances
-                  for each label). This alters "macro" to account for label
-                  imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    num_labels : int
+        Number of labels for the task.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the precision score for each label. Otherwise,
+        use one of the following options to compute the average precision score:
+        - ``micro``: Calculate metric globally from the total count of true
+            positives and false positives.
+        - ``macro``: Calculate metric for each label, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their average
+            weighted by the support (the number of true instances for each label).
+            This alters "macro" to account for label imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        precision: float or numpy.ndarray
-            Precision score. If ``average`` is None, return a numpy.ndarray of
-            precision scores for each label.
+    precision: float or numpy.ndarray
+        Precision score. If ``average`` is None, return a numpy.ndarray of
+        precision scores for each label.
 
     Raises
     ------
-        ValueError
-            If average is not one of ``micro``, ``macro``, ``weighted``,
-            or ``None``.
+    ValueError
+        If average is not one of ``micro``, ``macro``, ``weighted``,
+        or ``None``.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multilabel_precision
-        >>> target = [[0, 1], [1, 1]]
-        >>> preds = [[0.1, 0.9], [0.2, 0.8]]
-        >>> multilabel_precision(target, preds, num_labels=2)
-        array([0., 1. ])
+    >>> from cyclops.evaluation.metrics.functional import multilabel_precision
+    >>> target = [[0, 1], [1, 1]]
+    >>> preds = [[0.1, 0.9], [0.2, 0.8]]
+    >>> multilabel_precision(target, preds, num_labels=2)
+    array([0., 1. ])
 
     """
     _check_average_arg(average)
@@ -301,13 +294,7 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
         target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
-    tp, fp, _, fn = _multilabel_stat_scores_update(
-        target,
-        preds,
-        num_labels,
-        labelwise=True,
-    )
+    tp, fp, _, fn = _multilabel_stat_scores_update(target, preds, num_labels)
 
     return _precision_recall_reduce(
         tp,
@@ -338,76 +325,75 @@ def precision(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        task : Literal["binary", "multiclass", "multilabel"]
-            Task type.
-        pos_label : int
-            Label of the positive class. Only used for binary classification.
-        num_classes : Optional[int]
-            Number of classes. Only used for multiclass classification.
-        threshold : float
-            Threshold for positive class predictions. Default is 0.5.
-        top_k : Optional[int]
-            Number of highest probability or logits predictions to consider when
-            computing multiclass or multilabel metrics. Default is None.
-        num_labels : Optional[int]
-            Number of labels. Only used for multilabel classification.
-        average : Literal["micro", "macro", "weighted", None]
-            Average to apply. If None, return scores for each class. Default is
-            None.
-            One of:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives and and false positives.
-                - ``macro``: Calculate metrics for each label/class, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metrics for each label, and find their
-                  average weighted by support (the number of true instances for
-                  each label). This alters ``macro`` to account for label imbalance.
-        zero_division : Literal["warn", 0, 1]
-            Value to return when there are no true positives or true negatives.
-            If set to ``warn``, this acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    task : Literal["binary", "multiclass", "multilabel"]
+        Task type.
+    pos_label : int
+        Label of the positive class. Only used for binary classification.
+    num_classes : Optional[int]
+        Number of classes. Only used for multiclass classification.
+    threshold : float
+        Threshold for positive class predictions. Default is 0.5.
+    top_k : Optional[int]
+        Number of highest probability or logits predictions to consider when
+        computing multiclass or multilabel metrics. Default is None.
+    num_labels : Optional[int]
+        Number of labels. Only used for multilabel classification.
+    average : Literal["micro", "macro", "weighted", None]
+        Average to apply. If None, return scores for each class. Default is
+        None.
+        One of:
+        - ``micro``: Calculate metrics globally by counting the total true
+            positives and and false positives.
+        - ``macro``: Calculate metrics for each label/class, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their
+            average weighted by support (the number of true instances for
+            each label). This alters ``macro`` to account for label imbalance.
+    zero_division : Literal["warn", 0, 1]
+        Value to return when there are no true positives or true negatives.
+        If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        precision_score : numpy.ndarray or float
-            Precision score. If ``average`` is not None or task is ``binary``,
-            return a float. Otherwise, return a numpy.ndarray of precision scores
-            for each class/label.
+    precision_score : numpy.ndarray or float
+        Precision score. If ``average`` is not None or task is ``binary``,
+        return a float. Otherwise, return a numpy.ndarray of precision scores
+        for each class/label.
 
     Raises
     ------
-        ValueError
-            If task is not one of ``binary``, ``multiclass`` or ``multilabel``.
+    ValueError
+        If task is not one of ``binary``, ``multiclass`` or ``multilabel``.
 
-    Examples (binary)
-    -----------------
-        >>> from cyclops.evaluation.metrics.functional import precision
-        >>> target = [0, 1, 1, 0]
-        >>> preds = [0.1, 0.9, 0.8, 0.3]
-        >>> precision(target, preds, task="binary")
-        1.
+    Examples
+    --------
+    (binary)
+    >>> from cyclops.evaluation.metrics.functional import precision
+    >>> target = [0, 1, 1, 0]
+    >>> preds = [0.1, 0.9, 0.8, 0.3]
+    >>> precision(target, preds, task="binary")
+    1.
 
-    Examples (multiclass)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import precision
-        >>> target = [0, 1, 2, 0, 1, 2]
-        >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1],
-        ...         [0.5, 0.3, 0.2],  [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
-        >>> precision(target, preds, task="multiclass", num_classes=3,
-        ...     average="macro")
-        0.8333333333333334
+    (multiclass)
+    >>> from cyclops.evaluation.metrics.functional import precision
+    >>> target = [0, 1, 2, 0, 1, 2]
+    >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1],
+    ...         [0.5, 0.3, 0.2],  [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
+    >>> precision(target, preds, task="multiclass", num_classes=3,
+    ...     average="macro")
+    0.8333333333333334
 
-    Examples (multilabel)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import precision
-        >>> target = [[0, 1], [1, 1]]
-        >>> preds = [[0.1, 0.9], [0.2, 0.8]]
-        >>> precision(target, preds, task="multilabel", num_labels=2,
-        ...     average="macro")
-        0.5
+    (multilabel)
+    >>> from cyclops.evaluation.metrics.functional import precision
+    >>> target = [[0, 1], [1, 1]]
+    >>> preds = [[0.1, 0.9], [0.2, 0.8]]
+    >>> precision(target, preds, task="multilabel", num_labels=2,
+    ...     average="macro")
+    0.5
 
     """
     if task == "binary":
@@ -463,35 +449,36 @@ def binary_recall(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        pos_label : int, default=1
-            Label of the positive class.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    pos_label : int, default=1
+        Label of the positive class.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float
-            Recall score.
+    float
+        Recall score.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import binary_recall
-        >>> target = [0, 1, 0, 1]
-        >>> preds = [0, 1, 1, 0]
-        >>> binary_recall(target, preds)
-        0.5
+    >>> from cyclops.evaluation.metrics.functional import binary_recall
+    >>> target = [0, 1, 0, 1]
+    >>> preds = [0, 1, 1, 0]
+    >>> binary_recall(target, preds)
+    0.5
 
     """
-    target, preds = _binary_stat_scores_format(target, preds, threshold)
+    target, preds = _binary_stat_scores_format(
+        target, preds, threshold=threshold, pos_label=pos_label
+    )
 
-    # pylint: disable=invalid-name
     tp, fp, _, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
 
     return _precision_recall_reduce(
@@ -516,53 +503,51 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        num_classes : int
-            Number of classes.
-        top_k : Optional[int]
-            If given, and predictions are probabilities/logits, the recall will
-            be computed only for the top k classes. Otherwise, ``top_k`` will be
-            set to 1.
-        average : Literal["micro", "macro", "weighted", None]
-            Average to apply. If None, return scores for each class. Default is
-            None. One of:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives and false negatives.
-                - ``macro``: Calculate metrics for each label, and find their
-                  unweighted mean. This does not take label imbalance into
-                  account.
-                - ``weighted``: Calculate metrics for each label, and find their
-                  average weighted by support (the number of true instances
-                  for each label). This alters "macro" to account for label
-                  imbalance.
-        zero_division : Literal["warn", 0, 1]
-            Value to return when there are no true positives or true negatives.
-            If set to ``warn``, this acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    num_classes : int
+        Number of classes.
+    top_k : Optional[int]
+        If given, and predictions are probabilities/logits, the recall will
+        be computed only for the top k classes. Otherwise, ``top_k`` will be
+        set to 1.
+    average : Literal["micro", "macro", "weighted", None]
+        Average to apply. If None, return scores for each class. Default is
+        None. One of:
+        - ``micro``: Calculate metrics globally by counting the total true
+            positives and false negatives.
+        - ``macro``: Calculate metrics for each label, and find their unweighted
+            mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their
+            average weighted by support (the number of true instances for each label).
+            This alters "macro" to account for label imbalance.
+    zero_division : Literal["warn", 0, 1]
+        Value to return when there are no true positives or true negatives.
+        If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float or numpy.ndarray
-            Recall score. If ``average`` is None, return a numpy.ndarray of
-            recall scores for each class.
+    float or numpy.ndarray
+        Recall score. If ``average`` is None, return a numpy.ndarray of
+        recall scores for each class.
 
 
     Raises
     ------
-        ValueError
-            If ``average`` is not one of ``micro``, ``macro``, ``weighted``
-            or ``None``.
+    ValueError
+        If ``average`` is not one of ``micro``, ``macro``, ``weighted``
+        or ``None``.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multiclass_recall
-        >>> target = [0, 1, 2, 0, 1, 2]
-        >>> preds = [[0.4, 0.1, 0.5], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6],
-        ...     [0.5, 0.3, 0.2], [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
-        >>> multiclass_recall(target, preds, num_classes=3, average="macro")
-        0.8333333333333334
+    >>> from cyclops.evaluation.metrics.functional import multiclass_recall
+    >>> target = [0, 1, 2, 0, 1, 2]
+    >>> preds = [[0.4, 0.1, 0.5], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6],
+    ...     [0.5, 0.3, 0.2], [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
+    >>> multiclass_recall(target, preds, num_classes=3, average="macro")
+    0.8333333333333334
 
     """
     _check_average_arg(average)
@@ -571,13 +556,7 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
         target, preds, num_classes=num_classes, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
-    tp, fp, _, fn = _multiclass_stat_scores_update(
-        target,
-        preds,
-        num_classes,
-        classwise=True,
-    )
+    tp, fp, _, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
     return _precision_recall_reduce(
         tp,
@@ -607,49 +586,48 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        num_labels : int
-            Number of labels in the dataset.
-        threshold : float, default=0.5
-            Threshold for deciding the positive class.
-        average : Literal["micro", "macro", "weighted", None], default=None
-            If ``None``, return the recall score for each class. Otherwise,
-            use one of the following options to compute the average score:
-                - ``micro``: Calculate metric globally from the total count of true
-                    positives and false negatives.
-                - ``macro``: Calculate metric for each label, and find their
-                    unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metric for each label, and find their
-                    average weighted by the support (the number of true instances
-                    for each label). This alters "macro" to account for label
-                    imbalance.
-        zero_division : Literal["warn", 0, 1], default="warn"
-            Value to return when there is a zero division. If set to "warn", this
-            acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    num_labels : int
+        Number of labels in the dataset.
+    threshold : float, default=0.5
+        Threshold for deciding the positive class.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If ``None``, return the recall score for each class. Otherwise,
+        use one of the following options to compute the average score:
+        - ``micro``: Calculate metric globally from the total count of true
+            positives and false negatives.
+        - ``macro``: Calculate metric for each label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metric for each label, and find their
+            average weighted by the support (the number of true instances
+            for each label). This alters "macro" to account for label imbalance.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Value to return when there is a zero division. If set to "warn", this
+        acts as 0, but warnings are also raised.
 
     Returns
     -------
-        float or numpy.ndarray
-            Recall score. If ``average`` is None, return a numpy.ndarray of
-            recall scores for each label.
+    float or numpy.ndarray
+        Recall score. If ``average`` is None, return a numpy.ndarray of
+        recall scores for each label.
 
     Raises
     ------
-        ValueError
-            If ``average`` is not one of ``micro``, ``macro``, ``weighted``
-            or ``None``.
+    ValueError
+        If ``average`` is not one of ``micro``, ``macro``, ``weighted``
+        or ``None``.
 
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multilabel_recall
-        >>> target = [1, 1, 2, 0, 2, 2]
-        >>> preds = [1, 2, 2, 0, 2, 0]
-        >>> multilabel_recall(target, preds, num_classes=3)
-        array([1.        , 0.5       , 0.66666667])
+    >>> from cyclops.evaluation.metrics.functional import multilabel_recall
+    >>> target = [1, 1, 2, 0, 2, 2]
+    >>> preds = [1, 2, 2, 0, 2, 0]
+    >>> multilabel_recall(target, preds, num_classes=3)
+    array([1.        , 0.5       , 0.66666667])
 
     """
     _check_average_arg(average)
@@ -658,13 +636,7 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
         target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
-    tp, fp, _, fn = _multilabel_stat_scores_update(
-        target,
-        preds,
-        num_labels,
-        labelwise=True,
-    )
+    tp, fp, _, fn = _multilabel_stat_scores_update(target, preds, num_labels)
 
     return _precision_recall_reduce(
         tp,
@@ -696,73 +668,71 @@ def recall(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth (correct) target values.
-        preds : ArrayLike
-            Predictions as returned by a classifier.
-        task : Literal["binary", "multiclass", "multilabel"]
-            Task type.
-        pos_label : int
-            Label of the positive class. Only used for binary classification.
-        num_classes : Optional[int]
-            Number of classes. Only used for multiclass classification.
-        threshold : float, default=0.5
-            Threshold for positive class predictions.
-        top_k : Optional[int]
-            Number of highest probability or logits predictions to consider when
-            computing multiclass or multilabel metrics. Default is None.
-        num_labels : Optional[int]
-            Number of labels. Only used for multilabel classification.
-        average : Literal["micro", "macro", "weighted", None]
-            Average to apply. If None, return scores for each class. Default is
-            None.
-            One of:
-                - ``micro``: Calculate metrics globally by counting the total true
-                  positives and false negatives.
-                - ``macro``: Calculate metrics for each label, and find their
-                  unweighted mean. This does not take label imbalance into account.
-                - ``weighted``: Calculate metrics for each label, and find their
-                  average weighted by support (the number of true instances for
-                  each label). This alters ``macro`` to account for label imbalance.
-        zero_division : Literal["warn", 0, 1]
-            Value to return when there are no true positives or true negatives.
-            If set to ``warn``, this acts as 0, but warnings are also raised.
+    target : ArrayLike
+        Ground truth (correct) target values.
+    preds : ArrayLike
+        Predictions as returned by a classifier.
+    task : Literal["binary", "multiclass", "multilabel"]
+        Task type.
+    pos_label : int
+        Label of the positive class. Only used for binary classification.
+    num_classes : Optional[int]
+        Number of classes. Only used for multiclass classification.
+    threshold : float, default=0.5
+        Threshold for positive class predictions.
+    top_k : Optional[int]
+        Number of highest probability or logits predictions to consider when
+        computing multiclass or multilabel metrics. Default is None.
+    num_labels : Optional[int]
+        Number of labels. Only used for multilabel classification.
+    average : Literal["micro", "macro", "weighted", None]
+        Average to apply. If None, return scores for each class. Default is
+        None. One of:
+        - ``micro``: Calculate metrics globally by counting the total true
+        positives and false negatives.
+        - ``macro``: Calculate metrics for each label, and find their
+        unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their
+        average weighted by support (the number of true instances for
+        each label). This alters ``macro`` to account for label imbalance.
+    zero_division : Literal["warn", 0, 1]
+        Value to return when there are no true positives or true negatives.
+        If set to ``warn``, this acts as 0, but warnings are also raised.
 
     Returns
     -------
-        recall_score : float or numpy.ndarray
-            Recall score. If ``average`` is not None or ``task`` is ``binary``,
-            return a float. Otherwise, return a numpy.ndarray of recall scores
-            for each class/label.
+    recall_score : float or numpy.ndarray
+        Recall score. If ``average`` is not None or ``task`` is ``binary``,
+        return a float. Otherwise, return a numpy.ndarray of recall scores
+        for each class/label.
 
     Raises
     ------
-        ValueError
-            If ``task`` is not one of ``binary``, ``multiclass`` or ``multilabel``.
+    ValueError
+        If ``task`` is not one of ``binary``, ``multiclass`` or ``multilabel``.
 
-    Examples (binary)
-    -----------------
-        >>> from cyclops.evaluation.metrics.functional import recall
-        >>> target = [0, 1, 1, 0, 1]
-        >>> preds = [0.4, 0.2, 0.0, 0.6, 0.9]
-        >>> recall(target, preds, task="binary")
-        0.3333333333333333
+    Examples
+    --------
+    (binary)
+    >>> from cyclops.evaluation.metrics.functional import recall
+    >>> target = [0, 1, 1, 0, 1]
+    >>> preds = [0.4, 0.2, 0.0, 0.6, 0.9]
+    >>> recall(target, preds, task="binary")
+    0.3333333333333333
 
-    Examples (multiclass)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import recall
-        >>> target = [1, 1, 2, 0, 2, 2]
-        >>> preds = [1, 2, 2, 0, 2, 0]
-        >>> recall(target, preds, task="multiclass", num_classes=3)
-        array([1.        , 0.5       , 0.66666667])
+    (multiclass)
+    >>> from cyclops.evaluation.metrics.functional import recall
+    >>> target = [1, 1, 2, 0, 2, 2]
+    >>> preds = [1, 2, 2, 0, 2, 0]
+    >>> recall(target, preds, task="multiclass", num_classes=3)
+    array([1.        , 0.5       , 0.66666667])
 
-    Examples (multilabel)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import recall
-        >>> target = [[1, 0, 1], [0, 1, 0]]
-        >>> preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]
-        >>> recall(target, preds, task="multilabel", num_labels=3)
-        array([0., 1., 0.])
+    (multilabel)
+    >>> from cyclops.evaluation.metrics.functional import recall
+    >>> target = [[1, 0, 1], [0, 1, 0]]
+    >>> preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]
+    >>> recall(target, preds, task="multilabel", num_labels=3)
+    array([0., 1., 0.])
 
     """
     if task == "binary":

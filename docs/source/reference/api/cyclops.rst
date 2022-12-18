@@ -13,6 +13,7 @@ Subpackages
    :maxdepth: 4
 
    cyclops.evaluate
+   cyclops.monitor
    cyclops.process
    cyclops.query
    cyclops.utils

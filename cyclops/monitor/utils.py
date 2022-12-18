@@ -24,7 +24,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
 from cyclops.models.neural_nets.rnn import RNNModel
-from cyclops.models.wrapper import SKModel
+from cyclops.models.wrappers import SKModel
 
 
 def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):

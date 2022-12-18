@@ -22,11 +22,12 @@ from cyclops.evaluate.metrics.utils import (
 )
 
 
-def _stat_scores_compute(  # pylint: disable=invalid-name
+def _stat_scores_compute(
     tp: Union[np.ndarray, np.int_],
     fp: Union[np.ndarray, np.int_],
     tn: Union[np.ndarray, np.int_],
     fn: Union[np.ndarray, np.int_],
+    classwise: Optional[bool] = True,
 ) -> np.ndarray:
     """Compute true positives, false positives, true negatives and false negatives.
 
@@ -34,20 +35,29 @@ def _stat_scores_compute(  # pylint: disable=invalid-name
 
     Parameters
     ----------
-        tp : numpy.ndarray or numpy.int_
-            True positives.
-        fp : numpy.ndarray or numpy.int_
-            False positives.
-        tn : numpy.ndarray or numpy.int_
-            True negatives.
-        fn : numpy.ndarray or numpy.int_
-            False negatives.
+    tp : numpy.ndarray or numpy.int_
+        True positives.
+    fp : numpy.ndarray or numpy.int_
+        False positives.
+    tn : numpy.ndarray or numpy.int_
+        True negatives.
+    fn : numpy.ndarray or numpy.int_
+        False negatives.
+    classwise : bool, default=True
+        If True, compute the stat scores for each class separately. Otherwise,
+        compute the stat scores for the whole array.
 
     Returns
     -------
-        The stat scores.
+    The stat scores.
 
     """
+    if not classwise:
+        tp = tp.sum()
+        fp = fp.sum()
+        tn = tn.sum()
+        fn = fn.sum()
+
     if tp.ndim == 1 and tp.size == 1:  # 1D array with 1 element
         stats = [tp, fp, tn, fn, tp + fn]
     else:
@@ -68,7 +78,6 @@ def _stat_scores_from_confmat(
     target: np.ndarray,
     preds: np.ndarray,
     labels: Optional[ArrayLike] = None,
-    classwise: Optional[bool] = False,
 ) -> Tuple[
     Union[np.ndarray, np.int_],
     Union[np.ndarray, np.int_],
@@ -79,22 +88,18 @@ def _stat_scores_from_confmat(
 
     Parameters
     ----------
-        preds : numpy.ndarray
-            Predictions.
-        target : numpy.ndarray
-            Ground truth.
-        labels : numpy.ndarray, default=None
-            The set of labels to include.
-        classwise : bool, default=True
-            If True, compute the stat scores for each class separately. Otherwise,
-            compute the stat scores for the whole array.
+    preds : numpy.ndarray
+        Predictions.
+    target : numpy.ndarray
+        Ground truth.
+    labels : numpy.ndarray, default=None
+        The set of labels to include.
 
     Returns
     -------
-        Tuple of true positives, false positives, true negatives and false negatives.
+    Tuple of true positives, false positives, true negatives and false negatives.
 
     """
-    # pylint: disable=invalid-name
     confmat = multilabel_confusion_matrix(
         target, preds, labels=labels
     )  # shape: (n_classes, 2, 2)
@@ -103,12 +108,6 @@ def _stat_scores_from_confmat(
     fn = confmat[:, 1, 0]
     tp = confmat[:, 1, 1]
     fp = confmat[:, 0, 1]
-
-    if not classwise:
-        tp = tp.sum()
-        fp = fp.sum()
-        tn = tn.sum()
-        fn = fn.sum()
 
     return (
         tp.astype(np.int_),
@@ -123,20 +122,20 @@ def _binary_stat_scores_args_check(threshold: float, pos_label: int) -> None:
 
     Parameters
     ----------
-        threshold : float
-            Threshold for converting logits and probability predictions to binary
-            [1, 0].
-        pos_label : int
-            The positive label to report.
+    threshold : float
+        Threshold for converting logits and probability predictions to binary
+        [1, 0].
+    pos_label : int
+        The positive label to report.
 
     Returns
     -------
-        None
+    None
 
     Raises
     ------
-        ValueError
-            If the threshold is not in [0, 1] or if the pos_label is not 0 or 1.
+    ValueError
+        If the threshold is not in [0, 1] or if the pos_label is not 0 or 1.
 
     """
     if not 0.0 <= threshold <= 1.0:
@@ -147,7 +146,7 @@ def _binary_stat_scores_args_check(threshold: float, pos_label: int) -> None:
 
 
 def _binary_stat_scores_format(
-    target: ArrayLike, preds: ArrayLike, threshold: float
+    target: ArrayLike, preds: ArrayLike, threshold: float, pos_label: int
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Format the input for computing binary stat scores.
 
@@ -157,36 +156,50 @@ def _binary_stat_scores_format(
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth.
-        preds : ArrayLike
-            Predictions.
-        threshold : float
-            Threshold for converting logits and probability predictions to binary
-            [1, 0].
+    target : ArrayLike
+        Ground truth.
+    preds : ArrayLike
+        Predictions.
+    threshold : float
+        Threshold for converting logits and probability predictions to binary
+        [1, 0].
+    pos_label : int
+        The positive label to report.
 
     Returns
     -------
-        Tuple[numpy.ndarray, numpy.ndarray]
-            The formatted target and preds as numpy.ndarray.
+    Tuple[numpy.ndarray, numpy.ndarray]
+        The formatted target and preds as numpy.ndarray.
 
     Raises
     ------
-        ValueError
-            If the target and preds are not binary.
+    ValueError
+        If the target and preds are not binary.
 
-        ValueError
-            If the target and preds have non-binary values.
+    ValueError
+        If the target and preds have non-binary values.
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
         target, preds
     )
 
-    if type_target != "binary" or type_preds not in ["binary", "continuous"]:
+    if type_target != "binary":
+        raise ValueError(f"The argument `target` must be binary, got {type_target}")
+
+    if type_preds == "continuous-multioutput":
+        assert preds.shape[-1] == 2, (
+            "The argument `preds` must either be a 1D array or a 2D array with "
+            f"exactly 2 columns, got an array with shape: {preds.shape}."
+        )
+        preds = preds[
+            ..., pos_label
+        ]  # keep only the probabilities for the positive class
+        type_preds = "continuous"
+
+    if type_preds not in ["binary", "continuous"]:
         raise ValueError(
-            "The arguments `target` and `preds` must be binary or continuous, "
-            f"got {type_target} and {type_preds} respectively."
+            f"The arguments `preds` must be binary or continuous, got {type_preds}"
         )
 
     # check the number of classes
@@ -230,26 +243,26 @@ def _binary_stat_scores_update(
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth.
-        preds : ArrayLike
-            Predictions.
-        pos_label : int, default=1
-            The positive label to report. Can be either 0, 1.
+    target : ArrayLike
+        Ground truth.
+    preds : ArrayLike
+        Predictions.
+    pos_label : int, default=1
+        The positive label to report. Can be either 0, 1.
 
     Returns
     -------
-        Tuple[Union[numpy.ndarray, numpy.int_], Union[numpy.ndarray, numpy.int_],
-        Union[numpy.ndarray, numpy.int_], Union[numpy.ndarray, numpy.int_]]
-            The true positives, false positives, true negatives and false negatives.
+    Tuple[Union[numpy.ndarray, numpy.int_], Union[numpy.ndarray, numpy.int_],
+    Union[numpy.ndarray, numpy.int_], Union[numpy.ndarray, numpy.int_]]
+        The true positives, false positives, true negatives and false negatives.
 
     Raises
     ------
-        ValueError
-            If the target and preds are not numeric.
+    ValueError
+        If the target and preds are not numeric.
 
     """
-    return _stat_scores_from_confmat(target, preds, labels=[pos_label], classwise=True)
+    return _stat_scores_from_confmat(target, preds, labels=[pos_label])
 
 
 def binary_stat_scores(
@@ -262,49 +275,48 @@ def binary_stat_scores(
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth.
-        preds : ArrayLike
-            Predictions.
-        pos_label : int, default=1
-            The label to use for the positive class.
-        threshold : float, default=0.5
-            The threshold to use for converting the predictions to binary
-            values. Logits will be converted to probabilities using the sigmoid
-            function.
+    target : ArrayLike
+        Ground truth.
+    preds : ArrayLike
+        Predictions.
+    pos_label : int, default=1
+        The label to use for the positive class.
+    threshold : float, default=0.5
+        The threshold to use for converting the predictions to binary
+        values. Logits will be converted to probabilities using the sigmoid
+        function.
 
     Returns
     -------
-        numpy.ndarray
-            The true positives, false positives, true negatives and false negatives
-            and support in that order.
+    numpy.ndarray
+        The true positives, false positives, true negatives and false negatives
+        and support in that order.
 
     Raises
     ------
-        ValueError
-            If the threshold is not in [0, 1] or if the pos_label is not 0 or 1.
+    ValueError
+        If the threshold is not in [0, 1] or if the pos_label is not 0 or 1.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import binary_stat_scores
-        >>> target = [0, 1, 1, 0]
-        >>> preds = [0, 1, 0, 0]
-        >>> binary_stat_scores(target, preds)
-        array([1, 0, 2, 1, 2])
+    >>> from cyclops.evaluation.metrics.functional import binary_stat_scores
+    >>> target = [0, 1, 1, 0]
+    >>> preds = [0, 1, 0, 0]
+    >>> binary_stat_scores(target, preds)
+    array([1, 0, 2, 1, 2])
 
     """
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold
+        target=target, preds=preds, threshold=threshold, pos_label=pos_label
     )
 
-    # pylint: disable=invalid-name
     tp, fp, tn, fn = _binary_stat_scores_update(
         target=target, preds=preds, pos_label=pos_label
     )
 
-    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
+    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=True)
 
 
 def _multiclass_stat_scores_format(
@@ -318,33 +330,33 @@ def _multiclass_stat_scores_format(
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth.
-        preds : ArrayLike
-            Predictions.
-        num_classes : int
-            The total number of classes for the problem.
-        top_k : int
-            The number of top predictions to consider when computing the statistics.
-            Defaults to 1.
+    target : ArrayLike
+        Ground truth.
+    preds : ArrayLike
+        Predictions.
+    num_classes : int
+        The total number of classes for the problem.
+    top_k : int
+        The number of top predictions to consider when computing the statistics.
+        Defaults to 1.
 
     Returns
     -------
-        Tuple[numpy.ndarray, numpy.ndarray]
-            The formatted target and preds.
+    Tuple[numpy.ndarray, numpy.ndarray]
+        The formatted target and preds.
 
     Raises
     ------
-        ValueError
-            If the target is not in binary (with maximum label > 1) or multiclass
-            format.
-        RuntimeError
-            If more unique values are detected in `target` than `num_classes`.
-        ValueError
-            If the predictions are not in multiclass or continuous-multioutput
-            (logits or probabilites) format.
-        RuntimeError
-            If more unique values are detected in `preds` than `num_classes`.
+    ValueError
+        If the target is not in binary (with maximum label > 1) or multiclass
+        format.
+    RuntimeError
+        If more unique values are detected in `target` than `num_classes`.
+    ValueError
+        If the predictions are not in multiclass or continuous-multioutput
+        (logits or probabilites) format.
+    RuntimeError
+        If more unique values are detected in `preds` than `num_classes`.
 
     """
     # convert target and preds to numpy arrays
@@ -408,7 +420,6 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
     target: np.ndarray,
     preds: np.ndarray,
     num_classes: int,
-    classwise: Optional[bool] = True,
 ) -> Tuple[
     Union[np.ndarray, np.int_],
     Union[np.ndarray, np.int_],
@@ -419,30 +430,26 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : numpy.ndarray
-            Ground truth.
-        preds : numpy.ndarray
-            Predictions.
-        num_classes : int
-            The total number of classes for the problem.
-        classwise : bool, default=True
-            Whether to return the statistics for each class or sum over all classes.
+    target : numpy.ndarray
+        Ground truth.
+    preds : numpy.ndarray
+        Predictions.
+    num_classes : int
+        The total number of classes for the problem.
 
     Returns
     -------
-        Tuple[Union[numpy.ndarray, numpy.int_], Union[numpy.ndarray, numpy.int_],
-        Union[numpy.ndarray, numpy.int_], Union[numpy.ndarray, numpy.int_]]
-            The true positives, false positives, true negatives and false negatives.
+    Tuple[Union[numpy.ndarray, numpy.int_], Union[numpy.ndarray, numpy.int_],
+    Union[numpy.ndarray, numpy.int_], Union[numpy.ndarray, numpy.int_]]
+        The true positives, false positives, true negatives and false negatives.
 
     Raises
     ------
-        ValueError
-            If the input target and preds are not numeric.
+    ValueError
+        If the input target and preds are not numeric.
 
     """
-    return _stat_scores_from_confmat(
-        target, preds, labels=np.arange(num_classes), classwise=classwise
-    )
+    return _stat_scores_from_confmat(target, preds, labels=np.arange(num_classes))
 
 
 def multiclass_stat_scores(  # pylint: disable=too-many-arguments
@@ -456,51 +463,47 @@ def multiclass_stat_scores(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            The ground truth values.
-        preds : ArrayLike
-            The predictions. If determined to be in continuous format, will be
-            converted to multiclass using the ``top_k`` parameter.
-        num_classes : int
-            The total number of classes for the problem.
-        top_k : Optional[int], default=None
-            The number of top predictions to consider when computing the
-            stat scores. If ``None``, it is assumed to be 1.
-        classwise : bool, default=True
-            Whether to return the stat scores for each class or sum over all
-            classes.
+    target : ArrayLike
+        The ground truth values.
+    preds : ArrayLike
+        The predictions. If determined to be in continuous format, will be
+        converted to multiclass using the ``top_k`` parameter.
+    num_classes : int
+        The total number of classes for the problem.
+    top_k : Optional[int], default=None
+        The number of top predictions to consider when computing the
+        stat scores. If ``None``, it is assumed to be 1.
+    classwise : bool, default=True
+        Whether to return the stat scores for each class or sum over all
+        classes.
 
     Returns
     -------
-        numpy.nadarray
-            The number of true positives, false positives, true negatives, false
-            negatives and support. If ``classwise`` is ``True``, the shape is
-            ``(num_classes, 5)``. Otherwise, the shape is ``(5,)``
+    numpy.nadarray
+        The number of true positives, false positives, true negatives, false
+        negatives and support. If ``classwise`` is ``True``, the shape is
+        ``(num_classes, 5)``. Otherwise, the shape is ``(5,)``
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multiclass_stat_scores
-        >>> target = [0, 1, 2, 2, 2]
-        >>> preds = [0, 2, 1, 2, 0]
-        >>> multiclass_stat_scores(target, preds, num_classes=3)
-        array([[1, 1, 3, 0, 1],
-               [0, 1, 3, 1, 1],
-               [1, 1, 1, 2, 3]])
+    >>> from cyclops.evaluation.metrics.functional import multiclass_stat_scores
+    >>> target = [0, 1, 2, 2, 2]
+    >>> preds = [0, 2, 1, 2, 0]
+    >>> multiclass_stat_scores(target, preds, num_classes=3)
+    array([[1, 1, 3, 0, 1],
+            [0, 1, 3, 1, 1],
+            [1, 1, 1, 2, 3]])
 
     """
     target, preds = _multiclass_stat_scores_format(
         target=target, preds=preds, num_classes=num_classes, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
     tp, fp, tn, fn = _multiclass_stat_scores_update(
-        target=target,
-        preds=preds,
-        num_classes=num_classes,
-        classwise=classwise,
+        target=target, preds=preds, num_classes=num_classes
     )
 
-    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn)
+    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=classwise)
 
 
 def _multilabel_stat_scores_format(
@@ -514,32 +517,32 @@ def _multilabel_stat_scores_format(
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth.
-        preds : ArrayLike
-            Predictions.
-        num_labels : int
-            The total number of labels for the problem.
-        threshold : float, default=0.5
-            Threshold value for binarizing the predictions.
-        top_k : int, default=None
-            The number of top predictions to consider when computing the statistics.
+    target : ArrayLike
+        Ground truth.
+    preds : ArrayLike
+        Predictions.
+    num_labels : int
+        The total number of labels for the problem.
+    threshold : float, default=0.5
+        Threshold value for binarizing the predictions.
+    top_k : int, default=None
+        The number of top predictions to consider when computing the statistics.
 
     Returns
     -------
-        Tuple[numpy.ndarray, numpy.ndarray]
-            The formatted target and preds.
+    Tuple[numpy.ndarray, numpy.ndarray]
+        The formatted target and preds.
 
     Raises
     ------
-        ValueError
-            If the target is not in multilabel format.
-        ValueError
-            If the predictions are not in multilabel or continuous-multioutput
-            (probabilities or logits) format.
-        RuntimeError
-            If the number of labels implied by the predictions is inconsistent with
-            ``num_labels``.
+    ValueError
+        If the target is not in multilabel format.
+    ValueError
+        If the predictions are not in multilabel or continuous-multioutput
+        (probabilities or logits) format.
+    RuntimeError
+        If the number of labels implied by the predictions is inconsistent with
+        ``num_labels``.
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
@@ -585,7 +588,6 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     num_labels: int,
-    labelwise: Optional[bool] = False,
 ) -> Tuple[
     Union[np.ndarray, np.int_],
     Union[np.ndarray, np.int_],
@@ -596,30 +598,28 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth.
-        preds : ArrayLike
-            Predictions.
-        num_labels : int
-            The total number of labels for the problem.
-         labelwise : bool, default=False
-            Whether to return the statistics for each label or sum over all labels.
+    target : ArrayLike
+        Ground truth.
+    preds : ArrayLike
+        Predictions.
+    num_labels : int
+        The total number of labels for the problem.
+        labelwise : bool, default=False
+        Whether to return the statistics for each label or sum over all labels.
 
     Returns
     -------
-        numpy.ndarray
-            The number of true positives, false positives, true negatives and false
-            negatives.
+    numpy.ndarray
+        The number of true positives, false positives, true negatives and false
+        negatives.
 
     Raises
     ------
-        ValueError
-            If the input target and preds are not numeric.
+    ValueError
+        If the input target and preds are not numeric.
 
     """
-    return _stat_scores_from_confmat(
-        target, preds, labels=np.arange(num_labels), classwise=labelwise
-    )
+    return _stat_scores_from_confmat(target, preds, labels=np.arange(num_labels))
 
 
 def multilabel_stat_scores(  # pylint: disable=too-many-arguments
@@ -634,41 +634,41 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth.
-        preds : ArrayLike
-            Predictions.
-        num_labels : int
-            The total number of labels for the problem.
-        threshold : float, default=0.5
-            Threshold value for binarizing predictions that are probabilities or
-            logits. A sigmoid function is applied if the predictions are logits.
-        top_k : int, default=None
-            The number of top predictions to consider when computing the statistics.
-        labelwise : bool, default=False
-            Whether to return the stat scores for each label or sum over all labels.
+    target : ArrayLike
+        Ground truth.
+    preds : ArrayLike
+        Predictions.
+    num_labels : int
+        The total number of labels for the problem.
+    threshold : float, default=0.5
+        Threshold value for binarizing predictions that are probabilities or
+        logits. A sigmoid function is applied if the predictions are logits.
+    top_k : int, default=None
+        The number of top predictions to consider when computing the statistics.
+    labelwise : bool, default=False
+        Whether to return the stat scores for each label or sum over all labels.
 
     Returns
     -------
-        numpy.ndarray
-            The number of true positives, false positives, true negatives and false
-            negatives and the support. The shape of the array is ``(5, num_labels)``
-            if ``labelwise=True`` and ``(5,)`` otherwise.
+    numpy.ndarray
+        The number of true positives, false positives, true negatives and false
+        negatives and the support. The shape of the array is ``(5, num_labels)``
+        if ``labelwise=True`` and ``(5,)`` otherwise.
 
     Raises
     ------
-        ValueError
-            If ``threshold`` is not between ``0`` and ``1``.
+    ValueError
+        If ``threshold`` is not between ``0`` and ``1``.
 
     Examples
     --------
-        >>> from cyclops.evaluation.metrics.functional import multilabel_stat_scores
-        >>> target = [[0, 1, 1], [1, 0, 1]]
-        >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
-        >>> multilabel_stat_scores(target, preds, num_labels=3)
-        array([[1, 0, 1, 0, 1],
-               [1, 0, 1, 0, 1],
-               [2, 0, 0, 0, 2]])
+    >>> from cyclops.evaluation.metrics.functional import multilabel_stat_scores
+    >>> target = [[0, 1, 1], [1, 0, 1]]
+    >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
+    >>> multilabel_stat_scores(target, preds, num_labels=3)
+    array([[1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1],
+            [2, 0, 0, 0, 2]])
 
     """
     _binary_stat_scores_args_check(threshold=threshold, pos_label=1)
@@ -681,15 +681,11 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
         top_k=top_k,
     )
 
-    # pylint: disable=invalid-name
     tp, fp, tn, fn = _multilabel_stat_scores_update(
-        target=target,
-        preds=preds,
-        num_labels=num_labels,
-        labelwise=labelwise,
+        target=target, preds=preds, num_labels=num_labels
     )
 
-    return _stat_scores_compute(tp, fp, tn, fn)
+    return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=labelwise)
 
 
 def stat_scores(  # pylint: disable=too-many-arguments
@@ -711,70 +707,69 @@ def stat_scores(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-        target : ArrayLike
-            Ground truth.
-        preds : ArrayLike
-            Predictions.
-        task : Literal["binary", "multiclass", "multilabel"]
-            The task type. Can be either ``binary``, ``multiclass`` or
-            ``multilabel``.
-        pos_label : int, default=1
-            The positive label to report. Only used for binary tasks.
-        threshold : float, default=0.5
-            The threshold to use for binarizing the predictions if logits or
-            probabilities are provided. If logits are provided, a sigmoid function
-            is applied prior to binarization. Used for binary and multilabel tasks.
-        num_classes : int
-            The number of classes for the problem. Required for multiclass tasks.
-        classwise : bool, default=True
-            Whether to return the stat scores for each class or sum over all
-            classes. Only used for multiclass tasks.
-        top_k : int, default=None
-            The number of top predictions to consider when computing the statistics.
-            If ``None``, ``top_k`` is set to 1. Used for multiclass and multilabel
-            tasks.
-        num_labels : int
-            The number of labels. Only used for multilabel tasks.
-        labelwise : bool, default=False
-            Whether to compute the stat scores labelwise. Only used for multilabel
-            tasks.
+    target : ArrayLike
+        Ground truth.
+    preds : ArrayLike
+        Predictions.
+    task : Literal["binary", "multiclass", "multilabel"]
+        The task type. Can be either ``binary``, ``multiclass`` or
+        ``multilabel``.
+    pos_label : int, default=1
+        The positive label to report. Only used for binary tasks.
+    threshold : float, default=0.5
+        The threshold to use for binarizing the predictions if logits or
+        probabilities are provided. If logits are provided, a sigmoid function
+        is applied prior to binarization. Used for binary and multilabel tasks.
+    num_classes : int
+        The number of classes for the problem. Required for multiclass tasks.
+    classwise : bool, default=True
+        Whether to return the stat scores for each class or sum over all
+        classes. Only used for multiclass tasks.
+    top_k : int, default=None
+        The number of top predictions to consider when computing the statistics.
+        If ``None``, ``top_k`` is set to 1. Used for multiclass and multilabel
+        tasks.
+    num_labels : int
+        The number of labels. Only used for multilabel tasks.
+    labelwise : bool, default=False
+        Whether to compute the stat scores labelwise. Only used for multilabel
+        tasks.
 
     Returns
     -------
-        scores : numpy.ndarray
-            The stat scores - true positives, false positives, true negatives,
-            false negatives and support. For binary tasks, the shape is (5,).
-            For multiclass tasks, the shape is (n_classes, 5) if ``classwise`` is
-            True, otherwise (5,). For multilabel tasks, the shape is (n_labels, 5)
-            if ``labelwise`` is True, otherwise (n_classes, 5).
+    scores : numpy.ndarray
+        The stat scores - true positives, false positives, true negatives,
+        false negatives and support. For binary tasks, the shape is (5,).
+        For multiclass tasks, the shape is (n_classes, 5) if ``classwise`` is
+        True, otherwise (5,). For multilabel tasks, the shape is (n_labels, 5)
+        if ``labelwise`` is True, otherwise (n_classes, 5).
 
-    Examples (binary)
-    -----------------
-        >>> from cyclops.evaluation.metrics.functional import tat_scores
-        >>> target = [0, 1, 1, 0]
-        >>> preds = [0, 1, 0, 0]
-        >>> stat_scores(target, preds, task="binary")
-        array([1, 0, 2, 1, 2])
+    Examples
+    --------
+    (binary)
+    >>> from cyclops.evaluation.metrics.functional import tat_scores
+    >>> target = [0, 1, 1, 0]
+    >>> preds = [0, 1, 0, 0]
+    >>> stat_scores(target, preds, task="binary")
+    array([1, 0, 2, 1, 2])
 
-    Examples (multiclass)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import multiclass_stat_scores
-        >>> target = [0, 1, 2, 2, 2]
-        >>> preds = [0, 2, 1, 2, 0]
-        >>> stat_scores(target, preds, task="multiclass", num_classes=3)
-        array([[1, 1, 3, 0, 1],
-               [0, 1, 3, 1, 1],
-               [1, 1, 1, 2, 3]])
+    (multiclass)
+    >>> from cyclops.evaluation.metrics.functional import multiclass_stat_scores
+    >>> target = [0, 1, 2, 2, 2]
+    >>> preds = [0, 2, 1, 2, 0]
+    >>> stat_scores(target, preds, task="multiclass", num_classes=3)
+    array([[1, 1, 3, 0, 1],
+            [0, 1, 3, 1, 1],
+            [1, 1, 1, 2, 3]])
 
-    Examples (multilabel)
-    ---------------------
-        >>> from cyclops.evaluation.metrics.functional import stat_scores
-        >>> target = [[0, 1, 1], [1, 0, 1]]
-        >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
-        >>> stat_scores(target, preds, task="multilabel", num_labels=3)
-        array([[1, 0, 1, 0, 1],
-               [1, 0, 1, 0, 1],
-               [2, 0, 0, 0, 2]])
+    (multilabel)
+    >>> from cyclops.evaluation.metrics.functional import stat_scores
+    >>> target = [[0, 1, 1], [1, 0, 1]]
+    >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
+    >>> stat_scores(target, preds, task="multilabel", num_labels=3)
+    array([[1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1],
+            [2, 0, 0, 0, 2]])
 
     """
     if task == "binary":

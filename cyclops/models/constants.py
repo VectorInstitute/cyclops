@@ -12,7 +12,7 @@ DATA_TYPES = ["tabular", "temporal", "combined"]
 
 TASKS = {"binary_classification": ["mortality_decompensation", "delirium"]}
 
-CONFIG_FILE = join(os.path.dirname(__file__), "configs", "models.yaml")
+CONFIG_ROOT = join(os.path.dirname(__file__), "configs")
 
 DATA_DIR = join("/mnt/data", "cyclops", "use_cases")
 SAVE_DIR = join("/mnt/exp", "cyclops", "checkpoints")
