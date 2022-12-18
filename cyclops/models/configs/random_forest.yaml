@@ -1,10 +1,6 @@
 model_params:
   n_estimators: 10
   n_jobs: -1
-fit_params:
-  best_model: True
-  best_model_params:
-    n_estimators: [5, 10, 50, 100, 500]
-  best_model_metric: 'roc_auc'
-test_params:
-  flatten: True
+best_model_params:
+  n_estimators: [5, 10, 50, 100, 500]
+  metric: 'roc_auc'
