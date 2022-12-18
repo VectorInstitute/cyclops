@@ -10,13 +10,13 @@ from cyclops.models.wrappers import WrappedModel
 class Evaluator:
     """Evaluate one or more models on a dataset.
 
-    Parameters
+    Attributes
     ----------
-    models : Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
+    models : Dict[str, WrappedModel]
         Model(s) to evaluate.
     data : NamedTuple
         Dataset to evaluate the model(s) on.
-    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection]
+    metrics : MetricCollection
         Metric(s) to use for evaluation.
 
     warning:: This class is experimental and will change in the future.
@@ -29,6 +29,18 @@ class Evaluator:
         data: NamedTuple,
         metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
     ):
+        """Initialize the Evaluator class.
+
+        Parameters
+        ----------
+        models : Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
+            Model(s) to evaluate.
+        data : NamedTuple
+            Dataset to evaluate the model(s) on.
+        metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection]
+            Metric(s) to use for evaluation.
+
+        """
         self.models = self._prepare_models(models)
         self.data = data
         self.metrics = self._prepare_metrics(metrics)
