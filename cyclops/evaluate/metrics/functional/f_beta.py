@@ -725,8 +725,6 @@ def f1_score(  # pylint: disable=too-many-arguments
     >>> f1_score(target, preds, task="binary")
     0.5
 
-    Examples
-    --------
     (multiclass)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [0, 1, 2, 0]
@@ -734,8 +732,6 @@ def f1_score(  # pylint: disable=too-many-arguments
     >>> f1_score(target, preds, task="multiclass", num_classes=3)
     array([0.66666667, 0.8       , 0.        ])
 
-    Examples
-    --------
     (multilabel)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [[0, 1, 1], [1, 0, 0]]
