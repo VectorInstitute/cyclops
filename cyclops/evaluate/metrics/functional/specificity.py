@@ -44,6 +44,7 @@ def _specificity_reduce(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If None, return the specificity for each class, otherwise return the
         average specificity. Average options are:
+
         - ``micro``: Calculate metrics globally by counting the total
             true positives, false negatives, false positives and true negatives.
         - ``macro``: Calculate metrics for each label, and find their
@@ -175,6 +176,7 @@ def multiclass_specificity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If None, return the specificity for each class, otherwise return the
         average specificity. Average options are:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives, false negatives, false positives and true negatives.
         - ``macro``: Calculate metrics for each class, and find their unweighted
@@ -250,6 +252,7 @@ def multilabel_specificity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If None, return the specificity for each class, otherwise return the
         average specificity. Average options are:
+
         - ``micro``: Calculate metrics globally by counting the total
             true positives, false negatives, false positives and true
             negatives.
@@ -337,6 +340,7 @@ def specificity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives, false positives, false negatives and true negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -364,14 +368,14 @@ def specificity(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import specificity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.9, 0.05, 0.05, 0.35, 0.05]
     >>> specificity(target, preds, task="binary")
     0.5
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import specificity
     >>> target = [0, 1, 2, 0, 1]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
@@ -379,7 +383,7 @@ def specificity(  # pylint: disable=too-many-arguments
     >>> specificity(target, preds, task="multiclass", num_classes=3)
     array([0.5, 0., 0.5])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],

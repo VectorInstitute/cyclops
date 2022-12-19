@@ -12,6 +12,7 @@ from .utils import get_args
 class SyntheticShiftApplicator:
     """The SyntheticShiftApplicator class is used induce synthetic dataset shift.
 
+    Examples
     --------
     >>> from drift_detection.experimenter import Experimenter
     >>> from sklearn.datasets import load_diabetes

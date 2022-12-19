@@ -35,16 +35,18 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.doctest",
     "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
     "sphinx.ext.autosummary",
-    "sphinx_autodoc_typehints",
-    "sphinx.ext.intersphinx",
-    "numpydoc",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.apidoc",
     "sphinx.ext.autosectionlabel",
+    "sphinx.ext.intersphinx",
+    "sphinx_autodoc_typehints",
+    "numpydoc",
     "myst_parser",
     "sphinx_copybutton",
+    "autoapi.extension",
 ]
+autosummary_generate = True
 numpydoc_show_inherited_class_members = False
 numpydoc_show_class_members = False
 napoleon_google_docstring = False
@@ -55,11 +57,8 @@ autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
 
-apidoc_module_dir = "../../cyclops"
-apidoc_excluded_paths = ["tests", "models", "*constants.py", "*column_names.py"]
-apidoc_output_dir = "reference/api"
-apidoc_separate_modules = True
-apidoc_extra_args = ["-f", "-M", "-T", "--implicit-namespaces"]
+autoapi_type = "python"
+autoapi_dirs = ["../../cyclops"]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.9/", None),

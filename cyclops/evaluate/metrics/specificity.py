@@ -85,6 +85,7 @@ class MulticlassSpecificity(
     average : Literal["micro", "macro", "weighted", None], default=None
         If None, return the specificity for each class, otherwise return the
         average specificity. Average options are:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each class, and find their unweighted
             mean. This does not take class imbalance into account.
@@ -160,6 +161,7 @@ class MultilabelSpecificity(
     average : Literal["micro", "macro", "weighted", None], default=None
         If None, return the specificity for each class, otherwise return the
         average specificity. Average options are:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each label, and find their unweighted
             mean. This does not take label imbalance into account.
@@ -245,6 +247,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each class/label, and find their
             unweighted mean. This does not take label/class imbalance into
@@ -259,7 +262,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import Specificity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.9, 0.05, 0.05, 0.35, 0.05]
@@ -274,7 +277,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     >>> metric.compute()
     0.0
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import Specificity
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
@@ -291,7 +294,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     >>> metric.compute()
     array([0.8, 0.5, 0.8])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import Specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.2, 0.75], [0.35, 0.5, 0.15]]

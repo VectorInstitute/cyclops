@@ -357,7 +357,7 @@ class PrecisionRecallCurve(
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
     >>> target = [1, 1, 1, 0]
     >>> preds = [0.6, 0.2, 0.3, 0.8]
@@ -377,7 +377,7 @@ class PrecisionRecallCurve(
     array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]),
     array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
     >>> target = [0, 1, 2, 2]
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1],
@@ -409,7 +409,7 @@ class PrecisionRecallCurve(
             [1.        , 0.66666667, 0.        , 0.        ]]),
     array([0. , 0.5, 1. ]))
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
     >>> target = [[0, 1], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]

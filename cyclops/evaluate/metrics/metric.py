@@ -1,4 +1,5 @@
 """Base abstract class for all metrics."""
+
 import functools
 import inspect
 import logging

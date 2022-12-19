@@ -182,6 +182,7 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
         computing the accuracy score.
     average : Literal["micro", "macro", "weighted", None], default=None
         If not None, this determines the type of averaging performed on the data:
+
         - ``micro``: Calculate metrics globally by counting the total
             true positives, false negatives, false positives and true
             negatives.
@@ -268,6 +269,7 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
     average : Literal['micro', 'macro', 'weighted', None], default=None
         If None, return the accuracy score per label, otherwise this determines
         the type of averaging performed on the data:
+
         - ``micro``: Calculate metrics globally by counting the total
             true positives, false negatives, true negatives and false positives.
         - ``macro``: Calculate metrics for each label, and find their unweighted
@@ -361,6 +363,7 @@ def accuracy(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives. false positives, true negatives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -392,20 +395,20 @@ def accuracy(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import accuracy
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> accuracy(target, preds, task="binary")
     0.75
 
-    (multiclass)
+    >>> # (multiclass)
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 0, 2, 2, 1]
     >>> accuracy(target, preds, task="multiclass", num_classes=3, average="micro")
     0.6
 
-    (multilabel)
+    >>> # (multilabel)
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]
     >>> accuracy(target, preds, task="multilabel", num_labels=3, average="mcro")

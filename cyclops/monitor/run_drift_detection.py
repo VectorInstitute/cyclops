@@ -1,9 +1,13 @@
 """Run experimenter with pre-configured parameters."""
+
 import os
 import pickle
 
 import hydra
-from drift_detector import (
+from hydra.utils import get_original_cwd
+from omegaconf import DictConfig, open_dict
+
+from cyclops.monitor import (
     ClinicalShiftApplicator,
     DCTester,
     Detector,
@@ -12,9 +16,6 @@ from drift_detector import (
     SyntheticShiftApplicator,
     TSTester,
 )
-from hydra.utils import get_original_cwd
-from omegaconf import DictConfig, open_dict
-
 from cyclops.monitor.utils import get_args, get_obj_from_str
 
 

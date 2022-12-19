@@ -1,4 +1,5 @@
 """Functions for computing F-beta and F1 scores for different input types."""
+
 from typing import Literal, Optional, Union
 
 import numpy as np
@@ -44,6 +45,7 @@ def _fbeta_reduce(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -207,6 +209,7 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each class, and find their
@@ -291,6 +294,7 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -386,6 +390,7 @@ def fbeta_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives, false positives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -553,6 +558,7 @@ def multiclass_f1_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise, use one of
         the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each class, and find their
@@ -620,6 +626,7 @@ def multilabel_f1_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label. Otherwise, use one of
         the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -696,6 +703,7 @@ def f1_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives, false positives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -718,21 +726,21 @@ def f1_score(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.9, 0.8, 0.2]
     >>> f1_score(target, preds, task="binary")
     0.5
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
     >>> f1_score(target, preds, task="multiclass", num_classes=3)
     array([0.66666667, 0.8       , 0.        ])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
