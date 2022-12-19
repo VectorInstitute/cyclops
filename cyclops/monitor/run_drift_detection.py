@@ -18,6 +18,8 @@ from cyclops.monitor import (
 )
 from cyclops.monitor.utils import get_args, get_obj_from_str
 
+# mypy: ignore-errors
+
 
 @hydra.main(config_path="./configs")
 def run_experiment(cfg: DictConfig):

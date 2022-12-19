@@ -25,7 +25,8 @@ from cyclops.process.column_names import (
 from cyclops.process.diagnoses import process_diagnoses
 from cyclops.process.util import assert_has_columns
 from cyclops.query import gemini
-from cyclops.query.gemini import get_interface
+
+# from cyclops.query.gemini import get_interface
 
 # from use_cases.gemini.common.constants import READMISSION_MAP
 # from use_cases.gemini.common.query import (

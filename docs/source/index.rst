@@ -10,11 +10,3 @@ Welcome to cyclops's documentation!
    design
    contributing
    api
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

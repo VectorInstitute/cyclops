@@ -3,8 +3,8 @@ cyclops.query
 
 .. currentmodule:: cyclops.query
 
-metrics
--------
+dataset APIs
+------------
 
 .. autosummary::
     :toctree: generated
@@ -13,4 +13,13 @@ metrics
     mimiciv
     omop
     gemini
+
+
+query operations
+----------------
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:
+
     process

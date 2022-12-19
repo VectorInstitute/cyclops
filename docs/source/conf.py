@@ -46,7 +46,7 @@ extensions = [
     "sphinx_copybutton",
     "autoapi.extension",
 ]
-autosummary_generate = True
+autosummary_generate = False
 numpydoc_show_inherited_class_members = False
 numpydoc_show_class_members = False
 napoleon_google_docstring = False
@@ -58,7 +58,14 @@ copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
 
 autoapi_type = "python"
-autoapi_dirs = ["../../cyclops"]
+autoapi_dirs = [
+    "../../cyclops/query",
+    "../../cyclops/evaluate",
+    "../../cyclops/utils",
+    "../../cyclops/process",
+]
+autoapi_root = "technical/api"
+autoapi_add_toctree_entry = False
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.9/", None),

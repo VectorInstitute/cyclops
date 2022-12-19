@@ -1,4 +1,4 @@
-"""OMOP Query API."""
+"""OMOP query API."""
 
 import logging
 from typing import Dict, List, Optional, Union

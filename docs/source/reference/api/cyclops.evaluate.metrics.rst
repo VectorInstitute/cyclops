@@ -1,7 +1,7 @@
 cyclops.evaluate.metrics
 ========================
 
-.. currentmodule:: cyclops.evaluate.metrics
+.. automodule:: cyclops.evaluate.metrics
 
 metrics
 -------

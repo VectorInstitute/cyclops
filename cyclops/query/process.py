@@ -1,6 +1,6 @@
-"""Low-level query processing functionality.
+"""Low-level query operations.
 
-This module contains query operations functions such as AddColumn, Join, DropNulls, etc.
+This module contains query operation modules such as AddColumn, Join, DropNulls, etc.
 which can be used in high-level query API functions specific to datasets.
 
 """
