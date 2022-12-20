@@ -1,23 +1,19 @@
-cyclops.evaluate.metrics.functional package
-===========================================
+cyclops.evaluate.metrics.functional
+===================================
 
-.. automodule:: cyclops.evaluate.metrics.functional
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. currentmodule:: cyclops.evaluate.metrics.functional
 
-Submodules
-----------
+metrics
+-------
 
-.. toctree::
-   :maxdepth: 4
+.. autosummary::
+    :toctree: generated
 
-   cyclops.evaluate.metrics.functional.accuracy
-   cyclops.evaluate.metrics.functional.auroc
-   cyclops.evaluate.metrics.functional.f_beta
-   cyclops.evaluate.metrics.functional.precision_recall
-   cyclops.evaluate.metrics.functional.precision_recall_curve
-   cyclops.evaluate.metrics.functional.roc
-   cyclops.evaluate.metrics.functional.sensitivity
-   cyclops.evaluate.metrics.functional.specificity
-   cyclops.evaluate.metrics.functional.stat_scores
+    accuracy
+    auroc
+    f_beta
+    precision_recall
+    precision_recall_curve
+    roc
+    sensitivity
+    specificity

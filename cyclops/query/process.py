@@ -1,6 +1,6 @@
-"""Low-level query processing functionality.
+"""Low-level query operations.
 
-This module contains query operations functions such as AddColumn, Join, DropNulls, etc.
+This module contains query operation modules such as AddColumn, Join, DropNulls, etc.
 which can be used in high-level query API functions specific to datasets.
 
 """
@@ -970,21 +970,18 @@ class Cast:
 class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
     """Join a table with another table.
 
-    Warning: If neither on nor cond parameters are specified, an
-    expensive Cartesian product is performed.
-
     Parameters
     ----------
     join_table: cyclops.query.util.TableTypes
         Table on which to join.
-    on_: list of str or tuple, optional
+    on: list of str or tuple, optional
         A list of strings or tuples representing columns on which to join.
         Strings represent columns of same name in both tables. A tuple of
         style (table_col, join_table_col) is used to join on columns of
         different names. Suggested to specify this parameter as opposed to
         cond.
     on_to_type: list of type, optional
-        A list of types to which to convert the on_ columns before joining. Useful when
+        A list of types to which to convert the on columns before joining. Useful when
         two columns have the same values but in different format, e.g., strings of int.
     cond: BinaryExpression, optional
         Condition on which to join to tables.
@@ -994,6 +991,11 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         Filters to keep only these columns from the join_table.
     isouter:
         Flag to say if the join is a left outer join.
+
+    Warnings
+    --------
+    If neither on nor cond parameters are specified, an
+    expensive Cartesian product is performed.
 
     """
 
@@ -1672,7 +1674,9 @@ class RandomizeOrder:
     Useful when the data is ordered, so certain rows cannot
     be seen or analyzed when limited.
 
-    Warning: Becomes quite slow on large tables.
+    Warnings
+    --------
+    Becomes quite slow on large tables.
 
     """
 

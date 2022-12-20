@@ -105,10 +105,13 @@ footer span.commit code,
   border-color: #ccc;
 }
 
+.wy-menu-vertical {
+    overflow-y: scroll;
+}
 .wy-menu-vertical header,
 .wy-menu-vertical p.caption,
 .wy-menu-vertical a {
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 /* Remove sidebar TOC link colors, hover states, and borders */
@@ -171,6 +174,10 @@ footer span.commit code,
   color: var(--content-background-color) !important;
 }
 
+.wy-nav-content {
+    max-width: 900px !important;
+}
+
 /* Mark external links in the sidebar */
 .wy-menu-vertical a.external::after {
   display: inline-block;
@@ -201,7 +208,7 @@ footer span.commit code,
 
 /* Tables
  */
-.wy-nav-content-wrap .wy-nav-content .wy-table-responsive {
+/* .wy-nav-content-wrap .wy-nav-content .wy-table-responsive {
   /* Tables are wrapped in a container <div> (.wy-table-responsive) to handle
    * overflow.  Set this <div>'s width to the larger of (a) 100% of its
    * (several levels removed) container (.wy-nav-content) or (b) the width of
@@ -230,12 +237,11 @@ footer span.commit code,
    *
    * -trs, 16 March 2022
    */
-  width: max(100%, calc(100vw - 300px - 3.236em));
+/*  width: max(100%, calc(100vw - 300px - 3.236em));
 
   /* override earlier max-width: 100% */
-  max-width: none;
-}
-
+/*  max-width: none;
+}*/
 
 /* Mobile nav (top bar heading + flyout menu icon)
  */

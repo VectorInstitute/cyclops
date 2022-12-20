@@ -280,6 +280,7 @@ def multiclass_auroc(
     average : Literal["macro", "weighted"], default=None
         If ``None``, then the scores for each class are returned. Otherwise,
         this determines the type of averaging performed on the scores. One of
+
         - `macro`: Calculate metrics for each class, and find their unweighted
             mean. This does not take class imbalance into account.
         - `weighted`: Calculate metrics for each class, and find their average,
@@ -348,6 +349,7 @@ def _multilabel_auroc_compute(
     average : Literal["micro", "macro", "weighted"], default=None
         If ``None``, then the scores for each label are returned. Otherwise,
         this determines the type of averaging performed on the scores. One of
+
         - `micro`: Calculate metrics globally.
         - `macro`: Calculate metrics for each label, and find their unweighted
             mean. This does not take label imbalance into account.
@@ -407,6 +409,7 @@ def multilabel_auroc(
     average : Literal["micro", "macro", "weighted"], default=None
         If ``None``, then the scores for each label are returned. Otherwise,
         this determines the type of averaging performed on the scores. One of
+
         - `micro`: Calculate metrics globally by counting the total true
             positives, false negatives and false positives.
         - `macro`: Calculate metrics for each label, and find their unweighted
@@ -489,6 +492,7 @@ def auroc(  # pylint: disable=too-many-arguments
         If not None, apply the method to compute the average area under the
         ROC curve. Only applicable for the ``multiclass`` and ``multilabel``
         tasks. One of:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives, false negatives and false positives.
         - ``macro``: Calculate metrics for each label, and find their unweighted
@@ -504,14 +508,14 @@ def auroc(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.35, 0.4, 0.8]
     >>> auroc(target, preds, task="binary")
     0.75
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2],
@@ -519,7 +523,7 @@ def auroc(  # pylint: disable=too-many-arguments
     >>> auroc(target, preds, task="multiclass", num_classes=3, average=None)
     array([0.5, 1. , 0.5])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [[0, 1], [1, 1], [0, 0], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2], [0.4, 0.6], [0.2, 0.8]]

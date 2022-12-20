@@ -382,7 +382,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import StatScores
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
@@ -398,7 +398,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     >>> metric.compute()
     array([4, 2, 5, 1, 5])
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import StatScores
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 2, 1, 2, 0]
@@ -432,7 +432,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
             [0, 4, 3, 3, 3],
             [1, 2, 3, 4, 5]])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import StatScores
     >>> target = [[0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]

@@ -216,6 +216,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
         or 'multilabel'.
     thresholds : int or list of floats or numpy.ndarray of floats, default=None
         Thresholds used for computing the ROC curve. Can be one of:
+
         - None: use the unique values of ``preds`` as thresholds
         - int: generate ``thresholds`` number of evenly spaced values between
             0 and 1 as thresholds.
@@ -235,7 +236,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import ROCCurve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
@@ -254,7 +255,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]),
     array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import ROCCurve
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]
@@ -282,7 +283,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
             [0., 0., 0., 0.]]),
     array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import ROCCurve
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]

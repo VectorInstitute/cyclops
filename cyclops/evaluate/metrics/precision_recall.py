@@ -81,6 +81,7 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise, use one of the
         following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false positives.
         - ``macro``: Calculate metric for each class, and find their
@@ -161,6 +162,7 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the precision score for each label. Otherwise,
         use one of the following options to compute the average precision score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false positives.
         - ``macro``: Calculate metric for each label, and find their
@@ -251,6 +253,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the precision score for each label/class. Otherwise,
         use one of the following options to compute the average precision score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false positives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -436,6 +439,7 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false negatives.
         - ``macro``: Calculate metric for each class, and find their
@@ -511,6 +515,7 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -598,6 +603,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -612,7 +618,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
@@ -627,7 +633,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.compute()
     0.5
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
@@ -651,7 +657,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.compute()
     array([0.66666667, 0.        , 0.        ])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]

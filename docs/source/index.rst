@@ -8,14 +8,5 @@ Welcome to cyclops's documentation!
 
    intro
    design
-   gemini_hpc
    contributing
    api
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

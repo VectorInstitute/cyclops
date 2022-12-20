@@ -1,4 +1,5 @@
 """Detector base class."""
+
 from typing import Union
 
 import numpy as np
@@ -7,8 +8,7 @@ from tqdm import tqdm
 
 from cyclops.monitor.reductor import Reductor
 from cyclops.monitor.tester import DCTester, TSTester
-
-from .utils import get_args
+from cyclops.monitor.utils import get_args
 
 
 class Detector:
@@ -24,17 +24,6 @@ class Detector:
         Tester object for statistical testing.
     p_val_threshold : float
         Threshold for p-value. If p-value is below this threshold, a shift is detected.
-
-    Methods
-    -------
-    fit(X)
-        Fits Reductor to data.
-    transform(X, **kwargs)
-        Transforms data.
-    test_shift(X_source, X_target, **kwargs)
-        Tests shift between source and target data.
-    detect_shift(X_source, X_target, **kwargs)
-        Detects shift between source data and target data.
 
     """
 

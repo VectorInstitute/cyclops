@@ -1,4 +1,5 @@
 """Reductor Module."""
+
 import os
 import pickle
 from typing import Tuple, Union
@@ -23,8 +24,9 @@ class Reductor:
     The reductor is initialized with a dimensionality reduction method.
     The reductor can then be fit to the data and used to transform the data.
 
-    Example: (Data is loaded from memory)
+    Examples
     --------
+    >>> # (Data is loaded from memory)
     >>> from drift_detection.reductor import Reductor
     >>> from sklearn.datasets import load_diabetes
     >>> X, y = load_diabetes(return_X_y=True)
@@ -32,29 +34,29 @@ class Reductor:
     >>> reductor.fit(X)
     >>> X_transformed = reductor.transform(X)
 
-    Arguments
-    ---------
-    dr_method: String
+    Parameters
+    ----------
+    dr_method: str
         The dimensionality reduction method to use.
         Available methods are:
-            "NoRed"
-            "PCA"
-            "SRP"
-            "kPCA"
-            "Isomap"
-            "GMM"
-            "BBSDs_untrained_FFNN"
-            "BBSDh_untrained_FFNN"
-            "BBSDs_untrained_CNN"
-            "BBSDh_untrained_CNN"
-            "BBSDs_untrained_LSTM"
-            "BBSDh_untrained_LSTM"
-            "BBSDs_trained_LSTM"
-            "BBSDh_trained_LSTM"
-            "BBSDs_txrv_CNN"
-            "BBSDh_txrv_CNN"
-            "TAE_txrv_CNN"
-    model_path: String
+        - "NoRed"
+        - "PCA"
+        - "SRP"
+        - "kPCA"
+        - "Isomap"
+        - "GMM"
+        - "BBSDs_untrained_FFNN"
+        - "BBSDh_untrained_FFNN"
+        - "BBSDs_untrained_CNN"
+        - "BBSDh_untrained_CNN"
+        - "BBSDs_untrained_LSTM"
+        - "BBSDh_untrained_LSTM"
+        - "BBSDs_trained_LSTM"
+        - "BBSDh_trained_LSTM"
+        - "BBSDs_txrv_CNN"
+        - "BBSDh_txrv_CNN"
+        - "TAE_txrv_CNN"
+    model_path: str
         The path to the model to use for dimensionality reduction.
         If None, A new model is fit.
     var_ret: float
@@ -164,7 +166,7 @@ class Reductor:
 
         Parameters
         ----------
-        output_path: String
+        output_path: str
             path to save the model to
 
         """
@@ -224,11 +226,8 @@ class Reductor:
 
         Parameters
         ----------
-        data:
-            data to fit the reductor to.
-            Shape:
-                data: np.ndarray (n_samples, n_features)
-                      or torch Dataset
+        data: np.ndarray or torch.utils.data.Dataset
+            Data to fit the reductor of shape (n_samples, n_features).
 
         """
         # check if data is a numpy matrix or a torch dataset

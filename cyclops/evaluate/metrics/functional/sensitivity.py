@@ -87,6 +87,7 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         Average to apply. If None, return scores for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false negatives.
         - ``macro``: Calculate metrics for each label, and find their
@@ -103,7 +104,6 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
     float or numpy.ndarray
         Sensitivity score. If ``average`` is None, return a numpy.ndarray of
         sensitivity scores for each class.
-
 
     Raises
     ------
@@ -160,6 +160,7 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the sensitivity score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -182,7 +183,6 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
     ValueError
         If ``average`` is not one of ``micro``, ``macro``, ``weighted``
         or ``None``.
-
 
     Examples
     --------
@@ -244,6 +244,7 @@ def sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         Average to apply. If None, return scores for each class/label. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -269,21 +270,21 @@ def sensitivity(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import sensitivity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.4, 0.2, 0.0, 0.6, 0.9]
     >>> sensitivity(target, preds, task="binary")
     0.3333333333333333
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import sensitivity
     >>> target = [1, 1, 2, 0, 2, 2]
     >>> preds = [1, 2, 2, 0, 2, 0]
     >>> sensitivity(target, preds, task="multiclass", num_classes=3)
     array([1.        , 0.5       , 0.66666667])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import sensitivity
     >>> target = [[1, 0, 1], [0, 1, 0]]
     >>> preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]
