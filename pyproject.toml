@@ -59,6 +59,7 @@ sphinxcontrib-apidoc = "^0.3.0"
 sphinx-autodoc-typehints = "^1.18.1"
 myst-parser = "^0.18.0"
 sphinx-copybutton = "^0.5.0"
+sphinx-autoapi = "^2.0.0"
 
 [tool.poetry.group.interface.dependencies]
 dash = "^2.4.1"
