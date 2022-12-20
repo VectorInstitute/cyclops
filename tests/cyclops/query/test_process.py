@@ -19,11 +19,9 @@ from cyclops.query.process import (
     ReorderAfter,
     Substring,
     Trim,
-    ckwarg,
-    none_add,
-    process_checks,
+    _none_add,
+    _process_checks,
     process_operations,
-    remove_kwargs,
 )
 from cyclops.query.util import process_column
 
@@ -35,24 +33,11 @@ def test_table():
     return select(column_a, column("b"), column("c"))
 
 
-def test_ckwarg():
-    """Test ckwarg."""
-    assert ckwarg({"arg1": 1}, "arg1") == 1
-    assert ckwarg({"arg1": 1}, "arg2") is None
-
-
-def test_remove_kwargs():
-    """Test remove_kwargs."""
-    kwargs = {"arg1": 1, "arg2": 2, "arg3": 3}
-    assert "arg2" not in remove_kwargs(kwargs, "arg2")
-    assert "arg1" not in remove_kwargs(kwargs, ["arg2", "arg1"])
-
-
-def test_none_add():
-    """Test none_add fn."""
-    assert none_add("1", "2") == "12"
-    assert none_add("1", None) == "1"
-    assert none_add(None, "2") == "2"
+def test__none_add():
+    """Test _none_add fn."""
+    assert _none_add("1", "2") == "12"
+    assert _none_add("1", None) == "1"
+    assert _none_add(None, "2") == "2"
 
 
 def test_qap():
@@ -62,11 +47,11 @@ def test_qap():
     assert isinstance(test_arg, int) and test_arg == 2
 
 
-def test_process_checks(test_table):  # pylint: disable=redefined-outer-name
-    """Test process_checks fn."""
-    process_checks(test_table, cols=["a"], cols_not_in=["d"], timestamp_cols=["a"])
+def test__process_checks(test_table):  # pylint: disable=redefined-outer-name
+    """Test _process_checks fn."""
+    _process_checks(test_table, cols=["a"], cols_not_in=["d"], timestamp_cols=["a"])
     with pytest.raises(ValueError):
-        process_checks(test_table, cols_not_in=["a"])
+        _process_checks(test_table, cols_not_in=["a"])
 
 
 def test_process_operations(test_table):  # pylint: disable=redefined-outer-name
@@ -89,7 +74,7 @@ def test_process_operations(test_table):  # pylint: disable=redefined-outer-name
 @pytest.mark.integration_test
 def test_operations():
     """Test query operations."""
-    synthea = OMOPQuerier("cdm_synthea10", ["database=synthea_integration_test"])
+    synthea = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
     visits = synthea.visit_occurrence().query
     visits = Drop("care_site_source_value")(visits)
     visits = Rename({"care_site_name": "hospital_name"})(visits)

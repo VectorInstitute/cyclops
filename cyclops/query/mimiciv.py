@@ -36,7 +36,9 @@ from cyclops.query.postprocess.mimiciv import process_mimic_care_units
 from cyclops.query.util import (
     TableTypes,
     assert_table_has_columns,
+    ckwarg,
     get_column,
+    remove_kwargs,
     table_params_to_type,
 )
 from cyclops.utils.log import setup_logging
@@ -85,18 +87,19 @@ COLUMN_MAP = {
 class MIMICIVQuerier(DatasetQuerier):
     """MIMICIV dataset querier."""
 
-    def __init__(self, config_overrides: Optional[List] = None):
+    def __init__(self, **config_overrides):
         """Initialize.
 
         Parameters
         ----------
-        config_overrides: list, optional
-            List of override configuration parameters.
+        **config_overrides
+            Override configuration parameters, specified as kwargs.
 
         """
-        if not config_overrides:
-            config_overrides = []
-        super().__init__(TABLE_MAP, COLUMN_MAP, config_overrides)
+        overrides = {}
+        if config_overrides:
+            overrides = config_overrides
+        super().__init__(TABLE_MAP, COLUMN_MAP, **overrides)
 
     def patients(self, **process_kwargs) -> QueryInterface:
         """Query MIMIC patient data.
@@ -285,11 +288,11 @@ class MIMICIVQuerier(DatasetQuerier):
 
         # Get diagnosis codes.
         diagnoses_table = self.diagnoses(
-            diagnosis_versions=qp.ckwarg(process_kwargs, "diagnosis_versions"),
-            diagnosis_substring=qp.ckwarg(process_kwargs, "diagnosis_substring"),
-            diagnosis_codes=qp.ckwarg(process_kwargs, "diagnosis_codes"),
+            diagnosis_versions=ckwarg(process_kwargs, "diagnosis_versions"),
+            diagnosis_substring=ckwarg(process_kwargs, "diagnosis_substring"),
+            diagnosis_codes=ckwarg(process_kwargs, "diagnosis_codes"),
         ).query
-        process_kwargs = qp.remove_kwargs(
+        process_kwargs = remove_kwargs(
             process_kwargs,
             ["diagnosis_versions", "diagnosis_substring", "diagnosis_codes"],
         )
@@ -372,10 +375,10 @@ class MIMICIVQuerier(DatasetQuerier):
         """
         table = self.transfers(
             patients_table=patients_table,
-            encounters=qp.ckwarg(process_kwargs, "encounters"),
+            encounters=ckwarg(process_kwargs, "encounters"),
         ).query
 
-        process_kwargs = qp.remove_kwargs(process_kwargs, "encounters")
+        process_kwargs = remove_kwargs(process_kwargs, "encounters")
 
         return QueryInterfaceProcessed(
             self._db,

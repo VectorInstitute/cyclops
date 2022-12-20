@@ -96,19 +96,22 @@ class OMOPQuerier(DatasetQuerier):
     def __init__(
         self,
         schema_name: str,
-        config_overrides: Optional[List] = None,
+        **config_overrides,
     ):
         """Initialize.
 
         Parameters
         ----------
-        config_overrides: list, optional
-            List of override configuration parameters.
+        schema_name: str
+            Name of database schema.
+        **config_overrides
+            Override configuration parameters, specified as kwargs.
 
         """
-        if not config_overrides:
-            config_overrides = []
-        super().__init__(_get_table_map(schema_name), COLUMN_MAP, config_overrides)
+        overrides = {}
+        if config_overrides:
+            overrides = config_overrides
+        super().__init__(_get_table_map(schema_name), COLUMN_MAP, **overrides)
 
     def _map_concept_ids_to_name(
         self, source_table: Subquery, source_cols: Union[str, List[str]]

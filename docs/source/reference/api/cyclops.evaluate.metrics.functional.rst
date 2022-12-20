@@ -17,3 +17,4 @@ metrics
     roc
     sensitivity
     specificity
+    stat_scores

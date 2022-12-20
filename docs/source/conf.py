@@ -46,7 +46,7 @@ extensions = [
     "sphinx_copybutton",
     "autoapi.extension",
 ]
-autosummary_generate = False
+autosummary_generate = True
 numpydoc_show_inherited_class_members = False
 numpydoc_show_class_members = False
 napoleon_google_docstring = False

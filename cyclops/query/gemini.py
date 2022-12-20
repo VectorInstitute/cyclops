@@ -111,18 +111,19 @@ EVENT_CATEGORIES = [LAB, VITALS]
 class GEMINIQuerier(DatasetQuerier):
     """GEMINI dataset querier."""
 
-    def __init__(self, config_overrides: Optional[List] = None):
+    def __init__(self, **config_overrides):
         """Initialize.
 
         Parameters
         ----------
-        config_overrides: list, optional
-            List of override configuration parameters.
+        **config_overrides
+            Override configuration parameters, specified as kwargs.
 
         """
-        if not config_overrides:
-            config_overrides = []
-        super().__init__(TABLE_MAP, COLUMN_MAP, config_overrides)
+        overrides = {}
+        if config_overrides:
+            overrides = config_overrides
+        super().__init__(TABLE_MAP, COLUMN_MAP, **overrides)
 
     def er_admin(self, **process_kwargs) -> QueryInterface:
         """Query emergency room administrative data.
