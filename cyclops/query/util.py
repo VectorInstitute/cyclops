@@ -65,6 +65,49 @@ TABLE_OBJECTS = [Table, Select, Subquery, DBTable]
 TableTypes = Union[Select, Subquery, Table, DBTable]
 
 
+def ckwarg(kwargs: dict, kwarg: str):
+    """Get the value of a conditional keyword argument.
+
+    A keyword argument may or may not be specified in some
+    keyword arguments. If specified, return the value,
+    otherwise return None.
+
+    Parameters
+    ----------
+    kwargs: dict
+        Process keyword arguments.
+    kwarg: str
+        The keyword argument of interest.
+
+    Returns
+    -------
+    any, optional
+        The value of the keyword argument if it exists, otherwise None.
+
+    """
+    if kwarg in kwargs:
+        return kwargs[kwarg]
+    return None
+
+
+def remove_kwargs(process_kwargs: dict, kwargs: Union[str, List[str]]):
+    """Remove some keyword arguments from process_kwargs if they exist.
+
+    Parameters
+    ----------
+    process_kwargs: dict
+        Process keyword arguments.
+    kwargs: str or list of str
+        The keyword arguments to remove should they exist.
+
+    """
+    kwargs = to_list(kwargs)
+    for kwarg in kwargs:
+        if kwarg in process_kwargs:
+            del process_kwargs[kwarg]
+    return process_kwargs
+
+
 def _to_subquery(table: TableTypes) -> Subquery:
     """Convert a table from a table type object to the Subquery type.
 

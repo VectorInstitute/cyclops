@@ -102,49 +102,6 @@ class QAP:
         return val
 
 
-def ckwarg(kwargs: dict, kwarg: str):
-    """Get the value of a conditional keyword argument.
-
-    A keyword argument may or may not be specified in some
-    keyword arguments. If specified, return the value,
-    otherwise return None.
-
-    Parameters
-    ----------
-    kwargs: dict
-        Process keyword arguments.
-    kwarg: str
-        The keyword argument of interest.
-
-    Returns
-    -------
-    any, optional
-        The value of the keyword argument if it exists, otherwise None.
-
-    """
-    if kwarg in kwargs:
-        return kwargs[kwarg]
-    return None
-
-
-def remove_kwargs(process_kwargs: dict, kwargs: Union[str, List[str]]):
-    """Remove some keyword arguments from process_kwargs if they exist.
-
-    Parameters
-    ----------
-    process_kwargs: dict
-        Process keyword arguments.
-    kwargs: str or list of str
-        The keyword arguments to remove should they exist.
-
-    """
-    kwargs = to_list(kwargs)
-    for kwarg in kwargs:
-        if kwarg in process_kwargs:
-            del process_kwargs[kwarg]
-    return process_kwargs
-
-
 @table_params_to_type(Subquery)
 def process_operations(  # pylint: disable=too-many-locals
     table: TableTypes, operations: List[tuple], user_kwargs: dict
@@ -268,7 +225,7 @@ def process_operations(  # pylint: disable=too-many-locals
     return table
 
 
-def append_if_missing(
+def _append_if_missing(
     table: TableTypes,
     keep_cols: Optional[Union[str, List[str]]] = None,
     force_include_cols: Optional[Union[str, List[str]]] = None,
@@ -291,10 +248,11 @@ def append_if_missing(
     force_include_cols = to_list(force_include_cols)
     extend_cols = [col for col in force_include_cols if col not in keep_cols]
     keep_cols = extend_cols + keep_cols
+
     return FilterColumns(keep_cols)(table)
 
 
-def none_add(obj1: Any, obj2: Any):
+def _none_add(obj1: Any, obj2: Any):
     """Add two objects together while ignoring None values.
 
     If both objects are None, returns None.
@@ -312,7 +270,7 @@ def none_add(obj1: Any, obj2: Any):
     return obj1 + obj2
 
 
-def process_checks(
+def _process_checks(
     table: TableTypes,
     cols: Optional[Union[str, List[str]]] = None,
     cols_not_in: Optional[Union[str, List[str]]] = None,
@@ -379,7 +337,7 @@ class Drop:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.cols)
+        table = _process_checks(table, cols=self.cols)
         return drop_columns(table, self.cols)
 
 
@@ -415,7 +373,7 @@ class Rename:  # pylint: disable=too-few-public-methods
 
         """
         if self.check_exists:
-            table = process_checks(table, cols=list(self.rename_map.keys()))
+            table = _process_checks(table, cols=list(self.rename_map.keys()))
         return rename_columns(table, self.rename_map)
 
 
@@ -455,7 +413,7 @@ class Substring:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.col)
+        table = _process_checks(table, cols=self.col)
         table = select(
             table,
             func.substr(
@@ -493,7 +451,7 @@ class Reorder:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.cols)
+        table = _process_checks(table, cols=self.cols)
         return reorder_columns(table, self.cols)
 
 
@@ -527,7 +485,7 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
 
         """
         self.cols = to_list(self.cols)
-        table = process_checks(table, cols=self.cols + [self.after])
+        table = _process_checks(table, cols=self.cols + [self.after])
         names = get_column_names(table)
         names = [name for name in names if name not in self.cols]
         name_after_ind = names.index(self.after) + 1
@@ -562,7 +520,7 @@ class FilterColumns:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.cols)
+        table = _process_checks(table, cols=self.cols)
         return filter_columns(table, self.cols)
 
 
@@ -597,7 +555,7 @@ class Trim:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.cols)
+        table = _process_checks(table, cols=self.cols)
         return trim_columns(table, self.cols, new_col_labels=self.new_col_labels)
 
 
@@ -631,7 +589,7 @@ class Literal:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols_not_in=self.col)
+        table = _process_checks(table, cols_not_in=self.col)
         return select(table, literal(self.value).label(self.col)).subquery()
 
 
@@ -668,7 +626,7 @@ class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(
+        table = _process_checks(
             table, timestamp_cols=self.timestamp_col, cols_not_in=self.label
         )
 
@@ -716,7 +674,9 @@ class AddNumeric:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.add_to, cols_not_in=self.new_col_labels)
+        table = _process_checks(
+            table, cols=self.add_to, cols_not_in=self.new_col_labels
+        )
         return apply_to_columns(
             table,
             self.add_to,
@@ -759,7 +719,7 @@ class AddDeltaConstant:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(
+        table = _process_checks(
             table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
         )
 
@@ -813,11 +773,11 @@ class AddColumn:  # pylint: disable=too-few-public-methods
         """
         # If the column being added is a timestamp column, ensure the others are too
         if check_timestamp_columns(table, self.col):
-            table = process_checks(
+            table = _process_checks(
                 table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
             )
         else:
-            table = process_checks(
+            table = _process_checks(
                 table, cols=self.add_to, cols_not_in=self.new_col_labels
             )
 
@@ -885,7 +845,7 @@ class AddDeltaColumns:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(
+        table = _process_checks(
             table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
         )
 
@@ -939,7 +899,7 @@ class Cast:
             Processed table.
 
         """
-        table = process_checks(table, cols=self.cols)
+        table = _process_checks(table, cols=self.cols)
 
         cast_type_map = {
             "str": "to_str",
@@ -1050,13 +1010,16 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
                 col_obj if isinstance(col_obj, str) else col_obj[1]
                 for col_obj in self.on_
             ]
-            table = process_checks(table, cols=none_add(self.table_cols, on_table_cols))
-            self.join_table = process_checks(
-                self.join_table, cols=none_add(self.join_table_cols, on_join_table_cols)
+            table = _process_checks(
+                table, cols=_none_add(self.table_cols, on_table_cols)
+            )
+            self.join_table = _process_checks(
+                self.join_table,
+                cols=_none_add(self.join_table_cols, on_join_table_cols),
             )
             # Filter columns, keeping those being joined on
-            table = append_if_missing(table, self.table_cols, on_table_cols)
-            self.join_table = append_if_missing(
+            table = _append_if_missing(table, self.table_cols, on_table_cols)
+            self.join_table = _append_if_missing(
                 self.join_table, self.join_table_cols, on_join_table_cols
             )
             # Perform type conversions if given
@@ -1150,7 +1113,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = equals(get_column(table, self.col), self.value, **self.cond_kwargs)
         if self.not_:
             cond = cond._negate()
@@ -1210,7 +1173,7 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = in_(
             get_column(table, self.col),
             to_list(self.values),
@@ -1282,7 +1245,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         conds = [
             has_substring(get_column(table, self.col), sub, **self.cond_kwargs)
             for sub in self.substrings
@@ -1351,7 +1314,7 @@ class ConditionStartsWith:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = starts_with(get_column(table, self.col), self.string, **self.cond_kwargs)
         if self.not_:
             cond = cond._negate()
@@ -1411,7 +1374,7 @@ class ConditionEndsWith:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = ends_with(get_column(table, self.col), self.string, **self.cond_kwargs)
         if self.not_:
             cond = cond._negate()
@@ -1467,7 +1430,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(
+        table = _process_checks(
             table, cols=self.timestamp_col, cols_not_in=self.binarize_col
         )
         cond = in_(
@@ -1528,7 +1491,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(
+        table = _process_checks(
             table, cols=self.timestamp_col, cols_not_in=self.binarize_col
         )
         cond = in_(
@@ -1577,7 +1540,7 @@ class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, timestamp_cols=self.timestamp_col)
+        table = _process_checks(table, timestamp_cols=self.timestamp_col)
 
         if isinstance(self.timestamp, str):
             timestamp = to_datetime_format(self.timestamp)
@@ -1622,7 +1585,7 @@ class ConditionAfterDate:  # pylint: disable=too-few-public-methods
             Processed table.
 
         """
-        table = process_checks(table, timestamp_cols=self.timestamp_col)
+        table = _process_checks(table, timestamp_cols=self.timestamp_col)
 
         if isinstance(self.timestamp, str):
             timestamp = to_datetime_format(self.timestamp)
@@ -1727,7 +1690,7 @@ class DropNulls:
 
         """
         self.cols = to_list(self.cols)
-        table = process_checks(table, cols=self.cols)
+        table = _process_checks(table, cols=self.cols)
 
         cond = and_(*[not_equals(get_column(table, col), None) for col in self.cols])
         return select(table).where(cond).subquery()
@@ -1766,7 +1729,7 @@ class OrderBy:
         """
         self.cols = to_list(self.cols)
         ascending = to_list_optional(self.ascending)
-        table = process_checks(table, cols=self.cols)
+        table = _process_checks(table, cols=self.cols)
 
         if ascending is None:
             ascending = [True] * len(self.cols)
@@ -1855,7 +1818,7 @@ class GroupByAggregate:
         ]
 
         groupby_names = to_list(self.groupby_cols)
-        table = process_checks(table, cols=groupby_names + aggfunc_cols)
+        table = _process_checks(table, cols=groupby_names + aggfunc_cols)
 
         # Error checking
         for i, aggfunc_str in enumerate(aggfunc_strs):

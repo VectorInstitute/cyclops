@@ -1,7 +1,7 @@
 """Base querier class."""
 
 import logging
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, Optional, Union
 
 from hydra import compose, initialize
 from omegaconf import OmegaConf
@@ -33,28 +33,28 @@ class DatasetQuerier:
 
     """
 
-    def __init__(
-        self, table_map: Dict, column_map: Dict, config_overrides: Optional[List] = None
-    ) -> None:
+    def __init__(self, table_map: Dict, column_map: Dict, **config_overrides) -> None:
         """Initialize.
 
         Parameters
         ----------
-        config_overrides: list, optional
-            List of override configuration parameters.
         table_map: Dict
             A dictionary mapping table names to table objects in the DB.
         column_map: Dict
             A dictionary mapping column names from the database to map to output
             in a consistent format.
+        **config_overrides
+             Override configuration parameters, specified as kwargs.
 
         """
-        if not config_overrides:
-            config_overrides = []
+        overrides = []
+        if config_overrides:
+            for key, value in config_overrides.items():
+                overrides.append(f"{key}={value}")
         with initialize(
             version_base=None, config_path="configs", job_name="DatasetQuerier"
         ):
-            config = compose(config_name="config", overrides=config_overrides)
+            config = compose(config_name="config", overrides=overrides)
             LOGGER.debug(OmegaConf.to_yaml(config))
 
         self._db = Database(config)
