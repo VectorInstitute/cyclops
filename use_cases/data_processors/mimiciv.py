@@ -7,13 +7,12 @@ from typing import Callable, Generator, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from cyclops.constants import FEATURES
 from cyclops.process.aggregate import (
     Aggregator,
     tabular_as_aggregated,
     timestamp_ffill_agg,
 )
-from cyclops.process.constants import NUMERIC, ORDINAL
+from cyclops.process.constants import FEATURES, NUMERIC, ORDINAL, TARGETS
 from cyclops.process.feature.feature import TabularFeatures, TemporalFeatures
 from cyclops.process.feature.vectorized import (
     Vectorized,
@@ -414,7 +413,7 @@ class MIMICIVProcessor:
 
         """
         tab_train_X, tab_train_y = tab_train.split_out(
-            FEATURES, self.tab_feature_params["targets"]
+            FEATURES, self.tab_feature_params[TARGETS]
         )
         if normalize:
             tab_train_X = self._normalize(tab_train_X)
@@ -438,7 +437,7 @@ class MIMICIVProcessor:
 
         """
         tab_val_X, tab_val_y = tab_val.split_out(
-            FEATURES, self.tab_feature_params["targets"]
+            FEATURES, self.tab_feature_params[TARGETS]
         )
         if normalize:
             tab_val_X = self._normalize(tab_val_X)
@@ -461,7 +460,7 @@ class MIMICIVProcessor:
 
         """
         tab_test_X, tab_test_y = tab_test.split_out(
-            FEATURES, self.tab_feature_params["targets"]
+            FEATURES, self.tab_feature_params[TARGETS]
         )
         if normalize:
             tab_test_X = self._normalize(tab_test_X)
@@ -763,7 +762,7 @@ class MIMICIVProcessor:
         temp_vectorized = temp_vectorized.concat_over_axis(
             self.temp_feature_params["primary_feature"],
             targets,
-            self.temp_feature_params["targets"],
+            self.temp_feature_params[TARGETS],
         )
 
         if normalize:
@@ -822,7 +821,7 @@ class MIMICIVProcessor:
         """
         temp_train_X, temp_train_y = temp_train.split_out(
             self.temp_feature_params["primary_feature"],
-            self.temp_feature_params["targets"],
+            self.temp_feature_params[TARGETS],
         )
         if impute:
             temp_train_X.impute(
@@ -861,7 +860,7 @@ class MIMICIVProcessor:
         """
         temp_val_X, temp_val_y = temp_val.split_out(
             self.temp_feature_params["primary_feature"],
-            self.temp_feature_params["targets"],
+            self.temp_feature_params[TARGETS],
         )
         if impute:
             temp_val_X.impute(
@@ -898,7 +897,7 @@ class MIMICIVProcessor:
         """
         temp_test_X, temp_test_y = temp_test.split_out(
             self.temp_feature_params["primary_feature"],
-            self.temp_feature_params["targets"],
+            self.temp_feature_params[TARGETS],
         )
         if impute:
             temp_test_X.impute(
@@ -985,7 +984,7 @@ class MIMICIVProcessor:
         )
         comb_vectorized, _ = comb_vectorized.split_out(
             self.temp_feature_params["primary_feature"],
-            self.tab_feature_params["targets"],
+            self.tab_feature_params[TARGETS],
         )
 
         comb_vectorized.add_normalizer(
@@ -1072,7 +1071,7 @@ class MIMICIVProcessor:
         """
         comb_train_X, comb_train_y = comb_train.split_out(
             self.temp_feature_params["primary_feature"],
-            self.temp_feature_params["targets"],
+            self.temp_feature_params[TARGETS],
         )
         if impute:
             comb_train_X.impute(
@@ -1111,7 +1110,7 @@ class MIMICIVProcessor:
         """
         comb_val_X, comb_val_y = comb_val.split_out(
             self.temp_feature_params["primary_feature"],
-            self.temp_feature_params["targets"],
+            self.temp_feature_params[TARGETS],
         )
         if impute:
             comb_val_X.impute(
@@ -1150,7 +1149,7 @@ class MIMICIVProcessor:
         """
         comb_test_X, comb_test_y = comb_test.split_out(
             self.temp_feature_params["primary_feature"],
-            self.temp_feature_params["targets"],
+            self.temp_feature_params[TARGETS],
         )
         if impute:
             comb_test_X.impute(

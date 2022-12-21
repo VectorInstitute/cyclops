@@ -1,4 +1,5 @@
 """Base class for model wrappers."""
+
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Literal, Sequence, Union
 

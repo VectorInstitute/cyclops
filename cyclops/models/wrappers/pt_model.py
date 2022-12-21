@@ -1,4 +1,5 @@
 """PyTorch model wrapper."""
+
 import logging
 import os
 from typing import Any, Callable, Dict, List, Literal, Sequence, Union

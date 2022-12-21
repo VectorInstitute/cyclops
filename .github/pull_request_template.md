@@ -1,4 +1,4 @@
-# PR Type ([Feature | Fix | Documentation])
+# PR Type ([Feature | Fix | Documentation | Test])
 
 ## Short Description
 ...
