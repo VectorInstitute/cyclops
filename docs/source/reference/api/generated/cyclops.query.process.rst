@@ -3,26 +3,26 @@
 
 .. automodule:: cyclops.query.process
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Functions
 
    .. autosummary::
-   
-      process_operations
-   
-   
 
-   
-   
+      process_operations
+
+
+
+
+
    .. rubric:: Classes
 
    .. autosummary::
-   
+
       AddColumn
       AddDeltaColumns
       AddDeltaConstant
@@ -53,12 +53,3 @@
       ReorderAfter
       Substring
       Trim
-   
-   
-
-   
-   
-   
-
-
-
