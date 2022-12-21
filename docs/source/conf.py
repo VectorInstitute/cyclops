@@ -66,6 +66,7 @@ autoapi_dirs = [
 ]
 autoapi_root = "technical/api"
 autoapi_add_toctree_entry = False
+autoapi_options = ["members", "special-members"]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.9/", None),
