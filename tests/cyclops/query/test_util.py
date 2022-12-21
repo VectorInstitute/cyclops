@@ -3,9 +3,11 @@
 import pytest
 from sqlalchemy import Table, column, select
 from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy.types import Integer
 
 from cyclops.query.util import (
     DBTable,
+    _check_column_type,
     _to_select,
     _to_subquery,
     ckwarg,
@@ -31,7 +33,14 @@ from cyclops.query.util import (
 @pytest.fixture
 def test_table():
     """Test table input."""
-    return select(column("a"), column("b"), column("c"))
+    return select(process_column(column("a"), to_int=True), column("b"), column("c"))
+
+
+def test__check_column_type(test_table):  # pylint: disable=redefined-outer-name
+    """Test _check_column_type fn."""
+    assert _check_column_type(test_table, ["a"], Integer)
+    with pytest.raises(ValueError):
+        assert _check_column_type(test_table, ["b"], Integer, raise_error=True)
 
 
 def test_ckwarg():
@@ -161,7 +170,7 @@ def test_process_column():
     processed_col = process_column(test_col, to_date=True)
     assert str(processed_col) == "CAST(a AS DATE)"
     processed_col = process_column(test_col, to_timestamp=True)
-    assert str(processed_col) == "CAST(a AS TIMESTAMP)"
+    assert str(processed_col) == "CAST(a AS DATETIME)"
     test_col.type = "VARCHAR"
     processed_col = process_column(test_col, lower=True, trim=True)
     assert str(processed_col) == "trim(lower(a))"

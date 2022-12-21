@@ -9,13 +9,12 @@ from functools import wraps
 from typing import Any, Callable, List, Optional, Union
 
 import sqlalchemy
-from sqlalchemy import Float, Integer, Interval, String, cast, func, select
-from sqlalchemy.dialects.postgresql.base import DATE, TIMESTAMP
+from sqlalchemy import cast, func, select
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import ColumnClause
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.selectable import Select, Subquery
-from sqlalchemy.types import Boolean
+from sqlalchemy.types import Boolean, Date, DateTime, Float, Integer, Interval, String
 
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
@@ -736,10 +735,10 @@ def process_column(col: Column, **kwargs: bool) -> Column:
         col = cast(col, Boolean)
 
     if to_date:
-        col = cast(col, DATE)
+        col = cast(col, Date)
 
     if to_timestamp:
-        col = cast(col, TIMESTAMP)
+        col = cast(col, DateTime)
 
     return col
 
@@ -973,7 +972,7 @@ def in_(
     )
 
 
-def check_column_type(
+def _check_column_type(
     table: TableTypes,
     cols: Union[str, List[str]],
     types: Union[Any, List[Any]],
@@ -1004,7 +1003,6 @@ def check_column_type(
         any(isinstance(get_column(table, col).type, type_) for type_ in types)
         for col in cols
     ]
-
     if raise_error and not all(is_type):
         incorrect_type = list(
             set(cols) - {col for i, col in enumerate(cols) if is_type[i]}
@@ -1022,7 +1020,7 @@ def check_column_type(
 def check_timestamp_columns(
     table: TableTypes, cols: Union[str, List[str]], raise_error=False
 ):
-    """Check whether some columns are DATE or TIMESTAMP columns.
+    """Check whether some columns are Date or DateTime columns.
 
     Parameters
     ----------
@@ -1039,7 +1037,7 @@ def check_timestamp_columns(
         Whether all of the columns are one of the types.
 
     """
-    return check_column_type(table, cols, [DATE, TIMESTAMP], raise_error=raise_error)
+    return _check_column_type(table, cols, [Date, DateTime], raise_error=raise_error)
 
 
 @table_params_to_type(Subquery)

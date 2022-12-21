@@ -47,7 +47,7 @@ source $(poetry env info --path)/bin/activate
 
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
 
-## 🎓 Notebooks
+## 📓 Notebooks
 
 To use jupyter notebooks, the python virtual environment can be installed and
 used inside an IPython kernel. After activating the virtual environment, run:
@@ -62,7 +62,7 @@ Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 Tutorial notebooks in ``tutorials`` can be useful to view the
 functionality of the framework.
 
-## Reference
+## 🎓 Citation
 Reference to cite when you use CyclOps in a project or a research paper:
 ```
 @article {Krishnan2022.12.02.22283021,

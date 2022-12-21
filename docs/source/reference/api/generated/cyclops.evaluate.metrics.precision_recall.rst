@@ -3,20 +3,20 @@
 
 .. automodule:: cyclops.evaluate.metrics.precision_recall
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
+   
+   
    .. rubric:: Classes
 
    .. autosummary::
-
+   
       BinaryPrecision
       BinaryRecall
       MulticlassPrecision
@@ -25,3 +25,12 @@
       MultilabelRecall
       Precision
       Recall
+   
+   
+
+   
+   
+   
+
+
+

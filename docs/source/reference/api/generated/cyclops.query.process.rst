@@ -3,31 +3,26 @@
 
 .. automodule:: cyclops.query.process
 
+   
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Functions
 
    .. autosummary::
-
-      append_if_missing
-      ckwarg
-      none_add
-      process_checks
+   
       process_operations
-      remove_kwargs
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Classes
 
    .. autosummary::
-
+   
       AddColumn
       AddDeltaColumns
       AddDeltaConstant
@@ -58,3 +53,12 @@
       ReorderAfter
       Substring
       Trim
+   
+   
+
+   
+   
+   
+
+
+
