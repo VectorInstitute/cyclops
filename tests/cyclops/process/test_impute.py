@@ -19,7 +19,17 @@ from cyclops.process.constants import (
     MEDIAN,
     MODE,
 )
-from cyclops.process.impute import SeriesImputer, TabularImputer, compute_inter_range
+from cyclops.process.impute import (
+    SeriesImputer,
+    TabularImputer,
+    compute_inter_range,
+    np_ffill,
+    np_bfill,
+    np_ffill_bfill,
+    np_fill_null_num,
+    np_fill_null_zero,
+    np_fill_null_mean
+)
 
 
 @pytest.fixture
@@ -54,6 +64,68 @@ def test_input_feature_temporal():
     input_.loc[(2, 3)] = [1, 5.8, 0.3]
     input_.loc[(2, 4)] = [1, 2.0, 1.3]
     return input_
+
+
+def test_np_ffill():
+    """Test np_ffill."""
+    test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
+    res = np_ffill(test_arr)
+    assert np.array_equal(res, np.array([np.nan, 1, 2, 2, 3, 4, 4, 5, 6]), equal_nan=True)
+
+
+def test_np_bfill():
+    """Test np_bfill."""
+    test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
+    res = np_bfill(test_arr)
+    assert np.array_equal(res, np.array([1, 1, 2, 3, 3, 4, 5, 5, 6]), equal_nan=True)
+
+
+def test_np_ffill_bfill():
+    """Test np_ffill_bfill."""
+    test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
+    res = np_ffill_bfill(test_arr)
+    assert np.array_equal(res, np.array([1, 1, 2, 2, 3, 4, 4, 5, 6]), equal_nan=True)
+
+    test_arr = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+    res = np_ffill_bfill(test_arr)
+    assert np.array_equal(res, np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]), equal_nan=True)
+
+    test_arr = np.array([np.nan, 1, 2, 3, 4, 5, 6, 7])
+    res = np_ffill_bfill(test_arr)
+    assert np.array_equal(res, np.array([1, 1, 2, 3, 4, 5, 6, 7]), equal_nan=True)
+
+    test_arr = np.array([1, 2, 3, 4, 5, 6, 7, np.nan])
+    res = np_ffill_bfill(test_arr)
+    assert np.array_equal(res, np.array([1, 2, 3, 4, 5, 6, 7, 7]), equal_nan=True)
+
+
+def test_np_fill_null_num():
+    """Test np_fill_null_num."""
+    test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
+    res = np_fill_null_num(test_arr, 0)
+    assert np.array_equal(res, np.array([0, 1, 2, 0, 3, 4, 0, 5, 6]))
+
+    test_arr = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+    res = np_fill_null_num(test_arr, 0)
+    assert np.array_equal(res, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
+
+
+def test_np_fill_null_zero():
+    """Test np_fill_null_zero."""
+    test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
+    res = np_fill_null_zero(test_arr)
+    assert np.array_equal(res, np.array([0, 1, 2, 0, 3, 4, 0, 5, 6]))
+
+    test_arr = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+    res = np_fill_null_zero(test_arr)
+    assert np.array_equal(res, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
+
+
+def test_np_fill_null_mean():
+    """Test np_fill_null_mean."""
+    test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
+    res = np_fill_null_mean(test_arr)
+    assert np.array_equal(res, np.array([3.5, 1, 2, 3.5, 3, 4, 3.5, 5, 6]))
 
 
 def test_compute_inter_range():
@@ -114,11 +186,6 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
     test_tabular,
 ):
     """Test the TabularImputer and SeriesImputer."""
-    # def non_nulls_same(original: pd.DataFrame, imputed: pd.DataFrame) -> bool:
-
-    # print("\n\nINPUT")
-    # print(test_tabular)
-    # Test various imputation strategies
     imputer = TabularImputer(
         {
             "A": SeriesImputer(IGNORE),
@@ -130,9 +197,6 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
     assert missingness["A"] == 3 / 5
     assert missingness["B"] == 2 / 5
     assert missingness["C"] == 2 / 5
-
-    # print("\n\nIGNORE, MEAN, MEDIAN")
-    # print(res)
 
     assert np.isnan(res.iloc[0]["A"])
     assert np.isnan(res.iloc[2]["A"])
@@ -155,8 +219,6 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
         }
     )
     res, _ = imputer(test_tabular.copy())
-    # print("\n\nFFILL_BFILL, FFILL, BFILL")
-    # print(res)
 
     assert res.iloc[0]["A"] == 1.0
     assert res.iloc[2]["A"] == 1.0
@@ -184,8 +246,6 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
         }
     )
     res, _ = imputer(test_tabular.copy())
-    # print("\n\nMODE, LINEAR_INTERP")
-    # print(res)
 
     assert res.iloc[1]["B"] == 1.09
     assert res.iloc[3]["B"] == 1.09
