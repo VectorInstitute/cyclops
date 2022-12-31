@@ -23,12 +23,12 @@ from cyclops.process.impute import (
     SeriesImputer,
     TabularImputer,
     compute_inter_range,
-    np_ffill,
     np_bfill,
+    np_ffill,
     np_ffill_bfill,
+    np_fill_null_mean,
     np_fill_null_num,
     np_fill_null_zero,
-    np_fill_null_mean
 )
 
 
@@ -70,7 +70,9 @@ def test_np_ffill():
     """Test np_ffill."""
     test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
     res = np_ffill(test_arr)
-    assert np.array_equal(res, np.array([np.nan, 1, 2, 2, 3, 4, 4, 5, 6]), equal_nan=True)
+    assert np.array_equal(
+        res, np.array([np.nan, 1, 2, 2, 3, 4, 4, 5, 6]), equal_nan=True
+    )
 
 
 def test_np_bfill():
@@ -86,9 +88,15 @@ def test_np_ffill_bfill():
     res = np_ffill_bfill(test_arr)
     assert np.array_equal(res, np.array([1, 1, 2, 2, 3, 4, 4, 5, 6]), equal_nan=True)
 
-    test_arr = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+    test_arr = np.array(
+        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+    )
     res = np_ffill_bfill(test_arr)
-    assert np.array_equal(res, np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]), equal_nan=True)
+    assert np.array_equal(
+        res,
+        np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]),
+        equal_nan=True,
+    )
 
     test_arr = np.array([np.nan, 1, 2, 3, 4, 5, 6, 7])
     res = np_ffill_bfill(test_arr)
@@ -105,7 +113,9 @@ def test_np_fill_null_num():
     res = np_fill_null_num(test_arr, 0)
     assert np.array_equal(res, np.array([0, 1, 2, 0, 3, 4, 0, 5, 6]))
 
-    test_arr = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+    test_arr = np.array(
+        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+    )
     res = np_fill_null_num(test_arr, 0)
     assert np.array_equal(res, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
 
@@ -116,7 +126,9 @@ def test_np_fill_null_zero():
     res = np_fill_null_zero(test_arr)
     assert np.array_equal(res, np.array([0, 1, 2, 0, 3, 4, 0, 5, 6]))
 
-    test_arr = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+    test_arr = np.array(
+        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+    )
     res = np_fill_null_zero(test_arr)
     assert np.array_equal(res, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
 
