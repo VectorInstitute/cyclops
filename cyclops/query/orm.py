@@ -149,7 +149,7 @@ class Database:
 
         Parameters
         ----------
-        query: cyclops.query.util.TableTypes
+        query: cyclops.query.util.TableTypes or str
             Query to run.
         limit: int, optional
             Limit query result to limit.
