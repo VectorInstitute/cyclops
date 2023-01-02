@@ -1,4 +1,5 @@
 """Model library constants."""
+
 import os
 
 from cyclops.utils.file import join

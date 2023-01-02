@@ -22,8 +22,8 @@ The implemented use cases include:
 🐣 Getting Started
 ==================
 
-Installing the cyclops package using pip
-----------------------------------------
+Installing cyclops using pip
+----------------------------
 
 .. code:: bash
 

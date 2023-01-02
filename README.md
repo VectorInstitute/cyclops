@@ -26,7 +26,7 @@ use cases include:
 
 ## 🐣 Getting Started
 
-### Installing the cyclops package using pip
+### Installing cyclops using pip
 
 ```bash
 python3 -m pip install pycyclops

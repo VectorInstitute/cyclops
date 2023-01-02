@@ -12,6 +12,7 @@ from cyclops.query.util import (
     _to_subquery,
     ckwarg,
     drop_columns,
+    ends_with,
     equals,
     filter_columns,
     get_column,
@@ -25,6 +26,7 @@ from cyclops.query.util import (
     remove_kwargs,
     rename_columns,
     reorder_columns,
+    starts_with,
     table_params_to_type,
     trim_columns,
 )
@@ -47,6 +49,23 @@ def test_ckwarg():
     """Test ckwarg."""
     assert ckwarg({"arg1": 1}, "arg1") == 1
     assert ckwarg({"arg1": 1}, "arg2") is None
+
+
+def test_ends_with():
+    """Test ends_with."""
+    test_col = column("a")
+    assert (
+        str(ends_with(test_col, "a")) == "trim(lower(CAST(a AS VARCHAR))) LIKE :trim_1"
+    )
+
+
+def test_startswith():
+    """Test starts_with fn."""
+    test_col = column("a")
+    assert (
+        str(starts_with(test_col, "a"))
+        == "trim(lower(CAST(a AS VARCHAR))) LIKE :trim_1"
+    )
 
 
 def test_remove_kwargs():
