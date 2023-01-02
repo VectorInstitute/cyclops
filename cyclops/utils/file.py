@@ -8,6 +8,7 @@ from typing import Any, Generator, List, Optional, Union
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 
 from cyclops.utils.log import setup_logging
 
@@ -182,7 +183,7 @@ def load_dataframe(
     load_path: str,
     file_format: str = "parquet",
     log: bool = True,
-) -> pd.DataFrame:
+) -> Union[pd.DataFrame, dd.DataFrame]:
     """Load file to a pandas.DataFrame or dask.DataFrame object.
 
     Parameters
@@ -196,12 +197,11 @@ def load_dataframe(
 
     Returns
     -------
-    pandas.DataFrame
+    pandas.DataFrame or dask.DataFrame
         Loaded data.
 
     """
     load_path = process_file_save_path(load_path, file_format)
-    print(load_path)
     if log:
         LOGGER.info("Loading DataFrame from %s", load_path)
     if file_format == "parquet":

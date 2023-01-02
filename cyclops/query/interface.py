@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Literal, Optional, Union
 
 import dask.dataframe as dd
 import pandas as pd
@@ -43,7 +43,7 @@ class QueryInterface:
     def run(
         self,
         limit: Optional[int] = None,
-        backend: Optional[str] = "pandas",
+        backend: Literal["pandas", "dask"] = "pandas",
         index_col: Optional[str] = None,
         n_partitions: Optional[int] = None,
     ) -> Union[pd.DataFrame, dd.DataFrame]:
@@ -51,14 +51,14 @@ class QueryInterface:
 
         Parameters
         ----------
-        limit: int, optional
+        limit
             No. of rows to limit the query return.
-        backend: str, optional
+        backend
             Backend computing framework to use, Pandas or Dask.
-        index_col: str, optional
+        index_col
             Column which becomes the index, and defines the partitioning.
             Should be a indexed column in the SQL server, and any orderable type.
-        n_partitions: int, optional
+        n_partitions
             Number of partitions. Check dask documentation for additional details.
 
         Returns

@@ -59,7 +59,7 @@ def test_ends_with():
     )
 
 
-def test_startswith():
+def test_starts_with():
     """Test starts_with fn."""
     test_col = column("a")
     assert (
