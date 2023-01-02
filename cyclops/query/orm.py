@@ -4,7 +4,7 @@ import csv
 import logging
 import os
 import socket
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 import dask.dataframe as dd
 import pandas as pd
@@ -141,7 +141,7 @@ class Database:
         self,
         query: Union[TableTypes, str],
         limit: Optional[int] = None,
-        backend: Optional[str] = "pandas",
+        backend: Literal["pandas", "dask"] = "pandas",
         index_col: Optional[str] = None,
         n_partitions: Optional[int] = None,
     ) -> Union[pd.DataFrame, dd.DataFrame]:
@@ -149,16 +149,16 @@ class Database:
 
         Parameters
         ----------
-        query: cyclops.query.util.TableTypes or str
+        query
             Query to run.
-        limit: int, optional
+        limit
             Limit query result to limit.
-        backend: str, optional
+        backend
             Backend computing framework to use, Pandas or Dask.
-        index_col: str, optional
+        index_col
             Column which becomes the index, and defines the partitioning.
             Should be a indexed column in the SQL server, and any orderable type.
-        n_partitions: int, optional
+        n_partitions
             Number of partitions. Check dask documentation for additional details.
 
         Returns

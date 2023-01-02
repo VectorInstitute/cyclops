@@ -8,7 +8,6 @@ from typing import Any, Generator, List, Optional, Union
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-import dask.dataframe as dd
 
 from cyclops.utils.log import setup_logging
 
