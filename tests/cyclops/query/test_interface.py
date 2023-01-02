@@ -68,6 +68,12 @@ def test_query_interface_integration():
     # check that the partitions don't overlap
     assert len(set(vistit_ids_0).intersection(set(vistit_ids_1))) == 0
 
+    # test running a query using SQL string
+    synthea_db = visits.database
+    visits_df = synthea_db.run_query("SELECT * FROM cdm_synthea10.visit_occurrence")
+    assert isinstance(visits_df, pd.DataFrame)
+    assert visits_df.shape[0] > 0
+
 
 @patch("cyclops.query.orm.Database")
 @patch("sqlalchemy.sql.selectable.Subquery")
