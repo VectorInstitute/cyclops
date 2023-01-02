@@ -3,8 +3,9 @@
 import logging
 import os
 import pickle
-from typing import Any, Generator, List, Optional
+from typing import Any, Generator, List, Optional, Union
 
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 
@@ -127,12 +128,12 @@ def process_dir_save_path(save_path: str, create_dir: bool = True) -> str:
 
 
 def save_dataframe(
-    data: pd.DataFrame,
+    data: Union[pd.DataFrame, dd.DataFrame],
     save_path: str,
     file_format: str = "parquet",
     log: bool = True,
 ) -> str:
-    """Save a pandas.DataFrame object to file.
+    """Save a pandas.DataFrame or dask.DataFrame object to file.
 
     Parameters
     ----------
@@ -151,16 +152,22 @@ def save_dataframe(
         Processed save path for upstream use.
 
     """
-    save_path = process_file_save_path(save_path, file_format)
-
-    if not isinstance(data, pd.DataFrame):
+    if not isinstance(data, (pd.DataFrame, dd.DataFrame)):
         raise ValueError("Input data is not a DataFrame.")
-
+    save_path = process_file_save_path(save_path, file_format)
+    if isinstance(data, dd.DataFrame):
+        save_path, _ = os.path.splitext(save_path)
     if log:
         LOGGER.info("Saving dataframe to %s", save_path)
-
     if file_format == "parquet":
-        data.to_parquet(save_path)
+        if isinstance(data, pd.DataFrame):
+            data.to_parquet(save_path, schema=None)
+        if isinstance(data, dd.DataFrame):
+            data.to_parquet(
+                save_path,
+                schema=None,
+                name_function=lambda x: f"batch-{str(x).zfill(3)}.parquet",
+            )
     elif file_format == "csv":
         data.to_csv(save_path)
     else:
@@ -175,8 +182,8 @@ def load_dataframe(
     load_path: str,
     file_format: str = "parquet",
     log: bool = True,
-) -> pd.DataFrame:
-    """Load file to a pandas.DataFrame object.
+) -> Union[pd.DataFrame, dd.DataFrame]:
+    """Load file to a pandas.DataFrame or dask.DataFrame object.
 
     Parameters
     ----------
@@ -189,15 +196,13 @@ def load_dataframe(
 
     Returns
     -------
-    pandas.DataFrame
+    pandas.DataFrame or dask.DataFrame
         Loaded data.
 
     """
     load_path = process_file_save_path(load_path, file_format)
-
     if log:
         LOGGER.info("Loading DataFrame from %s", load_path)
-
     if file_format == "parquet":
         data = pd.read_parquet(load_path)
     elif file_format == "csv":
@@ -402,80 +407,6 @@ def yield_dataframes(
 
     for file in files:
         yield load_dataframe(join(dir_path, file), log=log)
-
-
-def concat_consequtive_dataframes(
-    dir_path: str,
-    every_n: int,
-    log: bool = True,
-) -> Generator[pd.DataFrame, None, None]:
-    """Yield DataFrames concatenated from consequtive files in a directory.
-
-    Any non-hidden files in the directory must be loadable as a DataFrame.
-
-    Parameters
-    ----------
-    dir_path: str
-        Directory path of files. Any non-hidden file must be loadable as a DataFrame.
-    every_n: int
-        Concatenate and yield every N consequtive files.
-    log: bool
-        Whether to log the occurence.
-
-    Yields
-    ------
-    pandas.DataFrame
-        Concatenated DataFrame.
-
-    """
-    assert every_n > 1
-
-    datas = []
-    for i, data in enumerate(yield_dataframes(dir_path, log=log)):
-        datas.append(data)
-
-        # Yield full batches
-        if (i + 1) % every_n == 0:
-            yield pd.concat(datas)
-            datas = []
-
-    # Yield if any remaining
-    if len(datas) > 0:
-        yield pd.concat(datas)
-
-
-def save_consequtive_dataframes(
-    prev_dir: str,
-    new_dir: str,
-    every_n: int,
-    log: bool = True,
-) -> None:
-    """Save DataFrames concatenated from consequtive files in a directory.
-
-    Parameters
-    ----------
-    prev_dir: str
-        Directory path of files. Any non-hidden file must be loadable as a DataFrame.
-    new_dir: str
-        Directory in which to save the newly concatenated DataFrames.
-    every_n: int
-        Concatenate and yield every N consequtive files.
-    log: bool
-        Whether to log the occurence.
-
-    """
-    new_dir = process_dir_save_path(new_dir)
-    generator = concat_consequtive_dataframes(prev_dir, every_n, log=log)
-
-    save_count = 0
-    while True:
-        try:
-            save_dataframe(
-                next(generator), join(new_dir, "batch_" + f"{save_count:04d}")
-            )
-            save_count += 1
-        except StopIteration:
-            return
 
 
 def yield_pickled_files(
