@@ -52,6 +52,7 @@ numpydoc_show_class_members = False
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
+napoleon_attr_annotations = True
 add_module_names = False
 autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "

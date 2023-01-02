@@ -34,6 +34,8 @@ def test_fractions_to_split():
         fractions_to_split([0.8, -0.2], 12)
     with pytest.raises(ValueError):
         fractions_to_split([0.8, 0.13, 0.23], 12)
+    with pytest.raises(ValueError):
+        fractions_to_split(-0.8, 12)
 
 
 def test_split_idx():
