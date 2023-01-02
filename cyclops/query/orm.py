@@ -62,7 +62,7 @@ class Database:
 
         Parameters
         ----------
-        config: omegaconf.dictconfig.DictConfig
+        config
             Path to directory with config file, for overrides.
 
         """
@@ -199,9 +199,9 @@ class Database:
 
         Parameters
         ----------
-        query: cyclops.query.util.TableTypes
+        query
             Query to save.
-        path:
+        path
             Save path.
 
         Returns
@@ -228,9 +228,9 @@ class Database:
 
         Parameters
         ----------
-        query: cyclops.query.util.TableTypes
+        query
             Query to save.
-        path:
+        path
             Save path.
 
         Returns
