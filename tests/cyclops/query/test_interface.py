@@ -4,10 +4,12 @@ import os
 import shutil
 from unittest.mock import patch
 
+import dask.dataframe as dd
 import pandas as pd
 import pytest
 
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
+from cyclops.query.omop import OMOPQuerier
 
 
 @pytest.fixture
@@ -39,6 +41,32 @@ def test_query_interface(
     query_interface.save(path, file_format="csv")
     with pytest.raises(ValueError):
         query_interface.save(path, file_format="donkey")
+
+
+@pytest.mark.integration_test
+def test_query_interface_integration():
+    """Test QueryInterface with OMOPQuerier."""
+    synthea = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
+    visits = synthea.visit_occurrence()
+    assert isinstance(visits, QueryInterface)
+    visits_pd_df = visits.run()
+    assert isinstance(visits_pd_df, pd.DataFrame)
+    assert visits_pd_df.shape[0] > 0
+    visits_dd_df = visits.run(backend="dask", index_col="visit_occurrence_id")
+    assert isinstance(visits_dd_df, dd.DataFrame)
+    assert (
+        "visit_occurrence_id" in visits_dd_df.columns
+    )  # reset index and keep index column
+    assert visits_dd_df.shape[0].compute() > 0
+    visits_dd_df = visits.run(
+        backend="dask", index_col="visit_occurrence_id", n_partitions=2
+    )
+    assert isinstance(visits_dd_df, dd.DataFrame)
+    assert visits_dd_df.npartitions == 2
+    vistit_ids_0 = visits_dd_df.partitions[0].compute()["visit_occurrence_id"]
+    vistit_ids_1 = visits_dd_df.partitions[1].compute()["visit_occurrence_id"]
+    # check that the partitions don't overlap
+    assert len(set(vistit_ids_0).intersection(set(vistit_ids_1))) == 0
 
 
 @patch("cyclops.query.orm.Database")

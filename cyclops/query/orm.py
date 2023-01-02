@@ -185,6 +185,7 @@ class Database:
                 data = dd.read_sql_query(
                     query, self.conn, index_col=index_col, npartitions=n_partitions
                 )
+                data = data.reset_index(drop=False)
             else:
                 raise ValueError("Invalid backend, can either be Pandas or Dask!")
         LOGGER.info("Query returned successfully!")
