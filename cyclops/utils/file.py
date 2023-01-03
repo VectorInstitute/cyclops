@@ -200,11 +200,17 @@ def load_dataframe(
         Loaded data.
 
     """
-    load_path = process_file_save_path(load_path, file_format)
+    is_dask = True
+    if not os.path.isdir(load_path):
+        load_path = process_file_save_path(load_path, file_format)
+        is_dask = False
     if log:
         LOGGER.info("Loading DataFrame from %s", load_path)
     if file_format == "parquet":
-        data = pd.read_parquet(load_path)
+        if is_dask:
+            data = dd.read_parquet(load_path)
+        else:
+            data = pd.read_parquet(load_path)
     elif file_format == "csv":
         data = pd.read_csv(load_path, index_col=[0])
     else:
