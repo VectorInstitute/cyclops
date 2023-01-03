@@ -45,6 +45,11 @@ poetry install
 source $(poetry env info --path)/bin/activate
 ```
 
+### Contributing
+Contributing to cyclops is welcomed. See [Contributing](CONTRIBUTING.md) for
+guidelines.
+
+
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
 
 ## 📓 Notebooks
