@@ -41,39 +41,33 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
-    "numpydoc",
+    # "numpydoc",
     "myst_parser",
     "sphinx_copybutton",
-    "autoapi.extension",
 ]
 autosummary_generate = True
-numpydoc_show_inherited_class_members = False
-numpydoc_show_class_members = False
+# numpydoc_show_inherited_class_members = False
+# numpydoc_show_class_members = False
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
 napoleon_attr_annotations = True
 add_module_names = False
+autoclass_content = "both"
+autodoc_inherit_docstrings = True
+set_type_checking_flag = True
 autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
-
-autoapi_type = "python"
-autoapi_dirs = [
-    "../../cyclops/query",
-    "../../cyclops/evaluate",
-    "../../cyclops/utils",
-    "../../cyclops/process",
-]
-autoapi_root = "technical/api"
-autoapi_add_toctree_entry = False
-autoapi_options = ["members", "special-members"]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.9/", None),
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
+    "dask": ("https://docs.dask.org/en/stable/", None),
+    "torch": ("https://pytorch.org/docs/stable/", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -82,7 +76,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns: list = ["reference/api/cyclops.rst"]
+exclude_patterns: list = []
 source_suffix = [".rst", ".md"]
 
 

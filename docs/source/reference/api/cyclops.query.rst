@@ -4,27 +4,21 @@ cyclops.query
 .. currentmodule:: cyclops.query
 
 .. autosummary::
-    :toctree: generated
-    :nosignatures:
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
 
     interface
+    ops
 
 dataset APIs
 ------------
 
 .. autosummary::
-    :toctree: generated
-    :nosignatures:
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
 
     mimiciv
     omop
     gemini
-
-query operations
-----------------
-
-.. autosummary::
-    :toctree: generated
-    :nosignatures:
-
-    process

@@ -34,5 +34,5 @@ jobs:
           source $(poetry env info --path)/bin/activate
           poetry install --without dev,interface
           # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
-          cd docs && make html
+          cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
