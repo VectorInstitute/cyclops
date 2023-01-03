@@ -32,20 +32,20 @@ def fractions_to_split(
     frac_list: List[float]
     if isinstance(fractions, float):
         if fractions >= 1 or fractions <= 0:
-            raise ValueError("As a float, fractions must be in the range (0, 1).")
+            raise ValueError("As a float, fractions must be in the range [0, 1].")
         frac_list = [fractions]
     elif isinstance(fractions, list):
         # Necessary so as to not mutate the original fractions list
         frac_list = list(fractions)
     else:
-        raise ValueError("fractions must be a float or a list of floats.")
+        raise TypeError("fractions must be a float or a list of floats.")
 
     # Element checking
-    is_float = [isinstance(elem, float) for elem in frac_list]
+    is_float = (isinstance(elem, float) for elem in frac_list)
     if not all(is_float):
-        raise ValueError("fractions must be floats.")
+        raise TypeError("fractions must be floats.")
 
-    invalid = [frac <= 0 or frac >= 1 for frac in frac_list]
+    invalid = (frac <= 0 or frac >= 1 for frac in frac_list)
     if any(invalid):
         raise ValueError("fractions must be between 0 and 1.")
 
@@ -61,7 +61,9 @@ def fractions_to_split(
     for i in range(1, len(frac_list)):
         frac_list[i] += frac_list[i - 1]
 
-    assert frac_list[-1] == 1
+    tolerance = 1e-9
+    if abs(frac_list[-1] - 1.0) > tolerance:
+        raise RuntimeError("Internal error: cumulative frac_list not summing to 1.")
 
     return np.round(np.array(frac_list[:-1]) * n_samples).astype(int)
 
