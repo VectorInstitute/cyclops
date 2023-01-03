@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.query.postprocess.util import event_time_between, to_timestamp
+from cyclops.query.post_process.util import event_time_between, to_timestamp
 
 
 def test_to_timestamp():

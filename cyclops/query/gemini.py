@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
 from sqlalchemy.sql.selectable import Subquery
 
+import cyclops.query.ops as qo
 from cyclops.process.column_names import (
     ADMIT_TIMESTAMP,
     CARE_UNIT,
@@ -27,7 +28,6 @@ from cyclops.process.column_names import (
     SUBJECT_ID,
 )
 from cyclops.process.constants import EMPTY_STRING
-from cyclops.query import process as qp
 from cyclops.query.base import DatasetQuerier
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import (
@@ -155,18 +155,18 @@ class GEMINIQuerier(DatasetQuerier):
 
         # Process optional operations
         operations: List[tuple] = [
-            (qp.ConditionBeforeDate, [ER_ADMIT_TIMESTAMP, qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, [ER_ADMIT_TIMESTAMP, qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, [ER_ADMIT_TIMESTAMP, qp.QAP("years")], {}),
-            (qp.ConditionInMonths, [ER_ADMIT_TIMESTAMP, qp.QAP("months")], {}),
+            (qo.ConditionBeforeDate, [ER_ADMIT_TIMESTAMP, qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, [ER_ADMIT_TIMESTAMP, qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, [ER_ADMIT_TIMESTAMP, qo.QAP("years")], {}),
+            (qo.ConditionInMonths, [ER_ADMIT_TIMESTAMP, qo.QAP("months")], {}),
             (
-                qp.ConditionIn,
-                ["triage_level", qp.QAP("triage_level")],
+                qo.ConditionIn,
+                ["triage_level", qo.QAP("triage_level")],
                 {"to_str": True},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -218,54 +218,54 @@ class GEMINIQuerier(DatasetQuerier):
         table = self.get_table(IP_ADMIN)
 
         if drop_null_subject_ids:
-            table = qp.DropNulls(SUBJECT_ID)(table)
+            table = qo.DropNulls(SUBJECT_ID)(table)
 
         # Possibly cast string representations to timestamps
-        table = qp.Cast([ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], "timestamp")(table)
+        table = qo.Cast([ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], "timestamp")(table)
 
         # Get the discharge disposition code descriptions
         lookup_table = self.get_table(LOOKUP_IP_ADMIN)
-        lookup_table = qp.ConditionEquals("variable", "discharge_disposition")(
+        lookup_table = qo.ConditionEquals("variable", "discharge_disposition")(
             lookup_table
         )
 
-        table = qp.Join(
+        table = qo.Join(
             lookup_table,
             on=("discharge_disposition", "value"),
             on_to_type="int",
             join_table_cols="description",
             isouter=True,
         )(table)
-        table = qp.Rename({"description": "discharge_description"})(table)
-        table = qp.Drop("value")(table)
+        table = qo.Rename({"description": "discharge_description"})(table)
+        table = qo.Drop("value")(table)
 
         # Join on ER data only if specified
         if er_admin_table is not None:
-            table = qp.Join(er_admin_table, on=ENCOUNTER_ID)(table)
+            table = qo.Join(er_admin_table, on=ENCOUNTER_ID)(table)
 
         # Process optional operations
         if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
             process_kwargs["died"] = True
 
         operations: List[tuple] = [
-            (qp.ConditionBeforeDate, ["admit_timestamp", qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, ["admit_timestamp", qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, ["admit_timestamp", qp.QAP("years")], {}),
-            (qp.ConditionInMonths, ["admit_timestamp", qp.QAP("months")], {}),
-            (qp.ConditionIn, [HOSPITAL_ID, qp.QAP("hospitals")], {"to_str": True}),
-            (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+            (qo.ConditionBeforeDate, ["admit_timestamp", qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, ["admit_timestamp", qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, ["admit_timestamp", qo.QAP("years")], {}),
+            (qo.ConditionInMonths, ["admit_timestamp", qo.QAP("months")], {}),
+            (qo.ConditionIn, [HOSPITAL_ID, qo.QAP("hospitals")], {"to_str": True}),
+            (qo.ConditionIn, [SEX, qo.QAP("sex")], {"to_str": True}),
             (
-                qp.ConditionEquals,
+                qo.ConditionEquals,
                 ["discharge_description", "Died"],
                 {
-                    "not_": qp.QAP("died", transform_fn=lambda x: not x),
-                    "binarize_col": qp.QAP("died_binarize_col", required=False),
+                    "not_": qo.QAP("died", transform_fn=lambda x: not x),
+                    "binarize_col": qo.QAP("died_binarize_col", required=False),
                 },
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -296,35 +296,35 @@ class GEMINIQuerier(DatasetQuerier):
         table = self.get_table(DIAGNOSIS)
 
         lookup_table = self.get_table(LOOKUP_DIAGNOSIS)
-        lookup_table = qp.ConditionEquals("variable", "diagnosis_type")(lookup_table)
-        table = qp.Join(
+        lookup_table = qo.ConditionEquals("variable", "diagnosis_type")(lookup_table)
+        table = qo.Join(
             lookup_table,
             on=("diagnosis_type", "value"),
             join_table_cols="description",
             isouter=True,
         )(table)
-        table = qp.Drop("value")(table)
-        table = qp.Rename({"description": "diagnosis_type_description"})(table)
-        table = qp.ReorderAfter("diagnosis_type_description", "diagnosis_type")(table)
+        table = qo.Drop("value")(table)
+        table = qo.Rename({"description": "diagnosis_type_description"})(table)
+        table = qo.ReorderAfter("diagnosis_type_description", "diagnosis_type")(table)
 
         # Trim whitespace from ICD codes.
-        table = qp.Trim(DIAGNOSIS_CODE)(table)
+        table = qo.Trim(DIAGNOSIS_CODE)(table)
 
         # Process optional operations
         operations: List[tuple] = [
             (
-                qp.ConditionIn,
-                [DIAGNOSIS_CODE, qp.QAP("diagnosis_codes")],
+                qo.ConditionIn,
+                [DIAGNOSIS_CODE, qo.QAP("diagnosis_codes")],
                 {"to_str": True},
             ),
             (
-                qp.ConditionIn,
-                ["diagnosis_type", qp.QAP("diagnosis_types")],
+                qo.ConditionIn,
+                ["diagnosis_type", qo.QAP("diagnosis_types")],
                 {"to_str": True},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -368,13 +368,13 @@ class GEMINIQuerier(DatasetQuerier):
             patient_encounters_table = self.patient_encounters().query
 
         # Join on patient encounters
-        table = qp.Join(diagnoses_table, on=ENCOUNTER_ID, isouter=True)(
+        table = qo.Join(diagnoses_table, on=ENCOUNTER_ID, isouter=True)(
             patient_encounters_table
         )
 
         # Process optional operations
-        operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
-        table = qp.process_operations(table, operations, process_kwargs)
+        operations: List[tuple] = [(qo.Limit, [qo.QAP("limit")], {})]
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -396,19 +396,19 @@ class GEMINIQuerier(DatasetQuerier):
 
         # Join with lookup to get transfer description.
         lookup_table = self.get_table(LOOKUP_ROOM_TRANSFER)
-        lookup_table = qp.ConditionEquals("variable", "medical_service")(lookup_table)
+        lookup_table = qo.ConditionEquals("variable", "medical_service")(lookup_table)
 
-        table = qp.Join(
+        table = qo.Join(
             lookup_table,
             on=("medical_service", "value"),
             join_table_cols="description",
             isouter=True,
         )(table)
-        table = qp.Rename({"description": "transfer_description"})(table)
+        table = qo.Rename({"description": "transfer_description"})(table)
 
         # Process optional operations
-        operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
-        table = qp.process_operations(table, operations, process_kwargs)
+        operations: List[tuple] = [(qo.Limit, [qo.QAP("limit")], {})]
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -437,7 +437,7 @@ class GEMINIQuerier(DatasetQuerier):
             Limit the number of rows returned.
 
         """
-        filter_care_unit_cols = qp.FilterColumns(
+        filter_care_unit_cols = qo.FilterColumns(
             [
                 ENCOUNTER_ID,
                 "admit",
@@ -448,46 +448,46 @@ class GEMINIQuerier(DatasetQuerier):
 
         # In-patient table.
         ip_table = self.get_table(IP_ADMIN)
-        ip_table = qp.Rename(
+        ip_table = qo.Rename(
             {
                 ADMIT_TIMESTAMP: "admit",
                 DISCHARGE_TIMESTAMP: "discharge",
             }
         )(ip_table)
-        ip_table = qp.Literal("IP", CARE_UNIT)(ip_table)
+        ip_table = qo.Literal("IP", CARE_UNIT)(ip_table)
         ip_table = filter_care_unit_cols(ip_table)
 
         # Special care unit table.
         scu_table = self.get_table(IP_SCU)
-        scu_table = qp.Rename(
+        scu_table = qo.Rename(
             {
                 SCU_ADMIT_TIMESTAMP: "admit",
                 SCU_DISCHARGE_TIMESTAMP: "discharge",
             }
         )(scu_table)
-        scu_table = qp.Literal("SCU", CARE_UNIT)(scu_table)
+        scu_table = qo.Literal("SCU", CARE_UNIT)(scu_table)
         scu_table = filter_care_unit_cols(scu_table)
 
         # Emergency room/department table.
         er_table = self.er_admin().query
-        er_table = qp.Rename(
+        er_table = qo.Rename(
             {
                 ER_ADMIT_TIMESTAMP: "admit",
                 ER_DISCHARGE_TIMESTAMP: "discharge",
             }
         )(er_table)
-        er_table = qp.Literal("ER", CARE_UNIT)(er_table)
+        er_table = qo.Literal("ER", CARE_UNIT)(er_table)
         er_table = filter_care_unit_cols(er_table)
 
         # Room transfer table.
         rt_table = self.room_transfers().query
-        rt_table = qp.Rename(
+        rt_table = qo.Rename(
             {
                 "checkin_date_time": "admit",
                 "checkout_date_time": "discharge",
             }
         )(rt_table)
-        rt_table = qp.Rename({"transfer_description": CARE_UNIT})(rt_table)
+        rt_table = qo.Rename({"transfer_description": CARE_UNIT})(rt_table)
         rt_table = filter_care_unit_cols(rt_table)
 
         # Combine.
@@ -499,11 +499,11 @@ class GEMINIQuerier(DatasetQuerier):
         ).subquery()
 
         if patient_encounters_table is not None:
-            table = qp.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
+            table = qo.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
 
         # Process optional operations
-        operations: List[tuple] = [(qp.Limit, [qp.QAP("limit")], {})]
-        table = qp.process_operations(table, operations, process_kwargs)
+        operations: List[tuple] = [(qo.Limit, [qo.QAP("limit")], {})]
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -556,35 +556,35 @@ class GEMINIQuerier(DatasetQuerier):
 
         # Remove rows with null events/events with no recorded name
         if drop_null_event_names:
-            table = qp.DropNulls(EVENT_NAME)(table)
-            table = qp.ConditionEquals(
+            table = qo.DropNulls(EVENT_NAME)(table)
+            table = qo.ConditionEquals(
                 EVENT_NAME, EMPTY_STRING, not_=True, to_str=True
             )(table)
 
         # Remove rows with null event values
         if drop_null_event_values:
-            table = qp.DropNulls(EVENT_VALUE)(table)
+            table = qo.DropNulls(EVENT_VALUE)(table)
 
         # Process optional operations
         operations: List[tuple] = [
-            (qp.ConditionIn, [EVENT_NAME, qp.QAP("event_names")], {"to_str": True}),
-            (qp.ConditionBeforeDate, [EVENT_TIMESTAMP, qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, [EVENT_TIMESTAMP, qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, [EVENT_TIMESTAMP, qp.QAP("years")], {}),
-            (qp.ConditionInMonths, [EVENT_TIMESTAMP, qp.QAP("months")], {}),
+            (qo.ConditionIn, [EVENT_NAME, qo.QAP("event_names")], {"to_str": True}),
+            (qo.ConditionBeforeDate, [EVENT_TIMESTAMP, qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, [EVENT_TIMESTAMP, qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, [EVENT_TIMESTAMP, qo.QAP("years")], {}),
+            (qo.ConditionInMonths, [EVENT_TIMESTAMP, qo.QAP("months")], {}),
             (
-                qp.ConditionSubstring,
-                [EVENT_NAME, qp.QAP("event_name_substring")],
+                qo.ConditionSubstring,
+                [EVENT_NAME, qo.QAP("event_name_substring")],
                 {"to_str": True},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         # Join on patient encounters
         if patient_encounters_table is not None:
-            table = qp.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
+            table = qo.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
 
         return QueryInterface(self._db, table)
 
@@ -623,27 +623,27 @@ class GEMINIQuerier(DatasetQuerier):
         """
         table = self.get_table(BLOOD_TRANSFUSION)
 
-        table = qp.Cast("issue_date_time", "timestamp")(table)
+        table = qo.Cast("issue_date_time", "timestamp")(table)
 
         operations: List[tuple] = [
-            (qp.ConditionBeforeDate, ["issue_date_time", qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, ["issue_date_time", qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, ["issue_date_time", qp.QAP("years")], {}),
-            (qp.ConditionInMonths, ["issue_date_time", qp.QAP("months")], {}),
-            (qp.ConditionEquals, ["rbc_mapped", qp.QAP("rbc_mapped")], {}),
+            (qo.ConditionBeforeDate, ["issue_date_time", qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, ["issue_date_time", qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, ["issue_date_time", qo.QAP("years")], {}),
+            (qo.ConditionInMonths, ["issue_date_time", qo.QAP("months")], {}),
+            (qo.ConditionEquals, ["rbc_mapped", qo.QAP("rbc_mapped")], {}),
             (
-                qp.ConditionSubstring,
-                ["blood_product_raw", qp.QAP("blood_product_raw_substring")],
+                qo.ConditionSubstring,
+                ["blood_product_raw", qo.QAP("blood_product_raw_substring")],
                 {},
             ),
             (
-                qp.ConditionIn,
-                ["blood_product_raw", qp.QAP("blood_product_raw_names")],
+                qo.ConditionIn,
+                ["blood_product_raw", qo.QAP("blood_product_raw_names")],
                 {"to_str": True},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -667,13 +667,13 @@ class GEMINIQuerier(DatasetQuerier):
 
         operations: List[tuple] = [
             (
-                qp.ConditionInYears,
-                ["intervention_episode_start_date", qp.QAP("years")],
+                qo.ConditionInYears,
+                ["intervention_episode_start_date", qo.QAP("years")],
                 {},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -709,44 +709,44 @@ class GEMINIQuerier(DatasetQuerier):
 
         # Get imaging test description
         lookup_table = self.get_table(LOOKUP_IMAGING)
-        lookup_table = qp.ConditionEquals("variable", "imaging_test_name_mapped")(
+        lookup_table = qo.ConditionEquals("variable", "imaging_test_name_mapped")(
             lookup_table
         )
 
-        table = qp.Join(
+        table = qo.Join(
             lookup_table,
             on=("imaging_test_name_mapped", "value"),
             on_to_type="str",
             join_table_cols="description",
         )(table)
-        table = qp.Drop("value")(table)
-        table = qp.Rename({"description": "imaging_test_description"})(table)
-        table = qp.ReorderAfter("imaging_test_description", "imaging_test_name_mapped")(
+        table = qo.Drop("value")(table)
+        table = qo.Rename({"description": "imaging_test_description"})(table)
+        table = qo.ReorderAfter("imaging_test_description", "imaging_test_name_mapped")(
             table
         )
 
         operations: List[tuple] = [
             (
-                qp.ConditionBeforeDate,
-                ["performed_date_time", qp.QAP("before_date")],
+                qo.ConditionBeforeDate,
+                ["performed_date_time", qo.QAP("before_date")],
                 {},
             ),
-            (qp.ConditionAfterDate, ["performed_date_time", qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, ["performed_date_time", qp.QAP("years")], {}),
-            (qp.ConditionInMonths, ["performed_date_time", qp.QAP("months")], {}),
+            (qo.ConditionAfterDate, ["performed_date_time", qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, ["performed_date_time", qo.QAP("years")], {}),
+            (qo.ConditionInMonths, ["performed_date_time", qo.QAP("months")], {}),
             (
-                qp.ConditionIn,
-                ["imaging_test_description", qp.QAP("test_descriptions")],
+                qo.ConditionIn,
+                ["imaging_test_description", qo.QAP("test_descriptions")],
                 {},
             ),
             (
-                qp.ConditionIn,
-                ["imaging_test_name_raw", qp.QAP("raw_test_names")],
+                qo.ConditionIn,
+                ["imaging_test_name_raw", qo.QAP("raw_test_names")],
                 {"to_str": True},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -770,9 +770,9 @@ class GEMINIQuerier(DatasetQuerier):
 
         operations: List[tuple] = [
             (
-                qp.FilterColumns,
+                qo.FilterColumns,
                 [
-                    qp.QAP(
+                    qo.QAP(
                         "variables",
                         transform_fn=lambda x: append_if_missing(
                             x, ENCOUNTER_ID, to_start=True
@@ -781,9 +781,9 @@ class GEMINIQuerier(DatasetQuerier):
                 ],
                 {},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -804,8 +804,8 @@ class GEMINIQuerier(DatasetQuerier):
         table = self.get_table(PHARMACY)
 
         operations: List[tuple] = [
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)

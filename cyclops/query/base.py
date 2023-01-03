@@ -7,7 +7,7 @@ from hydra import compose, initialize
 from omegaconf import OmegaConf
 from sqlalchemy.sql.selectable import Subquery
 
-from cyclops.query import process as qp
+from cyclops.query import ops as qo
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.orm import Database
 from cyclops.query.util import TableTypes, _to_subquery, table_params_to_type
@@ -113,6 +113,6 @@ class DatasetQuerier:
         table = self._table_map[table_name](self._db).data
 
         if rename:
-            table = qp.Rename(self._column_map, check_exists=False)(table)
+            table = qo.Rename(self._column_map, check_exists=False)(table)
 
         return _to_subquery(table)

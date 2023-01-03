@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Union
 
 from sqlalchemy.sql.selectable import Subquery
 
-from cyclops.query import process as qp
+import cyclops.query.ops as qo
 from cyclops.query.base import DatasetQuerier
 from cyclops.query.interface import QueryInterface
 from cyclops.query.util import TableTypes, table_params_to_type
@@ -135,13 +135,13 @@ class OMOPQuerier(DatasetQuerier):
         for col in to_list(source_cols):
             if ID not in col:
                 raise ValueError("Specified column not a concept ID column!")
-            source_table = qp.Join(
+            source_table = qo.Join(
                 concept_table,
                 on=(col, CONCEPT_ID),
                 join_table_cols=[CONCEPT_NAME],
                 isouter=True,
             )(source_table)
-            source_table = qp.Rename({CONCEPT_NAME: col.replace(ID, NAME)})(
+            source_table = qo.Rename({CONCEPT_NAME: col.replace(ID, NAME)})(
                 source_table
             )
 
@@ -162,7 +162,7 @@ class OMOPQuerier(DatasetQuerier):
 
         """
         care_site_table = self.get_table(CARE_SITE)
-        source_table = qp.Join(
+        source_table = qo.Join(
             care_site_table,
             on=CARE_SITE_ID,
             join_table_cols=[CARE_SITE_NAME, CARE_SITE_SOURCE_VALUE],
@@ -210,10 +210,10 @@ class OMOPQuerier(DatasetQuerier):
         table = self.get_table(VISIT_OCCURRENCE)
 
         if drop_null_person_ids:
-            table = qp.DropNulls(PERSON_ID)(table)
+            table = qo.DropNulls(PERSON_ID)(table)
 
         # Possibly cast string representations to timestamps.
-        table = qp.Cast([VISIT_START_DATETIME], "timestamp")(table)
+        table = qo.Cast([VISIT_START_DATETIME], "timestamp")(table)
 
         # Map concept IDs to concept table cols.
         table = self._map_concept_ids_to_name(
@@ -224,19 +224,19 @@ class OMOPQuerier(DatasetQuerier):
         table = self._map_care_site_id(table)
 
         operations: List[tuple] = [
-            (qp.ConditionBeforeDate, [VISIT_START_DATETIME, qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, [VISIT_START_DATETIME, qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, [VISIT_START_DATETIME, qp.QAP("years")], {}),
-            (qp.ConditionInMonths, [VISIT_START_DATETIME, qp.QAP("months")], {}),
+            (qo.ConditionBeforeDate, [VISIT_START_DATETIME, qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, [VISIT_START_DATETIME, qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, [VISIT_START_DATETIME, qo.QAP("years")], {}),
+            (qo.ConditionInMonths, [VISIT_START_DATETIME, qo.QAP("months")], {}),
             (
-                qp.ConditionIn,
-                [CARE_SITE_SOURCE_VALUE, qp.QAP("hospitals")],
+                qo.ConditionIn,
+                [CARE_SITE_SOURCE_VALUE, qo.QAP("hospitals")],
                 {"to_str": True},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -279,10 +279,10 @@ class OMOPQuerier(DatasetQuerier):
         table = self.get_table(VISIT_DETAIL)
 
         # Possibly cast string representations to timestamps
-        table = qp.Cast([VISIT_DETAIL_START_DATETIME], "timestamp")(table)
+        table = qo.Cast([VISIT_DETAIL_START_DATETIME], "timestamp")(table)
 
         if visit_occurrence_table is not None:
-            table = qp.Join(
+            table = qo.Join(
                 visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID]
             )(table)
 
@@ -292,26 +292,26 @@ class OMOPQuerier(DatasetQuerier):
 
         operations: List[tuple] = [
             (
-                qp.ConditionBeforeDate,
-                [VISIT_DETAIL_START_DATETIME, qp.QAP("before_date")],
+                qo.ConditionBeforeDate,
+                [VISIT_DETAIL_START_DATETIME, qo.QAP("before_date")],
                 {},
             ),
             (
-                qp.ConditionAfterDate,
-                [VISIT_DETAIL_START_DATETIME, qp.QAP("after_date")],
+                qo.ConditionAfterDate,
+                [VISIT_DETAIL_START_DATETIME, qo.QAP("after_date")],
                 {},
             ),
-            (qp.ConditionInYears, [VISIT_DETAIL_START_DATETIME, qp.QAP("years")], {}),
-            (qp.ConditionInMonths, [VISIT_DETAIL_START_DATETIME, qp.QAP("months")], {}),
+            (qo.ConditionInYears, [VISIT_DETAIL_START_DATETIME, qo.QAP("years")], {}),
+            (qo.ConditionInMonths, [VISIT_DETAIL_START_DATETIME, qo.QAP("months")], {}),
             (
-                qp.ConditionSubstring,
-                [VISIT_DETAIL_CONCEPT_NAME, qp.QAP("care_unit")],
+                qo.ConditionSubstring,
+                [VISIT_DETAIL_CONCEPT_NAME, qo.QAP("care_unit")],
                 {},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -348,20 +348,20 @@ class OMOPQuerier(DatasetQuerier):
         table = self.get_table(PERSON)
 
         if visit_occurrence_table is not None:
-            table = qp.Join(visit_occurrence_table, on=PERSON_ID)(table)
+            table = qo.Join(visit_occurrence_table, on=PERSON_ID)(table)
 
         table = self._map_concept_ids_to_name(
             table, ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"]
         )
 
         operations: List[tuple] = [
-            (qp.ConditionIn, [GENDER_CONCEPT_NAME, qp.QAP("gender")], {}),
-            (qp.ConditionIn, [RACE_CONCEPT_NAME, qp.QAP("race")], {}),
-            (qp.ConditionIn, [ETHNICITY_CONCEPT_NAME, qp.QAP("ethnicity")], {}),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.ConditionIn, [GENDER_CONCEPT_NAME, qo.QAP("gender")], {}),
+            (qo.ConditionIn, [RACE_CONCEPT_NAME, qo.QAP("race")], {}),
+            (qo.ConditionIn, [ETHNICITY_CONCEPT_NAME, qo.QAP("ethnicity")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -402,26 +402,26 @@ class OMOPQuerier(DatasetQuerier):
         table = self.get_table(OBSERVATION)
 
         if visit_occurrence_table is not None:
-            table = qp.Join(
+            table = qo.Join(
                 visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID]
             )(table)
 
         # Possibly cast string representations to timestamps
-        table = qp.Cast([OBSERVATION_DATETIME], "timestamp")(table)
+        table = qo.Cast([OBSERVATION_DATETIME], "timestamp")(table)
 
         table = self._map_concept_ids_to_name(
             table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID]
         )
 
         operations: List[tuple] = [
-            (qp.ConditionBeforeDate, [OBSERVATION_DATETIME, qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, [OBSERVATION_DATETIME, qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, [OBSERVATION_DATETIME, qp.QAP("years")], {}),
-            (qp.ConditionInMonths, [OBSERVATION_DATETIME, qp.QAP("months")], {}),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.ConditionBeforeDate, [OBSERVATION_DATETIME, qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, [OBSERVATION_DATETIME, qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, [OBSERVATION_DATETIME, qo.QAP("years")], {}),
+            (qo.ConditionInMonths, [OBSERVATION_DATETIME, qo.QAP("months")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -462,15 +462,15 @@ class OMOPQuerier(DatasetQuerier):
         table = self.get_table(MEASUREMENT)
 
         if visit_occurrence_table is not None:
-            table = qp.Join(
+            table = qo.Join(
                 visit_occurrence_table, on=[PERSON_ID, VISIT_OCCURRENCE_ID]
             )(table)
 
         # Possibly cast string representations to timestamps
-        table = qp.Cast([MEASUREMENT_DATETIME], "timestamp")(table)
+        table = qo.Cast([MEASUREMENT_DATETIME], "timestamp")(table)
 
         # Cast value_as_concept_id to int.
-        table = qp.Cast([VALUE_AS_CONCEPT_ID], "int")(table)
+        table = qo.Cast([VALUE_AS_CONCEPT_ID], "int")(table)
 
         table = self._map_concept_ids_to_name(
             table,
@@ -478,13 +478,13 @@ class OMOPQuerier(DatasetQuerier):
         )
 
         operations: List[tuple] = [
-            (qp.ConditionBeforeDate, [MEASUREMENT_DATETIME, qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, [MEASUREMENT_DATETIME, qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, [MEASUREMENT_DATETIME, qp.QAP("years")], {}),
-            (qp.ConditionInMonths, [MEASUREMENT_DATETIME, qp.QAP("months")], {}),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.ConditionBeforeDate, [MEASUREMENT_DATETIME, qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, [MEASUREMENT_DATETIME, qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, [MEASUREMENT_DATETIME, qo.QAP("years")], {}),
+            (qo.ConditionInMonths, [MEASUREMENT_DATETIME, qo.QAP("months")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)

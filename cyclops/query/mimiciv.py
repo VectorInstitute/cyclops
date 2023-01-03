@@ -12,6 +12,7 @@ from typing import List, Optional
 from sqlalchemy import Integer, func, select
 from sqlalchemy.sql.selectable import Subquery
 
+import cyclops.query.ops as qo
 from cyclops.process.column_names import (
     ADMIT_TIMESTAMP,
     AGE,
@@ -29,10 +30,9 @@ from cyclops.process.column_names import (
     SEX,
     SUBJECT_ID,
 )
-from cyclops.query import process as qp
 from cyclops.query.base import DatasetQuerier
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from cyclops.query.postprocess.mimiciv import process_mimic_care_units
+from cyclops.query.post_process.mimiciv import process_mimic_care_units
 from cyclops.query.util import (
     TableTypes,
     assert_table_has_columns,
@@ -149,17 +149,17 @@ class MIMICIVQuerier(DatasetQuerier):
         ).subquery()
 
         # Shift relevant columns by anchor year difference
-        table = qp.AddColumn("anchor_year", "anchor_year_difference")(table)
-        table = qp.AddDeltaColumns([DATE_OF_DEATH], years="anchor_year_difference")(
+        table = qo.AddColumn("anchor_year", "anchor_year_difference")(table)
+        table = qo.AddDeltaColumns([DATE_OF_DEATH], years="anchor_year_difference")(
             table
         )
 
         # Calculate approximate year of birth
-        table = qp.AddColumn(
+        table = qo.AddColumn(
             "anchor_year", "age", negative=True, new_col_labels="birth_year"
         )(table)
 
-        table = qp.Drop(
+        table = qo.Drop(
             [
                 "age",
                 "anchor_year",
@@ -171,7 +171,7 @@ class MIMICIVQuerier(DatasetQuerier):
         )(table)
 
         # Reorder nicely.
-        table = qp.Reorder(
+        table = qo.Reorder(
             [SUBJECT_ID, SEX, "birth_year", DATE_OF_DEATH, "anchor_year_difference"]
         )(table)
 
@@ -181,19 +181,19 @@ class MIMICIVQuerier(DatasetQuerier):
 
         operations: List[tuple] = [
             # Must convert to string since CHAR(1) type doesn't recognize equality
-            (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+            (qo.ConditionIn, [SEX, qo.QAP("sex")], {"to_str": True}),
             (
-                qp.ConditionEquals,
+                qo.ConditionEquals,
                 ["discharge_location", "DIED"],
                 {
-                    "not_": qp.QAP("died", transform_fn=lambda x: not x),
-                    "binarize_col": qp.QAP("died_binarize_col", required=False),
+                    "not_": qo.QAP("died", transform_fn=lambda x: not x),
+                    "binarize_col": qo.QAP("died_binarize_col", required=False),
                 },
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -220,32 +220,32 @@ class MIMICIVQuerier(DatasetQuerier):
         table = self.get_table(DIAGNOSES)
 
         # Rename long_title
-        table = qp.Rename({"long_title": DIAGNOSIS_TITLE})(table)
+        table = qo.Rename({"long_title": DIAGNOSIS_TITLE})(table)
 
         # Trim whitespace from ICD codes.
-        table = qp.Trim(DIAGNOSIS_CODE)(table)
+        table = qo.Trim(DIAGNOSIS_CODE)(table)
 
         # Process optional operations
         operations: List[tuple] = [
             (
-                qp.ConditionIn,
-                [DIAGNOSIS_VERSION, qp.QAP("diagnosis_versions")],
+                qo.ConditionIn,
+                [DIAGNOSIS_VERSION, qo.QAP("diagnosis_versions")],
                 {"to_int": True},
             ),
             (
-                qp.ConditionSubstring,
-                [DIAGNOSIS_TITLE, qp.QAP("diagnosis_substring")],
+                qo.ConditionSubstring,
+                [DIAGNOSIS_TITLE, qo.QAP("diagnosis_substring")],
                 {},
             ),
             (
-                qp.ConditionIn,
-                [DIAGNOSIS_CODE, qp.QAP("diagnosis_codes")],
+                qo.ConditionIn,
+                [DIAGNOSIS_CODE, qo.QAP("diagnosis_codes")],
                 {"to_str": True},
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -280,11 +280,11 @@ class MIMICIVQuerier(DatasetQuerier):
         table = self.get_table(PATIENT_DIAGNOSES)
 
         # Trim whitespace from ICD codes.
-        table = qp.Trim(DIAGNOSIS_CODE)(table)
+        table = qo.Trim(DIAGNOSIS_CODE)(table)
 
         # If provided, join with a patients table
         if patients_table is not None:
-            table = qp.Join(patients_table, on=SUBJECT_ID)(table)
+            table = qo.Join(patients_table, on=SUBJECT_ID)(table)
 
         # Get diagnosis codes.
         diagnoses_table = self.diagnoses(
@@ -298,7 +298,7 @@ class MIMICIVQuerier(DatasetQuerier):
         )
 
         # Include DIAGNOSIS_TITLE in patient diagnoses.
-        table = qp.Join(
+        table = qo.Join(
             diagnoses_table,
             on=[DIAGNOSIS_CODE, DIAGNOSIS_VERSION],
             join_table_cols=DIAGNOSIS_TITLE,
@@ -334,19 +334,19 @@ class MIMICIVQuerier(DatasetQuerier):
         table = self.get_table(TRANSFERS)
 
         if patients_table is not None:
-            table = qp.Join(patients_table, on=SUBJECT_ID)(table)
+            table = qo.Join(patients_table, on=SUBJECT_ID)(table)
 
-            table = qp.AddDeltaColumns(
+            table = qo.AddDeltaColumns(
                 ["intime", "outtime"], years="anchor_year_difference"
             )(table)
 
         # Process optional operations
         operations: List[tuple] = [
-            (qp.ConditionIn, [ENCOUNTER_ID, qp.QAP("encounters")], {"to_int": True}),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.ConditionIn, [ENCOUNTER_ID, qo.QAP("encounters")], {"to_int": True}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -432,10 +432,10 @@ class MIMICIVQuerier(DatasetQuerier):
             patients_table = self.patients().query
 
         # Join admissions and patient table
-        table = qp.Join(patients_table, on="subject_id")(table)
+        table = qo.Join(patients_table, on="subject_id")(table)
 
         # Update timestamps with anchor year difference
-        table = qp.AddDeltaColumns(
+        table = qo.AddDeltaColumns(
             [
                 ADMIT_TIMESTAMP,
                 DISCHARGE_TIMESTAMP,
@@ -447,32 +447,32 @@ class MIMICIVQuerier(DatasetQuerier):
         )(table)
 
         # Extract approximate age at time of admission
-        table = qp.ExtractTimestampComponent(ADMIT_TIMESTAMP, "year", AGE)(table)
-        table = qp.AddColumn(AGE, "birth_year", negative=True)(table)
-        table = qp.ReorderAfter(AGE, SEX)(table)
+        table = qo.ExtractTimestampComponent(ADMIT_TIMESTAMP, "year", AGE)(table)
+        table = qo.AddColumn(AGE, "birth_year", negative=True)(table)
+        table = qo.ReorderAfter(AGE, SEX)(table)
 
         # Process optional operations
         if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
             process_kwargs["died"] = True
 
         operations: List[tuple] = [
-            (qp.ConditionBeforeDate, [ADMIT_TIMESTAMP, qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, [ADMIT_TIMESTAMP, qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, [ADMIT_TIMESTAMP, qp.QAP("years")], {}),
-            (qp.ConditionInMonths, [ADMIT_TIMESTAMP, qp.QAP("months")], {}),
-            (qp.ConditionIn, [SEX, qp.QAP("sex")], {"to_str": True}),
+            (qo.ConditionBeforeDate, [ADMIT_TIMESTAMP, qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, [ADMIT_TIMESTAMP, qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, [ADMIT_TIMESTAMP, qo.QAP("years")], {}),
+            (qo.ConditionInMonths, [ADMIT_TIMESTAMP, qo.QAP("months")], {}),
+            (qo.ConditionIn, [SEX, qo.QAP("sex")], {"to_str": True}),
             (
-                qp.ConditionEquals,
+                qo.ConditionEquals,
                 ["discharge_location", "DIED"],
                 {
-                    "not_": qp.QAP("died", transform_fn=lambda x: not x),
-                    "binarize_col": qp.QAP("died_binarize_col", required=False),
+                    "not_": qo.QAP("died", transform_fn=lambda x: not x),
+                    "binarize_col": qo.QAP("died_binarize_col", required=False),
                 },
             ),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         return QueryInterface(self._db, table)
 
@@ -509,34 +509,34 @@ class MIMICIVQuerier(DatasetQuerier):
         event_labels = self.get_table(EVENT_LABELS)
 
         # Get category and event name
-        table = qp.Join(
+        table = qo.Join(
             event_labels, on="itemid", join_table_cols=["category", "event_name"]
         )(table)
-        table = qp.Rename({"category": EVENT_CATEGORY})(table)
+        table = qo.Rename({"category": EVENT_CATEGORY})(table)
 
         # Process optional operations
         operations: List[tuple] = [
-            (qp.ConditionBeforeDate, [EVENT_TIMESTAMP, qp.QAP("before_date")], {}),
-            (qp.ConditionAfterDate, [EVENT_TIMESTAMP, qp.QAP("after_date")], {}),
-            (qp.ConditionInYears, [EVENT_TIMESTAMP, qp.QAP("years")], {}),
-            (qp.ConditionInMonths, [EVENT_TIMESTAMP, qp.QAP("months")], {}),
-            (qp.ConditionIn, [EVENT_CATEGORY, qp.QAP("categories")], {}),
-            (qp.ConditionIn, [EVENT_NAME, qp.QAP("event_names")], {}),
-            (qp.ConditionSubstring, [EVENT_NAME, qp.QAP("event_name_substring")], {}),
-            (qp.Limit, [qp.QAP("limit")], {}),
+            (qo.ConditionBeforeDate, [EVENT_TIMESTAMP, qo.QAP("before_date")], {}),
+            (qo.ConditionAfterDate, [EVENT_TIMESTAMP, qo.QAP("after_date")], {}),
+            (qo.ConditionInYears, [EVENT_TIMESTAMP, qo.QAP("years")], {}),
+            (qo.ConditionInMonths, [EVENT_TIMESTAMP, qo.QAP("months")], {}),
+            (qo.ConditionIn, [EVENT_CATEGORY, qo.QAP("categories")], {}),
+            (qo.ConditionIn, [EVENT_NAME, qo.QAP("event_names")], {}),
+            (qo.ConditionSubstring, [EVENT_NAME, qo.QAP("event_name_substring")], {}),
+            (qo.Limit, [qo.QAP("limit")], {}),
         ]
 
-        table = qp.process_operations(table, operations, process_kwargs)
+        table = qo.process_operations(table, operations, process_kwargs)
 
         # Join on patient encounters
         if patient_encounters_table is not None:
-            table = qp.Join(
+            table = qo.Join(
                 patient_encounters_table,
                 on=ENCOUNTER_ID,
             )(table)
 
             # Add MIMIC patient-specific time difference to event/store timestamps
-            table = qp.AddDeltaColumns(
+            table = qo.AddDeltaColumns(
                 [EVENT_TIMESTAMP, "storetime"], years="anchor_year_difference"
             )(table)
 

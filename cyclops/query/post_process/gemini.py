@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from cyclops.query.postprocess.util import process_care_unit_changepoints
+from cyclops.query.post_process.util import process_care_unit_changepoints
 
 CARE_UNIT_HIERARCHY = [
     "ER",

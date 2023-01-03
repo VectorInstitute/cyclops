@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import column, select
 
 from cyclops.query.omop import OMOPQuerier
-from cyclops.query.process import (
+from cyclops.query.ops import (
     QAP,
     AddNumeric,
     ConditionIn,
