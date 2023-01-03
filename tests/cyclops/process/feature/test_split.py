@@ -26,9 +26,9 @@ def test_fractions_to_split():
     fractions_to_split(lst, 100)
     assert lst == [0.8, 0.2]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         fractions_to_split("donkey", 12)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         fractions_to_split([0.8, 1], 12)
     with pytest.raises(ValueError):
         fractions_to_split([0.8, -0.2], 12)
