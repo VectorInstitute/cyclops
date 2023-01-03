@@ -207,10 +207,8 @@ def load_dataframe(
     if log:
         LOGGER.info("Loading DataFrame from %s", load_path)
     if file_format == "parquet":
-        if is_dask:
-            data = dd.read_parquet(load_path)
-        else:
-            data = pd.read_parquet(load_path)
+        data_reader = dd.read_parquet if is_dask else pd.read_parquet
+        data = data_reader(load_path)
     elif file_format == "csv":
         data = pd.read_csv(load_path, index_col=[0])
     else:
