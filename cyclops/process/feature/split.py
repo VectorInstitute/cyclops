@@ -1,6 +1,15 @@
 """Dataset split processing."""
 
-from typing import Generator, List, Optional, Tuple, Union
+from typing import (
+    Generator,
+    Iterable,
+    List,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pandas as pd
@@ -8,8 +17,32 @@ import pandas as pd
 from cyclops.utils.common import to_list
 
 
+def __normalize_fractions(
+    fractions: Sequence[Union[float, int]]
+) -> MutableSequence[Union[float, int]]:
+    """Normalize the fractions to sum to 1.
+
+    Parameters
+    ----------
+    fractions: Sequence of values whose sum to normalize to 1.
+
+    Raises
+    ------
+    ValueError if the sum is 0.
+
+    Returns
+    -------
+    MutableSequence scaled such that its sum is 1.
+
+    """
+    original_sum = sum(fractions)
+    if original_sum == 0:
+        raise ValueError("sum of sequence is zero.")
+    return [value / original_sum for value in fractions]
+
+
 def fractions_to_split(
-    fractions: Union[float, List[float]],
+    fractions: Union[int, float, Sequence[Union[float, int]]],
     n_samples: int,
 ) -> np.ndarray:
     """Create an array of index split points useful for dataset splitting.
@@ -18,8 +51,18 @@ def fractions_to_split(
 
     Parameters
     ----------
-    fractions: float or list of float
-        Fraction(s) of samples between 0 and 1 to use for each split.
+    fractions: float, int, or Sequence thereof.
+        Fraction(s) of samples to use for each split.
+
+        If the sum of the sequence (or single value) is in the range
+        (0, 1), an additional fraction will be assumed at the end of
+        the sequence, such that the new sequence sums to 1.
+
+        If a sequence (or single value) of 2 or more values sums to
+        more than 1, it will first be normalized to sum to 1.
+
+        Negative values are always an error.
+
     n_samples: int
         The total number of samples in the data being split.
 
@@ -28,44 +71,34 @@ def fractions_to_split(
     np.ndarray
         Split indices to use in creating the desired split sizes.
 
+    Note
+    ----
+    For sufficiently small values of a fraction, the corresponding split
+    might be of zero size.
+
     """
-    frac_list: List[float]
-    if isinstance(fractions, float):
-        if fractions >= 1 or fractions <= 0:
-            raise ValueError("As a float, fractions must be in the range [0, 1].")
-        frac_list = [fractions]
-    elif isinstance(fractions, list):
-        # Necessary so as to not mutate the original fractions list
+    if n_samples < 0:
+        raise ValueError("'n_samples' cannot be negative.")
+
+    if isinstance(fractions, Iterable):
         frac_list = list(fractions)
     else:
-        raise TypeError("fractions must be a float or a list of floats.")
+        frac_list = [fractions]
 
-    # Element checking
-    is_float = (isinstance(elem, float) for elem in frac_list)
-    if not all(is_float):
-        raise TypeError("fractions must be floats.")
+    if any(map(lambda x: not isinstance(x, (float, int)), frac_list)):
+        raise TypeError("fractions must be int or float.")
 
-    invalid = (frac <= 0 or frac >= 1 for frac in frac_list)
-    if any(invalid):
-        raise ValueError("fractions must be between 0 and 1.")
+    if any(map(lambda x: x < 0, frac_list)):
+        raise ValueError("fractions must be non-negative.")
 
-    if sum(frac_list) != 1:
-        if sum(frac_list) < 1:
-            # Meant to handle floats e.g., 0.8 -> [0.8], which is actually [0.8, 0.2]
-            # Doing it this way allows for directly entering [0.8] in list form
-            frac_list.append(1.0 - sum(frac_list))
-        else:
-            raise ValueError("fractions must sum to 1.")
+    if 0.0 <= sum(frac_list) < 1.0:
+        # max() guarding against floating point imprecision
+        frac_list.append(max(0.0, 1.0 - sum(frac_list)))
 
-    # Turn into dividing list of lengths to split and return
-    for i in range(1, len(frac_list)):
-        frac_list[i] += frac_list[i - 1]
+    normalized_fractions = __normalize_fractions(frac_list)
+    normalized_indexes = np.cumsum(normalized_fractions)
 
-    tolerance = 1e-9
-    if abs(frac_list[-1] - 1.0) > tolerance:
-        raise RuntimeError("Internal error: cumulative frac_list not summing to 1.")
-
-    return np.round(np.array(frac_list[:-1]) * n_samples).astype(int)
+    return np.round(np.array(normalized_indexes[:-1]) * n_samples).astype(int)
 
 
 def split_idx(
@@ -185,7 +218,7 @@ def split_kfold(
         K disjoint subsets of indices equal in length.
 
     """
-    fracs = [1 / k_folds for i in range(k_folds - 1)]
+    fracs = [1 / k_folds for _ in range(k_folds - 1)]
     idxs = split_idx(fracs, n_samples, randomize=randomize, seed=seed)
     return idxs
 

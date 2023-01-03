@@ -17,25 +17,47 @@ from cyclops.process.feature.split import (
 )
 
 
-def test_fractions_to_split():
-    """Test fractions_to_split function."""
+def test_fractions_to_split_results():
+    """Test that the resulting index arrays are correct."""
     assert fractions_to_split(0.8, 100) == [80]
+    assert np.array_equal(
+        fractions_to_split([0.2] * 4, 100), np.array(range(20, 100, 20), dtype=int)
+    )
+    assert np.array_equal(fractions_to_split([1.0, 2.0], 12), np.array((4,), dtype=int))
 
-    # Ensure no mutation
+    assert fractions_to_split([1.0], 12).size == 0
+    assert fractions_to_split(1.0, 12).size == 0
+    assert fractions_to_split([2.0], 12).size == 0
+
+    # Expect no exception although sum > 1
+    fractions_to_split([0.8, 0.13, 0.23], 12)
+
+
+def test_fractions_to_split_expect_no_permutation():
+    """Expect that no permutations to mutable sequence argument."""
     lst = [0.8, 0.2]
     fractions_to_split(lst, 100)
     assert lst == [0.8, 0.2]
 
-    with pytest.raises(TypeError):
-        fractions_to_split("donkey", 12)
-    with pytest.raises(TypeError):
-        fractions_to_split([0.8, 1], 12)
-    with pytest.raises(ValueError):
-        fractions_to_split([0.8, -0.2], 12)
-    with pytest.raises(ValueError):
-        fractions_to_split([0.8, 0.13, 0.23], 12)
-    with pytest.raises(ValueError):
-        fractions_to_split(-0.8, 12)
+
+@pytest.mark.parametrize(
+    "fractions,n_samples,expected_exception",
+    [
+        (0.5, -10, ValueError),
+        ("donkey", 12, TypeError),
+        ([-0.01], 12, ValueError),
+        (-0.01, 12, ValueError),
+        ([0.8, "1"], 12, TypeError),
+        ([0.8, complex(1, 2)], 12, TypeError),
+        (complex(1, 0), 12, TypeError),
+        ([0.8, -0.2], 12, ValueError),
+        (-0.8, 12, ValueError),
+    ],
+)
+def test_fractions_to_split_exceptions(fractions, n_samples, expected_exception):
+    """Test expected exceptions in fractions_to_split function."""
+    with pytest.raises(expected_exception):
+        fractions_to_split(fractions, n_samples)
 
 
 def test_split_idx():
