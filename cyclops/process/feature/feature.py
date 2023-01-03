@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from cyclops.plotter import plot_histogram, plot_temporal_features
 from cyclops.process.aggregate import Aggregator
 from cyclops.process.constants import (
     BINARY,
@@ -31,6 +30,7 @@ from cyclops.process.util import has_columns, has_range_index, to_range_index
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
+from cyclops.utils.plot import plot_histogram, plot_temporal_features
 
 # Logging.
 LOGGER = logging.getLogger(__name__)

@@ -27,7 +27,7 @@ class QueryInterface:
         Database object to create ORM, and query data.
     query: cyclops.query.util.TableTypes
         The query.
-    data: pandas.DataFrame
+    data: pandas.DataFrame or dask.DataFrame
         Data returned from executing the query, as Pandas DataFrame.
     _run_args: dict
         Private dictionary attribute to keep track of arguments
@@ -37,7 +37,7 @@ class QueryInterface:
 
     database: Database
     query: TableTypes
-    data: Optional[pd.DataFrame] = None
+    data: Optional[Union[pd.DataFrame, dd.DataFrame]] = None
     _run_args: Dict = field(default_factory=dict)
 
     def run(
@@ -80,14 +80,16 @@ class QueryInterface:
 
         return self.data
 
-    def save(self, path: str, file_format: str = "parquet") -> str:
+    def save(
+        self, path: str, file_format: Literal["parquet", "csv"] = "parquet"
+    ) -> str:
         """Save the query.
 
         Parameters
         ----------
-        save_path: str
+        save_path
             Path where the file will be saved.
-        file_format: str
+        file_format
             File format of the file to save.
 
         Returns
@@ -140,7 +142,7 @@ class QueryInterfaceProcessed:
     _run_args: dict
         Private dictionary attribute to keep track of arguments
         passed to run() method.
-    data: pandas.DataFrame
+    data: pandas.DataFrame or dask.DataFrame
         Data returned from executing the query, as Pandas DataFrame.
 
     """
@@ -148,13 +150,13 @@ class QueryInterfaceProcessed:
     database: Database
     _query: TableTypes
     process_fn: Callable
-    data: Union[pd.DataFrame, None] = None
+    data: Optional[Union[pd.DataFrame, dd.DataFrame, None]] = None
     _run_args: Dict = field(default_factory=dict)
 
     def run(
         self,
         limit: Optional[int] = None,
-        backend: Optional[str] = "pandas",
+        backend: Literal["pandas", "dask"] = "pandas",
         index_col: Optional[str] = None,
         n_partitions: Optional[int] = None,
     ) -> Union[pd.DataFrame, dd.DataFrame]:
@@ -162,14 +164,14 @@ class QueryInterfaceProcessed:
 
         Parameters
         ----------
-        limit: int, optional
+        limit
             No. of rows to limit the query return.
-        backend: str, optional
+        backend
             Backend computing framework to use, Pandas or Dask.
-        index_col: str, optional
+        index_col
             Column which becomes the index, and defines the partitioning.
             Should be a indexed column in the SQL server, and any orderable type.
-        n_partitions: int, optional
+        n_partitions
             Number of partitions. Check dask documentation for additional details.
 
         Returns
@@ -197,14 +199,16 @@ class QueryInterfaceProcessed:
 
         return self.data
 
-    def save(self, path: str, file_format: str = "parquet") -> str:
+    def save(
+        self, path: str, file_format: Literal["parquet", "csv"] = "parquet"
+    ) -> str:
         """Save the processed query.
 
         Parameters
         ----------
-        save_path: str
+        save_path
             Path where the file will be saved.
-        file_format: str
+        file_format
             File format of the file to save.
 
         Returns

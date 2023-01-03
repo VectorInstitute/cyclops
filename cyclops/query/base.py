@@ -38,9 +38,9 @@ class DatasetQuerier:
 
         Parameters
         ----------
-        table_map: Dict
+        table_map
             A dictionary mapping table names to table objects in the DB.
-        column_map: Dict
+        column_map
             A dictionary mapping column names from the database to map to output
             in a consistent format.
         **config_overrides
@@ -71,9 +71,9 @@ class DatasetQuerier:
 
         Parameters
         ----------
-        table: cyclops.query.util.TableTypes
+        table
             Table to wrap in the interface.
-        process_fn: Callable
+        process_fn
             Process function to apply on the Pandas DataFrame returned from the query.
 
         Returns
@@ -96,9 +96,9 @@ class DatasetQuerier:
 
         Parameters
         ----------
-        table_name: str
+        table_name
             Name of GEMINI table.
-        rename: bool, optional
+        rename
             Whether to map the column names
 
         Returns

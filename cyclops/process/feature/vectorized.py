@@ -13,7 +13,7 @@ from cyclops.process.feature.split import split_idx
 from cyclops.process.impute import np_fill_null_num
 from cyclops.utils.common import list_swap
 from cyclops.utils.file import save_array
-from cyclops.utils.indexing import take_indices_over_axis
+from cyclops.utils.index import take_indices_over_axis
 from cyclops.utils.log import setup_logging
 
 # Logging.

@@ -7,7 +7,9 @@ metrics
 -------
 
 .. autosummary::
-    :toctree: generated
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
 
     accuracy
     auroc

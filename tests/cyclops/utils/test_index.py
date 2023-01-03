@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from cyclops.utils.indexing import index_axis, take_indices, take_indices_over_axis
+from cyclops.utils.index import index_axis, take_indices, take_indices_over_axis
 
 
 def test_index_axis():
