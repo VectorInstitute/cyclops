@@ -1758,9 +1758,9 @@ class GroupByAggregate:
     aggfuncs: dict
         Specify a dictionary of key-value pairs:
         column name: aggfunc string or
-        column name: (aggfunc string, new column label) or
-        This labelling allows for the aggregation of the same column with
-        different functions.
+        column name: (aggfunc string, new column label)
+        This labelling prevents the aggregation of the same column using multiple
+        aggregation functions.
     aggseps: dict, optional
         Specify a dictionary of key-value pairs:
         column name: string_aggfunc separator
@@ -1772,6 +1772,7 @@ class GroupByAggregate:
     >>> GroupByAggregate("person_id", {"person_id": "count"})(table)
     >>> GroupByAggregate("person_id", {"person_id": ("count", "visit_count")})(table)
     >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
+    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
 
     """
 
