@@ -1697,6 +1697,40 @@ class DropNulls:
 
 
 @dataclass
+class Apply:
+    """Apply a function to column(s).
+
+    The function must take a sqlalchemy column object and also return a column object.
+
+    Parameters
+    ----------
+    cols: str or list of str
+        Column(s) to apply the function to.
+
+    """
+
+    cols: Union[str, List[str]]
+    func: Callable
+    new_cols: Optional[Union[str, List[str]]] = None
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        return apply_to_columns(table, self.cols, self.func, self.new_cols)
+
+
+@dataclass
 class OrderBy:
     """Order, or sort, the rows of a table by some columns.
 
