@@ -1707,6 +1707,11 @@ class Apply:
     ----------
     cols: str or list of str
         Column(s) to apply the function to.
+    func: Callable
+        Function that takes in single sqlalchemy column object and returns a column
+        after applying the function.
+    new_cols: str or list of str, optional
+        New column name(s) after function is applied to the specified column(s).
 
     """
 
