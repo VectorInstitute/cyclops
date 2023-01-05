@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
+import sqlalchemy
 from sqlalchemy import and_, cast, extract, func, literal_column, or_, select
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import literal
@@ -1694,6 +1695,45 @@ class DropNulls:
 
         cond = and_(*[not_equals(get_column(table, col), None) for col in self.cols])
         return select(table).where(cond).subquery()
+
+
+@dataclass
+class Apply:
+    """Apply a function to column(s).
+
+    The function must take a sqlalchemy column object and also return a column object.
+
+    Parameters
+    ----------
+    cols: str or list of str
+        Column(s) to apply the function to.
+    func: Callable
+        Function that takes in single sqlalchemy column object and returns a column
+        after applying the function.
+    new_cols: str or list of str, optional
+        New column name(s) after function is applied to the specified column(s).
+
+    """
+
+    cols: Union[str, List[str]]
+    func: Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column]
+    new_cols: Optional[Union[str, List[str]]] = None
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        return apply_to_columns(table, self.cols, self.func, self.new_cols)
 
 
 @dataclass

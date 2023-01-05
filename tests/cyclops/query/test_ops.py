@@ -1,12 +1,13 @@
 """Test low-level query API processing functions."""
 
 import pytest
-from sqlalchemy import column, select
+from sqlalchemy import column, func, select
 
 from cyclops.query.omop import OMOPQuerier
 from cyclops.query.ops import (
     QAP,
     AddNumeric,
+    Apply,
     ConditionIn,
     ConditionSubstring,
     Drop,
@@ -76,6 +77,8 @@ def test_operations():
     """Test query operations."""
     synthea = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
     visits = synthea.visit_occurrence().query
+
+    # Query operations.
     visits = Drop("care_site_source_value")(visits)
     visits = Rename({"care_site_name": "hospital_name"})(visits)
     visits = Literal(1, "new_col")(visits)
@@ -97,6 +100,11 @@ def test_operations():
         {"visit_concept_name": ("string_agg", "visit_concept_names")},
         {"visit_concept_name": ", "},
     )(visits)
+    visits_apply = Apply(
+        "visit_concept_name",
+        func.lower,
+        "visit_concept_name_lower",
+    )(visits)
     with pytest.raises(ValueError):
         visits_agg_count = GroupByAggregate(
             "person_id", {"person_id": ("donkey", "visit_count")}
@@ -108,13 +116,17 @@ def test_operations():
     visits_agg_median = GroupByAggregate(
         "person_id", {"visit_concept_name": ("median", "visit_concept_name_median")}
     )(visits)
+
+    # Run queries.
     visits_agg_count = synthea.get_interface(visits_agg_count).run()
     visits_agg_median = synthea.get_interface(visits_agg_median).run()
     visits = synthea.get_interface(visits).run()
     visits_ordered = synthea.get_interface(visits_ordered).run()
     visits_limited = synthea.get_interface(visits_limited).run()
     visits_string_agg = synthea.get_interface(visits_string_agg).run()
+    visits_apply = synthea.get_interface(visits_apply).run()
 
+    # Check results.
     assert "care_site_source_value" not in visits.columns
     assert "care_site_name" not in visits.columns
     assert "hospital_name" in visits.columns
@@ -142,3 +154,7 @@ def test_operations():
         len(test_visit_concept_names) == 25
         and "Outpatient Visit" in test_visit_concept_names
     )
+    assert (
+        visits_apply["visit_concept_name_lower"].unique()
+        == ["inpatient visit", "outpatient visit", "emergency room visit"]
+    ).all()

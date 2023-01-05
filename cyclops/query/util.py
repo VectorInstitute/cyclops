@@ -529,7 +529,7 @@ def reorder_columns(table: TableTypes, cols: List[str]) -> Subquery:
 def apply_to_columns(
     table: TableTypes,
     col_names: Union[str, List[str]],
-    func_: Callable,
+    func_: Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
     new_col_labels: Optional[Union[str, List[str]]] = None,
 ) -> Subquery:
     """Apply a function to some columns.
