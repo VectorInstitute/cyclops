@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
+import sqlalchemy
 from sqlalchemy import and_, cast, extract, func, literal_column, or_, select
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import literal
@@ -1710,7 +1711,7 @@ class Apply:
     """
 
     cols: Union[str, List[str]]
-    func: Callable
+    func: Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column]
     new_cols: Optional[Union[str, List[str]]] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
