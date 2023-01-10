@@ -80,12 +80,15 @@ repos:
     - id: nbqa-isort
     - id: nbqa-check-ast
     - id: nbqa-flake8
-      # ignore E203/W503 to avoid conflict with black:
-      # https://github.com/psf/black/issues/354
+    # ignore E203/W503 to avoid conflict with black:
+    # https://github.com/psf/black/issues/354
       args: ['--ignore=E203,W503']
-      # - id: nbqa-mypy
+    # - id: nbqa-mypy
 
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.6.0
+  - repo: local
     hooks:
     - id: nbstripout
+      name: nbstripout
+      language: python
+      entry: nbstripout
+      exclude: docs/source/tutorials/mimiciv/query_api.ipynb
