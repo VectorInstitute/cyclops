@@ -64,7 +64,7 @@ python3 -m ipykernel install --user --name <name_of_kernel>
 Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 ``<name_of_kernel>``.
 
-Tutorial notebooks in ``tutorials`` can be useful to view the
+Tutorial notebooks in ``docs/source/tutorials`` can be useful to view the
 functionality of the framework.
 
 ## 🎓 Citation

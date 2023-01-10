@@ -41,13 +41,12 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
-    # "numpydoc",
     "myst_parser",
     "sphinx_copybutton",
+    "nbsphinx",
+    "IPython.sphinxext.ipython_console_highlighting",
 ]
 autosummary_generate = True
-# numpydoc_show_inherited_class_members = False
-# numpydoc_show_class_members = False
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
@@ -76,7 +75,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns: list = []
+exclude_patterns: list = ["**.ipynb_checkpoints"]
 source_suffix = [".rst", ".md"]
 
 

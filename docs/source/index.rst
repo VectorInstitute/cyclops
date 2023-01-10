@@ -7,6 +7,6 @@ Welcome to cyclops's documentation!
    :caption: Contents:
 
    intro
-   design
    contributing
+   tutorials
    api
