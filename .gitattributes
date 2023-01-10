@@ -1,2 +1,3 @@
 # Exclude jupyter notebooks for language stats.
 *.ipynb linguist-vendored
+docs/source/tutorials/**/*.ipynb filter= diff=
