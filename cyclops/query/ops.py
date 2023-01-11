@@ -1140,8 +1140,6 @@ class ConditionRegexMatch:  # pylint: disable=too-few-public-methods
         Take negation of condition.
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
-    **cond_kwargs
-        Optional keyword arguments for processing the condition.
 
     """
 
@@ -1151,14 +1149,12 @@ class ConditionRegexMatch:  # pylint: disable=too-few-public-methods
         regex: str,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs,
     ):
         """Initialize."""
         self.col = col
         self.regex = regex
         self.not_ = not_
         self.binarize_col = binarize_col
-        self.cond_kwargs = cond_kwargs
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
