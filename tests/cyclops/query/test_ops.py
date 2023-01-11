@@ -9,6 +9,7 @@ from cyclops.query.ops import (
     AddNumeric,
     Apply,
     ConditionIn,
+    ConditionRegexMatch,
     ConditionSubstring,
     Drop,
     ExtractTimestampComponent,
@@ -77,6 +78,7 @@ def test_operations():
     """Test query operations."""
     synthea = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
     visits = synthea.visit_occurrence().query
+    measurements = synthea.measurement().query
 
     # Query operations.
     visits = Drop("care_site_source_value")(visits)
@@ -116,6 +118,14 @@ def test_operations():
     visits_agg_median = GroupByAggregate(
         "person_id", {"visit_concept_name": ("median", "visit_concept_name_median")}
     )(visits)
+    visits_regex_match = ConditionRegexMatch(
+        "visit_concept_name", r"^In?", binarize_col="visit_concept_name_match"
+    )(visits)
+    measurements_regex_match = ConditionRegexMatch(
+        "value_source_value",
+        r"^[0-9]+(\.[0-9]+)?$",
+        binarize_col="value_source_value_match",
+    )(measurements)
 
     # Run queries.
     visits_agg_count = synthea.get_interface(visits_agg_count).run()
@@ -125,6 +135,8 @@ def test_operations():
     visits_limited = synthea.get_interface(visits_limited).run()
     visits_string_agg = synthea.get_interface(visits_string_agg).run()
     visits_apply = synthea.get_interface(visits_apply).run()
+    visits_regex_match = synthea.get_interface(visits_regex_match).run()
+    measurements_regex_match = synthea.get_interface(measurements_regex_match).run()
 
     # Check results.
     assert "care_site_source_value" not in visits.columns
@@ -158,3 +170,12 @@ def test_operations():
         visits_apply["visit_concept_name_lower"].unique()
         == ["inpatient visit", "outpatient visit", "emergency room visit"]
     ).all()
+    assert (
+        visits_regex_match["visit_concept_name_match"].sum()
+        == visits["visit_concept_name"].str.contains(r"In*").sum()
+    )
+    assert (
+        measurements_regex_match["value_source_value_match"].sum()
+    ) == measurements_regex_match["value_source_value"].str.contains(
+        r"^[0-9]+(\.[0-9]+)?$"
+    ).sum()

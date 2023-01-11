@@ -14,7 +14,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">= 3.8, <3.11"
 pandas = "^1.4.1"
-SQLAlchemy = "^1.4.32"
+SQLAlchemy = "^1.4.32, <2.0"
 python-dotenv = "^0.19.2"
 matplotlib = "^3.5.1"
 torch = "^1.11.0"

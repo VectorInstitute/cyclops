@@ -1127,6 +1127,66 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
+class ConditionRegexMatch:  # pylint: disable=too-few-public-methods
+    """Filter rows based on matching a regular expression.
+
+    Parameters
+    ----------
+    col: str
+        Column name on which to condition.
+    regex: str
+        Regular expression to match.
+    not_: bool, default=False
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+    **cond_kwargs
+        Optional keyword arguments for processing the condition.
+
+    """
+
+    def __init__(
+        self,
+        col: str,
+        regex: str,
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+        **cond_kwargs,
+    ):
+        """Initialize."""
+        self.col = col
+        self.regex = regex
+        self.not_ = not_
+        self.binarize_col = binarize_col
+        self.cond_kwargs = cond_kwargs
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        cond = get_column(table, self.col).regexp_match(self.regex)
+        if self.not_:
+            cond = cond._negate()
+
+        if self.binarize_col is not None:
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
+        return select(table).where(cond).subquery()
+
+
 class ConditionIn:  # pylint: disable=too-few-public-methods
     """Filter rows based on having a value in list of values.
 
