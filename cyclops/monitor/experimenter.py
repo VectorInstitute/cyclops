@@ -85,12 +85,12 @@ class Experimenter:
                     X, metadata, metadata_mapping
                 )
                 self.detector.fit(X_source, progress=False)
-                X_target, _ = self.detector.transform(X_target)
+                X_target = self.detector.transform(X_target)
             else:
                 self.detector.fit(X, progress=False)
                 if isinstance(X, torch.utils.data.Dataset):
-                    X, _ = self.detector.transform(X)
-                X_target, _ = self.shiftapplicator.apply_shift(
+                    X = self.detector.transform(X)
+                X_target = self.shiftapplicator.apply_shift(
                     X, metadata, metadata_mapping
                 )
         else:

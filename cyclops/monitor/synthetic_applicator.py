@@ -18,7 +18,7 @@ class SyntheticShiftApplicator:
     >>> X, y = load_diabetes(return_X_y=True)
     >>> X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
     >>> applicator = SyntheticShiftApplicator(shift_type="gn_shift")
-    >>> X_shift, y_shift = applicator.apply_shift(X_train, noise_amt=0.1, delta=0.1)
+    >>> X_shift = applicator.apply_shift(X_train, noise_amt=0.1, delta=0.1)
 
     Parameters
     ----------
@@ -57,13 +57,12 @@ class SyntheticShiftApplicator:
         # check if X is a numpy array or dataset
         if isinstance(X, np.ndarray):
             X_shift = X.copy()
-        y_shift = None
 
-        X_shift, _ = self.shift_types[self.shift_type](
+        X_shift = self.shift_types[self.shift_type](
             X_shift, metadata, metadata_mapping, **self.shift_args
         )
 
-        return (X_shift, y_shift)
+        return (X, X_shift)
 
 
 def categorical_shift(
@@ -95,7 +94,6 @@ def categorical_shift(
         placeholder for labels
 
     """
-    y_target = None
     cat_col = metadata_mapping[categorical_column]
 
     # check if cat_col is a list or ListConfig
@@ -121,194 +119,17 @@ def categorical_shift(
         target_indices = metadata.loc[metadata[cat_col] == target_category].index.values
 
     X_target = X[target_indices]
-    return X_target, y_target
-
-
-# def apply_predefined_shift(
-#     predefined_shift: str,
-#     X: np.ndarray,
-#     y: np.ndarray = None,
-#     X_ref: np.ndarray = None,
-#     y_ref: np.ndarray = None,
-# ):
-#     """Apply a predefined shift.
-
-#     Parameters
-#     ----------
-#     predefined_shift: String
-#         Name of shift type to use.
-#     X: numpy.matrix
-#         Source data.
-#     y: list
-#         Source label.
-#     X_ref: numpy.matrix
-#         Target data.
-#     y_ref: list
-#         Target label.
-
-#     Returns
-#     -------
-#     X_shift: numpy.matrix
-#         shifted features
-#     y_shift: numpy.array
-#         placeholder for labels
-
-#     """
-#     X_shift = X.copy()
-#     y_shift = None
-
-#     if predefined_shift == "large_gn_shift_1.0":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift,
-#             10.0,
-#             normalization=1.0,
-#             delta=1.0,
-#             clip=False,
-#         )
-#     elif predefined_shift == "medium_gn_shift_1.0":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift, 1.0, normalization=1.0, delta=1.0, clip=False
-#         )
-#     elif predefined_shift == "small_gn_shift_1.0":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift, 0.1, normalization=1.0, delta=1.0, clip=False
-#         )
-#     elif predefined_shift == "large_gn_shift_0.5":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift, 10.0, normalization=1.0, delta=0.5, clip=False
-#         )
-#     elif predefined_shift == "medium_gn_shift_0.5":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift, 1.0, normalization=1.0, delta=0.5, clip=False
-#         )
-#     elif predefined_shift == "small_gn_shift_0.5":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift, 0.1, normalization=1.0, delta=0.5, clip=False
-#         )
-#     elif predefined_shift == "large_gn_shift_0.1":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift, 10.0, normalization=1.0, delta=0.1, clip=False
-#         )
-#     elif predefined_shift == "medium_gn_shift_0.1":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift, 1.0, normalization=1.0, delta=0.1, clip=False
-#         )
-#     elif predefined_shift == "small_gn_shift_0.1":
-#         X_shift, _ = gaussian_noise_shift(
-#             X_shift, 0.1, normalization=1.0, delta=0.1, clip=False
-#         )
-#     elif predefined_shift == "ko_shift_0.1":
-#         X_shift, y_shift = knockout_shift(X_shift, y, 0, 0)
-#     elif predefined_shift == "ko_shift_0.5":
-#         X_shift, y_shift = knockout_shift(X_shift, y, 0, 1)
-#     elif predefined_shift == "ko_shift_1.0":
-#         X_shift, y_shift = knockout_shift(X_shift, y, 0, 2)
-#     elif predefined_shift == "cp_shift_0.75":
-#         X_shift, y_shift = feature_swap_shift(
-#             X_shift, y, X_ref, y_ref, 0, n_shuffle=0.75, rank=True
-#         )
-#     elif predefined_shift == "cp_shift_0.25":
-#         X_shift, y_shift = feature_swap_shift(
-#             X_shift, y, X_ref, y_ref, 0, n_shuffle=0.25, rank=True
-#         )
-#     elif predefined_shift == "mfa_shift_0.75_krc_rec":
-#         X_shift, y_shift = feature_association_shift(
-#             X_shift,
-#             y,
-#             n_shuffle=0.75,
-#             keep_rows_constant=True,
-#             repermute_each_column=True,
-#         )
-#     elif predefined_shift == "mfa_shift_0.25_krc_rec":
-#         X_shift, y_shift = feature_association_shift(
-#             X_shift,
-#             y,
-#             n_shuffle=0.25,
-#             keep_rows_constant=True,
-#             repermute_each_column=True,
-#         )
-#     elif predefined_shift == "mfa_shift_0.75_krc":
-#         X_shift, y_shift = feature_association_shift(
-#             X_shift,
-#             y,
-#             n_shuffle=0.75,
-#             keep_rows_constant=True,
-#             repermute_each_column=False,
-#         )
-#     elif predefined_shift == "mfa_shift_0.5_krc":
-#         X_shift, y_shift = feature_association_shift(
-#             X_shift,
-#             y,
-#             n_shuffle=0.5,
-#             keep_rows_constant=True,
-#             repermute_each_column=False,
-#         )
-#     elif predefined_shift == "mfa_shift_0.25_krc":
-#         X_shift, y_shift = feature_association_shift(
-#             X_shift,
-#             y,
-#             n_shuffle=0.25,
-#             keep_rows_constant=True,
-#             repermute_each_column=False,
-#         )
-#     elif predefined_shift == "mfa_shift_0.75":
-#         X_shift, y_shift = feature_association_shift(
-#             X_shift,
-#             y,
-#             n_shuffle=0.75,
-#             keep_rows_constant=False,
-#             repermute_each_column=False,
-#         )
-#     elif predefined_shift == "mfa_shift_0.5":
-#         X_shift, y_shift = feature_association_shift(
-#             X_shift,
-#             y,
-#             n_shuffle=0.5,
-#             keep_rows_constant=False,
-#             repermute_each_column=False,
-#         )
-#     elif predefined_shift == "mfa_shift_0.25":
-#         X_shift, y_shift = feature_association_shift(
-#             X_shift,
-#             y,
-#             n_shuffle=0.25,
-#             keep_rows_constant=False,
-#             repermute_each_column=False,
-#         )
-#     elif predefined_shift == "large_bn_shift_1.0":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.5, 1.0)
-#     elif predefined_shift == "medium_bn_shift_1.0":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.1, 1.0)
-#     elif predefined_shift == "small_bn_shift_1.0":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.01, 1.0)
-#     elif predefined_shift == "large_bn_shift_0.5":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.5, 0.5)
-#     elif predefined_shift == "medium_bn_shift_0.5":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.1, 0.5)
-#     elif predefined_shift == "small_bn_shift_0.5":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.01, 0.5)
-#     elif predefined_shift == "large_bn_shift_0.1":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.5, 0.1)
-#     elif predefined_shift == "medium_bn_shift_0.1":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.1, 0.1)
-#     elif predefined_shift == "small_bn_shift_0.1":
-#         X_shift, _ = binary_noise_shift(X_shift, 0.01, 0.1)
-#     else:
-#         raise ValueError(
-#             "Not a pre-defined shift, \
-#             specify custom parameters using appropriate function"
-#         )
-#     return (X_shift, y_shift)
-
+    return X, X_target
 
 def gaussian_noise_shift(
     X: np.ndarray,
     metadata: pd.DataFrame,
     metadata_mapping: dict,
-    noise_amt: float = 0.5,
+    source_noise_amt: float = 0,
+    target_noise_amt: float = 0.5,
     normalization: float = 1,
     delta: float = 0.5,
-    clip: bool = False,
+    clip: bool = False
 ):
     """Create gaussian noise of specificed parameters in input data.
 
@@ -343,7 +164,10 @@ def gaussian_noise_shift(
     X_mod = X[np.ix_(indices, c_cols)]
 
     if len(c_cols) == 1:
-        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(
+        noise = np.random.normal(0, source_noise_amt / normalization, X_mod.shape[0]).reshape(
+            X_mod.shape[0], 1
+        )
+        noise = np.random.normal(0, target_noise_amt / normalization, X_mod.shape[0]).reshape(
             X_mod.shape[0], 1
         )
     else:
@@ -377,21 +201,22 @@ def knockout_shift(
         covariate data
     y: list
         label data
-    cl: int
-        class (e.g. 0,1,2,3, etc.)
     delta: float
         fraction of samples removed
-
+    shift_class: int
+        class to remove samples from
+    
     Returns
     -------
     X: numpy.matrix
         covariate data with class imbalance
     y: numpy.array
         placeholer for labels
-
     """
     # unused variables
     _, _ = metadata, metadata_mapping
+
+    y = metadata[metadata_mapping["targets"]].values
 
     del_indices = np.where(y == shift_class)[0]
     until_index = math.ceil(delta * len(del_indices))
@@ -408,8 +233,6 @@ def feature_swap_shift(
     metadata: pd.DataFrame,
     metadata_mapping: dict,
     y: np.ndarray,
-    X_ref: np.ndarray = None,
-    y_ref: np.ndarray = None,
     shift_class: int = 1,
     n_shuffle: float = 0.25,
     rank: bool = False,
@@ -444,13 +267,13 @@ def feature_swap_shift(
     # unused variables
     _, _ = metadata, metadata_mapping
 
-    if isinstance(X_ref, np.ndarray):
-        n_feats = X_ref.shape[1]
+    if isinstance(X, np.ndarray):
+        n_feats = X.shape[1]
     n_shuffle_feats = int(n_shuffle * n_feats)
 
     # Get importance values - should sub for model-specific
     selector = SelectKBest(k=n_feats)
-    selection = selector.fit(X_ref, y_ref)
+    selection = selector.fit(X, y)
     ranked_x = sorted(
         zip(selection.scores_, selection.get_support(indices=True)), reverse=True
     )

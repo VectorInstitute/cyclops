@@ -1,6 +1,8 @@
 """Tester Module for drift detection with TSTester and DCTester submodules."""
 
 import numpy as np
+import torch
+import sklearn
 from alibi_detect.cd import (
     ChiSquareDrift,
     ClassifierDrift,
@@ -11,15 +13,11 @@ from alibi_detect.cd import (
     SpotTheDiffDrift,
     TabularDrift,
 )
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 
 from cyclops.monitor.utils import (
     ContextMMDWrapper,
     LKWrapper,
-    convolutional_neural_network,
-    feed_forward_neural_network,
-    get_args,
-    recurrent_neural_network,
+    get_args
 )
 
 
@@ -30,6 +28,8 @@ class TSTester:
     ----------
     tester_method: str
         two-sample statistical test method
+        available methods are:
+            "lk"
 
     Methods
     -------
@@ -42,21 +42,22 @@ class TSTester:
 
     """
 
-    def __init__(self, tester_method: str, **kwargs):
+    def __init__(self, tester_method: str, p_val_threshold = 0.05, **kwargs):
         self.tester_method = tester_method
         self.method = None
+        self.p_val_threshold = p_val_threshold
 
         # dict where the key is the string of each test_method
         # and the value is the class of the test_method
         self.tester_methods = {
-            "lk": LKWrapper,
-            "lsdd": LSDDDrift,
-            "mmd": MMDDrift,
-            "tabular": TabularDrift,
-            "ctx_mmd": ContextMMDWrapper,
-            "chi2": ChiSquareDrift,
-            "fet": FETDrift,
             "ks": KSDrift,
+            "chi2": ChiSquareDrift,
+            "mmd": MMDDrift,
+            "ctx_mmd": ContextMMDWrapper,
+            "lsdd": LSDDDrift,
+            "lk": LKWrapper,
+            "fet": FETDrift,
+            "tabular": TabularDrift,
         }
 
         self.method_args = kwargs
@@ -94,6 +95,7 @@ class TSTester:
     def test_shift(self, X_t):
         """Test for shift in data."""
         X_t = X_t.astype("float32")
+        num_features = X_t.shape[1]
 
         preds = self.method.predict(
             X_t, **get_args(self.method.predict, self.method_args)
@@ -107,6 +109,9 @@ class TSTester:
             p_val = p_val[idx]
             dist = dist[idx]
 
+        if self.tester_method in ["ks", "chi2", "fet", "tabular"]:
+            self.p_val_threshold = self.p_val_threshold/num_features
+
         return p_val, dist
 
 
@@ -115,12 +120,12 @@ class DCTester:
 
     Parameters
     ----------
-    model: str
-        model to use for domain classification.
-        Must be one of: "gb", "rf", "rnn", "cnn", "ffnn"
     tester_method: str
         domain classifier test method
         Must be one of: "spot_the_diff" or "classifier"
+    model: str
+        model to use for chosen test method.
+        Must be either a sklearn or pytorch model.
 
     Methods
     -------
@@ -132,23 +137,13 @@ class DCTester:
         Test for shift in data
 
     """
-
-    def __init__(self, tester_method: str, model_method: str = None):
+    def __init__(self, tester_method: str, **kwargs):
         self.tester_method = tester_method
-        self.model_method = model_method
-        self.tester = None
-        self.model = None
+        self.method_args = kwargs
 
         self.tester_methods = {
             "spot_the_diff": SpotTheDiffDrift,
             "classifier": ClassifierDrift,
-        }
-        self.model_methods = {
-            "gb": GradientBoostingClassifier,
-            "rf": RandomForestClassifier,
-            "rnn": recurrent_neural_network,
-            "cnn": convolutional_neural_network,
-            "ffnn": feed_forward_neural_network,
         }
         if self.tester_method not in self.tester_methods:
             raise ValueError(
@@ -156,21 +151,11 @@ class DCTester:
                 Must be one of {self.tester_methods.keys()}"
             )
 
-        if self.model_method not in self.model_methods:
-            raise ValueError(
-                f"Model method {self.model_method} not supported.\
-                Must be one of {self.model_methods.keys()}"
-            )
-
     def get_available_test_methods(self):
         """Return list of available test methods."""
         return list(self.tester_methods.keys())
 
-    def get_available_model_methods(self):
-        """Return list of available model methods."""
-        return list(self.model_methods.keys())
-
-    def fit(self, X_s, **kwargs):
+    def fit(self, X_s):
         """Initialize test method to source data."""
         X_s = X_s.astype("float32")
 
@@ -178,20 +163,21 @@ class DCTester:
             self.tester = self.tester_methods[self.tester_method](
                 X_s,
                 backend="pytorch",
-                **get_args(self.tester_methods[self.tester_method], kwargs),
+                **get_args(self.tester_methods[self.tester_method], self.method_args),
             )
-        else:
-            if self.model_method in ["rnn", "cnn", "ffnn"]:
-                kwargs["backend"] = "pytorch"
-            elif self.model_method in ["gb", "rf"]:
-                kwargs["backend"] = "sklearn"
-            self.model = self.model_methods[self.model_method](
-                **get_args(self.model_methods[self.model_method], kwargs)
-            )
+        elif self.tester_method == "classifier":
+            if isinstance(self.method_args['model'], torch.nn.Module):
+                self.method_args["backend"] = "pytorch"
+            elif isinstance(self.method_args['model'], sklearn.base.BaseEstimator):
+                self.method_args["backend"] = "sklearn"
+            else:
+                raise ValueError(
+                    f"Model must be one of: torch.nn.Module or sklearn.base.BaseEstimator"
+                )
             self.tester = self.tester_methods[self.tester_method](
                 X_s,
                 self.model,
-                **get_args(self.tester_methods[self.tester_method], kwargs),
+                **get_args(self.tester_methods[self.tester_method], self.method_args),
             )
 
     def test_shift(self, X_t):

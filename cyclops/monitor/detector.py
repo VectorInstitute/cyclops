@@ -8,7 +8,7 @@ from tqdm import tqdm
 from cyclops.monitor.reductor import Reductor
 from cyclops.monitor.tester import DCTester, TSTester
 
-from .utils import get_args
+from cyclops.monitor.utils import get_args, get_device
 
 
 class Detector:
@@ -42,14 +42,16 @@ class Detector:
         self,
         reductor: Reductor,
         tester: Union[TSTester, DCTester],
-        p_val_threshold: float = 0.05,
-        random_runs=5,
+        device=None
     ):
 
         self.reductor = reductor
         self.tester = tester
-        self.p_val_threshold = p_val_threshold
-        self.random_runs = random_runs
+        if device is None:
+            self.device = get_device()
+        else:
+            self.device = device
+        self.random_runs = 5
         self.samples = [10, 20, 50, 100, 200, 500, 1000]
 
     def fit(self, X_source: Union[np.ndarray, torch.utils.data.Dataset], **kwargs):
@@ -81,7 +83,7 @@ class Detector:
             Transformed data.
 
         """
-        return self.reductor.transform(X, **kwargs)
+        return self.reductor.transform(X, device=self.device, **kwargs)
 
     def test_shift(self, X_target, **kwargs):
         """Test shift between source and target data.
@@ -139,7 +141,7 @@ class Detector:
 
         results = self.test_shift(X_t[:sample, :], **kwargs)
 
-        if results["p_val"] < self.p_val_threshold:
+        if results["p_val"] < self.tester.p_val_threshold:
             shift_detected = 1
         else:
             shift_detected = 0
