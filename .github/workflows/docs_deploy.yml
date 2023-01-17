@@ -9,6 +9,7 @@ on:
       - .github/workflows/docs_build.yml
       - .github/workflows/docs_deploy.yml
       - '**.py'
+      - '**.ipynb'
       - poetry.lock
       - pyproject.toml
       - requirements.txt
