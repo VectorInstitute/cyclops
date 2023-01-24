@@ -65,6 +65,7 @@ class DatasetQuerier:
     def get_interface(
         self,
         table: TableTypes,
+        ops: Optional[qo.Sequential] = None,
         process_fn: Optional[Callable] = None,
     ) -> Union[QueryInterface, QueryInterfaceProcessed]:
         """Get a query interface for a GEMINI table.
@@ -73,6 +74,8 @@ class DatasetQuerier:
         ----------
         table
             Table to wrap in the interface.
+        ops: cyclops.query.ops.Sequential
+            Operations to perform on the query.
         process_fn
             Process function to apply on the Pandas DataFrame returned from the query.
 
@@ -84,9 +87,9 @@ class DatasetQuerier:
 
         """
         if process_fn is None:
-            return QueryInterface(self._db, table)
+            return QueryInterface(self._db, table, ops=ops)
 
-        return QueryInterfaceProcessed(self._db, table, process_fn)
+        return QueryInterfaceProcessed(self._db, table, ops=ops, process_fn=process_fn)
 
     def get_table(self, table_name: str, rename: bool = True) -> Subquery:
         """Get a table and possibly map columns to have standard names.

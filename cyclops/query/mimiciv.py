@@ -150,7 +150,7 @@ class MIMICIVQuerier(DatasetQuerier):
 
         # Shift relevant columns by anchor year difference
         table = qo.AddColumn("anchor_year", "anchor_year_difference")(table)
-        table = qo.AddDeltaColumns([DATE_OF_DEATH], years="anchor_year_difference")(
+        table = qo.AddDeltaColumn([DATE_OF_DEATH], years="anchor_year_difference")(
             table
         )
 
@@ -336,7 +336,7 @@ class MIMICIVQuerier(DatasetQuerier):
         if patients_table is not None:
             table = qo.Join(patients_table, on=SUBJECT_ID)(table)
 
-            table = qo.AddDeltaColumns(
+            table = qo.AddDeltaColumn(
                 ["intime", "outtime"], years="anchor_year_difference"
             )(table)
 
@@ -435,7 +435,7 @@ class MIMICIVQuerier(DatasetQuerier):
         table = qo.Join(patients_table, on="subject_id")(table)
 
         # Update timestamps with anchor year difference
-        table = qo.AddDeltaColumns(
+        table = qo.AddDeltaColumn(
             [
                 ADMIT_TIMESTAMP,
                 DISCHARGE_TIMESTAMP,
@@ -536,7 +536,7 @@ class MIMICIVQuerier(DatasetQuerier):
             )(table)
 
             # Add MIMIC patient-specific time difference to event/store timestamps
-            table = qo.AddDeltaColumns(
+            table = qo.AddDeltaColumn(
                 [EVENT_TIMESTAMP, "storetime"], years="anchor_year_difference"
             )(table)
 

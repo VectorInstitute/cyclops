@@ -7,6 +7,7 @@ from typing import Callable, Dict, Literal, Optional, Union
 import dask.dataframe as dd
 import pandas as pd
 
+import cyclops.query.ops as qo
 from cyclops.query.orm import Database
 from cyclops.query.util import TableTypes
 from cyclops.utils.file import save_dataframe
@@ -27,18 +28,44 @@ class QueryInterface:
         Database object to create ORM, and query data.
     query: cyclops.query.util.TableTypes
         The query.
-    data: pandas.DataFrame or dask.DataFrame
+    join: cyclops.query.ops.JoinArgs, optional
+        Join arguments to join the query with another table.
+    ops: cyclops.query.ops.Sequential, optional
+        Operations to perform on the query.
+    _data: pandas.DataFrame or dask.DataFrame
         Data returned from executing the query, as Pandas DataFrame.
     _run_args: dict
         Private dictionary attribute to keep track of arguments
         passed to run() method.
 
+    Notes
+    -----
+    After initialization, the query is automatically chained with the operations, and
+    the query attribute is updated.
+
+    The data attribute is private, and should not be accessed directly. Use the run()
+    method to fetch data.
+
     """
 
     database: Database
     query: TableTypes
-    data: Optional[Union[pd.DataFrame, dd.DataFrame]] = None
+    join: Optional[qo.JoinArgs] = None
+    ops: Optional[qo.Sequential] = None
+    _data: Optional[Union[pd.DataFrame, dd.DataFrame]] = None
     _run_args: Dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Post init method to chain operations with original query."""
+        if self.join:
+            self.query = qo.Join(**self.join._asdict())(self.query)
+        if self.ops:
+            self.query = self.ops(self.query)
+
+    @property
+    def data(self) -> Optional[Union[pd.DataFrame, dd.DataFrame]]:
+        """Get data."""
+        return self._data
 
     def run(
         self,
@@ -68,9 +95,9 @@ class QueryInterface:
 
         """
         # Only re-run when new run arguments are given.
-        if self.data is None or not self._run_args == locals():
+        if self._data is None or not self._run_args == locals():
             self._run_args = locals()
-            self.data = self.database.run_query(
+            self._data = self.database.run_query(
                 self.query,
                 limit=limit,
                 backend=backend,
@@ -78,7 +105,7 @@ class QueryInterface:
                 n_partitions=n_partitions,
             )
 
-        return self.data
+        return self._data
 
     def save(
         self, path: str, file_format: Literal["parquet", "csv"] = "parquet"
@@ -99,8 +126,8 @@ class QueryInterface:
 
         """
         # If the query was already run.
-        if self.data is not None:
-            path = save_dataframe(self.data, path, file_format=file_format)
+        if self._data is not None:
+            path = save_dataframe(self._data, path, file_format=file_format)
             return path
 
         # Save without running.
@@ -119,7 +146,7 @@ class QueryInterface:
         Sets the data attribute to None, thus clearing the dataframe contained.
 
         """
-        self.data = None
+        self._data = None
 
 
 @dataclass
@@ -139,19 +166,32 @@ class QueryInterfaceProcessed:
         The query.
     process_fn: Callable
         Process function to apply on the pandas dataframe returned from the query.
+    join: cyclops.query.ops.JoinArgs, optional
+        Join arguments to join the query with another table.
+    ops: cyclops.query.ops.Sequential, optional
+        Operations to perform on the query.
+    _data: pandas.DataFrame or dask.DataFrame
+        Data returned from executing the query, as Pandas DataFrame.
     _run_args: dict
         Private dictionary attribute to keep track of arguments
         passed to run() method.
-    data: pandas.DataFrame or dask.DataFrame
-        Data returned from executing the query, as Pandas DataFrame.
 
     """
 
     database: Database
     _query: TableTypes
     process_fn: Callable
-    data: Optional[Union[pd.DataFrame, dd.DataFrame, None]] = None
+    join: Optional[qo.JoinArgs] = None
+    ops: Optional[qo.Sequential] = None
+    _data: Optional[Union[pd.DataFrame, dd.DataFrame, None]] = None
     _run_args: Dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Post init method to chain operations with original query."""
+        if self.join:
+            self._query = qo.Join(**self.join._asdict())(self._query)
+        if self.ops:
+            self._query = self.ops(self._query)
 
     def run(
         self,
@@ -181,9 +221,9 @@ class QueryInterfaceProcessed:
 
         """
         # Only re-run when new run arguments are given.
-        if self.data is None or not self._run_args == locals():
+        if self._data is None or not self._run_args == locals():
             self._run_args = locals()
-            self.data = self.database.run_query(
+            self._data = self.database.run_query(
                 self._query,
                 limit=limit,
                 backend=backend,
@@ -195,9 +235,14 @@ class QueryInterfaceProcessed:
                 "Applying post-processing fn %s to query output",
                 self.process_fn.__name__,
             )
-            return self.process_fn(self.data)
+            return self.process_fn(self._data)
 
-        return self.data
+        return self._data
+
+    @property
+    def data(self) -> Optional[Union[pd.DataFrame, dd.DataFrame]]:
+        """Get data."""
+        return self._data
 
     def save(
         self, path: str, file_format: Literal["parquet", "csv"] = "parquet"
@@ -218,9 +263,9 @@ class QueryInterfaceProcessed:
 
         """
         # The query must be run in order to be processed.
-        if self.data is None:
+        if self._data is None:
             self.run()
-        path = save_dataframe(self.data, path, file_format=file_format)
+        path = save_dataframe(self._data, path, file_format=file_format)
 
         return path
 
@@ -230,4 +275,4 @@ class QueryInterfaceProcessed:
         Sets the data attribute to None, thus clearing the dataframe contained.
 
         """
-        self.data = None
+        self._data = None

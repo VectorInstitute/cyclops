@@ -4,7 +4,7 @@ import csv
 import logging
 import os
 import socket
-from typing import Literal, Optional, Union
+from typing import Generator, Literal, Optional, Union
 
 import dask.dataframe as dd
 import pandas as pd
@@ -116,6 +116,13 @@ class Database:
         session = sessionmaker(self.engine)
         session.configure(bind=self.engine)
         return session()
+
+    def tables(self, schema_name: str) -> Generator[str, None, None]:
+        """Get list of tables."""
+        metadata = MetaData(schema=schema_name)
+        metadata.reflect(bind=self.engine)
+
+        return (_get_attr_name(table_name) for table_name in metadata.tables.keys())
 
     def _setup(self):
         """Prepare ORM DB."""

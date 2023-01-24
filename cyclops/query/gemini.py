@@ -437,7 +437,7 @@ class GEMINIQuerier(DatasetQuerier):
             Limit the number of rows returned.
 
         """
-        filter_care_unit_cols = qo.FilterColumns(
+        filter_care_unit_cols = qo.Keep(
             [
                 ENCOUNTER_ID,
                 "admit",
@@ -770,7 +770,7 @@ class GEMINIQuerier(DatasetQuerier):
 
         operations: List[tuple] = [
             (
-                qo.FilterColumns,
+                qo.Keep,
                 [
                     qo.QAP(
                         "variables",

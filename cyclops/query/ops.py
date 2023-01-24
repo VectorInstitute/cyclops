@@ -1,13 +1,16 @@
 """Low-level query operations.
 
-This module contains query operation modules such as AddColumn, Join, DropNulls, etc.
-which can be used in high-level query API functions specific to datasets.
+This module contains query operation modules such which can be used in high-level query
+API functions specific to datasets.
 
 """
 
 # pylint: disable=too-many-lines
 
+from __future__ import annotations
+
 import logging
+from collections import namedtuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
@@ -48,6 +51,29 @@ from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
+
+
+JoinArgs = namedtuple(
+    "JoinArgs",
+    [
+        "join_table",
+        "on",
+        "on_to_type",
+        "cond",
+        "table_cols",
+        "join_table_cols",
+        "isouter",
+    ],
+    defaults=[None, None, None, None, None, None, False],
+)
+
+
+class QueryOp(type):
+    """Metaclass type for query operations."""
+
+    def __repr__(cls):
+        """Return the name of the class."""
+        return "QueryOp"
 
 
 @dataclass
@@ -101,6 +127,52 @@ class QAP:
             return self.transform_fn(val)
 
         return val
+
+
+def _chain_ops(query, ops):
+    if isinstance(ops, List):
+        for op_ in ops:
+            query = op_(query)
+    if isinstance(ops, Sequential):
+        query = _chain_ops(query, ops.ops)
+
+    return query
+
+
+class Sequential:
+    """Sequential query operations class.
+
+    Chains a list of sequential query operations and executes the final query on a
+    table.
+
+    """
+
+    def __init__(self, ops: Union[List[QueryOp], Sequential]):
+        """Initialize the Sequential class.
+
+        Parameters
+        ----------
+        ops: Union[List[QueryOp], Sequential]
+            List of query operations to be chained.
+
+        """
+        self.ops = ops
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Execute the query operations on the table.
+
+        Parameters
+        ----------
+        table: TableTypes
+            Table to be queried.
+
+        Returns
+        -------
+        Subquery
+            Query result after chaining the query operations.
+
+        """
+        return _chain_ops(table, self.ops)
 
 
 @table_params_to_type(Subquery)
@@ -250,7 +322,7 @@ def _append_if_missing(
     extend_cols = [col for col in force_include_cols if col not in keep_cols]
     keep_cols = extend_cols + keep_cols
 
-    return FilterColumns(keep_cols)(table)
+    return Keep(keep_cols)(table)
 
 
 def _none_add(obj1: Any, obj2: Any):
@@ -312,7 +384,7 @@ def _process_checks(
 
 
 @dataclass
-class Drop:  # pylint: disable=too-few-public-methods
+class Drop(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Drop some columns.
 
     Parameters
@@ -495,7 +567,7 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class FilterColumns:  # pylint: disable=too-few-public-methods
+class Keep:  # pylint: disable=too-few-public-methods
     """Keep only the specified columns in a table.
 
     Parameters
@@ -734,10 +806,7 @@ class AddDeltaConstant:  # pylint: disable=too-few-public-methods
 
 @dataclass
 class AddColumn:  # pylint: disable=too-few-public-methods
-    """Add an column to some columns.
-
-    Pay attention to column types. Some combinations will work,
-    whereas others will not.
+    """Add a column to some columns.
 
     Parameters
     ----------
@@ -750,6 +819,11 @@ class AddColumn:  # pylint: disable=too-few-public-methods
     new_col_labels: str or list of str, optional
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
+
+    Warning
+    -------
+    Pay attention to column types. Some combinations will work,
+    whereas others will not.
 
     """
 
@@ -800,7 +874,7 @@ class AddColumn:  # pylint: disable=too-few-public-methods
         )
 
 
-class AddDeltaColumns:  # pylint: disable=too-few-public-methods
+class AddDeltaColumn:  # pylint: disable=too-few-public-methods
     """Construct and add an interval column to some columns.
 
     Parameters
@@ -1042,11 +1116,9 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         else:
             # Filter columns
             if self.table_cols is not None:
-                table = FilterColumns(self.table_cols)(table)
+                table = Keep(self.table_cols)(table)
             if self.join_table_cols is not None:
-                self.join_table = FilterColumns(self.table_cols)(  # type: ignore
-                    self.join_table
-                )
+                self.join_table = Keep(self.table_cols)(self.join_table)  # type: ignore
 
             # Join on a specified condition
             if self.cond is not None:

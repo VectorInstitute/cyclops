@@ -2,6 +2,7 @@
 
 import pytest
 
+import cyclops.query.ops as qo
 from cyclops.query.omop import OMOPQuerier
 
 
@@ -9,16 +10,27 @@ from cyclops.query.omop import OMOPQuerier
 def test_omop_querier_synthea():
     """Test OMOPQuerier on synthea data."""
     synthea = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
-    visits = synthea.visit_occurrence().run()
-    persons = synthea.person().run()
+    ops = qo.Sequential(
+        [
+            qo.ConditionEquals("gender_source_value", "M"),
+            qo.Rename({"race_source_value": "race"}),
+        ]
+    )
+    persons_qi = synthea.person(ops=ops)
+    visits = synthea.visit_occurrence(
+        join=qo.JoinArgs(join_table=persons_qi.query, on="person_id")
+    ).run()
+    persons = persons_qi.run()
     observations = synthea.observation().run()
     measurements = synthea.measurement().run()
     visit_details = synthea.visit_detail().run()
-    assert len(visits) == 4115
+    providers = synthea.provider().run()
+    assert len(persons) == 54
+    assert len(visits) == 1620
     assert len(visit_details) == 4115
-    assert len(persons) == 109
     assert len(observations) == 16169
     assert len(measurements) == 19373
+    assert len(providers) == 212
 
 
 @pytest.mark.integration_test
