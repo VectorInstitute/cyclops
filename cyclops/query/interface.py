@@ -34,17 +34,13 @@ class QueryInterface:
         Operations to perform on the query.
     _data: pandas.DataFrame or dask.DataFrame
         Data returned from executing the query, as Pandas DataFrame.
-    _run_args: dict
-        Private dictionary attribute to keep track of arguments
+    _run_args: dict Private dictionary attribute to keep track of arguments
         passed to run() method.
 
     Notes
     -----
-    After initialization, the query is automatically chained with the operations, and
-    the query attribute is updated.
-
-    The data attribute is private, and should not be accessed directly. Use the run()
-    method to fetch data.
+    After initialization, the query, join operation and chaining of provided operations,
+    are automatically done and the query attribute is updated.
 
     """
 
@@ -175,6 +171,11 @@ class QueryInterfaceProcessed:
     _run_args: dict
         Private dictionary attribute to keep track of arguments
         passed to run() method.
+
+    Notes
+    -----
+    After initialization, the query, join operation and chaining of provided operations,
+    are automatically done and the query attribute is updated.
 
     """
 
