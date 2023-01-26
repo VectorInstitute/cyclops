@@ -1,41 +1,14 @@
 """GEMINI query API."""
 
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
-from sqlalchemy.sql.selectable import Subquery
 
 import cyclops.query.ops as qo
-from cyclops.process.column_names import (
-    ADMIT_TIMESTAMP,
-    CARE_UNIT,
-    DIAGNOSIS_CODE,
-    DISCHARGE_TIMESTAMP,
-    ENCOUNTER_ID,
-    ER_ADMIT_TIMESTAMP,
-    ER_DISCHARGE_TIMESTAMP,
-    EVENT_NAME,
-    EVENT_TIMESTAMP,
-    EVENT_VALUE,
-    EVENT_VALUE_UNIT,
-    HOSPITAL_ID,
-    LENGTH_OF_STAY_IN_ER,
-    SCU_ADMIT_TIMESTAMP,
-    SCU_DISCHARGE_TIMESTAMP,
-    SEX,
-    SUBJECT_ID,
-)
-from cyclops.process.constants import EMPTY_STRING
 from cyclops.query.base import DatasetQuerier
 from cyclops.query.interface import QueryInterface
-from cyclops.query.util import (
-    TableTypes,
-    assert_table_has_columns,
-    table_params_to_type,
-)
-from cyclops.utils.common import append_if_missing
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -62,9 +35,14 @@ BLOOD_TRANSFUSION = "blood_transfusion"
 IMAGING = "imaging"
 LOOKUP_IMAGING = "lookup_imaging"
 DERIVED_VARIABLES = "derived_variables"
+
+# Custm column names.
+CARE_UNIT = "care_unit"
+
+# Table map.
 TABLE_MAP = {
-    IP_ADMIN: lambda db: db.public.ip_administrative,
     ER_ADMIN: lambda db: db.public.er_administrative,
+    IP_ADMIN: lambda db: db.public.ip_administrative,
     DIAGNOSIS: lambda db: db.public.diagnosis,
     LAB: lambda db: db.public.lab,
     VITALS: lambda db: db.public.vitals,
@@ -82,30 +60,6 @@ TABLE_MAP = {
     LOOKUP_IMAGING: lambda db: db.public.lookup_imaging,
     DERIVED_VARIABLES: lambda db: db.public.derived_variables,
 }
-COLUMN_MAP = {
-    "genc_id": ENCOUNTER_ID,
-    "admit_date_time": ADMIT_TIMESTAMP,
-    "discharge_date_time": DISCHARGE_TIMESTAMP,
-    "gender": SEX,
-    "result_value": EVENT_VALUE,
-    "result_unit": EVENT_VALUE_UNIT,
-    "lab_test_name_mapped": EVENT_NAME,
-    "sample_collection_date_time": EVENT_TIMESTAMP,
-    "measurement_mapped": EVENT_NAME,
-    "measurement_value": EVENT_VALUE,
-    "measure_date_time": EVENT_TIMESTAMP,
-    "left_er_date_time": ER_DISCHARGE_TIMESTAMP,
-    "duration_er_stay_derived": LENGTH_OF_STAY_IN_ER,
-    "er_admit_timestamp": ER_ADMIT_TIMESTAMP,
-    "triage_date_time": ER_ADMIT_TIMESTAMP,
-    "er_discharge_timestamp": ER_DISCHARGE_TIMESTAMP,
-    "scu_admit_date_time": SCU_ADMIT_TIMESTAMP,
-    "scu_discharge_date_time": SCU_DISCHARGE_TIMESTAMP,
-    "hospital_id": HOSPITAL_ID,
-    "diagnosis_code": DIAGNOSIS_CODE,
-    "patient_id_hashed": SUBJECT_ID,
-}
-EVENT_CATEGORIES = [LAB, VITALS]
 
 
 class GEMINIQuerier(DatasetQuerier):
@@ -123,112 +77,31 @@ class GEMINIQuerier(DatasetQuerier):
         overrides = {}
         if config_overrides:
             overrides = config_overrides
-        super().__init__(TABLE_MAP, COLUMN_MAP, **overrides)
+        super().__init__(TABLE_MAP, **overrides)
 
-    def er_admin(self, **process_kwargs) -> QueryInterface:
-        """Query emergency room administrative data.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        triage_level: int or list of int
-            Restrict to certain triage levels.
-        before_date: datetime.datetime or str
-            Get data before some date.
-            If a string, provide in YYYY-MM-DD format.
-        after_date: datetime.datetime or str
-            Get data after some date.
-            If a string, provide in YYYY-MM-DD format.
-        years: int or list of int, optional
-            Get data by year.
-        months: int or list of int, optional
-            Get data by month.
-        limit: int, optional
-            Limit the number of rows returned.
-
-        """
-        table = self.get_table(ER_ADMIN)
-
-        # Process optional operations
-        operations: List[tuple] = [
-            (qo.ConditionBeforeDate, [ER_ADMIT_TIMESTAMP, qo.QAP("before_date")], {}),
-            (qo.ConditionAfterDate, [ER_ADMIT_TIMESTAMP, qo.QAP("after_date")], {}),
-            (qo.ConditionInYears, [ER_ADMIT_TIMESTAMP, qo.QAP("years")], {}),
-            (qo.ConditionInMonths, [ER_ADMIT_TIMESTAMP, qo.QAP("months")], {}),
-            (
-                qo.ConditionIn,
-                ["triage_level", qo.QAP("triage_level")],
-                {"to_str": True},
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    @table_params_to_type(Subquery)
-    @assert_table_has_columns(er_admin_table=ENCOUNTER_ID)
-    def patient_encounters(
+    def ip_admin(
         self,
-        er_admin_table: Optional[TableTypes] = None,
-        drop_null_subject_ids=True,
-        **process_kwargs,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query GEMINI patient encounters.
-
-        Parameters
-        ----------
-        er_admin_table: Subquery, optional
-            Gather Emergency Room data recorded for the particular encounter.
 
         Returns
         -------
         cyclops.query.interface.QueryInterface
             Constructed query, wrapped in an interface object.
 
-        Other Parameters
-        ----------------
-        sex: str or list of string, optional
-            Specify patient sex (one or multiple).
-        died: bool, optional
-            Specify True to get patients who have died, and False for those who haven't.
-        died_binarize_col: str, optional
-            Binarize the died condition and save as a column with label
-            died_binarize_col.
-        before_date: datetime.datetime or str
-            Get patients encounters before some date.
-            If a string, provide in YYYY-MM-DD format.
-        after_date: datetime.datetime or str
-            Get patients encounters after some date.
-            If a string, provide in YYYY-MM-DD format.
-        hospitals: str or list of str, optional
-            Get patient encounters by hospital sites.
-        years: int or list of int, optional
-            Get patient encounters by year.
-        months: int or list of int, optional
-            Get patient encounters by month.
-        limit: int, optional
-            Limit the number of rows returned.
-
         """
         table = self.get_table(IP_ADMIN)
 
-        if drop_null_subject_ids:
-            table = qo.DropNulls(SUBJECT_ID)(table)
-
         # Possibly cast string representations to timestamps
-        table = qo.Cast([ADMIT_TIMESTAMP, DISCHARGE_TIMESTAMP], "timestamp")(table)
+        table = qo.Cast(["admit_date_time", "discharge_date_time"], "timestamp")(table)
 
         # Get the discharge disposition code descriptions
         lookup_table = self.get_table(LOOKUP_IP_ADMIN)
         lookup_table = qo.ConditionEquals("variable", "discharge_disposition")(
             lookup_table
         )
-
         table = qo.Join(
             lookup_table,
             on=("discharge_disposition", "value"),
@@ -239,58 +112,22 @@ class GEMINIQuerier(DatasetQuerier):
         table = qo.Rename({"description": "discharge_description"})(table)
         table = qo.Drop("value")(table)
 
-        # Join on ER data only if specified
-        if er_admin_table is not None:
-            table = qo.Join(er_admin_table, on=ENCOUNTER_ID)(table)
+        return QueryInterface(self._db, table, join=join, ops=ops)
 
-        # Process optional operations
-        if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
-            process_kwargs["died"] = True
-
-        operations: List[tuple] = [
-            (qo.ConditionBeforeDate, ["admit_timestamp", qo.QAP("before_date")], {}),
-            (qo.ConditionAfterDate, ["admit_timestamp", qo.QAP("after_date")], {}),
-            (qo.ConditionInYears, ["admit_timestamp", qo.QAP("years")], {}),
-            (qo.ConditionInMonths, ["admit_timestamp", qo.QAP("months")], {}),
-            (qo.ConditionIn, [HOSPITAL_ID, qo.QAP("hospitals")], {"to_str": True}),
-            (qo.ConditionIn, [SEX, qo.QAP("sex")], {"to_str": True}),
-            (
-                qo.ConditionEquals,
-                ["discharge_description", "Died"],
-                {
-                    "not_": qo.QAP("died", transform_fn=lambda x: not x),
-                    "binarize_col": qo.QAP("died_binarize_col", required=False),
-                },
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    def diagnoses(self, **process_kwargs) -> QueryInterface:
+    def diagnoses(
+        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
+    ) -> QueryInterface:
         """Query diagnosis data.
+
+        Parameters
+        ----------
+        join: qo.JoinArgs, optional
+        ops: qo.Sequential, optional
 
         Returns
         -------
         cyclops.query.interface.QueryInterface
             Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        diagnosis_codes: str or list of str, optional
-            Get only the specified ICD codes.
-        diagnosis_types: list of str, optional
-            Include only those diagnoses that are of certain type.
-        limit: int, optional
-            Limit the number of rows returned.
-
-        Warnings
-        --------
-        Setting the ``include_description`` parameter would join diagnosis types
-        with descriptions and if the diagnosis type is None, then those rows would
-        be dropped.
 
         """
         table = self.get_table(DIAGNOSIS)
@@ -308,88 +145,24 @@ class GEMINIQuerier(DatasetQuerier):
         table = qo.ReorderAfter("diagnosis_type_description", "diagnosis_type")(table)
 
         # Trim whitespace from ICD codes.
-        table = qo.Trim(DIAGNOSIS_CODE)(table)
+        table = qo.Trim("diagnosis_code")(table)
 
-        # Process optional operations
-        operations: List[tuple] = [
-            (
-                qo.ConditionIn,
-                [DIAGNOSIS_CODE, qo.QAP("diagnosis_codes")],
-                {"to_str": True},
-            ),
-            (
-                qo.ConditionIn,
-                ["diagnosis_type", qo.QAP("diagnosis_types")],
-                {"to_str": True},
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-        table = qo.process_operations(table, operations, process_kwargs)
+        return QueryInterface(self._db, table, join=join, ops=ops)
 
-        return QueryInterface(self._db, table)
-
-    @table_params_to_type(Subquery)
-    @assert_table_has_columns(
-        diagnoses_table=[ENCOUNTER_ID, DIAGNOSIS_CODE],
-        patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID],
-    )
-    def patient_diagnoses(
-        self,
-        diagnoses_table: Optional[TableTypes] = None,
-        patient_encounters_table: Optional[TableTypes] = None,
-        **process_kwargs,
+    def room_transfer(
+        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
     ) -> QueryInterface:
-        """Query diagnosis data.
+        """Query room transfer data.
 
         Parameters
         ----------
-        diagnoses_table: cyclops.query.util.TableTypes, optional
-            Diagnoses table used to join.
-        patient_encounters_table: cyclops.query.util.TableTypes, optional
-            Patient encounters table used to join.
+        join: qo.JoinArgs, optional
+        ops: qo.Sequential, optional
 
         Returns
         -------
         cyclops.query.interface.QueryInterface
             Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        limit: int, optional
-            Limit the number of rows returned.
-
-        """
-        # Get diagnoses
-        if diagnoses_table is None:
-            diagnoses_table = self.diagnoses().query
-
-        # Get patient encounters
-        if patient_encounters_table is None:
-            patient_encounters_table = self.patient_encounters().query
-
-        # Join on patient encounters
-        table = qo.Join(diagnoses_table, on=ENCOUNTER_ID, isouter=True)(
-            patient_encounters_table
-        )
-
-        # Process optional operations
-        operations: List[tuple] = [(qo.Limit, [qo.QAP("limit")], {})]
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    def room_transfers(self, **process_kwargs) -> QueryInterface:
-        """Query room transfer data.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        limit: int, optional
-            Limit the number of rows returned.
 
         """
         table = self.get_table(ROOM_TRANSFER)
@@ -406,40 +179,29 @@ class GEMINIQuerier(DatasetQuerier):
         )(table)
         table = qo.Rename({"description": "transfer_description"})(table)
 
-        # Process optional operations
-        operations: List[tuple] = [(qo.Limit, [qo.QAP("limit")], {})]
-        table = qo.process_operations(table, operations, process_kwargs)
+        return QueryInterface(self._db, table, join=join, ops=ops)
 
-        return QueryInterface(self._db, table)
-
-    @table_params_to_type(Subquery)
-    @assert_table_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
     def care_units(
         self,
-        patient_encounters_table: Optional[TableTypes] = None,
-        **process_kwargs,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query care unit data.
 
         Parameters
         ----------
-        patient_encounters_table: cyclops.query.util.TableTypes, optional
-            Patient encounters table used to join.
+        join: qo.JoinArgs, optional
+        ops: qo.Sequential, optional
 
         Returns
         -------
         cyclops.query.interface.QueryInterface
             Constructed table, wrapped in an interface object.
 
-        Other Parameters
-        ----------------
-        limit: int, optional
-            Limit the number of rows returned.
-
         """
         filter_care_unit_cols = qo.Keep(
             [
-                ENCOUNTER_ID,
+                "genc_id",
                 "admit",
                 "discharge",
                 CARE_UNIT,
@@ -450,8 +212,8 @@ class GEMINIQuerier(DatasetQuerier):
         ip_table = self.get_table(IP_ADMIN)
         ip_table = qo.Rename(
             {
-                ADMIT_TIMESTAMP: "admit",
-                DISCHARGE_TIMESTAMP: "discharge",
+                "admit_date_time": "admit",
+                "discharge_date_time": "discharge",
             }
         )(ip_table)
         ip_table = qo.Literal("IP", CARE_UNIT)(ip_table)
@@ -461,26 +223,26 @@ class GEMINIQuerier(DatasetQuerier):
         scu_table = self.get_table(IP_SCU)
         scu_table = qo.Rename(
             {
-                SCU_ADMIT_TIMESTAMP: "admit",
-                SCU_DISCHARGE_TIMESTAMP: "discharge",
+                "scu_admit_date_time": "admit",
+                "scu_discharge_date_time": "discharge",
             }
         )(scu_table)
         scu_table = qo.Literal("SCU", CARE_UNIT)(scu_table)
         scu_table = filter_care_unit_cols(scu_table)
 
         # Emergency room/department table.
-        er_table = self.er_admin().query
+        er_table = self.get_table(ER_ADMIN)
         er_table = qo.Rename(
             {
-                ER_ADMIT_TIMESTAMP: "admit",
-                ER_DISCHARGE_TIMESTAMP: "discharge",
+                "er_admit_timestamp": "admit",
+                "er_discharge_timestamp": "discharge",
             }
         )(er_table)
         er_table = qo.Literal("ER", CARE_UNIT)(er_table)
         er_table = filter_care_unit_cols(er_table)
 
         # Room transfer table.
-        rt_table = self.room_transfers().query
+        rt_table = self.get_table(ROOM_TRANSFER)
         rt_table = qo.Rename(
             {
                 "checkin_date_time": "admit",
@@ -498,211 +260,22 @@ class GEMINIQuerier(DatasetQuerier):
             select(rt_table),
         ).subquery()
 
-        if patient_encounters_table is not None:
-            table = qo.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
+        return QueryInterface(self._db, table, join=join, ops=ops)
 
-        # Process optional operations
-        operations: List[tuple] = [(qo.Limit, [qo.QAP("limit")], {})]
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    @table_params_to_type(Subquery)
-    @assert_table_has_columns(patient_encounters_table=[ENCOUNTER_ID, SUBJECT_ID])
-    def events(
-        self,
-        event_category: str,
-        patient_encounters_table: Optional[TableTypes] = None,
-        drop_null_event_names: bool = True,
-        drop_null_event_values: bool = False,
-        **process_kwargs,
+    def imaging(
+        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
     ) -> QueryInterface:
-        """Query events.
+        """Query imaging data.
 
         Parameters
         ----------
-        event_category : str or list of str
-            Specify event category, e.g., lab, vitals, intervention, etc.
-        patient_encounters_table: cyclops.query.util.TableTypes, optional
-            Patient encounters table used to join.
-        drop_null_event_names: bool, default = True
-            Whether to drop rows with null or empty event names.
-        drop_null_event_values: bool, default = False
-            Whether to drop rows with null event values.
+        join: qo.JoinArgs, optional
+        ops: qo.Sequential, optional
 
         Returns
         -------
         cyclops.query.interface.QueryInterface
             Constructed table, wrapped in an interface object.
-
-
-        Other Parameters
-        ----------------
-        event_names: str or list of str, optional
-            Get only certain event names.
-        event_name_substring: str, optional
-            Get only event names with some substring(s).
-        limit: int, optional
-            Limit the number of rows returned.
-
-        """
-        if event_category not in EVENT_CATEGORIES:
-            raise ValueError(
-                f"""Invalid event category specified.
-                Must be in {", ".join(EVENT_CATEGORIES)}"""
-            )
-
-        table = self.get_table(event_category)
-
-        # Remove rows with null events/events with no recorded name
-        if drop_null_event_names:
-            table = qo.DropNulls(EVENT_NAME)(table)
-            table = qo.ConditionEquals(
-                EVENT_NAME, EMPTY_STRING, not_=True, to_str=True
-            )(table)
-
-        # Remove rows with null event values
-        if drop_null_event_values:
-            table = qo.DropNulls(EVENT_VALUE)(table)
-
-        # Process optional operations
-        operations: List[tuple] = [
-            (qo.ConditionIn, [EVENT_NAME, qo.QAP("event_names")], {"to_str": True}),
-            (qo.ConditionBeforeDate, [EVENT_TIMESTAMP, qo.QAP("before_date")], {}),
-            (qo.ConditionAfterDate, [EVENT_TIMESTAMP, qo.QAP("after_date")], {}),
-            (qo.ConditionInYears, [EVENT_TIMESTAMP, qo.QAP("years")], {}),
-            (qo.ConditionInMonths, [EVENT_TIMESTAMP, qo.QAP("months")], {}),
-            (
-                qo.ConditionSubstring,
-                [EVENT_NAME, qo.QAP("event_name_substring")],
-                {"to_str": True},
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        # Join on patient encounters
-        if patient_encounters_table is not None:
-            table = qo.Join(patient_encounters_table, on=ENCOUNTER_ID)(table)
-
-        return QueryInterface(self._db, table)
-
-    def blood_transfusions(self, **process_kwargs) -> QueryInterface:
-        """Query blood transfusion data.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        rbc_mapped: bool, optional
-            Whether the patient was transfused with Red Blood Cells.
-        rbc_mapped_binarize_col: str, optional
-            Binarize the rbc_mapped condition and save as a column with
-            label rbc_mapped_binarize_col.
-        blood_product_raw_substring: str, optional
-            Get only blood_product_raw rows with some substring(s).
-        blood_product_raw_names
-            Get only specified blood_product_raw rows.
-        before_date: datetime.datetime or str
-            Get tranfusions before some date.
-            If a string, provide in YYYY-MM-DD format.
-        after_date: datetime.datetime or str
-            Get tranfusions after some date.
-            If a string, provide in YYYY-MM-DD format.
-        years: int or list of int, optional
-            Get tranfusions by year.
-        months: int or list of int, optional
-            Get tranfusions by month.
-        limit: int, optional
-            Limit the number of rows returned.
-
-        """
-        table = self.get_table(BLOOD_TRANSFUSION)
-
-        table = qo.Cast("issue_date_time", "timestamp")(table)
-
-        operations: List[tuple] = [
-            (qo.ConditionBeforeDate, ["issue_date_time", qo.QAP("before_date")], {}),
-            (qo.ConditionAfterDate, ["issue_date_time", qo.QAP("after_date")], {}),
-            (qo.ConditionInYears, ["issue_date_time", qo.QAP("years")], {}),
-            (qo.ConditionInMonths, ["issue_date_time", qo.QAP("months")], {}),
-            (qo.ConditionEquals, ["rbc_mapped", qo.QAP("rbc_mapped")], {}),
-            (
-                qo.ConditionSubstring,
-                ["blood_product_raw", qo.QAP("blood_product_raw_substring")],
-                {},
-            ),
-            (
-                qo.ConditionIn,
-                ["blood_product_raw", qo.QAP("blood_product_raw_names")],
-                {"to_str": True},
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    def interventions(self, **process_kwargs) -> QueryInterface:
-        """Query interventions data.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        limit: int, optional
-            Limit the number of rows returned.
-        years: int or list of int, optional
-            Get tests by year.
-
-        """
-        table = self.get_table(INTERVENTION)
-
-        operations: List[tuple] = [
-            (
-                qo.ConditionInYears,
-                ["intervention_episode_start_date", qo.QAP("years")],
-                {},
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    def imaging(self, **process_kwargs) -> QueryInterface:
-        """Query imaging data.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        test_descriptions: str or list of str
-            Get only certain tests with the specified descriptions.
-        raw_test_names: str or list of str
-            Get only certain raw test names.
-        before_date: datetime.datetime or str
-            Get tests before some date.
-            If a string, provide in YYYY-MM-DD format.
-        after_date: datetime.datetime or str
-            Get tests after some date.
-            If a string, provide in YYYY-MM-DD format.
-        years: int or list of int, optional
-            Get tests by year.
-        months: int or list of int, optional
-            Get tests by month.
-        limit: int, optional
-            Limit the number of rows returned.
 
         """
         table = self.get_table(IMAGING)
@@ -725,87 +298,4 @@ class GEMINIQuerier(DatasetQuerier):
             table
         )
 
-        operations: List[tuple] = [
-            (
-                qo.ConditionBeforeDate,
-                ["performed_date_time", qo.QAP("before_date")],
-                {},
-            ),
-            (qo.ConditionAfterDate, ["performed_date_time", qo.QAP("after_date")], {}),
-            (qo.ConditionInYears, ["performed_date_time", qo.QAP("years")], {}),
-            (qo.ConditionInMonths, ["performed_date_time", qo.QAP("months")], {}),
-            (
-                qo.ConditionIn,
-                ["imaging_test_description", qo.QAP("test_descriptions")],
-                {},
-            ),
-            (
-                qo.ConditionIn,
-                ["imaging_test_name_raw", qo.QAP("raw_test_names")],
-                {"to_str": True},
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    def derived_variables(self, **process_kwargs) -> QueryInterface:
-        """Query derived variable data.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        variables: str or list of str
-            Variable columns to keep.
-        limit: int, optional
-            Limit the number of rows returned.
-
-        """
-        table = self.get_table(DERIVED_VARIABLES)
-
-        operations: List[tuple] = [
-            (
-                qo.Keep,
-                [
-                    qo.QAP(
-                        "variables",
-                        transform_fn=lambda x: append_if_missing(
-                            x, ENCOUNTER_ID, to_start=True
-                        ),
-                    )
-                ],
-                {},
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
-
-    def pharmacy(self, **process_kwargs) -> QueryInterface:
-        """Query pharmacy data.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed table, wrapped in an interface object.
-
-        Other Parameters
-        ----------------
-        limit: int, optional
-            Limit the number of rows returned.
-
-        """
-        table = self.get_table(PHARMACY)
-
-        operations: List[tuple] = [
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
+        return QueryInterface(self._db, table, join=join, ops=ops)

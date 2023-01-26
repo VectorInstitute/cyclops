@@ -10,7 +10,6 @@ API functions specific to datasets.
 from __future__ import annotations
 
 import logging
-from collections import namedtuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
@@ -53,19 +52,48 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-JoinArgs = namedtuple(
-    "JoinArgs",
-    [
-        "join_table",
-        "on",
-        "on_to_type",
-        "cond",
-        "table_cols",
-        "join_table_cols",
-        "isouter",
-    ],
-    defaults=[None, None, None, None, None, None, False],
-)
+# pylint: disable=too-few-public-methods
+
+
+@dataclass
+class JoinArgs:
+    """Arguments for joining tables.
+
+    Parameters
+    ----------
+    join_table: cyclops.query.util.TableTypes
+        Table to join.
+    on: list of str or tuple, optional
+    on_to_type: list of type, optional
+        A list of types to which to convert the on columns before joining. Useful when
+        two columns have the same values but in different format, e.g., strings of int.
+    cond: BinaryExpression, optional
+        Condition on which to join to tables.
+    table_cols: str or list of str, optional
+        Filters to keep only these columns from the table.
+    join_table_cols:
+        Filters to keep only these columns from the join_table.
+    isouter:
+        Flag to say if the join is a left outer join.
+
+    """
+
+    join_table: TableTypes
+    on: Optional[  # pylint: disable=invalid-name
+        Union[str, List[str], tuple, List[tuple]]
+    ] = None
+    on_to_type: Optional[Union[type, List[type]]] = None
+    cond: Optional[BinaryExpression] = None
+    table_cols: Optional[Union[str, List[str]]] = None
+    join_table_cols: Optional[Union[str, List[str]]] = None
+    isouter: Optional[bool] = False
+
+    def __post_init__(self):
+        """Post initialization."""
+        self.on = to_list_optional(self.on)
+        self.on_to_type = to_list_optional(self.on_to_type)
+        self.table_cols = to_list_optional(self.table_cols)
+        self.join_table_cols = to_list_optional(self.join_table_cols)
 
 
 class QueryOp(type):
@@ -384,7 +412,7 @@ def _process_checks(
 
 
 @dataclass
-class Drop(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class Drop(metaclass=QueryOp):
     """Drop some columns.
 
     Parameters
@@ -415,7 +443,7 @@ class Drop(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class Rename:  # pylint: disable=too-few-public-methods
+class Rename(metaclass=QueryOp):
     """Rename some columns.
 
     Parameters
@@ -451,7 +479,7 @@ class Rename:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class Substring:  # pylint: disable=too-few-public-methods
+class Substring(metaclass=QueryOp):
     """Get substring of a string column.
 
     Parameters
@@ -498,7 +526,7 @@ class Substring:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class Reorder:  # pylint: disable=too-few-public-methods
+class Reorder(metaclass=QueryOp):
     """Reorder the columns in a table.
 
     Parameters
@@ -528,9 +556,12 @@ class Reorder:  # pylint: disable=too-few-public-methods
         return reorder_columns(table, self.cols)
 
 
-class ReorderAfter:  # pylint: disable=too-few-public-methods
+@dataclass
+class ReorderAfter(metaclass=QueryOp):
     """Reorder a number of columns to come after a specified column.
 
+    Parameters
+    ----------
     cols: list of str
         Ordered list of column names which will come after a specified column.
     after: str
@@ -538,10 +569,8 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
 
     """
 
-    def __init__(self, cols: Union[str, List[str]], after: str):
-        """Initialize."""
-        self.cols = to_list(cols)
-        self.after = after
+    cols: Union[str, List[str]]
+    after: str
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -563,11 +592,12 @@ class ReorderAfter:  # pylint: disable=too-few-public-methods
         names = [name for name in names if name not in self.cols]
         name_after_ind = names.index(self.after) + 1
         new_order = names[:name_after_ind] + self.cols + names[name_after_ind:]
+
         return Reorder(new_order)(table)
 
 
 @dataclass
-class Keep:  # pylint: disable=too-few-public-methods
+class Keep(metaclass=QueryOp):
     """Keep only the specified columns in a table.
 
     Parameters
@@ -598,7 +628,7 @@ class Keep:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class Trim:  # pylint: disable=too-few-public-methods
+class Trim(metaclass=QueryOp):
     """Trim the whitespace from some string columns.
 
     Parameters
@@ -633,7 +663,7 @@ class Trim:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class Literal:  # pylint: disable=too-few-public-methods
+class Literal(metaclass=QueryOp):
     """Add a literal column to a table.
 
     Parameters
@@ -667,7 +697,7 @@ class Literal:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
+class ExtractTimestampComponent(metaclass=QueryOp):
     """Extract a component such as year or month from a timestamp column.
 
     Parameters
@@ -714,7 +744,7 @@ class ExtractTimestampComponent:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class AddNumeric:  # pylint: disable=too-few-public-methods
+class AddNumeric(metaclass=QueryOp):
     """Add a numeric value to some columns.
 
     Parameters
@@ -759,7 +789,7 @@ class AddNumeric:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class AddDeltaConstant:  # pylint: disable=too-few-public-methods
+class AddDeltaConstant(metaclass=QueryOp):
     """Construct and add a datetime.timedelta object to some columns.
 
     Parameters
@@ -805,7 +835,7 @@ class AddDeltaConstant:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class AddColumn:  # pylint: disable=too-few-public-methods
+class AddColumn(metaclass=QueryOp):
     """Add a column to some columns.
 
     Parameters
@@ -874,7 +904,7 @@ class AddColumn:  # pylint: disable=too-few-public-methods
         )
 
 
-class AddDeltaColumn:  # pylint: disable=too-few-public-methods
+class AddDeltaColumn(metaclass=QueryOp):
     """Construct and add an interval column to some columns.
 
     Parameters
@@ -943,7 +973,7 @@ class AddDeltaColumn:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class Cast:
+class Cast(metaclass=QueryOp):
     """Cast columns to a specified type.
 
     Currently supporting conversions to str, int, float, date and timestamp.
@@ -1002,7 +1032,7 @@ class Cast:
         )
 
 
-class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
+class Join(metaclass=QueryOp):
     """Join a table with another table.
 
     Parameters
@@ -1038,13 +1068,13 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
     def __init__(
         self,
         join_table: TableTypes,
-        on: Union[  # pylint:disable=invalid-name
-            str, List[str], tuple, List[tuple], None
+        on: Optional[  # pylint: disable=invalid-name
+            Union[str, List[str], tuple, List[tuple]]
         ] = None,
-        on_to_type: Union[type, List[type], None] = None,
-        cond: Union[BinaryExpression, None] = None,
-        table_cols: Union[str, List[str], None] = None,
-        join_table_cols: Union[str, List[str], None] = None,
+        on_to_type: Optional[Union[type, List[type]]] = None,
+        cond: Optional[BinaryExpression] = None,
+        table_cols: Optional[Union[str, List[str]]] = None,
+        join_table_cols: Optional[Union[str, List[str]]] = None,
         isouter: Optional[bool] = False,
     ):
         """Initialize."""
@@ -1139,7 +1169,7 @@ class Join:  # pylint:disable=too-few-public-methods, too-many-arguments
         ).subquery()
 
 
-class ConditionEquals:  # pylint: disable=too-few-public-methods
+class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on being equal, or not equal, to some value.
 
     Parameters
@@ -1199,7 +1229,7 @@ class ConditionEquals:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionRegexMatch:  # pylint: disable=too-few-public-methods
+class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on matching a regular expression.
 
     Parameters
@@ -1255,7 +1285,7 @@ class ConditionRegexMatch:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionIn:  # pylint: disable=too-few-public-methods
+class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on having a value in list of values.
 
     Parameters
@@ -1319,7 +1349,7 @@ class ConditionIn:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionSubstring:  # pylint: disable=too-few-public-methods
+class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows on based on having substrings.
 
     Can be specified whether it must have any or all of the specified substrings.
@@ -1396,7 +1426,7 @@ class ConditionSubstring:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionStartsWith:  # pylint: disable=too-few-public-methods
+class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on starting with some string.
 
     Parameters
@@ -1456,7 +1486,7 @@ class ConditionStartsWith:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionEndsWith:  # pylint: disable=too-few-public-methods
+class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on ending with some string.
 
     Parameters
@@ -1516,7 +1546,7 @@ class ConditionEndsWith:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionInYears:  # pylint: disable=too-few-public-methods
+class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp column being in a list of years.
 
     Parameters
@@ -1577,7 +1607,7 @@ class ConditionInYears:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionInMonths:  # pylint: disable=too-few-public-methods
+class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being in a list of years.
 
     Parameters
@@ -1638,7 +1668,7 @@ class ConditionInMonths:  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
+class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being before some date.
 
     Parameters
@@ -1683,7 +1713,7 @@ class ConditionBeforeDate:  # pylint: disable=too-few-public-methods
         )
 
 
-class ConditionAfterDate:  # pylint: disable=too-few-public-methods
+class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being after some date.
 
     Parameters
@@ -1729,7 +1759,7 @@ class ConditionAfterDate:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class Limit:  # pylint: disable=too-few-public-methods
+class Limit(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Limit the number of rows returned in a query.
 
     Parameters
@@ -1760,7 +1790,7 @@ class Limit:  # pylint: disable=too-few-public-methods
 
 
 @dataclass
-class RandomizeOrder:
+class RandomizeOrder(metaclass=QueryOp):
     """Randomize order of table rows.
 
     Useful when the data is ordered, so certain rows cannot
@@ -1791,7 +1821,7 @@ class RandomizeOrder:
 
 
 @dataclass
-class DropNulls:
+class DropNulls(metaclass=QueryOp):
     """Remove rows with null values in some specified columns.
 
     Parameters
@@ -1826,7 +1856,7 @@ class DropNulls:
 
 
 @dataclass
-class Apply:
+class Apply(metaclass=QueryOp):
     """Apply a function to column(s).
 
     The function must take a sqlalchemy column object and also return a column object.
@@ -1865,7 +1895,7 @@ class Apply:
 
 
 @dataclass
-class OrderBy:
+class OrderBy(metaclass=QueryOp):
     """Order, or sort, the rows of a table by some columns.
 
     Parameters
@@ -1916,7 +1946,7 @@ class OrderBy:
 
 
 @dataclass
-class GroupByAggregate:
+class GroupByAggregate(metaclass=QueryOp):
     """Aggregate over a group by object.
 
     Parameters

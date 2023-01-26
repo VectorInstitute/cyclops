@@ -1,7 +1,7 @@
 """A query interface class to wrap database objects and queries."""
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Callable, Dict, Literal, Optional, Union
 
 import dask.dataframe as dd
@@ -54,7 +54,7 @@ class QueryInterface:
     def __post_init__(self) -> None:
         """Post init method to chain operations with original query."""
         if self.join:
-            self.query = qo.Join(**self.join._asdict())(self.query)
+            self.query = qo.Join(**asdict(self.join))(self.query)
         if self.ops:
             self.query = self.ops(self.query)
 
@@ -190,7 +190,7 @@ class QueryInterfaceProcessed:
     def __post_init__(self) -> None:
         """Post init method to chain operations with original query."""
         if self.join:
-            self._query = qo.Join(**self.join._asdict())(self._query)
+            self._query = qo.Join(**asdict(self.join))(self._query)
         if self.ops:
             self._query = self.ops(self._query)
 

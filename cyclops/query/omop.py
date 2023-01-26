@@ -8,7 +8,6 @@ from sqlalchemy.sql.selectable import Subquery
 import cyclops.query.ops as qo
 from cyclops.query.base import DatasetQuerier
 from cyclops.query.interface import QueryInterface
-from cyclops.query.util import table_params_to_type
 from cyclops.utils.common import to_list
 from cyclops.utils.log import setup_logging
 
@@ -57,9 +56,6 @@ CARE_SITE_NAME = "care_site_name"
 GENDER_CONCEPT_NAME = "gender_concept_name"
 RACE_CONCEPT_NAME = "race_concept_name"
 ETHNICITY_CONCEPT_NAME = "ethnicity_concept_name"
-
-# Column map.
-COLUMN_MAP: dict = {}
 
 # Other constants
 ID = "id"
@@ -114,7 +110,7 @@ class OMOPQuerier(DatasetQuerier):
         overrides = {}
         if config_overrides:
             overrides = config_overrides
-        super().__init__(_get_table_map(schema_name), COLUMN_MAP, **overrides)
+        super().__init__(_get_table_map(schema_name), **overrides)
 
     def _map_concept_ids_to_name(
         self, source_table: Subquery, source_cols: Union[str, List[str]]
@@ -174,34 +170,6 @@ class OMOPQuerier(DatasetQuerier):
 
         return source_table
 
-    @table_params_to_type(Subquery)
-    def provider(
-        self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
-    ) -> Subquery:
-        """Query provider table using query operations.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-        ops: List[qo.Sequential], optional
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface
-            Constructed query, wrapped in an interface object.
-
-        """
-        table = self.get_table(PROVIDER)
-        if join:
-            table = qo.Join(**join)(table)
-        if ops:
-            table = ops(table)
-
-        return QueryInterface(self._db, table, ops=ops)
-
-    @table_params_to_type(Subquery)
     def visit_occurrence(
         self,
         join: Optional[qo.JoinArgs] = None,
@@ -212,7 +180,7 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: cyclops.query.ops.JoinArgs, optional
-        ops: List[qo.Sequential], optional
+        ops: qo.Sequential, optional
 
         Returns
         -------
@@ -221,7 +189,6 @@ class OMOPQuerier(DatasetQuerier):
 
         """
         table = self.get_table(VISIT_OCCURRENCE)
-        table = qo.Cast([VISIT_START_DATETIME], "timestamp")(table)
         table = self._map_concept_ids_to_name(
             table, ["visit_concept_id", "visit_type_concept_id"]
         )
@@ -229,7 +196,6 @@ class OMOPQuerier(DatasetQuerier):
 
         return QueryInterface(self._db, table, join=join, ops=ops)
 
-    @table_params_to_type(Subquery)
     def visit_detail(
         self,
         join: Optional[qo.JoinArgs] = None,
@@ -240,7 +206,7 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
-        ops: List[qo.Sequential], optional
+        ops: qo.Sequential, optional
 
 
         Returns
@@ -250,16 +216,12 @@ class OMOPQuerier(DatasetQuerier):
 
         """
         table = self.get_table(VISIT_DETAIL)
-
-        # Possibly cast string representations to timestamps
-        table = qo.Cast([VISIT_DETAIL_START_DATETIME], "timestamp")(table)
         table = self._map_concept_ids_to_name(
             table, ["visit_detail_concept_id", "visit_detail_type_concept_id"]
         )
 
         return QueryInterface(self._db, table, join=join, ops=ops)
 
-    @table_params_to_type(Subquery)
     def person(
         self,
         join: Optional[qo.JoinArgs] = None,
@@ -270,7 +232,7 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
-        ops: List[qo.Sequential], optional
+        ops: qo.Sequential, optional
 
         Returns
         -------
@@ -285,7 +247,6 @@ class OMOPQuerier(DatasetQuerier):
 
         return QueryInterface(self._db, table, join=join, ops=ops)
 
-    @table_params_to_type(Subquery)
     def observation(
         self,
         join: Optional[qo.JoinArgs] = None,
@@ -296,7 +257,7 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
-        ops: List[qo.Sequential], optional
+        ops: qo.Sequential, optional
 
         Returns
         -------
@@ -305,15 +266,12 @@ class OMOPQuerier(DatasetQuerier):
 
         """
         table = self.get_table(OBSERVATION)
-        # Possibly cast string representations to timestamps
-        table = qo.Cast([OBSERVATION_DATETIME], "timestamp")(table)
         table = self._map_concept_ids_to_name(
             table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID]
         )
 
         return QueryInterface(self._db, table, join=join, ops=ops)
 
-    @table_params_to_type(Subquery)
     def measurement(
         self,
         join: Optional[qo.JoinArgs] = None,
@@ -324,7 +282,7 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
-        ops: List[qo.Sequential], optional
+        ops: qo.Sequential, optional
 
         Returns
         -------
@@ -333,8 +291,6 @@ class OMOPQuerier(DatasetQuerier):
 
         """
         table = self.get_table(MEASUREMENT)
-        # Possibly cast string representations to timestamps
-        table = qo.Cast([MEASUREMENT_DATETIME], "timestamp")(table)
         # Cast value_as_concept_id to int.
         table = qo.Cast([VALUE_AS_CONCEPT_ID], "int")(table)
         table = self._map_concept_ids_to_name(

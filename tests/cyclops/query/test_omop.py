@@ -24,7 +24,7 @@ def test_omop_querier_synthea():
     observations = synthea.observation().run()
     measurements = synthea.measurement().run()
     visit_details = synthea.visit_detail().run()
-    providers = synthea.provider().run()
+    providers = synthea.provider().run()  # pylint: disable=no-member
     assert len(persons) == 54
     assert len(visits) == 1620
     assert len(visit_details) == 4115

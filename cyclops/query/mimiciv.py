@@ -101,17 +101,28 @@ class MIMICIVQuerier(DatasetQuerier):
             overrides = config_overrides
         super().__init__(TABLE_MAP, COLUMN_MAP, **overrides)
 
-    def patients(self, **process_kwargs) -> QueryInterface:
+    def patients(
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
+    ) -> QueryInterface:
         """Query MIMIC patient data.
 
-        Other Parameters
-        ----------------
-        sex: str or list of string, optional
-            Specify patient sex (one or multiple).
-        died: bool, optional
-            Specify True to get patients who have died, and False for those who haven't.
-        limit: int, optional
-            Limit the number of rows returned.
+        Parameters
+        ----------
+        join: qo.JoinArgs, optional
+        ops: qo.Sequential, optional
+
+        Returns
+        -------
+        cyclops.query.interface.QueryInterface
+            Constructed query, wrapped in an interface object.
+
+        Notes
+        -----
+        The function infers the approximate year a patient received care, using the
+        `anchor_year` and `anchor_year_group` columns. The `join` and `ops` supplied
+        are applied after the approximate year is inferred.
 
         """
         table = self.get_table(PATIENTS)
@@ -149,53 +160,38 @@ class MIMICIVQuerier(DatasetQuerier):
         ).subquery()
 
         # Shift relevant columns by anchor year difference
-        table = qo.AddColumn("anchor_year", "anchor_year_difference")(table)
-        table = qo.AddDeltaColumn([DATE_OF_DEATH], years="anchor_year_difference")(
-            table
+        # Calculate approximate year of birth
+        ops = qo.Sequential(
+            [
+                qo.AddColumn("anchor_year", "anchor_year_difference"),
+                qo.AddDeltaColumn([DATE_OF_DEATH], years="anchor_year_difference"),
+                qo.AddColumn(
+                    "anchor_year", "age", negative=True, new_col_labels="birth_year"
+                ),
+                qo.Drop(
+                    [
+                        "age",
+                        "anchor_year",
+                        "anchor_year_group",
+                        "anchor_year_group_start",
+                        "anchor_year_group_end",
+                        "anchor_year_group_middle",
+                    ]
+                ),
+                qo.Reorder(
+                    [
+                        SUBJECT_ID,
+                        SEX,
+                        "birth_year",
+                        DATE_OF_DEATH,
+                        "anchor_year_difference",
+                    ]
+                ),
+                ops,
+            ]
         )
 
-        # Calculate approximate year of birth
-        table = qo.AddColumn(
-            "anchor_year", "age", negative=True, new_col_labels="birth_year"
-        )(table)
-
-        table = qo.Drop(
-            [
-                "age",
-                "anchor_year",
-                "anchor_year_group",
-                "anchor_year_group_start",
-                "anchor_year_group_end",
-                "anchor_year_group_middle",
-            ]
-        )(table)
-
-        # Reorder nicely.
-        table = qo.Reorder(
-            [SUBJECT_ID, SEX, "birth_year", DATE_OF_DEATH, "anchor_year_difference"]
-        )(table)
-
-        # Process optional operations
-        if "died" not in process_kwargs and "died_binarize_col" in process_kwargs:
-            process_kwargs["died"] = True
-
-        operations: List[tuple] = [
-            # Must convert to string since CHAR(1) type doesn't recognize equality
-            (qo.ConditionIn, [SEX, qo.QAP("sex")], {"to_str": True}),
-            (
-                qo.ConditionEquals,
-                ["discharge_location", "DIED"],
-                {
-                    "not_": qo.QAP("died", transform_fn=lambda x: not x),
-                    "binarize_col": qo.QAP("died_binarize_col", required=False),
-                },
-            ),
-            (qo.Limit, [qo.QAP("limit")], {}),
-        ]
-
-        table = qo.process_operations(table, operations, process_kwargs)
-
-        return QueryInterface(self._db, table)
+        return QueryInterface(self._db, table, join=join, ops=ops)
 
     def diagnoses(self, **process_kwargs) -> QueryInterface:
         """Query MIMIC diagnoses.
