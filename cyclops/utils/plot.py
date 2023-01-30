@@ -10,12 +10,6 @@ from matplotlib.axes import SubplotBase
 from matplotlib.container import BarContainer
 from plotly.subplots import make_subplots
 
-from cyclops.process.column_names import (
-    EVENT_CATEGORY,
-    EVENT_NAME,
-    EVENT_TIMESTAMP,
-    EVENT_VALUE,
-)
 from cyclops.utils.common import to_list
 
 PLOT_HEIGHT = 520
@@ -23,7 +17,11 @@ PLOT_HEIGHT = 520
 
 def plot_timeline(
     events: pd.DataFrame,
-    timestep_timestamps: Optional[pd.Series] = None,
+    event_name: str,
+    event_ts: str,
+    event_value: str,
+    event_category: Optional[str] = None,
+    timesteps_ts: Optional[pd.Series] = None,
     return_fig: bool = False,
 ) -> Union[plotly.graph_objs.Figure, None]:
     """Plot timeline of patient events for an encounter.
@@ -32,7 +30,15 @@ def plot_timeline(
     ----------
     events: pandas.DataFrame
         Event data to plot.
-    timestep_timestamps: pandas.Series, optional
+    event_name: str
+        Name of column with event names.
+    event_ts: str
+        Name of column with event timestamps.
+    event_value: str
+        Name of column with event values.
+    event_category: str, optional
+        Name of column with category of events.
+    timesteps_ts: pandas.Series, optional
         Timestamps of timesteps to overlay as vertical lines.
         Useful to see aggregation buckets.
     return_fig: bool, optional
@@ -41,20 +47,19 @@ def plot_timeline(
     """
     fig = px.strip(
         events,
-        x=EVENT_TIMESTAMP,
-        y=EVENT_NAME,
-        color=EVENT_CATEGORY,
-        hover_data=[EVENT_VALUE],
+        x=event_ts,
+        y=event_name,
+        color=event_category,
+        hover_data=[event_value],
         stripmode="group",
     )
     fig.update_layout(
         title="Timeline Visualization",
-        autosize=False,
-        height=PLOT_HEIGHT,
+        autosize=True,
     )
-    if timestep_timestamps:
-        for timestep_timestamp in timestep_timestamps:
-            fig.add_vline(timestep_timestamp)
+    if timesteps_ts is not None:
+        for timestep_ts in timesteps_ts:
+            fig.add_vline(timestep_ts)
 
     fig = fig.update_layout(
         {
