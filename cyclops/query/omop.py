@@ -180,7 +180,9 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: cyclops.query.ops.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to perform on query.
 
         Returns
         -------
@@ -206,8 +208,9 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
-
+            Additional operations to perform on query.
 
         Returns
         -------
@@ -232,7 +235,9 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to perform on query.
 
         Returns
         -------
@@ -257,7 +262,9 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to perform on query.
 
         Returns
         -------
@@ -282,7 +289,9 @@ class OMOPQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to perform on query.
 
         Returns
         -------

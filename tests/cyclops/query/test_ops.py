@@ -7,12 +7,9 @@ from sqlalchemy import column, select
 
 from cyclops.query.omop import OMOPQuerier
 from cyclops.query.ops import (
-    QAP,
     AddNumeric,
     Apply,
-    ConditionIn,
     ConditionRegexMatch,
-    ConditionSubstring,
     Drop,
     ExtractTimestampComponent,
     GroupByAggregate,
@@ -26,7 +23,6 @@ from cyclops.query.ops import (
     Trim,
     _none_add,
     _process_checks,
-    process_operations,
 )
 from cyclops.query.util import process_column
 
@@ -59,35 +55,11 @@ def test__none_add():
     assert _none_add(None, "2") == "2"
 
 
-def test_qap():
-    """Test QAP."""
-    args = QAP("arg1", required=False, transform_fn=int)
-    test_arg = args(arg1="2")
-    assert isinstance(test_arg, int) and test_arg == 2
-
-
 def test__process_checks(table_input):  # pylint: disable=redefined-outer-name
     """Test _process_checks fn."""
     _process_checks(table_input, cols=["a"], cols_not_in=["d"], timestamp_cols=["a"])
     with pytest.raises(ValueError):
         _process_checks(table_input, cols_not_in=["a"])
-
-
-def test_process_operations(table_input):  # pylint: disable=redefined-outer-name
-    """Test process_operations fn."""
-    process_kwargs = {"b_args": "cat", "c_args": ["dog"]}
-    operations = [
-        (
-            ConditionIn,
-            ["b", QAP("b_args")],
-            {"to_str": True},
-        ),
-        (ConditionSubstring, ["c", QAP("c_args")], {}),
-    ]
-    table = process_operations(table_input, operations, process_kwargs)
-    query_lines = str(table).splitlines()
-    assert query_lines[0] == "SELECT anon_1.a, anon_1.b, anon_1.c "
-    assert query_lines[-1] == "WHERE lower(CAST(anon_1.c AS VARCHAR)) LIKE :lower_1"
 
 
 @pytest.mark.integration_test
