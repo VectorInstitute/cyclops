@@ -41,7 +41,7 @@ The python virtual environment can be set up using
 installed and then run:
 
 ```bash
-poetry install
+python3 -m poetry install
 source $(poetry env info --path)/bin/activate
 ```
 

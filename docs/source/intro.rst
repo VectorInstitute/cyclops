@@ -40,7 +40,7 @@ sure it is installed and then run:
 
 .. code:: bash
 
-   poetry install
+   python3 -m poetry install
    source $(poetry env info --path)/bin/activate
 
 Contributing

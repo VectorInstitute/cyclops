@@ -2,7 +2,7 @@
 
 import logging
 from functools import partial
-from typing import Callable, Dict, Generator, Mapping, Optional, Union
+from typing import Callable, List, Mapping, Optional, Union
 
 from hydra import compose, initialize
 from omegaconf import OmegaConf
@@ -53,6 +53,14 @@ class DatasetQuerier:
     _table_map: Mapping
         A dictionary mapping table names to table objects in the DB.
 
+    Notes
+    -----
+    This class is intended to be subclassed to provide methods for querying tables in
+    the database. The subclass accepts a table map as an argument, which is a mapping
+    from table names to table objects. By default, the methods are named after the
+    table names. The subclass can override the table methods by defining a method with
+    the same name as the table. The subclass can also add additional methods.
+
     """
 
     def __init__(self, table_map: Mapping, **config_overrides) -> None:
@@ -80,12 +88,12 @@ class DatasetQuerier:
         self._table_map = table_map
         self._setup_table_methods()
 
-    def list_tables(self) -> Generator[str, None, None]:
+    def list_tables(self) -> List[str]:
         """List table methods that can be queried using the database.
 
         Returns
         -------
-        Generator[str, None, None]
+        List[str]
             List of table names.
 
         """
@@ -121,9 +129,7 @@ class DatasetQuerier:
 
         return QueryInterfaceProcessed(self._db, table, ops=ops, process_fn=process_fn)
 
-    def get_table(
-        self, table_name: str, cast_timestamp_cols: bool = True
-    ) -> Subquery:
+    def get_table(self, table_name: str, cast_timestamp_cols: bool = True) -> Subquery:
         """Get a table and possibly map columns to have standard names.
 
         Standardizing column names allows for for columns to be
@@ -187,8 +193,9 @@ class DatasetQuerier:
 
         """
         for table_name in self._table_map:
-            setattr(
-                self,
-                table_name,
-                partial(self._template_table_method, table_name=table_name),
-            )
+            if not hasattr(self, table_name):
+                setattr(
+                    self,
+                    table_name,
+                    partial(self._template_table_method, table_name=table_name),
+                )
