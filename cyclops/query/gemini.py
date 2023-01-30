@@ -86,6 +86,13 @@ class GEMINIQuerier(DatasetQuerier):
     ) -> QueryInterface:
         """Query GEMINI patient encounters.
 
+        Parameters
+        ----------
+        join: qo.JoinArgs, optional
+            Join arguments.
+        ops: qo.Sequential, optional
+            Additional operations to perform on the table.
+
         Returns
         -------
         cyclops.query.interface.QueryInterface
@@ -122,7 +129,9 @@ class GEMINIQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to perform on the table.
 
         Returns
         -------
@@ -157,7 +166,9 @@ class GEMINIQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to perform on the table.
 
         Returns
         -------
@@ -186,12 +197,14 @@ class GEMINIQuerier(DatasetQuerier):
         join: Optional[qo.JoinArgs] = None,
         ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
-        """Query care unit data.
+        """Query care unit data, fetches transfer info from multiple tables.
 
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to perform on the table.
 
         Returns
         -------
@@ -265,12 +278,14 @@ class GEMINIQuerier(DatasetQuerier):
     def imaging(
         self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
     ) -> QueryInterface:
-        """Query imaging data.
+        """Query imaging reports data.
 
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to perform on the table.
 
         Returns
         -------

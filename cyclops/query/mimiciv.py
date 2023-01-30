@@ -76,7 +76,9 @@ class MIMICIVQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to apply to the query.
 
         Returns
         -------
@@ -147,7 +149,9 @@ class MIMICIVQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to apply to the query.
 
         Returns
         -------
@@ -174,7 +178,9 @@ class MIMICIVQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to apply to the query.
 
         Returns
         -------
@@ -199,7 +205,9 @@ class MIMICIVQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to apply to the query.
 
         Returns
         -------
@@ -226,7 +234,9 @@ class MIMICIVQuerier(DatasetQuerier):
         Parameters
         ----------
         join: qo.JoinArgs, optional
+            Join arguments.
         ops: qo.Sequential, optional
+            Additional operations to apply to the query.
 
         Returns
         -------
