@@ -57,7 +57,7 @@ def plot_timeline(
         title="Timeline Visualization",
         autosize=True,
     )
-    if timesteps_ts:
+    if timesteps_ts is not None:
         for timestep_ts in timesteps_ts:
             fig.add_vline(timestep_ts)
 

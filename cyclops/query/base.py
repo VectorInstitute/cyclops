@@ -2,7 +2,7 @@
 
 import logging
 from functools import partial
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Generator, Mapping, Optional, Union
 
 from hydra import compose, initialize
 from omegaconf import OmegaConf
@@ -50,17 +50,17 @@ class DatasetQuerier:
     ----------
     _db: cyclops.query.orm.Database
         ORM Database used to run queries.
-    _table_map: Dict
+    _table_map: Mapping
         A dictionary mapping table names to table objects in the DB.
 
     """
 
-    def __init__(self, table_map: Dict, **config_overrides) -> None:
+    def __init__(self, table_map: Mapping, **config_overrides) -> None:
         """Initialize.
 
         Parameters
         ----------
-        table_map: Dict
+        table_map: Mapping
             A dictionary mapping table names to table objects in the DB.
         **config_overrides
              Override configuration parameters, specified as kwargs.
@@ -80,12 +80,12 @@ class DatasetQuerier:
         self._table_map = table_map
         self._setup_table_methods()
 
-    def list_tables(self) -> list:
+    def list_tables(self) -> Generator[str, None, None]:
         """List table methods that can be queried using the database.
 
         Returns
         -------
-        list
+        Generator[str, None, None]
             List of table names.
 
         """
@@ -122,7 +122,7 @@ class DatasetQuerier:
         return QueryInterfaceProcessed(self._db, table, ops=ops, process_fn=process_fn)
 
     def get_table(
-        self, table_name: str, cast_timestamp_cols: Optional[bool] = True
+        self, table_name: str, cast_timestamp_cols: bool = True
     ) -> Subquery:
         """Get a table and possibly map columns to have standard names.
 
@@ -133,7 +133,7 @@ class DatasetQuerier:
         ----------
         table_name: str
             Name of GEMINI table.
-        cast_timestamp_cols: bool, optional
+        cast_timestamp_cols: bool
             Whether to cast timestamp columns to datetime.
 
         Returns

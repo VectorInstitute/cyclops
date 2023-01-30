@@ -53,9 +53,9 @@ class QueryInterface:
 
     def __post_init__(self) -> None:
         """Post init method to chain operations with original query."""
-        if self.join:
+        if self.join is not None:
             self.query = qo.Join(**asdict(self.join))(self.query)
-        if self.ops:
+        if self.ops is not None:
             self.query = self.ops(self.query)
 
     @property
@@ -189,9 +189,9 @@ class QueryInterfaceProcessed:
 
     def __post_init__(self) -> None:
         """Post init method to chain operations with original query."""
-        if self.join:
+        if self.join is not None:
             self._query = qo.Join(**asdict(self.join))(self._query)
-        if self.ops:
+        if self.ops is not None:
             self._query = self.ops(self._query)
 
     def run(
