@@ -44,7 +44,6 @@ jobs:
           file: ./coverage.xml
           name: codecov-umbrella
           fail_ci_if_error: true
-      - name: Build for building webpage
       - uses: actions/setup-node@v3
         with:
           node-version: 18

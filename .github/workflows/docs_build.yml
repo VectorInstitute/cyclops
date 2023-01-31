@@ -37,7 +37,6 @@ jobs:
           # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
-      - name: Setup for building webpage
       - uses: actions/setup-node@v3
         with:
           node-version: 18
