@@ -24,18 +24,18 @@ class QueryInterface:
 
     Parameters
     ----------
-    database: cyclops.orm.Database
+    database
         Database object to create ORM, and query data.
-    query: cyclops.query.util.TableTypes
+    query
         The query.
-    join: cyclops.query.ops.JoinArgs, optional
+    join
         Join arguments to join the query with another table.
-    ops: cyclops.query.ops.Sequential, optional
+    ops
         Operations to perform on the query.
-    _data: pandas.DataFrame or dask.DataFrame
+    _data
         Data returned from executing the query, as Pandas DataFrame.
-    _run_args: dict Private dictionary attribute to keep track of arguments
-        passed to run() method.
+    _run_args
+        Private dictionary attribute to keep track of arguments passed to run() method.
 
     Notes
     -----
@@ -110,7 +110,7 @@ class QueryInterface:
 
         Parameters
         ----------
-        save_path
+        path
             Path where the file will be saved.
         file_format
             File format of the file to save.
@@ -156,19 +156,19 @@ class QueryInterfaceProcessed:
 
     Parameters
     ----------
-    database: cyclops.orm.Database
+    database
         Database object to create ORM, and query data.
-    _query: cyclops.query.util.TableTypes
+    _query
         The query.
-    process_fn: Callable
+    process_fn
         Process function to apply on the pandas dataframe returned from the query.
-    join: cyclops.query.ops.JoinArgs, optional
+    join
         Join arguments to join the query with another table.
-    ops: cyclops.query.ops.Sequential, optional
+    ops
         Operations to perform on the query.
-    _data: pandas.DataFrame or dask.DataFrame
+    _data
         Data returned from executing the query, as Pandas DataFrame.
-    _run_args: dict
+    _run_args
         Private dictionary attribute to keep track of arguments
         passed to run() method.
 
@@ -252,7 +252,7 @@ class QueryInterfaceProcessed:
 
         Parameters
         ----------
-        save_path
+        path
             Path where the file will be saved.
         file_format
             File format of the file to save.
