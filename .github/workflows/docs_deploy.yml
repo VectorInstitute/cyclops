@@ -44,8 +44,19 @@ jobs:
           file: ./coverage.xml
           name: codecov-umbrella
           fail_ci_if_error: true
-      - name: Deploy to Github pages
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
+      - name: Build website
+        uses: actions/setup-node@v3
         with:
-          branch: github_pages
-          folder: docs/build/html
+          node-version: 18
+          cache: yarn
+        run: |
+          cd docs/cyclops-webpage
+          yarn install --frozen-lockfile
+          yarn build
+          cp -r ../build/html build/api
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: github_pages
+          publish_dir: ./build

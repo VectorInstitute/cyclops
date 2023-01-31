@@ -132,9 +132,6 @@ class DatasetQuerier:
     def get_table(self, table_name: str, cast_timestamp_cols: bool = True) -> Subquery:
         """Get a table and possibly map columns to have standard names.
 
-        Standardizing column names allows for for columns to be
-        recognized in downstream processing.
-
         Parameters
         ----------
         table_name: str
