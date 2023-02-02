@@ -4,13 +4,24 @@ from math import isclose
 
 import pytest
 from sqlalchemy import column, select
+import pandas as pd
 
 from cyclops.query.omop import OMOPQuerier
 from cyclops.query.ops import (
     AddNumeric,
     Apply,
+    Cast,
+    ConditionIn,
+    ConditionInMonths,
+    ConditionInYears,
+    ConditionStartsWith,
+    ConditionEndsWith,
+    ConditionSubstring,
     ConditionRegexMatch,
+    ConditionBeforeDate,
+    ConditionAfterDate,
     Drop,
+    DropNulls,
     ExtractTimestampComponent,
     GroupByAggregate,
     Limit,
@@ -271,6 +282,96 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
         ].item()
         == 53.1
     )
+
+
+@pytest.mark.integration_test
+def test_drop_nulls(visits_input):  # pylint: disable=redefined-outer-name
+    """Test DropNulls."""
+    visits = DropNulls("preceding_visit_occurrence_id")(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert visits["preceding_visit_occurrence_id"].isnull().sum() == 0
+
+
+@pytest.mark.integration_test
+def test_condition_before_date(  # pylint: disable=redefined-outer-name
+    visits_input
+):
+    """Test ConditionBeforeDate."""
+    visits = ConditionBeforeDate("visit_start_date", "2018-01-01")(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert visits["visit_start_date"].max() < pd.to_datetime("2018-01-01")
+
+
+@pytest.mark.integration_test
+def test_condition_after_date(  # pylint: disable=redefined-outer-name
+    visits_input
+):
+    """Test ConditionAfterDate."""
+    visits = ConditionAfterDate("visit_start_date", "2018-01-01")(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert visits["visit_start_date"].min() >= pd.to_datetime("2018-01-01")
+
+
+@pytest.mark.integration_test
+def test_condition_in(  # pylint: disable=redefined-outer-name
+    visits_input
+):
+    """Test ConditionIn."""
+    visits = ConditionIn("visit_concept_name", ["Outpatient Visit"])(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_name"] == "Outpatient Visit")
+
+
+@pytest.mark.integration_test
+def test_condition_in_months(  # pylint: disable=redefined-outer-name
+    visits_input
+):
+    """Test ConditionInMonths."""
+    visits_input = Cast("visit_start_date", "timestamp")(visits_input)
+    visits = ConditionInMonths("visit_start_date", 6)(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert (visits["visit_start_date"].dt.month == 6).all()
+
+
+@pytest.mark.integration_test
+def test_condition_in_years(  # pylint: disable=redefined-outer-name
+    visits_input
+):
+    """Test ConditionInYears."""
+    visits_input = Cast("visit_start_date", "timestamp")(visits_input)
+    visits = ConditionInYears("visit_start_date", 2018)(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert (visits["visit_start_date"].dt.year == 2018).all()
+
+
+@pytest.mark.integration_test
+def test_condition_substring(  # pylint: disable=redefined-outer-name
+    visits_input
+):
+    """Test ConditionSubstring."""
+    visits = ConditionSubstring("visit_concept_name", "Outpatient")(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_name"].str.contains("Outpatient"))
+
+
+@pytest.mark.integration_test
+def test_condition_starts_with(  # pylint: disable=redefined-outer-name
+    visits_input
+):
+    """Test ConditionStartsWith."""
+    visits = ConditionStartsWith("visit_concept_name", "Outpatient")(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_name"].str.startswith("Outpatient"))
+
+
+@pytest.mark.integration_test
+def test_condition_ends_with(  # pylint: disable=redefined-outer-name
+    visits_input
+):
+    """Test ConditionEndsWith."""
+    visits = ConditionEndsWith("visit_concept_name", "Visit")(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_name"].str.endswith("Visit"))
 
 
 @pytest.mark.integration_test
