@@ -1,4 +1,5 @@
 """Plotting functions."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
@@ -173,26 +174,38 @@ def plot_risk_mortality(predictions: np.ndarray, labels: np.ndarray) -> go.Figur
             go.Scatter(
                 mode="markers",
                 x=prediction_hours,
-                y=[label_h for x in prediction_hours],
-                line=dict(color="Black"),
+                y=[label_h for _ in prediction_hours],
+                line={"color": "Black"},
                 name="low risk of mortality label",
-                marker=dict(color="Green", size=20, line=dict(color="Black", width=2)),
+                marker={
+                    "color": "Green",
+                    "size": 20,
+                    "line": {"color": "Black", "width": 2},
+                },
             ),
             go.Scatter(
                 mode="markers",
                 x=[prediction_hours[i] for i, v in enumerate(is_mortality) if v],
                 y=[label_h for _, v in enumerate(is_mortality) if v],
-                line=dict(color="Red"),
+                line={"color": "Red"},
                 name="high risk of mortality label",
-                marker=dict(color="Red", size=20, line=dict(color="Black", width=2)),
+                marker={
+                    "color": "Red",
+                    "size": 20,
+                    "line": {"color": "Black", "width": 2},
+                },
             ),
             go.Scatter(
                 mode="markers",
                 x=[prediction_hours[i] for i, v in enumerate(after_discharge) if v],
                 y=[label_h for _, v in enumerate(after_discharge) if v],
-                line=dict(color="Grey"),
+                line={"color": "Grey"},
                 name="post discharge label",
-                marker=dict(color="Grey", size=20, line=dict(color="Black", width=2)),
+                marker={
+                    "color": "Grey",
+                    "size": 20,
+                    "line": {"color": "Black", "width": 2},
+                },
             ),
             go.Bar(
                 x=prediction_hours,
