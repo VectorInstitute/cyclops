@@ -8,6 +8,7 @@ from sqlalchemy import column, select
 
 from cyclops.query.omop import OMOPQuerier
 from cyclops.query.ops import (
+    AddColumn,
     AddNumeric,
     Apply,
     Cast,
@@ -79,6 +80,34 @@ def test_drop(visits_input):  # pylint: disable=redefined-outer-name
     visits = Drop("care_site_source_value")(visits_input)
     visits = SYNTHEA.get_interface(visits).run()
     assert "care_site_source_value" not in visits.columns
+
+
+@pytest.mark.integration_test
+def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
+    """Test AddColumn."""
+    ops = Sequential(
+        [
+            Literal(2, "test_col1"),
+            Literal(3, "test_col2"),
+            AddColumn("test_col1", "test_col2", new_col_labels="test_col3"),
+        ]
+    )
+    visits = SYNTHEA.get_interface(visits_input, ops=ops).run()
+    assert "test_col3" in visits.columns
+    assert (visits["test_col3"] == 5).all()
+
+    ops = Sequential(
+        [
+            Literal(2, "test_col1"),
+            Literal(3, "test_col2"),
+            AddColumn(
+                "test_col1", "test_col2", negative=True, new_col_labels="test_col3"
+            ),
+        ]
+    )
+    visits = SYNTHEA.get_interface(visits_input, ops=ops).run()
+    assert "test_col3" in visits.columns
+    assert (visits["test_col3"] == -1).all()
 
 
 @pytest.mark.integration_test
@@ -297,7 +326,7 @@ def test_condition_before_date(visits_input):  # pylint: disable=redefined-outer
     """Test ConditionBeforeDate."""
     visits = ConditionBeforeDate("visit_start_date", "2018-01-01")(visits_input)
     visits = SYNTHEA.get_interface(visits).run()
-    assert visits["visit_start_date"].max() < pd.to_datetime("2018-01-01")
+    assert pd.Timestamp(visits["visit_start_date"].max()) < pd.Timestamp("2018-01-01")
 
 
 @pytest.mark.integration_test
@@ -305,7 +334,7 @@ def test_condition_after_date(visits_input):  # pylint: disable=redefined-outer-
     """Test ConditionAfterDate."""
     visits = ConditionAfterDate("visit_start_date", "2018-01-01")(visits_input)
     visits = SYNTHEA.get_interface(visits).run()
-    assert visits["visit_start_date"].min() >= pd.to_datetime("2018-01-01")
+    assert pd.Timestamp(visits["visit_start_date"].min()) > pd.Timestamp("2018-01-01")
 
 
 @pytest.mark.integration_test
