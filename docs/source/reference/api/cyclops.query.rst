@@ -10,6 +10,7 @@ cyclops.query
 
     interface
     ops
+    base
 
 dataset APIs
 ------------
