@@ -10,6 +10,29 @@ import pandas as pd
 from pandas.errors import PerformanceWarning
 
 
+def to_timestamp(data: Union[pd.Series, np.ndarray]) -> pd.Series:
+    """Convert a Pandas series or NumPy array to a datetime/timestamp type.
+
+    Parameters
+    ----------
+    data: pandas.Series or numpy.ndarray
+        Data to be converted.
+
+    Returns
+    -------
+    pandas.Series
+        The converted data.
+
+    """
+    if isinstance(data, pd.Series):
+        return pd.to_datetime(data)
+
+    if isinstance(data, np.ndarray):
+        return pd.to_datetime(pd.Series(data))
+
+    raise ValueError(f"Type of data argument ({type(data)}) not supported.")
+
+
 def add_years_approximate(
     timestamp_series: pd.Series, years_series: pd.Series
 ) -> pd.Series:

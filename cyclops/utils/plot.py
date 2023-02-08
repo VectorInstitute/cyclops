@@ -2,17 +2,65 @@
 
 from typing import List, Optional, Union
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import plotly
 import plotly.express as px
 import plotly.graph_objects as go
 from matplotlib.axes import SubplotBase
+from matplotlib.cm import get_cmap
 from matplotlib.container import BarContainer
+from matplotlib.pyplot import figure
 from plotly.subplots import make_subplots
 
-from cyclops.utils.common import to_list
+from cyclops.process.util import has_columns
+from cyclops.utils.common import to_list, to_timestamp
 
 PLOT_HEIGHT = 520
+
+
+def plot_admit_discharge(
+    data: pd.DataFrame, description: str = "description", figsize: tuple = (10, 4)
+) -> None:
+    """Plot a series of admit discharge times given a description.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        DataFrame with 'admit', 'discharge', and description columns.
+        The admit and discharge columns must be convertable to Timestamps.
+
+    """
+    data = data.copy()
+    has_columns(data, ["admit", "discharge", description], raise_error=True)
+
+    figure(figsize=figsize, dpi=80)
+    colors = get_cmap("Accent").colors
+
+    data["admit_int"] = to_timestamp(data["admit"]).astype(int)
+    data["discharge_int"] = to_timestamp(data["discharge"]).astype(int)
+
+    desc_dict = {}
+    for val, key in enumerate(data[description].unique()):
+        desc_dict[key] = val
+
+    data["admit_int"] = data["admit"].astype(int)
+    data["discharge_int"] = data["discharge"].astype(int)
+
+    plotted = []
+
+    def plot_timerange(admit, discharge, desc):
+        ind = desc_dict[desc]
+        if desc in plotted:
+            plt.plot([admit, discharge], [ind, ind], color=colors[ind])
+        else:
+            plt.plot([admit, discharge], [ind, ind], color=colors[ind], label=desc)
+            plotted.append(desc)
+
+    for _, row in data.iterrows():
+        plot_timerange(row["admit_int"], row["discharge_int"], row[description])
+
+    plt.legend()
 
 
 def plot_timeline(
