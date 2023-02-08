@@ -32,6 +32,7 @@ hydra-core = "^1.2.0"
 torchxrayvision = "^0.0.37"
 alibi = {version = "^0.8.0", extras = ["shap"]}
 alibi-detect = {version = "^0.10.4", extras = ["torch"]}
+llvmlite = "0.38.0"
 
 [tool.poetry.group.dev.dependencies]
 seaborn = "^0.11.2"
