@@ -34,7 +34,7 @@ jobs:
           sudo apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v3
       - name: Install poetry
-        run: pipx install poetry
+        run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
       - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9

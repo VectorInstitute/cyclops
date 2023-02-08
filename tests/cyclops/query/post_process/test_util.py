@@ -1,28 +1,8 @@
 """Tests for post-processing functions in the query package."""
 
-import numpy as np
 import pandas as pd
-import pytest
 
-from cyclops.query.post_process.util import event_time_between, to_timestamp
-
-
-def test_to_timestamp():
-    """Test to_timestamp fn."""
-    series = pd.Series([1.2, 2000, 909998888300000])
-    timestamp = to_timestamp(series)
-    assert timestamp[0].year == 1970
-    assert timestamp[2].year == 1970
-    assert timestamp[2].day == 11
-
-    array = np.array([1.2, 2000, 909998888300000])
-    timestamp = to_timestamp(array)
-    assert timestamp[0].year == 1970
-    assert timestamp[2].year == 1970
-    assert timestamp[2].day == 11
-
-    with pytest.raises(ValueError):
-        to_timestamp("donkey")
+from cyclops.query.post_process.util import event_time_between
 
 
 def test_event_time_between():

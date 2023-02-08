@@ -30,7 +30,6 @@ from cyclops.process.util import has_columns, has_range_index, to_range_index
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
-from cyclops.utils.plot import plot_histogram, plot_temporal_features
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -824,25 +823,6 @@ class TabularFeatures(Features):
             data.values, indexes=[by_map, feat_map], axis_names=[self.by[0], FEATURES]
         )
 
-    def plot_features(
-        self,
-        features: Optional[Union[str, list]] = None,
-    ) -> None:
-        """Plot features.
-
-        High-level plotting function for features.
-
-        Parameters
-        ----------
-        features: str or list of str, optional
-            Names of features to plot.
-
-        """
-        if features is None:
-            plot_histogram(self.data, self.feature_names())
-        else:
-            plot_histogram(self.data, features)
-
 
 class TemporalFeatures(Features):
     """Temporal features."""
@@ -875,25 +855,6 @@ class TemporalFeatures(Features):
             raise ValueError(
                 "Features and aggregator timestamp columns must be the same."
             )
-
-    def plot_features(
-        self,
-        features: Optional[Union[str, list]] = None,
-    ) -> None:
-        """Plot features.
-
-        High-level plotting function for features.
-
-        Parameters
-        ----------
-        features: list or str, optional
-            Names of features to plot.
-
-        """
-        if features is None:
-            plot_temporal_features(self.data, self.feature_names())
-        else:
-            plot_temporal_features(self.data, features)
 
     def aggregate(self, **aggregate_kwargs) -> pd.DataFrame:
         """Aggregate the data.

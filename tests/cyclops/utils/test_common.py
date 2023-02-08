@@ -17,7 +17,26 @@ from cyclops.utils.common import (
     to_datetime_format,
     to_list,
     to_list_optional,
+    to_timestamp,
 )
+
+
+def test_to_timestamp():
+    """Test to_timestamp fn."""
+    series = pd.Series([1.2, 2000, 909998888300000])
+    timestamp = to_timestamp(series)
+    assert timestamp[0].year == 1970
+    assert timestamp[2].year == 1970
+    assert timestamp[2].day == 11
+
+    array = np.array([1.2, 2000, 909998888300000])
+    timestamp = to_timestamp(array)
+    assert timestamp[0].year == 1970
+    assert timestamp[2].year == 1970
+    assert timestamp[2].day == 11
+
+    with pytest.raises(ValueError):
+        to_timestamp("donkey")
 
 
 def test_add_years_approximate():
