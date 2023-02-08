@@ -12,29 +12,31 @@ packages = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">= 3.8, <3.11"
+python = ">=3.8, <3.11"
 pandas = "^1.4.1"
-SQLAlchemy = "^1.4.32, <2.0"
-matplotlib = "^3.5.1"
-torch = "^1.11.0"
-shap = "^0.40.0"
-xgboost = "^1.5.2"
-tables = "^3.7.0"
+numpy = "<=1.23.0"
+
+[tool.poetry.group.query.dependencies]
 pyarrow = "^7.0.0"
-llvmlite = "^0.38.0"
-psycopg2-binary = "^2.9.3"
-plotly = "^5.7.0"
-pyparsing = "^3.0.8"
-colorama = "^0.4.4"
-seaborn = "^0.11.2"
-torchxrayvision = "^0.0.37"
+psycopg2 = "^2.9.5"
 hydra-core = "^1.2.0"
+SQLAlchemy = "^1.4.32, <2.0"
 dask = {extras = ["dataframe"], version = "^2022.9.1"}
-protobuf = "^3.20.0"
+
+[tool.poetry.group.evaluate.dependencies]
+torch = "^1.11.0"
+xgboost = "^1.5.2"
+
+[tool.poetry.group.monitor.dependencies]
+hydra-core = "^1.2.0"
+torchxrayvision = "^0.0.37"
 alibi = {version = "^0.8.0", extras = ["shap"]}
 alibi-detect = {version = "^0.10.4", extras = ["torch"]}
 
 [tool.poetry.group.dev.dependencies]
+seaborn = "^0.11.2"
+plotly = "^5.7.0"
+matplotlib = "^3.5.1"
 evidently = "0.1.45.dev0"
 mlflow = "^1.24.0"
 jupyter = "^1.0.0"
