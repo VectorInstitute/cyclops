@@ -61,7 +61,7 @@ tz = ["python-dateutil"]
 name = "alibi"
 version = "0.8.0"
 description = "Algorithms for monitoring and explaining machine learning models"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -99,7 +99,7 @@ torch = ["torch (>=1.9.0,<2.0.0)"]
 name = "alibi-detect"
 version = "0.10.5"
 description = "Algorithms for outlier detection, concept drift and metrics."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -137,7 +137,7 @@ torch = ["torch (>=1.7.0,<1.13.0)"]
 name = "antlr4-python3-runtime"
 version = "4.9.3"
 description = "ANTLR 4.9.3 runtime for Python 3.7"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -375,7 +375,7 @@ test = ["flake8 (>=5.0.4,<5.1.0)", "uvloop (>=0.15.3)"]
 name = "attrs"
 version = "22.2.0"
 description = "Classes Without Boilerplate"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -524,7 +524,7 @@ css = ["tinycss2 (>=1.1.0,<1.2)"]
 name = "blis"
 version = "0.7.9"
 description = "The Blis BLAS-like linear algebra library, as a self-contained C-extension."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -589,7 +589,7 @@ files = [
 name = "catalogue"
 version = "2.0.8"
 description = "Super lightweight function registries for your library"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -601,7 +601,7 @@ files = [
 name = "certifi"
 version = "2022.12.7"
 description = "Python package for providing Mozilla's CA Bundle."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -702,7 +702,7 @@ files = [
 name = "charset-normalizer"
 version = "3.0.1"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -800,7 +800,7 @@ files = [
 name = "click"
 version = "8.1.3"
 description = "Composable command line interface toolkit"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -815,7 +815,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "cloudpickle"
 version = "2.2.1"
 description = "Extended pickling support for Python objects"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -843,7 +843,7 @@ requests = ">=2.7.9"
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 files = [
@@ -873,7 +873,7 @@ test = ["pytest"]
 name = "confection"
 version = "0.0.4"
 description = "The sweetest config system for Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -889,7 +889,7 @@ srsly = ">=2.4.0,<3.0.0"
 name = "contourpy"
 version = "1.0.7"
 description = "Python library for calculating contours of 2D quadrilateral grids"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -1102,7 +1102,7 @@ tox = ["tox"]
 name = "cycler"
 version = "0.11.0"
 description = "Composable style cycles"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -1114,7 +1114,7 @@ files = [
 name = "cymem"
 version = "2.0.7"
 description = "Manage calls to calloc/free through Cython"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -1272,7 +1272,7 @@ files = [
 name = "dask"
 version = "2022.12.1"
 description = "Parallel PyData with Task Scheduling"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -1410,7 +1410,7 @@ files = [
 name = "dill"
 version = "0.3.6"
 description = "serialize all of python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1576,7 +1576,7 @@ devel = ["colorama", "json-spec", "jsonschema", "pylint", "pytest", "pytest-benc
 name = "filelock"
 version = "3.9.0"
 description = "A platform independent file lock."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1648,7 +1648,7 @@ Flask = "*"
 name = "fonttools"
 version = "4.38.0"
 description = "Tools to manipulate font files"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1686,7 +1686,7 @@ files = [
 name = "fsspec"
 version = "2023.1.0"
 description = "File-system specification"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1776,7 +1776,7 @@ requests = ["requests (>=2.20.0,<3.0.0dev)"]
 name = "greenlet"
 version = "2.0.2"
 description = "Lightweight in-process concurrent programming"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 files = [
@@ -1976,7 +1976,7 @@ socks = ["socksio (>=1.0.0,<2.0.0)"]
 name = "huggingface-hub"
 version = "0.12.0"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
@@ -2007,7 +2007,7 @@ typing = ["types-PyYAML", "types-requests", "types-simplejson", "types-toml", "t
 name = "hydra-core"
 version = "1.3.1"
 description = "A framework for elegantly configuring complex applications"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -2052,7 +2052,7 @@ license = ["ukkonen"]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 files = [
@@ -2064,7 +2064,7 @@ files = [
 name = "imageio"
 version = "2.25.0"
 description = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2129,7 +2129,7 @@ testing = ["flake8 (<5)", "flufl.flake8", "importlib-resources (>=1.3)", "packag
 name = "importlib-resources"
 version = "5.10.2"
 description = "Read resources from Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2332,7 +2332,7 @@ testing = ["Django (<3.1)", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 name = "jinja2"
 version = "3.1.2"
 description = "A very fast and expressive template engine."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2350,7 +2350,7 @@ i18n = ["Babel (>=2.7)"]
 name = "joblib"
 version = "1.2.0"
 description = "Lightweight pipelining with Python functions"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2739,7 +2739,7 @@ files = [
 name = "kiwisolver"
 version = "1.4.4"
 description = "A fast implementation of the Cassowary constraint solver"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2844,7 +2844,7 @@ adal = ["adal (>=1.0.2)"]
 name = "langcodes"
 version = "3.3.0"
 description = "Tools for labeling human languages with IETF language tags"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -2905,7 +2905,7 @@ files = [
 name = "llvmlite"
 version = "0.38.0"
 description = "lightweight wrapper around basic LLVM functionality"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7,<3.11"
 files = [
@@ -2940,7 +2940,7 @@ files = [
 name = "locket"
 version = "1.0.0"
 description = "File-based locks for Python on Linux and Windows"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
@@ -3015,7 +3015,7 @@ testing = ["coverage", "pytest", "pytest-cov", "pytest-regressions"]
 name = "markupsafe"
 version = "2.1.2"
 description = "Safely add untrusted strings to HTML/XML markup."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -3075,7 +3075,7 @@ files = [
 name = "matplotlib"
 version = "3.6.3"
 description = "Python plotting package"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -3251,7 +3251,7 @@ sqlserver = ["mlflow-dbstore"]
 name = "murmurhash"
 version = "1.0.9"
 description = "Cython bindings for MurmurHash"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -3495,7 +3495,7 @@ files = [
 name = "networkx"
 version = "3.0"
 description = "Python package for creating and manipulating graphs and networks"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -3582,7 +3582,7 @@ test = ["pytest", "pytest-console-scripts", "pytest-tornasync"]
 name = "numba"
 version = "0.55.2"
 description = "compiling Python code using LLVM"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7,<3.11"
 files = [
@@ -3693,7 +3693,7 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 name = "omegaconf"
 version = "2.3.0"
 description = "A flexible configuration library"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -3709,7 +3709,7 @@ PyYAML = ">=5.1.0"
 name = "opencv-python"
 version = "4.7.0.68"
 description = "Wrapper package for OpenCV python bindings."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -3790,7 +3790,7 @@ files = [
 name = "packaging"
 version = "23.0"
 description = "Core utilities for Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -3878,7 +3878,7 @@ testing = ["docopt", "pytest (<6.0.0)"]
 name = "partd"
 version = "1.3.0"
 description = "Appendable key-value storage"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -3909,7 +3909,7 @@ files = [
 name = "pathy"
 version = "0.10.1"
 description = "pathlib.Path subclasses for local and cloud bucket storage"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">= 3.6"
 files = [
@@ -4025,7 +4025,7 @@ files = [
 name = "pillow"
 version = "9.4.0"
 description = "Python Imaging Library (Fork)"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -4249,7 +4249,7 @@ dev = ["autoflake8", "cairosvg", "flake8", "flaky", "ipython", "jinja2", "mike",
 name = "preshed"
 version = "3.0.8"
 description = "Cython hash table that trusts the keys are pre-hashed"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -4388,7 +4388,7 @@ test = ["enum34", "ipaddress", "mock", "pywin32", "wmi"]
 name = "psycopg2"
 version = "2.9.5"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -4438,7 +4438,7 @@ tests = ["pytest"]
 name = "pyarrow"
 version = "7.0.0"
 description = "Python library for Apache Arrow"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -4532,7 +4532,7 @@ files = [
 name = "pydantic"
 version = "1.10.4"
 description = "Data validation and settings management using python type hints"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -4657,7 +4657,7 @@ testutils = ["gitpython (>3)"]
 name = "pyparsing"
 version = "3.0.9"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6.8"
 files = [
@@ -4853,7 +4853,7 @@ files = [
 name = "pywavelets"
 version = "1.4.1"
 description = "PyWavelets, wavelet transform module"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -4931,7 +4931,7 @@ files = [
 name = "pyyaml"
 version = "5.4.1"
 description = "YAML parser and emitter for Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 files = [
@@ -5134,7 +5134,7 @@ setuptools = ">=41.0"
 name = "regex"
 version = "2022.10.31"
 description = "Alternative regular expression module, to replace re."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -5232,7 +5232,7 @@ files = [
 name = "requests"
 version = "2.28.2"
 description = "Python HTTP for Humans."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7, <4"
 files = [
@@ -5353,7 +5353,7 @@ pyasn1 = ">=0.1.3"
 name = "scikit-image"
 version = "0.19.3"
 description = "Image processing in Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -5405,7 +5405,7 @@ test = ["asv", "codecov", "flake8", "matplotlib (>=3.0.3)", "pooch (>=1.3.0)", "
 name = "scikit-learn"
 version = "1.2.1"
 description = "A set of python modules for machine learning and data mining"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -5448,7 +5448,7 @@ tests = ["black (>=22.3.0)", "flake8 (>=3.8.2)", "matplotlib (>=3.1.3)", "mypy (
 name = "scipy"
 version = "1.8.1"
 description = "SciPy: Scientific Library for Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8,<3.11"
 files = [
@@ -5484,7 +5484,7 @@ numpy = ">=1.17.3,<1.25.0"
 name = "scipy"
 version = "1.10.0"
 description = "Fundamental algorithms for scientific computing in Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "<3.12,>=3.8"
 files = [
@@ -5558,7 +5558,7 @@ win32 = ["pywin32"]
 name = "setuptools"
 version = "67.2.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -5575,7 +5575,7 @@ testing-integration = ["build[virtualenv]", "filelock (>=3.4.0)", "jaraco.envs (
 name = "shap"
 version = "0.41.0"
 description = "A unified approach to explain the output of any machine learning model."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -5641,7 +5641,7 @@ files = [
 name = "slicer"
 version = "0.0.7"
 description = "A small package for big slicing."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -5653,7 +5653,7 @@ files = [
 name = "smart-open"
 version = "6.3.0"
 description = "Utils for streaming large files (S3, HDFS, GCS, Azure Blob Storage, gzip, bz2...)"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6,<4.0"
 files = [
@@ -5723,7 +5723,7 @@ files = [
 name = "spacy"
 version = "3.5.0"
 description = "Industrial-strength Natural Language Processing (NLP) in Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -5811,7 +5811,7 @@ transformers = ["spacy-transformers (>=1.1.2,<1.3.0)"]
 name = "spacy-legacy"
 version = "3.0.12"
 description = "Legacy registered functions for spaCy backwards compatibility"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -5823,7 +5823,7 @@ files = [
 name = "spacy-loggers"
 version = "1.0.4"
 description = "Logging utilities for SpaCy"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -5835,7 +5835,7 @@ files = [
 name = "spacy-lookups-data"
 version = "1.0.3"
 description = "Additional lookup tables and data resources for spaCy"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -6078,7 +6078,7 @@ test = ["pytest"]
 name = "sqlalchemy"
 version = "1.4.46"
 description = "Database Abstraction Library"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
 files = [
@@ -6165,7 +6165,7 @@ files = [
 name = "srsly"
 version = "2.4.5"
 description = "Modern high-performance serialization utilities for Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -6311,14 +6311,14 @@ widechars = ["wcwidth"]
 
 [[package]]
 name = "tenacity"
-version = "8.2.0"
+version = "8.2.1"
 description = "Retry code until it succeeds"
 category = "dev"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "tenacity-8.2.0-py3-none-any.whl", hash = "sha256:b723061a78ed0f4524190eae321d3d84100227d51c5677035b6615d91895e0d6"},
-    {file = "tenacity-8.2.0.tar.gz", hash = "sha256:a43bcd8910406e0884ca0db3db7bed581f389c1d05165e992a1ddabfc81df05e"},
+    {file = "tenacity-8.2.1-py3-none-any.whl", hash = "sha256:dd1b769ca7002fda992322939feca5bee4fa11f39146b0af14e0b8d9f27ea854"},
+    {file = "tenacity-8.2.1.tar.gz", hash = "sha256:c7bb4b86425b977726a7b49971542d4f67baf72096597d283f3ffd01f33b92df"},
 ]
 
 [package.extras]
@@ -6361,7 +6361,7 @@ files = [
 name = "thinc"
 version = "8.1.7"
 description = "A refreshing functional take on deep learning, compatible with your favorite libraries"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -6437,7 +6437,7 @@ torch = ["torch (>=1.6.0)"]
 name = "threadpoolctl"
 version = "3.1.0"
 description = "threadpoolctl"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -6449,7 +6449,7 @@ files = [
 name = "tifffile"
 version = "2023.2.3"
 description = "Read and write TIFF files"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -6486,7 +6486,7 @@ test = ["flake8", "isort", "pytest"]
 name = "tokenizers"
 version = "0.13.2"
 description = "Fast and Customizable Tokenizers"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -6541,7 +6541,7 @@ testing = ["black (==22.3)", "datasets", "numpy", "pytest", "requests"]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
@@ -6577,7 +6577,7 @@ files = [
 name = "toolz"
 version = "0.12.0"
 description = "List processing tools and functional utilities"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 files = [
@@ -6589,7 +6589,7 @@ files = [
 name = "torch"
 version = "1.12.1"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
@@ -6622,7 +6622,7 @@ typing-extensions = "*"
 name = "torchvision"
 version = "0.13.1"
 description = "image and video datasets and models for torch deep learning"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -6661,7 +6661,7 @@ scipy = ["scipy"]
 name = "torchxrayvision"
 version = "0.0.37"
 description = "TorchXRayVision: A library of chest X-ray datasets and models"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -6704,7 +6704,7 @@ files = [
 name = "tqdm"
 version = "4.64.1"
 description = "Fast, Extensible Progress Meter"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 files = [
@@ -6741,7 +6741,7 @@ test = ["argcomplete (>=2.0)", "pre-commit", "pytest", "pytest-mock"]
 name = "transformers"
 version = "4.26.0"
 description = "State-of-the-art Machine Learning for JAX, PyTorch and TensorFlow"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
@@ -6808,7 +6808,7 @@ vision = ["Pillow"]
 name = "typer"
 version = "0.7.0"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -6829,7 +6829,7 @@ test = ["black (>=22.3.0,<23.0.0)", "coverage (>=6.2,<7.0)", "isort (>=5.0.6,<6.
 name = "typing-extensions"
 version = "4.4.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -6901,7 +6901,7 @@ dev = ["flake8 (<4.0.0)", "flake8-annotations", "flake8-bugbear", "flake8-commas
 name = "urllib3"
 version = "1.26.14"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 files = [
@@ -6974,7 +6974,7 @@ testing = ["coverage (>=5.0)", "pytest", "pytest-cover"]
 name = "wasabi"
 version = "1.1.1"
 description = "A lightweight console printing and formatting toolkit"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -7225,7 +7225,7 @@ files = [
 name = "xgboost"
 version = "1.7.3"
 description = "XGBoost Python Package"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -7316,14 +7316,14 @@ test = ["mypy", "pre-commit", "pytest", "pytest-asyncio", "websockets (>=10.0)"]
 
 [[package]]
 name = "zipp"
-version = "3.12.1"
+version = "3.13.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "zipp-3.12.1-py3-none-any.whl", hash = "sha256:6c4fe274b8f85ec73c37a8e4e3fa00df9fb9335da96fb789e3b96b318e5097b3"},
-    {file = "zipp-3.12.1.tar.gz", hash = "sha256:a3cac813d40993596b39ea9e93a18e8a2076d5c378b8bc88ec32ab264e04ad02"},
+    {file = "zipp-3.13.0-py3-none-any.whl", hash = "sha256:e8b2a36ea17df80ffe9e2c4fda3f693c3dad6df1697d3cd3af232db680950b0b"},
+    {file = "zipp-3.13.0.tar.gz", hash = "sha256:23f70e964bc11a34cef175bc90ba2914e1e4545ea1e3e2f67c079671883f9cb6"},
 ]
 
 [package.extras]
@@ -7331,11 +7331,11 @@ docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker
 testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
 
 [extras]
-evaluate = []
-monitor = []
-query = []
+evaluate = ["torch", "xgboost"]
+monitor = ["hydra-core", "torchxrayvision", "alibi", "alibi-detect", "llvmlite"]
+query = ["SQLAlchemy", "psycopg2", "pyarrow", "dask", "hydra-core"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.11"
-content-hash = "fa1949de46012822d1bc1292817c4a3f1830ce176a3e870700c2ccd2802df50f"
+content-hash = "736a27b20deb4c14a8473cf91d7907494f01d4104ee0be862d711724cbf82214"
