@@ -33,6 +33,8 @@ dask = {extras = ["dataframe"], version = "^2022.9.1"}
 protobuf = "^3.20.0"
 alibi = {version = "^0.8.0", extras = ["shap"]}
 alibi-detect = {version = "^0.10.4", extras = ["torch"]}
+datasets = "^2.9.0"
+monai = {extras = ["itk"], version = "^1.1.0"}
 
 [tool.poetry.group.dev.dependencies]
 evidently = "0.1.45.dev0"
