@@ -43,5 +43,5 @@ jobs:
         run: |
           poetry env use 3.9
           source $(poetry env info --path)/bin/activate
-          poetry install --without dev,docs,interface --all-extras
+          poetry install --without dev,docs,interface
           pre-commit run --all-files
