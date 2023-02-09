@@ -15,24 +15,17 @@ readme = "README.md"
 python = ">=3.8, <3.11"
 pandas = "^1.4.1"
 numpy = "<=1.23.0"
-
-[tool.poetry.group.query.dependencies]
-pyarrow = "^7.0.0"
-psycopg2 = "^2.9.5"
-hydra-core = "^1.2.0"
-SQLAlchemy = "^1.4.32, <2.0"
-dask = {extras = ["dataframe"], version = "^2022.9.1"}
-
-[tool.poetry.group.evaluate.dependencies]
-torch = "^1.11.0"
-xgboost = "^1.5.2"
-
-[tool.poetry.group.monitor.dependencies]
-hydra-core = "^1.2.0"
-torchxrayvision = "^0.0.37"
-alibi = {version = "^0.8.0", extras = ["shap"]}
-alibi-detect = {version = "^0.10.4", extras = ["torch"]}
-llvmlite = "0.38.0"
+pyarrow = { version = "^7.0.0", optional = true }
+psycopg2 = { version = "^2.9.5", optional = true }
+SQLAlchemy = { version = "^1.4.32, <2.0", optional = true }
+dask = { extras = ["dataframe"], version = "^2022.9.1", optional = true }
+torch = { version = "^1.11.0", optional = true }
+xgboost = { version = "^1.5.2", optional = true }
+hydra-core = { version = "^1.2.0", optional = true }
+torchxrayvision = { version = "^0.0.37", optional = true }
+alibi = { version = "^0.8.0", extras = ["shap"], optional = true }
+alibi-detect = { version = "^0.10.4", extras = ["torch"], optional = true }
+llvmlite = { version = "0.38.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 seaborn = "^0.11.2"
@@ -73,6 +66,11 @@ dash-mantine-components = "^0.10.2"
 dash-cool-components = "0.1.8"
 dash-bootstrap-components = "^1.1.0"
 Flask-Caching = "^1.10.1"
+
+[tool.poetry.extras]
+query = ["SQLAlchemy", "psycopg2", "pyarrow", "dask", "hydra-core"]
+evaluate = ["torch", "xgboost"]
+monitor = ["hydra-core", "torchxrayvision", "alibi", "alibi-detect", "llvmlite"]
 
 [tool.isort]
 profile = "black"

@@ -33,7 +33,7 @@ python3 -m pip install pycyclops
 ```
 
 The core package only includes support for the `process` API. To install support for
-`query`, `evaluate` and `monitor` APIs, install them as additional dependencies.
+`query`, `evaluate` and `monitor` APIs, install them as extra dependency installs.
 
 To install with `query` API support,
 
@@ -51,6 +51,13 @@ To install with `monitor` API support,
 
 ```bash
 python3 -m pip install 'pycyclops[monitor]'
+```
+
+Multiple extras could also be combined, for example to install with both `query` and
+`evaluate` API support:
+
+```bash
+python3 -m pip install 'pycyclops[query,evaluate]'
 ```
 
 
