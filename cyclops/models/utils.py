@@ -153,8 +153,9 @@ def _has_sklearn_api(model: object) -> bool:
     """
     return (
         hasattr(model, "fit")
+        or hasattr(model, "partial_fit")
         and hasattr(model, "predict")
-        and hasattr(model, "predict_proba")
+        or hasattr(model, "predict_proba")
     )
 
 
