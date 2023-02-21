@@ -15,24 +15,35 @@ class SlicingConfig:
 
     Parameters
     ----------
-    feature_keys : List[str]
+    feature_keys : List[str], default=[]
         List of feature keys to slice on. Each key can be a single feature or a list of
         features. The slice selects non-null values for the feature(s).
     feature_values : List[Union[Mapping[str, Any], List[Mapping[str, Any]]]]
         List of feature values to slice on. Each value is a dictionary mapping a feature
         key to a dictionary of feature value specifications. The slice selects rows
-        where the feature value matches the specification. The feature value
-        specification can be a single value, a range, or a list of values.
-        For a single value or list of values, the specification expects a "value" key
-        with the value or list of values. For a range, the specification expects a "min"
-        and "max" key with the minimum and maximum values. Optionally, "min_inclusive"
-        and "max_inclusive" keys can be set to False to exclude the minimum and maximum
-        values from the range. The specification can also specify whether to discard
-        null values, in which case "keep_null" is expected to be set to False. The
-        specification can also be negated, in which case the slice selects rows where
-        the feature value does not match the specification. This is done by setting the
-        "negate" key to True. If the dictionary has more than one key, the slice selects
-        rows where the feature value matches all specifications.
+        where the feature value matches the specification. Defaults [{}] which
+        selects all rows. The following feature value specifications are supported:
+        - value: The feature value must match the specified value. The value can be a
+          single value or a list of values. Time strings are supported.
+        - min_value: The feature value must be greater than or equal to the specified
+          value. Time strings are supported.
+        - min_inclusive: Whether to include the minimum value in the range. If True,
+          the slice selects rows where the feature value is greater than or equal to
+          the minimum value.
+        - max_value: The feature value must be less than or equal to the specified
+          value. Time strings are supported.
+        - max_inclusive: Whether to include the maximum value in the range. If True,
+          the slice selects rows where the feature value is less than or equal to the
+          maximum value.
+        - year: The feature value must be in the specified year.
+        - month: The feature value must be in the specified month.
+        - day: The feature value must be in the specified day.
+        - hour: The feature value must be in the specified hour.
+        - negate: Whether to negate the feature value specification. If True, the slice
+          selects rows where the feature value does not match the specification.
+        - keep_nulls: Whether to keep rows where the feature value is null. If True,
+          the slice selects rows where the feature value is null or matches the
+          specification.
     column_names : Optional[List[str]], optional
         List of column names in the data. If provided, the feature keys are validated
         against the column names. If the feature keys are not valid column names, a
@@ -47,12 +58,41 @@ class SlicingConfig:
         List of feature keys to slice on.
     feature_values : List[Union[Mapping[str, Any], List[Mapping[str, Any]]]]
         List of feature values to slice on.
-    column_names : Optional[List[str]]
+    column_names : List[str]
         List of column names in the data.
     validate : bool
         Whether to validate the feature keys and values.
     _slice_function_registry : Dict[str, Callable]
         Dictionary mapping slice function registration keys to slice functions.
+
+    Examples
+    --------
+    >>> from cyclops.evaluate.slicing import SlicingConfig
+    >>> slicing_config = SlicingConfig(
+    ...     feature_keys=["feature_1", "feature_2", ["feature_3", "feature_4"]],
+    ...     feature_values=[
+    ...         {"feature_1": {"value": "value_1"}},
+    ...         {"feature_1": {"value": ["value_1", "value_2"]}},
+    ...         {"feature_1": {"value": "value_1", "negate": True, "keep_nulls": True}},
+    ...         {"feature_1": {"min_value": "2020-01-01", "max_value": "2020-12-31"}},
+    ...         {"feature_1": {
+    ...             "min_value": 5,
+    ...             "max_value": 60,
+    ...             "min_inclusive": False,
+    ...             "max_inclusive": False}
+    ...         },
+    ...         {"feature_1": {"year": [2020, 2021, 2022]}},
+    ...         {"feature_1": {"month": [6, 7, 8]}},
+    ...         {"feature_1": {"month": 6, "day": 1}},
+    ...         {
+    ...             "feature_1": {"value": "value_1"},
+    ...             "feature_2": {
+    ...                 "min_value": "2020-01-01", keep_nulls: False,
+    ...             },
+    ...             "feature_3": {"year": ["2000", "2010", "2020"]},
+    ...         },
+    ...     ],
+    ... )
 
     """
 
@@ -77,6 +117,7 @@ class SlicingConfig:
             self._parse_feature_values(slice_def)
 
     def _check_feature_keys(self, keys: Union[str, List[str]]):
+        """Check that the feature keys are valid."""
         if isinstance(keys, list):
             for key in keys:
                 self._check_feature_keys(key)
@@ -85,22 +126,19 @@ class SlicingConfig:
             if isinstance(keys, str) and keys not in self.column_names:
                 raise KeyError(f"{keys} is not a valid column name")
 
-    def _parse_feature_keys(self, feature_key: Union[str, List[str]]) -> None:
-        self._check_feature_keys(keys=feature_key)
-        if isinstance(feature_key, str):
-            registration_key = f"slice_non_null:{feature_key}"
-            self._slice_function_registry[registration_key] = partial(
-                self.slice_non_null, feature_key=feature_key
-            )
-        elif isinstance(feature_key, list):
-            registration_key = f"slice_non_null_list:{feature_key}"
-            self._slice_function_registry[registration_key] = partial(
-                self.slice_non_null_list, feature_list=feature_key
-            )
+    def _parse_feature_keys(self, feature_keys: Union[str, List[str]]) -> None:
+        """Parse the feature keys and register the slice function."""
+        self._check_feature_keys(keys=feature_keys)
 
-    def _parse_single_feature_value_dict(
+        registration_key = f"filter_non_null:{feature_keys}"
+        self._slice_function_registry[registration_key] = partial(
+            filter_non_null, feature_keys=feature_keys
+        )
+
+    def _parse_single_feature_value_dict(  # pylint: disable=too-many-branches
         self, slice_def: Mapping[str, Mapping]
     ) -> Tuple[str, Callable]:
+        """Parse a single feature value dictionary and register the slice function."""
         feature_key, feature_value = next(iter(slice_def.items()))
 
         # validate key and value
@@ -121,33 +159,25 @@ class SlicingConfig:
                         + ",...,"
                         + ",".join(map(str, value[-3:]))
                     )
-                if negated:
-                    value_list_repr = f"!({value_list_repr})"
 
                 registration_key = f"{feature_key}:{value_list_repr}"
-                slice_function = partial(
-                    self.slice_feature_value_list,
-                    feature_key=feature_key,
-                    value_list=value,
-                    negate=negated,
-                    keep_nulls=feature_value.get("keep_nulls", True),
-                )
             else:
                 registration_key = f"{feature_key}:{value}"
-                if negated:
-                    registration_key = f"!({registration_key})"
 
-                slice_function = partial(
-                    self.slice_feature_value,
-                    feature_key=feature_key,
-                    value=value,
-                    negate=negated,
-                    keep_nulls=feature_value.get("keep_nulls", True),
-                )
+            if negated:
+                registration_key = f"!({registration_key})"
 
-        elif "min" in feature_value or "max" in feature_value:
-            min_value = feature_value.get("min", float("-inf"))
-            max_value = feature_value.get("max", float("inf"))
+            slice_function = partial(
+                filter_feature_value,
+                feature_key=feature_key,
+                value=value,
+                negate=negated,
+                keep_nulls=feature_value.get("keep_nulls", True),
+            )
+
+        elif "min_value" in feature_value or "max_value" in feature_value:
+            min_value = feature_value.get("min_value", -np.inf)
+            max_value = feature_value.get("max_value", np.inf)
             registration_key = f"{feature_key}:{min_value} - {max_value}"
 
             negated = feature_value.get("negate", False)
@@ -155,12 +185,46 @@ class SlicingConfig:
                 registration_key = f"!({registration_key})"
 
             slice_function = partial(
-                self.slice_feature_value_range,
+                filter_feature_value_range,
                 feature_key=feature_key,
-                min=min_value,
-                max=max_value,
+                min_value=min_value,
+                max_value=max_value,
                 min_inclusive=feature_value.get("min_inclusive", True),
-                max_inclusive=feature_value.get("max_inclusive", False),
+                max_inclusive=feature_value.get("max_inclusive", True),
+                negate=negated,
+                keep_nulls=feature_value.get("keep_nulls", True),
+            )
+        elif any(k in feature_value for k in ("year", "month", "day", "hour")):
+            year = feature_value.get("year")
+            month = feature_value.get("month")
+            day = feature_value.get("day")
+            hour = feature_value.get("hour")
+
+            # create registration key with year, month, day, hour if specified
+            registration_key = f"{feature_key}:"
+            if year is not None:
+                registration_key += f"year={year},"
+            if month is not None:
+                registration_key += f"month={month},"
+            if day is not None:
+                registration_key += f"day={day},"
+            if hour is not None:
+                registration_key += f"hour={hour}"
+
+            # remove trailing comma, if any
+            registration_key = registration_key.rstrip(",")
+
+            negated = feature_value.get("negate", False)
+            if negated:
+                registration_key = f"!({registration_key})"
+
+            slice_function = partial(
+                filter_feature_value_datetime,
+                feature_key=feature_key,
+                year=year,
+                month=month,
+                day=day,
+                hour=hour,
                 negate=negated,
                 keep_nulls=feature_value.get("keep_nulls", True),
             )
@@ -170,18 +234,19 @@ class SlicingConfig:
         return registration_key, slice_function
 
     def _parse_feature_values(self, slice_def: Mapping[str, Mapping]) -> None:
+        """Parse the feature values and register the slice function."""
         if not isinstance(slice_def, Mapping):
             raise ValueError(f"Invalid `feature_value` specification: {slice_def}")
 
-        if len(slice_def) == 0:  # empty dict - interpret as `slice_all`
-            registration_key = "slice_all"
-            slice_function = self.slice_all
+        if len(slice_def) == 0:  # empty dict - interpret as `no_filter`
+            registration_key = "no_filter"
+            slice_function = no_filter
         elif len(slice_def) == 1:  # single feature
             registration_key, slice_function = self._parse_single_feature_value_dict(
                 slice_def
             )
         else:  # compound slicing (bitwise AND)
-            registration_key = "slice_compound_feature_value:"
+            registration_key = "filter_compound_feature_value:"
             slice_functions = []
             for feature_key, feature_value in slice_def.items():
                 (
@@ -196,400 +261,393 @@ class SlicingConfig:
 
             # slice function is a bitwise AND of all the slice functions
             slice_function = partial(
-                self.slice_compound_feature_value, slice_functions=slice_functions
+                filter_compound_feature_value, slice_functions=slice_functions
             )
 
         self._slice_function_registry[registration_key] = slice_function
 
     def add_feature_keys(self, feature_keys: Union[str, List[str]]) -> None:
-        """Add feature keys to the slice specification."""
+        """Add feature keys to the slice specification.
+
+        Parameters
+        ----------
+        feature_keys : Union[str, List[str]]
+            A feature key or a list of feature keys.
+
+        """
         self.feature_keys.append(feature_keys)
         self._parse_feature_keys(feature_keys)
 
     def add_feature_values(self, feature_values: Mapping[str, Mapping]) -> None:
-        """Add feature values to the slice specification."""
+        """Add slice definition to the configuration.
+
+        Parameters
+        ----------
+        feature_values : Mapping[str, Mapping]
+            A dictionary of feature keys and values.
+
+        """
         self.feature_values.append(feature_values)
         self._parse_feature_values(feature_values)
 
-    @staticmethod
-    def slice_all(
-        examples: Dict[str, Any],
-        indices: Union[int, List[int]] = None,  # pylint: disable=unused-argument
-    ) -> Union[bool, List[bool]]:
-        """Return True for all examples.
-
-        Parameters
-        ----------
-        examples : Dict[str, Any]
-            A dictionary of features and values.
-        indices : Union[int, List[int]], optional, default=None
-            A list of indices to slice.
-        **kwargs
-            Additional keyword arguments. Ignored.
-
-        Returns
-        -------
-        Union[bool, List[bool]]
-            A boolean or a list of booleans containing `True` for all examples.
-
-        """
-        result: List[bool] = [True] * len(next(iter(examples.values())))
-        if len(result) == 1:
-            return result[0]
-        return result
-
-    @staticmethod
-    def slice_non_null(
-        examples: Dict[str, Any],
-        indices: Union[int, List[int]] = None,  # pylint: disable=unused-argument
-        **kwargs,
-    ) -> Union[bool, List[bool]]:
-        """Return True for all examples where the feature/column is not null/nan.
-
-        Parameters
-        ----------
-        examples : Dict[str, Any]
-            A dictionary of features and values.
-        indices : Union[int, List[int]], optional, default=None
-            The index or indices of the examples in the batch.
-        **kwargs
-            Additional keyword arguments. Must include `feature_key` which is the
-            name of the column to check for null/nan values.
-
-        Returns
-        -------
-        Union[bool, List[bool]]
-            A boolean or a list of booleans containing `True` for all examples where
-            the feature is not null/nan.
-
-        """
-        feature_key = kwargs["feature_key"]
-        values = examples[feature_key]
-        result = pd.notnull(values)
-
-        if isinstance(result, np.ndarray):
-            result = result.tolist()
-
-        return result
-
-    @staticmethod
-    def slice_non_null_list(
-        examples: Dict[str, Any],
-        indices: Union[int, List[int]] = None,  # pylint: disable=unused-argument
-        **kwargs,
-    ) -> Union[bool, List[bool]]:
-        """Return True for all examples where the columns are not null.
-
-        Parameters
-        ----------
-        examples : Dict[str, Any]
-            A dictionary of features and values.
-        indices : Union[int, List[int]], optional, default=None
-            The index or indices of the examples in the batch.
-        **kwargs
-            Additional keyword arguments. Must include `feature_list` which is a list
-            of column names to check for null/nan values.
-
-        Returns
-        -------
-        Union[bool, List[bool]]
-            A boolean or a list of booleans containing `True` for all examples where
-            the given list of columns are not null/nan.
-
-        """
-        feature_list = kwargs["feature_list"]
-        if not isinstance(feature_list, list):
-            raise ValueError(
-                f"Invalid `feature_key` specification: {feature_list}. "
-                "Must be a list of feature keys. Use `slice_non_null` for a single "
-                "feature key."
-            )
-
-        result = np.bitwise_and.reduce(
-            [pd.notnull(examples[feature_key]) for feature_key in feature_list]
-        )
-
-        if isinstance(result, np.ndarray):
-            result = result.tolist()
-
-        return result
-
-    @staticmethod
-    def slice_feature_value(
-        examples: Dict[str, Any],
-        indices: Union[int, List[int]] = None,  # pylint: disable=unused-argument
-        **kwargs,
-    ) -> Union[bool, List[bool]]:
-        """Return True for all examples where the feature/column has the given value.
-
-        Parameters
-        ----------
-        examples : Dict[str, Any]
-            A dictionary of features and values.
-        indices : Union[int, List[int]], optional, default=None
-            The index or indices of the examples in the batch.
-        **kwargs
-            Additional keyword arguments. Expected keyword arguments are:
-            - `feature_key`: required
-                The name of the column to check for the given value.
-            - `value`: required
-                The value to check for in the column.
-            - `negate`: optional, default=False
-                If True, return True for all examples where the feature/column does
-                not have the given value.
-            - `keep_null`: optional, default=True
-                If True, return True for all examples where the feature/column is
-                null/nan.
-
-        Returns
-        -------
-        Union[bool, List[bool]]
-            A boolean or a list of booleans containing `True` for all examples where
-            the feature has the given value.
-
-        """
-        value = kwargs["value"]
-        feature_key = kwargs["feature_key"]
-        negate = kwargs.get("negate", False)
-        keep_null = kwargs.get("keep_null", True)
-
-        value_is_datetime = is_datetime(value)
-        if value_is_datetime:
-            value = np.datetime64(value)
-
-        result = (
-            np.asanyarray(
-                examples[feature_key],
-                dtype=np.datetime64 if value_is_datetime else None,
-            )
-            == value
-        )
-        if not keep_null:
-            result = np.bitwise_and(result, pd.notnull(examples[feature_key]))
-        if negate:
-            result = np.bitwise_not(result)
-
-        if isinstance(result, np.ndarray):
-            result = result.tolist()
-
-        return result
-
-    @staticmethod
-    def slice_feature_value_list(
-        examples: Dict[str, Any],
-        indices: Union[int, List[int]] = None,  # pylint: disable=unused-argument
-        **kwargs,
-    ) -> Union[bool, List[bool]]:
-        """Return True for all examples where the value is in the given list.
-
-        Parameters
-        ----------
-        examples : Dict[str, Any]
-            A dictionary of features and values.
-        indices : Union[int, List[int]], optional, default=None
-            The index or indices of the examples in the batch.
-        **kwargs
-            Additional keyword arguments. Expected keyword arguments are:
-            - `feature_key`: required
-                The name of the column to check for the given values.
-            - `value_list`: required
-                The list of values to check for in the column.
-            - `negate`: optional, default=False
-                If True, return True for all examples where the value of a column
-                is not in the given list.
-            - `keep_null`: optional, default=True
-                If True, keep examples where the value of a column is null/nan.
-
-        Returns
-        -------
-        Union[bool, List[bool]]
-            A boolean or a list of booleans containing `True` for all examples where
-            the value of a feature is in the given list.
-
-        """
-        value_list = kwargs["value_list"]
-        feature = kwargs["feature_key"]
-        negate = kwargs.get("negate", False)
-        keep_null = kwargs.get("keep_null", True)
-
-        example_values = examples[feature]
-
-        value_is_datetime = is_datetime(value_list)
-        if value_is_datetime:
-            value_list = np.asanyarray(value_list, dtype=np.datetime64)
-            example_values = np.asanyarray(examples[feature], dtype=np.datetime64)
-
-        result = np.isin(example_values, value_list, invert=negate)
-        if not keep_null:
-            result = np.bitwise_and(result, pd.notnull(example_values))
-
-        if isinstance(result, np.ndarray):
-            result = result.tolist()
-
-        return result
-
-    @staticmethod
-    def slice_feature_value_range(
-        examples: Dict[str, Any],
-        indices: Union[int, List[int]] = None,  # pylint: disable=unused-argument
-        **kwargs,
-    ) -> Union[bool, List[bool]]:
-        """Return True for all examples where the value is in the given range.
-
-        Parameters
-        ----------
-        examples : Dict[str, Any]
-            A dictionary of features and values.
-        indices : Union[int, List[int]], optional, default=None
-            The index or indices of the examples in the batch.
-        **kwargs
-            Additional keyword arguments. Expected keyword arguments are:
-            - `feature_key`: required
-                The name of the column to check for the given values.
-            - `min`: optional, default=-inf
-                The minimum value of the range.
-            - `max`: optional, default=inf
-                The maximum value of the range.
-            - `min_inclusive`: optional, default=True
-                If True, the minimum value is included in the range.
-            - `max_inclusive`: optional, default=True
-                If True, the maximum value is included in the range.
-            - `negate`: optional, default=False
-                If True, return True for all examples where the value of a column
-                is not in the given range.
-            - `keep_null`: optional, default=True
-                If True, keep examples where the value of a column is null/nan.
-
-        Returns
-        -------
-        Union[bool, List[bool]]
-            A boolean or a list of booleans containing `True` for all examples where
-            the value of a feature is in the given range.
-
-        Raises
-        ------
-        ValueError
-            If max is less than min.
-        ValueError
-            If min and max are equal and either min_inclusive or max_inclusive is
-            False.
-        ValueError
-            If the feature is not numeric or datetime.
-
-        """
-        feature_key = kwargs["feature_key"]
-        min_value = kwargs.get("min", float("-inf"))
-        max_value = kwargs.get("max", float("inf"))
-        min_inclusive = kwargs.get("min_inclusive", True)
-        max_inclusive = kwargs.get("max_inclusive", True)
-        negate = kwargs.get("negate", False)
-        keep_null = kwargs.get("keep_null", True)
-
-        # handle datetime values
-        value_is_datetime = False
-        if is_datetime(min_value):
-            min_value = np.datetime64(min_value)
-            value_is_datetime = True
-        if is_datetime(max_value):
-            max_value = np.datetime64(max_value)
-            value_is_datetime = True
-
-        if value_is_datetime and min_value == float("-inf"):
-            min_value = np.datetime64(datetime.datetime.min)
-        if value_is_datetime and max_value == float("inf"):
-            max_value = np.datetime64(datetime.datetime.max)
-
-        if min_value > max_value:
-            raise ValueError(
-                f"Invalid range specification: min={min_value}, max={max_value}. "
-                "min must be less than or equal to max."
-            )
-        if min_value == max_value and not (min_inclusive and max_inclusive):
-            raise ValueError(
-                f"Invalid range specification: min={min_value}, max={max_value}, "
-                "min_inclusive={min_inclusive}, max_inclusive={max_inclusive}. "
-                "min must be less than or equal to max."
-            )
-
-        example_values = np.asanyarray(
-            examples[feature_key], dtype=np.datetime64 if value_is_datetime else None
-        )
-
-        # check that the feature is a number or datetime
-        if not (
-            np.issubdtype(example_values.dtype, np.number)
-            or np.issubdtype(example_values.dtype, np.datetime64)
-        ):
-            raise ValueError(
-                "Invalid range specification: "
-                f"feature {feature_key} is not a number or datetime."
-            )
-
-        result = (
-            ((example_values > min_value) & (example_values < max_value))
-            | ((example_values == min_value) & min_inclusive)
-            | ((example_values == max_value) & max_inclusive)
-        )
-
-        if not keep_null:
-            result = np.bitwise_and(result, pd.notnull(example_values))
-        if negate:
-            result = np.bitwise_not(result)
-
-        if isinstance(result, np.ndarray):
-            result = result.tolist()
-
-        return result
-
-    @staticmethod
-    def slice_compound_feature_value(
-        examples: Dict[str, Any],
-        indices: Union[int, List[int]] = None,  # pylint: disable=unused-argument
-        **kwargs,
-    ):
-        """Combine the result of multiple slices using bitwise AND.
-
-        Parameters
-        ----------
-        examples : Dict[str, Any]
-            A dictionary of features and values.
-        indices : Union[int, List[int]], optional, default=None
-            The index or indices of the examples in the batch.
-        **kwargs
-            Additional keyword arguments. Expected keyword arguments are:
-            - `slice_functions`: required
-                A list of functions to apply to the examples. The signature of each
-                function should be: `slice_function(examples, indices, **kwargs)`.
-                The result of each function should be a boolean or a list of booleans.
-
-        Returns
-        -------
-        Union[bool, List[bool]]
-            A boolean or a list of booleans containing `True` for all examples where
-            the value of a feature is in the given range.
-
-        """
-        slice_functions = kwargs["slice_functions"]
-
-        return np.bitwise_and.reduce(
-            [slice_function(examples, indices) for slice_function in slice_functions]
-        )
-
-    def get_slice_function(self, slice_key: str) -> Callable:
-        """Return the slice function for the given slice key."""
-        return self._slice_function_registry[slice_key]
-
-    def get_slice_keys(self) -> List[str]:
-        """Return the slice keys."""
-        return list(self._slice_function_registry.keys())
-
-    def get_slice_functions(self) -> List[Callable]:
-        """Return the slice functions."""
-        return list(self._slice_function_registry.values())
-
     def get_slices(self) -> Dict[str, Callable]:
-        """Return the slice functions."""
+        """Return the slice function registry."""
         return self._slice_function_registry
+
+
+# filter functions
+def no_filter(examples: Dict[str, Any]) -> Union[bool, List[bool]]:
+    """Return True for all examples.
+
+    Parameters
+    ----------
+    examples : Dict[str, Any]
+        A dictionary of features and values.
+
+    Returns
+    -------
+    Union[bool, List[bool]]
+        A boolean or a list of booleans containing `True` for all examples.
+
+    """
+    result: List[bool] = [True] * len(next(iter(examples.values())))
+    if len(result) == 1:
+        return result[0]
+    return result
+
+
+def filter_non_null(
+    examples: Dict[str, Any], feature_keys: Union[str, List[str]]
+) -> Union[bool, List[bool]]:
+    """Return True for all examples where the feature/column is not null.
+
+    Parameters
+    ----------
+    examples : Dict[str, Any]
+        A dictionary of features and values.
+    feature_keys : Union[str, List[str]]
+        The feature key(s) or column name(s) on which to filter.
+
+    Returns
+    -------
+    Union[bool, List[bool]]
+        A boolean or a list of booleans containing `True` for all examples where
+        the feature(s) is not null/nan.
+
+    """
+    # make sure feature key is a string or list of strings
+    if not (
+        isinstance(feature_keys, str)
+        or (
+            isinstance(feature_keys, list)
+            and all(isinstance(key, str) for key in feature_keys)
+        )
+    ):
+        raise ValueError(
+            "Expected feature_keys to be a string or list of strings. "
+            f"Got: {feature_keys} of type {type(feature_keys)}"
+        )
+
+    if isinstance(feature_keys, str):
+        feature_keys = [feature_keys]
+
+    result: Union[bool, List[bool]] = pd.notnull(examples[feature_keys[0]])
+    for feature_key in feature_keys[1:]:
+        result &= pd.notnull(examples[feature_key])
+
+    if isinstance(result, np.ndarray):
+        result = result.tolist()
+
+    return result
+
+
+def filter_feature_value(
+    examples: Dict[str, Any],
+    feature_key: str,
+    value: Union[Any, List[Any]],
+    negate: bool = False,
+    keep_nulls: bool = False,
+) -> Union[bool, List[bool]]:
+    """Return True for all examples where the feature/column has the given value.
+
+    Parameters
+    ----------
+    examples : Dict[str, Any]
+        A dictionary of features and values.
+    feature_key : str
+        The feature key or column name on which to find the value.
+    value : Union[Any, List[Any]]
+        The value or values to find. Exact match is performed.
+    negate : bool, optional, default=False
+        If `True`, return `True` for all examples where the feature/column does not
+        have the given value.
+    keep_nulls : bool, optional, default=False
+        If `True`, return `True` for all examples where the feature/column is null.
+
+    Returns
+    -------
+    Union[bool, List[bool]]
+        A boolean or a list of booleans containing `True` for all examples where
+        the feature has the given value or values.
+
+    """
+    value_is_datetime = is_datetime(value)  # only checks timestrings
+
+    value = np.asanyarray(value, dtype="datetime64" if value_is_datetime else None)
+
+    example_values = np.asanyarray(
+        examples[feature_key], dtype="datetime64" if value_is_datetime else None
+    )
+
+    result = np.isin(example_values, value, invert=negate)
+
+    if keep_nulls:
+        result = np.bitwise_or(result, pd.isnull(example_values))
+    else:
+        result = np.bitwise_and(result, pd.notnull(example_values))
+
+    if isinstance(result, np.ndarray):
+        result = result.tolist()
+
+    return result
+
+
+def filter_feature_value_range(
+    examples: Dict[str, Any],
+    feature_key: str,
+    min_value: float = -np.inf,
+    max_value: float = np.inf,
+    min_inclusive: bool = True,
+    max_inclusive: bool = True,
+    negate: bool = False,
+    keep_nulls: bool = False,
+) -> Union[bool, List[bool]]:
+    """Return True for all examples where the value is in the given range.
+
+    Parameters
+    ----------
+    examples : Dict[str, Any]
+        A dictionary of features and values.
+    feature_key : str
+        The feature key or column name on which to filter.
+    min_value : float, optional, default=-np.inf
+        The minimum value of the range.
+    max_value : float, optional, default=np.inf
+        The maximum value of the range.
+    min_inclusive : bool, optional, default=True
+        If `True`, include the minimum value in the range.
+    max_inclusive : bool, optional, default=True
+        If `True`, include the maximum value in the range.
+    negate : bool, optional, default=False
+        If `True`, return `True` for all examples where the value is not in the
+        given range.
+    keep_nulls : bool, optional, default=False
+        If `True`, return `True` for all examples where the feature/column is null.
+
+    Returns
+    -------
+    Union[bool, List[bool]]
+        A boolean or a list of booleans containing `True` for all examples where
+        the value of a feature is in the given range.
+
+    Raises
+    ------
+    ValueError
+        If max is less than min.
+    ValueError
+        If min and max are equal and either min_inclusive or max_inclusive is
+        False.
+    ValueError
+        If the feature is not numeric or datetime.
+
+    """
+    # handle datetime values
+    # min and max are converted to np.datetime64 if either is a timestring
+    value_is_datetime = False
+    if is_datetime(min_value):
+        min_value = np.datetime64(min_value)
+        value_is_datetime = True
+        if max_value == np.inf:
+            max_value = np.datetime64(datetime.datetime.max)
+    if is_datetime(max_value):
+        max_value = np.datetime64(max_value)
+        value_is_datetime = True
+        if min_value == -np.inf:
+            min_value = np.datetime64(datetime.datetime.min)
+
+    if min_value > max_value:
+        raise ValueError(
+            f"Invalid range specification: min={min_value}, max={max_value}. "
+            "min must be less than or equal to max."
+        )
+    if min_value == max_value and not (min_inclusive and max_inclusive):
+        raise ValueError(
+            "`min` and `max` are equal and either `min_inclusive` or "
+            "`max_inclusive` is False. This would result in an empty range."
+        )
+
+    example_values = np.asanyarray(
+        examples[feature_key], dtype="datetime64" if value_is_datetime else None
+    )
+
+    # check that the feature is a number or datetime
+    if not (
+        np.issubdtype(example_values.dtype, np.number)
+        or np.issubdtype(example_values.dtype, np.datetime64)
+    ):
+        raise ValueError(
+            "Invalid range specification: "
+            f"feature {feature_key} is not a number or datetime."
+        )
+
+    result = (
+        ((example_values > min_value) & (example_values < max_value))
+        | ((example_values == min_value) & min_inclusive)
+        | ((example_values == max_value) & max_inclusive)
+    )
+
+    if negate:
+        result = np.bitwise_not(result)
+
+    if keep_nulls:
+        result = np.bitwise_or(result, pd.isnull(example_values))
+    else:
+        result = np.bitwise_and(result, pd.notnull(example_values))
+
+    if isinstance(result, np.ndarray):
+        result = result.tolist()
+
+    return result
+
+
+def filter_feature_value_datetime(
+    examples: Dict[str, Any],
+    feature_key: str,
+    year: Optional[Union[int, str, List[int], List[str]]] = None,
+    month: Optional[Union[int, List[int]]] = None,
+    day: Optional[Union[int, List[int]]] = None,
+    hour: Optional[Union[int, List[int]]] = None,
+    negate: bool = False,
+    keep_nulls: bool = False,
+) -> Union[bool, List[bool]]:
+    """Return True for all examples where the datetime value matches the given datetime.
+
+    Parameters
+    ----------
+    examples : Dict[str, Any]
+        A dictionary of features and values.
+    feature_key : str
+        The feature key or column name on which to filter.
+    year : int, str, List[int], List[str], optional, default=None
+        The year to match. If string, it must be a valid year string (e.g. "2020").
+        If a list is provided, return `True` for all examples where the year matches
+        any of the values in the list.
+    month : int, List[int], optional, default=None
+        The month to match. If a list is provided, return `True` for all examples
+        where the month matches any of the values in the list.
+    day : int, List[int], optional, default=None
+        The day to match. If a list is provided, return `True` for all examples
+        where the day matches any of the values in the list.
+    hour : int, List[int], optional, default=None
+        The hour to match. If a list is provided, return `True` for all examples
+        where the hour matches any of the values in the list.
+    negate : bool, optional, default=False
+        If `True`, return `True` for all examples where the value does not match
+        the given datetime.
+    keep_nulls : bool, optional, default=False
+        If `True`, return `True` for all examples where the feature/column is null.
+
+    Returns
+    -------
+    Union[bool, List[bool]]
+        A boolean or a list of booleans containing `True` for all examples where
+        the value of a feature matches the given datetime.
+
+    Raises
+    ------
+    ValueError
+        If the feature is not a datetime.
+
+    """
+    # make sure the column has datetime type
+    example_values = np.asanyarray(examples[feature_key])
+    try:
+        example_values = example_values.astype("datetime64")
+    except ValueError as exc:
+        raise ValueError(
+            "Expected datetime feature, but got feature of type "
+            f"{example_values.dtype.name}."
+        ) from exc
+
+    # convert the datetime values to year, month, day, hour
+    years, months, days = [
+        example_values.astype(f"M8[{unit}]") for unit in ["Y", "M", "D"]
+    ]
+
+    # get all the values that match the given datetime
+    # acknowledgement: https://stackoverflow.com/a/56260054
+    result = np.ones_like(example_values, dtype=bool)
+    if year is not None:
+        result = np.bitwise_and(
+            result, np.isin(years.astype(int), np.asanyarray(year, dtype=int))
+        )
+    if month is not None:
+        result = np.bitwise_and(
+            result,
+            np.isin(
+                element=((months - years) + 1).astype(int),
+                test_elements=np.asanyarray(month, dtype=int),
+            ),
+        )
+    if day is not None:
+        result = np.bitwise_and(
+            element=((days - months) + 1).astype(int),
+            test_elements=np.asanyarray(day, dtype=int),
+        )
+    if hour is not None:
+        result = np.bitwise_and(
+            element=(example_values - days).astype("m8[h]").astype(int),
+            test_elements=np.asanyarray(hour, dtype=int),
+        )
+
+    if negate:
+        result = np.bitwise_not(result)
+
+    if keep_nulls:
+        result = np.bitwise_or(result, pd.isnull(example_values))
+    else:
+        result = np.bitwise_and(result, pd.notnull(example_values))
+
+    if isinstance(result, np.ndarray):
+        result = result.tolist()
+
+    return result
+
+
+def filter_compound_feature_value(
+    examples: Dict[str, Any], slice_functions: List[Callable]
+):
+    """Combine the result of multiple slices using bitwise AND.
+
+    Parameters
+    ----------
+    examples : Dict[str, Any]
+        A dictionary of features and values.
+    slice_functions : List[Callable]
+        A list of functions to apply to the examples. The signature of each
+        function should be: `slice_function(examples, indices, **kwargs)`.
+        The result of each function should be a boolean or a list of booleans.
+
+    Returns
+    -------
+    Union[bool, List[bool]]
+        A boolean or a list of booleans containing `True` for all examples where
+        the value of a feature is in the given range.
+
+    """
+    return np.bitwise_and.reduce(
+        [slice_function(examples) for slice_function in slice_functions]
+    )
 
 
 # utility functions
