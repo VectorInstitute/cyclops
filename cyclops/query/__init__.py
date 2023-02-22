@@ -9,6 +9,7 @@ except ImportError:
     ) from None
 
 
+from cyclops.query.eicu import EICUQuerier
 from cyclops.query.gemini import GEMINIQuerier
 from cyclops.query.mimiciv import MIMICIVQuerier
 from cyclops.query.omop import OMOPQuerier
