@@ -3,7 +3,7 @@
 import pytest
 
 import cyclops.query.ops as qo
-from cyclops.query.omop import OMOPQuerier
+from cyclops.query import OMOPQuerier
 
 
 @pytest.mark.integration_test
