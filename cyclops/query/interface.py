@@ -48,7 +48,7 @@ class QueryInterface:
     query: TableTypes
     join: Optional[qo.JoinArgs] = None
     ops: Optional[qo.Sequential] = None
-    _data: Optional[Union[pd.DataFrame, dd.DataFrame]] = None
+    _data: Optional[Union[pd.DataFrame, dd.core.DataFrame]] = None
     _run_args: Dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -59,7 +59,7 @@ class QueryInterface:
             self.query = self.ops(self.query)
 
     @property
-    def data(self) -> Optional[Union[pd.DataFrame, dd.DataFrame]]:
+    def data(self) -> Optional[Union[pd.DataFrame, dd.core.DataFrame]]:
         """Get data."""
         return self._data
 
@@ -69,7 +69,7 @@ class QueryInterface:
         backend: Literal["pandas", "dask"] = "pandas",
         index_col: Optional[str] = None,
         n_partitions: Optional[int] = None,
-    ) -> Union[pd.DataFrame, dd.DataFrame]:
+    ) -> Union[pd.DataFrame, dd.core.DataFrame]:
         """Run the query, and fetch data.
 
         Parameters
@@ -184,7 +184,7 @@ class QueryInterfaceProcessed:
     process_fn: Callable
     join: Optional[qo.JoinArgs] = None
     ops: Optional[qo.Sequential] = None
-    _data: Optional[Union[pd.DataFrame, dd.DataFrame, None]] = None
+    _data: Optional[Union[pd.DataFrame, dd.core.DataFrame, None]] = None
     _run_args: Dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -200,7 +200,7 @@ class QueryInterfaceProcessed:
         backend: Literal["pandas", "dask"] = "pandas",
         index_col: Optional[str] = None,
         n_partitions: Optional[int] = None,
-    ) -> Union[pd.DataFrame, dd.DataFrame]:
+    ) -> Union[pd.DataFrame, dd.core.DataFrame]:
         """Run the query, and fetch data.
 
         Parameters
@@ -241,7 +241,7 @@ class QueryInterfaceProcessed:
         return self._data
 
     @property
-    def data(self) -> Optional[Union[pd.DataFrame, dd.DataFrame]]:
+    def data(self) -> Optional[Union[pd.DataFrame, dd.core.DataFrame]]:
         """Get data."""
         return self._data
 

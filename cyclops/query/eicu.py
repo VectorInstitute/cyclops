@@ -5,6 +5,7 @@ Supports querying of eICU.
 """
 
 import logging
+from typing import Any, Dict
 
 from cyclops.query.base import DatasetQuerier
 from cyclops.utils.log import setup_logging
@@ -51,7 +52,7 @@ TABLE_MAP = {
 class EICUQuerier(DatasetQuerier):
     """eICU dataset querier."""
 
-    def __init__(self, **config_overrides):
+    def __init__(self, **config_overrides: Dict[str, Any]) -> None:
         """Initialize.
 
         Parameters

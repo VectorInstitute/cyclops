@@ -1,7 +1,7 @@
 """GEMINI query API."""
 
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
@@ -65,7 +65,7 @@ TABLE_MAP = {
 class GEMINIQuerier(DatasetQuerier):
     """GEMINI dataset querier."""
 
-    def __init__(self, **config_overrides):
+    def __init__(self, **config_overrides: Dict[str, Any]) -> None:
         """Initialize.
 
         Parameters

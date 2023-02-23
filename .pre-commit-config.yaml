@@ -52,8 +52,10 @@ repos:
     rev: v0.942
     hooks:
     - id: mypy
-      args: [--namespace-packages, --explicit-package-bases]
-      additional_dependencies: [types-python-dateutil==2.8.8, types-PyYAML==6.0.5]
+      entry: python3 -m mypy --config-file pyproject.toml
+      language: system
+      types: [python]
+      exclude: "apps|use_cases|tests|cyclops/(process|models|evaluate|monitor|workflow|utils)"
 
   - repo: local
     hooks:

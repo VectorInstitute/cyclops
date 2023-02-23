@@ -2,7 +2,7 @@
 
 import logging
 from functools import partial
-from typing import Callable, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
 from hydra import compose, initialize
 from omegaconf import OmegaConf
@@ -11,7 +11,7 @@ from sqlalchemy.sql.selectable import Subquery
 from cyclops.query import ops as qo
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.orm import Database
-from cyclops.query.util import TableTypes, _to_subquery, table_params_to_type
+from cyclops.query.util import DBTable, TableTypes, _to_subquery, table_params_to_type
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -63,7 +63,11 @@ class DatasetQuerier:
 
     """
 
-    def __init__(self, table_map: Mapping, **config_overrides) -> None:
+    def __init__(
+        self,
+        table_map: Mapping[str, Callable[..., DBTable]],
+        **config_overrides: Dict[str, Any],
+    ) -> None:
         """Initialize.
 
         Parameters
@@ -104,7 +108,7 @@ class DatasetQuerier:
         self,
         table: TableTypes,
         ops: Optional[qo.Sequential] = None,
-        process_fn: Optional[Callable] = None,
+        process_fn: Optional[Callable[..., Any]] = None,
     ) -> Union[QueryInterface, QueryInterfaceProcessed]:
         """Get a query interface for a GEMINI table.
 
