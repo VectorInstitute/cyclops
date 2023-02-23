@@ -201,7 +201,7 @@ def append_if_missing(lst: Any, append_lst: Any, to_start: bool = False) -> List
     return lst + extend_lst
 
 
-def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
+def to_datetime_format(date: str, fmt: str = "%Y-%m-%d") -> datetime:
     """Convert string date to datetime.
 
     Parameters

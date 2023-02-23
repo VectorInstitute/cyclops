@@ -80,7 +80,7 @@ class JoinArgs:
 
     join_table: TableTypes
     on: Optional[  # pylint: disable=invalid-name
-        Union[str, List[str], Tuple[str], List[tuple]]
+        Union[str, List[str], Tuple[str], List[Tuple[str, str]]]
     ] = None
     on_to_type: Optional[Union[type, List[type]]] = None
     cond: Optional[BinaryExpression] = None
@@ -279,7 +279,7 @@ class Rename(metaclass=QueryOp):
 
     """
 
-    rename_map: dict
+    rename_map: Dict[str, str]
     check_exists: bool = True
 
     def __call__(self, table: TableTypes) -> Subquery:
@@ -893,7 +893,7 @@ class Join(metaclass=QueryOp):
         self,
         join_table: TableTypes,
         on: Optional[  # pylint: disable=invalid-name
-            Union[str, List[str], Tuple[str], List[tuple]]
+            Union[str, List[str], Tuple[str], List[Tuple[str, str]]]
         ] = None,
         on_to_type: Optional[Union[type, List[type]]] = None,
         cond: Optional[BinaryExpression] = None,

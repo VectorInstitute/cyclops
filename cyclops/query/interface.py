@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import asdict, dataclass, field
-from typing import Callable, Dict, Literal, Optional, Union
+from typing import Any, Callable, Dict, Literal, Optional, Union
 
 import dask.dataframe as dd
 import pandas as pd
@@ -49,7 +49,7 @@ class QueryInterface:
     join: Optional[qo.JoinArgs] = None
     ops: Optional[qo.Sequential] = None
     _data: Optional[Union[pd.DataFrame, dd.core.DataFrame]] = None
-    _run_args: Dict = field(default_factory=dict)
+    _run_args: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Post init method to chain operations with original query."""
@@ -181,11 +181,11 @@ class QueryInterfaceProcessed:
 
     database: Database
     _query: TableTypes
-    process_fn: Callable
+    process_fn: Callable[..., Any]
     join: Optional[qo.JoinArgs] = None
     ops: Optional[qo.Sequential] = None
     _data: Optional[Union[pd.DataFrame, dd.core.DataFrame, None]] = None
-    _run_args: Dict = field(default_factory=dict)
+    _run_args: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Post init method to chain operations with original query."""

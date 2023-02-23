@@ -1,7 +1,7 @@
 """OMOP query API."""
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from sqlalchemy.sql.selectable import Subquery
 
@@ -62,7 +62,7 @@ ID = "id"
 NAME = "name"
 
 
-def _get_table_map(schema_name: str) -> Dict:
+def _get_table_map(schema_name: str) -> Dict[str, Callable[..., Any]]:
     """Get table map.
 
     Parameters
