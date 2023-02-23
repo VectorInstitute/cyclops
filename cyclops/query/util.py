@@ -6,7 +6,7 @@
 import logging
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import sqlalchemy
 from sqlalchemy import cast, func, select
@@ -744,7 +744,11 @@ def process_column(col: Column, **kwargs: bool) -> Column:
 
 
 def equals(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column has some value.
 
@@ -844,7 +848,7 @@ def has_string_format(
 
 
 def has_substring(
-    col: Column, substring: Any, lower: bool = True, **kwargs: bool
+    col: Column, substring: Any, lower: bool = True, **kwargs: Dict[str, bool]
 ) -> BinaryExpression:
     """Condition that a column has some substring.
 
@@ -873,7 +877,11 @@ def has_substring(
 
 
 def starts_with(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column starts with some value/string.
 
@@ -906,7 +914,11 @@ def starts_with(
 
 
 def ends_with(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column ends with some value/string.
 
@@ -939,7 +951,11 @@ def ends_with(
 
 
 def in_(
-    col: Column, lst: List[Any], lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    lst: List[Any],
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column value is in a list of values.
 

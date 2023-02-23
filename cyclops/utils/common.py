@@ -3,7 +3,7 @@
 import warnings
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -103,7 +103,7 @@ def add_years_exact(timestamp_series: pd.Series, years_series: pd.Series) -> pd.
     return timestamp_series + years_series.apply(lambda x: pd.DateOffset(years=x))
 
 
-def to_list(obj: Any) -> list:
+def to_list(obj: Any) -> List[Any]:
     """Convert some object to a list of object(s) unless already one.
 
     Parameters
@@ -128,7 +128,7 @@ def to_list(obj: Any) -> list:
 
 def to_list_optional(
     obj: Optional[Any], none_to_empty: bool = False
-) -> Union[list, None]:
+) -> Union[List[Any], None]:
     """Convert some object to a list of object(s) unless already None or a list.
 
     Parameters
@@ -152,7 +152,7 @@ def to_list_optional(
     return to_list(obj)
 
 
-def print_dict(dictionary: dict, limit: int = None) -> None:
+def print_dict(dictionary: Dict[Any, Any], limit: Optional[int] = None) -> None:
     """Print a dictionary with the option to limit the number of items.
 
     Parameters
@@ -201,7 +201,7 @@ def append_if_missing(lst: Any, append_lst: Any, to_start: bool = False) -> List
     return lst + extend_lst
 
 
-def to_datetime_format(date: str, fmt="%Y-%m-%d") -> datetime:
+def to_datetime_format(date: str, fmt: str = "%Y-%m-%d") -> datetime:
     """Convert string date to datetime.
 
     Parameters
@@ -294,7 +294,7 @@ def series_to_array(val: Any) -> Any:
     return val, False
 
 
-def array_to_series(val: Any):
+def array_to_series(val: Any) -> Tuple[Any, bool]:
     """Convert NumPy array to Pandas series, leaving other values unchanged.
 
     Parameters
@@ -318,7 +318,7 @@ def array_to_series(val: Any):
 def array_series_conversion(
     to: str,  # pylint: disable=invalid-name
     out_to: str = "back",
-) -> Callable:
+) -> Callable[..., Any]:
     """Convert positional arguments between numpy.ndarray and pandas.Series.
 
     When using out_to = 'back', the positional arguments given must correspond to the
@@ -350,7 +350,7 @@ def array_series_conversion(
     else:
         raise ValueError("to must be in: 'array', 'series'.")
 
-    def identity(val: Any):
+    def identity(val: Any) -> Tuple[Any, bool]:
         return val, False
 
     out_fn: Callable
@@ -368,7 +368,7 @@ def array_series_conversion(
     else:
         raise ValueError("out_to must be in: 'back', 'array', 'series', 'none'.")
 
-    def decorator(func_: Callable) -> Callable:
+    def decorator(func_: Callable[..., Any]) -> Callable[..., Any]:
         """Decorate function."""
 
         @wraps(func_)

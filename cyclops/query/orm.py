@@ -4,7 +4,7 @@ import csv
 import logging
 import os
 import socket
-from typing import Generator, Literal, Optional, Union
+from typing import Dict, Generator, Literal, Optional, Union
 
 import dask.dataframe as dd
 import pandas as pd
@@ -57,7 +57,7 @@ class Database:
 
     """
 
-    def __init__(self, config: DictConfig):
+    def __init__(self, config: DictConfig) -> None:
         """Instantiate.
 
         Parameters
@@ -124,9 +124,9 @@ class Database:
 
         return (_get_attr_name(table_name) for table_name in metadata.tables.keys())
 
-    def _setup(self):
+    def _setup(self) -> None:
         """Prepare ORM DB."""
-        meta: dict = {}
+        meta: Dict[str, MetaData] = {}
         schemas = self.inspector.get_schema_names()
         for schema_name in schemas:
             metadata = MetaData(schema=schema_name)
@@ -151,7 +151,7 @@ class Database:
         backend: Literal["pandas", "dask"] = "pandas",
         index_col: Optional[str] = None,
         n_partitions: Optional[int] = None,
-    ) -> Union[pd.DataFrame, dd.DataFrame]:
+    ) -> Union[pd.DataFrame, dd.core.DataFrame]:
         """Run query.
 
         Parameters
@@ -189,7 +189,7 @@ class Database:
             if backend == "pandas":
                 data = pd.read_sql_query(query, self.engine, index_col=index_col)
             elif backend == "dask":
-                data = dd.read_sql_query(
+                data = dd.read_sql_query(  # type: ignore
                     query, self.conn, index_col=index_col, npartitions=n_partitions
                 )
                 data = data.reset_index(drop=False)

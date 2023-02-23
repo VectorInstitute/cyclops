@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import sqlalchemy
 from sqlalchemy import and_, cast, extract, func, literal_column, or_, select
@@ -80,7 +80,7 @@ class JoinArgs:
 
     join_table: TableTypes
     on: Optional[  # pylint: disable=invalid-name
-        Union[str, List[str], tuple, List[tuple]]
+        Union[str, List[str], Tuple[str], List[Tuple[str, str]]]
     ] = None
     on_to_type: Optional[Union[type, List[type]]] = None
     cond: Optional[BinaryExpression] = None
@@ -88,7 +88,7 @@ class JoinArgs:
     join_table_cols: Optional[Union[str, List[str]]] = None
     isouter: Optional[bool] = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Post initialization."""
         self.on = to_list_optional(self.on)
         self.on_to_type = to_list_optional(self.on_to_type)
@@ -99,12 +99,12 @@ class JoinArgs:
 class QueryOp(type):
     """Metaclass type for query operations."""
 
-    def __repr__(cls):
+    def __repr__(cls) -> str:
         """Return the name of the class."""
         return "QueryOp"
 
 
-def _chain_ops(query, ops):
+def _chain_ops(query: Subquery, ops: Union[List[QueryOp], Sequential]) -> Subquery:
     if isinstance(ops, List):
         for op_ in ops:
             query = op_(query)
@@ -154,7 +154,7 @@ def _append_if_missing(
     table: TableTypes,
     keep_cols: Optional[Union[str, List[str]]] = None,
     force_include_cols: Optional[Union[str, List[str]]] = None,
-):
+) -> Subquery:
     """Keep only certain columns in a table, but must include certain columns.
 
     Parameters
@@ -177,7 +177,7 @@ def _append_if_missing(
     return Keep(keep_cols)(table)
 
 
-def _none_add(obj1: Any, obj2: Any):
+def _none_add(obj1: Any, obj2: Any) -> Any:
     """Add two objects together while ignoring None values.
 
     If both objects are None, returns None.
@@ -279,7 +279,7 @@ class Rename(metaclass=QueryOp):
 
     """
 
-    rename_map: dict
+    rename_map: Dict[str, str]
     check_exists: bool = True
 
     def __call__(self, table: TableTypes) -> Subquery:
@@ -752,8 +752,8 @@ class AddDeltaColumn(metaclass=QueryOp):
         add_to: Union[str, List[str]],
         negative: Optional[bool] = False,
         new_col_labels: Optional[Union[str, List[str]]] = None,
-        **delta_kwargs,
-    ):
+        **delta_kwargs: Any,
+    ) -> None:
         """Initialize."""
         self.add_to = add_to
         self.negative = negative
@@ -814,7 +814,7 @@ class Cast(metaclass=QueryOp):
     cols: Union[str, List[str]]
     type_: str
 
-    def __call__(self, table: TableTypes):
+    def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
@@ -893,7 +893,7 @@ class Join(metaclass=QueryOp):
         self,
         join_table: TableTypes,
         on: Optional[  # pylint: disable=invalid-name
-            Union[str, List[str], tuple, List[tuple]]
+            Union[str, List[str], Tuple[str], List[Tuple[str, str]]]
         ] = None,
         on_to_type: Optional[Union[type, List[type]]] = None,
         cond: Optional[BinaryExpression] = None,
@@ -1017,7 +1017,7 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
         value: Any,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs,
+        **cond_kwargs: Any,
     ):
         """Initialize."""
         self.col = col
@@ -1041,7 +1041,9 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
 
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
-        cond = equals(get_column(table, self.col), self.value, **self.cond_kwargs)
+        cond = equals(
+            get_column(table, self.col), self.value, True, True, **self.cond_kwargs
+        )
         if self.not_:
             cond = cond._negate()
 
@@ -1133,7 +1135,7 @@ class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
         values: Union[Any, List[Any]],
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs,
+        **cond_kwargs: Any,
     ):
         """Initialize."""
         self.col = col
@@ -1160,6 +1162,8 @@ class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
         cond = in_(
             get_column(table, self.col),
             to_list(self.values),
+            True,
+            True,
             **self.cond_kwargs,
         )
         if self.not_:
@@ -1204,7 +1208,7 @@ class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-m
         any_: bool = True,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs,
+        **cond_kwargs: Any,
     ):  # pylint: disable=too-many-arguments
         """Initialize."""
         self.col = col
@@ -1230,7 +1234,7 @@ class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-m
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         conds = [
-            has_substring(get_column(table, self.col), sub, **self.cond_kwargs)
+            has_substring(get_column(table, self.col), sub, True, **self.cond_kwargs)
             for sub in self.substrings
         ]
 
@@ -1274,7 +1278,7 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
         string: str,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs,
+        **cond_kwargs: Any,
     ):
         """Initialize."""
         self.col = col
@@ -1298,7 +1302,9 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
 
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
-        cond = starts_with(get_column(table, self.col), self.string, **self.cond_kwargs)
+        cond = starts_with(
+            get_column(table, self.col), self.string, True, True, **self.cond_kwargs
+        )
         if self.not_:
             cond = cond._negate()
 
@@ -1334,7 +1340,7 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         string: str,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs,
+        **cond_kwargs: Any,
     ):
         """Initialize."""
         self.col = col
@@ -1358,7 +1364,9 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
 
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
-        cond = ends_with(get_column(table, self.col), self.string, **self.cond_kwargs)
+        cond = ends_with(
+            get_column(table, self.col), self.string, True, True, **self.cond_kwargs
+        )
         if self.not_:
             cond = cond._negate()
 

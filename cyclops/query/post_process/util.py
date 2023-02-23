@@ -1,6 +1,7 @@
 """Post-processing functions applied to queried data (Pandas DataFrames)."""
 
-import numpy as np
+from typing import List
+
 import pandas as pd
 from pandas import Timestamp
 
@@ -52,7 +53,7 @@ def event_time_between(
 
 
 def process_care_unit_changepoints(
-    data: pd.DataFrame, care_unit_hierarchy: list
+    data: pd.DataFrame, care_unit_hierarchy: List[str]
 ) -> pd.DataFrame:
     """Process changepoint care unit information in a hierarchical fashion.
 
@@ -103,7 +104,7 @@ def process_care_unit_changepoints(
             care_unit_inds = list(map(lambda x: hierarchy[x], care_units))
             care_unit_selected = hierarchy_inv[min(care_unit_inds)]
         else:
-            care_unit_selected = np.nan
+            care_unit_selected = "unknown"
         changepoint_data.append([changepoint, care_unit_selected])
 
     checkpoint_df = pd.DataFrame(changepoint_data, columns={"changepoint", "care_unit"})
