@@ -3,7 +3,7 @@
 import warnings
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -294,7 +294,7 @@ def series_to_array(val: Any) -> Any:
     return val, False
 
 
-def array_to_series(val: Any):
+def array_to_series(val: Any) -> Tuple[Any, bool]:
     """Convert NumPy array to Pandas series, leaving other values unchanged.
 
     Parameters
@@ -318,7 +318,7 @@ def array_to_series(val: Any):
 def array_series_conversion(
     to: str,  # pylint: disable=invalid-name
     out_to: str = "back",
-) -> Callable:
+) -> Callable[..., Any]:
     """Convert positional arguments between numpy.ndarray and pandas.Series.
 
     When using out_to = 'back', the positional arguments given must correspond to the
@@ -350,7 +350,7 @@ def array_series_conversion(
     else:
         raise ValueError("to must be in: 'array', 'series'.")
 
-    def identity(val: Any):
+    def identity(val: Any) -> Tuple[Any, bool]:
         return val, False
 
     out_fn: Callable
@@ -368,7 +368,7 @@ def array_series_conversion(
     else:
         raise ValueError("out_to must be in: 'back', 'array', 'series', 'none'.")
 
-    def decorator(func_: Callable) -> Callable:
+    def decorator(func_: Callable[..., Any]) -> Callable[..., Any]:
         """Decorate function."""
 
         @wraps(func_)

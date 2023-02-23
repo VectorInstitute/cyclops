@@ -752,7 +752,7 @@ class AddDeltaColumn(metaclass=QueryOp):
         add_to: Union[str, List[str]],
         negative: Optional[bool] = False,
         new_col_labels: Optional[Union[str, List[str]]] = None,
-        **delta_kwargs: Dict[str, Any],
+        **delta_kwargs: Any,
     ) -> None:
         """Initialize."""
         self.add_to = add_to
@@ -1017,7 +1017,7 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
         value: Any,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs: Dict[str, Any],
+        **cond_kwargs: Any,
     ):
         """Initialize."""
         self.col = col
@@ -1135,7 +1135,7 @@ class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
         values: Union[Any, List[Any]],
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs: Dict[str, Any],
+        **cond_kwargs: Any,
     ):
         """Initialize."""
         self.col = col
@@ -1208,7 +1208,7 @@ class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-m
         any_: bool = True,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs: Dict[str, Any],
+        **cond_kwargs: Any,
     ):  # pylint: disable=too-many-arguments
         """Initialize."""
         self.col = col
@@ -1278,7 +1278,7 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
         string: str,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs: Dict[str, Any],
+        **cond_kwargs: Any,
     ):
         """Initialize."""
         self.col = col
@@ -1340,7 +1340,7 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         string: str,
         not_: bool = False,
         binarize_col: Optional[str] = None,
-        **cond_kwargs: Dict[str, Any],
+        **cond_kwargs: Any,
     ):
         """Initialize."""
         self.col = col

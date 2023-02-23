@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any, Callable, Dict, KwArg, List, VarArg
+from typing import Any, Callable, Dict, List
 
 from cyclops.utils.log import setup_logging
 
@@ -11,9 +11,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-def time_function(
-    func: Callable[..., Any]
-) -> Callable[[VarArg(List[Any]), KwArg(Dict[str, Any])], Any]:
+def time_function(func: Callable[..., Any]) -> Callable[..., Any]:
     """Time decorator function.
 
     Parameters
