@@ -1,7 +1,7 @@
 """Helper functions for testing metrics."""
 
 from functools import partial
-from typing import Any, Callable, Dict, Mapping, Sequence
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence
 
 import numpy as np
 
@@ -15,7 +15,7 @@ class MetricTester:
         preds: np.ndarray,
         metric_functional: Callable,
         sk_metric: Callable,
-        metric_args: Dict[str, Any] = None,
+        metric_args: Optional[Dict[str, Any]] = None,
         atol: float = 1e-8,
         **kwargs_update: Any,
     ) -> None:
@@ -72,7 +72,7 @@ class MetricTester:
         preds: np.ndarray,
         metric_class: Callable,
         sk_metric: Callable,
-        metric_args: Dict[str, Any] = None,
+        metric_args: Optional[Dict[str, Any]] = None,
         atol: float = 1e-8,
         **kwargs_update: Any,
     ) -> None:

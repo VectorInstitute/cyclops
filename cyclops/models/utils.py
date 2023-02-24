@@ -1,7 +1,7 @@
 """Utility functions for building models."""
 import inspect
 from difflib import get_close_matches
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
@@ -10,7 +10,9 @@ from sklearn.base import BaseEstimator
 
 
 def _get_class_members(
-    module, include_only: List[str] = None, exclude: List[str] = None
+    module,
+    include_only: Optional[List[str]] = None,
+    exclude: Optional[List[str]] = None,
 ) -> dict:
     """Get class members from module.
 

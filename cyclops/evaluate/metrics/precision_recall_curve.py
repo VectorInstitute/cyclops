@@ -1,6 +1,6 @@
 """Classes for computing precision-recall curves."""
 
-from typing import List, Literal, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -59,7 +59,7 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
     def __init__(
         self,
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
         pos_label: int = 1,
     ) -> None:
         super().__init__()
@@ -167,7 +167,7 @@ class MulticlassPrecisionRecallCurve(
     def __init__(
         self,
         num_classes: int,
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
     ) -> None:
         super().__init__()
         _check_thresholds(thresholds)
@@ -276,7 +276,7 @@ class MultilabelPrecisionRecallCurve(
     def __init__(
         self,
         num_labels: int,
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
     ) -> None:
         super().__init__()
 
@@ -439,10 +439,10 @@ class PrecisionRecallCurve(
     def __new__(  # type: ignore # mypy expects a subclass of PrecisionRecallCurve
         cls,
         task: Literal["binary", "multiclass", "multilabel"],
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
         pos_label: int = 1,
-        num_classes: int = None,
-        num_labels: int = None,
+        num_classes: Optional[int] = None,
+        num_labels: Optional[int] = None,
     ) -> Metric:
         """Create a task-specific instance of the precision-recall curve metric."""
         if task == "binary":

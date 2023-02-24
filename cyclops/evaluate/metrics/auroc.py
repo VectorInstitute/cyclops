@@ -1,6 +1,6 @@
 """Classes for computing area under the ROC curve."""
 
-from typing import List, Literal, Union
+from typing import List, Literal, Optional, Union
 
 import numpy as np
 
@@ -55,8 +55,8 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
 
     def __init__(
         self,
-        max_fpr: float = None,
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        max_fpr: Optional[float] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
         pos_label: int = 1,
     ) -> None:
         super().__init__(thresholds=thresholds, pos_label=pos_label)
@@ -126,8 +126,8 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
     def __init__(
         self,
         num_classes: int,
-        thresholds: Union[int, List[float], np.ndarray] = None,
-        average: Literal["macro", "weighted"] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        average: Optional[Literal["macro", "weighted"]] = None,
     ) -> None:
         super().__init__(num_classes=num_classes, thresholds=thresholds)
         _check_average_arg(average)
@@ -196,8 +196,8 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_a
     def __init__(
         self,
         num_labels: int,
-        thresholds: Union[int, List[float], np.ndarray] = None,
-        average: Literal["micro", "macro", "weighted"] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        average: Optional[Literal["micro", "macro", "weighted"]] = None,
     ) -> None:
         super().__init__(num_labels=num_labels, thresholds=thresholds)
         _check_average_arg(average)
@@ -307,11 +307,11 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     def __new__(  # type: ignore # mypy expects a subclass of AUROC
         cls,
         task: Literal["binary", "multiclass", "multilabel"],
-        max_fpr: float = None,
-        thresholds: Union[int, List[float], np.ndarray] = None,
-        num_classes: int = None,
-        num_labels: int = None,
-        average: Literal["micro", "macro", "weighted"] = None,
+        max_fpr: Optional[float] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        num_classes: Optional[int] = None,
+        num_labels: Optional[int] = None,
+        average: Optional[Literal["micro", "macro", "weighted"]] = None,
     ) -> Metric:
         """Create a task-specific instance of the AUROC metric."""
         if task == "binary":

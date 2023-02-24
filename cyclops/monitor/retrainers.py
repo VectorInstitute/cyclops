@@ -1,5 +1,7 @@
 """Retrainer that uses a cumulative set of data to retrain the model."""
 
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 import torch
@@ -36,8 +38,8 @@ class CumulativeRetrainer:
         shift_detector: Detector,
         optimizer: Optimizer,
         model=None,
-        model_name: str = None,
-        retrain_model_path: str = None,
+        model_name: Optional[str] = None,
+        retrain_model_path: Optional[str] = None,
         verbose: bool = False,
     ):
 
@@ -307,8 +309,8 @@ class MostRecentRetrainer:
         shift_detector: Detector,
         optimizer: Optimizer,
         model=None,
-        model_name: str = None,
-        retrain_model_path: str = None,
+        model_name: Optional[str] = None,
+        retrain_model_path: Optional[str] = None,
         verbose: bool = False,
     ):
 

@@ -16,7 +16,7 @@ from cyclops.evaluate.metrics.utils import (
 
 
 def _format_thresholds(
-    thresholds: Union[int, List[float], np.ndarray] = None
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None
 ) -> Optional[np.ndarray]:
     """Format thresholds to be a 1D numpy array of floats."""
     if isinstance(thresholds, int):
@@ -190,7 +190,7 @@ def _binary_precision_recall_curve_update(
 def _binary_precision_recall_curve_compute(
     state: Union[Tuple, np.ndarray],
     thresholds: np.ndarray,
-    pos_label: int = None,
+    pos_label: Optional[int] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute precision-recall curve from a state.
 
@@ -254,7 +254,7 @@ def _binary_precision_recall_curve_compute(
 def binary_precision_recall_curve(
     target: ArrayLike,
     preds: ArrayLike,
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
     pos_label: int = 1,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute precision-recall curve for binary input.
@@ -419,7 +419,7 @@ def _multiclass_precision_recall_curve_update(
     target: np.ndarray,
     preds: np.ndarray,
     num_classes: int,
-    thresholds: np.ndarray = None,
+    thresholds: Optional[np.ndarray] = None,
 ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """Update the state of the multiclass precision-recall curve.
 
@@ -532,7 +532,7 @@ def multiclass_precision_recall_curve(
     target: ArrayLike,
     preds: ArrayLike,
     num_classes: int,
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, np.ndarray],
     Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
@@ -792,7 +792,7 @@ def multilabel_precision_recall_curve(
     target: ArrayLike,
     preds: ArrayLike,
     num_labels: int,
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, np.ndarray],
     Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
@@ -871,10 +871,10 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
     pos_label: int = 1,
-    num_classes: int = None,
-    num_labels: int = None,
+    num_classes: Optional[int] = None,
+    num_labels: Optional[int] = None,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, np.ndarray],
     Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],

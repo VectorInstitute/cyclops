@@ -127,7 +127,7 @@ def plot_timeline(
 
 def plot_histogram(
     features: pd.DataFrame,
-    names: Union[str, list] = None,
+    names: Optional[Union[str, list]] = None,
     return_fig: bool = False,
     title="Histogram Visualization",
 ) -> Union[plotly.graph_objs.Figure, None]:
@@ -180,7 +180,7 @@ def plot_histogram(
 
 def plot_temporal_features(
     features: pd.DataFrame,
-    names: Union[str, List] = None,
+    names: Optional[Union[str, List]] = None,
     return_fig: bool = False,
 ) -> Union[plotly.graph_objs.Figure, None]:
     """Plot temporal features.
@@ -263,8 +263,8 @@ def setup_plot(
     title: str,
     xlabel: str,
     ylabel: str,
-    legend: list,
-):
+    legend: List[str],
+) -> None:
     """Set some attributes to plot e.g. title, labels and legend.
 
     Parameters
@@ -287,7 +287,7 @@ def setup_plot(
     plot_handle.legend(legend, loc=1)
 
 
-def set_bars_color(bars: BarContainer, color: str):
+def set_bars_color(bars: BarContainer, color: str) -> None:
     """Set color attribute for bars in bar plots.
 
     Parameters
