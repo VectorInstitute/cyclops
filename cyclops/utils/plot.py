@@ -1,6 +1,6 @@
 """Plotting functions."""
 
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -20,7 +20,9 @@ PLOT_HEIGHT = 520
 
 
 def plot_admit_discharge(
-    data: pd.DataFrame, description: str = "description", figsize: tuple = (10, 4)
+    data: pd.DataFrame,
+    description: str = "description",
+    figsize: Tuple[int, int] = (10, 4),
 ) -> None:
     """Plot a series of admit discharge times given a description.
 
@@ -49,7 +51,7 @@ def plot_admit_discharge(
 
     plotted = []
 
-    def plot_timerange(admit, discharge, desc):
+    def plot_timerange(admit, discharge, desc) -> None:  # type: ignore
         ind = desc_dict[desc]
         if desc in plotted:
             plt.plot([admit, discharge], [ind, ind], color=colors[ind])
@@ -127,9 +129,9 @@ def plot_timeline(
 
 def plot_histogram(
     features: pd.DataFrame,
-    names: Optional[Union[str, list]] = None,
+    names: Optional[Union[str, List[str]]] = None,
     return_fig: bool = False,
-    title="Histogram Visualization",
+    title: str = "Histogram Visualization",
 ) -> Union[plotly.graph_objs.Figure, None]:
     """Plot histogram of columns.
 
@@ -180,7 +182,7 @@ def plot_histogram(
 
 def plot_temporal_features(
     features: pd.DataFrame,
-    names: Optional[Union[str, List]] = None,
+    names: Optional[Union[str, List[str]]] = None,
     return_fig: bool = False,
 ) -> Union[plotly.graph_objs.Figure, None]:
     """Plot temporal features.

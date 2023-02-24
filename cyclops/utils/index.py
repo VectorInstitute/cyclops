@@ -1,6 +1,6 @@
 """Utility functions for indexing NumPy arrays."""
 
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -34,7 +34,7 @@ def index_axis(ind: int, axis: int, shape: Tuple) -> Tuple:
 
 def take_indices(
     data: np.ndarray,
-    indexes: List[Optional[Union[List[int], np.ndarray]]],
+    indexes: Sequence[Optional[Union[Sequence[int], np.ndarray]]],
 ) -> np.ndarray:
     """Index array by specifying the indices to take on each axis.
 
@@ -71,7 +71,7 @@ def take_indices(
 def take_indices_over_axis(
     data: np.ndarray,
     axis: int,
-    index: Union[np.ndarray, List[int]],
+    index: Union[np.ndarray, Sequence[int]],
 ):
     """Take indices along an axis.
 
@@ -85,7 +85,7 @@ def take_indices_over_axis(
         Array/list of indices to take along the axis.
 
     """
-    indexes: List[Union[None, np.ndarray]] = [None] * len(data.shape)
+    indexes: Sequence[Union[None, np.ndarray]] = [None] * len(data.shape)
     indexes[axis] = np.array(index)
 
     return take_indices(data, indexes)
