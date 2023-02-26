@@ -1,11 +1,11 @@
 """Utility functions for indexing NumPy arrays."""
 
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
 
-def index_axis(ind: int, axis: int, shape: Tuple) -> Tuple:
+def index_axis(ind: int, axis: int, shape: Tuple[int, ...]) -> Tuple[Any, ...]:
     """Index one value over one axis and fetch everything from all other axes.
 
     E.g., for ind = 3, axis = 1, and shape = (10, 20, 30), this function is
@@ -33,9 +33,9 @@ def index_axis(ind: int, axis: int, shape: Tuple) -> Tuple:
 
 
 def take_indices(
-    data: np.ndarray,
-    indexes: Sequence[Optional[Union[Sequence[int], np.ndarray]]],
-) -> np.ndarray:
+    data: np.typing.NDArray[Any],
+    indexes: Sequence[Optional[Union[Sequence[int], np.typing.NDArray[Any]]]],
+) -> np.typing.NDArray[Any]:
     """Index array by specifying the indices to take on each axis.
 
     Parameters
@@ -69,10 +69,10 @@ def take_indices(
 
 
 def take_indices_over_axis(
-    data: np.ndarray,
+    data: np.typing.NDArray[Any],
     axis: int,
-    index: Union[np.ndarray, Sequence[int]],
-):
+    index: Union[np.typing.NDArray[Any], Sequence[int]],
+) -> np.typing.NDArray[Any]:
     """Take indices along an axis.
 
     Parameters
@@ -85,7 +85,7 @@ def take_indices_over_axis(
         Array/list of indices to take along the axis.
 
     """
-    indexes: Sequence[Union[None, np.ndarray]] = [None] * len(data.shape)
-    indexes[axis] = np.array(index)
+    indexes = [None] * len(data.shape)
+    indexes[axis] = np.array(index)  # type: ignore
 
     return take_indices(data, indexes)

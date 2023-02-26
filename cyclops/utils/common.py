@@ -9,7 +9,7 @@ import pandas as pd
 from pandas.errors import PerformanceWarning
 
 
-def to_timestamp(data: Union[pd.Series, np.ndarray]) -> pd.Series:
+def to_timestamp(data: Union[pd.Series, np.typing.NDArray[Any]]) -> pd.Series:
     """Convert a Pandas series or NumPy array to a datetime/timestamp type.
 
     Parameters
