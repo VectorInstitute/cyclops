@@ -163,7 +163,7 @@ def save_dataframe(
         if isinstance(data, pd.DataFrame):
             data.to_parquet(save_path, schema=None)
         if isinstance(data, dd.core.DataFrame):
-            data.to_parquet(
+            data.to_parquet(  # type: ignore
                 save_path,
                 schema=None,
                 name_function=lambda x: f"batch-{str(x).zfill(3)}.parquet",
@@ -220,7 +220,7 @@ def load_dataframe(
 
 
 def save_array(
-    data: np.ndarray,
+    data: np.typing.ArrayLike,
     save_path: str,
     file_format: str = "npy",
     log: bool = True,
@@ -264,7 +264,7 @@ def load_array(
     load_path: str,
     file_format: str = "npy",
     log: bool = True,
-) -> np.ndarray:
+) -> Any:
     """Load file to a numpy.ndarray object.
 
     Parameters
@@ -291,6 +291,9 @@ def load_array(
         data = np.load(load_path)
     else:
         raise ValueError("Invalid file formated provided. Currently supporting 'npy'.")
+
+    if not isinstance(data, np.ndarray):
+        raise ValueError("Loaded data is not an array.")
 
     return data
 

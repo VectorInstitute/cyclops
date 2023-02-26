@@ -384,7 +384,7 @@ class Features:
         self,
         fractions: Union[float, List[float]] = 1.0,
         randomize: bool = True,
-        seed: int = None,
+        seed: Optional[int] = None,
     ):
         """Split the data into multiple datasets by fractions.
 
@@ -410,7 +410,7 @@ class Features:
         self,
         fractions: Union[float, List[float]] = 1.0,
         randomize: bool = True,
-        seed: int = None,
+        seed: Optional[int] = None,
     ) -> List[np.ndarray]:
         """Compute the value splits given fractions.
 
@@ -718,7 +718,7 @@ class Features:
 
     def slice(
         self,
-        slice_map: Dict[str, Union[Any, List[Any]]] = None,
+        slice_map: Optional[Dict[str, Union[Any, List[Any]]]] = None,
         slice_query: Optional[str] = None,
         replace: bool = False,
     ) -> np.ndarray:
@@ -891,7 +891,7 @@ def split_features(
     features: List[Union[Features, TabularFeatures, TemporalFeatures]],
     fractions: Optional[Union[float, List[float]]] = None,
     randomize: bool = True,
-    seed: int = None,
+    seed: Optional[int] = None,
 ) -> Tuple:
     """Split a set of features using the same uniquely identifying values.
 

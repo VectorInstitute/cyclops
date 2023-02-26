@@ -40,7 +40,7 @@ class Metric(ABC):
         self._defaults: Dict[str, Union[List, np.ndarray]] = {}
 
     def __init_subclass__(
-        cls, registry_key: str = None, force_register: bool = False, **kwargs
+        cls, registry_key: Optional[str] = None, force_register: bool = False, **kwargs
     ):
         """Register the subclass in the registry."""
         super().__init_subclass__(**kwargs)

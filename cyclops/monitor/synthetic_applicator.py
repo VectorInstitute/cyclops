@@ -1,5 +1,6 @@
 """SyntheticShiftApplicator class."""
 import math
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -409,8 +410,8 @@ def feature_swap_shift(
     metadata: pd.DataFrame,
     metadata_mapping: dict,
     y: np.ndarray,
-    X_ref: np.ndarray = None,
-    y_ref: np.ndarray = None,
+    X_ref: Optional[np.ndarray] = None,
+    y_ref: Optional[np.ndarray] = None,
     shift_class: int = 1,
     n_shuffle: float = 0.25,
     rank: bool = False,
