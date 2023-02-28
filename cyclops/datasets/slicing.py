@@ -393,11 +393,13 @@ def filter_feature_value(
     """
     value_is_datetime = is_datetime(value)  # only checks timestrings
 
-    value = np.asanyarray(value, dtype="datetime64" if value_is_datetime else None)
+    value = pd.Series(
+        value, dtype="datetime64[ns]" if value_is_datetime else None
+    ).to_numpy()
 
-    example_values = np.asanyarray(
-        examples[feature_key], dtype="datetime64" if value_is_datetime else None
-    )
+    example_values = pd.Series(
+        examples[feature_key], dtype="datetime64[ns]" if value_is_datetime else None
+    ).to_numpy()
 
     result = np.isin(example_values, value, invert=negate)
 
@@ -462,33 +464,24 @@ def filter_feature_value_range(
 
     """
     # handle datetime values
-    # min and max are converted to np.datetime64 if either is a timestring
-    value_is_datetime = False
-    if is_datetime(min_value):
-        min_value = np.datetime64(min_value)
-        value_is_datetime = True
-        if max_value == np.inf:
-            max_value = np.datetime64(datetime.datetime.max)
-    if is_datetime(max_value):
-        max_value = np.datetime64(max_value)
-        value_is_datetime = True
-        if min_value == -np.inf:
-            min_value = np.datetime64(datetime.datetime.min)
+    min_value, max_value, value_is_datetime = _maybe_convert_to_datetime(
+        min_value, max_value
+    )
 
     if min_value > max_value:
         raise ValueError(
-            f"Invalid range specification: min={min_value}, max={max_value}. "
-            "min must be less than or equal to max."
+            "Expected `min_value` to be less than or equal to `max_value`, but got "
+            f"`min_value={min_value}` and `max_value={max_value}`."
         )
     if min_value == max_value and not (min_inclusive and max_inclusive):
         raise ValueError(
-            "`min` and `max` are equal and either `min_inclusive` or "
+            "`min_value` and `max_value` are equal and either `min_inclusive` or "
             "`max_inclusive` is False. This would result in an empty range."
         )
 
-    example_values = np.asanyarray(
-        examples[feature_key], dtype="datetime64" if value_is_datetime else None
-    )
+    example_values = pd.Series(
+        examples[feature_key], dtype="datetime64[ns]" if value_is_datetime else None
+    ).to_numpy()
 
     # check that the feature is a number or datetime
     if not (
@@ -496,8 +489,8 @@ def filter_feature_value_range(
         or np.issubdtype(example_values.dtype, np.datetime64)
     ):
         raise ValueError(
-            "Invalid range specification: "
-            f"feature {feature_key} is not a number or datetime."
+            "Expected feature to be numeric or datetime, but got "
+            f"{example_values.dtype}."
         )
 
     result = (
@@ -570,7 +563,7 @@ def filter_feature_value_datetime(
 
     """
     # make sure the column has datetime type
-    example_values = np.asanyarray(examples[feature_key])
+    example_values = pd.Series(examples[feature_key]).to_numpy()
     try:
         example_values = example_values.astype("datetime64")
     except ValueError as exc:
@@ -588,24 +581,22 @@ def filter_feature_value_datetime(
     # acknowledgement: https://stackoverflow.com/a/56260054
     result = np.ones_like(example_values, dtype=bool)
     if year is not None:
-        result = np.bitwise_and(
-            result, np.isin(years.astype(int), np.asanyarray(year, dtype=int))
+        result &= np.isin(
+            element=years.astype(int) + 1970,
+            test_elements=np.asanyarray(year, dtype=int),
         )
     if month is not None:
-        result = np.bitwise_and(
-            result,
-            np.isin(
-                element=((months - years) + 1).astype(int),
-                test_elements=np.asanyarray(month, dtype=int),
-            ),
+        result &= np.isin(
+            element=((months - years) + 1).astype(int),
+            test_elements=np.asanyarray(month, dtype=int),
         )
     if day is not None:
-        result = np.bitwise_and(
+        result &= np.isin(
             element=((days - months) + 1).astype(int),
             test_elements=np.asanyarray(day, dtype=int),
         )
     if hour is not None:
-        result = np.bitwise_and(
+        result &= np.isin(
             element=(example_values - days).astype("m8[h]").astype(int),
             test_elements=np.asanyarray(hour, dtype=int),
         )
@@ -677,3 +668,41 @@ def is_datetime(value: Union[str, datetime.datetime, np.datetime64, np.ndarray, 
         return all((is_datetime(v) for v in value))
     else:
         return False
+
+
+def _maybe_convert_to_datetime(min_value: Any, max_value: Any) -> Tuple[Any, Any, bool]:
+    """Convert datetime and infinity values to np.datetime64.
+
+    Parameters
+    ----------
+    min_value : Any
+        The minimum value.
+    max_value : Any
+        The maximum value.
+
+    Returns
+    -------
+    Tuple[Any, Any, bool]
+        The minimum and maximum values, and a boolean indicating whether the
+        values are datetime values.
+
+    """
+    if isinstance(min_value, datetime.date):
+        min_value = datetime.datetime.combine(min_value, datetime.time.min)
+    if isinstance(max_value, datetime.date):
+        max_value = datetime.datetime.combine(max_value, datetime.time.max)
+
+    # convert datetime and infinity values to np.datetime64
+    value_is_datetime = False
+    if is_datetime(min_value):
+        min_value = np.datetime64(min_value)
+        value_is_datetime = True
+        if max_value == np.inf:
+            max_value = pd.Timestamp.max.to_datetime64()
+    if is_datetime(max_value):
+        max_value = np.datetime64(max_value)
+        value_is_datetime = True
+        if min_value == -np.inf:
+            min_value = pd.Timestamp.min.to_datetime64()
+
+    return min_value, max_value, value_is_datetime
