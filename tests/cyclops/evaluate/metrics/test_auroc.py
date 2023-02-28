@@ -1,7 +1,7 @@
 """Functions for testing the AUCROC metrics."""
 
 from functools import partial
-from typing import Literal
+from typing import Literal, Optional
 
 import numpy as np
 import pytest
@@ -24,7 +24,7 @@ from cyclops.evaluate.metrics.utils import sigmoid
 def _sk_binary_auroc(
     target: np.ndarray,
     preds: np.ndarray,
-    max_fpr: float = None,
+    max_fpr: Optional[float] = None,
 ) -> float:
     """Compute AUROC for binary case using sklearn."""
     if not ((0 < preds) & (preds < 1)).all():

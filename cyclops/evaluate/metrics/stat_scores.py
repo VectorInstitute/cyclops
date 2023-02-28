@@ -303,7 +303,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         self,
         num_labels: int,
         threshold: float = 0.5,
-        top_k: int = None,
+        top_k: Optional[int] = None,
         labelwise: bool = True,
     ) -> None:
         super().__init__()

@@ -1,7 +1,7 @@
 """Functions for computing the area under the ROC curve (AUROC)."""
 
 import warnings
-from typing import List, Literal, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -27,8 +27,8 @@ from cyclops.evaluate.metrics.utils import _check_thresholds
 def _reduce_auroc(
     fpr: Union[np.ndarray, List[np.ndarray]],
     tpr: Union[np.ndarray, List[np.ndarray]],
-    average: Literal["macro", "weighted"] = None,
-    weights: np.ndarray = None,
+    average: Optional[Literal["macro", "weighted"]] = None,
+    weights: Optional[np.ndarray] = None,
 ) -> Union[float, np.ndarray]:
     """Compute the area under the ROC curve and apply ``average`` method.
 
@@ -91,8 +91,8 @@ def _reduce_auroc(
 
 def _binary_auroc_compute(
     state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
-    thresholds: np.ndarray = None,
-    max_fpr: float = None,
+    thresholds: Optional[np.ndarray] = None,
+    max_fpr: Optional[float] = None,
     pos_label: int = 1,
 ) -> float:
     """Compute the area under the ROC curve for binary classification tasks.
@@ -144,8 +144,8 @@ def _binary_auroc_compute(
 def binary_auroc(
     target: ArrayLike,
     preds: ArrayLike,
-    max_fpr: float = None,
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    max_fpr: Optional[float] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
     pos_label: int = 1,
 ) -> float:
     """Compute the area under the ROC curve for binary classification tasks.
@@ -213,8 +213,8 @@ def binary_auroc(
 def _multiclass_auroc_compute(
     state: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]],
     num_classes: int,
-    thresholds: np.ndarray = None,
-    average: Literal["macro", "weighted"] = None,
+    thresholds: Optional[np.ndarray] = None,
+    average: Optional[Literal["macro", "weighted"]] = None,
 ) -> Union[float, np.ndarray]:
     """Compute the area under the ROC curve for multiclass classification tasks.
 
@@ -256,8 +256,8 @@ def multiclass_auroc(
     target: ArrayLike,
     preds: ArrayLike,
     num_classes: int,
-    thresholds: Union[int, List[float], np.ndarray] = None,
-    average: Literal["macro", "weighted"] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    average: Optional[Literal["macro", "weighted"]] = None,
 ) -> Union[float, np.ndarray]:
     """Compute the area under the ROC curve for multiclass classification tasks.
 
@@ -329,8 +329,8 @@ def multiclass_auroc(
 def _multilabel_auroc_compute(
     state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
     num_labels: int,
-    thresholds: np.ndarray = None,
-    average: Literal["micro", "macro", "weighted"] = None,
+    thresholds: Optional[np.ndarray] = None,
+    average: Optional[Literal["micro", "macro", "weighted"]] = None,
 ) -> Union[float, np.ndarray]:
     """Compute the area under the ROC curve for multilabel classification tasks.
 
@@ -385,8 +385,8 @@ def multilabel_auroc(
     target: ArrayLike,
     preds: ArrayLike,
     num_labels: int,
-    thresholds: Union[int, List[float], np.ndarray] = None,
-    average: Literal["micro", "macro", "weighted"] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    average: Optional[Literal["micro", "macro", "weighted"]] = None,
 ) -> Union[float, np.ndarray]:
     """Compute the area under the ROC curve for multilabel classification tasks.
 
@@ -459,11 +459,11 @@ def auroc(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
-    max_fpr: float = None,
-    thresholds: Union[int, List[float], np.ndarray] = None,
-    num_classes: int = None,
-    num_labels: int = None,
-    average: Literal["micro", "macro", "weighted"] = None,
+    max_fpr: Optional[float] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    num_classes: Optional[int] = None,
+    num_labels: Optional[int] = None,
+    average: Optional[Literal["micro", "macro", "weighted"]] = None,
 ) -> Union[float, np.ndarray]:
     """Compute the area under the ROC curve for different tasks.
 

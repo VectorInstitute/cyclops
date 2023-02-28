@@ -94,7 +94,7 @@ def split_vectorized(
     fractions: Union[float, List[float]],
     axes: Union[str, int, List[str], List[int]] = 0,
     randomize: bool = True,
-    seed: int = None,
+    seed: Optional[int] = None,
 ) -> Tuple:
     """Split vectorized datasets matching the index.
 
@@ -610,7 +610,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         axis: Union[str, int],
         fractions: Union[float, List[float]],
         randomize: bool = True,
-        seed: int = None,
+        seed: Optional[int] = None,
     ):
         """Split the data over an axis using split fractions.
 

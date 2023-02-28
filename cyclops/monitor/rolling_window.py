@@ -1,4 +1,6 @@
 """Rolling window class for detecting drift on time series data."""
+from typing import Optional
+
 import pandas as pd
 import torch
 from tqdm import tqdm
@@ -34,7 +36,7 @@ class RollingWindow:
         self,
         admin_data: pd.DataFrame,
         shift_detector: Detector,
-        optimizer: Optimizer = None,
+        optimizer: Optional[Optimizer] = None,
         model=None,
         verbose: bool = False,
     ):

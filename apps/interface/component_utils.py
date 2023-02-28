@@ -2,7 +2,7 @@
 import base64
 import io
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 
 import dash_mantine_components as dmc
 import numpy as np
@@ -15,7 +15,9 @@ def flatten_2d_tuple(tuple_of_tuples):
     return tuple(element for tupl in tuple_of_tuples for element in tupl)
 
 
-def generate_table_contents(data: pd.DataFrame, display_limit: int = None) -> List:
+def generate_table_contents(
+    data: pd.DataFrame, display_limit: Optional[int] = None
+) -> List:
     """Generate the table content objects."""
     if display_limit is not None:
         data = data.sample(min([display_limit, len(data)]))

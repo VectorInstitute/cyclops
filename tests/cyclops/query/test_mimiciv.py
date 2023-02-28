@@ -2,7 +2,7 @@
 
 import pytest
 
-from cyclops.query.mimiciv import MIMICIVQuerier
+from cyclops.query import MIMICIVQuerier
 
 
 @pytest.mark.integration_test

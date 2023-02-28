@@ -329,10 +329,10 @@ def accuracy(  # pylint: disable=too-many-arguments
     preds: ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
-    num_classes: int = None,
+    num_classes: Optional[int] = None,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
-    num_labels: int = None,
+    num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
 ) -> Union[float, np.ndarray]:

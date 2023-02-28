@@ -1,7 +1,7 @@
 """Functions for computing the receiver operating characteristic (ROC) curve."""
 
 import warnings
-from typing import List, Literal, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -21,7 +21,7 @@ from cyclops.evaluate.metrics.utils import _check_thresholds
 
 def _roc_compute_from_confmat(
     confmat: np.ndarray,
-    thresholds: np.ndarray = None,
+    thresholds: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute the ROC curve from a multi-threshold confusion matrix.
 
@@ -64,7 +64,7 @@ def _roc_compute_from_confmat(
 
 def _binary_roc_compute(
     state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
-    thresholds: np.ndarray = None,
+    thresholds: Optional[np.ndarray] = None,
     pos_label: int = 1,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute the ROC curve for binary classification.
@@ -130,7 +130,7 @@ def _binary_roc_compute(
 def binary_roc_curve(
     target: ArrayLike,
     preds: ArrayLike,
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
     pos_label: int = 1,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute the ROC curve for binary classification tasks.
@@ -190,7 +190,7 @@ def binary_roc_curve(
 def _multiclass_roc_compute(
     state: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]],
     num_classes: int,
-    thresholds: np.ndarray = None,
+    thresholds: Optional[np.ndarray] = None,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, np.ndarray],
     Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
@@ -246,7 +246,7 @@ def multiclass_roc_curve(
     target: ArrayLike,
     preds: ArrayLike,
     num_classes: int,
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, np.ndarray],
     Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
@@ -321,7 +321,7 @@ def multiclass_roc_curve(
 def _multilabel_roc_compute(
     state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
     num_labels: int,
-    thresholds: np.ndarray = None,
+    thresholds: Optional[np.ndarray] = None,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, np.ndarray],
     Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
@@ -377,7 +377,7 @@ def multilabel_roc_curve(
     target: ArrayLike,
     preds: ArrayLike,
     num_labels: int,
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, np.ndarray],
     Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
@@ -452,10 +452,10 @@ def roc_curve(  # pylint: disable=too-many-arguments
     target: ArrayLike,
     preds: ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
     pos_label: int = 1,
-    num_classes: int = None,
-    num_labels: int = None,
+    num_classes: Optional[int] = None,
+    num_labels: Optional[int] = None,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, np.ndarray],
     Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],

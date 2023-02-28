@@ -55,7 +55,7 @@ def test_assert_has_columns():
         df2: pd.DataFrame,
         some_str: str,
         df3: pd.DataFrame,
-        int_keyword: int = None,
+        int_keyword: Optional[int] = None,
         df_kwarg: Optional[pd.DataFrame] = None,
     ) -> None:
         return None

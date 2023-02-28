@@ -128,7 +128,7 @@ def process_dir_save_path(save_path: str, create_dir: bool = True) -> str:
 
 
 def save_dataframe(
-    data: Union[pd.DataFrame, dd.DataFrame],
+    data: Union[pd.DataFrame, dd.core.DataFrame],
     save_path: str,
     file_format: str = "parquet",
     log: bool = True,
@@ -152,18 +152,18 @@ def save_dataframe(
         Processed save path for upstream use.
 
     """
-    if not isinstance(data, (pd.DataFrame, dd.DataFrame)):
+    if not isinstance(data, (pd.DataFrame, dd.core.DataFrame)):
         raise ValueError("Input data is not a DataFrame.")
     save_path = process_file_save_path(save_path, file_format)
-    if isinstance(data, dd.DataFrame):
+    if isinstance(data, dd.core.DataFrame):
         save_path, _ = os.path.splitext(save_path)
     if log:
         LOGGER.info("Saving dataframe to %s", save_path)
     if file_format == "parquet":
         if isinstance(data, pd.DataFrame):
             data.to_parquet(save_path, schema=None)
-        if isinstance(data, dd.DataFrame):
-            data.to_parquet(
+        if isinstance(data, dd.core.DataFrame):
+            data.to_parquet(  # type: ignore
                 save_path,
                 schema=None,
                 name_function=lambda x: f"batch-{str(x).zfill(3)}.parquet",
@@ -182,7 +182,7 @@ def load_dataframe(
     load_path: str,
     file_format: str = "parquet",
     log: bool = True,
-) -> Union[pd.DataFrame, dd.DataFrame]:
+) -> Union[pd.DataFrame, dd.core.DataFrame]:
     """Load file to a pandas.DataFrame or dask.DataFrame object.
 
     Parameters
@@ -207,7 +207,7 @@ def load_dataframe(
     if log:
         LOGGER.info("Loading DataFrame from %s", load_path)
     if file_format == "parquet":
-        data_reader = dd.read_parquet if is_dask else pd.read_parquet
+        data_reader = dd.read_parquet if is_dask else pd.read_parquet  # type: ignore
         data = data_reader(load_path)
     elif file_format == "csv":
         data = pd.read_csv(load_path, index_col=[0])
@@ -220,7 +220,7 @@ def load_dataframe(
 
 
 def save_array(
-    data: np.ndarray,
+    data: np.typing.ArrayLike,
     save_path: str,
     file_format: str = "npy",
     log: bool = True,
@@ -264,7 +264,7 @@ def load_array(
     load_path: str,
     file_format: str = "npy",
     log: bool = True,
-) -> np.ndarray:
+) -> Any:
     """Load file to a numpy.ndarray object.
 
     Parameters
@@ -291,6 +291,9 @@ def load_array(
         data = np.load(load_path)
     else:
         raise ValueError("Invalid file formated provided. Currently supporting 'npy'.")
+
+    if not isinstance(data, np.ndarray):
+        raise ValueError("Loaded data is not an array.")
 
     return data
 
