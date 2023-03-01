@@ -1,6 +1,9 @@
 """Classes for computing the F-beta score."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Type, Union, cast
+
+import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.f_beta import _check_beta, _fbeta_reduce
 from cyclops.evaluate.metrics.metric import Metric
@@ -60,10 +63,10 @@ class BinaryFbetaScore(BinaryStatScores, registry_key="binary_fbeta_score"):
         self.beta = beta
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the metric from the state."""
         tp, fp, _, fn = self._final_state()
-        return _fbeta_reduce(
+        f_score = _fbeta_reduce(
             tp=tp,
             fp=fp,
             fn=fn,
@@ -71,6 +74,7 @@ class BinaryFbetaScore(BinaryStatScores, registry_key="binary_fbeta_score"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, f_score)
 
 
 class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_score"):
@@ -145,7 +149,7 @@ class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the metric from the state."""
         tp, fp, _, fn = self._final_state()
         return _fbeta_reduce(
@@ -227,7 +231,7 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the metric from the state."""
         tp, fp, _, fn = self._final_state()
         return _fbeta_reduce(
@@ -329,7 +333,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of FbetaScore
-        cls,
+        cls: Type[Metric],
         beta: float,
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
@@ -641,7 +645,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of F1Score
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
         num_classes: Optional[int] = None,

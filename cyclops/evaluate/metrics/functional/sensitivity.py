@@ -3,7 +3,7 @@
 from typing import Literal, Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.precision_recall import (
     binary_recall,
@@ -14,8 +14,8 @@ from cyclops.evaluate.metrics.functional.precision_recall import (
 
 
 def binary_sensitivity(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
     threshold: float = 0.5,
     zero_division: Literal["warn", 0, 1] = "warn",
@@ -63,20 +63,20 @@ def binary_sensitivity(
 
 
 def multiclass_sensitivity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute sensitivity score for multiclass classification problems.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_classes : int
         Total number of classes in the dataset.
@@ -132,14 +132,14 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
 
 
 def multilabel_sensitivity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute sensitivity score for multilabel classification tasks.
 
     The input is expected to be an array-like of shape (N, L), where N is the
@@ -149,9 +149,9 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_labels : int
         Number of labels in the dataset.
@@ -205,8 +205,8 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
 
 
 def sensitivity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
     num_classes: Optional[int] = None,
@@ -215,7 +215,7 @@ def sensitivity(  # pylint: disable=too-many-arguments
     num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute sensitivity score for different classification tasks.
 
     Sensitivity is the ratio tp / (tp + fn) where tp is the number of true positives
@@ -224,9 +224,9 @@ def sensitivity(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     task : Literal["binary", "multiclass", "multilabel"]
         Task type.
