@@ -26,8 +26,8 @@ torchxrayvision = { version = "^0.0.37", optional = true }
 alibi = { version = "^0.8.0", optional = true, extras = ["shap"] }
 alibi-detect = { version = "^0.10.4", optional = true, extras = ["torch"] }
 llvmlite = { version = "0.38.0", optional = true }
-datasets = "^2.10.1"
-monai = {extras = ["itk"], version = "^1.1.0"}
+datasets = { version = "^2.10.1", optional = true }
+monai = {version = "^1.1.0", optional = true, extras = ["itk"] }
 
 [tool.poetry.group.query.dependencies]
 pyarrow = "^7.0.0"
