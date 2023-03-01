@@ -19,7 +19,6 @@ class ClinicalShiftApplicator:
     """
 
     def __init__(self, shift_type: str, source, target, shift_id: str = None):
-
         self.shift_type = shift_type
         self.shift_id = shift_id
         self.source = source

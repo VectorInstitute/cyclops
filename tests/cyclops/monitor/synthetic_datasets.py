@@ -1,3 +1,5 @@
+"""Synthetic Datasets."""
+
 import numpy as np
 import pandas as pd
 from datasets.arrow_dataset import Dataset
@@ -48,6 +50,7 @@ def synthetic_gemini_dataset(size=1000):
     dataset = Dataset.from_pandas(df, preserve_index=False)
     dataset = dataset.with_format("np")
     return dataset
+
 
 def synthetic_nih_dataset(size=8):
     """Create a synthetic NIH dataset."""
