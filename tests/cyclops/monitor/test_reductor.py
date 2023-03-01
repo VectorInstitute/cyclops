@@ -1,8 +1,7 @@
 """Unit tests for Reductor module."""
 import numpy as np
 import pytest
-import torch
-from torch.utils.data import Dataset
+from synthetic_datasets import synthetic_nih_dataset
 
 from cyclops.monitor import Reductor
 
@@ -21,28 +20,10 @@ def fixture_x_timeseries():
     return x
 
 
-# pytest fixture for torch dataset of random images
-# and labels in dict with keys "img" and "lab"
-@pytest.fixture(name="txrv_dataset")
-def fixture_txrv_dataset():
-    """Create a test input."""
-
-    class TXRVDataset(Dataset):
-        """TXRV Dummy Dataset."""
-
-        def __init__(self, num_samples, channels, height, width, num_labels=14):
-            self.len = num_samples
-            self.data = torch.rand(num_samples, channels, height, width)
-            self.labels = torch.rand(num_samples, num_labels)
-
-        def __getitem__(self, index):
-            item = {"img": self.data[index], "lab": self.labels[index]}
-            return item
-
-        def __len__(self):
-            return self.len
-
-    dataset = TXRVDataset(100, 1, 224, 224)
+@pytest.fixture(name="nih_dataset")
+def fixture_nih_dataset():
+    """Create a test input for NIH use-case."""
+    dataset = synthetic_nih_dataset()
     return dataset
 
 
@@ -125,9 +106,9 @@ def test_reductor_bbsds_untrained_lstm(X_timeseries):
     assert X_reduced.shape == (100, 32, 1)
 
 
-def test_reductor_bbsd_txrv_cnn(txrv_dataset):
+def test_reductor_bbsd_txrv_cnn(nih_dataset):
     """Test Reductor."""
     reductor = Reductor("BBSDs_txrv_CNN")
-    reductor.fit(txrv_dataset)
-    X_reduced, _ = reductor.transform(txrv_dataset)
-    assert X_reduced.shape == (100, 18)
+    reductor.fit(nih_dataset)
+    X_reduced, _ = reductor.transform(nih_dataset)
+    assert X_reduced.shape == (8, 18)

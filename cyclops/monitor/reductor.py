@@ -517,20 +517,16 @@ class Reductor:
 
         """
         all_preds = []
-        all_labels = []
         model = model.to(self.device).eval()
         for batch in tqdm(dataloader) if progress else dataloader:
-            imgs = batch["img"]
-            labels = batch["lab"]
+            imgs = batch["features"]
             imgs = imgs.to(self.device)
             with torch.no_grad():
                 preds = model(imgs)
             preds = preds.cpu().numpy()
             all_preds.append(preds)
-            all_labels.append(labels)
         X_transformed = np.concatenate(all_preds)
-        labels = np.concatenate(all_labels)
-        return X_transformed, labels
+        return X_transformed, None
 
     def xrv_ae_inference(
         self, model: nn.Module, dataloader: DataLoader, progress=True

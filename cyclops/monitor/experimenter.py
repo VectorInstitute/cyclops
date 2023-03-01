@@ -4,9 +4,6 @@
 # from drift_detector.clinical_applicator import ClinicalShiftApplicator
 from typing import Union
 
-import numpy as np
-import pandas as pd
-import torch
 from datasets.arrow_dataset import Dataset
 
 from cyclops.monitor.clinical_applicator import ClinicalShiftApplicator
@@ -90,9 +87,6 @@ class Experimenter:
                 X_target, _ = self.shiftapplicator.apply_shift(dataset)
         else:
             self.detector.fit(dataset, progress=False)
-            if isinstance(dataset, Dataset):
-                X, _ = self.detector.transform(dataset)
-            X_target = dataset
 
         drift_sample_results = self.experiment_types[self.experiment_type](X_target)
 

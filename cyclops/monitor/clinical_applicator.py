@@ -25,12 +25,6 @@ class ClinicalShiftApplicator:
         self.source = source
         self.target = target
 
-        # self.method_args: dict[str, Optional[Union[str, list]]] = {
-        #     "source": source,
-        #     "target": target,
-        #     "shift_id": shift_id,
-        # }
-
         self.shift_types: Dict[str, Callable[..., Dataset]] = {
             "time": self.time,
             "month": self.month,
@@ -145,7 +139,7 @@ class ClinicalShiftApplicator:
         return ds_source, ds_target
 
     def hospital_type(
-        self, dataset: Dataset, shift_id: str, source: list, target: list
+        self, dataset: Dataset, source: list, target: list, shift_id: str
     ):
         """Shift against hospital type.
 
