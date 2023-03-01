@@ -19,7 +19,6 @@ class NIHCXRDataset:
     """NIH Chest X-ray dataset."""
 
     def __init__(self, cfg_path: str = "drift_detection/datasets/configs/nihcxr.yaml"):
-
         self.cfg = OmegaConf.load(cfg_path)
 
         self.image_path = self.cfg.image_path

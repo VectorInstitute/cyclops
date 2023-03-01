@@ -34,7 +34,6 @@ class Detector:
         p_val_threshold: float = 0.05,
         random_runs=5,
     ):
-
         self.reductor = reductor
         self.tester = tester
         self.p_val_threshold = p_val_threshold
@@ -165,12 +164,10 @@ class Detector:
         pbar_total = self.random_runs * len(self.samples)
         with tqdm(total=pbar_total, miniters=int(pbar_total / 100)) as pbar:
             for rand_run in range(self.random_runs):
-
                 np.random.seed(rand_run)
                 np.random.shuffle(X_target)
 
                 for sample_iter, sample in enumerate(self.samples):
-
                     drift_results = self.detect_shift(X_target, sample, **kwargs)
 
                     p_val_samples[sample_iter, rand_run] = drift_results["p_val"]

@@ -26,6 +26,8 @@ torchxrayvision = { version = "^0.0.37", optional = true }
 alibi = { version = "^0.8.0", optional = true, extras = ["shap"] }
 alibi-detect = { version = "^0.10.4", optional = true, extras = ["torch"] }
 llvmlite = { version = "0.38.0", optional = true }
+datasets = { version = "^2.10.1", optional = true }
+monai = {version = "^1.1.0", optional = true, extras = ["itk"] }
 
 [tool.poetry.group.query.dependencies]
 pyarrow = "^7.0.0"
@@ -37,6 +39,8 @@ dask = { version = "^2022.9.1", extras = ["dataframe"] }
 [tool.poetry.group.evaluate.dependencies]
 torch = "^1.11.0"
 xgboost = "^1.5.2"
+datasets = "^2.10.1"
+monai = {extras = ["itk"], version = "^1.1.0"}
 
 [tool.poetry.group.monitor.dependencies]
 hydra-core = "^1.2.0"
@@ -44,6 +48,8 @@ torchxrayvision = "^0.0.37"
 alibi = {version = "^0.8.0", extras = ["shap"]}
 alibi-detect = {version = "^0.10.4", extras = ["torch"]}
 llvmlite = "0.38.0"
+datasets = "^2.10.1"
+monai = {extras = ["itk"], version = "^1.1.0"}
 
 [tool.poetry.group.dev.dependencies]
 seaborn = "^0.11.2"
@@ -88,7 +94,7 @@ Flask-Caching = "^1.10.1"
 
 [tool.poetry.extras]
 query = ["SQLAlchemy", "psycopg2", "pyarrow", "dask", "hydra-core"]
-evaluate = ["torch", "xgboost"]
+evaluate = ["torch", "xgboost", "datasets", "monai"]
 monitor = ["hydra-core", "torchxrayvision", "alibi", "alibi-detect", "llvmlite"]
 
 [tool.isort]

@@ -84,7 +84,6 @@ class Reductor:
         n_classes: Optional[int] = None,
         random_state: int = 42,
     ):
-
         self.dr_method = dr_method
         self.model_path = model_path
         self.var_ret = var_ret
@@ -232,7 +231,6 @@ class Reductor:
         """
         # check if data is a numpy matrix or a torch dataset
         if isinstance(data, np.ndarray):
-
             if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
                 if self.n_components is None:
                     self.n_components = self.get_dr_amount(data)

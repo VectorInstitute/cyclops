@@ -4,17 +4,17 @@ from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 
-from cyclops.evaluate.metrics import (
-    BinaryPrecisionRecallCurve,
-    MulticlassPrecisionRecallCurve,
-    MultilabelPrecisionRecallCurve,
-)
 from cyclops.evaluate.metrics.functional.roc import (
     _binary_roc_compute,
     _multiclass_roc_compute,
     _multilabel_roc_compute,
 )
 from cyclops.evaluate.metrics.metric import Metric
+from cyclops.evaluate.metrics.precision_recall_curve import (
+    BinaryPrecisionRecallCurve,
+    MulticlassPrecisionRecallCurve,
+    MultilabelPrecisionRecallCurve,
+)
 
 # mypy: ignore-errors
 

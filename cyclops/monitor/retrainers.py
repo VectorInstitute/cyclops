@@ -42,7 +42,6 @@ class CumulativeRetrainer:
         retrain_model_path: Optional[str] = None,
         verbose: bool = False,
     ):
-
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
@@ -112,7 +111,6 @@ class CumulativeRetrainer:
             pbar.update(1)
 
             if p_val < p_val_threshold:
-
                 X_update_streams = pd.concat(
                     data_streams["X"][max(int(i) - run_length, 0) : int(i)]
                 )
@@ -313,7 +311,6 @@ class MostRecentRetrainer:
         retrain_model_path: Optional[str] = None,
         verbose: bool = False,
     ):
-
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
@@ -383,7 +380,6 @@ class MostRecentRetrainer:
             pbar.update(1)
 
             if p_val < p_val_threshold:
-
                 X_update_streams = pd.concat(
                     data_streams["X"][max(int(i) - run_length, 0) : int(i)]
                 )
