@@ -511,7 +511,7 @@ def _multilabel_stat_scores_format(
     preds: ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
-    top_k: int = None,
+    top_k: Optional[int] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Format the target and preds for multilabel inputs.
 

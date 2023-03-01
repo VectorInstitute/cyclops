@@ -31,7 +31,6 @@ class SyntheticShiftApplicator:
     """
 
     def __init__(self, shift_type: str, **kwargs):
-
         self.shift_type = shift_type
 
         self.shift_types: Dict[str, Callable[..., Dataset]] = {

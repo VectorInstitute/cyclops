@@ -304,10 +304,10 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
         cls,
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
-        num_classes: int = None,
+        num_classes: Optional[int] = None,
         threshold: float = 0.5,
         top_k: Optional[int] = None,
-        num_labels: int = None,
+        num_labels: Optional[int] = None,
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> Metric:

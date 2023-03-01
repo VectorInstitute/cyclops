@@ -1,20 +1,20 @@
 """Classes for computing ROC metrics."""
 
-from typing import List, Literal, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 
-from cyclops.evaluate.metrics import (
-    BinaryPrecisionRecallCurve,
-    MulticlassPrecisionRecallCurve,
-    MultilabelPrecisionRecallCurve,
-)
 from cyclops.evaluate.metrics.functional.roc import (
     _binary_roc_compute,
     _multiclass_roc_compute,
     _multilabel_roc_compute,
 )
 from cyclops.evaluate.metrics.metric import Metric
+from cyclops.evaluate.metrics.precision_recall_curve import (
+    BinaryPrecisionRecallCurve,
+    MulticlassPrecisionRecallCurve,
+    MultilabelPrecisionRecallCurve,
+)
 
 # mypy: ignore-errors
 
@@ -316,10 +316,10 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     def __new__(  # type: ignore # mypy expects a subclass of ROCCurve
         cls,
         task: Literal["binary", "multiclass", "multilabel"],
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
         pos_label: int = 1,
-        num_classes: int = None,
-        num_labels: int = None,
+        num_classes: Optional[int] = None,
+        num_labels: Optional[int] = None,
     ) -> Metric:
         """Create a task-specific instance of the ROC curve metric."""
         if task == "binary":

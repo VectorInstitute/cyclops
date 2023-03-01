@@ -2,7 +2,7 @@
 # from drift_detector.detector import Detector
 # from drift_detector.synthetic_applicator import SyntheticShiftApplicator
 # from drift_detector.clinical_applicator import ClinicalShiftApplicator
-from typing import Union
+from typing import Optional, Union
 
 from datasets.arrow_dataset import Dataset
 
@@ -35,11 +35,10 @@ class Experimenter:
         self,
         experiment_type: str,
         detector: Detector,
-        shiftapplicator: Union[
-            SyntheticShiftApplicator, ClinicalShiftApplicator
+        shiftapplicator: Optional[
+            Union[SyntheticShiftApplicator, ClinicalShiftApplicator]
         ] = None,
     ):
-
         self.detector = detector
         self.shiftapplicator = shiftapplicator
 

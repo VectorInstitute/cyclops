@@ -706,7 +706,10 @@ def tabular_as_aggregated(  # pylint: disable=too-many-arguments
 
 
 def timestamp_ffill_agg(
-    timesteps: pd.Series, num_timesteps: int, val: float = 1, fill_nan: float = None
+    timesteps: pd.Series,
+    num_timesteps: int,
+    val: float = 1,
+    fill_nan: Optional[float] = None,
 ):
     """Perform single-value aggregation with fill forward functionality given timesteps.
 

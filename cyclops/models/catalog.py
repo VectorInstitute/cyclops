@@ -2,7 +2,7 @@
 
 import logging
 from difflib import get_close_matches
-from typing import Any, Callable, Dict, List, Literal, Set, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
 import torch.nn.modules
 import torch.optim
@@ -81,7 +81,7 @@ def register_model(name: str, model_type: Literal["static", "temporal"]) -> Call
 
 
 def list_models(
-    category: Literal["static", "temporal", "pytorch", "sklearn"] = None
+    category: Optional[Literal["static", "temporal", "pytorch", "sklearn"]] = None
 ) -> List[str]:
     """List models.
 

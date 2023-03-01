@@ -1,5 +1,7 @@
 """Retrainer that uses a cumulative set of data to retrain the model."""
 
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 import torch
@@ -36,11 +38,10 @@ class CumulativeRetrainer:
         shift_detector: Detector,
         optimizer: Optimizer,
         model=None,
-        model_name: str = None,
-        retrain_model_path: str = None,
+        model_name: Optional[str] = None,
+        retrain_model_path: Optional[str] = None,
         verbose: bool = False,
     ):
-
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
@@ -110,7 +111,6 @@ class CumulativeRetrainer:
             pbar.update(1)
 
             if p_val < p_val_threshold:
-
                 X_update_streams = pd.concat(
                     data_streams["X"][max(int(i) - run_length, 0) : int(i)]
                 )
@@ -307,11 +307,10 @@ class MostRecentRetrainer:
         shift_detector: Detector,
         optimizer: Optimizer,
         model=None,
-        model_name: str = None,
-        retrain_model_path: str = None,
+        model_name: Optional[str] = None,
+        retrain_model_path: Optional[str] = None,
         verbose: bool = False,
     ):
-
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
@@ -381,7 +380,6 @@ class MostRecentRetrainer:
             pbar.update(1)
 
             if p_val < p_val_threshold:
-
                 X_update_streams = pd.concat(
                     data_streams["X"][max(int(i) - run_length, 0) : int(i)]
                 )

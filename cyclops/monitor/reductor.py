@@ -2,7 +2,7 @@
 
 import os
 import pickle
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -78,14 +78,13 @@ class Reductor:
     def __init__(
         self,
         dr_method: str,
-        model_path: str = None,
+        model_path: Optional[str] = None,
         var_ret: float = 0.8,
-        n_components: int = None,
-        n_features: int = None,
-        n_classes: int = None,
+        n_components: Optional[int] = None,
+        n_features: Optional[int] = None,
+        n_classes: Optional[int] = None,
         random_state: int = 42,
     ):
-
         self.dr_method = dr_method
         self.model_path = model_path
         self.var_ret = var_ret
@@ -233,7 +232,6 @@ class Reductor:
         """
         # check if data is a numpy matrix or a huggingface dataset
         if isinstance(data, np.ndarray):
-
             if self.dr_method in ("PCA", "SRP", "kPCA", "Isomap", "GMM"):
                 if self.n_components is None:
                     self.n_components = self.get_dr_amount(data)
@@ -254,7 +252,7 @@ class Reductor:
         self,
         data: Union[np.ndarray, Dataset],
         batch_size: int = 32,
-        num_workers: int = None,
+        num_workers: Optional[int] = None,
         progress: bool = True,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """Transform the data using the chosen dimensionality reduction method.

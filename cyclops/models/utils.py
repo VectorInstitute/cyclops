@@ -1,7 +1,7 @@
 """Utility functions for building models."""
 import inspect
 from difflib import get_close_matches
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
@@ -10,7 +10,9 @@ from sklearn.base import BaseEstimator
 
 
 def _get_class_members(
-    module, include_only: List[str] = None, exclude: List[str] = None
+    module,
+    include_only: Optional[List[str]] = None,
+    exclude: Optional[List[str]] = None,
 ) -> dict:
     """Get class members from module.
 
@@ -153,8 +155,9 @@ def _has_sklearn_api(model: object) -> bool:
     """
     return (
         hasattr(model, "fit")
+        or hasattr(model, "partial_fit")
         and hasattr(model, "predict")
-        and hasattr(model, "predict_proba")
+        or hasattr(model, "predict_proba")
     )
 
 

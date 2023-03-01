@@ -319,8 +319,8 @@ def _to_numeric(
 
 def _convertible_to_categorical(  # pylint: disable=too-many-arguments
     series: pd.Series,
-    category_min: int = None,
-    category_max: int = None,
+    category_min: Optional[int] = None,
+    category_max: Optional[int] = None,
     unique: Optional[np.ndarray] = None,
     raise_error_over_max: bool = False,
     raise_error_under_min: bool = False,
@@ -728,7 +728,7 @@ def _to_categorical_indicators(
 def convertible_to_type(
     series: pd.Series,
     type_: str,
-    unique: np.ndarray = None,
+    unique: Optional[np.ndarray] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to some type.

@@ -1,5 +1,7 @@
 """Tester Module for drift detection with TSTester and DCTester submodules."""
 
+from typing import Optional
+
 import numpy as np
 from alibi_detect.cd import (
     ChiSquareDrift,
@@ -133,7 +135,7 @@ class DCTester:
 
     """
 
-    def __init__(self, tester_method: str, model_method: str = None):
+    def __init__(self, tester_method: str, model_method: Optional[str] = None):
         self.tester_method = tester_method
         self.model_method = model_method
         self.tester = None
