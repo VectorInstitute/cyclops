@@ -99,16 +99,16 @@ class SlicingConfig:
     feature_keys: List[Union[str, List[str]]] = field(
         default_factory=list, init=True, repr=True, hash=True, compare=True
     )
-    feature_values: List[Union[Mapping[str, Any], List[Mapping[str, Any]]]] = field(
+    feature_values: List[Mapping[str, Mapping[str, Any]]] = field(
         default_factory=lambda: [{}], init=True, repr=True, hash=True, compare=True
     )
     column_names: Optional[List[str]] = None
     validate: bool = True
-    _slice_function_registry: Dict[str, Callable] = field(
-        default_factory=dict, init=False, repr=False, hash=False, compare=False
-    )
+    _slice_function_registry: Dict[
+        str, Callable[[Dict[str, Any]], Union[bool, List[bool]]]
+    ] = field(default_factory=dict, init=False, repr=False, hash=False, compare=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Parse the slice definitions and construct the slice functions."""
         for feature_key in self.feature_keys:
             self._parse_feature_keys(feature_key)
@@ -116,7 +116,7 @@ class SlicingConfig:
         for slice_def in self.feature_values:
             self._parse_feature_values(slice_def)
 
-    def _check_feature_keys(self, keys: Union[str, List[str]]):
+    def _check_feature_keys(self, keys: Union[str, List[str]]) -> None:
         """Check that the feature keys are valid."""
         if isinstance(keys, list):
             for key in keys:
@@ -136,8 +136,8 @@ class SlicingConfig:
         )
 
     def _parse_single_feature_value_dict(  # pylint: disable=too-many-branches
-        self, slice_def: Mapping[str, Mapping]
-    ) -> Tuple[str, Callable]:
+        self, slice_def: Mapping[str, Mapping[str, Any]]
+    ) -> Tuple[str, Callable[..., Union[bool, List[bool]]]]:
         """Parse a single feature value dictionary and register the slice function."""
         feature_key, feature_value = next(iter(slice_def.items()))
 
@@ -233,7 +233,7 @@ class SlicingConfig:
 
         return registration_key, slice_function
 
-    def _parse_feature_values(self, slice_def: Mapping[str, Mapping]) -> None:
+    def _parse_feature_values(self, slice_def: Mapping[str, Mapping[str, Any]]) -> None:
         """Parse the feature values and register the slice function."""
         if not isinstance(slice_def, Mapping):
             raise ValueError(f"Invalid `feature_value` specification: {slice_def}")
@@ -278,7 +278,9 @@ class SlicingConfig:
         self.feature_keys.append(feature_keys)
         self._parse_feature_keys(feature_keys)
 
-    def add_feature_values(self, feature_values: Mapping[str, Mapping]) -> None:
+    def add_feature_values(
+        self, feature_values: Mapping[str, Mapping[str, Any]]
+    ) -> None:
         """Add slice definition to the configuration.
 
         Parameters
@@ -290,7 +292,9 @@ class SlicingConfig:
         self.feature_values.append(feature_values)
         self._parse_feature_values(feature_values)
 
-    def get_slices(self) -> Dict[str, Callable]:
+    def get_slices(
+        self,
+    ) -> Dict[str, Callable[[Dict[str, Any]], Union[bool, List[bool]]]]:
         """Return the slice function registry."""
         return self._slice_function_registry
 
@@ -351,14 +355,11 @@ def filter_non_null(
     if isinstance(feature_keys, str):
         feature_keys = [feature_keys]
 
-    result: Union[bool, List[bool]] = pd.notnull(examples[feature_keys[0]])
+    result = pd.notnull(examples[feature_keys[0]])
     for feature_key in feature_keys[1:]:
         result &= pd.notnull(examples[feature_key])
 
-    if isinstance(result, np.ndarray):
-        result = result.tolist()
-
-    return result
+    return result.tolist()  # type: ignore
 
 
 def filter_feature_value(
@@ -404,14 +405,11 @@ def filter_feature_value(
     result = np.isin(example_values, value, invert=negate)
 
     if keep_nulls:
-        result = np.bitwise_or(result, pd.isnull(example_values))
+        result |= pd.isnull(example_values)
     else:
-        result = np.bitwise_and(result, pd.notnull(example_values))
+        result &= pd.notnull(example_values)
 
-    if isinstance(result, np.ndarray):
-        result = result.tolist()
-
-    return result
+    return result.tolist()  # type: ignore
 
 
 def filter_feature_value_range(
@@ -500,17 +498,14 @@ def filter_feature_value_range(
     )
 
     if negate:
-        result = np.bitwise_not(result)
+        result = ~result
 
     if keep_nulls:
-        result = np.bitwise_or(result, pd.isnull(example_values))
+        result |= pd.isnull(example_values)
     else:
-        result = np.bitwise_and(result, pd.notnull(example_values))
+        result &= pd.notnull(example_values)
 
-    if isinstance(result, np.ndarray):
-        result = result.tolist()
-
-    return result
+    return result.tolist()  # type: ignore
 
 
 def filter_feature_value_datetime(
@@ -602,22 +597,20 @@ def filter_feature_value_datetime(
         )
 
     if negate:
-        result = np.bitwise_not(result)
+        result = ~result
 
     if keep_nulls:
-        result = np.bitwise_or(result, pd.isnull(example_values))
+        result |= pd.isnull(example_values)
     else:
-        result = np.bitwise_and(result, pd.notnull(example_values))
+        result &= pd.notnull(example_values)
 
-    if isinstance(result, np.ndarray):
-        result = result.tolist()
-
-    return result
+    return result.tolist()  # type: ignore
 
 
 def filter_compound_feature_value(
-    examples: Dict[str, Any], slice_functions: List[Callable]
-):
+    examples: Dict[str, Any],
+    slice_functions: List[Callable[..., Union[bool, List[bool]]]],
+) -> Union[bool, List[bool]]:
     """Combine the result of multiple slices using bitwise AND.
 
     Parameters
@@ -636,13 +629,24 @@ def filter_compound_feature_value(
         the value of a feature is in the given range.
 
     """
-    return np.bitwise_and.reduce(
+    result: Union[bool, List[bool]] = np.bitwise_and.reduce(
         [slice_function(examples) for slice_function in slice_functions]
     )
 
+    return result
+
 
 # utility functions
-def is_datetime(value: Union[str, datetime.datetime, np.datetime64, np.ndarray, List]):
+def is_datetime(
+    value: Union[
+        str,
+        datetime.datetime,
+        np.datetime64,
+        np.ndarray[Any, np.dtype[Any]],
+        List[Any],
+        Any,
+    ],
+) -> bool:
     """Check if the given value is a datetime.
 
     Parameters
@@ -662,12 +666,12 @@ def is_datetime(value: Union[str, datetime.datetime, np.datetime64, np.ndarray, 
             return True
         except ValueError:
             return False
-    elif isinstance(value, (datetime.datetime, np.datetime64)):
-        return True
-    elif isinstance(value, (list, np.ndarray)):
+    if isinstance(value, (list, np.ndarray)):
         return all((is_datetime(v) for v in value))
-    else:
-        return False
+    if isinstance(value, (datetime.datetime, np.datetime64)):
+        return True
+
+    return False
 
 
 def _maybe_convert_to_datetime(min_value: Any, max_value: Any) -> Tuple[Any, Any, bool]:

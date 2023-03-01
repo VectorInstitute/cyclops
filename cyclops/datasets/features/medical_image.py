@@ -7,14 +7,18 @@ from io import BytesIO
 from typing import Any, ClassVar, Dict, Optional, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 import pyarrow as pa
 from datasets import config
 from datasets.download.streaming_download_manager import xopen
 from datasets.features import Image, features
 from datasets.utils.file_utils import is_local_path
 from datasets.utils.py_utils import string_to_dict
-from monai.data import ImageReader, ITKWriter
-from monai.transforms import Compose, LoadImage, ToNumpy
+from monai.data.image_reader import ImageReader
+from monai.data.image_writer import ITKWriter
+from monai.transforms.compose import Compose
+from monai.transforms.io.array import LoadImage
+from monai.transforms.utility.array import ToNumpy
 
 from cyclops.utils.log import setup_logging
 
@@ -24,8 +28,8 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 
 @dataclass
-class MedicalImage(Image):
-    """Medical image feature.
+class MedicalImage(Image):  # type: ignore
+    """Medical image `Feature` to read medical image files.
 
     Parameters
     ----------
@@ -49,7 +53,9 @@ class MedicalImage(Image):
     pa_type: ClassVar[Any] = pa.struct({"bytes": pa.binary(), "path": pa.string()})
     _type: str = field(default="MedicalImage", init=False, repr=False)
 
-    def encode_example(self, value: Union[str, dict, np.ndarray]) -> dict:
+    def encode_example(
+        self, value: Union[str, Dict[str, Any], npt.NDArray[Any]]
+    ) -> Dict[str, Any]:
         """Encode example into a format for Arrow.
 
         Parameters
@@ -95,9 +101,9 @@ class MedicalImage(Image):
 
     def decode_example(
         self,
-        value: dict,
+        value: Dict[str, Any],
         token_per_repo_id: Optional[Dict[str, Union[str, bool, None]]] = None,
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """Decode an example from the serialized version to the feature type version.
 
         Parameters
@@ -157,7 +163,9 @@ class MedicalImage(Image):
 
         return {"array": image, "metadata": metadata}
 
-    def _read_file_from_bytes(self, buffer: BytesIO) -> Tuple[np.ndarray, dict]:
+    def _read_file_from_bytes(
+        self, buffer: BytesIO
+    ) -> Tuple[npt.NDArray[Any], Dict[str, Any]]:
         """Read an image from bytes.
 
         Parameters
@@ -181,10 +189,10 @@ class MedicalImage(Image):
 
 
 def _encode_ndarray(
-    array: np.ndarray,
-    metadata: Optional[dict] = None,
+    array: npt.NDArray[Any],
+    metadata: Optional[Dict[str, Any]] = None,
     image_format: str = ".png",
-) -> dict:
+) -> Dict[str, Any]:
     """Encode a numpy array or torch tensor as bytes.
 
     Parameters

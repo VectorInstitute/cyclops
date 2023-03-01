@@ -21,20 +21,22 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-class MedicalImageFolderConfig(folder_based_builder.FolderBasedBuilderConfig):
+class MedicalImageFolderConfig(
+    folder_based_builder.FolderBasedBuilderConfig  # type: ignore
+):
     """BuilderConfig for MedicalImageFolder."""
 
     drop_labels: bool = None  # type: ignore
     drop_metadata: bool = None  # type: ignore
 
 
-class MedicalImageFolder(folder_based_builder.FolderBasedBuilder):
+class MedicalImageFolder(folder_based_builder.FolderBasedBuilder):  # type: ignore
     """MedicalImageFolder."""
 
     BASE_FEATURE = MedicalImage()
     BASE_COLUMN_NAME = "image"
     BUILDER_CONFIG_CLASS = MedicalImageFolderConfig
-    EXTENSIONS: List[str]  # definition at the bottom of the scriptpP
+    EXTENSIONS: List[str]  # definition at the bottom of the script
     ImageClassification.input_schema = Features({"image": MedicalImage()})
     CLASSIFICATION_TASK = ImageClassification(
         image_column="image", label_column="label"
