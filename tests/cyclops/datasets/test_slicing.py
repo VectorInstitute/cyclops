@@ -83,7 +83,7 @@ def test_no_filter():
     """Test no filter."""
     table = visits_table()
     filtered_ds = get_filtered_dataset(table=table, filter_func=no_filter)
-    assert len(visits_table) == len(filtered_ds)
+    assert len(table) == len(filtered_ds)
 
 
 @pytest.mark.integration_test
@@ -389,7 +389,7 @@ def test_compound_feature_value(
     )
 
 
-# test SlcingConfig
+@pytest.mark.integration_test
 def test_slicing_config():
     """Test SlicingConfig class."""
     value1 = ["mmHg", "kg", "mL", "mL/min"]
