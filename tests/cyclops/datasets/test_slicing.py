@@ -23,20 +23,31 @@ from cyclops.datasets.slicing import (
 )
 from cyclops.query.omop import OMOPQuerier
 
-# the test data
-synthea = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
-ops = qo.Sequential(
-    [
-        qo.ConditionEquals("gender_source_value", "M"),  # type: ignore
-        qo.Rename({"race_source_value": "race"}),  # type: ignore
-    ]
-)
+SYNTHEA = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
 
-persons_qi = synthea.person(ops=ops)
-visits_table = synthea.visit_occurrence(
-    join=qo.JoinArgs(join_table=persons_qi.query, on="person_id")
-).run()
-measurements_table = synthea.measurement().run()
+
+@pytest.fixture
+def visits_table() -> pd.DataFrame:
+    """Get the visits table."""
+    ops = qo.Sequential(
+        [
+            qo.ConditionEquals("gender_source_value", "M"),  # type: ignore
+            qo.Rename({"race_source_value": "race"}),  # type: ignore
+        ]
+    )
+
+    persons_qi = SYNTHEA.person(ops=ops)
+    visit_occurrence_table = SYNTHEA.visit_occurrence(
+        join=qo.JoinArgs(join_table=persons_qi.query, on="person_id")
+    ).run()
+
+    return visit_occurrence_table
+
+
+@pytest.fixture
+def measurement_table() -> pd.DataFrame:
+    """Get the measurements table."""
+    return SYNTHEA.measurement().run()
 
 
 def get_filtered_dataset(table: pd.DataFrame, filter_func: Callable) -> Dataset:
@@ -70,37 +81,38 @@ def get_filtered_dataset(table: pd.DataFrame, filter_func: Callable) -> Dataset:
 
 
 @pytest.mark.integration_test
-@pytest.mark.parametrize("table", [visits_table, measurements_table])
-def test_no_filter(table: pd.DataFrame):
+def test_no_filter(visits_table: pd.DataFrame):
     """Test no filter."""
-    filtered_ds = get_filtered_dataset(table, no_filter)
-    assert len(table) == len(filtered_ds)
+    filtered_ds = get_filtered_dataset(visits_table, no_filter)
+    assert len(visits_table) == len(filtered_ds)
 
 
 @pytest.mark.integration_test
-@pytest.mark.parametrize(
-    "table,column_name", [(measurements_table, "unit_source_value")]
-)
-def test_filter_non_null(table: pd.DataFrame, column_name: str):
+@pytest.mark.parametrize("column_name", ["unit_source_value"])
+def test_filter_non_null(column_name: str, measurement_table: pd.DataFrame):
     """Test filter non-null."""
     filtered_ds = get_filtered_dataset(
-        table=table, filter_func=partial(filter_non_null, feature_keys=column_name)
+        table=measurement_table,
+        filter_func=partial(filter_non_null, feature_keys=column_name),
     )
     assert None not in filtered_ds.unique(column_name)
 
 
 @pytest.mark.integration_test
 @pytest.mark.parametrize(
-    "table,column_name,value,negate, keep_nulls",
+    "column_name,value,negate, keep_nulls",
     [
-        (visits_table, "race", "asian", False, False),
-        (measurements_table, "unit_source_value", ["cm", "mm"], False, False),
-        (measurements_table, "unit_source_value", "n/a", True, False),
-        (measurements_table, "unit_source_value", "n/a", True, True),
+        ("unit_source_value", ["cm", "mm"], False, False),
+        ("unit_source_value", "n/a", True, False),
+        ("unit_source_value", "n/a", True, True),
     ],
 )
 def test_filter_feature_value(
-    table: pd.DataFrame, column_name: str, value: Any, negate: bool, keep_nulls: bool
+    measurement_table: pd.DataFrame,
+    column_name: str,
+    value: Any,
+    negate: bool,
+    keep_nulls: bool,
 ):
     """Test filter feature value."""
     filter_func = partial(
@@ -110,7 +122,7 @@ def test_filter_feature_value(
         negate=negate,
         keep_nulls=keep_nulls,
     )
-    filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
+    filtered_ds = get_filtered_dataset(table=measurement_table, filter_func=filter_func)
 
     if not isinstance(value, list):
         value = [value]
@@ -126,28 +138,18 @@ def test_filter_feature_value(
 
 @pytest.mark.integration_test
 @pytest.mark.parametrize(
-    """table,column_name,min_value,max_value,min_inclusive,max_inclusive,negate,
-    keep_nulls""",
+    "column_name,min_value,max_value,min_inclusive,max_inclusive,negate,keep_nulls",
     [
-        (visits_table, "race", "asian", "asian", True, True, False, False),
-        (visits_table, "visit_start_date", -np.inf, np.inf, True, True, False, False),
-        (
-            visits_table,
-            "visit_start_date",
-            "2014-01-14",
-            np.inf,
-            True,
-            True,
-            False,
-            False,
-        ),
-        (measurements_table, "value_as_number", 100, 1000, False, False, False, False),
-        (measurements_table, "value_as_number", 42, 420, True, True, False, True),
-        (measurements_table, "value_as_number", -np.inf, 69, True, False, True, False),
+        ("unit_source_value", "cm", "mm", True, True, False, False),
+        ("measurement_date", -np.inf, np.inf, True, True, False, False),
+        ("measurement_datetime", "2014-01-14", np.inf, True, True, False, False),
+        ("value_as_number", 100, 1000, False, False, False, False),
+        ("value_as_number", 42, 420, True, True, False, True),
+        ("value_as_number", -np.inf, 69, True, False, True, False),
     ],
 )
 def test_filter_feature_value_range(
-    table: pd.DataFrame,
+    measurement_table: pd.DataFrame,
     column_name: str,
     min_value: Any,
     max_value: Any,
@@ -176,7 +178,8 @@ def test_filter_feature_value_range(
     # If the column is not numeric or datetime, we expect a ValueError.
     col_dtype = (
         pd.Series(
-            table[column_name], dtype="datetime64[ns]" if value_is_datetime else None
+            measurement_table[column_name],
+            dtype="datetime64[ns]" if value_is_datetime else None,
         )
         .to_numpy()
         .dtype
@@ -186,17 +189,21 @@ def test_filter_feature_value_range(
         np.issubdtype(col_dtype, np.number) or np.issubdtype(col_dtype, np.datetime64)
     ):
         with pytest.raises(ValueError):
-            filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
+            filtered_ds = get_filtered_dataset(
+                table=measurement_table, filter_func=filter_func
+            )
         return
 
     # If the min_value is greater than the max_value, we expect a ValueError.
     if min_value > max_value:
         with pytest.raises(ValueError):
-            filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
+            filtered_ds = get_filtered_dataset(
+                table=measurement_table, filter_func=filter_func
+            )
         return
 
     # Otherwise, we expect the filter to work.
-    filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
+    filtered_ds = get_filtered_dataset(table=measurement_table, filter_func=filter_func)
     examples = pd.Series(
         filtered_ds[column_name], dtype="datetime64[ns]" if value_is_datetime else None
     ).to_numpy()
@@ -218,14 +225,13 @@ def test_filter_feature_value_range(
 
 @pytest.mark.integration_test
 @pytest.mark.parametrize(
-    "table,column_name,year,month,day,hour,negate,keep_nulls",
+    "column_name,year,month,day,hour,negate,keep_nulls",
     [
-        (visits_table, "visit_start_date", 2014, None, None, None, False, False),
-        (visits_table, "visit_start_date", None, [4, 6, 7], None, None, False, False),
-        (visits_table, "visit_start_date", None, None, [7, 14, 21], None, False, False),
-        (visits_table, "visit_start_date", None, None, None, [0, 12, 23], False, False),
+        ("visit_start_date", 2014, None, None, None, False, False),
+        ("visit_start_date", None, [4, 6, 7], None, None, False, False),
+        ("visit_start_date", None, None, [7, 14, 21], None, False, False),
+        ("visit_start_date", None, None, None, [0, 12, 23], False, False),
         (
-            visits_table,
             "visit_start_date",
             [2001, 2007, 2008, 2009],
             [9, 10, 11, 12],
@@ -234,11 +240,11 @@ def test_filter_feature_value_range(
             True,
             False,
         ),
-        (visits_table, "visit_start_date", 2014, 1, 14, 0, True, True),
+        ("visit_start_date", 2014, 1, 14, 0, True, True),
     ],
 )
 def test_filter_feature_value_datetime(
-    table: pd.DataFrame,
+    visits_table: pd.DataFrame,
     column_name: str,
     year: Union[int, str, List[int], List[str]],
     month: Union[int, List[int]],
@@ -260,9 +266,9 @@ def test_filter_feature_value_datetime(
     )
 
     # add a null row
-    table.loc[len(table)] = [None] * len(table.columns)
+    visits_table.loc[len(visits_table)] = [None] * len(visits_table.columns)
 
-    filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
+    filtered_ds = get_filtered_dataset(table=visits_table, filter_func=filter_func)
 
     examples = pd.to_datetime(filtered_ds[column_name])
     result = np.ones_like(examples, dtype=bool)
@@ -289,21 +295,9 @@ def test_filter_feature_value_datetime(
 
 @pytest.mark.integration_test
 @pytest.mark.parametrize(
-    "table,value_col,value,range_col,range_min,range_max, datetime_col,year,month",
+    "value_col,value,range_col,range_min,range_max, datetime_col,year,month",
     [
         (
-            measurements_table,
-            "unit_source_value",
-            ["kg", "kg/m2"],
-            "value_as_number",
-            100,
-            1000,
-            "measurement_date",
-            [1990, 1995, 2000, 2005, 2010],
-            [6, 7, 8, 9],
-        ),
-        (
-            visits_table,
             "race",
             ["asian", "black"],
             "visit_start_date",
@@ -312,11 +306,11 @@ def test_filter_feature_value_datetime(
             "visit_end_datetime",
             [2014, 2015, 2016, 2017, 2018],
             [1, 2, 3, 4, 5, 10, 11, 12],
-        ),
+        )
     ],
 )
 def test_compound_feature_value(
-    table: pd.DataFrame,
+    visits_table: pd.DataFrame,
     value_col: str,
     value: Any,
     range_col: str,
@@ -361,7 +355,7 @@ def test_compound_feature_value(
     )
 
     filtered_ds = get_filtered_dataset(
-        table=table,
+        table=visits_table,
         filter_func=partial(
             filter_compound_feature_value,
             slice_functions=[
@@ -400,7 +394,7 @@ def test_compound_feature_value(
 
 
 # test SlcingConfig
-def test_slicing_config():
+def test_slicing_config(measurement_table: pd.DataFrame):
     """Test SlicingConfig class."""
     value1 = ["mmHg", "kg", "mL", "mL/min"]
     value2 = ["mm", "cm"]
@@ -425,11 +419,10 @@ def test_slicing_config():
         },
     ]
 
-    table = measurements_table
     slice_config = SlicingConfig(
         feature_keys=feature_keys,
         feature_values=feature_values,
-        column_names=table.columns,
+        column_names=measurement_table.columns,
     )
     assert slice_config.feature_keys == feature_keys
     assert slice_config.feature_values == feature_values
@@ -437,7 +430,7 @@ def test_slicing_config():
     for slice_name, slice_func in slice_config.get_slices().items():
         assert callable(slice_func)
 
-        filtered_ds = get_filtered_dataset(table, filter_func=slice_func)
+        filtered_ds = get_filtered_dataset(measurement_table, filter_func=slice_func)
 
         # check that the filtered dataset has the correct values
         if slice_name == "filter_non_null:unit_source_value":
