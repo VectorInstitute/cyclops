@@ -26,7 +26,6 @@ from cyclops.query.omop import OMOPQuerier
 SYNTHEA = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
 
 
-@pytest.fixture
 def visits_table() -> pd.DataFrame:
     """Get the visits table."""
     ops = qo.Sequential(
@@ -44,7 +43,6 @@ def visits_table() -> pd.DataFrame:
     return visit_occurrence_table
 
 
-@pytest.fixture
 def measurement_table() -> pd.DataFrame:
     """Get the measurements table."""
     return SYNTHEA.measurement().run()
@@ -81,18 +79,20 @@ def get_filtered_dataset(table: pd.DataFrame, filter_func: Callable) -> Dataset:
 
 
 @pytest.mark.integration_test
-def test_no_filter(visits_table: pd.DataFrame):
+def test_no_filter():
     """Test no filter."""
-    filtered_ds = get_filtered_dataset(visits_table, no_filter)
+    table = visits_table()
+    filtered_ds = get_filtered_dataset(table=table, filter_func=no_filter)
     assert len(visits_table) == len(filtered_ds)
 
 
 @pytest.mark.integration_test
 @pytest.mark.parametrize("column_name", ["unit_source_value"])
-def test_filter_non_null(column_name: str, measurement_table: pd.DataFrame):
+def test_filter_non_null(column_name: str):
     """Test filter non-null."""
+    table = measurement_table()
     filtered_ds = get_filtered_dataset(
-        table=measurement_table,
+        table=table,
         filter_func=partial(filter_non_null, feature_keys=column_name),
     )
     assert None not in filtered_ds.unique(column_name)
@@ -108,7 +108,6 @@ def test_filter_non_null(column_name: str, measurement_table: pd.DataFrame):
     ],
 )
 def test_filter_feature_value(
-    measurement_table: pd.DataFrame,
     column_name: str,
     value: Any,
     negate: bool,
@@ -122,7 +121,8 @@ def test_filter_feature_value(
         negate=negate,
         keep_nulls=keep_nulls,
     )
-    filtered_ds = get_filtered_dataset(table=measurement_table, filter_func=filter_func)
+    table = measurement_table()
+    filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
 
     if not isinstance(value, list):
         value = [value]
@@ -149,7 +149,6 @@ def test_filter_feature_value(
     ],
 )
 def test_filter_feature_value_range(
-    measurement_table: pd.DataFrame,
     column_name: str,
     min_value: Any,
     max_value: Any,
@@ -169,6 +168,7 @@ def test_filter_feature_value_range(
         negate=negate,
         keep_nulls=keep_nulls,
     )
+    table = measurement_table()
 
     # Convert min_value and max_value to datetime if necessary.
     min_value, max_value, value_is_datetime = _maybe_convert_to_datetime(
@@ -178,7 +178,7 @@ def test_filter_feature_value_range(
     # If the column is not numeric or datetime, we expect a ValueError.
     col_dtype = (
         pd.Series(
-            measurement_table[column_name],
+            table[column_name],
             dtype="datetime64[ns]" if value_is_datetime else None,
         )
         .to_numpy()
@@ -189,21 +189,17 @@ def test_filter_feature_value_range(
         np.issubdtype(col_dtype, np.number) or np.issubdtype(col_dtype, np.datetime64)
     ):
         with pytest.raises(ValueError):
-            filtered_ds = get_filtered_dataset(
-                table=measurement_table, filter_func=filter_func
-            )
+            filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
         return
 
     # If the min_value is greater than the max_value, we expect a ValueError.
     if min_value > max_value:
         with pytest.raises(ValueError):
-            filtered_ds = get_filtered_dataset(
-                table=measurement_table, filter_func=filter_func
-            )
+            filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
         return
 
     # Otherwise, we expect the filter to work.
-    filtered_ds = get_filtered_dataset(table=measurement_table, filter_func=filter_func)
+    filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
     examples = pd.Series(
         filtered_ds[column_name], dtype="datetime64[ns]" if value_is_datetime else None
     ).to_numpy()
@@ -244,7 +240,6 @@ def test_filter_feature_value_range(
     ],
 )
 def test_filter_feature_value_datetime(
-    visits_table: pd.DataFrame,
     column_name: str,
     year: Union[int, str, List[int], List[str]],
     month: Union[int, List[int]],
@@ -264,11 +259,12 @@ def test_filter_feature_value_datetime(
         negate=negate,
         keep_nulls=keep_nulls,
     )
+    table = visits_table()
 
     # add a null row
-    visits_table.loc[len(visits_table)] = [None] * len(visits_table.columns)
+    table.loc[len(table)] = [None] * len(table.columns)
 
-    filtered_ds = get_filtered_dataset(table=visits_table, filter_func=filter_func)
+    filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
 
     examples = pd.to_datetime(filtered_ds[column_name])
     result = np.ones_like(examples, dtype=bool)
@@ -310,7 +306,6 @@ def test_filter_feature_value_datetime(
     ],
 )
 def test_compound_feature_value(
-    visits_table: pd.DataFrame,
     value_col: str,
     value: Any,
     range_col: str,
@@ -329,6 +324,7 @@ def test_compound_feature_value(
         negate=False,
         keep_nulls=False,
     )
+    table = visits_table()
 
     # filter range
     filter_func_range = partial(
@@ -355,7 +351,7 @@ def test_compound_feature_value(
     )
 
     filtered_ds = get_filtered_dataset(
-        table=visits_table,
+        table=table,
         filter_func=partial(
             filter_compound_feature_value,
             slice_functions=[
@@ -394,7 +390,7 @@ def test_compound_feature_value(
 
 
 # test SlcingConfig
-def test_slicing_config(measurement_table: pd.DataFrame):
+def test_slicing_config():
     """Test SlicingConfig class."""
     value1 = ["mmHg", "kg", "mL", "mL/min"]
     value2 = ["mm", "cm"]
@@ -419,10 +415,12 @@ def test_slicing_config(measurement_table: pd.DataFrame):
         },
     ]
 
+    table = measurement_table()
+
     slice_config = SlicingConfig(
         feature_keys=feature_keys,
         feature_values=feature_values,
-        column_names=measurement_table.columns,
+        column_names=table.columns,
     )
     assert slice_config.feature_keys == feature_keys
     assert slice_config.feature_values == feature_values
@@ -430,7 +428,7 @@ def test_slicing_config(measurement_table: pd.DataFrame):
     for slice_name, slice_func in slice_config.get_slices().items():
         assert callable(slice_func)
 
-        filtered_ds = get_filtered_dataset(measurement_table, filter_func=slice_func)
+        filtered_ds = get_filtered_dataset(table, filter_func=slice_func)
 
         # check that the filtered dataset has the correct values
         if slice_name == "filter_non_null:unit_source_value":

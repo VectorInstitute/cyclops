@@ -26,6 +26,8 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
+# pylint: disable=fixme
+
 
 @dataclass
 class MedicalImage(Image):  # type: ignore
