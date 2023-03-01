@@ -1,6 +1,9 @@
 """Classes for computing accuracy metrics."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Type, Union, cast
+
+import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.accuracy import _accuracy_reduce
 from cyclops.evaluate.metrics.metric import Metric
@@ -54,10 +57,10 @@ class BinaryAccuracy(BinaryStatScores, registry_key="binary_accuracy"):
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the accuracy score from the state."""
         tp, fp, tn, fn = self._final_state()
-        return _accuracy_reduce(
+        score = _accuracy_reduce(
             tp=tp,
             fp=fp,
             tn=tn,
@@ -66,6 +69,7 @@ class BinaryAccuracy(BinaryStatScores, registry_key="binary_accuracy"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, score)
 
 
 class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy"):
@@ -123,7 +127,7 @@ class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the accuracy score from the state."""
         tp, fp, tn, fn = self._final_state()
         return _accuracy_reduce(
@@ -199,7 +203,7 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the accuracy score from the state."""
         tp, fp, tn, fn = self._final_state()
         return _accuracy_reduce(
@@ -301,7 +305,7 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of Accuracy
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
         num_classes: Optional[int] = None,

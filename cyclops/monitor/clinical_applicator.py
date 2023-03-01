@@ -4,7 +4,7 @@ from typing import Callable, Dict
 
 from datasets.arrow_dataset import Dataset
 
-from cyclops.evaluate.slicing import SlicingConfig
+from cyclops.datasets.slicing import SlicingConfig
 
 
 class ClinicalShiftApplicator:
