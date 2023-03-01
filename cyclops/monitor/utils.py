@@ -2,6 +2,7 @@
 
 import importlib
 import inspect
+import os
 import pickle
 from datetime import timedelta
 from itertools import cycle
@@ -703,3 +704,32 @@ if __name__ == "__main__":
     for i in range(10):
         sleep(0.25)
     loader.stop()
+
+
+def nihcxr_preprocess(df: pd.DataFrame, nihcxr_dir: str) -> pd.DataFrame:
+    """Preprocess NIHCXR dataframe.
+
+    Add a column with the path to the image and create
+    one-hot encoded pathogies from Finding Labels column.
+
+    Parameters
+    ----------
+        df (pd.DataFrame): NIHCXR dataframe.
+
+    Returns
+    -------
+        pd.DataFrame: pre-processed NIHCXR dataframe.
+
+    """
+    # Add path column
+    df["image"] = df["Image Index"].apply(
+        lambda x: os.path.join(nihcxr_dir, "images", x)
+    )
+
+    # Create one-hot encoded pathologies
+    pathologies = df["Finding Labels"].str.get_dummies(sep="|")
+
+    # Add one-hot encoded pathologies to dataframe
+    df = pd.concat([df, pathologies], axis=1)
+
+    return df
