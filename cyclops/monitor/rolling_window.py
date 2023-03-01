@@ -40,7 +40,6 @@ class RollingWindow:
         model=None,
         verbose: bool = False,
     ):
-
         self.admin_data = admin_data
         self.shift_detector = shift_detector
         self.optimizer = optimizer

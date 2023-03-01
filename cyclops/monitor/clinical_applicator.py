@@ -20,7 +20,6 @@ class ClinicalShiftApplicator:
     """
 
     def __init__(self, shift_type: str, source, target):
-
         self.shift_type = shift_type
 
         self.method_args = {"source": source, "target": target}

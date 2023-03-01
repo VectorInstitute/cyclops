@@ -5,11 +5,12 @@ from datetime import datetime
 from typing import Any, List, Optional, Union
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from pandas.errors import PerformanceWarning
 
 
-def to_timestamp(data: Union[pd.Series, np.typing.NDArray[Any]]) -> pd.Series:
+def to_timestamp(data: Union[pd.Series, npt.NDArray[Any]]) -> pd.Series:
     """Convert a Pandas series or NumPy array to a datetime/timestamp type.
 
     Parameters
