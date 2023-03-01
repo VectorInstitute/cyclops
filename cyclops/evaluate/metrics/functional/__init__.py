@@ -1,4 +1,4 @@
-"""Metrics functional package."""
+"""Evaluation metrics functional package."""
 
 from cyclops.evaluate.metrics.functional.accuracy import (  # noqa: F401
     accuracy,
