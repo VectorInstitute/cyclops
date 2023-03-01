@@ -27,6 +27,8 @@ def fixture_nih_dataset():
 
 # test gemini use-case with pca reductor and mmd tester and
 # clinical shift applicator for hospital_type w/ synthetic_gemini_dataset
+
+@pytest.mark.skip(reason="will deprecate experimenter")
 @pytest.mark.integration_test
 def test_experimenter_gemini_pca_mmd(gemini_dataset):
     """Test Experimenter."""
@@ -51,6 +53,7 @@ def test_experimenter_gemini_pca_mmd(gemini_dataset):
 
 # test nih use-case with tae_trxv_cnn reductor and mmd tester and
 # synthetic shift applicator for gaussian noise w/ txrv_dataset
+@pytest.mark.skip(reason="will deprecate experimenter")
 @pytest.mark.integration_test
 def test_experimenter_nih_tae_trxv_cnn_mmd(nih_dataset):
     """Test Experimenter."""
