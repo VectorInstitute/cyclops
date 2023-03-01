@@ -398,7 +398,6 @@ class LKWrapper:
         num_features=None,
         num_classes=None,
     ):
-
         self.proj = self.choose_proj(X_s, proj_type, num_features, num_classes)
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)

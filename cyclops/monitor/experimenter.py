@@ -41,7 +41,6 @@ class Experimenter:
             Union[SyntheticShiftApplicator, ClinicalShiftApplicator]
         ] = None,
     ):
-
         self.detector = detector
         self.shiftapplicator = shiftapplicator
 

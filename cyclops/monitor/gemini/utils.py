@@ -188,7 +188,6 @@ def get_dataset_hospital(
 
     # get experimental dataset
     if dataset == "covid":
-
         ids_source = admin_data.loc[
             (
                 (admin_data["admit_timestamp"].dt.date > datetime.date(2019, 1, 1))

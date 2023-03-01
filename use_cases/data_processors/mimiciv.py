@@ -1297,7 +1297,6 @@ class MIMICIVProcessor:
             self.temp_params["query"] == mimic.CHARTEVENTS
             and self.temp_params["top_n_events"]
         ):
-
             LOGGER.info("Getting top %d events", self.temp_params["top_n_events"])
             top_events = get_top_events(
                 self.cleaned_dir, self.temp_params["top_n_events"]
