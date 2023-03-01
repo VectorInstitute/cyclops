@@ -1,13 +1,9 @@
 """integration tests for Experimenter module."""
 
-import numpy as np
-import pandas as pd
 import pytest
-import torch
-from torch.utils.data import Dataset
+from synthetic_datasets import synthetic_gemini_dataset, synthetic_nih_dataset
 
 from cyclops.monitor.clinical_applicator import ClinicalShiftApplicator
-from cyclops.monitor.datasets.utils import synthetic_gemini_dataset
 from cyclops.monitor.detector import Detector
 from cyclops.monitor.experimenter import Experimenter
 from cyclops.monitor.reductor import Reductor
@@ -18,41 +14,26 @@ from cyclops.monitor.tester import TSTester
 @pytest.fixture(name="gemini_dataset")
 def fixture_gemini_dataset():
     """Create a test input for GEMINI use-case."""
-    metadata, features, metadata_mapping = synthetic_gemini_dataset()
-    return features.reshape(features.shape[0], -1), metadata, metadata_mapping
+    dataset = synthetic_gemini_dataset()
+    return dataset
 
 
-@pytest.fixture(name="txrv_dataset")
-def fixture_txrv_dataset():
+@pytest.fixture(name="nih_dataset")
+def fixture_nih_dataset():
     """Create a test input for NIH use-case."""
-
-    class TXRVDataset(Dataset):
-        """TXRV Dummy Dataset."""
-
-        def __init__(self, num_samples, channels, height, width, num_labels=14):
-            self.len = num_samples
-            self.data = torch.rand(num_samples, channels, height, width)
-            self.labels = torch.rand(num_samples, num_labels)
-
-        def __getitem__(self, index):
-            item = {"img": self.data[index], "lab": self.labels[index]}
-            return item
-
-        def __len__(self):
-            return self.len
-
-    dataset = TXRVDataset(8, 1, 224, 224)
-    metadata = pd.DataFrame(np.random.randint(0, 2, size=(8, 2)), columns=list("AB"))
-    metadata_mapping = {"A": "A", "B": "B"}
-    return dataset, metadata, metadata_mapping
+    dataset = synthetic_nih_dataset()
+    return dataset
 
 
 # test gemini use-case with pca reductor and mmd tester and
 # clinical shift applicator for hospital_type w/ synthetic_gemini_dataset
+
+
+@pytest.mark.skip(reason="will deprecate experimenter")
 @pytest.mark.integration_test
 def test_experimenter_gemini_pca_mmd(gemini_dataset):
     """Test Experimenter."""
-    X, metadata, metadata_mapping = gemini_dataset
+    dataset = gemini_dataset
     reductor = Reductor("PCA", n_components=2)
     tester = TSTester("mmd")
     detector = Detector(reductor, tester)
@@ -60,7 +41,7 @@ def test_experimenter_gemini_pca_mmd(gemini_dataset):
     target = ["2017-06-01", "2020-01-01"]
     applicator = ClinicalShiftApplicator("time", source, target)
     experimenter = Experimenter("sensitivity_test", detector, applicator)
-    results = experimenter.run(X, metadata, metadata_mapping)
+    results = experimenter.run(dataset)
 
     assert list(results.keys()) == [
         "samples",
@@ -73,16 +54,17 @@ def test_experimenter_gemini_pca_mmd(gemini_dataset):
 
 # test nih use-case with tae_trxv_cnn reductor and mmd tester and
 # synthetic shift applicator for gaussian noise w/ txrv_dataset
+@pytest.mark.skip(reason="will deprecate experimenter")
 @pytest.mark.integration_test
-def test_experimenter_nih_tae_trxv_cnn_mmd(txrv_dataset):
+def test_experimenter_nih_tae_trxv_cnn_mmd(nih_dataset):
     """Test Experimenter."""
     reductor = Reductor("TAE_txrv_CNN")
     tester = TSTester("mmd")
-    dataset, metadata, metadata_mapping = txrv_dataset
+    dataset = nih_dataset
     detector = Detector(reductor, tester)
     applicator = SyntheticShiftApplicator("gn_shift")
     experimenter = Experimenter("sensitivity_test", detector, applicator)
-    results = experimenter.run(dataset, metadata, metadata_mapping)
+    results = experimenter.run(dataset)
 
     assert list(results.keys()) == [
         "samples",
