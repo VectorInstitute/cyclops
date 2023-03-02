@@ -1,0 +1,3 @@
+[submodule "docs/cyclops-webpage"]
+	path = docs/cyclops-webpage
+	url = git@github.com:amrit110/cyclops-webpage.git
