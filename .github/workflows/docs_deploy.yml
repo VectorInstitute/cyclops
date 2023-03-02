@@ -47,7 +47,6 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: true
       - uses: actions/setup-node@v3
-        working-directory: docs/cyclops-webpage
         with:
           node-version: 18
           cache: yarn
