@@ -20,7 +20,6 @@ on:
       - '**.py'
       - poetry.lock
       - pyproject.toml
-      - requirements.txt
       - '**.ipynb'
 
 jobs:
