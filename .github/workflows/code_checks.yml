@@ -10,7 +10,6 @@ on:
       - '**.py'
       - poetry.lock
       - pyproject.toml
-      - requirements.txt
       - '**.ipynb'
   pull_request:
     branches:

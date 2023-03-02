@@ -11,9 +11,9 @@ on:
       - '**.ipynb'
       - poetry.lock
       - pyproject.toml
-      - requirements.txt
       - '**.rst'
       - '**.md'
+      - docs/cyclops-webpage
 
 jobs:
   build:
