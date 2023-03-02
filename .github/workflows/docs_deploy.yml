@@ -25,6 +25,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install libcurl4-openssl-dev libssl-dev pandoc
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - name: Install dependencies, build docs and coverage report
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
       - uses: actions/setup-python@v4.3.0
@@ -44,8 +46,19 @@ jobs:
           file: ./coverage.xml
           name: codecov-umbrella
           fail_ci_if_error: true
-      - name: Deploy to Github pages
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
+      - uses: actions/setup-node@v3
+        working-directory: docs/cyclops-webpage
         with:
-          branch: github_pages
-          folder: docs/build/html
+          node-version: 18
+          cache: yarn
+      - name: Build webpage
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+          cp -r ../build/html build/api
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: github_pages
+          publish_dir: ./build

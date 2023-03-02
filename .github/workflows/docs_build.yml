@@ -24,6 +24,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install libcurl4-openssl-dev libssl-dev pandoc
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - name: Install dependencies, build docs and coverage report
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
       - uses: actions/setup-python@v4.3.0
@@ -37,3 +39,13 @@ jobs:
           # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
+      - uses: actions/setup-node@v3
+        working-directory: docs/cyclops-webpage
+        with:
+          node-version: 18
+          cache: yarn
+      - name: Build webpage
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+          cp -r ../build/html build/api
