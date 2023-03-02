@@ -40,12 +40,13 @@ jobs:
           cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
       - uses: actions/setup-node@v3
-        working-directory: docs/cyclops-webpage
         with:
           node-version: 18
           cache: yarn
+          cache-dependency-path: '**/yarn.lock'
       - name: Build webpage
         run: |
+          cd docs/cyclops-webpage
           yarn install --frozen-lockfile
           yarn build
           cp -r ../build/html build/api
