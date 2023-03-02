@@ -55,8 +55,10 @@ class Formatter(logging.Formatter):
     """
 
     def __init__(
-        self, msg: Optional[str] = formatter_message(LOG_FORMAT, True), use_color=True
-    ):
+        self,
+        msg: Optional[str] = formatter_message(LOG_FORMAT, True),
+        use_color: bool = True,
+    ) -> None:
         """Instantiate.
 
         Parameters
@@ -98,8 +100,8 @@ def setup_logging(
     log_level: Union[int, str] = "DEBUG",
     print_level: Union[int, str] = "INFO",
     logger: Optional[logging.Logger] = None,
-    use_color: Optional[bool] = True,
-):
+    use_color: bool = True,
+) -> None:
     """Create logger, and set it up.
 
     Parameters

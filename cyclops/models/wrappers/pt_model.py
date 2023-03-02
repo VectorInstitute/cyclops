@@ -1,7 +1,8 @@
 """PyTorch model wrapper."""
+
 import logging
 import os
-from typing import Any, Callable, Dict, List, Literal, Sequence, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -111,11 +112,11 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         criterion: Union[str, nn.Module],
         optimizer: Union[str, Optimizer] = torch.optim.SGD,
         lr: float = 0.01,
-        lr_scheduler: Union[str, TorchLRScheduler] = None,
+        lr_scheduler: Optional[Union[str, TorchLRScheduler]] = None,
         lr_update_per_batch: bool = False,
         batch_size: int = 32,
         max_epochs: int = 10,
-        activation: Union[str, nn.Module] = None,
+        activation: Optional[Union[str, nn.Module]] = None,
         train_loader=DataLoader,
         test_loader=DataLoader,
         warm_start: bool = False,
@@ -123,7 +124,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         save_every: int = -1,
         save_best_only: bool = True,
         device: Union[str, torch.device] = "cpu",
-        seed: int = None,
+        seed: Optional[int] = None,
         deterministic: bool = False,
         **kwargs,
     ):
@@ -202,7 +203,9 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         return instance_or_class(**kwargs)
 
-    def _initialize_module(self, module_name: str, default: str = None, **extra_kwargs):
+    def _initialize_module(
+        self, module_name: str, default: Optional[str] = None, **extra_kwargs
+    ):
         """Initialize a module.
 
         Parameters
@@ -745,7 +748,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         X,
         y,
         parameters: Union[Dict, List[Dict]],
-        metric: Union[str, Callable, Sequence, Dict] = None,
+        metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
         **kwargs,
     ):

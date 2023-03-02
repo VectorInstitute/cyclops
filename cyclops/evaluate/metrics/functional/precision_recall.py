@@ -1,9 +1,9 @@
 """Functions for computing precision and recall scores on different input types."""
 
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, cast
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from sklearn.metrics._classification import _prf_divide
 
 from cyclops.evaluate.metrics.functional.stat_scores import (
@@ -22,13 +22,13 @@ from cyclops.evaluate.metrics.utils import (
 
 
 def _precision_recall_reduce(  # pylint: disable=too-many-arguments
-    tp: np.ndarray,
-    fp: np.ndarray,
-    fn: np.ndarray,
+    tp: Union[npt.NDArray[np.int_], np.int_],
+    fp: Union[npt.NDArray[np.int_], np.int_],
+    fn: Union[npt.NDArray[np.int_], np.int_],
     metric: Literal["precision", "recall"],
     average: Literal["micro", "macro", "weighted", None],
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[np.ndarray, float]:
+) -> Union[npt.NDArray[np.float_], float]:
     """Compute precision or recall scores and apply specified average.
 
     Parameters
@@ -78,7 +78,7 @@ def _precision_recall_reduce(  # pylint: disable=too-many-arguments
     if average == "weighted":
         weights = tp + fn
         if np.sum(weights) == 0:
-            result = np.ones_like(score)
+            result = np.ones_like(score, dtype=np.float64)
             if zero_division in ["warn", 0]:
                 result = np.zeros_like(score)
             return result
@@ -88,14 +88,14 @@ def _precision_recall_reduce(  # pylint: disable=too-many-arguments
     if average is not None and score.ndim != 0 and len(score) > 1:
         result = np.average(score, weights=weights)
     else:
-        result = _get_value_if_singleton_array(score)
+        result = _get_value_if_singleton_array(score)  # type: ignore[assignment]
 
     return result
 
 
 def binary_precision(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
     threshold: float = 0.5,
     zero_division: Literal["warn", 0, 1] = "warn",
@@ -104,9 +104,9 @@ def binary_precision(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     pos_label : int, default=1
         The label of the positive class.
@@ -142,7 +142,7 @@ def binary_precision(  # pylint: disable=too-many-arguments
 
     tp, fp, _, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
 
-    return _precision_recall_reduce(
+    precision_score = _precision_recall_reduce(
         tp,
         fp,
         fn,
@@ -151,22 +151,24 @@ def binary_precision(  # pylint: disable=too-many-arguments
         zero_division=zero_division,
     )
 
+    return cast(float, precision_score)
+
 
 def multiclass_precision(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[npt.NDArray[np.float_], float]:
     """Compute precision score for multiclass classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_classes : int
         Number of classes in the dataset.
@@ -177,6 +179,7 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the precision score for each class. Otherwise,
         use one of the following options to compute the average precision score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false positives.
         - ``macro``: Calculate metric for each class, and find their unweighted
@@ -228,14 +231,14 @@ def multiclass_precision(  # pylint: disable=too-many-arguments
 
 
 def multilabel_precision(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[npt.NDArray[np.float_], float]:
     """Compute precision score for multilabel classification tasks.
 
     The input is expected to be an array-like of shape (N, L), where N is the
@@ -245,9 +248,9 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_labels : int
         Number of labels for the task.
@@ -256,6 +259,7 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the precision score for each label. Otherwise,
         use one of the following options to compute the average precision score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false positives.
         - ``macro``: Calculate metric for each label, and find their unweighted
@@ -307,8 +311,8 @@ def multilabel_precision(  # pylint: disable=too-many-arguments
 
 
 def precision(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
     num_classes: Optional[int] = None,
@@ -317,7 +321,7 @@ def precision(  # pylint: disable=too-many-arguments
     num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[npt.NDArray[np.float_], float]:
     """Compute precision score for different classification tasks.
 
     Precision is the ratio of correctly predicted positive observations to the
@@ -325,9 +329,9 @@ def precision(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     task : Literal["binary", "multiclass", "multilabel"]
         Task type.
@@ -344,8 +348,8 @@ def precision(  # pylint: disable=too-many-arguments
         Number of labels. Only used for multilabel classification.
     average : Literal["micro", "macro", "weighted", None]
         Average to apply. If None, return scores for each class. Default is
-        None.
-        One of:
+        None. One of:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and and false positives.
         - ``macro``: Calculate metrics for each label/class, and find their
@@ -371,14 +375,14 @@ def precision(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import precision
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.9, 0.8, 0.3]
     >>> precision(target, preds, task="binary")
     1.
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import precision
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1],
@@ -387,7 +391,7 @@ def precision(  # pylint: disable=too-many-arguments
     ...     average="macro")
     0.8333333333333334
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import precision
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
@@ -397,30 +401,30 @@ def precision(  # pylint: disable=too-many-arguments
 
     """
     if task == "binary":
-        precision_score = binary_precision(
+        return binary_precision(
             target,
             preds,
             pos_label=pos_label,
             threshold=threshold,
             zero_division=zero_division,
         )
-    elif task == "multiclass":
+    if task == "multiclass":
         assert (
             isinstance(num_classes, int) and num_classes > 0
         ), "Number of classes must be specified for multiclass classification."
-        precision_score = multiclass_precision(
+        return multiclass_precision(
             target,
             preds,
             num_classes=num_classes,
-            average=average,  # type: ignore
+            average=average,
             top_k=top_k,
             zero_division=zero_division,
         )
-    elif task == "multilabel":
+    if task == "multilabel":
         assert (
             isinstance(num_labels, int) and num_labels > 0
         ), "Number of labels must be specified for multilabel classification."
-        precision_score = multilabel_precision(
+        return multilabel_precision(
             target,
             preds,
             num_labels=num_labels,
@@ -429,29 +433,27 @@ def precision(  # pylint: disable=too-many-arguments
             top_k=top_k,
             zero_division=zero_division,
         )
-    else:
-        raise ValueError(
-            f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
-            f"'multilabel'."
-        )
 
-    return precision_score
+    raise ValueError(
+        f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
+        f"'multilabel'."
+    )
 
 
 def binary_recall(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
     threshold: float = 0.5,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> float:
     """Compute recall score for binary classification.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     pos_label : int, default=1
         Label of the positive class.
@@ -481,7 +483,7 @@ def binary_recall(  # pylint: disable=too-many-arguments
 
     tp, fp, _, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
 
-    return _precision_recall_reduce(
+    recall_score = _precision_recall_reduce(
         tp,
         fp,
         fn,
@@ -490,22 +492,24 @@ def binary_recall(  # pylint: disable=too-many-arguments
         zero_division=zero_division,
     )
 
+    return cast(float, recall_score)
+
 
 def multiclass_recall(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[npt.NDArray[np.float_], float]:
     """Compute recall score for multiclass classification.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_classes : int
         Number of classes.
@@ -516,6 +520,7 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None]
         Average to apply. If None, return scores for each class. Default is
         None. One of:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false negatives.
         - ``macro``: Calculate metrics for each label, and find their unweighted
@@ -532,7 +537,6 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
     float or numpy.ndarray
         Recall score. If ``average`` is None, return a numpy.ndarray of
         recall scores for each class.
-
 
     Raises
     ------
@@ -569,14 +573,14 @@ def multiclass_recall(  # pylint: disable=too-many-arguments
 
 
 def multilabel_recall(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[npt.NDArray[np.float_], float]:
     """Compute recall score for multilabel classification tasks.
 
     The input is expected to be an array-like of shape (N, L), where N is the
@@ -586,9 +590,9 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_labels : int
         Number of labels in the dataset.
@@ -597,6 +601,7 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -619,7 +624,6 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
     ValueError
         If ``average`` is not one of ``micro``, ``macro``, ``weighted``
         or ``None``.
-
 
     Examples
     --------
@@ -649,17 +653,17 @@ def multilabel_recall(  # pylint: disable=too-many-arguments
 
 
 def recall(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
-    num_classes: int = None,
+    num_classes: Optional[int] = None,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
-    num_labels: int = None,
+    num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[npt.NDArray[np.float_], float]:
     """Compute recall score for different classification tasks.
 
     Recall is the ratio tp / (tp + fn) where tp is the number of true positives
@@ -668,9 +672,9 @@ def recall(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     task : Literal["binary", "multiclass", "multilabel"]
         Task type.
@@ -685,16 +689,16 @@ def recall(  # pylint: disable=too-many-arguments
         computing multiclass or multilabel metrics. Default is None.
     num_labels : Optional[int]
         Number of labels. Only used for multilabel classification.
-    average : Literal["micro", "macro", "weighted", None]
-        Average to apply. If None, return scores for each class. Default is
-        None. One of:
+    average : Literal["micro", "macro", "weighted", None], default=None
+        Average to apply. If None, return scores for each class. One of:
+
         - ``micro``: Calculate metrics globally by counting the total true
-        positives and false negatives.
+            positives and false negatives.
         - ``macro``: Calculate metrics for each label, and find their
-        unweighted mean. This does not take label imbalance into account.
+            unweighted mean. This does not take label imbalance into account.
         - ``weighted``: Calculate metrics for each label, and find their
-        average weighted by support (the number of true instances for
-        each label). This alters ``macro`` to account for label imbalance.
+            average weighted by support (the number of true instances for
+            each label). This alters ``macro`` to account for label imbalance.
     zero_division : Literal["warn", 0, 1]
         Value to return when there are no true positives or true negatives.
         If set to ``warn``, this acts as 0, but warnings are also raised.
@@ -713,21 +717,21 @@ def recall(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import recall
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.4, 0.2, 0.0, 0.6, 0.9]
     >>> recall(target, preds, task="binary")
     0.3333333333333333
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import recall
     >>> target = [1, 1, 2, 0, 2, 2]
     >>> preds = [1, 2, 2, 0, 2, 0]
     >>> recall(target, preds, task="multiclass", num_classes=3)
     array([1.        , 0.5       , 0.66666667])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import recall
     >>> target = [[1, 0, 1], [0, 1, 0]]
     >>> preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]
@@ -736,30 +740,30 @@ def recall(  # pylint: disable=too-many-arguments
 
     """
     if task == "binary":
-        recall_score = binary_recall(
+        return binary_recall(
             target,
             preds,
             pos_label=pos_label,
             threshold=threshold,
             zero_division=zero_division,
         )
-    elif task == "multiclass":
+    if task == "multiclass":
         assert (
             isinstance(num_classes, int) and num_classes > 0
         ), "Number of classes must be specified for multiclass classification."
-        recall_score = multiclass_recall(
+        return multiclass_recall(
             target,
             preds,
             num_classes=num_classes,
-            average=average,  # type: ignore
+            average=average,
             top_k=top_k,
             zero_division=zero_division,
         )
-    elif task == "multilabel":
+    if task == "multilabel":
         assert (
             isinstance(num_labels, int) and num_labels > 0
         ), "Number of labels must be specified for multilabel classification."
-        recall_score = multilabel_recall(
+        return multilabel_recall(
             target,
             preds,
             num_labels=num_labels,
@@ -768,10 +772,8 @@ def recall(  # pylint: disable=too-many-arguments
             top_k=top_k,
             zero_division=zero_division,
         )
-    else:
-        raise ValueError(
-            f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
-            f"'multilabel'."
-        )
 
-    return recall_score
+    raise ValueError(
+        f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
+        f"'multilabel'."
+    )

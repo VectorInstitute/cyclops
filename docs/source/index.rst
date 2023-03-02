@@ -7,15 +7,6 @@ Welcome to cyclops's documentation!
    :caption: Contents:
 
    intro
-   design
-   gemini_hpc
    contributing
+   tutorials
    api
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

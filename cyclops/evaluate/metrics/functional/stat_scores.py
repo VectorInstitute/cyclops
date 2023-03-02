@@ -9,8 +9,8 @@ and probabilities.
 from typing import Literal, Optional, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 import scipy as sp
-from numpy.typing import ArrayLike
 from sklearn.metrics import multilabel_confusion_matrix
 from sklearn.preprocessing import label_binarize
 
@@ -23,12 +23,12 @@ from cyclops.evaluate.metrics.utils import (
 
 
 def _stat_scores_compute(
-    tp: Union[np.ndarray, np.int_],
-    fp: Union[np.ndarray, np.int_],
-    tn: Union[np.ndarray, np.int_],
-    fn: Union[np.ndarray, np.int_],
+    tp: Union[npt.NDArray[np.int_], np.int_],
+    fp: Union[npt.NDArray[np.int_], np.int_],
+    tn: Union[npt.NDArray[np.int_], np.int_],
+    fn: Union[npt.NDArray[np.int_], np.int_],
     classwise: Optional[bool] = True,
-) -> np.ndarray:
+) -> npt.NDArray[np.int_]:
     """Compute true positives, false positives, true negatives and false negatives.
 
     Concatenates the results in a single array, along with the support.
@@ -69,20 +69,20 @@ def _stat_scores_compute(
             np.expand_dims(tp, axis=-1) + np.expand_dims(fn, axis=-1),  # support
         ]
 
-    output: np.ndarray = np.concatenate(stats, axis=-1)
+    output: npt.NDArray[np.int_] = np.concatenate(stats, axis=-1)
 
     return output
 
 
 def _stat_scores_from_confmat(
-    target: np.ndarray,
-    preds: np.ndarray,
-    labels: Optional[ArrayLike] = None,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
+    labels: Optional[npt.ArrayLike] = None,
 ) -> Tuple[
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
 ]:
     """Compute true positives, false positives, true negatives and false negatives.
 
@@ -146,8 +146,8 @@ def _binary_stat_scores_args_check(threshold: float, pos_label: int) -> None:
 
 
 def _binary_stat_scores_format(
-    target: ArrayLike, preds: ArrayLike, threshold: float, pos_label: int
-) -> Tuple[np.ndarray, np.ndarray]:
+    target: npt.ArrayLike, preds: npt.ArrayLike, threshold: float, pos_label: int
+) -> Tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]:
     """Format the input for computing binary stat scores.
 
     Checks that ``target`` and ``preds`` are binary and have the same shape.
@@ -156,9 +156,9 @@ def _binary_stat_scores_format(
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions.
     threshold : float
         Threshold for converting logits and probability predictions to binary
@@ -224,28 +224,28 @@ def _binary_stat_scores_format(
         if not np.all(np.logical_and(preds >= 0.0, preds <= 1.0)):
             preds = sigmoid(preds)  # convert logits to probabilities
 
-        preds = (preds >= threshold).astype(np.int_)
+        preds = preds >= threshold  # binarize the predictions
 
     return target.astype(np.int_), preds.astype(np.int_)
 
 
 def _binary_stat_scores_update(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
 ) -> Tuple[
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
 ]:
     """Compute the statistics for binary inputs.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions.
     pos_label : int, default=1
         The positive label to report. Can be either 0, 1.
@@ -266,18 +266,18 @@ def _binary_stat_scores_update(
 
 
 def binary_stat_scores(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
     threshold: float = 0.5,
-) -> np.ndarray:
+) -> npt.NDArray[np.int_]:
     """Compute the stat scores for binary inputs.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions.
     pos_label : int, default=1
         The label to use for the positive class.
@@ -320,8 +320,11 @@ def binary_stat_scores(
 
 
 def _multiclass_stat_scores_format(
-    target: ArrayLike, preds: ArrayLike, num_classes: int, top_k: Optional[int] = 1
-) -> Tuple[np.ndarray, np.ndarray]:
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
+    num_classes: int,
+    top_k: Optional[int] = 1,
+) -> Tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]:
     """Format the target and preds for multiclass inputs.
 
     Checks that the target and preds are of the same length and that the target
@@ -330,9 +333,9 @@ def _multiclass_stat_scores_format(
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions.
     num_classes : int
         The total number of classes for the problem.
@@ -360,9 +363,11 @@ def _multiclass_stat_scores_format(
 
     """
     # convert target and preds to numpy arrays
-    target, preds, type_target, type_preds = common_input_checks_and_format(
-        target, preds
-    )
+    formatted = common_input_checks_and_format(target, preds)
+    target: npt.NDArray[np.int_] = formatted[0]  # type: ignore[no-redef]
+    preds: npt.NDArray[np.int_] = formatted[1]  # type: ignore[no-redef]
+    type_target: str = formatted[2]
+    type_preds: str = formatted[3]
 
     # check the target
     if type_target not in ["binary", "multiclass"]:
@@ -400,10 +405,10 @@ def _multiclass_stat_scores_format(
 
     # handle probabilities and logits
     if type_preds == "continuous-multioutput":
-        if not np.all(np.logical_and(preds >= 0.0, preds <= 1.0)):
+        if not np.all(np.logical_and(preds >= 0.0, preds <= 1.0)):  # type: ignore
             preds = sp.special.softmax(preds, axis=1)  # convert logits to probabilities
 
-        if not np.allclose(1, preds.sum(axis=1)):
+        if not np.allclose(1, preds.sum(axis=1)):  # type: ignore[union-attr]
             raise ValueError(
                 "``preds`` need to be probabilities for multiclass problems"
                 " i.e. they should sum up to 1.0 over classes"
@@ -413,18 +418,18 @@ def _multiclass_stat_scores_format(
         preds = select_topk(preds, top_k or 1)
         target = label_binarize(target, classes=np.arange(num_classes))
 
-    return target.astype(np.int_), preds.astype(np.int_)
+    return target.astype(np.int_), preds.astype(np.int_)  # type: ignore[union-attr]
 
 
 def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
-    target: np.ndarray,
-    preds: np.ndarray,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
 ) -> Tuple[
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
 ]:
     """Update the stat scores for multiclass inputs.
 
@@ -453,19 +458,19 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
 
 
 def multiclass_stat_scores(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
     top_k: Optional[int] = None,
     classwise: Optional[bool] = True,
-) -> np.ndarray:
+) -> npt.NDArray[np.int_]:
     """Compute stat scores for multiclass targets.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         The ground truth values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         The predictions. If determined to be in continuous format, will be
         converted to multiclass using the ``top_k`` parameter.
     num_classes : int
@@ -507,19 +512,19 @@ def multiclass_stat_scores(  # pylint: disable=too-many-arguments
 
 
 def _multilabel_stat_scores_format(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
-    top_k: int = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    top_k: Optional[int] = None,
+) -> Tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]:
     """Format the target and preds for multilabel inputs.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions.
     num_labels : int
         The total number of labels for the problem.
@@ -579,28 +584,28 @@ def _multilabel_stat_scores_format(
         if top_k is not None:
             preds = select_topk(preds, top_k)
         else:
-            preds = (preds >= threshold).astype(np.int_)
+            preds = preds >= threshold
 
     return target.astype(np.int_), preds.astype(np.int_)
 
 
 def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
 ) -> Tuple[
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
-    Union[np.ndarray, np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
+    Union[npt.NDArray[np.int_], np.int_],
 ]:
     """Update the stat scores for multilabel inputs.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions.
     num_labels : int
         The total number of labels for the problem.
@@ -623,20 +628,20 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
 
 
 def multilabel_stat_scores(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     labelwise: Optional[bool] = False,
-) -> np.ndarray:
+) -> npt.NDArray[np.int_]:
     """Compute the stat scores for multilabel inputs.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions.
     num_labels : int
         The total number of labels for the problem.
@@ -689,8 +694,8 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
 
 
 def stat_scores(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
     threshold: float = 0.5,
@@ -699,7 +704,7 @@ def stat_scores(  # pylint: disable=too-many-arguments
     top_k: Optional[int] = None,
     num_labels: Optional[int] = None,
     labelwise: Optional[bool] = False,
-) -> np.ndarray:
+) -> npt.NDArray[np.int_]:
     """Compute stat scores for binary, multiclass or multilabel problems.
 
     This function acts as an entry point to the specialized functions for each
@@ -707,9 +712,9 @@ def stat_scores(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions.
     task : Literal["binary", "multiclass", "multilabel"]
         The task type. Can be either ``binary``, ``multiclass`` or
@@ -746,14 +751,14 @@ def stat_scores(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import tat_scores
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
     >>> stat_scores(target, preds, task="binary")
     array([1, 0, 2, 1, 2])
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import multiclass_stat_scores
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 2, 1, 2, 0]
@@ -762,7 +767,7 @@ def stat_scores(  # pylint: disable=too-many-arguments
             [0, 1, 3, 1, 1],
             [1, 1, 1, 2, 3]])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import stat_scores
     >>> target = [[0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]

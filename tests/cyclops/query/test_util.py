@@ -3,12 +3,16 @@
 import pytest
 from sqlalchemy import Table, column, select
 from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy.types import Integer
 
 from cyclops.query.util import (
     DBTable,
+    _check_column_type,
     _to_select,
     _to_subquery,
+    ckwarg,
     drop_columns,
+    ends_with,
     equals,
     filter_columns,
     get_column,
@@ -19,8 +23,10 @@ from cyclops.query.util import (
     process_column,
     process_elem,
     process_list,
+    remove_kwargs,
     rename_columns,
     reorder_columns,
+    starts_with,
     table_params_to_type,
     trim_columns,
 )
@@ -29,7 +35,44 @@ from cyclops.query.util import (
 @pytest.fixture
 def test_table():
     """Test table input."""
-    return select(column("a"), column("b"), column("c"))
+    return select(process_column(column("a"), to_int=True), column("b"), column("c"))
+
+
+def test__check_column_type(test_table):  # pylint: disable=redefined-outer-name
+    """Test _check_column_type fn."""
+    assert _check_column_type(test_table, ["a"], Integer)
+    with pytest.raises(ValueError):
+        assert _check_column_type(test_table, ["b"], Integer, raise_error=True)
+
+
+def test_ckwarg():
+    """Test ckwarg."""
+    assert ckwarg({"arg1": 1}, "arg1") == 1
+    assert ckwarg({"arg1": 1}, "arg2") is None
+
+
+def test_ends_with():
+    """Test ends_with."""
+    test_col = column("a")
+    assert (
+        str(ends_with(test_col, "a")) == "trim(lower(CAST(a AS VARCHAR))) LIKE :trim_1"
+    )
+
+
+def test_starts_with():
+    """Test starts_with fn."""
+    test_col = column("a")
+    assert (
+        str(starts_with(test_col, "a"))
+        == "trim(lower(CAST(a AS VARCHAR))) LIKE :trim_1"
+    )
+
+
+def test_remove_kwargs():
+    """Test remove_kwargs."""
+    kwargs = {"arg1": 1, "arg2": 2, "arg3": 3}
+    assert "arg2" not in remove_kwargs(kwargs, "arg2")
+    assert "arg1" not in remove_kwargs(kwargs, ["arg2", "arg1"])
 
 
 def test__to_subquery():
@@ -146,7 +189,7 @@ def test_process_column():
     processed_col = process_column(test_col, to_date=True)
     assert str(processed_col) == "CAST(a AS DATE)"
     processed_col = process_column(test_col, to_timestamp=True)
-    assert str(processed_col) == "CAST(a AS TIMESTAMP)"
+    assert str(processed_col) == "CAST(a AS DATETIME)"
     test_col.type = "VARCHAR"
     processed_col = process_column(test_col, lower=True, trim=True)
     assert str(processed_col) == "trim(lower(a))"

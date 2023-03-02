@@ -1,11 +1,10 @@
 """Clinical Shift Applicator module."""
 
-from typing import Union
+from typing import Callable, Dict
 
-import numpy as np
-import pandas as pd
+from datasets.arrow_dataset import Dataset
 
-from .utils import get_args
+from cyclops.datasets.slicing import SlicingConfig
 
 
 class ClinicalShiftApplicator:
@@ -19,183 +18,190 @@ class ClinicalShiftApplicator:
 
     """
 
-    def __init__(self, shift_type: str, source, target):
-
+    def __init__(self, shift_type: str, source, target, shift_id: str = None):
         self.shift_type = shift_type
+        self.shift_id = shift_id
+        self.source = source
+        self.target = target
 
-        self.method_args = {"source": source, "target": target}
-
-        self.shift_types = {
+        self.shift_types: Dict[str, Callable[..., Dataset]] = {
             "time": self.time,
             "month": self.month,
             "hospital_type": self.hospital_type,
+            "custom": self.custom,
         }
 
         if self.shift_type not in self.shift_types:
             raise ValueError(f"Shift type {self.shift_type} not supported. ")
 
-    def apply_shift(self, X, metadata: pd.DataFrame, metadata_mapping: dict):
+    def apply_shift(self, dataset: Dataset):
         """apply_shift.
 
         Returns
         -------
-        X: pd.DataFrame
-            Data to apply shift to.
-        y:
-            Outcome labels.
-        metadata: pd.DataFrame
-            Dataframe containing admin variables to filter on
-            (e.g. "hospital_id", "admit_timestamp").
+        dataset: huggingface Dataset
+            Dataset to apply shift to.
 
         """
-        # list(X.index.get_level_values(0).unique())
-        # X = X[np.in1d(X.index.get_level_values(0), metadata["encounter_id"])]
-
-        X_s, X_t = self.shift_types[self.shift_type](
-            X,
-            metadata,
-            metadata_mapping,
-            **get_args(self.shift_types[self.shift_type], self.method_args),
+        ds_source, ds_target = self.shift_types[self.shift_type](
+            dataset, self.source, self.target, self.shift_id
         )
-
-        # list(X.index.get_level_values(0).unique())
-
-        return (X_s.values, X_t.values)
+        return ds_source, ds_target
 
     def time(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        metadata: pd.DataFrame,
-        metadata_mapping: dict,
-        source,
-        target,
+        dataset: Dataset,
+        source: list,
+        target: list,
+        shift_id: str,
     ):
         """Shift in time.
 
         Parameters
         ----------
-        X: pd.DataFrame
-            Data to apply shift to.
-        metadata: pd.DataFrame
-            Dataframe containing admin variables to filter on
-            (e.g. "hospital_id", "admit_timestamp").
-        source: list[datetime.date]
-            Start and end of source data.
-        target: list[datetime.date]
-            Start and end of target data.
-        encounter_id: str
-            Column name for encounter ids.
-        admit_timestamp: str
-            Column name for admission timestamps.
+        dataset: huggingface Dataset
+            Dataset to apply shift to.
+        shift_id: str
+            Column name for shift id.
+        source: list
+            List of values for source data.
+        target: list
+            List of values for target data.
+
+        Returns
+        -------
+        ds_source: huggingface Dataset
+            Dataset with source data.
+        ds_target: huggingface Dataset
+            Dataset with target data.
 
         """
-        if isinstance(X, np.ndarray):
-            X = pd.DataFrame(X)
-        encounter_id = metadata_mapping["id"]
-        admit_timestamp = metadata_mapping["timestamp"]
+        source_slice = SlicingConfig(
+            feature_values=[
+                {
+                    shift_id: {
+                        "min_value": source[0],
+                        "max_value": source[1],
+                        "min_inclusive": True,
+                        "max_inclusive": True,
+                    }
+                }
+            ]
+        )
+        for _, shift_func in source_slice.get_slices().items():
+            ds_source = dataset.filter(shift_func, batched=True)
 
-        ids_source = metadata.loc[
-            (
-                (metadata[admit_timestamp].dt.date > pd.to_datetime(source[0]).date())
-                & (
-                    metadata[admit_timestamp].dt.date < pd.to_datetime(source[1]).date()
-                ),
-            ),
-            encounter_id,
-        ]
-        ids_target = metadata.loc[
-            (
-                (metadata[admit_timestamp].dt.date > pd.to_datetime(target[0]).date())
-                & (
-                    metadata[admit_timestamp].dt.date < pd.to_datetime(target[1]).date()
-                ),
-            ),
-            encounter_id,
-        ]
-        X_source = X.loc[X.index.get_level_values(0).isin(ids_source)]
-        X_target = X.loc[X.index.get_level_values(0).isin(ids_target)]
-        return (X_source, X_target)
+        target_slice = SlicingConfig(
+            feature_values=[
+                {
+                    shift_id: {
+                        "min_value": target[0],
+                        "max_value": target[1],
+                        "min_inclusive": True,
+                        "max_inclusive": True,
+                    }
+                }
+            ]
+        )
+        for _, shift_func in target_slice.get_slices().items():
+            ds_target = dataset.filter(shift_func, batched=True)
+        return ds_source, ds_target
 
     def month(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        metadata: pd.DataFrame,
-        metadata_mapping: dict,
-        source,
-        target,
+        dataset: Dataset,
+        source: list,
+        target: list,
+        shift_id: str,
     ):
         """Shift for selection of months.
 
         Parameters
         ----------
-        X: pd.DataFrame
-            Data to apply shift to.
-        metadata: pd.DataFrame
-            Dataframe containing admin variables to filter on
-            (e.g. "hospital_id", "admit_timestamp").
-        encounter_id: str
-            Column name for encounter ids.
-        admit_timestamp: str
-            Column name for admission timestamps.
+        dataset: huggingface Dataset
+            Dataset to apply shift to.
+        shift_id: str
+            Column name for shift id.
+        source: list
+            List of values for source data.
+        target: list
+            List of values for target data.
 
         """
-        if isinstance(X, np.ndarray):
-            X = pd.DataFrame(X)
-        encounter_id = metadata_mapping["id"]
-        admit_timestamp = metadata_mapping["timestamp"]
+        source_slice = SlicingConfig(feature_values=[{shift_id: {"value": source}}])
+        for _, shift_func in source_slice.get_slices().items():
+            ds_source = dataset.filter(shift_func, batched=True)
 
-        ids_source = metadata.loc[
-            ((metadata[admit_timestamp].dt.month.isin(source))),
-            encounter_id,
-        ]
-        ids_target = metadata.loc[
-            ((metadata[admit_timestamp].dt.month.isin(target))),
-            encounter_id,
-        ]
-        X_source = X.loc[X.index.get_level_values(0).isin(ids_source)]
-        X_target = X.loc[X.index.get_level_values(0).isin(ids_target)]
-        return (X_source, X_target)
+        target_slice = SlicingConfig(feature_values=[{shift_id: {"value": target}}])
+        for _, shift_func in target_slice.get_slices().items():
+            ds_target = dataset.filter(shift_func, batched=True)
+        return ds_source, ds_target
 
     def hospital_type(
-        self,
-        X: Union[np.ndarray, pd.DataFrame],
-        metadata: pd.DataFrame,
-        metadata_mapping: dict,
-        source,
-        target,
+        self, dataset: Dataset, source: list, target: list, shift_id: str
     ):
         """Shift against hospital type.
 
         Parameters
         ----------
-        X: pd.DataFrame
-            Data to apply shift to.
-        metadata: pd.DataFrame
-            Dataframe containing admin variables to filter on
-            (e.g. "hospital_id", "admit_timestamp").
-        source_hospitals: list
-            List of hospitals for source data.
-        target_hospitals: list
-            List of hospitals for target data.
-        encounter_id: str
-            Column name for encounter ids.
-        hospital_id: str
-            Column name for hospital ids.
+        dataset: huggingface Dataset
+            Dataset to apply shift to.
+        shift_id: str
+            Column name for shift id.
+        source: list
+            List of values for source data.
+        target: list
+            List of values for target data.
 
         """
-        if isinstance(X, np.ndarray):
-            X = pd.DataFrame(X)
-        encounter_id = metadata_mapping["id"]
-        hospital_id = metadata_mapping["hospital_id"]
+        source_slice = SlicingConfig(feature_values=[{shift_id: {"value": source}}])
+        for _, shift_func in source_slice.get_slices().items():
+            ds_source = dataset.filter(shift_func, batched=True)
 
-        ids_source = metadata.loc[
-            ((metadata[hospital_id].isin(source))),
-            encounter_id,
-        ]
-        ids_target = metadata.loc[
-            ((metadata[hospital_id].isin(target))),
-            encounter_id,
-        ]
-        X_source = X.loc[X.index.get_level_values(0).isin(ids_source)]
-        X_target = X.loc[X.index.get_level_values(0).isin(ids_target)]
-        return (X_source, X_target)
+        target_slice = SlicingConfig(feature_values=[{shift_id: {"value": target}}])
+        for _, shift_func in target_slice.get_slices().items():
+            ds_target = dataset.filter(shift_func, batched=True)
+        return ds_source, ds_target
+
+    def custom(
+        self,
+        dataset: Dataset,
+        source: SlicingConfig,
+        target: SlicingConfig,
+        shift_id: str = None,
+    ):
+        """Build custom shift.
+
+        Build a custom shift by passing in a SlicingConfig for source and target data.
+
+        Parameters
+        ----------
+        dataset: huggingface Dataset
+            Dataset to apply shift to.
+        shift_id: str
+            Column name for shift id.
+        source: SlicingConfig
+            SlicingConfig for source data.
+        target: SlicingConfig
+            SlicingConfig for target data.
+
+        """
+        if shift_id:
+            raise ValueError(
+                "Shift id not required for custom shift. \
+                Please remove shift_id from method call."
+            )
+        ds_source = None
+        for _, shift_func in source.get_slices().items():
+            if ds_source is None:
+                ds_source = dataset.filter(shift_func, batched=True)
+            else:
+                ds_source = ds_source.filter(shift_func, batched=True)
+
+        ds_target = None
+        for _, shift_func in target.get_slices().items():
+            if ds_target is None:
+                ds_target = dataset.filter(shift_func, batched=True)
+            else:
+                ds_target = ds_target.filter(shift_func, batched=True)
+        return ds_source, ds_target

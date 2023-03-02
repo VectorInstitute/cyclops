@@ -1,6 +1,9 @@
 """Classes for computing the F-beta score."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Type, Union, cast
+
+import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.f_beta import _check_beta, _fbeta_reduce
 from cyclops.evaluate.metrics.metric import Metric
@@ -60,10 +63,10 @@ class BinaryFbetaScore(BinaryStatScores, registry_key="binary_fbeta_score"):
         self.beta = beta
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the metric from the state."""
         tp, fp, _, fn = self._final_state()
-        return _fbeta_reduce(
+        f_score = _fbeta_reduce(
             tp=tp,
             fp=fp,
             fn=fn,
@@ -71,6 +74,7 @@ class BinaryFbetaScore(BinaryStatScores, registry_key="binary_fbeta_score"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, f_score)
 
 
 class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_score"):
@@ -89,6 +93,7 @@ class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally.
         - ``macro``: Calculate metric for each class, and find their
             unweighted mean. This does not take class imbalance into account.
@@ -144,7 +149,7 @@ class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the metric from the state."""
         tp, fp, _, fn = self._final_state()
         return _fbeta_reduce(
@@ -177,6 +182,7 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally.
         - ``macro``: Calculate metric for each label, and find their
             unweighted mean. This does not take label imbalance into account.
@@ -225,7 +231,7 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the metric from the state."""
         tp, fp, _, fn = self._final_state()
         return _fbeta_reduce(
@@ -263,6 +269,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each class/label, and find their
             unweighted mean. This does not take label/class imbalance into
@@ -277,7 +284,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import FbetaScore
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
@@ -292,7 +299,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     >>> metric.compute()
     0.9090909090909091
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import FbetaScore
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.1, 0.8, 0.1], [0.1, 0.1, 0.8], [0.1, 0.1, 0.8], [0.8, 0.1, 0.1]]
@@ -308,7 +315,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     >>> metric.compute()
     array([0.83333333, 0.5       , 0.        ])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import FbetaScore
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
@@ -326,14 +333,14 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of FbetaScore
-        cls,
+        cls: Type[Metric],
         beta: float,
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
-        num_classes: int = None,
+        num_classes: Optional[int] = None,
         threshold: float = 0.5,
         top_k: Optional[int] = None,
-        num_labels: int = None,
+        num_labels: Optional[int] = None,
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> Metric:
@@ -433,6 +440,7 @@ class MulticlassF1Score(MulticlassFbetaScore, registry_key="multiclass_f1_score"
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise, use one of
         the following options to compute the average score:
+
         - ``micro``: Calculate metric globally.
         - ``macro``: Calculate metric for each class, and find their
             unweighted mean. This does not take class imbalance into account.
@@ -496,6 +504,7 @@ class MultilabelF1Score(MultilabelFbetaScore, registry_key="multilabel_f1_score"
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label. Otherwise, use one of
         the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false positives.
         - ``macro``: Calculate metric for each label, and find their
@@ -569,6 +578,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each class/label, and find their
             unweighted mean. This does not take label/class imbalance into
@@ -583,7 +593,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import F1Score
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
@@ -598,7 +608,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     >>> metric.compute()
     0.8
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import F1Score
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.95, 0.05, 0]]
@@ -614,7 +624,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     >>> metric.compute()
     array([0.        , 0.85714286, 0.        ])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import F1Score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
@@ -635,13 +645,13 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of F1Score
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
-        num_classes: int = None,
+        num_classes: Optional[int] = None,
         threshold: float = 0.5,
         top_k: Optional[int] = None,
-        num_labels: int = None,
+        num_labels: Optional[int] = None,
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> Metric:

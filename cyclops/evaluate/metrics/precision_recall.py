@@ -1,6 +1,9 @@
 """Classes for computing precision and recall metrics."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Type, Union, cast
+
+import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.precision_recall import (
     _precision_recall_reduce,
@@ -54,10 +57,10 @@ class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the precision score from the state."""
         tp, fp, _, fn = self._final_state()
-        return _precision_recall_reduce(
+        score = _precision_recall_reduce(
             tp=tp,
             fp=fp,
             fn=fn,
@@ -65,6 +68,7 @@ class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, score)
 
 
 class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precision"):
@@ -81,6 +85,7 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise, use one of the
         following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false positives.
         - ``macro``: Calculate metric for each class, and find their
@@ -132,7 +137,7 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[npt.NDArray[np.float_], float]:  # type: ignore[override]
         """Compute the precision score from the state."""
         tp, fp, _, fn = self._final_state()
         return _precision_recall_reduce(
@@ -161,6 +166,7 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the precision score for each label. Otherwise,
         use one of the following options to compute the average precision score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false positives.
         - ``macro``: Calculate metric for each label, and find their
@@ -212,7 +218,7 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[npt.NDArray[np.float_], float]:  # type: ignore[override]
         """Compute the precision score from the state."""
         tp, fp, _, fn = self._final_state()
         return _precision_recall_reduce(
@@ -251,6 +257,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the precision score for each label/class. Otherwise,
         use one of the following options to compute the average precision score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false positives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -327,7 +334,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of Precision
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
         num_classes: Optional[int] = None,
@@ -409,10 +416,10 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the recall score from the state."""
         tp, fp, _, fn = self._final_state()
-        return _precision_recall_reduce(
+        score = _precision_recall_reduce(
             tp=tp,
             fp=fp,
             fn=fn,
@@ -420,6 +427,7 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, score)
 
 
 class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
@@ -436,6 +444,7 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false negatives.
         - ``macro``: Calculate metric for each class, and find their
@@ -486,7 +495,7 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[npt.NDArray[np.float_], float]:  # type: ignore[override]
         """Compute the recall score from the state."""
         tp, fp, _, fn = self._final_state()
         return _precision_recall_reduce(
@@ -511,6 +520,7 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -559,7 +569,7 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[npt.NDArray[np.float_], float]:  # type: ignore[override]
         """Compute the recall score from the state."""
         tp, fp, _, fn = self._final_state()
         return _precision_recall_reduce(
@@ -598,6 +608,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -612,7 +623,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
@@ -627,7 +638,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.compute()
     0.5
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
@@ -651,7 +662,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.compute()
     array([0.66666667, 0.        , 0.        ])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import Recall
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
@@ -672,13 +683,13 @@ class Recall(Metric, registry_key="recall", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of Recall
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
-        num_classes: int = None,
+        num_classes: Optional[int] = None,
         threshold: float = 0.5,
         top_k: Optional[int] = None,
-        num_labels: int = None,
+        num_labels: Optional[int] = None,
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> Metric:

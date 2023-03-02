@@ -9,6 +9,7 @@ on:
       - .github/workflows/docs_build.yml
       - .github/workflows/docs_deploy.yml
       - '**.py'
+      - '**.ipynb'
       - poetry.lock
       - pyproject.toml
       - requirements.txt
@@ -25,7 +26,7 @@ jobs:
           sudo apt-get install libcurl4-openssl-dev libssl-dev pandoc
       - uses: actions/checkout@v3
       - name: Install dependencies, build docs and coverage report
-        run: pipx install poetry
+        run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
       - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9
@@ -34,8 +35,8 @@ jobs:
           poetry env use 3.9
           source $(poetry env info --path)/bin/activate
           poetry install --without dev,interface
-          pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
-          cd docs && make html
+          # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
+          cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1

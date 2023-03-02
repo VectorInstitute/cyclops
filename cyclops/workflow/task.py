@@ -1,7 +1,7 @@
 """Tasks and workflows."""
 
 import logging
-from typing import Union
+from typing import Literal, Union
 
 import pandas as pd
 from prefect import flow, task
@@ -38,7 +38,7 @@ def run_query(query_interface: Union[QueryInterface, QueryInterfaceProcessed]):
 def save_query(
     query_interface: Union[QueryInterface, QueryInterfaceProcessed],
     path: str,
-    file_format: str,
+    file_format: Literal["csv", "parquet"],
 ):
     """Task to save a query.
 

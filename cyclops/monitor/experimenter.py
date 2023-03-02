@@ -2,11 +2,9 @@
 # from drift_detector.detector import Detector
 # from drift_detector.synthetic_applicator import SyntheticShiftApplicator
 # from drift_detector.clinical_applicator import ClinicalShiftApplicator
-from typing import Union
+from typing import Optional, Union
 
-import numpy as np
-import pandas as pd
-import torch
+from datasets.arrow_dataset import Dataset
 
 from cyclops.monitor.clinical_applicator import ClinicalShiftApplicator
 from cyclops.monitor.detector import Detector
@@ -37,11 +35,10 @@ class Experimenter:
         self,
         experiment_type: str,
         detector: Detector,
-        shiftapplicator: Union[
-            SyntheticShiftApplicator, ClinicalShiftApplicator
+        shiftapplicator: Optional[
+            Union[SyntheticShiftApplicator, ClinicalShiftApplicator]
         ] = None,
     ):
-
         self.detector = detector
         self.shiftapplicator = shiftapplicator
 
@@ -62,9 +59,7 @@ class Experimenter:
 
     def run(
         self,
-        X: Union[np.ndarray, torch.utils.data.Dataset],
-        metadata: pd.DataFrame,
-        metadata_mapping: dict,
+        dataset: Dataset,
     ):
         """Run experiment.
 
@@ -81,23 +76,16 @@ class Experimenter:
         """
         if self.shiftapplicator is not None:
             if isinstance(self.shiftapplicator, ClinicalShiftApplicator):
-                X_source, X_target = self.shiftapplicator.apply_shift(
-                    X, metadata, metadata_mapping
-                )
-                self.detector.fit(X_source, progress=False)
-                X_target = self.detector.transform(X_target)
+                ds_source, ds_target = self.shiftapplicator.apply_shift(dataset)
+                self.detector.fit(ds_source, progress=False)
+                X_target, _ = self.detector.transform(ds_target)
             else:
-                self.detector.fit(X, progress=False)
-                if isinstance(X, torch.utils.data.Dataset):
-                    X = self.detector.transform(X)
-                X_target = self.shiftapplicator.apply_shift(
-                    X, metadata, metadata_mapping
-                )
+                self.detector.fit(dataset, progress=False)
+                if isinstance(dataset, Dataset):
+                    dataset, _ = self.detector.transform(dataset)
+                X_target, _ = self.shiftapplicator.apply_shift(dataset)
         else:
-            self.detector.fit(X, progress=False)
-            if isinstance(X, torch.utils.data.Dataset):
-                X, _ = self.detector.transform(X)
-            X_target = X
+            self.detector.fit(dataset, progress=False)
 
         drift_sample_results = self.experiment_types[self.experiment_type](X_target)
 

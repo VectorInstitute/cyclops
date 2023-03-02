@@ -1,10 +1,10 @@
 """Functions for computing the area under the ROC curve (AUROC)."""
 
 import warnings
-from typing import List, Literal, Tuple, Union
+from typing import Any, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from sklearn.metrics import auc
 
 from cyclops.evaluate.metrics.functional.precision_recall_curve import (
@@ -25,11 +25,11 @@ from cyclops.evaluate.metrics.utils import _check_thresholds
 
 
 def _reduce_auroc(
-    fpr: Union[np.ndarray, List[np.ndarray]],
-    tpr: Union[np.ndarray, List[np.ndarray]],
-    average: Literal["macro", "weighted"] = None,
-    weights: np.ndarray = None,
-) -> Union[float, np.ndarray]:
+    fpr: Union[npt.NDArray[Any], List[npt.NDArray[Any]]],
+    tpr: Union[npt.NDArray[Any], List[npt.NDArray[Any]]],
+    average: Optional[Literal["macro", "weighted"]] = None,
+    weights: Optional[npt.NDArray[Any]] = None,
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the area under the ROC curve and apply ``average`` method.
 
     Parameters
@@ -86,13 +86,13 @@ def _reduce_auroc(
                 "Received an incompatible combinations of inputs to make reduction."
             )
 
-    return result
+    return cast(Union[float, npt.NDArray[np.float_]], result)
 
 
 def _binary_auroc_compute(
-    state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
-    thresholds: np.ndarray = None,
-    max_fpr: float = None,
+    state: Union[Tuple[npt.NDArray[Any], npt.NDArray[Any]], npt.NDArray[Any]],
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
+    max_fpr: Optional[float] = None,
     pos_label: int = 1,
 ) -> float:
     """Compute the area under the ROC curve for binary classification tasks.
@@ -123,38 +123,39 @@ def _binary_auroc_compute(
     fpr, tpr, _ = _binary_roc_compute(state, thresholds=thresholds, pos_label=pos_label)
 
     if max_fpr is None or max_fpr == 1:
-        return auc(x=fpr, y=tpr)
+        roc_auc = auc(x=fpr, y=tpr)
+        return cast(float, roc_auc)
 
     # Add a single point at max_fpr by linear interpolation
-    stop = np.searchsorted(fpr, max_fpr, "right")
+    stop: int = np.searchsorted(fpr, max_fpr, "right")  # type: ignore[assignment]
     x_interp = [fpr[stop - 1], fpr[stop]]
     y_interp = [tpr[stop - 1], tpr[stop]]
     tpr = np.append(tpr[:stop], np.interp(max_fpr, x_interp, y_interp))
     fpr = np.append(fpr[:stop], max_fpr)
     partial_auc = auc(fpr, tpr)
 
-    # McClish correction: standardize result to be 0.5 if non-discriminant
-    # and 1 if maximal
+    # standardize result to be 0.5 if non-discriminant and 1 if maximal
     min_area = 0.5 * max_fpr**2
     max_area = max_fpr
 
-    return 0.5 * (1 + (partial_auc - min_area) / (max_area - min_area))
+    roc_auc = 0.5 * (1 + (partial_auc - min_area) / (max_area - min_area))
+    return cast(float, roc_auc)
 
 
 def binary_auroc(
-    target: ArrayLike,
-    preds: ArrayLike,
-    max_fpr: float = None,
-    thresholds: Union[int, List[float], np.ndarray] = None,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
+    max_fpr: Optional[float] = None,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     pos_label: int = 1,
 ) -> float:
     """Compute the area under the ROC curve for binary classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated probabilities or decision function. If the values in ``preds``
         are not in the range [0, 1], then they will be transformed to this range
         via a sigmoid function.
@@ -211,11 +212,13 @@ def binary_auroc(
 
 
 def _multiclass_auroc_compute(
-    state: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]],
+    state: Union[
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+    ],
     num_classes: int,
-    thresholds: np.ndarray = None,
-    average: Literal["macro", "weighted"] = None,
-) -> Union[float, np.ndarray]:
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
+    average: Optional[Literal["macro", "weighted"]] = None,
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the area under the ROC curve for multiclass classification tasks.
 
     Parameters
@@ -253,19 +256,19 @@ def _multiclass_auroc_compute(
 
 
 def multiclass_auroc(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
-    thresholds: Union[int, List[float], np.ndarray] = None,
-    average: Literal["macro", "weighted"] = None,
-) -> Union[float, np.ndarray]:
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
+    average: Optional[Literal["macro", "weighted"]] = None,
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the area under the ROC curve for multiclass classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated probabilities or decision function. If the values in ``preds``
         are not in the range [0, 1], then they will be transformed to this range
         via a softmax function.
@@ -280,6 +283,7 @@ def multiclass_auroc(
     average : Literal["macro", "weighted"], default=None
         If ``None``, then the scores for each class are returned. Otherwise,
         this determines the type of averaging performed on the scores. One of
+
         - `macro`: Calculate metrics for each class, and find their unweighted
             mean. This does not take class imbalance into account.
         - `weighted`: Calculate metrics for each class, and find their average,
@@ -326,11 +330,13 @@ def multiclass_auroc(
 
 
 def _multilabel_auroc_compute(
-    state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
+    state: Union[
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+    ],
     num_labels: int,
-    thresholds: np.ndarray = None,
-    average: Literal["micro", "macro", "weighted"] = None,
-) -> Union[float, np.ndarray]:
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
+    average: Optional[Literal["micro", "macro", "weighted"]] = None,
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the area under the ROC curve for multilabel classification tasks.
 
     Parameters
@@ -348,6 +354,7 @@ def _multilabel_auroc_compute(
     average : Literal["micro", "macro", "weighted"], default=None
         If ``None``, then the scores for each label are returned. Otherwise,
         this determines the type of averaging performed on the scores. One of
+
         - `micro`: Calculate metrics globally.
         - `macro`: Calculate metrics for each label, and find their unweighted
             mean. This does not take label imbalance into account.
@@ -380,19 +387,19 @@ def _multilabel_auroc_compute(
 
 
 def multilabel_auroc(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
-    thresholds: Union[int, List[float], np.ndarray] = None,
-    average: Literal["micro", "macro", "weighted"] = None,
-) -> Union[float, np.ndarray]:
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
+    average: Optional[Literal["micro", "macro", "weighted"]] = None,
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the area under the ROC curve for multilabel classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated probabilities or decision function. If the values in ``preds``
         are not in the range [0, 1], then they will be transformed to this range
         via a softmax function.
@@ -407,6 +414,7 @@ def multilabel_auroc(
     average : Literal["micro", "macro", "weighted"], default=None
         If ``None``, then the scores for each label are returned. Otherwise,
         this determines the type of averaging performed on the scores. One of
+
         - `micro`: Calculate metrics globally by counting the total true
             positives, false negatives and false positives.
         - `macro`: Calculate metrics for each label, and find their unweighted
@@ -453,20 +461,20 @@ def multilabel_auroc(
 
 
 def auroc(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
-    max_fpr: float = None,
-    thresholds: Union[int, List[float], np.ndarray] = None,
-    num_classes: int = None,
-    num_labels: int = None,
-    average: Literal["micro", "macro", "weighted"] = None,
-) -> Union[float, np.ndarray]:
+    max_fpr: Optional[float] = None,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
+    num_classes: Optional[int] = None,
+    num_labels: Optional[int] = None,
+    average: Optional[Literal["micro", "macro", "weighted"]] = None,
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the area under the ROC curve for different tasks.
 
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated probabilities or decision function. If ``preds`` is not in the
         range [0, 1], a sigmoid function is applied to transform it to the range
         [0, 1].
@@ -489,6 +497,7 @@ def auroc(  # pylint: disable=too-many-arguments
         If not None, apply the method to compute the average area under the
         ROC curve. Only applicable for the ``multiclass`` and ``multilabel``
         tasks. One of:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives, false negatives and false positives.
         - ``macro``: Calculate metrics for each label, and find their unweighted
@@ -504,14 +513,14 @@ def auroc(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.35, 0.4, 0.8]
     >>> auroc(target, preds, task="binary")
     0.75
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2],
@@ -519,7 +528,7 @@ def auroc(  # pylint: disable=too-many-arguments
     >>> auroc(target, preds, task="multiclass", num_classes=3, average=None)
     array([0.5, 1. , 0.5])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import auroc
     >>> target = [[0, 1], [1, 1], [0, 0], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2], [0.4, 0.6], [0.2, 0.8]]
@@ -528,31 +537,27 @@ def auroc(  # pylint: disable=too-many-arguments
 
     """
     if task == "binary":
-        auroc_score = binary_auroc(
-            target, preds, max_fpr=max_fpr, thresholds=thresholds
-        )
-    elif task == "multiclass":
+        return binary_auroc(target, preds, max_fpr=max_fpr, thresholds=thresholds)
+    if task == "multiclass":
         assert (
             isinstance(num_classes, int) and num_classes > 0
         ), "Number of classes must be a positive integer."
-        auroc_score = multiclass_auroc(
+        return multiclass_auroc(
             target,
             preds,
             num_classes,
             thresholds=thresholds,
-            average=average,  # type: ignore
+            average=average,  # type: ignore[arg-type]
         )
-    elif task == "multilabel":
+    if task == "multilabel":
         assert (
             isinstance(num_labels, int) and num_labels > 0
         ), "Number of labels must be a positive integer."
-        auroc_score = multilabel_auroc(
+        return multilabel_auroc(
             target, preds, num_labels, thresholds=thresholds, average=average
         )
-    else:
-        raise ValueError(
-            "Expected argument `task` to be either 'binary', 'multiclass' or "
-            f"'multilabel', but got {task}"
-        )
 
-    return auroc_score
+    raise ValueError(
+        "Expected argument `task` to be either 'binary', 'multiclass' or "
+        f"'multilabel', but got {task}"
+    )

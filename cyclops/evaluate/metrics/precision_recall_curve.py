@@ -1,11 +1,12 @@
 """Classes for computing precision-recall curves."""
 
-from typing import List, Literal, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Type, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 
-from cyclops.evaluate.metrics.functional.precision_recall_curve import (
+# pylint: disable=line-too-long
+from cyclops.evaluate.metrics.functional.precision_recall_curve import (  # type: ignore[attr-defined] # noqa: E501
     _binary_precision_recall_curve_compute,
     _binary_precision_recall_curve_format,
     _binary_precision_recall_curve_update,
@@ -19,8 +20,6 @@ from cyclops.evaluate.metrics.functional.precision_recall_curve import (
     _multilabel_precision_recall_curve_update,
 )
 from cyclops.evaluate.metrics.metric import Metric
-
-# mypy: ignore-errors
 
 
 class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_curve"):
@@ -59,7 +58,7 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
     def __init__(
         self,
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         pos_label: int = 1,
     ) -> None:
         super().__init__()
@@ -76,8 +75,8 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
         self.pos_label = pos_label
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
@@ -93,21 +92,23 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
         # pylint: disable=no-member # attributes are added with setattr
         if isinstance(state, np.ndarray):
-            self.confmat += state
+            self.confmat += state  # type: ignore[attr-defined]
         else:
-            self.target.append(state[0])
-            self.preds.append(state[1])
+            self.target.append(state[0])  # type: ignore[attr-defined]
+            self.preds.append(state[1])  # type: ignore[attr-defined]
 
-    def compute(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute(
+        self,
+    ) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
         """Compute the precision-recall curve from the state."""
         # pylint: disable=no-member # attributes are added with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _binary_precision_recall_curve_compute(
             state=state, thresholds=self.thresholds, pos_label=self.pos_label
@@ -167,7 +168,7 @@ class MulticlassPrecisionRecallCurve(
     def __init__(
         self,
         num_classes: int,
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     ) -> None:
         super().__init__()
         _check_thresholds(thresholds)
@@ -185,8 +186,8 @@ class MulticlassPrecisionRecallCurve(
         self.num_classes = num_classes
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
@@ -205,29 +206,35 @@ class MulticlassPrecisionRecallCurve(
 
         # pylint: disable=no-member # attributes are added with setattr
         if isinstance(state, np.ndarray):
-            self.confmat += state
+            self.confmat += state  # type: ignore[attr-defined]
         else:
-            self.target.append(state[0])
-            self.preds.append(state[1])
+            self.target.append(state[0])  # type: ignore[attr-defined]
+            self.preds.append(state[1])  # type: ignore[attr-defined]
 
     def compute(
         self,
     ) -> Union[
-        Tuple[np.ndarray, np.ndarray, np.ndarray],
-        Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+        Tuple[
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+        ],
     ]:
         """Compute the precision-recall curve from the state."""
         # pylint: disable=no-member # attributes are added with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _multiclass_precision_recall_curve_compute(
-            state=state, thresholds=self.thresholds, num_classes=self.num_classes
+            state=state,
+            thresholds=self.thresholds,  # type: ignore[arg-type]
+            num_classes=self.num_classes,
         )
 
 
@@ -276,7 +283,7 @@ class MultilabelPrecisionRecallCurve(
     def __init__(
         self,
         num_labels: int,
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     ) -> None:
         super().__init__()
 
@@ -294,8 +301,8 @@ class MultilabelPrecisionRecallCurve(
         self.num_labels = num_labels
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
@@ -311,24 +318,35 @@ class MultilabelPrecisionRecallCurve(
 
         # pylint: disable=no-member # attributes are added with setattr
         if isinstance(state, np.ndarray):
-            self.confmat += state
+            self.confmat += state  # type: ignore[attr-defined]
         else:
-            self.target.append(state[0])
-            self.preds.append(state[1])
+            self.target.append(state[0])  # type: ignore[attr-defined]
+            self.preds.append(state[1])  # type: ignore[attr-defined]
 
-    def compute(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute(
+        self,
+    ) -> Union[
+        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+        Tuple[
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+        ],
+    ]:
         """Compute the precision-recall curve from the state."""
         # pylint: disable=no-member # attributes are added with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _multilabel_precision_recall_curve_compute(
-            state, thresholds=self.thresholds, num_labels=self.num_labels
+            state,
+            thresholds=self.thresholds,  # type: ignore[arg-type]
+            num_labels=self.num_labels,
         )
 
 
@@ -357,7 +375,7 @@ class PrecisionRecallCurve(
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
     >>> target = [1, 1, 1, 0]
     >>> preds = [0.6, 0.2, 0.3, 0.8]
@@ -377,7 +395,7 @@ class PrecisionRecallCurve(
     array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]),
     array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
     >>> target = [0, 1, 2, 2]
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1],
@@ -409,7 +427,7 @@ class PrecisionRecallCurve(
             [1.        , 0.66666667, 0.        , 0.        ]]),
     array([0. , 0.5, 1. ]))
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
     >>> target = [[0, 1], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
@@ -437,12 +455,12 @@ class PrecisionRecallCurve(
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of PrecisionRecallCurve
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
-        thresholds: Union[int, List[float], np.ndarray] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         pos_label: int = 1,
-        num_classes: int = None,
-        num_labels: int = None,
+        num_classes: Optional[int] = None,
+        num_labels: Optional[int] = None,
     ) -> Metric:
         """Create a task-specific instance of the precision-recall curve metric."""
         if task == "binary":

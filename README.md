@@ -26,11 +26,40 @@ use cases include:
 
 ## 🐣 Getting Started
 
-### Installing the core cyclops package using pip
+### Installing cyclops using pip
 
 ```bash
 python3 -m pip install pycyclops
 ```
+
+The core package only includes support for the `process` API. To install support for
+`query`, `evaluate` and `monitor` APIs, install them as extra dependency installs.
+
+To install with `query` API support,
+
+```bash
+python3 -m pip install 'pycyclops[query]'
+```
+
+To install with `evaluate` API support,
+
+```bash
+python3 -m pip install 'pycyclops[evaluate]'
+```
+
+To install with `monitor` API support,
+
+```bash
+python3 -m pip install 'pycyclops[monitor]'
+```
+
+Multiple extras could also be combined, for example to install with both `query` and
+`evaluate` API support:
+
+```bash
+python3 -m pip install 'pycyclops[query,evaluate]'
+```
+
 
 ## 🧑🏿‍💻 Developing
 
@@ -41,13 +70,18 @@ The python virtual environment can be set up using
 installed and then run:
 
 ```bash
-poetry install
+python3 -m poetry install
 source $(poetry env info --path)/bin/activate
 ```
 
+### Contributing
+Contributing to cyclops is welcomed. See [Contributing](CONTRIBUTING.md) for
+guidelines.
+
+
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
 
-## 🎓 Notebooks
+## 📓 Notebooks
 
 To use jupyter notebooks, the python virtual environment can be installed and
 used inside an IPython kernel. After activating the virtual environment, run:
@@ -59,10 +93,10 @@ python3 -m ipykernel install --user --name <name_of_kernel>
 Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 ``<name_of_kernel>``.
 
-Tutorial notebooks in ``tutorials`` can be useful to view the
+Tutorial notebooks in ``docs/source/tutorials`` can be useful to view the
 functionality of the framework.
 
-## Reference
+## 🎓 Citation
 Reference to cite when you use CyclOps in a project or a research paper:
 ```
 @article {Krishnan2022.12.02.22283021,

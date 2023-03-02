@@ -1,23 +1,53 @@
-cyclops.evaluate package
-========================
+cyclops.evaluate
+================
 
 .. automodule:: cyclops.evaluate
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
-Subpackages
------------
+.. autosummary::
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
 
-.. toctree::
-   :maxdepth: 4
+    evaluator
 
-   cyclops.evaluate.metrics
 
-Submodules
-----------
+cyclops.evaluate.metrics.functional
+===================================
 
-.. toctree::
-   :maxdepth: 4
+.. automodule:: cyclops.evaluate.metrics.functional
 
-   cyclops.evaluate.evaluator
+.. autosummary::
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
+
+    accuracy
+    auroc
+    f_beta
+    precision_recall
+    precision_recall_curve
+    roc
+    sensitivity
+    specificity
+    stat_scores
+
+
+cyclops.evaluate.metrics
+========================
+
+.. automodule:: cyclops.evaluate.metrics
+
+.. autosummary::
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
+
+    accuracy
+    auroc
+    f_beta
+    precision_recall
+    precision_recall_curve
+    roc
+    sensitivity
+    specificity
+    stat_scores

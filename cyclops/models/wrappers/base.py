@@ -1,6 +1,7 @@
 """Base class for model wrappers."""
+
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Literal, Sequence, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 
 import cyclops.models.wrappers.utils as wrapper_utils
 
@@ -56,7 +57,7 @@ class ModelWrapper(ABC):
         X,
         y,
         parameters: Union[Dict, List[Dict]],
-        metric: Union[str, Callable, Sequence, Dict] = None,
+        metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
         **kwargs,
     ):

@@ -1,4 +1,5 @@
 """Base abstract class for all metrics."""
+
 import functools
 import inspect
 import logging
@@ -11,6 +12,7 @@ from difflib import get_close_matches
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.utils import (
     _apply_function_recursively,
@@ -27,19 +29,22 @@ _METRIC_REGISTRY = {}
 class Metric(ABC):
     """Abstract base class for metrics classes."""
 
-    def __init__(self):
-        self.update_state: Callable = self._wrap_update(
+    def __init__(self) -> None:
+        self.update_state: Callable[..., Any] = self._wrap_update(  # type: ignore
             self.update_state
-        )  # type: ignore # pylint: disable=method-hidden
-        self.compute: Callable = self._wrap_compute(
+        )  # pylint: disable=method-hidden
+        self.compute: Callable[..., Any] = self._wrap_compute(  # type: ignore
             self.compute
-        )  # type: ignore # pylint: disable=method-hidden
+        )  # pylint: disable=method-hidden
         self._update_count: int = 0
         self._computed: Any = None
-        self._defaults: Dict[str, Union[List, np.ndarray]] = {}
+        self._defaults: Dict[str, Union[List[Any], npt.NDArray[Any]]] = {}
 
     def __init_subclass__(
-        cls, registry_key: str = None, force_register: bool = False, **kwargs
+        cls: Any,
+        registry_key: Optional[str] = None,
+        force_register: bool = False,
+        **kwargs: Any,
     ):
         """Register the subclass in the registry."""
         super().__init_subclass__(**kwargs)
@@ -64,7 +69,7 @@ class Metric(ABC):
                     )
                 _METRIC_REGISTRY[registry_key] = cls
 
-    def add_state(self, name: str, default: Union[List, np.ndarray]) -> None:
+    def add_state(self, name: str, default: Union[List[Any], npt.NDArray[Any]]) -> None:
         """Add a state variable to the metric.
 
         Parameters
@@ -131,7 +136,7 @@ class Metric(ABC):
     def compute(self) -> Any:  # pylint: disable=method-hidden
         """Compute the final value of the metric from the state variables."""
 
-    def _wrap_update(self, update: Callable) -> Callable:
+    def _wrap_update(self, update: Callable[..., None]) -> Callable[..., None]:
         """Manage the internal attributes before calling the update method.
 
         Sets the ``_computed`` attribute to None and increments the ``_update_count``
@@ -158,7 +163,7 @@ class Metric(ABC):
 
         return wrapped_func
 
-    def _wrap_compute(self, compute: Callable) -> Callable:
+    def _wrap_compute(self, compute: Callable[..., Any]) -> Callable[..., Any]:
         """Wrap the ``compute`` method to ensure safety and caching.
 
         Raises a warning if the ``compute`` method is called before the ``update``
@@ -205,7 +210,7 @@ class Metric(ABC):
 
         return wrapped_func
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """Update the global metric state and compute the metric for a batch."""
         # global accumulation
         self.update_state(*args, **kwargs)
@@ -255,7 +260,7 @@ def create_metric(metric_name: str, **kwargs: Optional[Dict[str, Any]]) -> Metri
         )
         raise ValueError(f"Metric {metric_name} not found.{similar_keys}")
 
-    metric = metric_class(**kwargs)
+    metric: Metric = metric_class(**kwargs)
 
     return metric
 
@@ -337,7 +342,7 @@ class MetricCollection(Metric):
 
     def _validate_input(
         self, metrics: Union[Metric, Sequence[Metric], Dict[str, Metric]]
-    ):
+    ) -> None:
         """Validate the input to the constructor.
 
         Parameters
@@ -497,7 +502,7 @@ class MetricCollection(Metric):
 
         return metric_groups
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         """Update the global metric state and compute the metric for a batch."""
         # global accumulation
         self.update_state(*args, **kwargs)

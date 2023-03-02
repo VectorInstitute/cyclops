@@ -1,8 +1,9 @@
 """Functions for computing F-beta and F1 scores for different input types."""
-from typing import Literal, Optional, Union
+
+from typing import Literal, Optional, Union, cast
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from sklearn.metrics._classification import _prf_divide
 
 from cyclops.evaluate.metrics.functional.stat_scores import (
@@ -21,13 +22,13 @@ from cyclops.evaluate.metrics.utils import (
 
 
 def _fbeta_reduce(  # pylint: disable=too-many-arguments
-    tp: np.ndarray,
-    fp: np.ndarray,
-    fn: np.ndarray,
+    tp: Union[npt.NDArray[np.int_], np.int_],
+    fp: Union[npt.NDArray[np.int_], np.int_],
+    fn: Union[npt.NDArray[np.int_], np.int_],
     beta: float,
     average: Literal["micro", "macro", "weighted", None],
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the F-beta score, a generalization of F-measure.
 
     Parameters
@@ -44,6 +45,7 @@ def _fbeta_reduce(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -92,9 +94,9 @@ def _fbeta_reduce(  # pylint: disable=too-many-arguments
     if average == "weighted":
         weights = tp + fn
         if np.sum(weights) == 0:
-            result = np.ones_like(score)
+            result = np.ones_like(score, dtype=np.float64)
             if zero_division in ["warn", 0]:
-                result = np.zeros_like(score)
+                result = np.zeros_like(score, dtype=np.float64)
             return result
     else:
         weights = None
@@ -102,7 +104,7 @@ def _fbeta_reduce(  # pylint: disable=too-many-arguments
     if average is not None and score.ndim != 0 and len(score) > 1:
         result = np.average(score, weights=weights)
     else:
-        result = _get_value_if_singleton_array(score)
+        result = _get_value_if_singleton_array(score)  # type: ignore[assignment]
 
     return result
 
@@ -114,8 +116,8 @@ def _check_beta(beta: float) -> None:
 
 
 def binary_fbeta_score(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     beta: float,
     pos_label: int = 1,
     threshold: float = 0.5,
@@ -125,9 +127,9 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     beta : float
         Weight of precision in harmonic mean.
@@ -169,7 +171,7 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
         target=target, preds=preds, pos_label=pos_label
     )
 
-    return _fbeta_reduce(
+    f_score = _fbeta_reduce(
         tp=tp,
         fp=fp,
         fn=fn,
@@ -178,23 +180,25 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
         zero_division=zero_division,
     )
 
+    return cast(float, f_score)
+
 
 def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     beta: float,
     num_classes: int,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the F-beta score for multiclass data.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     beta : float
         Weight of precision in harmonic mean.
@@ -207,6 +211,7 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each class, and find their
@@ -261,22 +266,22 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
 
 
 def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     beta: float,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the F-beta score for multilabel data.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     beta : float
         Weight of precision in harmonic mean.
@@ -291,6 +296,7 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -346,25 +352,25 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
 
 
 def fbeta_score(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     beta: float,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
-    num_classes: int = None,
+    num_classes: Optional[int] = None,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
-    num_labels: int = None,
+    num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the F-beta score for binary, multiclass, or multilabel data.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated targets as returned by a classifier.
     beta : float
         Weight of precision in harmonic mean.
@@ -386,6 +392,7 @@ def fbeta_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives, false positives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -436,7 +443,7 @@ def fbeta_score(  # pylint: disable=too-many-arguments
 
     """
     if task == "binary":
-        score = binary_fbeta_score(
+        return binary_fbeta_score(
             target,
             preds,
             beta,
@@ -444,24 +451,24 @@ def fbeta_score(  # pylint: disable=too-many-arguments
             threshold=threshold,
             zero_division=zero_division,
         )
-    elif task == "multiclass":
+    if task == "multiclass":
         assert (
             isinstance(num_classes, int) and num_classes > 0
         ), "Number of classes must be specified for multiclass classification."
-        score = multiclass_fbeta_score(
+        return multiclass_fbeta_score(
             target,
             preds,
             beta,
             num_classes,
             top_k=top_k,
-            average=average,  # type: ignore
+            average=average,
             zero_division=zero_division,
         )
-    elif task == "multilabel":
+    if task == "multilabel":
         assert (
             isinstance(num_labels, int) and num_labels > 0
         ), "Number of labels must be specified for multilabel classification."
-        score = multilabel_fbeta_score(
+        return multilabel_fbeta_score(
             target,
             preds,
             beta,
@@ -471,18 +478,16 @@ def fbeta_score(  # pylint: disable=too-many-arguments
             average=average,
             zero_division=zero_division,
         )
-    else:
-        raise ValueError(
-            f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
-        )
 
-    return score
+    raise ValueError(
+        f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
+        " or 'multilabel'"
+    )
 
 
 def binary_f1_score(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
     threshold: float = 0.5,
     zero_division: Literal["warn", 0, 1] = "warn",
@@ -529,20 +534,20 @@ def binary_f1_score(  # pylint: disable=too-many-arguments
 
 
 def multiclass_f1_score(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the F1 score for multiclass classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_classes : int
         Number of classes in the dataset.
@@ -553,6 +558,7 @@ def multiclass_f1_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each class. Otherwise, use one of
         the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each class, and find their
@@ -593,21 +599,21 @@ def multiclass_f1_score(  # pylint: disable=too-many-arguments
 
 
 def multilabel_f1_score(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the F1 score for multilabel classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_labels : int
         Number of labels for the task.
@@ -620,6 +626,7 @@ def multilabel_f1_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label. Otherwise, use one of
         the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives, false positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -659,24 +666,24 @@ def multilabel_f1_score(  # pylint: disable=too-many-arguments
 
 
 def f1_score(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
-    num_classes: int = None,
+    num_classes: Optional[int] = None,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
-    num_labels: int = None,
+    num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the F1 score for multiclass data.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated targets as returned by a classifier.
     task : Literal["binary", "multiclass", "multilabel"]
         Type of classification task.
@@ -696,6 +703,7 @@ def f1_score(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives, false positives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -718,21 +726,21 @@ def f1_score(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.9, 0.8, 0.2]
     >>> f1_score(target, preds, task="binary")
     0.5
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
     >>> f1_score(target, preds, task="multiclass", num_classes=3)
     array([0.66666667, 0.8       , 0.        ])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import f1_score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]

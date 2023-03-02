@@ -1,7 +1,8 @@
 """Model catalog."""
+
 import logging
 from difflib import get_close_matches
-from typing import Any, Callable, Dict, List, Literal, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
 import torch.nn.modules
 import torch.optim
@@ -18,10 +19,10 @@ setup_logging(print_level="WARN", logger=LOGGER)
 # Model catalogs   #
 ####################
 _model_catalog: Dict[str, Any] = {}
-_temporal_model_keys: set[str] = set()
-_static_model_keys: set[str] = set()
-_pt_model_keys: set[str] = set()
-_sk_model_keys: set[str] = set()
+_temporal_model_keys: Set[str] = set()
+_static_model_keys: Set[str] = set()
+_pt_model_keys: Set[str] = set()
+_sk_model_keys: Set[str] = set()
 
 
 def register_model(name: str, model_type: Literal["static", "temporal"]) -> Callable:
@@ -80,8 +81,8 @@ def register_model(name: str, model_type: Literal["static", "temporal"]) -> Call
 
 
 def list_models(
-    category: Literal["static", "temporal", "pytorch", "sklearn"] = None
-) -> list[str]:
+    category: Optional[Literal["static", "temporal", "pytorch", "sklearn"]] = None
+) -> List[str]:
     """List models.
 
     Parameters

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0  # Use the ref you want to point at
+    rev: v4.4.0  # Use the ref you want to point at
     hooks:
     - id: trailing-whitespace
     - id: check-ast
@@ -17,17 +17,17 @@ repos:
     - id: check-toml
 
   - repo: https://github.com/ambv/black
-    rev: 22.3.0
+    rev: 23.1.0
     hooks:
     - id: black
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.5.2
+    rev: 5.12.0
     hooks:
     - id: isort
 
   - repo: https://github.com/myint/docformatter
-    rev: v1.3.1
+    rev: v1.5.1
     hooks:
     - id: docformatter
       args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88, --blank]
@@ -42,18 +42,20 @@ repos:
       files: ".*.py$"
 
   - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.1.1
+    rev: 6.3.0
     hooks:
     - id: pydocstyle
       args: [--convention=numpy]
       additional_dependencies: [toml]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.942
+    rev: v1.0.1
     hooks:
     - id: mypy
-      args: [--namespace-packages, --explicit-package-bases]
-      additional_dependencies: [types-python-dateutil==2.8.8, types-PyYAML==6.0.5]
+      entry: python3 -m mypy --config-file pyproject.toml
+      language: system
+      types: [python]
+      exclude: "apps|use_cases|tests|cyclops/(process|models|monitor|workflow)"
 
   - repo: local
     hooks:
@@ -74,18 +76,21 @@ repos:
       always_run: true
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.3.1
+    rev: 1.6.3
     hooks:
     - id: nbqa-black
     - id: nbqa-isort
     - id: nbqa-check-ast
     - id: nbqa-flake8
-      # ignore E203/W503 to avoid conflict with black:
-      # https://github.com/psf/black/issues/354
+    # ignore E203/W503 to avoid conflict with black:
+    # https://github.com/psf/black/issues/354
       args: ['--ignore=E203,W503']
-      # - id: nbqa-mypy
+    # - id: nbqa-mypy
 
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.6.0
+  - repo: local
     hooks:
     - id: nbstripout
+      name: nbstripout
+      language: python
+      entry: nbstripout
+      exclude: ^docs/source/tutorials/.*/.*\.ipynb$

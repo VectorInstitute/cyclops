@@ -6,16 +6,15 @@
 import logging
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import sqlalchemy
-from sqlalchemy import Float, Integer, Interval, String, cast, func, select
-from sqlalchemy.dialects.postgresql.base import DATE, TIMESTAMP
+from sqlalchemy import cast, func, select
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import ColumnClause
 from sqlalchemy.sql.schema import Column, Table
 from sqlalchemy.sql.selectable import Select, Subquery
-from sqlalchemy.types import Boolean
+from sqlalchemy.types import Boolean, Date, DateTime, Float, Integer, Interval, String
 
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
@@ -63,6 +62,49 @@ class DBTable:
 
 TABLE_OBJECTS = [Table, Select, Subquery, DBTable]
 TableTypes = Union[Select, Subquery, Table, DBTable]
+
+
+def ckwarg(kwargs: dict, kwarg: str):
+    """Get the value of a conditional keyword argument.
+
+    A keyword argument may or may not be specified in some
+    keyword arguments. If specified, return the value,
+    otherwise return None.
+
+    Parameters
+    ----------
+    kwargs: dict
+        Process keyword arguments.
+    kwarg: str
+        The keyword argument of interest.
+
+    Returns
+    -------
+    any, optional
+        The value of the keyword argument if it exists, otherwise None.
+
+    """
+    if kwarg in kwargs:
+        return kwargs[kwarg]
+    return None
+
+
+def remove_kwargs(process_kwargs: dict, kwargs: Union[str, List[str]]):
+    """Remove some keyword arguments from process_kwargs if they exist.
+
+    Parameters
+    ----------
+    process_kwargs: dict
+        Process keyword arguments.
+    kwargs: str or list of str
+        The keyword arguments to remove should they exist.
+
+    """
+    kwargs = to_list(kwargs)
+    for kwarg in kwargs:
+        if kwarg in process_kwargs:
+            del process_kwargs[kwarg]
+    return process_kwargs
 
 
 def _to_subquery(table: TableTypes) -> Subquery:
@@ -487,7 +529,7 @@ def reorder_columns(table: TableTypes, cols: List[str]) -> Subquery:
 def apply_to_columns(
     table: TableTypes,
     col_names: Union[str, List[str]],
-    func_: Callable,
+    func_: Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
     new_col_labels: Optional[Union[str, List[str]]] = None,
 ) -> Subquery:
     """Apply a function to some columns.
@@ -693,16 +735,20 @@ def process_column(col: Column, **kwargs: bool) -> Column:
         col = cast(col, Boolean)
 
     if to_date:
-        col = cast(col, DATE)
+        col = cast(col, Date)
 
     if to_timestamp:
-        col = cast(col, TIMESTAMP)
+        col = cast(col, DateTime)
 
     return col
 
 
 def equals(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column has some value.
 
@@ -802,7 +848,7 @@ def has_string_format(
 
 
 def has_substring(
-    col: Column, substring: Any, lower: bool = True, **kwargs: bool
+    col: Column, substring: Any, lower: bool = True, **kwargs: Dict[str, bool]
 ) -> BinaryExpression:
     """Condition that a column has some substring.
 
@@ -831,7 +877,11 @@ def has_substring(
 
 
 def starts_with(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column starts with some value/string.
 
@@ -864,7 +914,11 @@ def starts_with(
 
 
 def ends_with(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column ends with some value/string.
 
@@ -897,7 +951,11 @@ def ends_with(
 
 
 def in_(
-    col: Column, lst: List[Any], lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    lst: List[Any],
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column value is in a list of values.
 
@@ -930,7 +988,7 @@ def in_(
     )
 
 
-def check_column_type(
+def _check_column_type(
     table: TableTypes,
     cols: Union[str, List[str]],
     types: Union[Any, List[Any]],
@@ -961,7 +1019,6 @@ def check_column_type(
         any(isinstance(get_column(table, col).type, type_) for type_ in types)
         for col in cols
     ]
-
     if raise_error and not all(is_type):
         incorrect_type = list(
             set(cols) - {col for i, col in enumerate(cols) if is_type[i]}
@@ -979,7 +1036,7 @@ def check_column_type(
 def check_timestamp_columns(
     table: TableTypes, cols: Union[str, List[str]], raise_error=False
 ):
-    """Check whether some columns are DATE or TIMESTAMP columns.
+    """Check whether some columns are Date or DateTime columns.
 
     Parameters
     ----------
@@ -996,7 +1053,7 @@ def check_timestamp_columns(
         Whether all of the columns are one of the types.
 
     """
-    return check_column_type(table, cols, [DATE, TIMESTAMP], raise_error=raise_error)
+    return _check_column_type(table, cols, [Date, DateTime], raise_error=raise_error)
 
 
 @table_params_to_type(Subquery)

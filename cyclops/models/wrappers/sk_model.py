@@ -1,8 +1,9 @@
 """Scikit-learn model wrapper."""
+
 import logging
 import os
 from functools import wraps
-from typing import Any, Callable, Dict, List, Literal, Sequence, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 
 from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator as SKBaseEstimator
@@ -75,7 +76,7 @@ class SKModel:
         X: ArrayLike,
         y: ArrayLike,
         parameters: Union[Dict, List[Dict]],
-        metric: Union[str, Callable, Sequence, Dict] = None,
+        metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
         **kwargs,
     ):

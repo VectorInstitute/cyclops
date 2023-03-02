@@ -12,7 +12,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from cyclops.process.constants import MIN_MAX, STANDARD
 from cyclops.process.util import has_columns, has_range_index
 from cyclops.utils.common import to_list_optional
-from cyclops.utils.indexing import index_axis
+from cyclops.utils.index import index_axis
 
 METHOD_MAP = {STANDARD: StandardScaler, MIN_MAX: MinMaxScaler}
 

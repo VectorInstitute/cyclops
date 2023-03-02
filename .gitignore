@@ -25,3 +25,4 @@ _extract
 dist/
 outputs/
 multirun/
+_autosummary

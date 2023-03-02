@@ -1,6 +1,9 @@
 """Classes for computing specificity metrics."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Type, Union, cast
+
+import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.specificity import _specificity_reduce
 from cyclops.evaluate.metrics.metric import Metric
@@ -55,11 +58,11 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the specificity score from the state."""
         # pylint: disable=invalid-name # for tp, tn, fp, fn
         tp, fp, tn, fn = self._final_state()
-        return _specificity_reduce(
+        score = _specificity_reduce(
             tp=tp,
             fp=fp,
             tn=tn,
@@ -67,6 +70,7 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, score)
 
 
 class MulticlassSpecificity(
@@ -85,6 +89,7 @@ class MulticlassSpecificity(
     average : Literal["micro", "macro", "weighted", None], default=None
         If None, return the specificity for each class, otherwise return the
         average specificity. Average options are:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each class, and find their unweighted
             mean. This does not take class imbalance into account.
@@ -127,7 +132,7 @@ class MulticlassSpecificity(
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the specificity score from the state."""
         tp, fp, tn, fn = self._final_state()
         return _specificity_reduce(
@@ -160,6 +165,7 @@ class MultilabelSpecificity(
     average : Literal["micro", "macro", "weighted", None], default=None
         If None, return the specificity for each class, otherwise return the
         average specificity. Average options are:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each label, and find their unweighted
             mean. This does not take label imbalance into account.
@@ -206,7 +212,7 @@ class MultilabelSpecificity(
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the specificity score from the state."""
         tp, fp, tn, fn = self._final_state()
         return _specificity_reduce(
@@ -245,6 +251,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each class/label, and find their
             unweighted mean. This does not take label/class imbalance into
@@ -259,7 +266,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import Specificity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.9, 0.05, 0.05, 0.35, 0.05]
@@ -274,7 +281,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     >>> metric.compute()
     0.0
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import Specificity
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
@@ -291,7 +298,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     >>> metric.compute()
     array([0.8, 0.5, 0.8])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import Specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.2, 0.75], [0.35, 0.5, 0.15]]
@@ -312,13 +319,13 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of Specificity
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
-        num_classes: int = None,
+        num_classes: Optional[int] = None,
         threshold: float = 0.5,
         top_k: Optional[int] = None,
-        num_labels: int = None,
+        num_labels: Optional[int] = None,
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> Metric:

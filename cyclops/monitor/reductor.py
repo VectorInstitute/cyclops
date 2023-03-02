@@ -1,11 +1,13 @@
 """Reductor Module."""
+
 import os
 import pickle
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
 import torchxrayvision as xrv
+from datasets.arrow_dataset import Dataset
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
@@ -24,8 +26,9 @@ class Reductor:
     The reductor is initialized with a dimensionality reduction method.
     The reductor can then be fit to the data and used to transform the data.
 
-    Example: (Data is loaded from memory)
+    Examples
     --------
+    >>> # (Data is loaded from memory)
     >>> from drift_detection.reductor import Reductor
     >>> from sklearn.datasets import load_diabetes
     >>> X, y = load_diabetes(return_X_y=True)
@@ -33,9 +36,9 @@ class Reductor:
     >>> reductor.fit(X)
     >>> X_transformed = reductor.transform(X)
 
-    Arguments
-    ---------
-    dr_method: String
+    Parameters
+    ----------
+    dr_method: str
         The dimensionality reduction method to use.
         Available methods are:
             "nored"
@@ -54,7 +57,6 @@ class Reductor:
         dr_method: str,
         **kwargs
     ):
-
         self.dr_method = dr_method
 
         # dictionary of string methods with corresponding functions
@@ -100,7 +102,7 @@ class Reductor:
 
         Parameters
         ----------
-        output_path: String
+        output_path: str
             path to save the model to
 
         """
@@ -134,7 +136,7 @@ class Reductor:
         ]
 
 
-    def fit(self, data: Union[np.ndarray, torch.utils.data.Dataset]):
+    def fit(self, data: Union[np.ndarray, Dataset]):
         """Fit the reductor to the data.
 
         For pre-trained or untrained models,
@@ -142,31 +144,29 @@ class Reductor:
 
         Parameters
         ----------
-        data:
-            data to fit the reductor to.
-            Shape:
-                data: np.ndarray (n_samples, n_features)
-                      or torch Dataset
+        data: np.ndarray or huggingface Dataset
+            Data to fit the reductor of shape (n_samples, n_features).
 
         """
-        # check if data is a numpy matrix or a torch dataset
+        # check if data is a numpy matrix or a huggingface dataset
         if isinstance(data, np.ndarray):
             if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
                 self.model.fit(data)
 
-        elif isinstance(data, torch.utils.data.Dataset):
+        elif isinstance(data, Dataset):
             pass
 
         else:
             raise ValueError(
-                "data must be a numpy matrix (n_samples, n_features) or a torch Dataset"
+                "data must be a numpy matrix (n_samples, n_features) \
+                     or a huggingface Dataset"
             )
 
     def transform(
         self,
-        data: Union[np.ndarray, torch.utils.data.Dataset],
+        data: Union[np.ndarray, Dataset],
         batch_size: int = 32,
-        num_workers: int = None,
+        num_workers: Optional[int] = None,
         progress: bool = True,
         device: str = None,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
@@ -174,10 +174,10 @@ class Reductor:
 
         Parameters
         ----------
-        data: np.ndarray (n_samples, n_features) or torch Dataset
+        data: np.ndarray (n_samples, n_features) or huggingface Dataset
             data to transform.
         batch_size: int
-            batch size for LSTM inference/pytorch dataloader. Default: 32
+            batch size for pytorch dataloader. Default: 32
         num_workers: int
             number of workers for pytorch dataloader. If None, uses max number of cpus.
 
@@ -199,7 +199,7 @@ class Reductor:
         elif self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
             if isinstance(data, np.ndarray):
                 X_transformed = self.model.transform(data)
-            elif isinstance(data, torch.utils.data.Dataset):
+            elif isinstance(data, Dataset):
                 dataloader = DataLoader(
                     data, batch_size=batch_size, num_workers=num_workers
                 )

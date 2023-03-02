@@ -1,5 +1,7 @@
 """Querying functions used in the query page."""
 
+# pylint: disable=no-member
+
 from typing import Dict
 
 import pandas as pd
@@ -59,8 +61,9 @@ def query(  # pylint: disable=too-many-arguments
 
     if diagnosis_checked:
         if encounters is None:
-            diagnoses = db.diagnoses(**diagnosis_kwargs).run()
-            datas[APP_DIAG] = diagnoses
+            # diagnoses = db.diagnoses(**diagnosis_kwargs).run()
+            # datas[APP_DIAG] = diagnoses
+            datas[APP_DIAG] = None
         else:
             diagnoses = patient_diagnoses(diagnosis_kwargs).run()
             datas[APP_ENC] = pd.merge(

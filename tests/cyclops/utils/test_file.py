@@ -4,12 +4,12 @@ import os
 import shutil
 from unittest import TestCase
 
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 import pytest
 
 from cyclops.utils.file import (
-    concat_consequtive_dataframes,
     exchange_extension,
     join,
     listdir_nonhidden,
@@ -19,7 +19,6 @@ from cyclops.utils.file import (
     process_dir_save_path,
     process_file_save_path,
     save_array,
-    save_consequtive_dataframes,
     save_dataframe,
     save_pickle,
     yield_dataframes,
@@ -37,40 +36,6 @@ def test_yield_pickled_files():
     for pkl_file_content in yield_pickled_files("test_dir4", skip_n=1):
         TestCase().assertDictEqual(test_data, pkl_file_content)
     shutil.rmtree("./test_dir4")
-
-
-def test_concat_consequtive_save_dataframes():
-    """Test concat_consequtive_dataframes and save_consequtive_dataframes fn."""
-    test_df = pd.DataFrame([1, 2], columns=["a"])
-    os.makedirs("test_dir2", exist_ok=True)
-    save_dataframe(test_df, "test_dir2/df1")
-    save_dataframe(test_df, "test_dir2/df2")
-    save_dataframe(test_df, "test_dir2/df3")
-    save_dataframe(test_df, "test_dir2/df4")
-    for dataframe in concat_consequtive_dataframes("test_dir2", every_n=2):
-        assert dataframe.equals(
-            pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1])
-        )
-
-    save_dataframe(test_df, "test_dir2/df5")
-    count = 0
-    for dataframe in concat_consequtive_dataframes("test_dir2", every_n=2):
-        if count == 2:
-            assert dataframe.equals(pd.DataFrame([1, 2], columns=["a"], index=[0, 1]))
-        else:
-            assert dataframe.equals(
-                pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1])
-            )
-        count += 1
-
-    save_consequtive_dataframes("test_dir2", "test_dir3", every_n=2)
-    df1 = load_dataframe("test_dir3/batch_0000.parquet")
-    df2 = load_dataframe("test_dir3/batch_0001.parquet")
-    assert df1.equals(pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1]))
-    assert df2.equals(pd.DataFrame([1, 2, 1, 2], columns=["a"], index=[0, 1, 0, 1]))
-
-    shutil.rmtree("test_dir2")
-    shutil.rmtree("test_dir3")
 
 
 def test_yield_dataframes():
@@ -178,6 +143,11 @@ def test_save_dataframe(
     loaded_data = pd.read_csv(path + ".csv", index_col=[0])
     assert loaded_data.equals(test_data_without_index)
 
+    dask_df = dd.from_pandas(test_data_with_index, npartitions=2)
+    save_dataframe(dask_df, path, file_format="parquet")
+    loaded_data = dd.read_parquet(path)
+    assert loaded_data.compute().equals(test_data_with_index)
+
     shutil.rmtree("test_save")
 
     with pytest.raises(ValueError):
@@ -215,6 +185,11 @@ def test_load_dataframe(
     save_dataframe(test_data_without_index, path, file_format="csv")
     loaded_data = load_dataframe(path, file_format="csv")
     assert loaded_data.equals(test_data_without_index)
+
+    dask_df = dd.from_pandas(test_data_with_index, npartitions=2)
+    save_dataframe(dask_df, path, file_format="parquet")
+    loaded_data = load_dataframe(path)
+    assert loaded_data.compute().equals(test_data_with_index)
 
     with pytest.raises(ValueError):
         load_dataframe(path, file_format="donkey")

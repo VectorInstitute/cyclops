@@ -1,9 +1,9 @@
 """Functions for computing accuracy scores for classification tasks."""
 
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, cast
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from sklearn.metrics._classification import _prf_divide
 
 from cyclops.evaluate.metrics.functional.stat_scores import (
@@ -22,14 +22,14 @@ from cyclops.evaluate.metrics.utils import (
 
 
 def _accuracy_reduce(  # pylint: disable=too-many-arguments
-    tp: Union[np.ndarray, np.int_],
-    fp: Union[np.ndarray, np.int_],
-    tn: Union[np.ndarray, np.int_],
-    fn: Union[np.ndarray, np.int_],
+    tp: Union[npt.NDArray[np.int_], np.int_],
+    fp: Union[npt.NDArray[np.int_], np.int_],
+    tn: Union[npt.NDArray[np.int_], np.int_],
+    fn: Union[npt.NDArray[np.int_], np.int_],
     task_type: Literal["binary", "multiclass", "multilabel"],
     average: Literal["micro", "macro", "weighted", None],
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[np.ndarray, float]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute accuracy score per class or sample and apply average.
 
     Parameters
@@ -54,16 +54,16 @@ def _accuracy_reduce(  # pylint: disable=too-many-arguments
 
     Returns
     -------
-        accuracy : numpy.ndarray or float
-            The average accuracy score if 'average' is not None, otherwise the
-            accuracy score per class.
+    accuracy : numpy.ndarray or float
+        The average accuracy score if 'average' is not None, otherwise the
+        accuracy score per class.
 
     """
     if average == "micro":
         tp = np.array(np.sum(tp))
         fn = np.array(np.sum(fn))
-        numerator = tp
-        denominator = tp + fn
+        numerator: Union[npt.NDArray[np.int_], np.int_] = tp
+        denominator: Union[npt.NDArray[np.int_], np.int_] = tp + fn
         if task_type == "multilabel":
             fp = np.array(np.sum(fp))
             tn = np.array(np.sum(tn))
@@ -94,19 +94,23 @@ def _accuracy_reduce(  # pylint: disable=too-many-arguments
 
         if weights is not None and np.sum(weights) == 0:
             return (
-                np.zeros_like(score)
+                np.zeros_like(score, dtype=np.float64)
                 if zero_division in ["warn", 0]
-                else np.ones_like(score)
+                else np.ones_like(score, dtype=np.float64)
             )
 
-        return np.average(score, weights=weights)
+        avg_score: Union[float, npt.NDArray[np.float_]] = np.average(
+            score, weights=weights
+        )
+        return avg_score
 
-    return _get_value_if_singleton_array(score)
+    ret_value = _get_value_if_singleton_array(score)
+    return cast(Union[float, npt.NDArray[np.float_]], ret_value)
 
 
 def binary_accuracy(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
     threshold: float = 0.5,
     zero_division: Literal["warn", 0, 1] = "warn",
@@ -115,9 +119,9 @@ def binary_accuracy(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated targets (predictions) as returned by a classifier.
     pos_label : int, default=1
         The label of the positive class. Can be 0 or 1.
@@ -131,7 +135,7 @@ def binary_accuracy(  # pylint: disable=too-many-arguments
 
     Returns
     -------
-    float
+    acc_score : float
         The accuracy score.
 
     Examples
@@ -154,26 +158,33 @@ def binary_accuracy(  # pylint: disable=too-many-arguments
     )
 
     tp, fp, tn, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
-    return _accuracy_reduce(
-        tp, fp, tn, fn, task_type="binary", average=None, zero_division=zero_division
+    acc_score = _accuracy_reduce(
+        tp,
+        fp,
+        tn,
+        fn,
+        task_type="binary",
+        average=None,
+        zero_division=zero_division,
     )
+    return cast(float, acc_score)
 
 
 def multiclass_accuracy(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the accuracy score for multiclass classification problems.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated targets (predictions) as returned by a classifier.
     num_classes : int
         Number of classes in the dataset.
@@ -182,6 +193,7 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
         computing the accuracy score.
     average : Literal["micro", "macro", "weighted", None], default=None
         If not None, this determines the type of averaging performed on the data:
+
         - ``micro``: Calculate metrics globally by counting the total
             true positives, false negatives, false positives and true
             negatives.
@@ -229,26 +241,29 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
     # pylint: disable=invalid-name
     tp, fp, tn, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
-    return _accuracy_reduce(
-        tp,
-        fp,
-        tn,
-        fn,
-        task_type="multiclass",
-        average=average,
-        zero_division=zero_division,
+    return cast(
+        float,
+        _accuracy_reduce(
+            tp,
+            fp,
+            tn,
+            fn,
+            task_type="multiclass",
+            average=average,
+            zero_division=zero_division,
+        ),
     )
 
 
 def multilabel_accuracy(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute the accuracy score for multilabel-indicator targets.
 
     Parameters
@@ -268,6 +283,7 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
     average : Literal['micro', 'macro', 'weighted', None], default=None
         If None, return the accuracy score per label, otherwise this determines
         the type of averaging performed on the data:
+
         - ``micro``: Calculate metrics globally by counting the total
             true positives, false negatives, true negatives and false positives.
         - ``macro``: Calculate metrics for each label, and find their unweighted
@@ -323,24 +339,24 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
 
 
 def accuracy(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
-    num_classes: int = None,
+    num_classes: Optional[int] = None,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
-    num_labels: int = None,
+    num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute accuracy score for different classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated targets (predictions) as returned by a classifier.
     task : Literal["binary", "multiclass", "multilabel"]
         The type of task for the input data. One of 'binary', 'multiclass'
@@ -361,6 +377,7 @@ def accuracy(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each label/class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives. false positives, true negatives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -392,20 +409,20 @@ def accuracy(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import accuracy
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> accuracy(target, preds, task="binary")
     0.75
 
-    (multiclass)
+    >>> # (multiclass)
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 0, 2, 2, 1]
     >>> accuracy(target, preds, task="multiclass", num_classes=3, average="micro")
     0.6
 
-    (multilabel)
+    >>> # (multilabel)
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]
     >>> accuracy(target, preds, task="multilabel", num_labels=3, average="mcro")
@@ -413,7 +430,7 @@ def accuracy(  # pylint: disable=too-many-arguments
 
     """
     if task == "binary":
-        accuracy_score = binary_accuracy(
+        accuracy_score: Union[float, npt.NDArray[np.float_]] = binary_accuracy(
             target,
             preds,
             pos_label=pos_label,
@@ -429,7 +446,7 @@ def accuracy(  # pylint: disable=too-many-arguments
             preds,
             num_classes=num_classes,
             top_k=top_k,
-            average=average,  # type: ignore
+            average=average,
             zero_division=zero_division,
         )
     elif task == "multilabel":

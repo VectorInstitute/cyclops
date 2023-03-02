@@ -1,24 +1,20 @@
 """unit tests for Synthetic Applicator."""
 
+import numpy as np
 import pytest
 
-from cyclops.monitor.datasets.utils import synthetic_gemini_dataset
 from cyclops.monitor.synthetic_applicator import SyntheticShiftApplicator
 
 
-@pytest.fixture(name="dataset")
-def fixture_dataset():
+@pytest.fixture(name="X")
+def fixture_x():
     """Create a test input."""
-    metadata, features, metadata_mapping = synthetic_gemini_dataset()
-    return features.reshape(features.shape[0], -1), metadata, metadata_mapping
+    x = np.random.rand(100, 10)
+    return x
 
 
-# Test all shift types
-
-
-def test_sa_gn_shift(dataset):
+def test_sa_gn_shift(X):
     """Test SyntheticShiftApplicator gaussian shift."""
-    features, metadata, metadata_mapping = dataset
     applicator = SyntheticShiftApplicator("gn_shift")
-    X_s, _ = applicator.apply_shift(features, metadata, metadata_mapping)
-    assert X_s.shape[-1] == features.shape[-1]
+    X_s = applicator.apply_shift(X)
+    assert X_s.shape[-1] == X.shape[-1]

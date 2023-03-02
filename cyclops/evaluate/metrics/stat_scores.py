@@ -1,9 +1,9 @@
 """Classes for computing stat scores."""
 
-from typing import Callable, Literal, Optional, Tuple
+from typing import Callable, Literal, Optional, Tuple, Type, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.stat_scores import (
     _binary_stat_scores_args_check,
@@ -16,8 +16,6 @@ from cyclops.evaluate.metrics.functional.stat_scores import (
     _stat_scores_compute,
 )
 from cyclops.evaluate.metrics.metric import Metric
-
-# mypy: ignore-errors
 
 
 class _AbstractScores(Metric):
@@ -46,7 +44,9 @@ class _AbstractScores(Metric):
 
         """
         assert size > 0, "``size`` must be greater than 0."
-        default: Callable = lambda: np.zeros(shape=size, dtype=np.int_)
+        default: Callable[[], npt.NDArray[np.int_]] = lambda: np.zeros(
+            shape=size, dtype=np.int_
+        )
 
         self.add_state("tp", default())
         self.add_state("fp", default())
@@ -54,7 +54,11 @@ class _AbstractScores(Metric):
         self.add_state("fn", default())
 
     def _update_state(
-        self, tp: np.ndarray, fp: np.ndarray, tn: np.ndarray, fn: np.ndarray
+        self,
+        tp: Union[npt.NDArray[np.int_], np.int_],
+        fp: Union[npt.NDArray[np.int_], np.int_],
+        tn: Union[npt.NDArray[np.int_], np.int_],
+        fn: Union[npt.NDArray[np.int_], np.int_],
     ) -> None:
         """Update the state variables.
 
@@ -75,12 +79,19 @@ class _AbstractScores(Metric):
 
         """
         # pylint: disable=no-member
-        self.tp += tp
-        self.fp += fp
-        self.tn += tn
-        self.fn += fn
+        self.tp += tp  # type: ignore[attr-defined]
+        self.fp += fp  # type: ignore[attr-defined]
+        self.tn += tn  # type: ignore[attr-defined]
+        self.fn += fn  # type: ignore[attr-defined]
 
-    def _final_state(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def _final_state(
+        self,
+    ) -> Tuple[
+        Union[npt.NDArray[np.int_], np.int_],
+        Union[npt.NDArray[np.int_], np.int_],
+        Union[npt.NDArray[np.int_], np.int_],
+        Union[npt.NDArray[np.int_], np.int_],
+    ]:
         """Return the final state variables.
 
         Returns
@@ -91,10 +102,10 @@ class _AbstractScores(Metric):
 
         """
         # pylint: disable=no-member
-        tp = self.tp
-        fp = self.fp
-        tn = self.tn
-        fn = self.fn
+        tp = self.tp  # type: ignore[attr-defined]
+        fp = self.fp  # type: ignore[attr-defined]
+        tn = self.tn  # type: ignore[attr-defined]
+        fn = self.fn  # type: ignore[attr-defined]
         return tp, fp, tn, fn
 
 
@@ -139,8 +150,8 @@ class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
         self._create_state(size=1)
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state variables."""
         target, preds = _binary_stat_scores_format(
             target, preds, threshold=self.threshold, pos_label=self.pos_label
@@ -151,7 +162,7 @@ class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
         )
         self._update_state(tp, fp, tn, fn)
 
-    def compute(self) -> np.ndarray:
+    def compute(self) -> npt.NDArray[np.int_]:
         """Compute the binary stat scores from the state variables.
 
         Returns
@@ -232,8 +243,8 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
         self._create_state(size=num_classes)
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state variables."""
         target, preds = _multiclass_stat_scores_format(
             target, preds, num_classes=self.num_classes, top_k=self.top_k
@@ -243,7 +254,7 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
         )
         self._update_state(tp, fp, tn, fn)
 
-    def compute(self) -> np.ndarray:
+    def compute(self) -> npt.NDArray[np.int_]:
         """Compute the multiclass stat scores from the state variables.
 
         Returns
@@ -303,7 +314,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         self,
         num_labels: int,
         threshold: float = 0.5,
-        top_k: int = None,
+        top_k: Optional[int] = None,
         labelwise: bool = True,
     ) -> None:
         super().__init__()
@@ -318,8 +329,8 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         self._create_state(size=num_labels)
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state variables."""
         target, preds = _multilabel_stat_scores_format(
             target,
@@ -333,7 +344,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         )
         self._update_state(tp, fp, tn, fn)
 
-    def compute(self) -> np.ndarray:
+    def compute(self) -> npt.NDArray[np.int_]:
         """Compute the multilabel stat scores from the state variables.
 
         Returns
@@ -382,7 +393,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import StatScores
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
@@ -398,7 +409,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     >>> metric.compute()
     array([4, 2, 5, 1, 5])
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import StatScores
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 2, 1, 2, 0]
@@ -432,7 +443,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
             [0, 4, 3, 3, 3],
             [1, 2, 3, 4, 5]])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import StatScores
     >>> target = [[0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
@@ -455,7 +466,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of StatScores
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
         threshold: float = 0.5,

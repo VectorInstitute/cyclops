@@ -3,7 +3,7 @@
 from typing import Literal, Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.precision_recall import (
     binary_recall,
@@ -14,8 +14,8 @@ from cyclops.evaluate.metrics.functional.precision_recall import (
 
 
 def binary_sensitivity(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
     threshold: float = 0.5,
     zero_division: Literal["warn", 0, 1] = "warn",
@@ -63,20 +63,20 @@ def binary_sensitivity(
 
 
 def multiclass_sensitivity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute sensitivity score for multiclass classification problems.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_classes : int
         Total number of classes in the dataset.
@@ -87,6 +87,7 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         Average to apply. If None, return scores for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false negatives.
         - ``macro``: Calculate metrics for each label, and find their
@@ -103,7 +104,6 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
     float or numpy.ndarray
         Sensitivity score. If ``average`` is None, return a numpy.ndarray of
         sensitivity scores for each class.
-
 
     Raises
     ------
@@ -132,14 +132,14 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
 
 
 def multilabel_sensitivity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-):
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute sensitivity score for multilabel classification tasks.
 
     The input is expected to be an array-like of shape (N, L), where N is the
@@ -149,9 +149,9 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     num_labels : int
         Number of labels in the dataset.
@@ -160,6 +160,7 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the sensitivity score for each class. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metric globally from the total count of true
             positives and false negatives.
         - ``macro``: Calculate metric for each label, and find their
@@ -183,7 +184,6 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
         If ``average`` is not one of ``micro``, ``macro``, ``weighted``
         or ``None``.
 
-
     Examples
     --------
     >>> from cyclops.evaluation.metrics.functional import multilabel_sensitivity
@@ -205,17 +205,17 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
 
 
 def sensitivity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
-    num_classes: int = None,
+    num_classes: Optional[int] = None,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
-    num_labels: int = None,
+    num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute sensitivity score for different classification tasks.
 
     Sensitivity is the ratio tp / (tp + fn) where tp is the number of true positives
@@ -224,9 +224,9 @@ def sensitivity(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predictions as returned by a classifier.
     task : Literal["binary", "multiclass", "multilabel"]
         Task type.
@@ -244,6 +244,7 @@ def sensitivity(  # pylint: disable=too-many-arguments
     average : Literal["micro", "macro", "weighted", None], default=None
         Average to apply. If None, return scores for each class/label. Otherwise,
         use one of the following options to compute the average score:
+
         - ``micro``: Calculate metrics globally by counting the total true
             positives and false negatives.
         - ``macro``: Calculate metrics for each class/label, and find their
@@ -269,21 +270,21 @@ def sensitivity(  # pylint: disable=too-many-arguments
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics.functional import sensitivity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.4, 0.2, 0.0, 0.6, 0.9]
     >>> sensitivity(target, preds, task="binary")
     0.3333333333333333
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics.functional import sensitivity
     >>> target = [1, 1, 2, 0, 2, 2]
     >>> preds = [1, 2, 2, 0, 2, 0]
     >>> sensitivity(target, preds, task="multiclass", num_classes=3)
     array([1.        , 0.5       , 0.66666667])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics.functional import sensitivity
     >>> target = [[1, 0, 1], [0, 1, 0]]
     >>> preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]

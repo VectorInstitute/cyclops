@@ -1,6 +1,9 @@
 """Classes for computing accuracy metrics."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Type, Union, cast
+
+import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.accuracy import _accuracy_reduce
 from cyclops.evaluate.metrics.metric import Metric
@@ -54,10 +57,10 @@ class BinaryAccuracy(BinaryStatScores, registry_key="binary_accuracy"):
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the accuracy score from the state."""
         tp, fp, tn, fn = self._final_state()
-        return _accuracy_reduce(
+        score = _accuracy_reduce(
             tp=tp,
             fp=fp,
             tn=tn,
@@ -66,6 +69,7 @@ class BinaryAccuracy(BinaryStatScores, registry_key="binary_accuracy"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, score)
 
 
 class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy"):
@@ -80,6 +84,7 @@ class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy
         computing the accuracy score.
     average : Literal["micro", "macro", "weighted", None], default=None
         If not None, this determines the type of averaging performed on the data:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each class, and find their unweighted
             mean. This does not take class imbalance into account.
@@ -122,7 +127,7 @@ class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the accuracy score from the state."""
         tp, fp, tn, fn = self._final_state()
         return _accuracy_reduce(
@@ -152,6 +157,7 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
     average : Literal['micro', 'macro', 'weighted', None], default=None
         If None, return the accuracy score per label, otherwise this determines
         the type of averaging performed on the data:
+
         - ``micro``: Calculate metrics globally.
         - ``macro``: Calculate metrics for each label, and find their unweighted
             mean. This does not take label imbalance into account.
@@ -197,7 +203,7 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the accuracy score from the state."""
         tp, fp, tn, fn = self._final_state()
         return _accuracy_reduce(
@@ -235,20 +241,21 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the recall score for each label/class. Otherwise,
         use one of the following options to compute the average score:
-            - ``micro``: Calculate metrics globally.
-            - ``macro``: Calculate metrics for each class/label, and find their
-                unweighted mean. This does not take label imbalance into account.
-            - ``weighted``: Calculate metrics for each label/class, and find
-                their average weighted by support (the number of true instances
-                for each label/class). This alters ``macro`` to account for
-                label/class imbalance.
+
+        - ``micro``: Calculate metrics globally.
+        - ``macro``: Calculate metrics for each class/label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label/class, and find
+            their average weighted by support (the number of true instances
+            for each label/class). This alters ``macro`` to account for
+            label/class imbalance.
     zero_division : Literal["warn", 0, 1], default="warn"
         Sets the value to return when there is a zero division. If set to ``warn``,
         this acts as 0, but warnings are also raised.
 
     Examples
     --------
-    (binary)
+    >>> # (binary)
     >>> from cyclops.evaluation.metrics import Accuracy
     >>> target = [0, 0, 1, 1]
     >>> preds = [0, 1, 1, 1]
@@ -263,7 +270,7 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     >>> metric.compute()
     0.5
 
-    (multiclass)
+    >>> # (multiclass)
     >>> from cyclops.evaluation.metrics import Accuracy
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 0, 2, 2, 1]
@@ -279,7 +286,7 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     >>> metric.compute()
     array([0., 1., 0.])
 
-    (multilabel)
+    >>> # (multilabel)
     >>> from cyclops.evaluation.metrics import Accuracy
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]
@@ -298,13 +305,13 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of Accuracy
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
-        num_classes: int = None,
+        num_classes: Optional[int] = None,
         threshold: float = 0.5,
         top_k: Optional[int] = None,
-        num_labels: int = None,
+        num_labels: Optional[int] = None,
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> Metric:

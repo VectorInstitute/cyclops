@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from cyclops.plotter import plot_histogram, plot_temporal_features
 from cyclops.process.aggregate import Aggregator
 from cyclops.process.constants import (
     BINARY,
@@ -385,7 +384,7 @@ class Features:
         self,
         fractions: Union[float, List[float]] = 1.0,
         randomize: bool = True,
-        seed: int = None,
+        seed: Optional[int] = None,
     ):
         """Split the data into multiple datasets by fractions.
 
@@ -411,7 +410,7 @@ class Features:
         self,
         fractions: Union[float, List[float]] = 1.0,
         randomize: bool = True,
-        seed: int = None,
+        seed: Optional[int] = None,
     ) -> List[np.ndarray]:
         """Compute the value splits given fractions.
 
@@ -719,7 +718,7 @@ class Features:
 
     def slice(
         self,
-        slice_map: Dict[str, Union[Any, List[Any]]] = None,
+        slice_map: Optional[Dict[str, Union[Any, List[Any]]]] = None,
         slice_query: Optional[str] = None,
         replace: bool = False,
     ) -> np.ndarray:
@@ -824,25 +823,6 @@ class TabularFeatures(Features):
             data.values, indexes=[by_map, feat_map], axis_names=[self.by[0], FEATURES]
         )
 
-    def plot_features(
-        self,
-        features: Optional[Union[str, list]] = None,
-    ) -> None:
-        """Plot features.
-
-        High-level plotting function for features.
-
-        Parameters
-        ----------
-        features: str or list of str, optional
-            Names of features to plot.
-
-        """
-        if features is None:
-            plot_histogram(self.data, self.feature_names())
-        else:
-            plot_histogram(self.data, features)
-
 
 class TemporalFeatures(Features):
     """Temporal features."""
@@ -875,25 +855,6 @@ class TemporalFeatures(Features):
             raise ValueError(
                 "Features and aggregator timestamp columns must be the same."
             )
-
-    def plot_features(
-        self,
-        features: Optional[Union[str, list]] = None,
-    ) -> None:
-        """Plot features.
-
-        High-level plotting function for features.
-
-        Parameters
-        ----------
-        features: list or str, optional
-            Names of features to plot.
-
-        """
-        if features is None:
-            plot_temporal_features(self.data, self.feature_names())
-        else:
-            plot_temporal_features(self.data, features)
 
     def aggregate(self, **aggregate_kwargs) -> pd.DataFrame:
         """Aggregate the data.
@@ -930,7 +891,7 @@ def split_features(
     features: List[Union[Features, TabularFeatures, TemporalFeatures]],
     fractions: Optional[Union[float, List[float]]] = None,
     randomize: bool = True,
-    seed: int = None,
+    seed: Optional[int] = None,
 ) -> Tuple:
     """Split a set of features using the same uniquely identifying values.
 

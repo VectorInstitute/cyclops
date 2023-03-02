@@ -1,30 +1,25 @@
-cyclops.query package
-=====================
+cyclops.query
+=============
 
 .. automodule:: cyclops.query
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
-Subpackages
------------
+.. autosummary::
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
 
-.. toctree::
-   :maxdepth: 4
+    interface
+    ops
+    base
 
-   cyclops.query.postprocess
+dataset APIs
+------------
 
-Submodules
-----------
+.. autosummary::
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
 
-.. toctree::
-   :maxdepth: 4
-
-   cyclops.query.base
-   cyclops.query.gemini
-   cyclops.query.interface
-   cyclops.query.mimiciv
-   cyclops.query.omop
-   cyclops.query.orm
-   cyclops.query.process
-   cyclops.query.util
+    mimiciv
+    omop
+    gemini

@@ -1,5 +1,7 @@
 """Tester Module for drift detection with TSTester and DCTester submodules."""
 
+from typing import Optional
+
 import numpy as np
 import torch
 import sklearn

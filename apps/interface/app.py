@@ -10,9 +10,9 @@ import pandas as pd
 from dash import Dash, Input, Output, State, html
 from flask_caching import Cache
 
-from cyclops.plotter import plot_histogram, plot_timeline
 from cyclops.process.column_names import ENCOUNTER_ID
 from cyclops.utils.file import join, load_dataframe, save_dataframe
+from cyclops.utils.plot import plot_histogram, plot_timeline
 
 # import app_query
 from . import app_query

@@ -1,4 +1,5 @@
 """Detector base class."""
+
 from typing import Union
 
 import numpy as np
@@ -25,17 +26,6 @@ class Detector:
     p_val_threshold : float
         Threshold for p-value. If p-value is below this threshold, a shift is detected.
 
-    Methods
-    -------
-    fit(X)
-        Fits Reductor to data.
-    transform(X, **kwargs)
-        Transforms data.
-    test_shift(X_source, X_target, **kwargs)
-        Tests shift between source and target data.
-    detect_shift(X_source, X_target, **kwargs)
-        Detects shift between source data and target data.
-
     """
 
     def __init__(
@@ -44,7 +34,6 @@ class Detector:
         tester: Union[TSTester, DCTester],
         device=None
     ):
-
         self.reductor = reductor
         self.tester = tester
         if device is None:
@@ -178,12 +167,10 @@ class Detector:
         pbar_total = self.random_runs * len(self.samples)
         with tqdm(total=pbar_total, miniters=int(pbar_total / 100)) as pbar:
             for rand_run in range(self.random_runs):
-
                 np.random.seed(rand_run)
                 np.random.shuffle(X_target)
 
                 for sample_iter, sample in enumerate(self.samples):
-
                     drift_results = self.detect_shift(X_target, sample, **kwargs)
 
                     p_val_samples[sample_iter, rand_run] = drift_results["p_val"]
