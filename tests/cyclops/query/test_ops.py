@@ -15,9 +15,12 @@ from cyclops.query.ops import (
     ConditionAfterDate,
     ConditionBeforeDate,
     ConditionEndsWith,
+    ConditionEquals,
+    ConditionGreaterThan,
     ConditionIn,
     ConditionInMonths,
     ConditionInYears,
+    ConditionLessThan,
     ConditionRegexMatch,
     ConditionStartsWith,
     ConditionSubstring,
@@ -385,6 +388,35 @@ def test_condition_ends_with(visits_input):  # pylint: disable=redefined-outer-n
     visits = ConditionEndsWith("visit_concept_name", "Visit")(visits_input)
     visits = SYNTHEA.get_interface(visits).run()
     assert all(visits["visit_concept_name"].str.endswith("Visit"))
+
+
+@pytest.mark.integration_test
+def test_condition_equals(visits_input):  # pylint: disable=redefined-outer-name
+    """Test ConditionEquals."""
+    visits = ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_name"] == "Outpatient Visit")
+    visits = ConditionEquals("visit_concept_name", "Outpatient Visit", not_=True)(
+        visits_input
+    )
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_name"] != "Outpatient Visit")
+
+
+@pytest.mark.integration_test
+def test_condition_greater_than(visits_input):  # pylint: disable=redefined-outer-name
+    """Test ConditionGreaterThan."""
+    visits = ConditionGreaterThan("visit_concept_id", 9300)(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_id"] > 9300)
+
+
+@pytest.mark.integration_test
+def test_condition_less_than(visits_input):  # pylint: disable=redefined-outer-name
+    """Test ConditionLessThan."""
+    visits = ConditionLessThan("visit_concept_id", 9300)(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_id"] < 9300)
 
 
 @pytest.mark.integration_test
