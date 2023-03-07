@@ -1,11 +1,11 @@
+# pylint: disable=too-many-lines
+
 """Low-level query operations.
 
 This module contains query operation modules such which can be used in high-level query
 API functions specific to datasets.
 
 """
-
-# pylint: disable=too-many-lines
 
 from __future__ import annotations
 
