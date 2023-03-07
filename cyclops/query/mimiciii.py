@@ -8,8 +8,8 @@ import logging
 from typing import Any, Dict, Optional
 
 import cyclops.query.ops as qo
-from cyclops.query.interface import QueryInterface
 from cyclops.query.base import DatasetQuerier
+from cyclops.query.interface import QueryInterface
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -64,8 +64,7 @@ class MIMICIIIQuerier(DatasetQuerier):
         if config_overrides:
             overrides = config_overrides
         super().__init__(TABLE_MAP, **overrides)
-        
-        
+
     def diagnoses_icd(
         self,
         join: Optional[qo.JoinArgs] = None,
@@ -96,7 +95,7 @@ class MIMICIIIQuerier(DatasetQuerier):
         )(table)
 
         return QueryInterface(self._db, table, join=join, ops=ops)
-    
+
     def labevents(
         self,
         join: Optional[qo.JoinArgs] = None,
@@ -127,8 +126,7 @@ class MIMICIIIQuerier(DatasetQuerier):
         )(table)
 
         return QueryInterface(self._db, table, join=join, ops=ops)
-    
-    
+
     def chartevents(
         self,
         join: Optional[qo.JoinArgs] = None,
