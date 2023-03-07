@@ -1,11 +1,11 @@
+# pylint: disable=too-many-lines
+
 """Low-level query operations.
 
 This module contains query operation modules such which can be used in high-level query
 API functions specific to datasets.
 
 """
-
-# pylint: disable=too-many-lines
 
 from __future__ import annotations
 
@@ -34,9 +34,11 @@ from cyclops.query.util import (
     get_column_names,
     get_columns,
     get_delta_column,
+    greater_than,
     has_columns,
     has_substring,
     in_,
+    less_than,
     not_equals,
     process_column,
     rename_columns,
@@ -835,6 +837,7 @@ class Cast(metaclass=QueryOp):
             "int": "to_int",
             "float": "to_float",
             "date": "to_date",
+            "bool": "to_bool",
             "timestamp": "to_timestamp",
         }
 
@@ -1043,6 +1046,148 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = equals(
             get_column(table, self.col), self.value, True, True, **self.cond_kwargs
+        )
+        if self.not_:
+            cond = cond._negate()
+
+        if self.binarize_col is not None:
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
+        return select(table).where(cond).subquery()
+
+
+class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+    """Filter rows based on greater than (or equal), to some value.
+
+    Parameters
+    ----------
+    col: str
+        Column name on which to condition.
+    value: any
+        Value greater than.
+    equal: bool, default=False
+        Include equality to the value.
+    not_: bool, default=False
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+    **cond_kwargs
+        Optional keyword arguments for processing the condition.
+
+    """
+
+    def __init__(
+        self,
+        col: str,
+        value: Any,
+        equal: bool = False,
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+        **cond_kwargs: Any,
+    ):
+        """Initialize."""
+        self.col = col
+        self.value = value
+        self.equal = equal
+        self.not_ = not_
+        self.binarize_col = binarize_col
+        self.cond_kwargs = cond_kwargs
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        cond = greater_than(
+            get_column(table, self.col),
+            self.value,
+            True,
+            True,
+            self.equal,
+            **self.cond_kwargs,
+        )
+        if self.not_:
+            cond = cond._negate()
+
+        if self.binarize_col is not None:
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
+        return select(table).where(cond).subquery()
+
+
+class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+    """Filter rows based on less than (or equal), to some value.
+
+    Parameters
+    ----------
+    col: str
+        Column name on which to condition.
+    value: any
+        Value greater than.
+    equal: bool, default=False
+        Include equality to the value.
+    not_: bool, default=False
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+    **cond_kwargs
+        Optional keyword arguments for processing the condition.
+
+    """
+
+    def __init__(
+        self,
+        col: str,
+        value: Any,
+        equal: bool = False,
+        not_: bool = False,
+        binarize_col: Optional[str] = None,
+        **cond_kwargs: Any,
+    ):
+        """Initialize."""
+        self.col = col
+        self.value = value
+        self.equal = equal
+        self.not_ = not_
+        self.binarize_col = binarize_col
+        self.cond_kwargs = cond_kwargs
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        cond = less_than(
+            get_column(table, self.col),
+            self.value,
+            True,
+            True,
+            self.equal,
+            **self.cond_kwargs,
         )
         if self.not_:
             cond = cond._negate()

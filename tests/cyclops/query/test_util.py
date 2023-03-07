@@ -18,7 +18,9 @@ from cyclops.query.util import (
     get_column,
     get_column_names,
     get_columns,
+    greater_than,
     has_columns,
+    less_than,
     not_equals,
     process_column,
     process_elem,
@@ -199,6 +201,20 @@ def test_equals():
     """Test equals fn."""
     test_col = column("a")
     assert str(equals(test_col, "bat")) == "a = :a_1"
+
+
+def test_greater_than():
+    """Test greater_than fn."""
+    test_col = column("a")
+    assert str(greater_than(test_col, 1)) == "a > :a_1"
+    assert str(greater_than(test_col, 1, equal=True)) == "a >= :a_1"
+
+
+def test_less_than():
+    """Test less_than fn."""
+    test_col = column("a")
+    assert str(less_than(test_col, 1)) == "a < :a_1"
+    assert str(less_than(test_col, 1, equal=True)) == "a <= :a_1"
 
 
 def test_not_equals():
