@@ -2,6 +2,6 @@ API Reference
 =============
 
 .. toctree::
-   :glob:
 
-   reference/api/*
+   reference/api/query.rst
+   reference/api/evaluate.rst
