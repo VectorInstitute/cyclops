@@ -36,6 +36,7 @@ from cyclops.query.ops import (
     Sequential,
     Substring,
     Trim,
+    Union,
     _none_add,
     _process_checks,
 )
@@ -417,6 +418,25 @@ def test_condition_less_than(visits_input):  # pylint: disable=redefined-outer-n
     visits = ConditionLessThan("visit_concept_id", 9300)(visits_input)
     visits = SYNTHEA.get_interface(visits).run()
     assert all(visits["visit_concept_id"] < 9300)
+
+
+@pytest.mark.integration_test
+def test_union(visits_input):  # pylint: disable=redefined-outer-name
+    """Test Union."""
+    visits = Union(
+        ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
+    )(ConditionEquals("visit_concept_name", "Emergency Room Visit")(visits_input))
+    visits = SYNTHEA.get_interface(visits).run()
+    assert len(visits) == 3937
+    assert all(
+        visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"])
+    )
+    visits = Union(
+        ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
+        union_all=True,
+    )(ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input))
+    visits = SYNTHEA.get_interface(visits).run()
+    assert len(visits) == 7554
 
 
 @pytest.mark.integration_test
