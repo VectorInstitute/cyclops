@@ -177,6 +177,7 @@ def fill_null_with(series: pd.Series, null: pd.Series, value: Any) -> pd.Series:
         Imputed series.
 
     """
+    series = series.copy()
     series[null] = value
     return series
 
