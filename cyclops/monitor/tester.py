@@ -1,7 +1,5 @@
 """Tester Module for drift detection with TSTester and DCTester submodules."""
 
-from typing import Optional
-
 import numpy as np
 import torch
 import sklearn
@@ -84,8 +82,6 @@ class TSTester:
         # if not already present
         # this is required for the FET test
         # to work properly
-        # add this to the FET test in alibi-detect
-        # so that it is not required here
         if self.tester_method == "fet":
             if "alternative" not in self.method_args:
                 self.method_args["alternative"] = "two-sided"

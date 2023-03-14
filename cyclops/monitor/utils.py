@@ -132,6 +132,31 @@ def xrv_inference(model: nn.Module, dataloader: DataLoader, progress=True, devic
     labels = np.concatenate(all_labels)
     return X_transformed, labels
 
+def model_inference(model: nn.Module, dataloader: DataLoader, progress=True
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Perform batched inference with a model on a TorchXRayVision dataset.
+
+    Parameters
+    ----------
+    model: torch.nn.Module
+        the model to use for inference.
+
+    Returns
+    -------
+    X_transformed: np.ndarray
+        the transformed dataset.
+
+    """
+    all_outputs = []
+    for batch in tqdm(dataloader) if progress else dataloader:
+        features = batch["features"]
+        with torch.no_grad():
+            out = model(features)
+        out = out.cpu().numpy()
+        all_outputs.append(out)
+    all_outputs = np.concatenate(all_outputs)
+    return all_outputs
+
 
 def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
     """Print metrics for binary classification."""
@@ -827,7 +852,7 @@ def nihcxr_preprocess(df: pd.DataFrame, nihcxr_dir: str) -> pd.DataFrame:
 
     """
     # Add path column
-    df["image"] = df["Image Index"].apply(
+    df["features"] = df["Image Index"].apply(
         lambda x: os.path.join(nihcxr_dir, "images", x)
     )
 

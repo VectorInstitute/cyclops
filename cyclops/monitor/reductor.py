@@ -15,9 +15,9 @@ from sklearn.random_projection import SparseRandomProjection
 from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from multiprocess import set_start_method
 
-from cyclops.monitor.utils import get_device
-from cyclops.monitor.utils import minibatch_inference, batch_inference, xrv_inference
+from cyclops.monitor.utils import model_inference
 
 
 class Reductor:
@@ -49,15 +49,20 @@ class Reductor:
             "gmm"
             "bbsd-soft"
             "bbsd-hard"
-            "bbsd-soft+tae"
+            "bbsd-soft+txrv-tae"
     """
 
     def __init__(
         self,
         dr_method: str,
+        device: str = None,
         **kwargs
     ):
         self.dr_method = dr_method
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = device
 
         # dictionary of string methods with corresponding functions
         reductor_methods = {
@@ -70,7 +75,7 @@ class Reductor:
             "bbse-soft": BlackBoxShiftEstimatorSoft,
             "bbse-hard": BlackBoxShiftEstimatorHard,
             "txrv-ae": TXRVAutoencoder,
-            "bbse-soft+txrv-ae": BBSE_TAE,
+            "bbse-soft+txrv-tae": BBSE_TAE,
         }
 
         # check if dr_method is valid
@@ -82,6 +87,8 @@ class Reductor:
 
         # initialize model
         self.model = reductor_methods[self.dr_method](**kwargs)
+        if self.dr_method in ("bbse-soft", "bbse-hard", "txrv-ae", "bbse-soft+txrv-tae"):
+            self.model = self.model.to(self.device)
 
     def load_model(self):
         """Load pre-trained model from path.
@@ -136,7 +143,7 @@ class Reductor:
         ]
 
 
-    def fit(self, data: Union[np.ndarray, Dataset]):
+    def fit(self, dataset: Dataset):
         """Fit the reductor to the data.
 
         For pre-trained or untrained models,
@@ -149,27 +156,15 @@ class Reductor:
 
         """
         # check if data is a numpy matrix or a huggingface dataset
-        if isinstance(data, np.ndarray):
-            if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
-                self.model.fit(data)
-
-        elif isinstance(data, Dataset):
-            pass
-
-        else:
-            raise ValueError(
-                "data must be a numpy matrix (n_samples, n_features) \
-                     or a huggingface Dataset"
-            )
+        if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
+            self.model.fit(dataset)
 
     def transform(
         self,
-        data: Union[np.ndarray, Dataset],
+        dataset: Union[Dataset, np.ndarray],
         batch_size: int = 32,
-        num_workers: Optional[int] = None,
-        progress: bool = True,
-        device: str = None,
-    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        num_workers: int = 1,
+    ) -> np.ndarray:
         """Transform the data using the chosen dimensionality reduction method.
 
         Parameters
@@ -187,55 +182,85 @@ class Reductor:
             transformed data
         
         """
-        if num_workers is None:
+        if num_workers == -1:
             num_workers = os.cpu_count()
-        
+        if num_workers > 1:
+            try:
+                set_start_method("spawn")
+            except RuntimeError:
+                pass
+
         if self.dr_method == "NoRed":
-            if isinstance(data, np.ndarray):
-                X_transformed = data
-            elif isinstance(data, torch.utils.data.Dataset):
-                raise NotImplementedError("NoRed not implemented for torch datasets")
+            dataset.map(self.nored_inference, batched=True,
+                        batch_size=batch_size, num_proc=num_workers)
+            features = np.array(dataset["outputs"])
+            dataset.remove_columns("outputs")
 
         elif self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
-            if isinstance(data, np.ndarray):
-                X_transformed = self.model.transform(data)
-            elif isinstance(data, Dataset):
-                dataloader = DataLoader(
-                    data, batch_size=batch_size, num_workers=num_workers
+            if isinstance(dataset, np.ndarray):
+                features = self.model.transform(dataset)
+            else:
+                raise NotImplementedError(
+                    "pca, srp, kpca, isomap, gmm not implemented for huggingface datasets, use numpy arrays instead."
                 )
-                X_transformed = batch_inference(
-                    self.model, dataloader, progress, device
-                )
-
-        elif self.dr_method == "GMM":
-            X_transformed = self.model.predict_proba(data)
 
         else:
-            if isinstance(data, np.ndarray):
-                X_transformed = minibatch_inference(data, self.model, batch_size, device)
-            elif isinstance(data, torch.utils.data.Dataset):
-                dataloader = DataLoader(
-                    data, batch_size=batch_size, num_workers=num_workers
-                )
-                X_transformed = xrv_inference(
-                    self.model, dataloader, progress, device
-                )
-        return X_transformed
+            dataset = dataset.map(self.bbse_inference, batched=True, 
+                        batch_size=batch_size, num_proc=num_workers)
+            features = np.array(dataset["outputs"])
+            dataset.remove_columns("outputs")
+        return features
+    
+    def bbse_inference(self, examples):
+        """Inference function for Black Box Shift Estimator models.
+
+        Parameters
+        ----------
+        examples: dict
+            dictionary containing the data to use for inference.
+        
+        Returns
+        -------
+        examples: dict
+            dictionary containing the data with the outputs.
+
+        """
+        images = torch.concat(examples["features"])        
+        examples["outputs"] = self.model(images)
+        return examples
+
+    def nored_inference(self, examples):
+        """Inference function for no dimensionality reduction.
+
+        Parameters
+        ----------
+        examples: dict
+            dictionary containing the data to use for inference.
+        
+        Returns
+        -------
+        examples: dict
+            dictionary containing the data with the outputs.
+
+        """
+        images = torch.stack(examples["features"]).squeeze(1)
+        examples["outputs"] = images
+        return examples
         
 
 class BlackBoxShiftEstimatorSoft(nn.Module):
-    def __init__(self, model, **kwargs):
+    def __init__(self, model):
         super().__init__()
-        self.model = model(**kwargs)
+        self.model = model
 
     def forward(self, x):
         x = self.model(x)
-        return x.softmax(dim=-1)
+        return x
 
 class BlackBoxShiftEstimatorHard(nn.Module):
-    def __init__(self, model, **kwargs):
+    def __init__(self, model):
         super().__init__()
-        self.model = model(**kwargs)
+        self.model = model()
 
     def forward(self, x):
         x = self.model(x)
@@ -251,14 +276,13 @@ class TXRVAutoencoder(nn.Module):
         return x
 
 class BBSE_TAE(nn.Module):
-    def __init__(self, model, **kwargs):
+    def __init__(self, model):
         super().__init__()
-        self.model = model(**kwargs)
+        self.model = model
         self.tae = TXRVAutoencoder()
 
     def forward(self, x):
         x_bbse = self.model(x)
-        x_bbse = x_bbse.softmax(dim=-1)
         x_tae = self.tae(x)
         x_tae = (x_tae - x_tae.min()) / (x_tae.max() - x_tae.min())
         x = torch.cat((x_bbse, x_tae), dim=1)
