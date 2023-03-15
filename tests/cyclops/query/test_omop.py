@@ -25,12 +25,14 @@ def test_omop_querier_synthea():
     measurements = synthea.measurement().run()
     visit_details = synthea.visit_detail().run()
     providers = synthea.provider().run()  # pylint: disable=no-member
+    conditions = synthea.condition_occurrence().run()
     assert len(persons) == 54
     assert len(visits) == 1620
     assert len(visit_details) == 4115
     assert len(observations) == 16169
     assert len(measurements) == 19373
     assert len(providers) == 212
+    assert len(conditions) == 1363
 
 
 @pytest.mark.integration_test
