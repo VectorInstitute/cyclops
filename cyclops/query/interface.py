@@ -30,7 +30,7 @@ class QueryInterface:
         The query.
     join: cyclops.query.ops.JoinArgs, optional
         Join arguments to join the query with another table.
-    ops: cyclops.query.ops.Sequential, optional
+    ops: cyclops.query.ops.Sequential or cyclops.query.ops.QueryOp, optional
         Operations to perform on the query.
     _data: pandas.DataFrame or dask.DataFrame
         Data returned from executing the query, as Pandas DataFrame.
@@ -47,7 +47,7 @@ class QueryInterface:
     database: Database
     query: TableTypes
     join: Optional[qo.JoinArgs] = None
-    ops: Optional[qo.Sequential] = None
+    ops: Optional[Union[qo.QueryOp, qo.Sequential]] = None
     _data: Optional[Union[pd.DataFrame, dd.core.DataFrame]] = None
     _run_args: Dict[str, Any] = field(default_factory=dict)
 
@@ -164,7 +164,7 @@ class QueryInterfaceProcessed:
         Process function to apply on the pandas dataframe returned from the query.
     join: cyclops.query.ops.JoinArgs, optional
         Join arguments to join the query with another table.
-    ops: cyclops.query.ops.Sequential, optional
+    ops: cyclops.query.ops.Sequential or cyclops.query.ops.QueryOp, optional
         Operations to perform on the query.
     _data: pandas.DataFrame or dask.DataFrame
         Data returned from executing the query, as Pandas DataFrame.
@@ -183,7 +183,7 @@ class QueryInterfaceProcessed:
     _query: TableTypes
     process_fn: Callable[..., Any]
     join: Optional[qo.JoinArgs] = None
-    ops: Optional[qo.Sequential] = None
+    ops: Optional[Union[qo.QueryOp, qo.Sequential]] = None
     _data: Optional[Union[pd.DataFrame, dd.core.DataFrame, None]] = None
     _run_args: Dict[str, Any] = field(default_factory=dict)
 

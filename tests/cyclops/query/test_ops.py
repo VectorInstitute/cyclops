@@ -24,6 +24,7 @@ from cyclops.query.ops import (
     ConditionRegexMatch,
     ConditionStartsWith,
     ConditionSubstring,
+    Distinct,
     Drop,
     DropNulls,
     ExtractTimestampComponent,
@@ -465,3 +466,12 @@ def test_sequential(visits_input):  # pylint: disable=redefined-outer-name
     assert list(visits[visits["person_id"] == 33]["visit_concept_name_substr"])[0] == (
         "Out"
     )
+
+
+@pytest.mark.integration_test
+def test_distinct(visits_input):  # pylint: disable=redefined-outer-name
+    """Test Distinct."""
+    distinct_op = Distinct(["person_id"])
+    visits = SYNTHEA.get_interface(visits_input, ops=distinct_op).run()
+    assert len(visits) == 109
+    visits = SYNTHEA.get_interface(visits_input).run()

@@ -2086,3 +2086,40 @@ class GroupByAggregate(metaclass=QueryOp):
             agg_cols.append(agg_col.label(aggfunc_names[i]))
 
         return select(*groupby_cols, *agg_cols).group_by(*groupby_cols).subquery()
+
+
+@dataclass
+class Distinct(metaclass=QueryOp):
+    """Get distinct rows.
+
+    Parameters
+    ----------
+    cols: str or list of str
+        Columns to use for distinct.
+
+    Examples
+    --------
+    >>> Distinct("person_id")(table)
+    >>> Distinct(["person_id", "visit_id"])(table)
+
+    """
+
+    cols: typing.Union[str, typing.List[str]]
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        cols = to_list(self.cols)
+        table = _process_checks(table, cols=cols)
+        return select(table).distinct(*get_columns(table, cols)).subquery()
