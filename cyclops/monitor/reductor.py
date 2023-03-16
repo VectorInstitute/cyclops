@@ -140,13 +140,15 @@ class Reductor:
     def fit(self, dataset: Dataset):
         """Fit the reductor to the data.
 
-        For pre-trained or untrained models,
-        this function loads the weights or initializes the model, respectively.
+        For scikit-learn models, the model is fit to the data
+        to be used for transforming the data.
+
+        All other methods are pre-trained and do not need to be fit.
 
         Parameters
         ----------
-        data: np.ndarray or huggingface Dataset
-            Data to fit the reductor of shape (n_samples, n_features).
+        dataset: huggingface Dataset
+            dataset to fit the reductor to.
 
         """
         features = dataset["features"]
@@ -163,16 +165,16 @@ class Reductor:
 
         Parameters
         ----------
-        data: np.ndarray (n_samples, n_features) or huggingface Dataset
+        dataset: huggingface Dataset or np.ndarray
             data to transform.
         batch_size: int
             batch size for pytorch dataloader. Default: 32
         num_workers: int
-            number of workers for pytorch dataloader. If None, uses max number of cpus.
+            number of workers for pytorch dataloader. If -1, uses max number of cpus.
 
         Returns
         -------
-        X_transformed: numpy.matrix
+        features: np.ndarray
             transformed data
 
         """

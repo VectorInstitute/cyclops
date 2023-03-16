@@ -25,9 +25,28 @@ class Detector:
         Tester object for statistical testing.
     p_val_threshold : float
         Threshold for p-value. If p-value is below this threshold, a shift is detected.
-
+    device : str
+        Device to use for testing. If None, will use GPU if available, else CPU.
+    experiment_type : str
+        Experiment type to run. Must be one of:
+            "sensitivity_test"
+            "balanced_sensitivity_test"
+            "rolling_window_drift"
+            "rolling_window_performance"
+    experiment_types : dict
+        Dictionary of experiment types and their corresponding methods.
+    
+    Methods
+    -------
+    sensitivity_test
+        Run sensitivity test.
+    balanced_sensitivity_test
+        Run balanced sensitivity test.
+    rolling_window_drift
+        Run rolling window drift detection.
+    rolling_window_performance
+        Run rolling window performance detection.
     """
-
     def __init__(
         self,
         experiment_type: str,
@@ -36,6 +55,7 @@ class Detector:
         device: str = None,
         **kwargs,
     ):
+        """Initialize Detector object."""
         self.experiment_type = experiment_type
 
         self.experiment_types: dict = {
@@ -61,7 +81,16 @@ class Detector:
         self.method_args = get_args(self.experiment_types[self.experiment_type], kwargs)
 
     def fit(self, ds_source: Dataset, **kwargs):
-        """Fit Reductor to data."""
+        """Fit Reductor and Tester to source data.
+
+        Parameters
+        ----------
+        X_source : np.ndarray
+            Source data.
+        **kwargs
+            Keyword arguments for Reductor.
+
+        """
         self.reductor.fit(ds_source)
 
         source_features = self.transform(
@@ -75,10 +104,12 @@ class Detector:
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
-            Data to be transformed.
-        **kwargs
-            Keyword arguments for Reductor.
+        dataset: Dataset
+            Dataset to transform.
+        batch_size: int
+            Batch size for data loader.
+        num_workers: int
+            Number of workers for data loader.
 
         Returns
         -------
@@ -93,12 +124,8 @@ class Detector:
 
         Parameters
         ----------
-        X_source : np.ndarray
-            Source data.
         X_target : np.ndarray
             Target data.
-        **kwargs
-            Keyword arguments for Tester.
 
         Returns
         -------
@@ -182,7 +209,31 @@ class Detector:
         batch_size: int = 32,
         num_workers: int = 1,
     ):
-        """Sensitivity test for drift detection."""
+        """Sensitivity test for drift detection.
+
+        Parameters
+        ----------
+        ds_source: Dataset
+            Source dataset.
+        ds_target: Dataset
+            Target dataset.
+        source_sample_size: int
+            Size of source sample.
+        target_sample_size: int or list of int
+            Size of target sample.
+        num_runs: int
+            Number of runs.
+        batch_size: int
+            Batch size for data loader.
+        num_workers: int
+            Number of workers for data loader.
+        
+        Returns
+        ------- 
+        dict
+            Dictionary containing p-value, distance, and boolean 'shift_detected'.
+        
+        """
         p_val = np.empty((num_runs, len(target_sample_size)))
         dist = np.empty((num_runs, len(target_sample_size)))
         shift_detected = np.empty((num_runs, len(target_sample_size)))
@@ -221,7 +272,30 @@ class Detector:
         batch_size: int = 32,
         num_workers: int = 1,
     ):
-        """Perform balanced sensitivity test for drift detection."""
+        """Perform balanced sensitivity test for drift detection.
+
+        Parameters
+        ----------
+        ds_source: Dataset
+            Source dataset.
+        ds_target: Dataset
+            Target dataset.
+        source_sample_size: int
+            Size of source sample.
+        target_sample_size: int or list of int
+            Size of target sample.
+        num_runs: int
+            Number of runs.
+        batch_size: int
+            Batch size for data loader.
+        num_workers: int
+            Number of workers for data loader.
+        
+        Returns
+        ------- 
+        dict
+            Dictionary containing p-value, distance, and boolean 'shift_detected'.
+        """
         p_val = np.empty((num_runs, len(target_sample_size)))
         dist = np.empty((num_runs, len(target_sample_size)))
         shift_detected = np.empty((num_runs, len(target_sample_size)))
@@ -270,7 +344,35 @@ class Detector:
         batch_size: int = 32,
         num_workers: int = 1,
     ):
-        """Perform balanced sensitivity test for drift detection."""
+        """Perform rolling window drift detection.
+
+        Parameters
+        ----------
+        ds_source: Dataset
+            Source dataset.
+        ds_target: Dataset
+            Target dataset.
+        source_sample_size: int
+            Size of source sample.
+        target_sample_size: int
+            Size of target sample.
+        timestamp_column: str
+            Name of timestamp column.
+        window_size: str
+            Size of window.
+        num_runs: int
+            Number of runs.
+        batch_size: int
+            Batch size for data loader.
+        num_workers: int
+            Number of workers for data loader.
+    
+        Returns
+        -------
+        dict
+            Dictionary containing p-value, distance, and boolean 'shift_detected'.
+        
+        """
         indices = list(
             pd.DataFrame(index=pd.to_datetime(ds_target[timestamp_column]))
             .resample(window_size)
@@ -318,5 +420,33 @@ class Detector:
         batch_size: int = 32,
         num_workers: int = 1,
     ):
-        """Perform rolling window performance test for drift detection."""
+        """Perform rolling window performance test for drift detection.
+
+        Parameters
+        ----------
+        ds_source: Dataset
+            Source dataset.
+        ds_target: Dataset
+            Target dataset.
+        source_sample_size: int
+            Size of source sample.
+        target_sample_size: int
+            Size of target sample.
+        timestamp_column: str
+            Name of timestamp column.
+        window_size: str
+            Size of window.
+        num_runs: int
+            Number of runs.
+        batch_size: int
+            Batch size for data loader.
+        num_workers: int
+            Number of workers for data loader.
+    
+        Returns
+        -------
+        dict
+            Dictionary containing p-value, distance, and boolean 'shift_detected'.
+
+        """
         raise NotImplementedError
