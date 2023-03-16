@@ -50,7 +50,7 @@ class Reductor:
     """
 
     def __init__(self, dr_method: str, device: str = "cpu", **kwargs):
-        self.dr_method = dr_method
+        self.dr_method = dr_method.lower()
         self.device = device
         self.model_path = None
 
