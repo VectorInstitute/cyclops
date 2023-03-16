@@ -20,7 +20,7 @@ class SyntheticShiftApplicator:
     >>> X, y = load_diabetes(return_X_y=True)
     >>> X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
     >>> applicator = SyntheticShiftApplicator(shift_type="gn_shift")
-    >>> X_shift, y_shift = applicator.apply_shift(X_train, noise_amt=0.1, delta=0.1)
+    >>> X_shift = applicator.apply_shift(X_train, noise_amt=0.1, delta=0.1)
 
     Parameters
     ----------
@@ -128,10 +128,10 @@ def knockout_shift(
         covariate data
     y: list
         label data
-    cl: int
-        class (e.g. 0,1,2,3, etc.)
     delta: float
         fraction of samples removed
+    shift_class: int
+        class to remove samples from
 
     Returns
     -------
@@ -155,7 +155,7 @@ def feature_swap_shift(
     X: np.matrix,
     y: np.ndarray,
     X_ref: np.matrix = None,
-    y_ref: np.ndarray = None,
+    # y_ref: np.ndarray = None,
     shift_class: int = 1,
     n_shuffle: float = 0.25,
     rank: bool = False,
@@ -193,7 +193,7 @@ def feature_swap_shift(
 
     # Get importance values - should sub for model-specific
     selector = SelectKBest(k=n_feats)
-    selection = selector.fit(X_ref, y_ref)
+    selection = selector.fit(X, y)
     ranked_x = sorted(
         zip(selection.scores_, selection.get_support(indices=True)), reverse=True
     )
