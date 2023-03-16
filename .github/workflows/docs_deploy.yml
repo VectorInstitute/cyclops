@@ -12,9 +12,9 @@ on:
       - '**.ipynb'
       - poetry.lock
       - pyproject.toml
-      - requirements.txt
       - '**.rst'
       - '**.md'
+      - docs/cyclops-webpage
 
 jobs:
   deploy:
@@ -47,7 +47,6 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: true
       - uses: actions/setup-node@v3
-        working-directory: docs/cyclops-webpage
         with:
           node-version: 18
           cache: yarn
@@ -63,4 +62,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: github_pages
-          publish_dir: ./build
+          publish_dir: docs/cyclops-webpage/build
