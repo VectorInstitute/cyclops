@@ -1,7 +1,8 @@
+# pylint: disable=too-many-lines
+
 """Utility functions for querying."""
 
 # mypy: ignore-errors
-# pylint: disable=too-many-lines
 
 import logging
 from dataclasses import dataclass

@@ -1,6 +1,6 @@
-"""Handling feature types."""
-
 # pylint: disable=too-many-lines
+
+"""Handling feature types."""
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
