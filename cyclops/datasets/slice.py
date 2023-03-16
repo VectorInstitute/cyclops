@@ -1,4 +1,4 @@
-"""Slicing functions for evaluating model performance on subsets of the data."""
+"""Functions for creating subsets of data."""
 import datetime
 from dataclasses import dataclass, field
 from functools import partial
@@ -10,47 +10,48 @@ from dateutil.parser import parse
 
 
 @dataclass
-class SlicingConfig:
-    """Configuration for slicing the data.
+class SliceSpec:
+    """Slice specification class.
 
     Parameters
     ----------
     feature_keys : List[str], default=[]
-        List of feature keys to slice on. Each key can be a single feature or a list of
-        features. The slice selects non-null values for the feature(s).
+        List of feature keys to slice on. Each key can be a single feature or a
+        list of features. The slice selects non-null values for the feature(s).
     feature_values : List[Union[Mapping[str, Any], List[Mapping[str, Any]]]]
         List of feature values to slice on. Each value is a dictionary mapping a feature
         key to a dictionary of feature value specifications. The slice selects rows
         where the feature value matches the specification. Defaults [{}] which
         selects all rows. The following feature value specifications are supported:
-        - value: The feature value must match the specified value. The value can be a
+        - `value`: The feature value must match the specified value. The value can be a
           single value or a list of values. Time strings are supported.
-        - min_value: The feature value must be greater than or equal to the specified
+        - `min_value`: The feature value must be greater than or equal to the specified
           value. Time strings are supported.
-        - min_inclusive: Whether to include the minimum value in the range. If True,
+        - `min_inclusive`: Whether to include the minimum value in the range. If True,
           the slice selects rows where the feature value is greater than or equal to
           the minimum value.
-        - max_value: The feature value must be less than or equal to the specified
+        - `max_value`: The feature value must be less than or equal to the specified
           value. Time strings are supported.
-        - max_inclusive: Whether to include the maximum value in the range. If True,
-          the slice selects rows where the feature value is less than or equal to the
-          maximum value.
-        - year: The feature value must be in the specified year.
-        - month: The feature value must be in the specified month.
-        - day: The feature value must be in the specified day.
-        - hour: The feature value must be in the specified hour.
-        - negate: Whether to negate the feature value specification. If True, the slice
-          selects rows where the feature value does not match the specification.
-        - keep_nulls: Whether to keep rows where the feature value is null. If True,
-          the slice selects rows where the feature value is null or matches the
+        - `max_inclusive`: Whether to include the maximum value in the range. If
+          True, the slice selects rows where the feature value is less than or
+          equal to the maximum value.
+        - `year`: The feature value must be in the specified year.
+        - `month`: The feature value must be in the specified month.
+        - `day`: The feature value must be in the specified day.
+        - `hour`: The feature value must be in the specified hour.
+        - `negate`: Whether to negate the feature value specification. If True,
+          the slice selects rows where the feature value does not match the
           specification.
+        - `keep_nulls`: Whether to keep rows where the feature value is null. If
+          True, the slice selects rows where the feature value is null or matches
+          the specification.
     column_names : Optional[List[str]], optional
         List of column names in the data. If provided, the feature keys are validated
         against the column names. If the feature keys are not valid column names, a
         KeyError is raised.
     validate : bool, default=True
-        Whether to validate the feature keys and values. If True, the feature keys are
-        validated against the column names.
+        Whether to validate the feature keys and values. If True, the feature keys
+        are validated against the column names.
 
     Attributes
     ----------
@@ -67,8 +68,8 @@ class SlicingConfig:
 
     Examples
     --------
-    >>> from cyclops.evaluate.slicing import SlicingConfig
-    >>> slicing_config = SlicingConfig(
+    >>> from cyclops.evaluate.slice import SliceSpec
+    >>> slice_spec = SliceSpec(
     ...     feature_keys=["feature_1", "feature_2", ["feature_3", "feature_4"]],
     ...     feature_values=[
     ...         {"feature_1": {"value": "value_1"}},
@@ -314,7 +315,9 @@ def no_filter(examples: Dict[str, Any]) -> Union[bool, List[bool]]:
         A boolean or a list of booleans containing `True` for all examples.
 
     """
-    result: List[bool] = [True] * len(next(iter(examples.values())))
+    result: List[bool] = np.ones_like(
+        next(iter(examples.values())), dtype=bool
+    ).tolist()
     if len(result) == 1:
         return result[0]
     return result
@@ -339,7 +342,6 @@ def filter_non_null(
         the feature(s) is not null/nan.
 
     """
-    # make sure feature key is a string or list of strings
     if not (
         isinstance(feature_keys, str)
         or (

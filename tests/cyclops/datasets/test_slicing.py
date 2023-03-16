@@ -1,4 +1,4 @@
-"""Tests for cyclops.evaluate.slicing module."""
+"""Tests for cyclops.evaluate.slice module."""
 from functools import partial
 from typing import Any, Callable, List, Union
 
@@ -9,11 +9,11 @@ from datasets import Dataset
 from datasets.splits import Split
 
 import cyclops.query.ops as qo
-from cyclops.datasets.slicing import (
+from cyclops.datasets.slice import (
     _maybe_convert_to_datetime,  # pylint: disable=protected-access
 )
-from cyclops.datasets.slicing import (
-    SlicingConfig,
+from cyclops.datasets.slice import (
+    SliceSpec,
     filter_compound_feature_value,
     filter_feature_value,
     filter_feature_value_datetime,
@@ -390,8 +390,8 @@ def test_compound_feature_value(
 
 
 @pytest.mark.integration_test
-def test_slicing_config():
-    """Test SlicingConfig class."""
+def test_slice_spec():
+    """Test SlicingSpec class."""
     value1 = ["mmHg", "kg", "mL", "mL/min"]
     value2 = ["mm", "cm"]
     min_value = 100
@@ -417,15 +417,15 @@ def test_slicing_config():
 
     table = measurement_table()
 
-    slice_config = SlicingConfig(
+    slice_spec = SliceSpec(
         feature_keys=feature_keys,
         feature_values=feature_values,
         column_names=table.columns,
     )
-    assert slice_config.feature_keys == feature_keys
-    assert slice_config.feature_values == feature_values
+    assert slice_spec.feature_keys == feature_keys
+    assert slice_spec.feature_values == feature_values
 
-    for slice_name, slice_func in slice_config.get_slices().items():
+    for slice_name, slice_func in slice_spec.get_slices().items():
         assert callable(slice_func)
 
         filtered_ds = get_filtered_dataset(table, filter_func=slice_func)
