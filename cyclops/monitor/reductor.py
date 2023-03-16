@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import torchxrayvision as xrv
 from datasets.arrow_dataset import Dataset
+from multiprocess import set_start_method
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
@@ -15,7 +16,6 @@ from sklearn.random_projection import SparseRandomProjection
 from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from multiprocess import set_start_method
 
 from cyclops.monitor.utils import model_inference
 
@@ -50,14 +50,10 @@ class Reductor:
             "bbsd-soft"
             "bbsd-hard"
             "bbsd-soft+txrv-tae"
+
     """
 
-    def __init__(
-        self,
-        dr_method: str,
-        device: str = None,
-        **kwargs
-    ):
+    def __init__(self, dr_method: str, device: str = None, **kwargs):
         self.dr_method = dr_method
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -87,7 +83,12 @@ class Reductor:
 
         # initialize model
         self.model = reductor_methods[self.dr_method](**kwargs)
-        if self.dr_method in ("bbse-soft", "bbse-hard", "txrv-ae", "bbse-soft+txrv-tae"):
+        if self.dr_method in (
+            "bbse-soft",
+            "bbse-hard",
+            "txrv-ae",
+            "bbse-soft+txrv-tae",
+        ):
             self.model = self.model.to(self.device)
 
     def load_model(self):
@@ -139,9 +140,8 @@ class Reductor:
             "bbse-soft",
             "bbse-hard",
             "txrv-ae",
-            "bbse-soft+txrv-ae"
+            "bbse-soft+txrv-ae",
         ]
-
 
     def fit(self, dataset: Dataset):
         """Fit the reductor to the data.
@@ -180,7 +180,7 @@ class Reductor:
         -------
         X_transformed: numpy.matrix
             transformed data
-        
+
         """
         if num_workers == -1:
             num_workers = os.cpu_count()
@@ -191,8 +191,12 @@ class Reductor:
                 pass
 
         if self.dr_method == "NoRed":
-            dataset.map(self.nored_inference, batched=True,
-                        batch_size=batch_size, num_proc=num_workers)
+            dataset.map(
+                self.nored_inference,
+                batched=True,
+                batch_size=batch_size,
+                num_proc=num_workers,
+            )
             features = np.array(dataset["outputs"])
             dataset.remove_columns("outputs")
 
@@ -201,16 +205,21 @@ class Reductor:
                 features = self.model.transform(dataset)
             else:
                 raise NotImplementedError(
-                    "pca, srp, kpca, isomap, gmm not implemented for huggingface datasets, use numpy arrays instead."
+                    "pca, srp, kpca, isomap, gmm not implemented for \
+                        huggingface datasets, use numpy arrays instead."
                 )
 
         else:
-            dataset = dataset.map(self.bbse_inference, batched=True, 
-                        batch_size=batch_size, num_proc=num_workers)
+            dataset = dataset.map(
+                self.bbse_inference,
+                batched=True,
+                batch_size=batch_size,
+                num_proc=num_workers,
+            )
             features = np.array(dataset["outputs"])
             dataset.remove_columns("outputs")
         return features
-    
+
     def bbse_inference(self, examples):
         """Inference function for Black Box Shift Estimator models.
 
@@ -218,14 +227,14 @@ class Reductor:
         ----------
         examples: dict
             dictionary containing the data to use for inference.
-        
+
         Returns
         -------
         examples: dict
             dictionary containing the data with the outputs.
 
         """
-        images = torch.concat(examples["features"])        
+        images = torch.concat(examples["features"])
         examples["outputs"] = self.model(images)
         return examples
 
@@ -236,7 +245,7 @@ class Reductor:
         ----------
         examples: dict
             dictionary containing the data to use for inference.
-        
+
         Returns
         -------
         examples: dict
@@ -246,18 +255,26 @@ class Reductor:
         images = torch.stack(examples["features"]).squeeze(1)
         examples["outputs"] = images
         return examples
-        
+
 
 class BlackBoxShiftEstimatorSoft(nn.Module):
-    def __init__(self, model):
+    """Wrapper for Black Box Shift Estimator Soft model."""
+
+    def __init__(self, model, softmax=False):
         super().__init__()
         self.model = model
+        self.softmax = softmax
 
     def forward(self, x):
         x = self.model(x)
+        if self.softmax:
+            x = torch.softmax(x, dim=-1)
         return x
 
+
 class BlackBoxShiftEstimatorHard(nn.Module):
+    """Wrapper for Black Box Shift Estimator Hard model."""
+
     def __init__(self, model):
         super().__init__()
         self.model = model()
@@ -266,7 +283,10 @@ class BlackBoxShiftEstimatorHard(nn.Module):
         x = self.model(x)
         return x.argmax(dim=-1)
 
+
 class TXRVAutoencoder(nn.Module):
+    """Wrapper for TXRV Autoencoder model."""
+
     def __init__(self, weights="101-elastic"):
         super().__init__()
         self.model = xrv.autoencoders.ResNetAE(weights)
@@ -275,7 +295,10 @@ class TXRVAutoencoder(nn.Module):
         x = self.model.encode(x).mean(dim=(2, 3))
         return x
 
+
 class BBSE_TAE(nn.Module):
+    """Wrapper for Black Box Shift Estimator Soft + TXRV Autoencoder model."""
+
     def __init__(self, model):
         super().__init__()
         self.model = model

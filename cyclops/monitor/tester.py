@@ -1,8 +1,8 @@
 """Tester Module for drift detection with TSTester and DCTester submodules."""
 
 import numpy as np
-import torch
 import sklearn
+import torch
 from alibi_detect.cd import (
     ChiSquareDrift,
     ClassifierDrift,
@@ -14,11 +14,7 @@ from alibi_detect.cd import (
     TabularDrift,
 )
 
-from cyclops.monitor.utils import (
-    ContextMMDWrapper,
-    LKWrapper,
-    get_args
-)
+from cyclops.monitor.utils import ContextMMDWrapper, LKWrapper, get_args
 
 
 class TSTester:
@@ -42,7 +38,7 @@ class TSTester:
 
     """
 
-    def __init__(self, tester_method: str, p_val_threshold = 0.05, **kwargs):
+    def __init__(self, tester_method: str, p_val_threshold=0.05, **kwargs):
         self.tester_method = tester_method
         self.method = None
         self.p_val_threshold = p_val_threshold
@@ -108,7 +104,7 @@ class TSTester:
             dist = dist[idx]
 
         if self.tester_method in ["ks", "chi2", "fet", "tabular"]:
-            self.p_val_threshold = self.p_val_threshold/num_features
+            self.p_val_threshold = self.p_val_threshold / num_features
 
         return p_val, dist
 
@@ -135,6 +131,7 @@ class DCTester:
         Test for shift in data
 
     """
+
     def __init__(self, tester_method: str, **kwargs):
         self.tester_method = tester_method
         self.method_args = kwargs
@@ -164,13 +161,14 @@ class DCTester:
                 **get_args(self.tester_methods[self.tester_method], self.method_args),
             )
         elif self.tester_method == "classifier":
-            if isinstance(self.method_args['model'], torch.nn.Module):
+            if isinstance(self.method_args["model"], torch.nn.Module):
                 self.method_args["backend"] = "pytorch"
-            elif isinstance(self.method_args['model'], sklearn.base.BaseEstimator):
+            elif isinstance(self.method_args["model"], sklearn.base.BaseEstimator):
                 self.method_args["backend"] = "sklearn"
             else:
                 raise ValueError(
-                    f"Model must be one of: torch.nn.Module or sklearn.base.BaseEstimator"
+                    "Model must be one of: torch.nn.Module or \
+                    sklearn.base.BaseEstimator"
                 )
             self.tester = self.tester_methods[self.tester_method](
                 X_s,

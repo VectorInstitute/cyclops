@@ -9,7 +9,7 @@ from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -21,16 +21,16 @@ from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
 from cyclops.models.neural_nets.rnn import RNNModel
 from cyclops.models.wrappers import SKModel
-from tqdm import tqdm
-from typing import Tuple
 
 
-def minibatch_inference(data, model: nn.Module, batch_size: int = 32, device: str = None
+def minibatch_inference(
+    data, model: nn.Module, batch_size: int = 32, device: str = None
 ) -> np.ndarray:
     """Perform batch inference.
 
@@ -69,7 +69,9 @@ def minibatch_inference(data, model: nn.Module, batch_size: int = 32, device: st
     X_transformed = np.concatenate(X_transformed_all, axis=0)
     return X_transformed
 
-def batch_inference(model: nn.Module, dataloader: DataLoader, progress=True
+
+def batch_inference(
+    model: nn.Module, dataloader: DataLoader, progress=True
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Perform batched inference on the dataset.
 
@@ -99,7 +101,12 @@ def batch_inference(model: nn.Module, dataloader: DataLoader, progress=True
     labels = np.concatenate(all_labels)
     return X_transformed, labels
 
-def xrv_inference(model: nn.Module, dataloader: DataLoader, progress=True, device=None,
+
+def xrv_inference(
+    model: nn.Module,
+    dataloader: DataLoader,
+    progress=True,
+    device=None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Perform batched inference with a model on a TorchXRayVision dataset.
 
@@ -132,7 +139,9 @@ def xrv_inference(model: nn.Module, dataloader: DataLoader, progress=True, devic
     labels = np.concatenate(all_labels)
     return X_transformed, labels
 
-def model_inference(model: nn.Module, dataloader: DataLoader, progress=True
+
+def model_inference(
+    model: nn.Module, dataloader: DataLoader, progress=True
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Perform batched inference with a model on a TorchXRayVision dataset.
 

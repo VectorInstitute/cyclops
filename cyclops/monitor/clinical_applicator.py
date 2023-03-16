@@ -34,7 +34,13 @@ class ClinicalShiftApplicator:
         if self.shift_type not in self.shift_types:
             raise ValueError(f"Shift type {self.shift_type} not supported. ")
 
-    def apply_shift(self, dataset: Dataset):
+    def apply_shift(
+        self,
+        dataset: Dataset,
+        batched: bool = True,
+        batch_size: int = 1000,
+        num_proc: int = 1,
+    ):
         """apply_shift.
 
         Returns
@@ -44,7 +50,13 @@ class ClinicalShiftApplicator:
 
         """
         ds_source, ds_target = self.shift_types[self.shift_type](
-            dataset, self.source, self.target, self.shift_id
+            dataset,
+            self.source,
+            self.target,
+            self.shift_id,
+            batched,
+            batch_size,
+            num_proc,
         )
         return ds_source, ds_target
 
@@ -54,6 +66,9 @@ class ClinicalShiftApplicator:
         source: list,
         target: list,
         shift_id: str,
+        batched: bool = True,
+        batch_size: int = 1000,
+        num_proc: int = 1,
     ):
         """Shift in time.
 
@@ -89,7 +104,9 @@ class ClinicalShiftApplicator:
             ]
         )
         for _, shift_func in source_slice.get_slices().items():
-            ds_source = dataset.filter(shift_func, batched=True)
+            ds_source = dataset.filter(
+                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
+            )
 
         target_slice = SlicingConfig(
             feature_values=[
@@ -104,7 +121,9 @@ class ClinicalShiftApplicator:
             ]
         )
         for _, shift_func in target_slice.get_slices().items():
-            ds_target = dataset.filter(shift_func, batched=True)
+            ds_target = dataset.filter(
+                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
+            )
         return ds_source, ds_target
 
     def month(
@@ -113,6 +132,9 @@ class ClinicalShiftApplicator:
         source: list,
         target: list,
         shift_id: str,
+        batched: bool = True,
+        batch_size: int = 1000,
+        num_proc: int = 1,
     ):
         """Shift for selection of months.
 
@@ -130,15 +152,26 @@ class ClinicalShiftApplicator:
         """
         source_slice = SlicingConfig(feature_values=[{shift_id: {"value": source}}])
         for _, shift_func in source_slice.get_slices().items():
-            ds_source = dataset.filter(shift_func, batched=True)
+            ds_source = dataset.filter(
+                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
+            )
 
         target_slice = SlicingConfig(feature_values=[{shift_id: {"value": target}}])
         for _, shift_func in target_slice.get_slices().items():
-            ds_target = dataset.filter(shift_func, batched=True)
+            ds_target = dataset.filter(
+                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
+            )
         return ds_source, ds_target
 
     def hospital_type(
-        self, dataset: Dataset, source: list, target: list, shift_id: str
+        self,
+        dataset: Dataset,
+        source: list,
+        target: list,
+        shift_id: str,
+        batched: bool = True,
+        batch_size: int = 1000,
+        num_proc: int = 1,
     ):
         """Shift against hospital type.
 
@@ -156,11 +189,15 @@ class ClinicalShiftApplicator:
         """
         source_slice = SlicingConfig(feature_values=[{shift_id: {"value": source}}])
         for _, shift_func in source_slice.get_slices().items():
-            ds_source = dataset.filter(shift_func, batched=True)
+            ds_source = dataset.filter(
+                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
+            )
 
         target_slice = SlicingConfig(feature_values=[{shift_id: {"value": target}}])
         for _, shift_func in target_slice.get_slices().items():
-            ds_target = dataset.filter(shift_func, batched=True)
+            ds_target = dataset.filter(
+                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
+            )
         return ds_source, ds_target
 
     def custom(
@@ -169,6 +206,9 @@ class ClinicalShiftApplicator:
         source: SlicingConfig,
         target: SlicingConfig,
         shift_id: str = None,
+        batched: bool = True,
+        batch_size: int = 1000,
+        num_proc: int = 1,
     ):
         """Build custom shift.
 
@@ -192,16 +232,37 @@ class ClinicalShiftApplicator:
                 Please remove shift_id from method call."
             )
         ds_source = None
+
         for _, shift_func in source.get_slices().items():
             if ds_source is None:
-                ds_source = dataset.filter(shift_func, batched=True)
+                ds_source = dataset.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
             else:
-                ds_source = ds_source.filter(shift_func, batched=True)
+                ds_source = ds_source.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
 
         ds_target = None
         for _, shift_func in target.get_slices().items():
             if ds_target is None:
-                ds_target = dataset.filter(shift_func, batched=True)
+                ds_target = dataset.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
             else:
-                ds_target = ds_target.filter(shift_func, batched=True)
+                ds_target = ds_target.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
         return ds_source, ds_target

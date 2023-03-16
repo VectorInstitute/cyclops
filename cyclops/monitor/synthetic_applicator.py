@@ -64,7 +64,7 @@ def gaussian_noise_shift(
     noise_amt: float = 0.5,
     normalization: float = 1,
     delta: float = 0.5,
-    clip: bool = False
+    clip: bool = False,
 ):
     """Create gaussian noise of specificed parameters in input data.
 
@@ -96,10 +96,7 @@ def gaussian_noise_shift(
     X_mod = X[np.ix_(indices, c_cols)]
 
     if len(c_cols) == 1:
-        noise = np.random.normal(0, source_noise_amt / normalization, X_mod.shape[0]).reshape(
-            X_mod.shape[0], 1
-        )
-        noise = np.random.normal(0, target_noise_amt / normalization, X_mod.shape[0]).reshape(
+        noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(
             X_mod.shape[0], 1
         )
     else:
@@ -135,13 +132,14 @@ def knockout_shift(
         fraction of samples removed
     shift_class: int
         class to remove samples from
-    
+
     Returns
     -------
     X: numpy.matrix
         covariate data with class imbalance
     y: numpy.array
         placeholer for labels
+
     """
     del_indices = np.where(y == shift_class)[0]
     until_index = math.ceil(delta * len(del_indices))
