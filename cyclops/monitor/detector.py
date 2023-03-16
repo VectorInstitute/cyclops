@@ -35,7 +35,7 @@ class Detector:
             "rolling_window_performance"
     experiment_types : dict
         Dictionary of experiment types and their corresponding methods.
-    
+
     Methods
     -------
     sensitivity_test
@@ -46,7 +46,9 @@ class Detector:
         Run rolling window drift detection.
     rolling_window_performance
         Run rolling window performance detection.
+
     """
+
     def __init__(
         self,
         experiment_type: str,
@@ -227,12 +229,12 @@ class Detector:
             Batch size for data loader.
         num_workers: int
             Number of workers for data loader.
-        
+
         Returns
-        ------- 
+        -------
         dict
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
-        
+
         """
         p_val = np.empty((num_runs, len(target_sample_size)))
         dist = np.empty((num_runs, len(target_sample_size)))
@@ -290,11 +292,12 @@ class Detector:
             Batch size for data loader.
         num_workers: int
             Number of workers for data loader.
-        
+
         Returns
-        ------- 
+        -------
         dict
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
+
         """
         p_val = np.empty((num_runs, len(target_sample_size)))
         dist = np.empty((num_runs, len(target_sample_size)))
@@ -366,12 +369,12 @@ class Detector:
             Batch size for data loader.
         num_workers: int
             Number of workers for data loader.
-    
+
         Returns
         -------
         dict
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
-        
+
         """
         indices = list(
             pd.DataFrame(index=pd.to_datetime(ds_target[timestamp_column]))
@@ -442,7 +445,7 @@ class Detector:
             Batch size for data loader.
         num_workers: int
             Number of workers for data loader.
-    
+
         Returns
         -------
         dict
