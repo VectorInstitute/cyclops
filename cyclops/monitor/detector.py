@@ -4,10 +4,8 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
-import torch
 from datasets import concatenate_datasets
 from datasets.arrow_dataset import Dataset
-from tqdm import tqdm
 
 from cyclops.monitor.reductor import Reductor
 from cyclops.monitor.tester import DCTester, TSTester

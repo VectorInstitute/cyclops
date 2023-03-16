@@ -155,7 +155,7 @@ def feature_swap_shift(
     X: np.matrix,
     y: np.ndarray,
     X_ref: np.matrix = None,
-    y_ref: np.ndarray = None,
+    # y_ref: np.ndarray = None,
     shift_class: int = 1,
     n_shuffle: float = 0.25,
     rank: bool = False,

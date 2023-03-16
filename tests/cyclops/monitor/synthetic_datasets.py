@@ -5,7 +5,7 @@ import pandas as pd
 from datasets.arrow_dataset import Dataset
 
 
-def synthetic_gemini_dataset(size=1000):
+def synthetic_gemini_dataset(size=100):
     """Create a synthetic Gemini dataset."""
     gemini_columns = [
         "encounter_id",
@@ -48,7 +48,6 @@ def synthetic_gemini_dataset(size=1000):
     df["features"] = np.random.rand(size, 64, 7).tolist()
 
     dataset = Dataset.from_pandas(df, preserve_index=False)
-    dataset = dataset.with_format("np")
     return dataset
 
 
@@ -91,6 +90,21 @@ def synthetic_nih_dataset(size=8):
 
     df["features"] = np.random.rand(size, 1, 224, 224).tolist()
     dataset = Dataset.from_pandas(df, preserve_index=False)
-    dataset = dataset.with_format("torch", columns=["features"])
 
+    return dataset
+
+
+def synthetic_generic_dataset(size=100):
+    """Create a synthetic Gemini dataset."""
+    columns = ["timestamp"]
+
+    df = pd.DataFrame(columns=columns)
+    df["timestamp"] = pd.date_range(start="1/1/2020", end="12/25/2020", periods=size)
+    df["discharge_timestamp"] = pd.date_range(
+        start="1/1/2015", end="8/1/2020", periods=size
+    )
+    df["mortality"] = np.random.randint(0, 2, size=size)
+    df["features"] = np.random.rand(size, 10).tolist()
+
+    dataset = Dataset.from_pandas(df, preserve_index=False)
     return dataset

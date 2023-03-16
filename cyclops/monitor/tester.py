@@ -123,8 +123,8 @@ class DCTester:
 
     Methods
     -------
-    get_available_model_methods()
-        Get available model methods
+    get_available_test_methods()
+        Get available test methods
     fit(X_s: np.ndarray, **kwargs)
         Fit domain classifier to reference data
     test_shift(X_t: np.ndarray, **kwargs)
@@ -135,6 +135,7 @@ class DCTester:
     def __init__(self, tester_method: str, **kwargs):
         self.tester_method = tester_method
         self.method_args = kwargs
+        self.tester = None
 
         self.tester_methods = {
             "spot_the_diff": SpotTheDiffDrift,
@@ -172,7 +173,6 @@ class DCTester:
                 )
             self.tester = self.tester_methods[self.tester_method](
                 X_s,
-                self.model,
                 **get_args(self.tester_methods[self.tester_method], self.method_args),
             )
 

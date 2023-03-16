@@ -2,22 +2,18 @@
 
 import os
 import pickle
-from typing import Optional, Tuple, Union
+from multiprocessing import set_start_method
+from typing import Union
 
 import numpy as np
 import torch
 import torchxrayvision as xrv
 from datasets.arrow_dataset import Dataset
-from multiprocess import set_start_method
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.random_projection import SparseRandomProjection
 from torch import nn
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-
-from cyclops.monitor.utils import model_inference
 
 
 class Reductor:
@@ -53,16 +49,14 @@ class Reductor:
 
     """
 
-    def __init__(self, dr_method: str, device: str = None, **kwargs):
+    def __init__(self, dr_method: str, device: str = "cpu", **kwargs):
         self.dr_method = dr_method
-        if device is None:
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        else:
-            self.device = device
+        self.device = device
+        self.model_path = None
 
         # dictionary of string methods with corresponding functions
         reductor_methods = {
-            "nored": None,
+            "nored": NoReduction,
             "pca": PCA,
             "srp": SparseRandomProjection,
             "kpca": KernelPCA,
@@ -71,7 +65,7 @@ class Reductor:
             "bbse-soft": BlackBoxShiftEstimatorSoft,
             "bbse-hard": BlackBoxShiftEstimatorHard,
             "txrv-ae": TXRVAutoencoder,
-            "bbse-soft+txrv-tae": BBSE_TAE,
+            "bbse-soft+txrv-tae": BBSETAE,
         }
 
         # check if dr_method is valid
@@ -155,9 +149,9 @@ class Reductor:
             Data to fit the reductor of shape (n_samples, n_features).
 
         """
-        # check if data is a numpy matrix or a huggingface dataset
+        features = dataset["features"]
         if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
-            self.model.fit(dataset)
+            self.model.fit(features)
 
     def transform(
         self,
@@ -190,8 +184,8 @@ class Reductor:
             except RuntimeError:
                 pass
 
-        if self.dr_method == "NoRed":
-            dataset.map(
+        if self.dr_method == "nored":
+            dataset = dataset.map(
                 self.nored_inference,
                 batched=True,
                 batch_size=batch_size,
@@ -200,15 +194,10 @@ class Reductor:
             features = np.array(dataset["outputs"])
             dataset.remove_columns("outputs")
 
-        elif self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
-            if isinstance(dataset, np.ndarray):
-                features = self.model.transform(dataset)
-            else:
-                raise NotImplementedError(
-                    "pca, srp, kpca, isomap, gmm not implemented for \
-                        huggingface datasets, use numpy arrays instead."
-                )
-
+        elif self.dr_method in ("pca", "srp", "kpca", "isomap"):
+            features = self.model.transform(dataset["features"])
+        elif self.dr_method in ("gmm"):
+            features = self.model.predict_proba(dataset["features"])
         else:
             dataset = dataset.map(
                 self.bbse_inference,
@@ -234,8 +223,16 @@ class Reductor:
             dictionary containing the data with the outputs.
 
         """
-        images = torch.concat(examples["features"])
-        examples["outputs"] = self.model(images)
+        if isinstance(examples["features"][0], np.ndarray):
+            features = np.concatenate(examples["features"])
+        elif isinstance(examples["features"][0], torch.Tensor):
+            features = torch.concat(examples["features"])
+        elif isinstance(examples["features"][0], list):
+            if isinstance(self.model, torch.nn.Module):
+                features = torch.tensor(examples["features"])
+            else:
+                features = np.array(examples["features"])
+        examples["outputs"] = self.model(features)
         return examples
 
     def nored_inference(self, examples):
@@ -252,9 +249,28 @@ class Reductor:
             dictionary containing the data with the outputs.
 
         """
-        images = torch.stack(examples["features"]).squeeze(1)
-        examples["outputs"] = images
+        if isinstance(examples["features"][0], np.ndarray):
+            features = np.concatenate(examples["features"])
+        elif isinstance(examples["features"][0], torch.Tensor):
+            features = torch.concat(examples["features"])
+        elif isinstance(examples["features"][0], list):
+            features = np.array(examples["features"])
+            print(features.shape, "1")
+        examples["outputs"] = features
         return examples
+
+
+class NoReduction:
+    """No reduction function."""
+
+    def __init__(self):
+        pass
+
+    def fit(self, data: Dataset):
+        """Fit the model to the data."""
+
+    def transform(self, data: Dataset):
+        """Transform the data."""
 
 
 class BlackBoxShiftEstimatorSoft(nn.Module):
@@ -266,6 +282,7 @@ class BlackBoxShiftEstimatorSoft(nn.Module):
         self.softmax = softmax
 
     def forward(self, x):
+        """Forward pass of the model."""
         x = self.model(x)
         if self.softmax:
             x = torch.softmax(x, dim=-1)
@@ -280,6 +297,7 @@ class BlackBoxShiftEstimatorHard(nn.Module):
         self.model = model()
 
     def forward(self, x):
+        """Forward pass of the model."""
         x = self.model(x)
         return x.argmax(dim=-1)
 
@@ -292,11 +310,12 @@ class TXRVAutoencoder(nn.Module):
         self.model = xrv.autoencoders.ResNetAE(weights)
 
     def forward(self, x):
+        """Forward pass of the model."""
         x = self.model.encode(x).mean(dim=(2, 3))
         return x
 
 
-class BBSE_TAE(nn.Module):
+class BBSETAE(nn.Module):
     """Wrapper for Black Box Shift Estimator Soft + TXRV Autoencoder model."""
 
     def __init__(self, model):
@@ -305,6 +324,7 @@ class BBSE_TAE(nn.Module):
         self.tae = TXRVAutoencoder()
 
     def forward(self, x):
+        """Forward pass of the model."""
         x_bbse = self.model(x)
         x_tae = self.tae(x)
         x_tae = (x_tae - x_tae.min()) / (x_tae.max() - x_tae.min())

@@ -9,10 +9,11 @@ from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+import PIL
 import torch
 from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
 from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
@@ -21,7 +22,7 @@ from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
-from tqdm import tqdm
+from torchvision.transforms import PILToTensor
 
 from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
@@ -29,142 +30,27 @@ from cyclops.models.neural_nets.rnn import RNNModel
 from cyclops.models.wrappers import SKModel
 
 
-def minibatch_inference(
-    data, model: nn.Module, batch_size: int = 32, device: str = None
-) -> np.ndarray:
-    """Perform batch inference.
+def apply_transforms(examples: Dict[str, List], transforms: callable) -> dict:
+    """Apply transforms to examples."""
+    # examples is a dict of lists; convert to list of dicts.
+    # doing a conversion from PIL to tensor is necessary here when working
+    # with the Image feature type.
+    value_len = len(list(examples.values())[0])
+    examples = [
+        {
+            k: PILToTensor()(v[i]) if isinstance(v[i], PIL.Image.Image) else v[i]
+            for k, v in examples.items()
+        }
+        for i in range(value_len)
+    ]
 
-    Performs batch inference on in-memory data by
-    breaking into series of mini-batches.
+    # apply the transforms to each example
+    examples = [transforms(example) for example in examples]
 
-    Parameters
-    ----------
-    model: torch.nn.Module
-        the model to use for inference.
+    # convert back to a dict of lists
+    examples = {k: [d[k] for d in examples] for k in examples[0]}
 
-    Returns
-    -------
-    X_transformed: np.ndarray
-        the transformed data.
-
-    """
-    if isinstance(data, np.ndarray):
-        X = torch.from_numpy(data.astype("float32"))
-    num_samples = X.shape[0]
-    n_batches = int(np.ceil(num_samples / batch_size))
-
-    X_transformed_all = []
-    model.to(device)
-    with torch.no_grad():
-        for i in range(n_batches):
-            batch_idx = (
-                i * batch_size,
-                min((i + 1) * batch_size, num_samples),
-            )
-            X_batch = X[batch_idx[0] : batch_idx[1]]
-            X_batch = X_batch.to(device)
-            X_transformed = model(X_batch)
-            X_transformed = X_transformed.cpu()
-            X_transformed_all.append(X_transformed.detach().numpy())
-    X_transformed = np.concatenate(X_transformed_all, axis=0)
-    return X_transformed
-
-
-def batch_inference(
-    model: nn.Module, dataloader: DataLoader, progress=True
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Perform batched inference on the dataset.
-
-    Parameters
-    ----------
-    model: torch.nn.Module
-        the model to use for inference.
-
-    Returns
-    -------
-    X_transformed: np.ndarray
-        the transformed dataset.
-    labels: np.ndarray
-        the labels of the transformed dataset.
-
-    """
-    imgs_transformed = []
-    all_labels = []
-    for batch in tqdm(dataloader) if progress else dataloader:
-        imgs = batch["img"]
-        labels = batch["lab"]
-        all_labels.append(labels)
-        for img in imgs:
-            img_transformed = model.fit_transform(img[0]).flatten()
-            imgs_transformed.append(np.expand_dims(img_transformed, axis=0))
-    X_transformed = np.concatenate(imgs_transformed)
-    labels = np.concatenate(all_labels)
-    return X_transformed, labels
-
-
-def xrv_inference(
-    model: nn.Module,
-    dataloader: DataLoader,
-    progress=True,
-    device=None,
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Perform batched inference with a model on a TorchXRayVision dataset.
-
-    Parameters
-    ----------
-    model: torch.nn.Module
-        the model to use for inference.
-
-    Returns
-    -------
-    X_transformed: np.ndarray
-        the transformed dataset.
-    labels: np.ndarray
-        the labels of the transformed dataset.
-
-    """
-    all_preds = []
-    all_labels = []
-    model = model.to(device).eval()
-    for batch in tqdm(dataloader) if progress else dataloader:
-        imgs = batch["img"]
-        labels = batch["lab"]
-        imgs = imgs.to(device)
-        with torch.no_grad():
-            preds = model(imgs)
-        preds = preds.cpu().numpy()
-        all_preds.append(preds)
-        all_labels.append(labels)
-    X_transformed = np.concatenate(all_preds)
-    labels = np.concatenate(all_labels)
-    return X_transformed, labels
-
-
-def model_inference(
-    model: nn.Module, dataloader: DataLoader, progress=True
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Perform batched inference with a model on a TorchXRayVision dataset.
-
-    Parameters
-    ----------
-    model: torch.nn.Module
-        the model to use for inference.
-
-    Returns
-    -------
-    X_transformed: np.ndarray
-        the transformed dataset.
-
-    """
-    all_outputs = []
-    for batch in tqdm(dataloader) if progress else dataloader:
-        features = batch["features"]
-        with torch.no_grad():
-            out = model(features)
-        out = out.cpu().numpy()
-        all_outputs.append(out)
-    all_outputs = np.concatenate(all_outputs)
-    return all_outputs
+    return examples
 
 
 def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
