@@ -230,6 +230,146 @@ class Metric(ABC):
 
         return batch_result
 
+    def __repr__(self) -> str:
+        """Return a string representation of the metric."""
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        """Return a string representation of the metric."""
+        return self.__repr__()
+
+    def __add__(self, other: "Metric") -> "Metric":
+        """Add two metrics together."""
+        return _OperationMetric(np.add, self, other)
+
+    def __radd__(self, other: "Metric") -> "Metric":
+        """Add two metrics together."""
+        return _OperationMetric(np.add, other, self)
+
+    def __sub__(self, other: "Metric") -> "Metric":
+        """Subtract two metrics together."""
+        return _OperationMetric(np.subtract, self, other)
+
+    def __rsub__(self, other: "Metric") -> "Metric":
+        """Subtract two metrics together."""
+        return _OperationMetric(np.subtract, other, self)
+
+    def __mul__(self, other: "Metric") -> "Metric":
+        """Multiply two metrics together."""
+        return _OperationMetric(np.multiply, self, other)
+
+    def __rmul__(self, other: "Metric") -> "Metric":
+        """Multiply two metrics together."""
+        return _OperationMetric(np.multiply, other, self)
+
+    def __truediv__(self, other: "Metric") -> "Metric":
+        """Divide two metrics together."""
+        return _OperationMetric(np.true_divide, self, other)
+
+    def __rtruediv__(self, other: "Metric") -> "Metric":
+        """Divide two metrics together."""
+        return _OperationMetric(np.true_divide, other, self)
+
+    def __pow__(self, other: "Metric") -> "Metric":
+        """Raise two metrics to a power."""
+        return _OperationMetric(np.power, self, other)
+
+    def __rpow__(self, other: "Metric") -> "Metric":
+        """Raise two metrics to a power."""
+        return _OperationMetric(np.power, other, self)
+
+    def __eq__(self, other: object) -> bool:
+        """Compare two metrics for equality."""
+        if not isinstance(other, Metric):
+            return NotImplemented
+        return _OperationMetric(np.equal, self, other)  # type: ignore[return-value]
+
+    def __ne__(self, other: object) -> bool:
+        """Compare two metrics for inequality."""
+        if not isinstance(other, Metric):
+            return NotImplemented
+        return _OperationMetric(np.not_equal, self, other)  # type: ignore[return-value]
+
+    def __gt__(self, other: "Metric") -> "Metric":
+        """Compare two metrics for greater than."""
+        return _OperationMetric(np.greater, self, other)
+
+    def __ge__(self, other: "Metric") -> "Metric":
+        """Compare two metrics for greater than or equal to."""
+        return _OperationMetric(np.greater_equal, self, other)
+
+    def __lt__(self, other: "Metric") -> "Metric":
+        """Compare two metrics for less than."""
+        return _OperationMetric(np.less, self, other)
+
+    def __le__(self, other: "Metric") -> "Metric":
+        """Compare two metrics for less than or equal to."""
+        return _OperationMetric(np.less_equal, self, other)
+
+    def __and__(self, other: "Metric") -> "Metric":
+        """Bitwise AND two metrics together."""
+        return _OperationMetric(np.bitwise_and, self, other)
+
+    def __rand__(self, other: "Metric") -> "Metric":
+        """Bitwise AND two metrics together."""
+        return _OperationMetric(np.bitwise_and, other, self)
+
+    def __or__(self, other: "Metric") -> "Metric":
+        """Bitwise OR two metrics together."""
+        return _OperationMetric(np.bitwise_or, self, other)
+
+    def __ror__(self, other: "Metric") -> "Metric":
+        """Bitwise OR two metrics together."""
+        return _OperationMetric(np.bitwise_or, other, self)
+
+    def __xor__(self, other: "Metric") -> "Metric":
+        """Bitwise XOR two metrics together."""
+        return _OperationMetric(np.bitwise_xor, self, other)
+
+    def __rxor__(self, other: "Metric") -> "Metric":
+        """Bitwise XOR two metrics together."""
+        return _OperationMetric(np.bitwise_xor, other, self)
+
+    def __invert__(self) -> "Metric":
+        """Invert a metric."""
+        return _OperationMetric(np.invert, self, None)
+
+    def __neg__(self) -> "Metric":
+        """Negate a metric."""
+        return _OperationMetric(np.negative, self, None)
+
+    def __pos__(self) -> "Metric":
+        """Posit two metrics together."""
+        return _OperationMetric(np.absolute, self, None)
+
+    def __abs__(self) -> "Metric":
+        """Absolute value of two metrics together."""
+        return _OperationMetric(np.absolute, self, None)
+
+    def __matmul__(self, other: "Metric") -> "Metric":
+        """Matrix multiplication of two metrics together."""
+        return _OperationMetric(np.matmul, self, other)
+
+    def __rmatmul__(self, other: "Metric") -> "Metric":
+        """Matrix multiplication of two metrics together."""
+        return _OperationMetric(np.matmul, other, self)
+
+    def __mod__(self, other: "Metric") -> "Metric":
+        """Modulo two metrics together."""
+        return _OperationMetric(np.mod, self, other)
+
+    def __rmod__(self, other: "Metric") -> "Metric":
+        """Modulo two metrics together."""
+        return _OperationMetric(np.mod, other, self)
+
+    def __floordiv__(self, other: "Metric") -> "Metric":
+        """Floor division two metrics together."""
+        return _OperationMetric(np.floor_divide, self, other)
+
+    def __rfloordiv__(self, other: "Metric") -> "Metric":
+        """Floor division two metrics together."""
+        return _OperationMetric(np.floor_divide, other, self)
+
 
 def create_metric(metric_name: str, **kwargs: Optional[Dict[str, Any]]) -> Metric:
     """Create a metric instance from a name.
@@ -263,6 +403,79 @@ def create_metric(metric_name: str, **kwargs: Optional[Dict[str, Any]]) -> Metri
     metric: Metric = metric_class(**kwargs)
 
     return metric
+
+
+class _OperationMetric(Metric):
+    def __init__(
+        self,
+        operator: Callable[..., Any],
+        metric1: Union[int, float, Metric],
+        metric2: Union[int, float, Metric, None],
+    ):
+        super().__init__()
+
+        self.op = operator  # pylint: disable=invalid-name
+        self.metric1 = metric1
+        self.metric2 = metric2
+
+    def update_state(self, *args: Any, **kwargs: Any) -> None:
+        if isinstance(self.metric1, Metric):
+            # TODO: filter kwargs
+            self.metric1.update_state(*args, **kwargs)
+
+        if isinstance(self.metric2, Metric):
+            self.metric2.update_state(*args, **kwargs)
+
+    def compute(self) -> Any:
+        if isinstance(self.metric1, Metric):
+            metric1 = self.metric1.compute()
+        else:
+            metric1 = self.metric1
+
+        if isinstance(self.metric2, Metric):
+            metric2 = self.metric2.compute()
+        else:
+            metric2 = self.metric2
+
+        if self.metric2 is None:
+            return self.op(metric1)
+
+        return self.op(metric1, metric2)
+
+    def reset_state(self) -> None:
+        if isinstance(self.metric1, Metric):
+            self.metric1.reset_state()
+
+        if isinstance(self.metric2, Metric):
+            self.metric2.reset_state()
+
+    def _wrap_compute(self, compute: Callable[..., Any]) -> Callable[..., Any]:
+        return compute
+
+    def __repr__(self) -> str:
+        _op_metrics = (
+            f"(\n  {self.op.__name__}(\n    {repr(self.metric1)},\n    "
+            f"{repr(self.metric2)}\n  )\n)"
+        )
+
+        return _op_metrics
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if hasattr(self.metric1, name):
+            setattr(self.metric1, name, value)
+        if hasattr(self.metric2, name):
+            setattr(self.metric2, name, value)
+
+        super().__setattr__(name, value)
+
+    def __getattr__(self, name: str) -> Any:
+        if hasattr(self.metric1, name) and hasattr(self.metric2, name):
+            return getattr(self.metric1, name)
+
+        raise AttributeError(
+            f"Attribute {name} not found in {self.__class__.__name__} or "
+            f"{self.metric1.__class__.__name__} and {self.metric2.__class__.__name__}"
+        )
 
 
 class MetricCollection(Metric):
@@ -330,6 +543,7 @@ class MetricCollection(Metric):
                 # pylint: disable=protected-access
                 metric._computed = base_metric._computed
                 metric._update_count = base_metric._update_count
+                # pylint: enable=protected-access
 
     def compute(self) -> Dict[str, Any]:
         """Compute the metrics in the collection."""
@@ -337,7 +551,7 @@ class MetricCollection(Metric):
 
     def reset_state(self) -> None:
         """Reset the state of all metrics in the collection."""
-        for metric in self._metrics.values():
+        for metric in self._metrics.values():  # pylint: disable=protected-access
             metric.reset_state()
 
     def _validate_input(
