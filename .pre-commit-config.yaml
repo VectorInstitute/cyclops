@@ -54,11 +54,7 @@ repos:
       entry: python3 -m mypy --config-file pyproject.toml
       language: system
       types: [python]
-<<<<<<< HEAD
-      exclude: "apps|use_cases|tests|cyclops/(process|models|evaluate|workflow)"
-=======
       exclude: "apps|use_cases|tests|cyclops/(process|models|monitor|workflow)"
->>>>>>> origin/main
 
   - repo: local
     hooks:
