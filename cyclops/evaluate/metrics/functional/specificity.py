@@ -1,9 +1,9 @@
 """Functions to compute the specificity metric."""
 
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, cast
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from sklearn.metrics._classification import _prf_divide
 
 from cyclops.evaluate.metrics.functional.stat_scores import (
@@ -22,13 +22,13 @@ from cyclops.evaluate.metrics.utils import (
 
 
 def _specificity_reduce(  # pylint: disable=too-many-arguments
-    tp: Union[np.int_, np.ndarray],
-    fp: Union[np.int_, np.ndarray],
-    tn: Union[np.int_, np.ndarray],
-    fn: Union[np.int_, np.ndarray],
+    tp: Union[npt.NDArray[np.int_], np.int_],
+    fp: Union[npt.NDArray[np.int_], np.int_],
+    tn: Union[npt.NDArray[np.int_], np.int_],
+    fn: Union[npt.NDArray[np.int_], np.int_],
     average: Literal["micro", "macro", "weighted", None],
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Reduce specificity.
 
     Parameters
@@ -84,22 +84,22 @@ def _specificity_reduce(  # pylint: disable=too-many-arguments
         weights = None
 
     if weights is not None and np.sum(weights) == 0:
-        result = np.ones_like(score)
+        result = np.ones_like(score, dtype=np.float64)
         if zero_division in ["warn", 0]:
-            result = np.zeros_like(score)
+            result = np.zeros_like(score, dtype=np.float64)
         return result
 
     if average is not None and score.ndim != 0 and len(score) > 1:
         result = np.average(score, weights=weights)
     else:
-        result = _get_value_if_singleton_array(score)
+        result = _get_value_if_singleton_array(score)  # type: ignore[assignment]
 
     return result
 
 
 def binary_specificity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     pos_label: int = 1,
     threshold: float = 0.5,
     zero_division: Literal["warn", 0, 1] = "warn",
@@ -108,9 +108,9 @@ def binary_specificity(  # pylint: disable=too-many-arguments
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated targets (predictions) as returned by a classifier.
     pos_label : int, default=1
         The label to use for the positive class.
@@ -141,7 +141,7 @@ def binary_specificity(  # pylint: disable=too-many-arguments
 
     tp, fp, tn, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
 
-    return _specificity_reduce(
+    score = _specificity_reduce(
         tp,
         fp,
         tn,
@@ -150,22 +150,24 @@ def binary_specificity(  # pylint: disable=too-many-arguments
         zero_division=zero_division,
     )
 
+    return cast(float, score)
+
 
 def multiclass_specificity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute specificity for multiclass classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated targets (predictions) as returned by a classifier.
     num_classes : int
         The number of classes in the dataset.
@@ -223,21 +225,21 @@ def multiclass_specificity(  # pylint: disable=too-many-arguments
 
 
 def multilabel_specificity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
     threshold: float = 0.5,
     top_k: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute specificity for multilabel classification tasks.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated targets (predictions) as returned by a classifier.
     num_labels : int
         The number of labels in the dataset.
@@ -300,8 +302,8 @@ def multilabel_specificity(  # pylint: disable=too-many-arguments
 
 
 def specificity(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
     pos_label: int = 1,
     num_classes: Optional[int] = None,
@@ -310,7 +312,7 @@ def specificity(  # pylint: disable=too-many-arguments
     num_labels: Optional[int] = None,
     average: Literal["micro", "macro", "weighted", None] = None,
     zero_division: Literal["warn", 0, 1] = "warn",
-) -> Union[float, np.ndarray]:
+) -> Union[float, npt.NDArray[np.float_]]:
     """Compute specificity score for different classification tasks.
 
     The specificity is the ratio of true negatives to the sum of true negatives and
@@ -393,30 +395,30 @@ def specificity(  # pylint: disable=too-many-arguments
 
     """
     if task == "binary":
-        score = binary_specificity(
+        return binary_specificity(
             target,
             preds,
             pos_label=pos_label,
             threshold=threshold,
             zero_division=zero_division,
         )
-    elif task == "multiclass":
+    if task == "multiclass":
         assert (
             isinstance(num_classes, int) and num_classes > 0
         ), "Number of classes must be specified for multiclass classification."
-        score = multiclass_specificity(
+        return multiclass_specificity(
             target,
             preds,
             num_classes,
             top_k=top_k,
-            average=average,  # type: ignore
+            average=average,
             zero_division=zero_division,
         )
-    elif task == "multilabel":
+    if task == "multilabel":
         assert (
             isinstance(num_labels, int) and num_labels > 0
         ), "Number of labels must be specified for multilabel classification."
-        score = multilabel_specificity(
+        return multilabel_specificity(
             target,
             preds,
             num_labels,
@@ -425,10 +427,8 @@ def specificity(  # pylint: disable=too-many-arguments
             average=average,
             zero_division=zero_division,
         )
-    else:
-        raise ValueError(
-            f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
-        )
 
-    return score
+    raise ValueError(
+        f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
+        " or 'multilabel'"
+    )

@@ -1,11 +1,12 @@
 """Classes for computing precision-recall curves."""
 
-from typing import List, Literal, Optional, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Type, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 
-from cyclops.evaluate.metrics.functional.precision_recall_curve import (
+# pylint: disable=line-too-long
+from cyclops.evaluate.metrics.functional.precision_recall_curve import (  # type: ignore[attr-defined] # noqa: E501
     _binary_precision_recall_curve_compute,
     _binary_precision_recall_curve_format,
     _binary_precision_recall_curve_update,
@@ -19,8 +20,6 @@ from cyclops.evaluate.metrics.functional.precision_recall_curve import (
     _multilabel_precision_recall_curve_update,
 )
 from cyclops.evaluate.metrics.metric import Metric
-
-# mypy: ignore-errors
 
 
 class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_curve"):
@@ -59,7 +58,7 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
     def __init__(
         self,
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         pos_label: int = 1,
     ) -> None:
         super().__init__()
@@ -76,8 +75,8 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
         self.pos_label = pos_label
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
@@ -93,21 +92,23 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
         # pylint: disable=no-member # attributes are added with setattr
         if isinstance(state, np.ndarray):
-            self.confmat += state
+            self.confmat += state  # type: ignore[attr-defined]
         else:
-            self.target.append(state[0])
-            self.preds.append(state[1])
+            self.target.append(state[0])  # type: ignore[attr-defined]
+            self.preds.append(state[1])  # type: ignore[attr-defined]
 
-    def compute(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute(
+        self,
+    ) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
         """Compute the precision-recall curve from the state."""
         # pylint: disable=no-member # attributes are added with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _binary_precision_recall_curve_compute(
             state=state, thresholds=self.thresholds, pos_label=self.pos_label
@@ -167,7 +168,7 @@ class MulticlassPrecisionRecallCurve(
     def __init__(
         self,
         num_classes: int,
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     ) -> None:
         super().__init__()
         _check_thresholds(thresholds)
@@ -185,8 +186,8 @@ class MulticlassPrecisionRecallCurve(
         self.num_classes = num_classes
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
@@ -205,29 +206,35 @@ class MulticlassPrecisionRecallCurve(
 
         # pylint: disable=no-member # attributes are added with setattr
         if isinstance(state, np.ndarray):
-            self.confmat += state
+            self.confmat += state  # type: ignore[attr-defined]
         else:
-            self.target.append(state[0])
-            self.preds.append(state[1])
+            self.target.append(state[0])  # type: ignore[attr-defined]
+            self.preds.append(state[1])  # type: ignore[attr-defined]
 
     def compute(
         self,
     ) -> Union[
-        Tuple[np.ndarray, np.ndarray, np.ndarray],
-        Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+        Tuple[
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+        ],
     ]:
         """Compute the precision-recall curve from the state."""
         # pylint: disable=no-member # attributes are added with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _multiclass_precision_recall_curve_compute(
-            state=state, thresholds=self.thresholds, num_classes=self.num_classes
+            state=state,
+            thresholds=self.thresholds,  # type: ignore[arg-type]
+            num_classes=self.num_classes,
         )
 
 
@@ -276,7 +283,7 @@ class MultilabelPrecisionRecallCurve(
     def __init__(
         self,
         num_labels: int,
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     ) -> None:
         super().__init__()
 
@@ -294,8 +301,8 @@ class MultilabelPrecisionRecallCurve(
         self.num_labels = num_labels
 
     def update_state(  # pylint: disable=arguments-differ
-        self, target: ArrayLike, preds: ArrayLike
-    ) -> None:  # type: ignore
+        self, target: npt.ArrayLike, preds: npt.ArrayLike
+    ) -> None:
         """Update the state of the metric.
 
         The state is either a list of targets and predictions (if ``thresholds`` is
@@ -311,24 +318,35 @@ class MultilabelPrecisionRecallCurve(
 
         # pylint: disable=no-member # attributes are added with setattr
         if isinstance(state, np.ndarray):
-            self.confmat += state
+            self.confmat += state  # type: ignore[attr-defined]
         else:
-            self.target.append(state[0])
-            self.preds.append(state[1])
+            self.target.append(state[0])  # type: ignore[attr-defined]
+            self.preds.append(state[1])  # type: ignore[attr-defined]
 
-    def compute(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute(
+        self,
+    ) -> Union[
+        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+        Tuple[
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+        ],
+    ]:
         """Compute the precision-recall curve from the state."""
         # pylint: disable=no-member # attributes are added with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _multilabel_precision_recall_curve_compute(
-            state, thresholds=self.thresholds, num_labels=self.num_labels
+            state,
+            thresholds=self.thresholds,  # type: ignore[arg-type]
+            num_labels=self.num_labels,
         )
 
 
@@ -437,9 +455,9 @@ class PrecisionRecallCurve(
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of PrecisionRecallCurve
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         pos_label: int = 1,
         num_classes: Optional[int] = None,
         num_labels: Optional[int] = None,

@@ -3,6 +3,7 @@
 from typing import List, Literal, Optional, Union
 
 import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.auroc import (
     _binary_auroc_compute,
@@ -16,8 +17,6 @@ from cyclops.evaluate.metrics.precision_recall_curve import (
     MultilabelPrecisionRecallCurve,
 )
 from cyclops.evaluate.metrics.utils import _check_average_arg
-
-# mypy: ignore-errors
 
 
 class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
@@ -56,7 +55,7 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
     def __init__(
         self,
         max_fpr: Optional[float] = None,
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         pos_label: int = 1,
     ) -> None:
         super().__init__(thresholds=thresholds, pos_label=pos_label)
@@ -66,12 +65,12 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
         """Compute the area under the ROC curve from the state variables."""
         # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _binary_auroc_compute(
             state,
@@ -126,23 +125,23 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
     def __init__(
         self,
         num_classes: int,
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         average: Optional[Literal["macro", "weighted"]] = None,
     ) -> None:
         super().__init__(num_classes=num_classes, thresholds=thresholds)
         _check_average_arg(average)
         self.average = average
 
-    def compute(self) -> Union[float, np.ndarray]:  # type: ignore
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type:ignore[override]
         """Compute the area under the ROC curve from the state variables."""
         # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _multiclass_auroc_compute(
             state=state,
@@ -196,23 +195,23 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_a
     def __init__(
         self,
         num_labels: int,
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         average: Optional[Literal["micro", "macro", "weighted"]] = None,
     ) -> None:
         super().__init__(num_labels=num_labels, thresholds=thresholds)
         _check_average_arg(average)
         self.average = average
 
-    def compute(self) -> Union[float, np.ndarray]:  # type: ignore
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the area under the ROC curve from the state variables."""
         # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _multilabel_auroc_compute(
             state=state,
@@ -308,7 +307,7 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
         cls,
         task: Literal["binary", "multiclass", "multilabel"],
         max_fpr: Optional[float] = None,
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         num_classes: Optional[int] = None,
         num_labels: Optional[int] = None,
         average: Optional[Literal["micro", "macro", "weighted"]] = None,

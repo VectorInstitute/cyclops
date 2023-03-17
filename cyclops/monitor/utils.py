@@ -2,16 +2,18 @@
 
 import importlib
 import inspect
+import os
 import pickle
 from datetime import timedelta
 from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+import PIL
 import torch
 from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
 from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
@@ -20,11 +22,35 @@ from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+from torchvision.transforms import PILToTensor
 
 from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
 from cyclops.models.neural_nets.rnn import RNNModel
 from cyclops.models.wrappers import SKModel
+
+
+def apply_transforms(examples: Dict[str, List], transforms: callable) -> dict:
+    """Apply transforms to examples."""
+    # examples is a dict of lists; convert to list of dicts.
+    # doing a conversion from PIL to tensor is necessary here when working
+    # with the Image feature type.
+    value_len = len(list(examples.values())[0])
+    examples = [
+        {
+            k: PILToTensor()(v[i]) if isinstance(v[i], PIL.Image.Image) else v[i]
+            for k, v in examples.items()
+        }
+        for i in range(value_len)
+    ]
+
+    # apply the transforms to each example
+    examples = [transforms(example) for example in examples]
+
+    # convert back to a dict of lists
+    examples = {k: [d[k] for d in examples] for k in examples[0]}
+
+    return examples
 
 
 def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
@@ -398,7 +424,6 @@ class LKWrapper:
         num_features=None,
         num_classes=None,
     ):
-
         self.proj = self.choose_proj(X_s, proj_type, num_features, num_classes)
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
@@ -704,3 +729,32 @@ if __name__ == "__main__":
     for i in range(10):
         sleep(0.25)
     loader.stop()
+
+
+def nihcxr_preprocess(df: pd.DataFrame, nihcxr_dir: str) -> pd.DataFrame:
+    """Preprocess NIHCXR dataframe.
+
+    Add a column with the path to the image and create
+    one-hot encoded pathogies from Finding Labels column.
+
+    Parameters
+    ----------
+        df (pd.DataFrame): NIHCXR dataframe.
+
+    Returns
+    -------
+        pd.DataFrame: pre-processed NIHCXR dataframe.
+
+    """
+    # Add path column
+    df["features"] = df["Image Index"].apply(
+        lambda x: os.path.join(nihcxr_dir, "images", x)
+    )
+
+    # Create one-hot encoded pathologies
+    pathologies = df["Finding Labels"].str.get_dummies(sep="|")
+
+    # Add one-hot encoded pathologies to dataframe
+    df = pd.concat([df, pathologies], axis=1)
+
+    return df

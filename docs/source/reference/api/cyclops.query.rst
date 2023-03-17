@@ -1,7 +1,7 @@
 cyclops.query
 =============
 
-.. currentmodule:: cyclops.query
+.. automodule:: cyclops.query
 
 .. autosummary::
     :toctree: _autosummary

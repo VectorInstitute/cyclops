@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0  # Use the ref you want to point at
+    rev: v4.4.0  # Use the ref you want to point at
     hooks:
     - id: trailing-whitespace
     - id: check-ast
@@ -12,22 +12,21 @@ repos:
     - id: mixed-line-ending
       args: [--fix=lf]
     - id: requirements-txt-fixer
-    - id: trailing-whitespace
     - id: check-yaml
     - id: check-toml
 
   - repo: https://github.com/ambv/black
-    rev: 22.3.0
+    rev: 23.1.0
     hooks:
     - id: black
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.5.2
+    rev: 5.12.0
     hooks:
     - id: isort
 
   - repo: https://github.com/myint/docformatter
-    rev: v1.3.1
+    rev: v1.5.1
     hooks:
     - id: docformatter
       args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88, --blank]
@@ -42,20 +41,24 @@ repos:
       files: ".*.py$"
 
   - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.1.1
+    rev: 6.3.0
     hooks:
     - id: pydocstyle
       args: [--convention=numpy]
       additional_dependencies: [toml]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.942
+    rev: v1.0.1
     hooks:
     - id: mypy
       entry: python3 -m mypy --config-file pyproject.toml
       language: system
       types: [python]
+<<<<<<< HEAD
       exclude: "apps|use_cases|tests|cyclops/(process|models|evaluate|workflow)"
+=======
+      exclude: "apps|use_cases|tests|cyclops/(process|models|monitor|workflow)"
+>>>>>>> origin/main
 
   - repo: local
     hooks:
@@ -76,7 +79,7 @@ repos:
       always_run: true
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.3.1
+    rev: 1.6.3
     hooks:
     - id: nbqa-black
     - id: nbqa-isort

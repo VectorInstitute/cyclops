@@ -2,6 +2,6 @@ API Reference
 =============
 
 .. toctree::
-   :glob:
 
-   reference/api/*
+   reference/api/cyclops.query.rst
+   reference/api/cyclops.evaluate.rst

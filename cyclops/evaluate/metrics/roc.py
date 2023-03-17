@@ -3,20 +3,19 @@
 from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 
-from cyclops.evaluate.metrics import (
-    BinaryPrecisionRecallCurve,
-    MulticlassPrecisionRecallCurve,
-    MultilabelPrecisionRecallCurve,
-)
 from cyclops.evaluate.metrics.functional.roc import (
     _binary_roc_compute,
     _multiclass_roc_compute,
     _multilabel_roc_compute,
 )
 from cyclops.evaluate.metrics.metric import Metric
-
-# mypy: ignore-errors
+from cyclops.evaluate.metrics.precision_recall_curve import (
+    BinaryPrecisionRecallCurve,
+    MulticlassPrecisionRecallCurve,
+    MultilabelPrecisionRecallCurve,
+)
 
 
 class BinaryROCCurve(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"):
@@ -55,16 +54,18 @@ class BinaryROCCurve(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"
 
     """
 
-    def compute(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute(
+        self,
+    ) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
         """Compute the ROC curve from the state variables."""
         # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _binary_roc_compute(
             state, thresholds=self.thresholds, pos_label=self.pos_label
@@ -127,16 +128,25 @@ class MulticlassROCCurve(
 
     """
 
-    def compute(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute(
+        self,
+    ) -> Union[
+        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+        Tuple[
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+        ],
+    ]:
         """Compute the ROC curve from the state variables."""
         # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _multiclass_roc_compute(
             state=state, num_classes=self.num_classes, thresholds=self.thresholds
@@ -190,16 +200,25 @@ class MultilabelROCCurve(
 
     """
 
-    def compute(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute(
+        self,
+    ) -> Union[
+        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+        Tuple[
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+            List[npt.NDArray[np.float_]],
+        ],
+    ]:
         """Compute the ROC curve from the state variables."""
         # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
-            state = [
-                np.concatenate(self.target, axis=0),
-                np.concatenate(self.preds, axis=0),
-            ]
+            state = (
+                np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
+                np.concatenate(self.preds, axis=0),  # type: ignore[attr-defined]
+            )
         else:
-            state = self.confmat
+            state = self.confmat  # type: ignore[attr-defined]
 
         return _multilabel_roc_compute(
             state=state, num_labels=self.num_labels, thresholds=self.thresholds
@@ -316,7 +335,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     def __new__(  # type: ignore # mypy expects a subclass of ROCCurve
         cls,
         task: Literal["binary", "multiclass", "multilabel"],
-        thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+        thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         pos_label: int = 1,
         num_classes: Optional[int] = None,
         num_labels: Optional[int] = None,

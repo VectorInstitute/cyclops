@@ -1,7 +1,8 @@
+# pylint: disable=too-many-lines
+
 """Utility functions for querying."""
 
 # mypy: ignore-errors
-# pylint: disable=too-many-lines
 
 import logging
 from dataclasses import dataclass
@@ -777,6 +778,96 @@ def equals(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs) == process_elem(
+        value, lower=lower, trim=trim, **kwargs
+    )
+
+
+def greater_than(
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    equal: bool = False,
+    **kwargs: Dict[str, bool],
+) -> BinaryExpression:
+    """Condition that a column is greater than some value.
+
+    Assumes that if searching for a string, both the value and column values
+    should be converted to lowercase and trimmed of leading/trailing whitespace.
+
+    Parameters
+    ----------
+    col : sqlalchemy.sql.schema.Column
+        The column to condition.
+    val : Any
+        The value to match in the column.
+    lower : bool, default=True
+        Whether to convert the value and column to lowercase.
+        This is only relevant when the column/value are strings.
+    trim : bool, default=True
+        Whether to trim (strip) whitespace on the value and column.
+        This is only relevant when the column/value are strings.
+    equal: bool, default=False
+        Whether to also include equal to the value.
+    **kwargs : dict, optional
+        Remaining preprocessing keyword arguments.
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BinaryExpression
+        An expression representing where the condition was satisfied.
+
+    """
+    if equal:
+        return process_column(col, lower=lower, trim=trim, **kwargs) >= process_elem(
+            value, lower=lower, trim=trim, **kwargs
+        )
+    return process_column(col, lower=lower, trim=trim, **kwargs) > process_elem(
+        value, lower=lower, trim=trim, **kwargs
+    )
+
+
+def less_than(
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    equal: bool = False,
+    **kwargs: Dict[str, bool],
+) -> BinaryExpression:
+    """Condition that a column is less than some value.
+
+    Assumes that if searching for a string, both the value and column values
+    should be converted to lowercase and trimmed of leading/trailing whitespace.
+
+    Parameters
+    ----------
+    col : sqlalchemy.sql.schema.Column
+        The column to condition.
+    val : Any
+        The value to match in the column.
+    lower : bool, default=True
+        Whether to convert the value and column to lowercase.
+        This is only relevant when the column/value are strings.
+    trim : bool, default=True
+        Whether to trim (strip) whitespace on the value and column.
+        This is only relevant when the column/value are strings.
+    equal: bool, default=False
+        Whether to also include equal to the value.
+    **kwargs : dict, optional
+        Remaining preprocessing keyword arguments.
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BinaryExpression
+        An expression representing where the condition was satisfied.
+
+    """
+    if equal:
+        return process_column(col, lower=lower, trim=trim, **kwargs) <= process_elem(
+            value, lower=lower, trim=trim, **kwargs
+        )
+    return process_column(col, lower=lower, trim=trim, **kwargs) < process_elem(
         value, lower=lower, trim=trim, **kwargs
     )
 

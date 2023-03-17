@@ -1,133 +1,98 @@
 """Unit tests for Reductor module."""
-import numpy as np
 import pytest
-import torch
-from torch.utils.data import Dataset
+from synthetic_datasets import (
+    synthetic_gemini_dataset,
+    synthetic_generic_dataset,
+    synthetic_nih_dataset,
+)
+from torchxrayvision.models import DenseNet
 
+from cyclops.models import LSTMModel
 from cyclops.monitor import Reductor
 
 
-@pytest.fixture(name="X")
-def fixture_x():
-    """Create a test input."""
-    x = np.random.rand(100, 10)
-    return x
-
-
-@pytest.fixture(name="X_timeseries")
-def fixture_x_timeseries():
-    """Create a test input."""
-    x = np.random.rand(100, 32, 10)
-    return x
-
-
-# pytest fixture for torch dataset of random images
-# and labels in dict with keys "img" and "lab"
-@pytest.fixture(name="txrv_dataset")
-def fixture_txrv_dataset():
-    """Create a test input."""
-
-    class TXRVDataset(Dataset):
-        """TXRV Dummy Dataset."""
-
-        def __init__(self, num_samples, channels, height, width, num_labels=14):
-            self.len = num_samples
-            self.data = torch.rand(num_samples, channels, height, width)
-            self.labels = torch.rand(num_samples, num_labels)
-
-        def __getitem__(self, index):
-            item = {"img": self.data[index], "lab": self.labels[index]}
-            return item
-
-        def __len__(self):
-            return self.len
-
-    dataset = TXRVDataset(100, 1, 224, 224)
+@pytest.fixture(name="generic_dataset")
+def fixture_generic_dataset():
+    """Create a test input for NIH use-case."""
+    dataset = synthetic_generic_dataset()
     return dataset
 
 
-@pytest.fixture(name="image_dataset")
-def fixture_image_dataset():
-    """Create a test input."""
-    x = np.random.rand(100, 3, 32, 32)
-    return x
+@pytest.fixture(name="gemini_dataset")
+def fixture_gemini_dataset():
+    """Create a test input for GEMINI use-case."""
+    dataset = synthetic_gemini_dataset()
+    return dataset
 
 
-def test_reductor_nored(X):
+@pytest.fixture(name="nih_dataset")
+def fixture_nih_dataset():
+    """Create a test input for NIH use-case."""
+    dataset = synthetic_nih_dataset()
+    return dataset
+
+
+def test_reductor_nored(generic_dataset):
     """Test Reductor."""
-    reductor = Reductor("NoRed")
-    reductor.fit(X)
-    X_reduced, _ = reductor.transform(X)
+    reductor = Reductor("nored")
+    reductor.fit(generic_dataset)
+    X_reduced = reductor.transform(generic_dataset)
     assert X_reduced.shape == (100, 10)
 
 
-def test_reductor_pca(X):
+def test_reductor_pca(generic_dataset):
     """Test Reductor."""
-    reductor = Reductor("PCA", n_components=2)
-    reductor.fit(X)
-    X_reduced, _ = reductor.transform(X)
+    reductor = Reductor("pca", n_components=2)
+    reductor.fit(generic_dataset)
+    X_reduced = reductor.transform(generic_dataset)
     assert X_reduced.shape == (100, 2)
 
 
-def test_reductor_srp(X):
+def test_reductor_srp(generic_dataset):
     """Test Reductor."""
-    reductor = Reductor("SRP", n_components=2)
-    reductor.fit(X)
-    X_reduced, _ = reductor.transform(X)
+    reductor = Reductor("srp", n_components=2)
+    reductor.fit(generic_dataset)
+    X_reduced = reductor.transform(generic_dataset)
     assert X_reduced.shape == (100, 2)
 
 
-def test_reductor_kpca(X):
+def test_reductor_kpca(generic_dataset):
     """Test Reductor."""
-    reductor = Reductor("kPCA", n_components=2)
-    reductor.fit(X)
-    X_reduced, _ = reductor.transform(X)
+    reductor = Reductor("kpca", n_components=2)
+    reductor.fit(generic_dataset)
+    X_reduced = reductor.transform(generic_dataset)
     assert X_reduced.shape == (100, 2)
 
 
-def test_reductor_isomap(X):
+def test_reductor_isomap(generic_dataset):
     """Test Reductor."""
-    reductor = Reductor("Isomap", n_components=2)
-    reductor.fit(X)
-    X_reduced, _ = reductor.transform(X)
+    reductor = Reductor("isomap", n_components=2)
+    reductor.fit(generic_dataset)
+    X_reduced = reductor.transform(generic_dataset)
     assert X_reduced.shape == (100, 2)
 
 
-def test_reductor_gmm(X):
+def test_reductor_gmm(generic_dataset):
     """Test Reductor."""
-    reductor = Reductor("GMM", n_components=2)
-    reductor.fit(X)
-    X_reduced, _ = reductor.transform(X)
+    reductor = Reductor("gmm", n_components=2)
+    reductor.fit(generic_dataset)
+    X_reduced = reductor.transform(generic_dataset)
     assert X_reduced.shape == (100, 2)
 
 
-def test_reductor_bbsds_untrained_ffnn(X):
+def test_reductor_bbsds_untrained_lstm(gemini_dataset):
     """Test Reductor."""
-    reductor = Reductor("BBSDs_untrained_FFNN", n_features=10, n_classes=2)
-    reductor.fit(X)
-    X_reduced, _ = reductor.transform(X)
-    assert X_reduced.shape == (100, 2)
+    model = LSTMModel(7)
+    reductor = Reductor("bbse-soft", model=model)
+    reductor.fit(gemini_dataset)
+    X_reduced = reductor.transform(gemini_dataset)
+    assert X_reduced.shape == (100, 64, 1)
 
 
-def test_reductor_bbsds_untrained_cnn(image_dataset):
+def test_reductor_bbsd_txrv_cnn(nih_dataset):
     """Test Reductor."""
-    reductor = Reductor("BBSDs_untrained_CNN", n_features=3, n_classes=2)
-    reductor.fit(image_dataset)
-    X_reduced, _ = reductor.transform(image_dataset)
-    assert X_reduced.shape == (100, 2)
-
-
-def test_reductor_bbsds_untrained_lstm(X_timeseries):
-    """Test Reductor."""
-    reductor = Reductor("BBSDs_untrained_LSTM", n_features=10)
-    reductor.fit(X_timeseries)
-    X_reduced, _ = reductor.transform(X_timeseries)
-    assert X_reduced.shape == (100, 32, 1)
-
-
-def test_reductor_bbsd_txrv_cnn(txrv_dataset):
-    """Test Reductor."""
-    reductor = Reductor("BBSDs_txrv_CNN")
-    reductor.fit(txrv_dataset)
-    X_reduced, _ = reductor.transform(txrv_dataset)
-    assert X_reduced.shape == (100, 18)
+    model = DenseNet(weights="densenet121-res224-all")
+    reductor = Reductor("bbse-soft", model=model)
+    reductor.fit(nih_dataset)
+    X_reduced = reductor.transform(nih_dataset)
+    assert X_reduced.shape == (8, 18)

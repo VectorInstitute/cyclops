@@ -1,10 +1,10 @@
 """Functions for computing the receiver operating characteristic (ROC) curve."""
 
 import warnings
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Any, List, Literal, Optional, Tuple, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from sklearn.metrics._ranking import _binary_clf_curve
 
 from cyclops.evaluate.metrics.functional.precision_recall_curve import (
@@ -20,9 +20,9 @@ from cyclops.evaluate.metrics.utils import _check_thresholds
 
 
 def _roc_compute_from_confmat(
-    confmat: np.ndarray,
-    thresholds: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    confmat: npt.NDArray[Any],
+    thresholds: npt.NDArray[np.float_],
+) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
     """Compute the ROC curve from a multi-threshold confusion matrix.
 
     Parameters
@@ -63,10 +63,10 @@ def _roc_compute_from_confmat(
 
 
 def _binary_roc_compute(
-    state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
-    thresholds: Optional[np.ndarray] = None,
+    state: Union[Tuple[npt.NDArray[Any], npt.NDArray[Any]], npt.NDArray[Any]],
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
     pos_label: int = 1,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
     """Compute the ROC curve for binary classification.
 
     Parameters
@@ -102,7 +102,7 @@ def _binary_roc_compute(
         # start the curve at (0, 0)
         fps = np.hstack((0, fps))
         tps = np.hstack((0, tps))
-        thresholds = np.hstack((1, thresholds))
+        thresholds = np.hstack((1, thresholds))  # type: ignore[arg-type]
 
         if fps[-1] <= 0:
             warnings.warn(
@@ -110,7 +110,7 @@ def _binary_roc_compute(
                 " meaningless. Returning zero array in false positive score",
                 UserWarning,
             )
-            fpr = np.zeros_like(thresholds)
+            fpr = np.zeros_like(thresholds, dtype=np.float64)
         else:
             fpr = fps / fps[-1]
 
@@ -120,7 +120,7 @@ def _binary_roc_compute(
                 " meaningless. Returning zero array in true positive score",
                 UserWarning,
             )
-            tpr = np.zeros_like(thresholds)
+            tpr = np.zeros_like(thresholds, dtype=np.float64)
         else:
             tpr = tps / tps[-1]
 
@@ -128,11 +128,11 @@ def _binary_roc_compute(
 
 
 def binary_roc_curve(
-    target: ArrayLike,
-    preds: ArrayLike,
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     pos_label: int = 1,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
     """Compute the ROC curve for binary classification tasks.
 
     Parameters
@@ -188,12 +188,18 @@ def binary_roc_curve(
 
 
 def _multiclass_roc_compute(
-    state: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]],
+    state: Union[
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+    ],
     num_classes: int,
-    thresholds: Optional[np.ndarray] = None,
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the ROC curve for multiclass classification tasks.
 
@@ -229,27 +235,33 @@ def _multiclass_roc_compute(
 
         tpr = tpr.T
         fpr = fpr.T
-    else:
-        fpr, tpr, thresholds = [], [], []
-        for i in range(num_classes):
-            res = _binary_roc_compute(
-                [state[0], state[1][:, i]], thresholds=None, pos_label=i
-            )
-            fpr.append(res[0])
-            tpr.append(res[1])
-            thresholds.append(res[2])
 
-    return fpr, tpr, thresholds
+        return fpr, tpr, thresholds
+
+    fpr_list, tpr_list, thresholds_list = [], [], []
+    for i in range(num_classes):
+        res = _binary_roc_compute(
+            (state[0], state[1][:, i]), thresholds=None, pos_label=i
+        )
+        fpr_list.append(res[0])
+        tpr_list.append(res[1])
+        thresholds_list.append(res[2])
+
+    return fpr_list, tpr_list, thresholds_list
 
 
 def multiclass_roc_curve(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the ROC curve for multiclass classification tasks.
 
@@ -319,12 +331,18 @@ def multiclass_roc_curve(
 
 
 def _multilabel_roc_compute(
-    state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
+    state: Union[
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+    ],
     num_labels: int,
-    thresholds: Optional[np.ndarray] = None,
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the ROC curve for multilabel classification tasks.
 
@@ -360,27 +378,33 @@ def _multilabel_roc_compute(
 
         tpr = tpr.T
         fpr = fpr.T
-    else:
-        fpr, tpr, thresholds = [], [], []
-        for i in range(num_labels):
-            res = _binary_roc_compute(
-                [state[0][:, i], state[1][:, i]], thresholds=None, pos_label=i
-            )
-            fpr.append(res[0])
-            tpr.append(res[1])
-            thresholds.append(res[2])
 
-    return fpr, tpr, thresholds
+        return fpr, tpr, thresholds
+
+    fpr_list, tpr_list, thresholds_list = [], [], []
+    for i in range(num_labels):
+        res = _binary_roc_compute(
+            (state[0][:, i], state[1][:, i]), thresholds=None, pos_label=i
+        )
+        fpr_list.append(res[0])
+        tpr_list.append(res[1])
+        thresholds_list.append(res[2])
+
+    return fpr_list, tpr_list, thresholds_list
 
 
 def multilabel_roc_curve(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the ROC curve for multilabel classification tasks.
 
@@ -449,16 +473,20 @@ def multilabel_roc_curve(
 
 
 def roc_curve(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     pos_label: int = 1,
     num_classes: Optional[int] = None,
     num_labels: Optional[int] = None,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the ROC curve for different tasks/input types.
 
@@ -571,27 +599,19 @@ def roc_curve(  # pylint: disable=too-many-arguments
     """
     _check_thresholds(thresholds)
     if task == "binary":
-        fpr, tpr, thresholds = binary_roc_curve(
-            target, preds, thresholds, pos_label=pos_label
-        )
-    elif task == "multiclass":
+        return binary_roc_curve(target, preds, thresholds, pos_label=pos_label)
+    if task == "multiclass":
         assert isinstance(
             num_classes, int
         ), "Number of classes must be a positive integer."
-        fpr, tpr, thresholds = multiclass_roc_curve(
-            target, preds, num_classes, thresholds
-        )
-    elif task == "multilabel":
+        return multiclass_roc_curve(target, preds, num_classes, thresholds)
+    if task == "multilabel":
         assert isinstance(
             num_labels, int
         ), "Number of labels must be a positive integer."
-        fpr, tpr, thresholds = multilabel_roc_curve(
-            target, preds, num_labels, thresholds
-        )
-    else:
-        raise ValueError(
-            "Expected argument `task` to be either 'binary', 'multiclass' or "
-            f"'multilabel', but got {task}"
-        )
+        return multilabel_roc_curve(target, preds, num_labels, thresholds)
 
-    return fpr, tpr, thresholds
+    raise ValueError(
+        "Expected argument `task` to be either 'binary', 'multiclass' or "
+        f"'multilabel', but got {task}"
+    )

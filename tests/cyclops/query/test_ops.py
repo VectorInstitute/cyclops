@@ -15,12 +15,16 @@ from cyclops.query.ops import (
     ConditionAfterDate,
     ConditionBeforeDate,
     ConditionEndsWith,
+    ConditionEquals,
+    ConditionGreaterThan,
     ConditionIn,
     ConditionInMonths,
     ConditionInYears,
+    ConditionLessThan,
     ConditionRegexMatch,
     ConditionStartsWith,
     ConditionSubstring,
+    Distinct,
     Drop,
     DropNulls,
     ExtractTimestampComponent,
@@ -33,6 +37,7 @@ from cyclops.query.ops import (
     Sequential,
     Substring,
     Trim,
+    Union,
     _none_add,
     _process_checks,
 )
@@ -388,6 +393,54 @@ def test_condition_ends_with(visits_input):  # pylint: disable=redefined-outer-n
 
 
 @pytest.mark.integration_test
+def test_condition_equals(visits_input):  # pylint: disable=redefined-outer-name
+    """Test ConditionEquals."""
+    visits = ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_name"] == "Outpatient Visit")
+    visits = ConditionEquals("visit_concept_name", "Outpatient Visit", not_=True)(
+        visits_input
+    )
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_name"] != "Outpatient Visit")
+
+
+@pytest.mark.integration_test
+def test_condition_greater_than(visits_input):  # pylint: disable=redefined-outer-name
+    """Test ConditionGreaterThan."""
+    visits = ConditionGreaterThan("visit_concept_id", 9300)(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_id"] > 9300)
+
+
+@pytest.mark.integration_test
+def test_condition_less_than(visits_input):  # pylint: disable=redefined-outer-name
+    """Test ConditionLessThan."""
+    visits = ConditionLessThan("visit_concept_id", 9300)(visits_input)
+    visits = SYNTHEA.get_interface(visits).run()
+    assert all(visits["visit_concept_id"] < 9300)
+
+
+@pytest.mark.integration_test
+def test_union(visits_input):  # pylint: disable=redefined-outer-name
+    """Test Union."""
+    visits = Union(
+        ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
+    )(ConditionEquals("visit_concept_name", "Emergency Room Visit")(visits_input))
+    visits = SYNTHEA.get_interface(visits).run()
+    assert len(visits) == 3937
+    assert all(
+        visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"])
+    )
+    visits = Union(
+        ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
+        union_all=True,
+    )(ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input))
+    visits = SYNTHEA.get_interface(visits).run()
+    assert len(visits) == 7554
+
+
+@pytest.mark.integration_test
 def test_sequential(visits_input):  # pylint: disable=redefined-outer-name
     """Test Sequential."""
     substr_op = Sequential(
@@ -413,3 +466,12 @@ def test_sequential(visits_input):  # pylint: disable=redefined-outer-name
     assert list(visits[visits["person_id"] == 33]["visit_concept_name_substr"])[0] == (
         "Out"
     )
+
+
+@pytest.mark.integration_test
+def test_distinct(visits_input):  # pylint: disable=redefined-outer-name
+    """Test Distinct."""
+    distinct_op = Distinct(["person_id"])
+    visits = SYNTHEA.get_interface(visits_input, ops=distinct_op).run()
+    assert len(visits) == 109
+    visits = SYNTHEA.get_interface(visits_input).run()

@@ -1,10 +1,10 @@
-"""Functions for computing the precision-recall curve for different input types."""
+"""Functions for computing the precision-recall curve for different input types."""  # pylint: disable=C0302,C0301 # noqa: E501
 
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Any, List, Literal, Optional, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 import scipy as sp
-from numpy.typing import ArrayLike
 from sklearn.metrics._ranking import _binary_clf_curve
 from sklearn.preprocessing import label_binarize
 
@@ -16,8 +16,8 @@ from cyclops.evaluate.metrics.utils import (
 
 
 def _format_thresholds(
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None
-) -> Optional[np.ndarray]:
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None
+) -> Optional[npt.NDArray[np.float_]]:
     """Format thresholds to be a 1D numpy array of floats."""
     if isinstance(thresholds, int):
         thresholds = np.linspace(0, 1, thresholds)
@@ -28,8 +28,11 @@ def _format_thresholds(
 
 
 def _ovr_multi_threshold_confusion_matrix(
-    target: np.ndarray, preds: np.ndarray, num_classes: int, num_thresholds: int
-) -> np.ndarray:
+    target: npt.NDArray[np.int_],
+    preds: npt.NDArray[np.int_],
+    num_classes: int,
+    num_thresholds: int,
+) -> npt.NDArray[np.int_]:
     """Compute multi-threshold confusion matrix for one-vs-rest classification."""
     pred_sum = np.count_nonzero(preds, axis=0)
     target_sum = np.count_nonzero(target, axis=0)
@@ -46,8 +49,8 @@ def _ovr_multi_threshold_confusion_matrix(
 
 
 def _precision_recall_curve_compute_from_confmat(
-    confmat: np.ndarray, thresholds: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    confmat: npt.NDArray[np.int_], thresholds: npt.NDArray[np.float_]
+) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
     """Compute precision-recall curve from a multi-threshold confusion matrix."""
     tps = confmat[..., 1, 1]
     fps = confmat[..., 0, 1]
@@ -75,15 +78,15 @@ def _precision_recall_curve_compute_from_confmat(
 
 
 def _binary_precision_recall_curve_format(
-    target: ArrayLike, preds: ArrayLike, pos_label: int
-) -> Tuple[np.ndarray, np.ndarray]:
+    target: npt.ArrayLike, preds: npt.ArrayLike, pos_label: int
+) -> Tuple[npt.NDArray[Any], npt.NDArray[Any]]:
     """Check and format binary precision-recall curve input/data.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated probabilities or non-thresholded output of decision function.
         A sigmoid function is applied if ``preds`` are not in [0, 1].
     pos_label : int
@@ -147,8 +150,10 @@ def _binary_precision_recall_curve_format(
 
 
 def _binary_precision_recall_curve_update(
-    target: np.ndarray, preds: np.ndarray, thresholds: Optional[np.ndarray]
-) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+    target: npt.NDArray[Any],
+    preds: npt.NDArray[Any],
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
+) -> Union[Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]]:
     """Compute the state from which the precision-recall curve can be computed.
 
     Parameters
@@ -182,16 +187,20 @@ def _binary_precision_recall_curve_update(
     tn = np.sum((target == preds_t.T) & (target == 0), axis=1)
     fn = np.sum((target != preds_t.T) & (target == 1), axis=1)
 
-    confmat = np.stack([tn, fp, fn, tp], axis=1).reshape(len_t, 2, 2)
+    confmat: npt.NDArray[np.int_] = np.stack([tn, fp, fn, tp], axis=1).reshape(
+        len_t, 2, 2
+    )
 
     return confmat
 
 
 def _binary_precision_recall_curve_compute(
-    state: Union[Tuple, np.ndarray],
-    thresholds: np.ndarray,
+    state: Union[
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+    ],
+    thresholds: Optional[npt.NDArray[np.float_]],
     pos_label: Optional[int] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
     """Compute precision-recall curve from a state.
 
     Parameters
@@ -216,10 +225,15 @@ def _binary_precision_recall_curve_compute(
     thresholds : numpy.ndarray
         Thresholds used for computing the precision and recall scores.
 
+    Raises
+    ------
+    ValueError
+        If ``thresholds`` is None.
+
     """
     if isinstance(state, np.ndarray):
         precision, recall, thresholds = _precision_recall_curve_compute_from_confmat(
-            state, thresholds
+            state, thresholds  # type: ignore[arg-type]
         )
     else:
         fps, tps, thresholds = _binary_clf_curve(
@@ -246,24 +260,24 @@ def _binary_precision_recall_curve_compute(
 
         precision = np.hstack((precision[sliced], 1))
         recall = np.hstack((recall[sliced], 0))
-        thresholds = thresholds[sliced]
+        thresholds = thresholds[sliced]  # type: ignore[index]
 
     return precision, recall, thresholds
 
 
 def binary_precision_recall_curve(
-    target: ArrayLike,
-    preds: ArrayLike,
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     pos_label: int = 1,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
     """Compute precision-recall curve for binary input.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Binary target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predicted probabilities or output of a decision function. If ``preds``
         are logits, they will be transformed to probabilities via the sigmoid
         function.
@@ -319,17 +333,17 @@ def binary_precision_recall_curve(
 
 
 def _multiclass_precision_recall_curve_format(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]]:
     """Check and format the input for the multiclass precision-recall curve.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         The target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         The predicted probabilities or output of a decision function. If
         ``preds`` is not in the [0, 1] range, it will be transformed into this
         range via the softmax function.
@@ -355,14 +369,16 @@ def _multiclass_precision_recall_curve_format(
         same number of samples.
 
     """
-    target, preds, type_target, type_preds = common_input_checks_and_format(
-        target, preds
-    )
+    formatted = common_input_checks_and_format(target, preds)
+    target_: npt.NDArray[np.int_] = formatted[0]
+    preds_: npt.NDArray[np.float_] = formatted[1]
+    type_target: str = formatted[2]
+    type_preds: str = formatted[3]
 
-    if preds.ndim != target.ndim + 1:
+    if preds_.ndim != target_.ndim + 1:
         raise ValueError(
             "Expected argument `preds` to have one more dimension than argument "
-            f"`target`, but got {preds.ndim} and {target.ndim} respectively"
+            f"`target`, but got {preds_.ndim} and {target_.ndim} respectively"
         )
 
     if type_target not in ["binary", "multiclass"]:
@@ -382,45 +398,45 @@ def _multiclass_precision_recall_curve_format(
             f" with probability/logit scores but got {type_preds}"
         )
 
-    if preds.shape[-1] != num_classes:
+    if preds_.shape[-1] != num_classes:
         raise ValueError(
             "Expected argument `preds` to have the same number of classes as "
-            f"argument `num_classes`, but got {preds.shape[-1]} and {num_classes} "
+            f"argument `num_classes`, but got {preds_.shape[-1]} and {num_classes} "
             "respectively"
         )
 
-    if preds.shape[0] != target.shape[0]:
+    if preds_.shape[0] != target_.shape[0]:
         raise ValueError(
             "Expected argument `preds` to have the same number of samples as "
-            f"argument `target`, but got {preds.shape[0]} and {target.shape[0]} "
+            f"argument `target`, but got {preds_.shape[0]} and {target_.shape[0]} "
             "respectively"
         )
 
-    num_implied_classes = len(np.unique(target))
+    num_implied_classes = len(np.unique(target_))
     if num_implied_classes > num_classes:
         raise ValueError(
             "Detected more unique values in `target` than `num_classes`. Expected only "
             f"{num_classes} but found {num_implied_classes} in `target`."
         )
 
-    if not np.all(np.logical_and(preds >= 0.0, preds <= 1.0)):
-        preds = sp.special.softmax(preds, axis=1)  # logit to probability
+    if not np.all(np.logical_and(preds_ >= 0.0, preds_ <= 1.0)):
+        preds_ = sp.special.softmax(preds_, axis=1)  # logit to probability
 
-    if not np.allclose(1, preds.sum(axis=1)):
+    if not np.allclose(1, preds_.sum(axis=1)):
         raise ValueError(
             "``preds`` need to be probabilities for multiclass problems"
             " i.e. they should sum up to 1.0 over classes"
         )
 
-    return target, preds
+    return target_, preds_
 
 
 def _multiclass_precision_recall_curve_update(
-    target: np.ndarray,
-    preds: np.ndarray,
+    target: npt.NDArray[np.int_],
+    preds: npt.NDArray[np.float_],
     num_classes: int,
-    thresholds: Optional[np.ndarray] = None,
-) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
+) -> Union[Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]]:
     """Update the state of the multiclass precision-recall curve.
 
     Parameters
@@ -465,12 +481,18 @@ def _multiclass_precision_recall_curve_update(
 
 
 def _multiclass_precision_recall_curve_compute(
-    state: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]],
-    thresholds: np.ndarray,
+    state: Union[
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+    ],
+    thresholds: npt.NDArray[np.float_],
     num_classes: int,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the multiclass precision-recall curve.
 
@@ -508,34 +530,40 @@ def _multiclass_precision_recall_curve_compute(
 
         precision = np.hstack((precision.T, np.ones((num_classes, 1))))
         recall = np.hstack((recall.T, np.zeros((num_classes, 1))))
-    else:
-        precision, recall, thresholds = [], [], []
-        for i in range(num_classes):
-            (
-                precision_i,
-                recall_i,
-                thresholds_i,
-            ) = _binary_precision_recall_curve_compute(
-                (state[0], state[1][:, i]),
-                thresholds=None,
-                pos_label=i,
-            )
 
-            precision.append(precision_i)
-            recall.append(recall_i)
-            thresholds.append(thresholds_i)
+        return precision, recall, thresholds
 
-    return precision, recall, thresholds
+    precision_list, recall_list, thresholds_list = [], [], []
+    for i in range(num_classes):
+        (
+            precision_i,
+            recall_i,
+            thresholds_i,
+        ) = _binary_precision_recall_curve_compute(
+            (state[0], state[1][:, i]),
+            thresholds=None,
+            pos_label=i,
+        )
+
+        precision_list.append(precision_i)
+        recall_list.append(recall_i)
+        thresholds_list.append(thresholds_i)
+
+    return precision_list, recall_list, thresholds_list
 
 
 def multiclass_precision_recall_curve(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_classes: int,
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the precision-recall curve for multiclass problems.
 
@@ -603,21 +631,23 @@ def multiclass_precision_recall_curve(
         target, preds, num_classes=num_classes, thresholds=thresholds
     )
 
-    return _multiclass_precision_recall_curve_compute(state, thresholds, num_classes)
+    return _multiclass_precision_recall_curve_compute(
+        state, thresholds, num_classes  # type: ignore[arg-type]
+    )
 
 
 def _multilabel_precision_recall_curve_format(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]]:
     """Check and format the multilabel precision-recall curve input/data.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         The target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predicted probabilities or output of a decision function. If the
         values are not in [0, 1], then they are converted into probabilities
         by applying the sigmoid function.
@@ -636,9 +666,6 @@ def _multilabel_precision_recall_curve_format(
         The target values as a numpy array.
     preds : numpy.ndarray
         The predicted probabilities as a numpy array.
-    thresholds : numpy.ndarray
-        Thresholds used for computing the precision and recall scores as a
-        numpy array, if ``thresholds`` is not None.
 
     Raises
     ------
@@ -688,8 +715,11 @@ def _multilabel_precision_recall_curve_format(
 
 
 def _multilabel_precision_recall_curve_update(
-    target: np.ndarray, preds: np.ndarray, num_labels: int, thresholds: np.ndarray
-) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+    target: npt.NDArray[np.int_],
+    preds: npt.NDArray[np.float_],
+    num_labels: int,
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
+) -> Union[Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]]:
     """Update the multilabel precision-recall curve state.
 
     Parameters
@@ -728,12 +758,18 @@ def _multilabel_precision_recall_curve_update(
 
 
 def _multilabel_precision_recall_curve_compute(
-    state: Union[Tuple[np.ndarray, np.ndarray], np.ndarray],
-    thresholds: np.ndarray,
+    state: Union[
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+    ],
+    thresholds: npt.NDArray[np.float_],
     num_labels: int,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the precision-recall curve for multilabel data.
 
@@ -766,44 +802,50 @@ def _multilabel_precision_recall_curve_compute(
 
         precision = np.hstack((precision.T, np.ones((num_labels, 1))))
         recall = np.hstack((recall.T, np.zeros((num_labels, 1))))
-    else:
-        precision, recall, thresholds = [], [], []
-        for i in range(num_labels):
-            target = state[0][:, i]
-            preds = state[1][:, i]
-            (
-                precision_i,
-                recall_i,
-                thresholds_i,
-            ) = _binary_precision_recall_curve_compute(
-                (target, preds),
-                thresholds=None,
-                pos_label=1,
-            )
 
-            precision.append(precision_i)
-            recall.append(recall_i)
-            thresholds.append(thresholds_i)
+        return precision, recall, thresholds
 
-    return precision, recall, thresholds
+    precision_list, recall_list, thresholds_list = [], [], []
+    for i in range(num_labels):
+        target = state[0][:, i]
+        preds = state[1][:, i]
+        (
+            precision_i,
+            recall_i,
+            thresholds_i,
+        ) = _binary_precision_recall_curve_compute(
+            (target, preds),
+            thresholds=None,
+            pos_label=1,
+        )
+
+        precision_list.append(precision_i)
+        recall_list.append(recall_i)
+        thresholds_list.append(thresholds_i)
+
+    return precision_list, recall_list, thresholds_list
 
 
 def multilabel_precision_recall_curve(
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     num_labels: int,
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the precision-recall curve for multilabel input.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         The target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Predicted probabilities or output of a decision function. If the
         values are not in [0, 1], then they are converted into that range
         by applying the sigmoid function.
@@ -864,28 +906,34 @@ def multilabel_precision_recall_curve(
         target, preds, num_labels=num_labels, thresholds=thresholds
     )
 
-    return _multilabel_precision_recall_curve_compute(state, thresholds, num_labels)
+    return _multilabel_precision_recall_curve_compute(
+        state, thresholds, num_labels  # type: ignore[arg-type]
+    )
 
 
 def precision_recall_curve(  # pylint: disable=too-many-arguments
-    target: ArrayLike,
-    preds: ArrayLike,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
-    thresholds: Optional[Union[int, List[float], np.ndarray]] = None,
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     pos_label: int = 1,
     num_classes: Optional[int] = None,
     num_labels: Optional[int] = None,
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray, np.ndarray],
-    Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]],
+    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
+    Tuple[
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+        List[npt.NDArray[np.float_]],
+    ],
 ]:
     """Compute the precision-recall curve for different tasks/input types.
 
     Parameters
     ----------
-    target : ArrayLike
+    target : npt.ArrayLike
         Ground truth (correct) target values.
-    preds : ArrayLike
+    preds : npt.ArrayLike
         Estimated probabilities or non-thresholded output of decision function.
     task : Literal["binary", "multiclass", "multilabel"]
         The task for which the precision-recall curve is computed.
@@ -970,29 +1018,27 @@ def precision_recall_curve(  # pylint: disable=too-many-arguments
 
     """
     if task == "binary":
-        precision, recall, thresholds = binary_precision_recall_curve(
+        return binary_precision_recall_curve(
             target, preds, thresholds=thresholds, pos_label=pos_label
         )
-    elif task == "multiclass":
+    if task == "multiclass":
         assert (
             isinstance(num_classes, int) and num_classes > 0
         ), "Number of classes must be a positive integer."
 
-        precision, recall, thresholds = multiclass_precision_recall_curve(
+        return multiclass_precision_recall_curve(
             target, preds, num_classes=num_classes, thresholds=thresholds
         )
-    elif task == "multilabel":
+    if task == "multilabel":
         assert (
             isinstance(num_labels, int) and num_labels > 0
         ), "Number of labels must be a positive integer."
 
-        precision, recall, thresholds = multilabel_precision_recall_curve(
+        return multilabel_precision_recall_curve(
             target, preds, num_labels=num_labels, thresholds=thresholds
         )
-    else:
-        raise ValueError(
-            "Expected argument `task` to be either 'binary', 'multiclass' or "
-            f"'multilabel', but got {task}"
-        )
 
-    return precision, recall, thresholds
+    raise ValueError(
+        "Expected argument `task` to be either 'binary', 'multiclass' or "
+        f"'multilabel', but got {task}"
+    )

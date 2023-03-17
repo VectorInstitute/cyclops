@@ -1,6 +1,9 @@
 """Classes for computing specificity metrics."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Type, Union, cast
+
+import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.specificity import _specificity_reduce
 from cyclops.evaluate.metrics.metric import Metric
@@ -55,11 +58,11 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the specificity score from the state."""
         # pylint: disable=invalid-name # for tp, tn, fp, fn
         tp, fp, tn, fn = self._final_state()
-        return _specificity_reduce(
+        score = _specificity_reduce(
             tp=tp,
             fp=fp,
             tn=tn,
@@ -67,6 +70,7 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, score)
 
 
 class MulticlassSpecificity(
@@ -128,7 +132,7 @@ class MulticlassSpecificity(
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the specificity score from the state."""
         tp, fp, tn, fn = self._final_state()
         return _specificity_reduce(
@@ -208,7 +212,7 @@ class MultilabelSpecificity(
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the specificity score from the state."""
         tp, fp, tn, fn = self._final_state()
         return _specificity_reduce(
@@ -315,7 +319,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of Specificity
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
         num_classes: Optional[int] = None,

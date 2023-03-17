@@ -3,14 +3,14 @@
 from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from sklearn.utils.multiclass import type_of_target
 
 # boolean, unsigned integer, signed integer, float, complex.
 _NUMERIC_KINDS = set("buifc")
 
 
-def is_numeric(*arrays: ArrayLike) -> bool:
+def is_numeric(*arrays: npt.ArrayLike) -> bool:
     """Check if given arrays have numeric datatype.
 
     Determine whether the argument(s) have a numeric datatype, when converted to a
@@ -32,8 +32,8 @@ def is_numeric(*arrays: ArrayLike) -> bool:
 
 
 def _input_squeeze(
-    target: np.ndarray, preds: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
+    target: npt.NDArray[Any], preds: npt.NDArray[Any]
+) -> Tuple[npt.NDArray[Any], npt.NDArray[Any]]:
     """Remove excess dimensions."""
     if preds.shape[0] == 1:
         target, preds = np.expand_dims(target.squeeze(), axis=0), np.expand_dims(
@@ -44,7 +44,7 @@ def _input_squeeze(
     return target, preds
 
 
-def _check_muldim_input(target: np.ndarray, preds: np.ndarray) -> None:
+def _check_muldim_input(target: npt.NDArray[Any], preds: npt.NDArray[Any]) -> None:
     """Check if the input has more than two dimensions.
 
     None of the metrics support multidimensional input.
@@ -70,9 +70,9 @@ def _check_muldim_input(target: np.ndarray, preds: np.ndarray) -> None:
 
 
 def common_input_checks_and_format(
-    target: ArrayLike,
-    preds: ArrayLike,
-) -> Tuple[np.ndarray, np.ndarray, str, str]:
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
+) -> Tuple[npt.NDArray[Any], npt.NDArray[Any], str, str]:
     """Check the input and convert it to the correct format.
 
     This function also checks if the input is valid.
@@ -136,7 +136,7 @@ def common_input_checks_and_format(
     return target, preds, type_target, type_preds
 
 
-def sigmoid(arr: ArrayLike) -> np.ndarray:
+def sigmoid(arr: npt.ArrayLike) -> npt.NDArray[np.float_]:
     """Sigmoid function."""
     arr = np.asanyarray(arr)
     return 1 / (1 + np.exp(-arr))
@@ -174,12 +174,14 @@ def check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) ->
         )
 
 
-def select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray:
+def select_topk(
+    prob_scores: npt.ArrayLike, top_k: Optional[int] = 1
+) -> npt.NDArray[np.int_]:
     """Convert a probability scores to binary by selecting top-k highest entries.
 
     Parameters
     ----------
-    prob_scores : np.ndarray
+    prob_scores : ArrayLike
         The probability scores. Must be a 2D array.
     top_k : int, default=1
         The number of top predictions to select.
@@ -203,7 +205,9 @@ def select_topk(prob_scores: np.ndarray, top_k: Optional[int] = 1) -> np.ndarray
     return topk_array.astype(np.int_)
 
 
-def _check_thresholds(thresholds: Union[int, List[float], np.ndarray]) -> None:
+def _check_thresholds(
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]]
+) -> None:
     """Check if thresholds are valid.
 
     Parameters
@@ -271,7 +275,7 @@ def _check_average_arg(average: Literal["micro", "macro", "weighted", None]) -> 
 
 
 def _apply_function_recursively(
-    data: Any, func: Callable, *args: Any, **kwargs: Any
+    data: Any, func: Callable[..., Any], *args: Any, **kwargs: Any
 ) -> Any:
     """Apply a function recursively to a given data structure.
 
@@ -306,7 +310,9 @@ def _apply_function_recursively(
     return func(data)
 
 
-def _get_value_if_singleton_array(data: ArrayLike):
+def _get_value_if_singleton_array(
+    data: npt.ArrayLike,
+) -> Union[npt.ArrayLike, Any]:
     """Return element if input is 0d or 1d singleton array-like object."""
     data_arr = np.asanyarray(data)
     return data_arr.item() if (data_arr.ndim == 0 or data_arr.size == 1) else data

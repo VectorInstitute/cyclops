@@ -14,9 +14,9 @@ on:
       - '**.ipynb'
       - poetry.lock
       - pyproject.toml
-      - requirements.txt
       - '**.rst'
       - '**.md'
+      - docs/cyclops-webpage
   pull_request:
     branches:
       - main
@@ -30,9 +30,9 @@ on:
       - '**.ipynb'
       - poetry.lock
       - pyproject.toml
-      - requirements.txt
       - '**.rst'
       - '**.md'
+      - docs/cyclops-webpage
 
 jobs:
   integration-tests:

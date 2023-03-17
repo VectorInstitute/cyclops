@@ -1,3 +1,5 @@
+# pylint: disable=too-many-lines
+
 """Low-level query operations.
 
 This module contains query operation modules such which can be used in high-level query
@@ -5,14 +7,12 @@ API functions specific to datasets.
 
 """
 
-# pylint: disable=too-many-lines
-
 from __future__ import annotations
 
 import logging
+import typing
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import sqlalchemy
 from sqlalchemy import and_, cast, extract, func, literal_column, or_, select
@@ -34,9 +34,11 @@ from cyclops.query.util import (
     get_column_names,
     get_columns,
     get_delta_column,
+    greater_than,
     has_columns,
     has_substring,
     in_,
+    less_than,
     not_equals,
     process_column,
     rename_columns,
@@ -79,14 +81,19 @@ class JoinArgs:
     """
 
     join_table: TableTypes
-    on: Optional[  # pylint: disable=invalid-name
-        Union[str, List[str], Tuple[str], List[Tuple[str, str]]]
+    on: typing.Optional[  # pylint: disable=invalid-name
+        typing.Union[
+            str,
+            typing.List[str],
+            typing.Tuple[str],
+            typing.List[typing.Tuple[str, str]],
+        ]
     ] = None
-    on_to_type: Optional[Union[type, List[type]]] = None
-    cond: Optional[BinaryExpression] = None
-    table_cols: Optional[Union[str, List[str]]] = None
-    join_table_cols: Optional[Union[str, List[str]]] = None
-    isouter: Optional[bool] = False
+    on_to_type: typing.Optional[typing.Union[type, typing.List[type]]] = None
+    cond: typing.Optional[BinaryExpression] = None
+    table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None
+    join_table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None
+    isouter: typing.Optional[bool] = False
 
     def __post_init__(self) -> None:
         """Post initialization."""
@@ -104,8 +111,10 @@ class QueryOp(type):
         return "QueryOp"
 
 
-def _chain_ops(query: Subquery, ops: Union[List[QueryOp], Sequential]) -> Subquery:
-    if isinstance(ops, List):
+def _chain_ops(
+    query: Subquery, ops: typing.Union[typing.List[QueryOp], Sequential]
+) -> Subquery:
+    if isinstance(ops, typing.List):
         for op_ in ops:
             query = op_(query)
     if isinstance(ops, Sequential):
@@ -122,13 +131,13 @@ class Sequential:
 
     """
 
-    def __init__(self, ops: Union[List[QueryOp], Sequential]):
+    def __init__(self, ops: typing.Union[typing.List[QueryOp], Sequential]):
         """Initialize the Sequential class.
 
         Parameters
         ----------
-        ops: Union[List[QueryOp], Sequential]
-            List of query operations to be chained.
+        ops: typing.Union[typing.List[QueryOp], Sequential]
+            typing.List of query operations to be chained.
 
         """
         self.ops = ops
@@ -152,8 +161,8 @@ class Sequential:
 
 def _append_if_missing(
     table: TableTypes,
-    keep_cols: Optional[Union[str, List[str]]] = None,
-    force_include_cols: Optional[Union[str, List[str]]] = None,
+    keep_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    force_include_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
 ) -> Subquery:
     """Keep only certain columns in a table, but must include certain columns.
 
@@ -177,15 +186,15 @@ def _append_if_missing(
     return Keep(keep_cols)(table)
 
 
-def _none_add(obj1: Any, obj2: Any) -> Any:
+def _none_add(obj1: typing.Any, obj2: typing.Any) -> typing.Any:
     """Add two objects together while ignoring None values.
 
     If both objects are None, returns None.
 
     Parameters
     ----------
-    obj1: Any
-    obj2: Any
+    obj1: typing.Any
+    obj2: typing.Any
 
     """
     if obj1 is None:
@@ -197,9 +206,9 @@ def _none_add(obj1: Any, obj2: Any) -> Any:
 
 def _process_checks(
     table: TableTypes,
-    cols: Optional[Union[str, List[str]]] = None,
-    cols_not_in: Optional[Union[str, List[str]]] = None,
-    timestamp_cols: Optional[Union[str, List[str]]] = None,
+    cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    cols_not_in: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    timestamp_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
 ) -> Subquery:
     """Perform checks, and possibly alterations, on a table.
 
@@ -246,7 +255,7 @@ class Drop(metaclass=QueryOp):
 
     """
 
-    cols: Union[str, List[str]]
+    cols: typing.Union[str, typing.List[str]]
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -279,7 +288,7 @@ class Rename(metaclass=QueryOp):
 
     """
 
-    rename_map: Dict[str, str]
+    rename_map: typing.Dict[str, str]
     check_exists: bool = True
 
     def __call__(self, table: TableTypes) -> Subquery:
@@ -360,7 +369,7 @@ class Reorder(metaclass=QueryOp):
 
     """
 
-    cols: List[str]
+    cols: typing.List[str]
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -393,7 +402,7 @@ class ReorderAfter(metaclass=QueryOp):
 
     """
 
-    cols: Union[str, List[str]]
+    cols: typing.Union[str, typing.List[str]]
     after: str
 
     def __call__(self, table: TableTypes) -> Subquery:
@@ -431,7 +440,7 @@ class Keep(metaclass=QueryOp):
 
     """
 
-    cols: Union[str, List[str]]
+    cols: typing.Union[str, typing.List[str]]
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -465,8 +474,8 @@ class Trim(metaclass=QueryOp):
 
     """
 
-    cols: Union[str, List[str]]
-    new_col_labels: Optional[Union[str, List[str]]] = None
+    cols: typing.Union[str, typing.List[str]]
+    new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -499,7 +508,7 @@ class Literal(metaclass=QueryOp):
 
     """
 
-    value: Any
+    value: typing.Any
     col: str
 
     def __call__(self, table: TableTypes) -> Subquery:
@@ -583,9 +592,9 @@ class AddNumeric(metaclass=QueryOp):
 
     """
 
-    add_to: Union[str, List[str]]
-    num: Union[int, float]
-    new_col_labels: Optional[Union[str, List[str]]] = None
+    add_to: typing.Union[str, typing.List[str]]
+    num: typing.Union[int, float]
+    new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -628,9 +637,9 @@ class AddDeltaConstant(metaclass=QueryOp):
 
     """
 
-    add_to: Union[str, List[str]]
+    add_to: typing.Union[str, typing.List[str]]
     delta: timedelta
-    new_col_labels: Optional[Union[str, List[str]]] = None
+    new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -681,10 +690,10 @@ class AddColumn(metaclass=QueryOp):
 
     """
 
-    add_to: Union[str, List[str]]
+    add_to: typing.Union[str, typing.List[str]]
     col: str
-    negative: Optional[bool] = False
-    new_col_labels: Optional[Union[str, List[str]]] = None
+    negative: typing.Optional[bool] = False
+    new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -749,10 +758,10 @@ class AddDeltaColumn(metaclass=QueryOp):
 
     def __init__(
         self,
-        add_to: Union[str, List[str]],
-        negative: Optional[bool] = False,
-        new_col_labels: Optional[Union[str, List[str]]] = None,
-        **delta_kwargs: Any,
+        add_to: typing.Union[str, typing.List[str]],
+        negative: typing.Optional[bool] = False,
+        new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+        **delta_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
         self.add_to = add_to
@@ -811,7 +820,7 @@ class Cast(metaclass=QueryOp):
 
     """
 
-    cols: Union[str, List[str]]
+    cols: typing.Union[str, typing.List[str]]
     type_: str
 
     def __call__(self, table: TableTypes) -> Subquery:
@@ -835,6 +844,7 @@ class Cast(metaclass=QueryOp):
             "int": "to_int",
             "float": "to_float",
             "date": "to_date",
+            "bool": "to_bool",
             "timestamp": "to_timestamp",
         }
 
@@ -854,6 +864,48 @@ class Cast(metaclass=QueryOp):
             self.cols,
             lambda x: process_column(x, **kwargs),  # pylint: disable=unnecessary-lambda
         )
+
+
+class Union(metaclass=QueryOp):
+    """Union two tables.
+
+    Parameters
+    ----------
+    union_table : cyclops.query.util.TableTypes
+        Table to union with the first table.
+    union_all : bool, optional
+        Whether to use the all keyword in the union.
+
+    """
+
+    def __init__(
+        self, union_table: TableTypes, union_all: typing.Optional[bool] = False
+    ) -> None:
+        """Initialize."""
+        self.union_table = union_table
+        self.union_all = union_all
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table)
+        union_table = _process_checks(self.union_table)
+
+        if self.union_all:
+            return select(table).union_all(select(union_table)).subquery()
+
+        return select(table).union(select(union_table)).subquery()
 
 
 class Join(metaclass=QueryOp):
@@ -892,14 +944,19 @@ class Join(metaclass=QueryOp):
     def __init__(
         self,
         join_table: TableTypes,
-        on: Optional[  # pylint: disable=invalid-name
-            Union[str, List[str], Tuple[str], List[Tuple[str, str]]]
+        on: typing.Optional[  # pylint: disable=invalid-name
+            typing.Union[
+                str,
+                typing.List[str],
+                typing.Tuple[str],
+                typing.List[typing.Tuple[str, str]],
+            ]
         ] = None,
-        on_to_type: Optional[Union[type, List[type]]] = None,
-        cond: Optional[BinaryExpression] = None,
-        table_cols: Optional[Union[str, List[str]]] = None,
-        join_table_cols: Optional[Union[str, List[str]]] = None,
-        isouter: Optional[bool] = False,
+        on_to_type: typing.Optional[typing.Union[type, typing.List[type]]] = None,
+        cond: typing.Optional[BinaryExpression] = None,
+        table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+        join_table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+        isouter: typing.Optional[bool] = False,
     ):
         """Initialize."""
         if on is not None and cond is not None:
@@ -1007,17 +1064,17 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        Optional keyword arguments for processing the condition.
+        typing.Optional keyword arguments for processing the condition.
 
     """
 
     def __init__(
         self,
         col: str,
-        value: Any,
+        value: typing.Any,
         not_: bool = False,
-        binarize_col: Optional[str] = None,
-        **cond_kwargs: Any,
+        binarize_col: typing.Optional[str] = None,
+        **cond_kwargs: typing.Any,
     ):
         """Initialize."""
         self.col = col
@@ -1055,6 +1112,148 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
         return select(table).where(cond).subquery()
 
 
+class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+    """Filter rows based on greater than (or equal), to some value.
+
+    Parameters
+    ----------
+    col: str
+        Column name on which to condition.
+    value: any
+        Value greater than.
+    equal: bool, default=False
+        Include equality to the value.
+    not_: bool, default=False
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+    **cond_kwargs
+        typing.Optional keyword arguments for processing the condition.
+
+    """
+
+    def __init__(
+        self,
+        col: str,
+        value: typing.Any,
+        equal: bool = False,
+        not_: bool = False,
+        binarize_col: typing.Optional[str] = None,
+        **cond_kwargs: typing.Any,
+    ):
+        """Initialize."""
+        self.col = col
+        self.value = value
+        self.equal = equal
+        self.not_ = not_
+        self.binarize_col = binarize_col
+        self.cond_kwargs = cond_kwargs
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        cond = greater_than(
+            get_column(table, self.col),
+            self.value,
+            True,
+            True,
+            self.equal,
+            **self.cond_kwargs,
+        )
+        if self.not_:
+            cond = cond._negate()
+
+        if self.binarize_col is not None:
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
+        return select(table).where(cond).subquery()
+
+
+class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+    """Filter rows based on less than (or equal), to some value.
+
+    Parameters
+    ----------
+    col: str
+        Column name on which to condition.
+    value: any
+        Value greater than.
+    equal: bool, default=False
+        Include equality to the value.
+    not_: bool, default=False
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+    **cond_kwargs
+        typing.Optional keyword arguments for processing the condition.
+
+    """
+
+    def __init__(
+        self,
+        col: str,
+        value: typing.Any,
+        equal: bool = False,
+        not_: bool = False,
+        binarize_col: typing.Optional[str] = None,
+        **cond_kwargs: typing.Any,
+    ):
+        """Initialize."""
+        self.col = col
+        self.value = value
+        self.equal = equal
+        self.not_ = not_
+        self.binarize_col = binarize_col
+        self.cond_kwargs = cond_kwargs
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
+        cond = less_than(
+            get_column(table, self.col),
+            self.value,
+            True,
+            True,
+            self.equal,
+            **self.cond_kwargs,
+        )
+        if self.not_:
+            cond = cond._negate()
+
+        if self.binarize_col is not None:
+            return select(
+                table, cast(cond, Boolean).label(self.binarize_col)
+            ).subquery()
+
+        return select(table).where(cond).subquery()
+
+
 class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on matching a regular expression.
 
@@ -1076,7 +1275,7 @@ class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-
         col: str,
         regex: str,
         not_: bool = False,
-        binarize_col: Optional[str] = None,
+        binarize_col: typing.Optional[str] = None,
     ):
         """Initialize."""
         self.col = col
@@ -1125,17 +1324,17 @@ class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        Optional keyword arguments for processing the condition.
+        typing.Optional keyword arguments for processing the condition.
 
     """
 
     def __init__(
         self,
         col: str,
-        values: Union[Any, List[Any]],
+        values: typing.Union[typing.Any, typing.List[typing.Any]],
         not_: bool = False,
-        binarize_col: Optional[str] = None,
-        **cond_kwargs: Any,
+        binarize_col: typing.Optional[str] = None,
+        **cond_kwargs: typing.Any,
     ):
         """Initialize."""
         self.col = col
@@ -1197,18 +1396,18 @@ class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-m
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        Optional keyword arguments for processing the condition.
+        typing.Optional keyword arguments for processing the condition.
 
     """
 
     def __init__(
         self,
         col: str,
-        substrings: Union[str, List[str]],
+        substrings: typing.Union[str, typing.List[str]],
         any_: bool = True,
         not_: bool = False,
-        binarize_col: Optional[str] = None,
-        **cond_kwargs: Any,
+        binarize_col: typing.Optional[str] = None,
+        **cond_kwargs: typing.Any,
     ):  # pylint: disable=too-many-arguments
         """Initialize."""
         self.col = col
@@ -1268,7 +1467,7 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        Optional keyword arguments for processing the condition.
+        typing.Optional keyword arguments for processing the condition.
 
     """
 
@@ -1277,8 +1476,8 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
         col: str,
         string: str,
         not_: bool = False,
-        binarize_col: Optional[str] = None,
-        **cond_kwargs: Any,
+        binarize_col: typing.Optional[str] = None,
+        **cond_kwargs: typing.Any,
     ):
         """Initialize."""
         self.col = col
@@ -1330,7 +1529,7 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        Optional keyword arguments for processing the condition.
+        typing.Optional keyword arguments for processing the condition.
 
     """
 
@@ -1339,8 +1538,8 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         col: str,
         string: str,
         not_: bool = False,
-        binarize_col: Optional[str] = None,
-        **cond_kwargs: Any,
+        binarize_col: typing.Optional[str] = None,
+        **cond_kwargs: typing.Any,
     ):
         """Initialize."""
         self.col = col
@@ -1397,9 +1596,9 @@ class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-met
     def __init__(
         self,
         timestamp_col: str,
-        years: Union[int, List[int]],
+        years: typing.Union[int, typing.List[int]],
         not_: bool = False,
-        binarize_col: Optional[str] = None,
+        binarize_col: typing.Optional[str] = None,
     ):
         """Initialize."""
         self.timestamp_col = timestamp_col
@@ -1458,9 +1657,9 @@ class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-me
     def __init__(
         self,
         timestamp_col: str,
-        months: Union[int, List[int]],
+        months: typing.Union[int, typing.List[int]],
         not_: bool = False,
-        binarize_col: Optional[str] = None,
+        binarize_col: typing.Optional[str] = None,
     ):
         """Initialize."""
         self.timestamp_col = timestamp_col
@@ -1512,7 +1711,7 @@ class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-
 
     """
 
-    def __init__(self, timestamp_col: str, timestamp: Union[str, datetime]):
+    def __init__(self, timestamp_col: str, timestamp: typing.Union[str, datetime]):
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.timestamp = timestamp
@@ -1557,7 +1756,7 @@ class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-m
 
     """
 
-    def __init__(self, timestamp_col: str, timestamp: Union[str, datetime]):
+    def __init__(self, timestamp_col: str, timestamp: typing.Union[str, datetime]):
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.timestamp = timestamp
@@ -1664,7 +1863,7 @@ class DropNulls(metaclass=QueryOp):
 
     """
 
-    cols: Union[str, List[str]]
+    cols: typing.Union[str, typing.List[str]]
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -1697,7 +1896,7 @@ class Apply(metaclass=QueryOp):
     ----------
     cols: str or list of str
         Column(s) to apply the function to.
-    func: Callable
+    func: typing.Callable
         Function that takes in single sqlalchemy column object and returns a column
         after applying the function.
     new_cols: str or list of str, optional
@@ -1705,9 +1904,9 @@ class Apply(metaclass=QueryOp):
 
     """
 
-    cols: Union[str, List[str]]
-    func: Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column]
-    new_cols: Optional[Union[str, List[str]]] = None
+    cols: typing.Union[str, typing.List[str]]
+    func: typing.Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column]
+    new_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -1740,8 +1939,8 @@ class OrderBy(metaclass=QueryOp):
 
     """
 
-    cols: Union[str, List[str]]
-    ascending: Optional[Union[bool, List[bool]]] = None
+    cols: typing.Union[str, typing.List[str]]
+    ascending: typing.Optional[typing.Union[bool, typing.List[bool]]] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -1806,9 +2005,11 @@ class GroupByAggregate(metaclass=QueryOp):
 
     """
 
-    groupby_cols: Union[str, List[str]]
-    aggfuncs: Union[Dict[str, Sequence[str]], Dict[str, str]]
-    aggseps: Dict[str, str] = field(default_factory=dict)
+    groupby_cols: typing.Union[str, typing.List[str]]
+    aggfuncs: typing.Union[
+        typing.Dict[str, typing.Sequence[str]], typing.Dict[str, str]
+    ]
+    aggseps: typing.Dict[str, str] = field(default_factory=dict)
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -1885,3 +2086,40 @@ class GroupByAggregate(metaclass=QueryOp):
             agg_cols.append(agg_col.label(aggfunc_names[i]))
 
         return select(*groupby_cols, *agg_cols).group_by(*groupby_cols).subquery()
+
+
+@dataclass
+class Distinct(metaclass=QueryOp):
+    """Get distinct rows.
+
+    Parameters
+    ----------
+    cols: str or list of str
+        Columns to use for distinct.
+
+    Examples
+    --------
+    >>> Distinct("person_id")(table)
+    >>> Distinct(["person_id", "visit_id"])(table)
+
+    """
+
+    cols: typing.Union[str, typing.List[str]]
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        cols = to_list(self.cols)
+        table = _process_checks(table, cols=cols)
+        return select(table).distinct(*get_columns(table, cols)).subquery()

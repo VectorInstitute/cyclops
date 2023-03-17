@@ -1,6 +1,9 @@
 """Classes for computing precision and recall metrics."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Type, Union, cast
+
+import numpy as np
+import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.precision_recall import (
     _precision_recall_reduce,
@@ -54,10 +57,10 @@ class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the precision score from the state."""
         tp, fp, _, fn = self._final_state()
-        return _precision_recall_reduce(
+        score = _precision_recall_reduce(
             tp=tp,
             fp=fp,
             fn=fn,
@@ -65,6 +68,7 @@ class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, score)
 
 
 class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precision"):
@@ -133,7 +137,7 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[npt.NDArray[np.float_], float]:  # type: ignore[override]
         """Compute the precision score from the state."""
         tp, fp, _, fn = self._final_state()
         return _precision_recall_reduce(
@@ -214,7 +218,7 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[npt.NDArray[np.float_], float]:  # type: ignore[override]
         """Compute the precision score from the state."""
         tp, fp, _, fn = self._final_state()
         return _precision_recall_reduce(
@@ -330,7 +334,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of Precision
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
         num_classes: Optional[int] = None,
@@ -412,10 +416,10 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> float:  # type: ignore[override]
         """Compute the recall score from the state."""
         tp, fp, _, fn = self._final_state()
-        return _precision_recall_reduce(
+        score = _precision_recall_reduce(
             tp=tp,
             fp=fp,
             fn=fn,
@@ -423,6 +427,7 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
             average=None,
             zero_division=self.zero_division,
         )
+        return cast(float, score)
 
 
 class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
@@ -490,7 +495,7 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[npt.NDArray[np.float_], float]:  # type: ignore[override]
         """Compute the recall score from the state."""
         tp, fp, _, fn = self._final_state()
         return _precision_recall_reduce(
@@ -564,7 +569,7 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
         self.average = average
         self.zero_division = zero_division
 
-    def compute(self) -> float:
+    def compute(self) -> Union[npt.NDArray[np.float_], float]:  # type: ignore[override]
         """Compute the recall score from the state."""
         tp, fp, _, fn = self._final_state()
         return _precision_recall_reduce(
@@ -678,7 +683,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     """
 
     def __new__(  # type: ignore # mypy expects a subclass of Recall
-        cls,
+        cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
         pos_label: int = 1,
         num_classes: Optional[int] = None,

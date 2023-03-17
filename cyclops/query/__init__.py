@@ -11,5 +11,6 @@ except ImportError:
 
 from cyclops.query.eicu import EICUQuerier
 from cyclops.query.gemini import GEMINIQuerier
+from cyclops.query.mimiciii import MIMICIIIQuerier
 from cyclops.query.mimiciv import MIMICIVQuerier
 from cyclops.query.omop import OMOPQuerier
