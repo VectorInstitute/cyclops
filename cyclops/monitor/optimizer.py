@@ -1,10 +1,12 @@
 """Optimizer to train the baseline model."""
 
 from datetime import datetime
+from typing import Any, Callable, Generator, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, Dataset
 
 
 class Optimizer:
@@ -23,33 +25,32 @@ class Optimizer:
 
     def __init__(
         self,
-        model,
-        loss_fn,
-        optimizer,
-        activation,
-        lr_scheduler,
-        reweight_positive=None,
+        model: torch.nn.Module,
+        loss_fn: Callable[..., torch.Tensor],
+        optimizer: torch.optim.Optimizer,
+        activation: Callable[..., torch.Tensor],
+        lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
+        reweight_positive: Union[None, float, np.dtype[np.float64], str] = None,
     ):
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.activation = activation
         self.lr_scheduler = lr_scheduler
-        self.train_losses = []
-        self.val_losses = []
+        self.train_losses: List[float] = []
+        self.val_losses: List[float] = []
         self.device = model.device
         self.reweight_positive = reweight_positive
 
-    def reweight_loss(self, loss, y):
+    def reweight_loss(self, loss: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """Reweight the losses."""
         if isinstance(self.reweight_positive, (float, np.float64)):
             loss[y.squeeze() == 1] *= self.reweight_positive
         elif self.reweight_positive == "mini-batch":
             loss[y.squeeze() == 1] *= (y == 0).sum() / (y == 1).sum()
-
         return loss
 
-    def train_step(self, x, y):
+    def train_step(self, x: torch.Tensor, y: torch.Tensor) -> float:
         """Train model for one step."""
         # Sets model to train mode
         self.model.train(True)
@@ -58,7 +59,7 @@ class Optimizer:
         yhat = self.model(x)
 
         # Computes loss
-        loss = self.loss_fn(yhat.squeeze(), y.squeeze())
+        loss: torch.Tensor = self.loss_fn(yhat.squeeze(), y.squeeze())
 
         # Reweight the losses
         loss = self.reweight_loss(loss, y)
@@ -70,7 +71,7 @@ class Optimizer:
         loss = loss.sum() / (~y.eq(-1)).sum()
 
         # Computes gradients
-        loss.backward()
+        loss.backward()  # type: ignore
 
         # self.model.float()
         # Updates parameters and zeroes gradients
@@ -82,14 +83,11 @@ class Optimizer:
 
     def train(
         self,
-        train_loader,
-        val_loader,
-        # batch_size=64,
-        n_epochs=50,
-        # n_features=1,
-        # timesteps=-1,
-        model_path=None,
-    ):
+        train_loader: DataLoader[Any],
+        val_loader: DataLoader[Any],
+        n_epochs: int = 50,
+        model_path: Optional[str] = None,
+    ) -> None:
         """Train pytorch model.
 
         Parameters
@@ -98,12 +96,10 @@ class Optimizer:
             Dataset object containing training set.
         val_loader: DataLoader
             Dataset object containing validation set.
-        batch_size: int
-            Number of samples to train before updating model parameters.
         n_epochs: int
             Number of complete passes through the training set.
-        n_features: int
-            Number of features.
+        model_path: str
+            Path to save model.
 
         """
         if model_path is None:
@@ -155,12 +151,16 @@ class Optimizer:
 
     def evaluate(
         self,
-        test_loader,
-        # batch_size=1,
-        # n_features=1,
-        # timesteps=-1,
-        flatten=True,
-    ):
+        test_loader: DataLoader[Any],
+        flatten: bool = True,
+    ) -> Union[
+        Tuple[
+            np.ndarray[float, np.dtype[np.float64]],
+            np.ndarray[float, np.dtype[np.float64]],
+            np.ndarray[float, np.dtype[np.float64]],
+        ],
+        Generator[np.ndarray[float, np.dtype[np.float64]], None, None],
+    ]:
         """Evaluate pytorch model.
 
         Parameters
@@ -168,13 +168,13 @@ class Optimizer:
         test_loader: DataLoader
             Dataset object containing test set.
         batch_size: int
-            Number of samples to evaluate at a time.
+            Number of samples in each batch.
 
         """
         with torch.no_grad():
-            y_pred_values = []
-            y_test_labels = []
-            y_pred_labels = []
+            y_pred_values: List[torch.Tensor] = []
+            y_test_labels: List[torch.Tensor] = []
+            y_pred_labels: List[torch.Tensor] = []
             for x_test, y_test in test_loader:
                 # x_test = x_test.view([batch_size, timesteps, n_features]).to(
                 #    self.device
@@ -187,16 +187,25 @@ class Optimizer:
                 y_test_labels.append(y_test.cpu().detach())
                 y_pred_labels.append(torch.round(y_hat).cpu().detach())
 
-        y_test_labels = np.concatenate(y_test_labels)
-        y_pred_labels = np.concatenate(y_pred_labels)
-        y_pred_values = np.concatenate(y_pred_values)
+        y_test_labels_array: np.ndarray[float, np.dtype[np.float64]] = np.concatenate(
+            y_test_labels
+        )
+        y_pred_labels_array: np.ndarray[float, np.dtype[np.float64]] = np.concatenate(
+            y_pred_labels
+        )
+        y_pred_values_array: np.ndarray[float, np.dtype[np.float64]] = np.concatenate(
+            y_pred_values
+        )
 
         if flatten:
-            return (y.flatten() for y in [y_test_labels, y_pred_values, y_pred_labels])
+            return (
+                y.flatten()
+                for y in [y_test_labels_array, y_pred_values_array, y_pred_labels_array]
+            )
 
-        return y_test_labels, y_pred_values, y_pred_labels
+        return y_test_labels_array, y_pred_values_array, y_pred_labels_array
 
-    def plot_losses(self):
+    def plot_losses(self) -> None:
         """Plot training and validation losses."""
         plt.plot(self.train_losses, label="Training loss")
         plt.plot(self.val_losses, label="Validation loss")

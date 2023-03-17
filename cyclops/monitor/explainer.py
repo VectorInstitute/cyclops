@@ -5,6 +5,8 @@ difference in shap values for a chosen domain classifier to provide insight into
 most significant features in the drift detection.
 
 """
+from typing import Any, Optional
+
 import shap
 
 
@@ -20,13 +22,18 @@ class Explainer:
 
     """
 
-    def __init__(self, model, data=None, explainer_type=None):
+    def __init__(
+        self,
+        model: Any,
+        data: Optional[Any] = None,
+        explainer_type: Optional[str] = None,
+    ):
         self.model = model
         self.data = data
         self.explainer_type = explainer_type
         self.explainer = self.get_explainer()
 
-    def get_explainer(self):
+    def get_explainer(self) -> Any:
         """Get the explainer for the model."""
         if self.explainer_type == "tree":
             explainer = shap.TreeExplainer(self.model, self.data)
@@ -38,27 +45,27 @@ class Explainer:
             explainer = shap.Explainer(self.model)
         return explainer
 
-    def get_shap_values(self, X):
+    def get_shap_values(self, X: Any) -> Any:
         """Get the shap values for the model."""
         shap_values = self.explainer(X)
         return shap_values
 
-    def plot_dependence(self, feat, shap_values, X):
+    def plot_dependence(self, feat: Any, shap_values: Any, X: Any) -> Any:
         """Plot the dependence of a feature on the model output."""
         shap.dependence_plot(feat, shap_values, X)
 
-    def plot_summary(self, shap_values, X):
+    def plot_summary(self, shap_values: Any, X: Any) -> Any:
         """Plot the summary of the shap values."""
         shap.summary_plot(shap_values, X)
 
-    def plot_waterfall(self, shap_values, max_display=20):
+    def plot_waterfall(self, shap_values: Any, max_display: int = 20) -> Any:
         """Plot the waterfall plot of the shap values."""
         shap.plots.waterfall(shap_values, max_display=max_display)
 
-    def plot_beeswarm(self, shap_values):
+    def plot_beeswarm(self, shap_values: Any) -> Any:
         """Plot the beeswarm plot of the shap values."""
         shap.plots.beeswarm(shap_values)
 
-    def plot_heatmap(self, shap_values):
+    def plot_heatmap(self, shap_values: Any) -> Any:
         """Plot the heatmap of the shap values."""
         shap.plots.heatmap(shap_values)
