@@ -27,6 +27,11 @@ setup_logging(print_level="INFO", logger=LOGGER)
 COLUMN_OBJECTS = [Column, ColumnClause]
 
 
+def get_attr_name(name: str) -> str:
+    """Get attribute name (second part of first.second)."""
+    return name.split(".")[-1]
+
+
 @dataclass
 class DBSchema:
     """Database schema wrapper.

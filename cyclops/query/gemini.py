@@ -16,50 +16,8 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-# Constants.
-IP_ADMIN = "ip_admin"
-ER_ADMIN = "er_admin"
-DIAGNOSIS = "diagnosis"
-LAB = "lab"
-VITALS = "vitals"
-PHARMACY = "pharmacy"
-INTERVENTION = "intervention"
-LOOKUP_IP_ADMIN = "lookup_ip_admin"
-LOOKUP_ER_ADMIN = "lookup_er_admin"
-LOOKUP_DIAGNOSIS = "lookup_diagnosis"
-LOOKUP_CCSR = "lookup_ccsr"
-IP_SCU = "ip_scu"
-LOOKUP_ROOM_TRANSFER = "lookup_room_transfer"
-ROOM_TRANSFER = "room_transfer"
-BLOOD_TRANSFUSION = "blood_transfusion"
-IMAGING = "imaging"
-LOOKUP_IMAGING = "lookup_imaging"
-DERIVED_VARIABLES = "derived_variables"
-
 # Custm column names.
 CARE_UNIT = "care_unit"
-
-# Table map.
-TABLE_MAP = {
-    ER_ADMIN: lambda db: db.public.er_administrative,
-    IP_ADMIN: lambda db: db.public.ip_administrative,
-    DIAGNOSIS: lambda db: db.public.diagnosis,
-    LAB: lambda db: db.public.lab,
-    VITALS: lambda db: db.public.vitals,
-    PHARMACY: lambda db: db.public.pharmacy,
-    INTERVENTION: lambda db: db.public.intervention,
-    LOOKUP_IP_ADMIN: lambda db: db.public.lookup_ip_administrative,
-    LOOKUP_ER_ADMIN: lambda db: db.public.lookup_er_administrative,
-    LOOKUP_DIAGNOSIS: lambda db: db.public.lookup_diagnosis,
-    LOOKUP_CCSR: lambda db: db.public.lookup_ccsr,
-    IP_SCU: lambda db: db.public.ip_scu,
-    ROOM_TRANSFER: lambda db: db.public.room_transfer,
-    LOOKUP_ROOM_TRANSFER: lambda db: db.public.lookup_room_transfer,
-    BLOOD_TRANSFUSION: lambda db: db.public.blood_transfusion,
-    IMAGING: lambda db: db.public.imaging,
-    LOOKUP_IMAGING: lambda db: db.public.lookup_imaging,
-    DERIVED_VARIABLES: lambda db: db.public.derived_variables,
-}
 
 
 class GEMINIQuerier(DatasetQuerier):
@@ -77,7 +35,7 @@ class GEMINIQuerier(DatasetQuerier):
         overrides = {}
         if config_overrides:
             overrides = config_overrides
-        super().__init__(TABLE_MAP, **overrides)
+        super().__init__(**overrides)
 
     def ip_admin(
         self,
@@ -99,13 +57,13 @@ class GEMINIQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(IP_ADMIN)
+        table = self.get_table("public", "ip_administrative")
 
         # Possibly cast string representations to timestamps
         table = qo.Cast(["admit_date_time", "discharge_date_time"], "timestamp")(table)
 
         # Get the discharge disposition code descriptions
-        lookup_table = self.get_table(LOOKUP_IP_ADMIN)
+        lookup_table = self.get_table("public", "lookup_ip_administrative")
         lookup_table = qo.ConditionEquals("variable", "discharge_disposition")(
             lookup_table
         )
@@ -119,7 +77,7 @@ class GEMINIQuerier(DatasetQuerier):
         table = qo.Rename({"description": "discharge_description"})(table)
         table = qo.Drop("value")(table)
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def diagnoses(
         self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
@@ -139,9 +97,9 @@ class GEMINIQuerier(DatasetQuerier):
             Constructed table, wrapped in an interface object.
 
         """
-        table = self.get_table(DIAGNOSIS)
+        table = self.get_table("public", "diagnosis")
 
-        lookup_table = self.get_table(LOOKUP_DIAGNOSIS)
+        lookup_table = self.get_table("public", "lookup_diagnosis")
         lookup_table = qo.ConditionEquals("variable", "diagnosis_type")(lookup_table)
         table = qo.Join(
             lookup_table,
@@ -156,7 +114,7 @@ class GEMINIQuerier(DatasetQuerier):
         # Trim whitespace from ICD codes.
         table = qo.Trim("diagnosis_code")(table)
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def room_transfer(
         self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
@@ -176,10 +134,10 @@ class GEMINIQuerier(DatasetQuerier):
             Constructed table, wrapped in an interface object.
 
         """
-        table = self.get_table(ROOM_TRANSFER)
+        table = self.get_table("public", "room_transfer")
 
         # Join with lookup to get transfer description.
-        lookup_table = self.get_table(LOOKUP_ROOM_TRANSFER)
+        lookup_table = self.get_table("public", "lookup_room_transfer")
         lookup_table = qo.ConditionEquals("variable", "medical_service")(lookup_table)
 
         table = qo.Join(
@@ -190,7 +148,7 @@ class GEMINIQuerier(DatasetQuerier):
         )(table)
         table = qo.Rename({"description": "transfer_description"})(table)
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def care_units(
         self,
@@ -222,7 +180,7 @@ class GEMINIQuerier(DatasetQuerier):
         )
 
         # In-patient table.
-        ip_table = self.get_table(IP_ADMIN)
+        ip_table = self.get_table("public", "ip_administrative")
         ip_table = qo.Rename(
             {
                 "admit_date_time": "admit",
@@ -233,7 +191,7 @@ class GEMINIQuerier(DatasetQuerier):
         ip_table = filter_care_unit_cols(ip_table)
 
         # Special care unit table.
-        scu_table = self.get_table(IP_SCU)
+        scu_table = self.get_table("public", "ip_scu")
         scu_table = qo.Rename(
             {
                 "scu_admit_date_time": "admit",
@@ -244,7 +202,7 @@ class GEMINIQuerier(DatasetQuerier):
         scu_table = filter_care_unit_cols(scu_table)
 
         # Emergency room/department table.
-        er_table = self.get_table(ER_ADMIN)
+        er_table = self.get_table("public", "er_administrative")
         er_table = qo.Rename(
             {
                 "er_admit_timestamp": "admit",
@@ -255,7 +213,7 @@ class GEMINIQuerier(DatasetQuerier):
         er_table = filter_care_unit_cols(er_table)
 
         # Room transfer table.
-        rt_table = self.get_table(ROOM_TRANSFER)
+        rt_table = self.get_table("public", "room_transfer")
         rt_table = qo.Rename(
             {
                 "checkin_date_time": "admit",
@@ -273,7 +231,7 @@ class GEMINIQuerier(DatasetQuerier):
             select(rt_table),
         ).subquery()
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def imaging(
         self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
@@ -293,10 +251,10 @@ class GEMINIQuerier(DatasetQuerier):
             Constructed table, wrapped in an interface object.
 
         """
-        table = self.get_table(IMAGING)
+        table = self.get_table("public", "imaging")
 
         # Get imaging test description
-        lookup_table = self.get_table(LOOKUP_IMAGING)
+        lookup_table = self.get_table("public", "lookup_imaging")
         lookup_table = qo.ConditionEquals("variable", "imaging_test_name_mapped")(
             lookup_table
         )
@@ -313,4 +271,4 @@ class GEMINIQuerier(DatasetQuerier):
             table
         )
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
