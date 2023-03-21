@@ -55,6 +55,9 @@ class Database:
     inspector: sqlalchemy.engine.reflection.Inspector
         Module for schema inspection.
     session: sqlalchemy.orm.session.Session
+        Session for ORM.
+    is_connected: bool
+        Whether the database is setup, connected and ready to run queries.
 
     """
 
@@ -68,6 +71,7 @@ class Database:
 
         """
         self.config = config
+        self.is_connected = False
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(SOCKET_CONNECTION_TIMEOUT)
@@ -86,6 +90,7 @@ class Database:
         self.session = self._create_session()
         self._tables: List[str] = []
         self._setup()
+        self.is_connected = True
         LOGGER.info("Database setup, ready to run queries!")
 
     def _create_engine(self) -> Engine:

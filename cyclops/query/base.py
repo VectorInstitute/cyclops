@@ -1,5 +1,4 @@
 """Base querier class."""
-
 import logging
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -74,13 +73,17 @@ class DatasetQuerier:
 
     Attributes
     ----------
-    _db: cyclops.query.orm.Database
+    db: cyclops.query.orm.Database
         ORM Database used to run queries.
 
     Notes
     -----
     This class is intended to be subclassed to provide methods for querying tables in
-    the database.
+    the database. This class automatically creates methods for querying tables in the
+    database. The methods are named after the schema and table name, i.e.
+    `self.schema_name.table_name()`. The methods are created when the class is
+    instantiated. The subclass can provide custom methods for querying tables in the
+    database which can build on the methods created by this class.
 
     """
 
@@ -107,6 +110,9 @@ class DatasetQuerier:
             LOGGER.debug(OmegaConf.to_yaml(config))
 
         self.db = Database(config)
+        if not self.db.is_connected:
+            LOGGER.error("Database is not connected, cannot run queries.")
+            return
         self._setup_table_methods()
 
     def list_schemas(self) -> List[str]:
@@ -255,7 +261,7 @@ class DatasetQuerier:
         the database. The methods are named after the table names.
 
         """
-        schemas = self.db.inspector.get_schema_names()
+        schemas = self.list_schemas()
         meta: Dict[str, MetaData] = {}
         for schema_name in schemas:
             metadata = MetaData(schema=schema_name)
