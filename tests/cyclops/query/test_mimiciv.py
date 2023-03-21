@@ -28,12 +28,11 @@ def test_mimiciv_querier():
     assert "value" in chart_events
     assert "category" in chart_events
 
-    tables = querier.list_tables()
-    assert "patients" in tables
-    assert "diagnoses" in tables
-    assert "labevents" in tables
-    assert "chartevents" in tables
-    assert "pharmacy" in tables
+    custom_tables = querier.list_custom_tables()
+    assert "patients" in custom_tables
+    assert "diagnoses" in custom_tables
+    assert "labevents" in custom_tables
+    assert "chartevents" in custom_tables
 
-    with pytest.raises(ValueError):
-        querier.get_table("invalid_table")
+    with pytest.raises(AttributeError):
+        querier.get_table("invalid_schema", "invalid_table")
