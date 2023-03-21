@@ -240,7 +240,7 @@ class DatasetQuerier:
             Name of table in the database.
         join: cyclops.query.ops.JoinArgs
             Join arguments.
-        ops: cyclops.query.ops.Sequential
+        ops: cyclops.query.ops.Sequential or cyclops.query.ops.QueryOp, optional
             Operations to perform on the query.
 
         Returns
