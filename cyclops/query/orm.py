@@ -4,7 +4,7 @@ import csv
 import logging
 import os
 import socket
-from typing import Dict, Generator, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 import dask.dataframe as dd
 import pandas as pd
@@ -17,7 +17,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.selectable import Select
 
-from cyclops.query.util import DBSchema, DBTable, TableTypes, table_params_to_type
+from cyclops.query.util import (
+    DBSchema,
+    DBTable,
+    TableTypes,
+    get_attr_name,
+    table_params_to_type,
+)
 from cyclops.utils.file import exchange_extension, process_file_save_path
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -35,11 +41,6 @@ def _get_db_url(  # pylint: disable=too-many-arguments
 ) -> str:
     """Combine to make Database URL string."""
     return f"{dbms}://{user}:{pwd}@{host}:{port}/{database}"
-
-
-def _get_attr_name(name: str) -> str:
-    """Get attribute name (second part of first.second)."""
-    return name.split(".")[-1]
 
 
 class Database:
@@ -83,6 +84,7 @@ class Database:
 
         self.engine = self._create_engine()
         self.session = self._create_session()
+        self._tables: List[str] = []
         self._setup()
         LOGGER.info("Database setup, ready to run queries!")
 
@@ -115,14 +117,19 @@ class Database:
         # Create a session for using ORM.
         session = sessionmaker(self.engine)
         session.configure(bind=self.engine)
+
         return session()
 
-    def tables(self, schema_name: str) -> Generator[str, None, None]:
-        """Get list of tables."""
-        metadata = MetaData(schema=schema_name)
-        metadata.reflect(bind=self.engine)
+    def list_tables(self) -> List[str]:
+        """List tables in a schema.
 
-        return (_get_attr_name(table_name) for table_name in metadata.tables.keys())
+        Returns
+        -------
+        List[str]
+            List of table names.
+
+        """
+        return self._tables
 
     def _setup(self) -> None:
         """Prepare ORM DB."""
@@ -139,7 +146,8 @@ class Database:
                     setattr(table, column.name, column)
                 if not isinstance(table.name, str):
                     table.name = str(table.name)
-                setattr(schema, _get_attr_name(table.name), table)
+                self._tables.append(table.name)
+                setattr(schema, get_attr_name(table.name), table)
             setattr(self, schema_name, schema)
 
     @time_function

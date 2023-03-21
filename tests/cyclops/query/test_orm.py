@@ -13,7 +13,7 @@ def test_omop_querier():
     """Test ORM using OMOPQuerier."""
     querier = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
     assert querier is not None
-    db_ = querier._db  # pylint: disable=protected-access
+    db_ = querier.db
     visits_query = querier.visit_occurrence().query
     db_.save_query_to_csv(visits_query, "visits.csv")
     visits_df = pd.read_csv("visits.csv")
@@ -25,5 +25,4 @@ def test_omop_querier():
     assert len(visits_df) == 4115
     os.remove("visits.parquet")
 
-    # pylint: disable=protected-access
-    assert len(list(querier._db.tables(querier.schema_name))) == 44
+    assert len(querier.list_tables()) == 69
