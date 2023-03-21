@@ -4,7 +4,7 @@ from typing import Callable, Dict
 
 from datasets.arrow_dataset import Dataset
 
-from cyclops.datasets.slice import SliceSpec
+from cyclops.datasets.slicer import SliceSpec
 
 
 class ClinicalShiftApplicator:
@@ -77,7 +77,7 @@ class ClinicalShiftApplicator:
 
         """
         source_slice = SliceSpec(
-            feature_values=[
+            spec_list=[
                 {
                     shift_id: {
                         "min_value": source[0],
@@ -92,7 +92,7 @@ class ClinicalShiftApplicator:
             ds_source = dataset.filter(shift_func, batched=True)
 
         target_slice = SliceSpec(
-            feature_values=[
+            spec_list=[
                 {
                     shift_id: {
                         "min_value": target[0],
@@ -128,11 +128,11 @@ class ClinicalShiftApplicator:
             List of values for target data.
 
         """
-        source_slice = SliceSpec(feature_values=[{shift_id: {"value": source}}])
+        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
         for _, shift_func in source_slice.get_slices().items():
             ds_source = dataset.filter(shift_func, batched=True)
 
-        target_slice = SliceSpec(feature_values=[{shift_id: {"value": target}}])
+        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
         for _, shift_func in target_slice.get_slices().items():
             ds_target = dataset.filter(shift_func, batched=True)
         return ds_source, ds_target
@@ -154,11 +154,11 @@ class ClinicalShiftApplicator:
             List of values for target data.
 
         """
-        source_slice = SliceSpec(feature_values=[{shift_id: {"value": source}}])
+        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
         for _, shift_func in source_slice.get_slices().items():
             ds_source = dataset.filter(shift_func, batched=True)
 
-        target_slice = SliceSpec(feature_values=[{shift_id: {"value": target}}])
+        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
         for _, shift_func in target_slice.get_slices().items():
             ds_target = dataset.filter(shift_func, batched=True)
         return ds_source, ds_target
