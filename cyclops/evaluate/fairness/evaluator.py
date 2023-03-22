@@ -1,50 +1,65 @@
-"""Fairness metrics."""
+"""Fairness evaluator."""
+import inspect
 import itertools
 import logging
-from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Union
-import warnings
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
-
 from datasets import Dataset, config
-from dataset.features import Features
+from datasets.features import Features
 
-from cyclops.datasets.slice import SliceSpec
+from cyclops.datasets.slicer import SliceSpec, is_datetime
 from cyclops.datasets.utils import (
     check_required_columns,
-    feature_is_numeric,
     feature_is_datetime,
+    feature_is_numeric,
+    get_columns_as_numpy_array,
+    set_decode,
 )
-from cyclops.evaluate.metrics.metric import Metric, MetricCollection, create_metric
-from cyclops.evaluate.metrics.utils import _check_thresholds  # noqa: F401
+from cyclops.evaluate.metrics.factory import create_metric
+from cyclops.evaluate.metrics.functional.precision_recall_curve import (
+    _format_thresholds,
+)
+from cyclops.evaluate.metrics.metric import Metric, MetricCollection, OperatorMetric
+from cyclops.evaluate.metrics.utils import (
+    _check_thresholds,
+    _get_value_if_singleton_array,
+)
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
 
-def fairness_metric(  # pylint: disable=too-many-arguments
+def evaluate_fairness(  # pylint: disable=too-many-arguments
     metrics: Union[str, Callable[..., Any], Metric, MetricCollection],
     dataset: Dataset,
     groups: Union[str, List[str]],
     target_columns: Union[str, List[str]],
     prediction_columns: Union[str, List[str]] = "predictions",
-    group_bins: Optional[Mapping[str, Union[int, List[Any]]]] = None,
-    group_base_values: Optional[Mapping[str, Any]] = None,
+    group_values: Optional[Dict[str, Any]] = None,
+    group_bins: Optional[Dict[str, Union[int, List[Any]]]] = None,
+    group_base_values: Optional[Dict[str, Any]] = None,
     thresholds: Optional[Union[int, List[float]]] = None,
-    batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
     compute_optimal_threshold: bool = False,  # expensive operation
+    remove_columns: Optional[Union[str, List[str]]] = None,
+    batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
     metric_name: Optional[str] = None,
     metric_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Union[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Dict[str, Any]]]]:
-    """Compute fairness metrics.
+    """Compute fairness indicators.
+
+    This function computes fairness indicators for a dataset that includes
+    predictions and targets.
 
     Parameters
     ----------
     metrics : Union[str, Callable[..., Any], Metric, MetricCollection]
         The metric or metrics to compute. If a string, it should be the name of a
-        metric provided by Cyclops. If a callable, it should be a function that
+        metric provided by CyclOps. If a callable, it should be a function that
         takes target, prediction, and optionally threshold/thresholds as arguments
         and returns a dictionary of metric names and values.
     dataset : Dataset
@@ -63,12 +78,16 @@ def fairness_metric(  # pylint: disable=too-many-arguments
         should be the name of a column in the dataset. If a list, it should be a list
         of column names in the dataset. Lists allow for evaluating multiple models
         on the same dataset.
-    group_bins : Mapping[str, Union[int, List[Any]]], optional, default=None
+    group_values : Dict[str, Any], optional, default=None
+        The values to use for groups. If None, the values will be the unique values
+        in the group. This can be used to limit the number of groups that are
+        evaluated.
+    group_bins : Dict[str, Union[int, List[Any]]], optional, default=None
         Bins to use for groups with continuous values. If int, an equal number of
         bins will be created for the group. If list, the bins will be created from
         the values in the list. If None, the bins will be created from the unique
         values in the group, which may be very slow for large groups.
-    group_base_values : Mapping[str, Any], optional, default=None
+    group_base_values : Dict[str, Any], optional, default=None
         The base values to use for groups. This is used in the denominator when
         computing parity across groups. If None, the base value will be the overall
         metric value.
@@ -104,111 +123,142 @@ def fairness_metric(  # pylint: disable=too-many-arguments
     ValueError
         If the dataset does not contain the required columns.
     TypeError
-        If the batch size is not an integer.
+        If the dataset is not a HuggingFace Dataset object or if the batch size is
+        not an integer.
     RuntimeError
-        If an empty slice is encountered.
+        If an empty slice is encountered when computing metrics.
 
     """
-
-    metrics_: Union[Callable[..., Any], MetricCollection] = _format_metrics(
-        metrics, metric_name, **metric_kwargs
-    )
-
-    _format_dataset(dataset)
-
-    groups, target_columns, prediction_columns = _format_column_names(
-        groups, target_columns, prediction_columns
-    )
-    check_required_columns(
-        dataset.column_names,
-        groups,
-        target_columns,
-        prediction_columns,
-        list(group_base_values.keys()) if group_base_values is not None else None,
-        list(group_bins.keys()) if group_bins is not None else None,
-    )
-
-    unique_values = {group: dataset.unique(group) for group in groups}
-    if group_bins is None:
-        warn_too_many_unique_values(unqiue_values=unique_values)
-
-    if group_base_values is not None:
-        _validate_base_values(
-            base_values=group_base_values, groups=groups, unique_values=unique_values
+    # input validation and formatting
+    if not isinstance(dataset, Dataset):
+        raise TypeError(
+            "Expected `dataset` to be of type `Dataset`, but got " f"{type(dataset)}."
         )
-
-    if group_bins is not None:
-        _validate_group_bins(
-            group_bins=group_bins, groups=groups, unique_values=unique_values
-        )
-
-        bins = _create_bins(
-            group_bins=group_bins,
-            dataset_features=dataset.features,
-            unique_values=unique_values,
-        )
-        unique_values.update(bins)  # update unique values with bins
-
-        if group_base_values is not None:  # update the base values with bins
-            group_base_values = _update_base_values_with_bins(
-                base_values=group_base_values, bins=bins, unique_values=unique_values
-            )
 
     _check_thresholds(thresholds)
-    if isinstance(thresholds, int):
-        thresholds = np.linspace(0, 1, thresholds).tolist()
-
-    if not isinstance(batch_size, int):
-        raise TypeError(
-            f"Expected `batch_size` to be of type `int`, but got {type(batch_size)}."
-        )
-
-    slice_def = _get_slice_spec(
-        groups=groups,
-        unique_values=unique_values,
-        column_names=dataset.column_names,
+    fmt_thresholds: npt.NDArray[np.float_] = _format_thresholds(  # type: ignore
+        thresholds
     )
 
-    if group_base_values is not None:  # since we have base values, remove overall slice
-        slice_def._slice_function_registry.pop("no_filter")
+    metrics_: Union[Callable[..., Any], MetricCollection] = _format_metrics(
+        metrics, metric_name, **(metric_kwargs or {})
+    )
 
-    results = {}
+    fmt_groups: List[str] = _format_column_names(groups)
+    fmt_target_columns: List[str] = _format_column_names(target_columns)
+    fmt_prediction_columns: List[str] = _format_column_names(prediction_columns)
 
-    for slice_name, slice_fn in slice_spec.get_slices().items():
-        sliced_dataset = dataset.filter(slice_fn, batched=True)
+    check_required_columns(
+        dataset.column_names,
+        fmt_groups,
+        fmt_target_columns,
+        fmt_prediction_columns,
+        list(group_base_values.keys()) if group_base_values is not None else None,
+        list(group_bins.keys()) if group_bins is not None else None,
+        list(group_values.keys()) if group_values is not None else None,
+    )
 
-        if len(sliced_dataset) == 0:
-            raise RuntimeError(
-                f"Slice {slice_name} is empty. Please check your slice "
-                f"configuration or the data."
+    set_decode(
+        dataset, decode=False, exclude=fmt_target_columns + fmt_prediction_columns
+    )  # don't decode columns that we don't need; pass dataset by reference
+
+    with dataset.formatted_as(
+        "numpy",
+        columns=fmt_groups + fmt_target_columns + fmt_prediction_columns,
+        output_all_columns=True,
+    ):
+        unique_values: Dict[str, List[Any]] = _get_unique_values(
+            dataset=dataset, groups=fmt_groups, group_values=group_values
+        )
+
+        if group_base_values is not None:
+            _validate_base_values(
+                base_values=group_base_values,
+                groups=fmt_groups,
+                unique_values=unique_values,
             )
 
-        for prediction_column in prediction_columns:
-            results[prediction_column] = {
-                "Group Size": {slice_name: sliced_dataset.num_rows}
-            }
+        if group_bins is None:
+            warn_too_many_unique_values(unique_values=unique_values)
+        else:
+            _validate_group_bins(
+                group_bins=group_bins, groups=fmt_groups, unique_values=unique_values
+            )
 
-            results[prediction_column].update(
-                _get_metric_results_for_prediction_and_slice(
+            bins = _create_bins(
+                group_bins=group_bins,
+                dataset_features=dataset.features,
+                unique_values=unique_values,
+            )
+
+            if group_base_values is not None:  # update the base values with bins
+                group_base_values = _update_base_values_with_bins(
+                    base_values=group_base_values,
+                    bins=bins,
+                )
+
+            unique_values.update(bins)  # update unique values with bins
+
+        slice_spec = _get_slice_spec(
+            groups=fmt_groups,
+            unique_values=unique_values,
+            column_names=dataset.column_names,
+        )
+
+        if group_base_values is not None:
+            # since we have base values, remove overall slice
+            slice_spec._registry.pop(  # pylint: disable=protected-access
+                "overall", None
+            )
+
+        results: Dict[str, Dict[str, Any]] = {}
+
+        for slice_name, slice_fn in slice_spec.slices():
+            sliced_dataset = dataset.remove_columns(remove_columns or []).filter(
+                slice_fn,
+                batched=True,
+                batch_size=batch_size,
+                desc=f"Filter -> {slice_name}",
+            )
+
+            if len(sliced_dataset) == 0:
+                raise RuntimeError(
+                    f"Slice {slice_name} is empty. Please check your slice "
+                    f"configuration or the data."
+                )
+
+            for prediction_column in fmt_prediction_columns:
+                results.setdefault(prediction_column, {})
+                results[prediction_column].setdefault("Group Size", {}).update(
+                    {slice_name: sliced_dataset.num_rows}
+                )
+
+                pred_result = _get_metric_results_for_prediction_and_slice(
                     metrics=metrics_,
                     dataset=sliced_dataset,
-                    target_columns=target_columns,
+                    target_columns=fmt_target_columns,
                     prediction_column=prediction_column,
                     slice_name=slice_name,
                     batch_size=batch_size,
                     metric_name=metric_name,
-                    thresholds=thresholds,
+                    thresholds=fmt_thresholds,
                 )
-            )
+                # if metric_name does not exist, add it to the dictionary
+                # otherwise, update the dictionary for the metric_name
+                for key, slice_result in pred_result.items():
+                    results[prediction_column].setdefault(key, {}).update(slice_result)
 
-            if compute_optimal_threshold:
-                # IDEA: generate a comprehensive list of thresholds and compute
-                # the metric for each threshold. Next compute the parity metrics
-                # for each threshold and select the threshold that leads to
-                # the least disparity across all slices for each metric.
-                raise NotImplementedError(
-                    "Computing optimal threshold is not yet implemented."
-                )
+                if compute_optimal_threshold:
+                    # pylint: disable=fixme
+                    # TODO: generate a comprehensive list of thresholds and compute
+                    # the metric for each threshold. Next compute the parity metrics
+                    # for each threshold and select the threshold that leads to
+                    # the least disparity across all slices for each metric.
+                    raise NotImplementedError(
+                        "Computing optimal threshold is not yet implemented."
+                    )
+
+    set_decode(dataset, decode=True)  # reset decode
 
     # compute parity metrics
     if group_base_values is not None:
@@ -218,28 +268,28 @@ def fairness_metric(  # pylint: disable=too-many-arguments
         )
     else:
         parity_results = _compute_parity_metrics(
-            results=results, base_slice_name="no_filter"
+            results=results, base_slice_name="overall"
         )
 
     # add parity metrics to the results
     for prediction_column, parity_metrics in parity_results.items():
-        results[prediction_column].update(parity_metrics[prediction_column])
+        results[prediction_column].update(parity_metrics)
 
-    if len(prediction_columns) == 1:
-        return results[prediction_columns[0]]
+    if len(fmt_prediction_columns) == 1:
+        return results[fmt_prediction_columns[0]]
 
     return results
 
 
 def warn_too_many_unique_values(
-    unqiue_values: Union[List[Any], Mapping[str, List[Any]]],
+    unique_values: Union[List[Any], Dict[str, List[Any]]],
     max_unique_values: int = 50,
 ) -> None:
     """Warns if the number of unique values is greater than `max_unique_values`.
 
     Parameters
     ----------
-    unique_values : Union[List[Any], Mapping[str, List[Any]]]
+    unique_values : Union[List[Any], Dict[str, List[Any]]]
         A list of unique values or a mapping from group names to lists of unique
         values.
     max_unique_values : int, default=50
@@ -255,23 +305,28 @@ def warn_too_many_unique_values(
     If the number of unique values in any group is greater than `max_unique_values`.
 
     """
+    if not (isinstance(max_unique_values, int) and max_unique_values > 0):
+        raise TypeError(
+            "`max_unique_values` must be a positive integer. Got "
+            f"{type(max_unique_values)}."
+        )
+
     msg = (
         "The number of unique values for the group is greater than "
         "%s. This may take a long time to compute. "
-        "Consider binning the values into fewer groups.",
-        max_unique_values,
+        "Consider binning the values into fewer groups."
     )
-    if isinstance(unqiue_values, list):
-        if len(unqiue_values) > max_unique_values:
-            LOGGER.warning(msg)
-    elif isinstance(unqiue_values, dict) and any(
-        len(values) > max_unique_values for values in unique_values.values()
-    ):
-        LOGGER.warning(msg)
-    else:
-        raise TypeError(
-            f"`unique_values` must be a list or a mapping. Got {type(unqiue_values)}."
-        )
+    if isinstance(unique_values, list):
+        if len(unique_values) > max_unique_values:
+            LOGGER.warning(msg, max_unique_values)
+        return
+    if isinstance(unique_values, dict):
+        if any(len(values) > max_unique_values for values in unique_values.values()):
+            LOGGER.warning(msg, max_unique_values)
+        return
+    raise TypeError(
+        f"`unique_values` must be a list or a mapping. Got {type(unique_values)}."
+    )
 
 
 def _format_metrics(
@@ -279,7 +334,7 @@ def _format_metrics(
     metric_name: Optional[str] = None,
     **metric_kwargs: Any,
 ) -> Union[Callable[..., Any], Metric, MetricCollection]:
-    """Formats the metrics argument.
+    """Format the metrics argument.
 
     Parameters
     ----------
@@ -305,6 +360,9 @@ def _format_metrics(
     if isinstance(metrics, str):
         metrics = create_metric(metric_name=metrics, **metric_kwargs)
     if isinstance(metrics, Metric):
+        if metric_name is not None and isinstance(metrics, OperatorMetric):
+            # single metric created from arithmetic operation, with given name
+            return MetricCollection({metric_name: metrics})
         return MetricCollection(metrics)
     if isinstance(metrics, MetricCollection):
         return metrics
@@ -323,79 +381,74 @@ def _format_metrics(
     )
 
 
-def _format_dataset(dataset: Dataset, format_str: str = "numpy") -> Dataset:
-    """Set the output format of the dataset.
+def _format_column_names(column_names: Union[str, List[str]]) -> List[str]:
+    """Format the column names to list of strings if not already a list.
 
     Parameters
     ----------
-    dataset : Dataset
-        The dataset to format.
-    format_str : str, default="numpy"
-        The format to set the dataset to. This can be any of the formats
-        supported by `Dataset.set_format`.
-
-    Raises
-    ------
-    TypeError
-        If `dataset` is not of type `Dataset`.
-
-    """
-    if not isinstance(dataset, Dataset):
-        raise TypeError(
-            "Expected `dataset` to be of type `Dataset`, but got " f"{type(dataset)}."
-        )
-
-    dataset.set_format(format_str)
-
-
-def _format_column_names(*column_names: Union[str, List[str]]) -> Tuple[List[str]]:
-    """Formats the column names to lists of strings.
-
-    Parameters
-    ----------
-    *column_names : Union[str, List[str]]
+    column_names : Union[str, List[str]]
         The column names to format.
 
     Returns
     -------
-    Tuple[List[str]]
+    List[str]
         The formatted column names.
 
     Raises
     ------
     TypeError
-        If any of the column names are not strings or lists of strings.
+        If any of the column names are not strings or list of strings.
 
     """
-    ret = []
-    for column_name in column_names:
-        if isinstance(column_name, str):
-            ret.append([column_name])
-        elif isinstance(column_name, list):
-            ret.append(column_name)
-        else:
-            raise TypeError(
-                f"Expected column name {column_name} to be a string or "
-                f"list of strings, but got {type(column_name)}."
-            )
+    if isinstance(column_names, str):
+        return [column_names]
+    if isinstance(column_names, list):
+        return column_names
 
-    return tuple(ret)
+    raise TypeError(
+        f"Expected column name {column_names} to be a string or "
+        f"list of strings, but got {type(column_names)}."
+    )
+
+
+def _get_unique_values(
+    dataset: Dataset, groups: List[str], group_values: Optional[Dict[str, Any]]
+) -> Dict[str, List[Any]]:
+    """Get the unique values for a group."""
+    unique_values = {}
+    for group in groups:
+        column_unique_values = dataset.unique(group)
+        if group_values is not None and group in group_values:
+            udv = group_values[group]  # user defined values
+            if not isinstance(udv, list):
+                udv = [udv]
+
+            # check that the user defined values are in the unique values
+            if not set(udv).issubset(set(column_unique_values)):
+                raise ValueError(
+                    f"User defined values {udv} for group {group} are not a subset of "
+                    f"the unique values {column_unique_values}."
+                )
+            unique_values[group] = udv
+        else:
+            unique_values[group] = column_unique_values
+    return unique_values
 
 
 def _validate_base_values(
-    base_values: Mapping[str, Any],
+    base_values: Dict[str, Any],
     groups: List[str],
-    unique_values: Mapping[str, List[Any]],
+    unique_values: Dict[str, List[Any]],
 ) -> None:
-    """Checks that the base values are valid.
+    """Check that the base values are valid.
 
     Parameters
     ----------
-    base_values : Mapping[str, Any]
+    base_values : Dict[str, Any]
         The base values for each group.
     groups : List[str]
         The groups to use for computing the metric results.
-    unique_values : Mapping[str, List[Any]]
+    unique_values : Dict[str, List[Any]]
         The unique values for each group.
 
     Raises
@@ -414,29 +467,32 @@ def _validate_base_values(
         )
 
     # base values for each group must be part of the unique values
+    # unless it a numeric or datetime type, then it can be any value
+    # in the range of the unique values
     for group, base_value in base_values.items():
+        if isinstance(base_value, (int, float, datetime)) or is_datetime(base_value):
+            continue
         if base_value not in unique_values[group]:
             raise ValueError(
-                f"The base value for {group} must be one of the unique "
-                f"values for the group. Got {base_value} but expected one of "
-                f"{unique_values[group]}."
+                f"The base value {base_value} for group {group} is not part of the "
+                f"unique values for the group. Got {unique_values[group]}."
             )
 
 
 def _validate_group_bins(
-    group_bins: Mapping[str, Union[int, List[Any]]],
+    group_bins: Dict[str, Union[int, List[Any]]],
     groups: List[str],
-    unique_values: Mapping[str, List[Any]],
+    unique_values: Dict[str, List[Any]],
 ) -> None:
-    """Checks that the group bins are valid.
+    """Check that the group bins are valid.
 
     Parameters
     ----------
-    group_bins : Mapping[str, Union[int, List[Any]]]
+    group_bins : Dict[str, Union[int, List[Any]]]
         The bins for each group.
     groups : List[str]
         The groups to use for accessing fairness.
-    unique_values : Mapping[str, List[Any]]
+    unique_values : Dict[str, List[Any]]
         The unique values for each group.
 
     Raises
@@ -459,7 +515,7 @@ def _validate_group_bins(
         )
 
     for group, bins in group_bins.items():
-        if not (isinstance(bins, list) or isinstance(bins, int)):
+        if not isinstance(bins, (list, int)):
             raise TypeError(
                 f"The bins for {group} must be a list or an integer. "
                 f"Got {type(bins)}."
@@ -480,19 +536,19 @@ def _validate_group_bins(
 
 
 def _create_bins(
-    group_bins: Mapping[str, Union[int, List[Any]]],
+    group_bins: Dict[str, Union[int, List[Any]]],
     dataset_features: Features,
-    unique_values: Mapping[str, List[Any]],
+    unique_values: Dict[str, List[Any]],
 ) -> Dict[str, pd.IntervalIndex]:
-    """Creates the bins for numeric and datetime features.
+    """Create the bins for numeric and datetime features.
 
     Parameters
     ----------
-    group_bins : Mapping[str, Union[int, List[Any]]]
+    group_bins : Dict[str, Union[int, List[Any]]]
         The user-defined bins for each group.
     dataset_features : Features
         The features of the dataset.
-    unique_values : Mapping[str, List[Any]]
+    unique_values : Dict[str, List[Any]]
         The unique values for each group.
 
     Returns
@@ -509,9 +565,8 @@ def _create_bins(
     breaks = {}
     for group, bins in group_bins.items():
         group_feature = dataset_features[group]
-        if not (
-            feature_is_numeric(group_feature) or feature_is_datetime(group_feature)
-        ):
+        column_is_datetime = feature_is_datetime(group_feature)
+        if not (feature_is_numeric(group_feature) or column_is_datetime):
             raise ValueError(
                 f"Column {group} in the must have a numeric or datetime dtype. "
                 f"Got {group_feature.dtype}."
@@ -522,13 +577,26 @@ def _create_bins(
             if not all(bins[i] <= bins[i + 1] for i in range(len(bins) - 1)):
                 bins = sorted(bins)
 
-        out = pd.cut(unique_values[group], bins, duplicates="drop")
+            # convert timestring values to datetime
+            if column_is_datetime:
+                bins = pd.to_datetime(bins).values
+
+        cut_data = pd.Series(
+            unique_values[group], dtype="datetime64[ns]" if column_is_datetime else None
+        ).to_numpy()
+        out = pd.cut(cut_data, bins, duplicates="drop")
 
         intervals = out.categories
 
         # add -inf and inf to the left and right ends
-        left_end = pd.Interval(left=-np.inf, right=intervals[0].left)
-        right_end = pd.Interval(left=intervals[-1].right, right=np.inf)
+        left_end = pd.Interval(
+            left=pd.Timestamp.min if column_is_datetime else -np.inf,
+            right=intervals[0].left,
+        )
+        right_end = pd.Interval(
+            left=intervals[-1].right,
+            right=pd.Timestamp.max if column_is_datetime else np.inf,
+        )
 
         lefts = (
             [left_end.left]
@@ -547,11 +615,9 @@ def _create_bins(
 
 
 def _update_base_values_with_bins(
-    base_values: Dict[str, Any],
-    bins: Dict[str, pd.IntervalIndex],
-    unique_values: Dict[str, Any],
+    base_values: Dict[str, Any], bins: Dict[str, pd.IntervalIndex]
 ) -> Dict[str, Any]:
-    """Updates the base values with the corresponding interval.
+    """Update the base values with the corresponding interval.
 
     Parameters
     ----------
@@ -559,8 +625,6 @@ def _update_base_values_with_bins(
         The base values for each group.
     bins : Dict[str, pandas.IntervalIndex]
         The bins for each group.
-    unique_values : Dict[str, Any]
-        The unique values for each group.
 
     Returns
     -------
@@ -571,16 +635,20 @@ def _update_base_values_with_bins(
     """
     for group, bin_values in bins.items():
         base_value = base_values[group]
-        base_value_idx = np.where(unique_values[group] == base_value)[0][0]
 
-        # use that index to get the corresponding interval
-        base_values[group] = bin_values[base_value_idx]
+        # find the interval that contains the base value
+        for interval in bin_values:
+            if isinstance(interval.left, pd.Timestamp):
+                base_value = pd.to_datetime(base_value)
+            if interval.left <= base_value <= interval.right:
+                base_values[group] = interval
+                break
 
     return base_values
 
 
 def _get_slice_spec(
-    groups: List[str], unique_values: Mapping[str, Any], column_names: List[str]
+    groups: List[str], unique_values: Dict[str, List[Any]], column_names: List[str]
 ) -> SliceSpec:
     """Create the slice specifications for computing the metrics.
 
@@ -588,7 +656,7 @@ def _get_slice_spec(
     ----------
     groups : List[str]
         The groups (columns) to slice on.
-    unique_values : Mapping[str, Any]
+    unique_values : Dict[str, List[Any]]
         The unique values for each group.
     column_names : List[str]
         The names of the columns in the dataset.
@@ -599,7 +667,6 @@ def _get_slice_spec(
         The slice specifications for computing the metrics.
 
     """
-
     slices = []
 
     group_combinations = list(itertools.product(*unique_values.values()))
@@ -609,8 +676,12 @@ def _get_slice_spec(
         for group, value in zip(groups, combination):
             if isinstance(value, pd.Interval):
                 slice_dict[group] = {
-                    "min_value": value.left,
-                    "max_value": value.right,
+                    "min_value": -np.inf
+                    if value.left == pd.Timestamp.min
+                    else value.left,
+                    "max_value": np.inf
+                    if value.right == pd.Timestamp.max
+                    else value.right,
                     "min_inclusive": value.closed_left,
                     "max_inclusive": value.closed_right,
                     "keep_nulls": False,
@@ -619,16 +690,16 @@ def _get_slice_spec(
                 slice_dict[group] = {"value": value, "keep_nulls": False}
         slices.append(slice_dict)
 
-    return SliceSpec(feature_values=slices, column_names=column_names)
+    return SliceSpec(slices, validate=True, column_names=column_names)
 
 
 def _compute_metrics(
-    metrics: Union[Callable, MetricCollection],
+    metrics: Union[Callable[..., Any], MetricCollection],
     dataset: Dataset,
     target_columns: List[str],
     prediction_column: str,
     threshold: Optional[float] = None,
-    batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
+    batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
     metric_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Compute the metrics for the dataset.
@@ -643,7 +714,7 @@ def _compute_metrics(
         The target columns.
     prediction_column : str
         The prediction column.
-    threshold : Optional[float]
+    threshold : Union[float, List[float]], optional, default=None
         The threshold to use for the metrics.
     batch_size : int
         The batch size to use for the computation.
@@ -659,42 +730,52 @@ def _compute_metrics(
     if isinstance(metrics, MetricCollection):
         if threshold is not None:
             # set the threshold for each metric in the collection
-            for metric in metrics._metrics:  # pylint: disable=protected-access
+            for name, metric in metrics.items():
                 if hasattr(metric, "threshold"):
-                    metric.threshold = threshold
-                elif hasattr(metric, "thresholds"):
-                    metric.thresholds = [threshold]
+                    setattr(metric, "threshold", threshold)
                 else:
                     LOGGER.warning(
                         "Metric %s does not have a threshold attribute. "
                         "Skipping setting the threshold.",
-                        metric.name,
+                        name,
                     )
 
-        for batch in dataset.iter(batch_size=batch_size):
-            targets = np.stack(
-                [batch[target_column] for target_column in target_columns],
-                axis=1,
-            ).squeeze()
-            predictions = batch[prediction_column]
+        if (
+            batch_size is None or batch_size <= 0
+        ):  # dataset.iter does not support getting all rows
+            targets = get_columns_as_numpy_array(
+                dataset=dataset, columns=target_columns
+            )
+            predictions = get_columns_as_numpy_array(
+                dataset=dataset, columns=prediction_column
+            )
+            results: Dict[str, Any] = metrics(targets, predictions)
+        else:
+            for batch in dataset.iter(batch_size=batch_size):
+                targets = get_columns_as_numpy_array(
+                    dataset=batch, columns=target_columns
+                )
+                predictions = get_columns_as_numpy_array(
+                    dataset=batch, columns=prediction_column
+                )
 
-            metrics.update_state(targets, predictions)
+                metrics.update_state(targets, predictions)
 
-        results: Dict[str, Any] = metrics.compute()
+            results = metrics.compute()
+
         metrics.reset_state()
-    elif callable(metrics):
-        targets = np.stack(
-            [dataset[target_column] for target_column in target_columns],
-            axis=1,
-        ).squeeze()
-        predictions = dataset[prediction_column]
+
+        return results
+    if callable(metrics):
+        targets = get_columns_as_numpy_array(dataset=dataset, columns=target_columns)
+        predictions = get_columns_as_numpy_array(
+            dataset=dataset, columns=prediction_column
+        )
 
         # check if the callable can take thresholds as an argument
         if threshold is not None:
             if "threshold" in inspect.signature(metrics).parameters:
                 output = metrics(targets, predictions, threshold=threshold)
-            elif "thresholds" in inspect.signature(metrics).parameters:
-                output = metrics(targets, predictions, thresholds=[threshold])
             else:
                 LOGGER.warning(
                     "The `metrics` argument is a callable that does not take a "
@@ -708,25 +789,23 @@ def _compute_metrics(
         if metric_name is None:
             metric_name = getattr(metrics, "__name__", "Unnamed Metric")
 
-        results = {metric_name.title(): output}
-    else:
-        raise TypeError(
-            "The `metrics` argument must be a string, a Metric, a MetricCollection, "
-            f"or a callable. Got {type(metrics)}."
-        )
+        return {metric_name.title(): output}
 
-    return results
+    raise TypeError(
+        "The `metrics` argument must be a string, a Metric, a MetricCollection, "
+        f"or a callable. Got {type(metrics)}."
+    )
 
 
 def _get_metric_results_for_prediction_and_slice(
-    metrics: Union[Callable, MetricCollection],
+    metrics: Union[Callable[..., Any], MetricCollection],
     dataset: Dataset,
     target_columns: List[str],
     prediction_column: str,
     slice_name: str,
-    batch_size: int,
+    batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
     metric_name: Optional[str] = None,
-    thresholds: Optional[List[float]] = None,
+    thresholds: Optional[npt.NDArray[np.float_]] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Compute metrics for a slice of a dataset.
 
@@ -755,7 +834,6 @@ def _get_metric_results_for_prediction_and_slice(
         The computed metrics.
 
     """
-
     if thresholds is None:
         metric_output = _compute_metrics(
             metrics=metrics,
@@ -768,24 +846,24 @@ def _get_metric_results_for_prediction_and_slice(
 
         # results format: {metric_name: {slice_name: metric_value}}
         return {key: {slice_name: value} for key, value in metric_output.items()}
-    else:
-        results = {}
-        for threshold in thresholds:
-            metric_output = _compute_metrics(
-                metrics=metrics,
-                dataset=dataset,
-                target_columns=target_columns,
-                prediction_column=prediction_column,
-                batch_size=batch_size,
-                threshold=threshold,
-                metric_name=metric_name,
-            )
 
-            # results format: {metric_name@threshold: {slice_name: metric_value}}
-            for key, value in metric_output.items():
-                results[f"{key}@{threshold}"] = {slice_name: value}
+    results = {}
+    for threshold in thresholds:
+        metric_output = _compute_metrics(
+            metrics=metrics,
+            dataset=dataset,
+            target_columns=target_columns,
+            prediction_column=prediction_column,
+            batch_size=batch_size,
+            threshold=threshold,
+            metric_name=metric_name,
+        )
 
-        return results
+        # results format: {metric_name@threshold: {slice_name: metric_value}}
+        for key, value in metric_output.items():
+            results[f"{key}@{threshold}"] = {slice_name: value}
+
+    return results
 
 
 def _construct_base_slice_name(base_values: Dict[str, Any]) -> str:
@@ -800,13 +878,22 @@ def _construct_base_slice_name(base_values: Dict[str, Any]) -> str:
     -------
     base_slice_name : str
         A string representing the slice name for the base group.
+
     """
     base_slice_name = ""
     for group, base_value in base_values.items():
         if isinstance(base_value, pd.Interval):
-            base_slice_name += f"{group}:{base_value.left} - {base_value.right}+"
+            min_value = (
+                -np.inf if base_value.left == pd.Timestamp.min else base_value.left
+            )
+            max_value = (
+                np.inf if base_value.right == pd.Timestamp.max else base_value.right
+            )
+            min_end = "[" if base_value.closed_left else "("
+            max_end = "]" if base_value.closed_right else ")"
+            base_slice_name += f"{group}:{min_end}{min_value} - {max_value}{max_end}&"
         else:
-            base_slice_name += f"{group}:{base_value}+"
+            base_slice_name += f"{group}:{base_value}&"
     base_slice_name = base_slice_name[:-1]
 
     return base_slice_name
@@ -833,9 +920,9 @@ def _compute_parity_metrics(
     -------
     Dict[str, Dict[str, Dict[str, Dict[str, float]]]]
         A dictionary mapping the prediction column to the metrics dictionary.
-    """
 
-    parity_results = {}
+    """
+    parity_results: Dict[str, Dict[str, Any]] = {}
 
     for key, prediction_result in results.items():
         parity_results[key] = {}
@@ -852,11 +939,16 @@ def _compute_parity_metrics(
 
                 numerator = metric_value
                 denominator = slice_result[base_slice_name]
-                parity_metric_value = denominator and numerator / denominator or 0
+                parity_metric_value = np.divide(  # type: ignore[call-overload]
+                    numerator,
+                    denominator,
+                    out=np.zeros_like(numerator, dtype=np.float_),
+                    where=denominator != 0,  # type: ignore[comparison-overlap]
+                )
 
                 # add the parity metric to the results
-                parity_results[key] = {
-                    parity_metric_name: {slice_name: parity_metric_value}
-                }
+                parity_results[key].setdefault(parity_metric_name, {}).update(
+                    {slice_name: _get_value_if_singleton_array(parity_metric_value)}
+                )
 
     return parity_results
