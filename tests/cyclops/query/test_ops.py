@@ -24,6 +24,7 @@ from cyclops.query.ops import (
     ConditionRegexMatch,
     ConditionStartsWith,
     ConditionSubstring,
+    Distinct,
     Drop,
     DropNulls,
     ExtractTimestampComponent,
@@ -42,7 +43,7 @@ from cyclops.query.ops import (
 )
 from cyclops.query.util import process_column
 
-SYNTHEA = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
+QUERIER = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
 
 
 @pytest.fixture
@@ -55,13 +56,13 @@ def table_input():
 @pytest.fixture
 def visits_input():
     """Test visits table input."""
-    return SYNTHEA.visit_occurrence().query
+    return QUERIER.visit_occurrence().query
 
 
 @pytest.fixture
 def measurements_input():
     """Test measurement table input."""
-    return SYNTHEA.measurement().query
+    return QUERIER.measurement().query
 
 
 def test__none_add():
@@ -82,7 +83,7 @@ def test__process_checks(table_input):  # pylint: disable=redefined-outer-name
 def test_drop(visits_input):  # pylint: disable=redefined-outer-name
     """Test Drop."""
     visits = Drop("care_site_source_value")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert "care_site_source_value" not in visits.columns
 
 
@@ -96,7 +97,7 @@ def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
             AddColumn("test_col1", "test_col2", new_col_labels="test_col3"),
         ]
     )
-    visits = SYNTHEA.get_interface(visits_input, ops=ops).run()
+    visits = QUERIER.get_interface(visits_input, ops=ops).run()
     assert "test_col3" in visits.columns
     assert (visits["test_col3"] == 5).all()
 
@@ -109,7 +110,7 @@ def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
             ),
         ]
     )
-    visits = SYNTHEA.get_interface(visits_input, ops=ops).run()
+    visits = QUERIER.get_interface(visits_input, ops=ops).run()
     assert "test_col3" in visits.columns
     assert (visits["test_col3"] == -1).all()
 
@@ -118,7 +119,7 @@ def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
 def test_rename(visits_input):  # pylint: disable=redefined-outer-name
     """Test Rename."""
     visits = Rename({"care_site_name": "hospital_name"})(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert "hospital_name" in visits.columns
     assert "care_site_name" not in visits.columns
 
@@ -128,7 +129,7 @@ def test_literal(visits_input):  # pylint: disable=redefined-outer-name
     """Test Literal."""
     visits = Literal(1, "new_col")(visits_input)
     visits = Literal("a", "new_col2")(visits)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert "new_col" in visits.columns
     assert visits["new_col"].iloc[0] == 1
     assert "new_col2" in visits.columns
@@ -139,7 +140,7 @@ def test_literal(visits_input):  # pylint: disable=redefined-outer-name
 def test_reorder_after(visits_input):  # pylint: disable=redefined-outer-name
     """Test ReorderAfter."""
     visits = ReorderAfter("visit_concept_name", "care_site_id")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert list(visits.columns).index("care_site_id") + 1 == list(visits.columns).index(
         "visit_concept_name"
     )
@@ -149,7 +150,7 @@ def test_reorder_after(visits_input):  # pylint: disable=redefined-outer-name
 def test_limit(visits_input):  # pylint: disable=redefined-outer-name
     """Test Limit."""
     visits = Limit(10)(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert len(visits) == 10
 
 
@@ -157,7 +158,7 @@ def test_limit(visits_input):  # pylint: disable=redefined-outer-name
 def test_order_by(visits_input):  # pylint: disable=redefined-outer-name
     """Test OrderBy."""
     visits = OrderBy("visit_concept_name")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert visits["visit_concept_name"].is_monotonic_increasing
 
 
@@ -167,7 +168,7 @@ def test_substring(visits_input):  # pylint: disable=redefined-outer-name
     visits = Substring("visit_concept_name", 0, 3, "visit_concept_name_substr")(
         visits_input
     )
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert visits["visit_concept_name_substr"].iloc[0] == "In"
 
 
@@ -175,7 +176,7 @@ def test_substring(visits_input):  # pylint: disable=redefined-outer-name
 def test_trim(visits_input):  # pylint: disable=redefined-outer-name
     """Test Trim."""
     visits = Trim("visit_concept_name", "visit_concept_name_trim")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert visits["visit_concept_name_trim"].iloc[0] == "Inpatient Visit"
 
 
@@ -187,7 +188,7 @@ def test_extract_timestamp_component(
     visits = ExtractTimestampComponent(
         "visit_start_date", "year", "visit_start_date_year"
     )(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert visits["visit_start_date_year"].iloc[0] == 2018
 
 
@@ -196,7 +197,7 @@ def test_add_numeric(visits_input):  # pylint: disable=redefined-outer-name
     """Test AddNumeric."""
     visits = Literal(1, "new_col")(visits_input)
     visits = AddNumeric("new_col", 1, "new_col_plus_1")(visits)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert visits["new_col_plus_1"].iloc[0] == 2
 
 
@@ -206,7 +207,7 @@ def test_apply(visits_input):  # pylint: disable=redefined-outer-name
     visits = Apply(
         "visit_concept_name", lambda x: x + "!", "visit_concept_name_exclaim"
     )(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert visits["visit_concept_name_exclaim"].iloc[0] == "Inpatient Visit!"
 
 
@@ -220,7 +221,7 @@ def test_condition_regex_match(
         r"^[0-9]+(\.[0-9]+)?$",
         binarize_col="value_source_value_match",
     )(measurements_input)
-    measurements = SYNTHEA.get_interface(measurements).run()
+    measurements = QUERIER.get_interface(measurements).run()
     assert "value_source_value_match" in measurements.columns
     assert (
         measurements["value_source_value_match"].sum()
@@ -266,13 +267,13 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
         "person_id", {"value_as_number": ("median", "value_as_number_median")}
     )(measurements_input)
 
-    visits_count = SYNTHEA.get_interface(visits_count).run()
-    visits_string_agg = SYNTHEA.get_interface(visits_string_agg).run()
-    measurements_sum = SYNTHEA.get_interface(measurements_sum).run()
-    measurements_average = SYNTHEA.get_interface(measurements_average).run()
-    measurements_min = SYNTHEA.get_interface(measurements_min).run()
-    measurements_max = SYNTHEA.get_interface(measurements_max).run()
-    measurements_median = SYNTHEA.get_interface(measurements_median).run()
+    visits_count = QUERIER.get_interface(visits_count).run()
+    visits_string_agg = QUERIER.get_interface(visits_string_agg).run()
+    measurements_sum = QUERIER.get_interface(measurements_sum).run()
+    measurements_average = QUERIER.get_interface(measurements_average).run()
+    measurements_min = QUERIER.get_interface(measurements_min).run()
+    measurements_max = QUERIER.get_interface(measurements_max).run()
+    measurements_median = QUERIER.get_interface(measurements_median).run()
 
     assert "num_visits" in visits_count.columns
     assert visits_count[visits_count["person_id"] == 33]["num_visits"][0] == 25
@@ -321,7 +322,7 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
 def test_drop_nulls(visits_input):  # pylint: disable=redefined-outer-name
     """Test DropNulls."""
     visits = DropNulls("preceding_visit_occurrence_id")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert visits["preceding_visit_occurrence_id"].isnull().sum() == 0
 
 
@@ -329,7 +330,7 @@ def test_drop_nulls(visits_input):  # pylint: disable=redefined-outer-name
 def test_condition_before_date(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionBeforeDate."""
     visits = ConditionBeforeDate("visit_start_date", "2018-01-01")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert pd.Timestamp(visits["visit_start_date"].max()) < pd.Timestamp("2018-01-01")
 
 
@@ -337,7 +338,7 @@ def test_condition_before_date(visits_input):  # pylint: disable=redefined-outer
 def test_condition_after_date(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionAfterDate."""
     visits = ConditionAfterDate("visit_start_date", "2018-01-01")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert pd.Timestamp(visits["visit_start_date"].min()) > pd.Timestamp("2018-01-01")
 
 
@@ -345,7 +346,7 @@ def test_condition_after_date(visits_input):  # pylint: disable=redefined-outer-
 def test_condition_in(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionIn."""
     visits = ConditionIn("visit_concept_name", ["Outpatient Visit"])(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_name"] == "Outpatient Visit")
 
 
@@ -354,7 +355,7 @@ def test_condition_in_months(visits_input):  # pylint: disable=redefined-outer-n
     """Test ConditionInMonths."""
     visits_input = Cast("visit_start_date", "timestamp")(visits_input)
     visits = ConditionInMonths("visit_start_date", 6)(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert (visits["visit_start_date"].dt.month == 6).all()
 
 
@@ -363,7 +364,7 @@ def test_condition_in_years(visits_input):  # pylint: disable=redefined-outer-na
     """Test ConditionInYears."""
     visits_input = Cast("visit_start_date", "timestamp")(visits_input)
     visits = ConditionInYears("visit_start_date", 2018)(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert (visits["visit_start_date"].dt.year == 2018).all()
 
 
@@ -371,7 +372,7 @@ def test_condition_in_years(visits_input):  # pylint: disable=redefined-outer-na
 def test_condition_substring(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionSubstring."""
     visits = ConditionSubstring("visit_concept_name", "Outpatient")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_name"].str.contains("Outpatient"))
 
 
@@ -379,7 +380,7 @@ def test_condition_substring(visits_input):  # pylint: disable=redefined-outer-n
 def test_condition_starts_with(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionStartsWith."""
     visits = ConditionStartsWith("visit_concept_name", "Outpatient")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_name"].str.startswith("Outpatient"))
 
 
@@ -387,7 +388,7 @@ def test_condition_starts_with(visits_input):  # pylint: disable=redefined-outer
 def test_condition_ends_with(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionEndsWith."""
     visits = ConditionEndsWith("visit_concept_name", "Visit")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_name"].str.endswith("Visit"))
 
 
@@ -395,12 +396,12 @@ def test_condition_ends_with(visits_input):  # pylint: disable=redefined-outer-n
 def test_condition_equals(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionEquals."""
     visits = ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_name"] == "Outpatient Visit")
     visits = ConditionEquals("visit_concept_name", "Outpatient Visit", not_=True)(
         visits_input
     )
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_name"] != "Outpatient Visit")
 
 
@@ -408,7 +409,7 @@ def test_condition_equals(visits_input):  # pylint: disable=redefined-outer-name
 def test_condition_greater_than(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionGreaterThan."""
     visits = ConditionGreaterThan("visit_concept_id", 9300)(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_id"] > 9300)
 
 
@@ -416,7 +417,7 @@ def test_condition_greater_than(visits_input):  # pylint: disable=redefined-oute
 def test_condition_less_than(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionLessThan."""
     visits = ConditionLessThan("visit_concept_id", 9300)(visits_input)
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_id"] < 9300)
 
 
@@ -426,7 +427,7 @@ def test_union(visits_input):  # pylint: disable=redefined-outer-name
     visits = Union(
         ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
     )(ConditionEquals("visit_concept_name", "Emergency Room Visit")(visits_input))
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert len(visits) == 3937
     assert all(
         visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"])
@@ -435,7 +436,7 @@ def test_union(visits_input):  # pylint: disable=redefined-outer-name
         ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
         union_all=True,
     )(ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input))
-    visits = SYNTHEA.get_interface(visits).run()
+    visits = QUERIER.get_interface(visits).run()
     assert len(visits) == 7554
 
 
@@ -455,7 +456,7 @@ def test_sequential(visits_input):  # pylint: disable=redefined-outer-name
         substr_op,
     ]
     sequential_ops = Sequential(operations)
-    visits = SYNTHEA.get_interface(visits_input, ops=sequential_ops).run()
+    visits = QUERIER.get_interface(visits_input, ops=sequential_ops).run()
     assert "hospital_name" in visits.columns
     assert "visit_concept_name_exclaim" in visits.columns
     assert list(visits[visits["person_id"] == 33]["visit_concept_name_exclaim"])[0] == (
@@ -465,3 +466,12 @@ def test_sequential(visits_input):  # pylint: disable=redefined-outer-name
     assert list(visits[visits["person_id"] == 33]["visit_concept_name_substr"])[0] == (
         "Out"
     )
+
+
+@pytest.mark.integration_test
+def test_distinct(visits_input):  # pylint: disable=redefined-outer-name
+    """Test Distinct."""
+    distinct_op = Distinct(["person_id"])
+    visits = QUERIER.get_interface(visits_input, ops=distinct_op).run()
+    assert len(visits) == 109
+    visits = QUERIER.get_interface(visits_input).run()

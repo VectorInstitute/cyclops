@@ -1294,7 +1294,7 @@ class MIMICIVProcessor:
         cleaned_generator = self._load_batches(self.cleaned_dir)
         filter_fn = None
         if (
-            self.temp_params["query"] == mimic.CHARTEVENTS
+            self.temp_params["query"] == mimic.CHARTEVENTS  # pylint: disable=no-member
             and self.temp_params["top_n_events"]
         ):
             LOGGER.info("Getting top %d events", self.temp_params["top_n_events"])

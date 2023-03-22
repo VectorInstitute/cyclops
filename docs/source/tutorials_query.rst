@@ -13,3 +13,4 @@ queries.
     tutorials/mimiciv/query_api.ipynb
     tutorials/eicu/query_api.ipynb
     tutorials/omop/query_api.ipynb
+    tutorials/gemini/query_api.ipynb

@@ -1,7 +1,7 @@
 """OMOP query API."""
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy.sql.selectable import Subquery
 
@@ -15,16 +15,6 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
-
-# Table names.
-VISIT_OCCURRENCE = "visit_occurrence"
-VISIT_DETAIL = "visit_detail"
-PERSON = "person"
-MEASUREMENT = "measurement"
-CONCEPT = "concept"
-OBSERVATION = "observation"
-CARE_SITE = "care_site"
-PROVIDER = "provider"
 
 # OMOP column names.
 VISIT_OCCURRENCE_ID = "visit_occurrence_id"
@@ -62,32 +52,6 @@ ID = "id"
 NAME = "name"
 
 
-def _get_table_map(schema_name: str) -> Dict[str, Callable[..., Any]]:
-    """Get table map.
-
-    Parameters
-    ----------
-    schema_name: str
-        Name of schema.
-
-    Returns
-    -------
-    Dict
-        A mapping of table names to the ORM table objects.
-
-    """
-    return {
-        VISIT_OCCURRENCE: lambda db: getattr(db, schema_name).visit_occurrence,
-        VISIT_DETAIL: lambda db: getattr(db, schema_name).visit_detail,
-        PERSON: lambda db: getattr(db, schema_name).person,
-        MEASUREMENT: lambda db: getattr(db, schema_name).measurement,
-        OBSERVATION: lambda db: getattr(db, schema_name).observation,
-        CONCEPT: lambda db: getattr(db, schema_name).concept,
-        CARE_SITE: lambda db: getattr(db, schema_name).care_site,
-        PROVIDER: lambda db: getattr(db, schema_name).provider,
-    }
-
-
 class OMOPQuerier(DatasetQuerier):
     """OMOP querier."""
 
@@ -110,19 +74,29 @@ class OMOPQuerier(DatasetQuerier):
         overrides = {}
         if config_overrides:
             overrides = config_overrides
-        super().__init__(_get_table_map(schema_name), **overrides)
+        super().__init__(**overrides)
 
-    def _map_concept_ids_to_name(
-        self, source_table: Subquery, source_cols: Union[str, List[str]]
+    def map_concept_ids_to_name(
+        self,
+        src_table: Subquery,
+        src_cols: Union[str, List[str]],
+        dst_cols: Optional[Union[str, List[str]]] = None,
     ) -> Subquery:
         """Map concept IDs in a source table to concept names from concept table.
 
+        For each concept ID column with a name like `somecol_concept_ID`, the mapped
+        concept name column will be named `somecol_concept_name`. If `dst_cols` is
+        specified, the mapped concept name column will be named according to the
+        corresponding name in `dst_cols`.
+
         Parameters
         ----------
-        source_table: Subquery
+        src_table: Subquery
             Source table with concept IDs.
-        source_cols: list of str
-            List of columns names to consider as concept IDs for mapping.
+        src_cols: str or list of str
+            Column name(s) to consider as concept IDs for mapping.
+        dst_cols: str or list of str, optional
+            Column name(s) to assign for the mapped concept name columns.
 
         Returns
         -------
@@ -130,21 +104,29 @@ class OMOPQuerier(DatasetQuerier):
             Query with mapped columns from concept table.
 
         """
-        concept_table = self.get_table(CONCEPT)
-        for col in to_list(source_cols):
+        concept_table = self.get_table(self.schema_name, "concept")
+        src_cols = to_list(src_cols)
+        if dst_cols:
+            dst_cols = to_list(dst_cols)
+            if len(dst_cols) != len(src_cols):
+                raise ValueError("dst_cols must be same length as src_cols")
+
+        for i, col in enumerate(src_cols):
             if ID not in col:
                 raise ValueError("Specified column not a concept ID column!")
-            source_table = qo.Join(
+            src_table = qo.Join(
                 concept_table,
                 on=(col, CONCEPT_ID),
                 join_table_cols=[CONCEPT_NAME],
                 isouter=True,
-            )(source_table)
-            source_table = qo.Rename({CONCEPT_NAME: col.replace(ID, NAME)})(
-                source_table
-            )
+            )(src_table)
+            if dst_cols:
+                dst_col_name = dst_cols[i]
+            else:
+                dst_col_name = col.replace(ID, NAME)
+            src_table = qo.Rename({CONCEPT_NAME: dst_col_name})(src_table)
 
-        return source_table
+        return src_table
 
     def _map_care_site_id(self, source_table: Subquery) -> Subquery:
         """Map care_site_id in a source table to care_site table.
@@ -160,7 +142,7 @@ class OMOPQuerier(DatasetQuerier):
             Query with mapped columns from care_site table.
 
         """
-        care_site_table = self.get_table(CARE_SITE)
+        care_site_table = self.get_table(self.schema_name, "care_site")
         source_table = qo.Join(
             care_site_table,
             on=CARE_SITE_ID,
@@ -190,13 +172,17 @@ class OMOPQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(VISIT_OCCURRENCE)
-        table = self._map_concept_ids_to_name(
-            table, ["visit_concept_id", "visit_type_concept_id"]
+        table = self.get_table(self.schema_name, "visit_occurrence")
+        table = self.map_concept_ids_to_name(
+            table,
+            [
+                "visit_concept_id",
+                "visit_type_concept_id",
+            ],
         )
         table = self._map_care_site_id(table)
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def visit_detail(
         self,
@@ -218,12 +204,12 @@ class OMOPQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(VISIT_DETAIL)
-        table = self._map_concept_ids_to_name(
+        table = self.get_table(self.schema_name, "visit_detail")
+        table = self.map_concept_ids_to_name(
             table, ["visit_detail_concept_id", "visit_detail_type_concept_id"]
         )
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def person(
         self,
@@ -245,12 +231,12 @@ class OMOPQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(PERSON)
-        table = self._map_concept_ids_to_name(
+        table = self.get_table(self.schema_name, "person")
+        table = self.map_concept_ids_to_name(
             table, ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"]
         )
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def observation(
         self,
@@ -272,12 +258,12 @@ class OMOPQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(OBSERVATION)
-        table = self._map_concept_ids_to_name(
+        table = self.get_table(self.schema_name, "observation")
+        table = self.map_concept_ids_to_name(
             table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID]
         )
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def measurement(
         self,
@@ -299,12 +285,12 @@ class OMOPQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(MEASUREMENT)
+        table = self.get_table(self.schema_name, "measurement")
         # Cast value_as_concept_id to int.
         table = qo.Cast([VALUE_AS_CONCEPT_ID], "int")(table)
-        table = self._map_concept_ids_to_name(
+        table = self.map_concept_ids_to_name(
             table,
             [MEASUREMENT_CONCEPT_ID, MEASUREMENT_TYPE_CONCEPT_ID, UNIT_CONCEPT_ID],
         )
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)

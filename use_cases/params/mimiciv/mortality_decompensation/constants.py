@@ -14,7 +14,6 @@ from cyclops.process.column_names import (
 )
 from cyclops.process.constants import ALL, MEAN, STANDARD, TARGETS
 from cyclops.process.impute import np_ffill_bfill
-from cyclops.query.mimiciv import CHARTEVENTS
 from cyclops.utils.file import join, process_dir_save_path
 
 CONST_NAME = "mortality_decompensation"
@@ -82,7 +81,7 @@ TABULAR_AGG = {
 }
 
 TEMPORAL_PARAMS = {
-    "query": CHARTEVENTS,
+    "query": "chartevents",
     "top_n_events": 150,
     "timestep_size": 24,  # Make a prediction every day
     "window_duration": 144,  # Predict for the first 6 days of admission

@@ -1,6 +1,7 @@
 """Utility functions for querying."""  # pylint: disable=too-many-lines
 
 # mypy: ignore-errors
+
 import logging
 from dataclasses import dataclass
 from functools import wraps
@@ -22,6 +23,11 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 COLUMN_OBJECTS = [Column, ColumnClause]
+
+
+def get_attr_name(name: str) -> str:
+    """Get attribute name (second part of first.second)."""
+    return name.split(".")[-1]
 
 
 @dataclass
