@@ -24,7 +24,7 @@ on:
 
 jobs:
   run-code-check:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Install apt dependencies
         run: |
