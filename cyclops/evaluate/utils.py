@@ -1,8 +1,7 @@
 """Utility functions for the `evaluate` package."""
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, List, Mapping, Union
 
 from datasets import DatasetDict, IterableDatasetDict, get_dataset_split_names
-from datasets.splits import Split
 
 
 def choose_split(
