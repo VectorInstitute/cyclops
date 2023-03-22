@@ -21,11 +21,14 @@ setup_logging(print_level="WARN", logger=LOGGER)
 _model_catalog: Dict[str, Any] = {}
 _temporal_model_keys: Set[str] = set()
 _static_model_keys: Set[str] = set()
+_img_model_keys: Set[str] = set()
 _pt_model_keys: Set[str] = set()
 _sk_model_keys: Set[str] = set()
 
 
-def register_model(name: str, model_type: Literal["static", "temporal"]) -> Callable:
+def register_model(
+    name: str, model_type: Literal["static", "temporal", "image"]
+) -> Callable:
     """Register model in the catalog.
 
     Parameters
@@ -58,17 +61,19 @@ def register_model(name: str, model_type: Literal["static", "temporal"]) -> Call
         _model_catalog[name] = model_obj
 
         if model_type == "static":
-            _static_model_keys.add(name)
+            _static_model_keys.add(model_obj.__name__)
         elif model_type == "temporal":
-            _temporal_model_keys.add(name)
+            _temporal_model_keys.add(model_obj.__name__)
+        elif model_type == "image":
+            _img_model_keys.add(model_obj.__name__)
         else:
             raise NotImplementedError(f"Model type {model_type} is not supported.")
 
         # infer model library
         if is_pytorch_model(model_obj):
-            _pt_model_keys.add(name)
+            _pt_model_keys.add(model_obj.__name__)
         elif is_sklearn_model(model_obj):
-            _sk_model_keys.add(name)
+            _sk_model_keys.add(model_obj.__name__)
         else:
             raise NotImplementedError(
                 "Model library is not supported. Only PyTorch and scikit-learn "
