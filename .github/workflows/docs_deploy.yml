@@ -18,12 +18,8 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Install apt dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install libcurl4-openssl-dev libssl-dev pandoc
       - uses: actions/checkout@v3
         with:
           submodules: 'true'
