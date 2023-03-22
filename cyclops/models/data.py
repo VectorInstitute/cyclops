@@ -1,9 +1,57 @@
 """Data classes."""
+from typing import Optional, Union
+
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
 from cyclops.utils.file import join, load_pickle
+
+
+class PTDataset(Dataset):
+    """General dataset wrapper that can be used in conjunction with PyTorch DataLoader.
+
+    Parameters
+    ----------
+    X : Union[np.ndarray, torch.Tensor]
+      Everything pertaining to the input data.
+
+    y : Union[np.ndarray, torch.Tensor] or None (default=None)
+      Everything pertaining to the target, if there is anything.
+
+    """
+
+    def __init__(
+        self,
+        X: Union[np.ndarray, torch.Tensor],
+        y: Optional[Union[np.ndarray, torch.Tensor]] = None,
+    ):
+        self.X = X
+        self.y = y
+
+        # pylint: disable=invalid-name
+        len_X = len(X)
+        if y is not None:
+            len_y = len(y)
+            if len_y != len_X:
+                raise ValueError("X and y have inconsistent lengths.")
+        self._len = len_X
+
+    def __len__(self):
+        """Return the length of the dataset."""
+        return self._len
+
+    def transform(self, X, y):
+        """Transform the data."""
+        y = torch.Tensor([0]) if y is None else y
+        return (X, y)
+
+    def __getitem__(self, idx):
+        """Return the data at index idx."""
+        X = self.X[idx]
+        y = self.y[idx] if self.y is not None else None
+
+        return self.transform(X, y)
 
 
 class VectorizedLoader:
@@ -294,48 +342,3 @@ class VectorizedLoader:
         y_test = self._prep_temporal(data_vectors[5].data)
 
         return (X_train, y_train, X_val, y_val, X_test, y_test)
-
-
-class PTDataset(Dataset):
-    """Pytorch dataset class."""
-
-    def __init__(self, inputs: np.ndarray, target: np.ndarray) -> None:
-        """Initialize dataset.
-
-        Parameters
-        ----------
-        inputs : np.ndarray
-            Data features.
-        target : np.ndarray
-            Data labels.
-
-        """
-        self.inputs = torch.from_numpy(inputs).float()
-        self.target = torch.from_numpy(target).float()
-
-    def __getitem__(self, idx: int) -> tuple:
-        """Get data items per index.
-
-        Parameters
-        ----------
-        idx : int
-            The index of the data instance.
-
-        Returns
-        -------
-        tuple
-            The features and labels for the instance.
-
-        """
-        return self.inputs[idx], self.target[idx]
-
-    def __len__(self) -> int:
-        """Get the length of the dataset.
-
-        Returns
-        -------
-        int
-            The length of the dataset.
-
-        """
-        return len(self.target)
