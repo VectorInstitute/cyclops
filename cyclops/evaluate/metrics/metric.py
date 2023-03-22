@@ -1,15 +1,23 @@
 """Base abstract class for all metrics."""
 
 import functools
-import inspect
+import json
 import logging
-import re
-import warnings
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from collections import OrderedDict, UserDict
 from copy import deepcopy
-from difflib import get_close_matches
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import numpy.typing as npt
@@ -49,13 +57,13 @@ class Metric(ABC):
         """Register the subclass in the registry."""
         super().__init_subclass__(**kwargs)
 
-        # check that the subclass has implemented the abstract methods
-        if (
+        excluded_classes = ("Metric", "OperatorMetric", "MetricCollection")
+        if (  # subclass has not implemented abstract methods
             not (
                 cls.update_state is Metric.update_state or cls.compute is Metric.compute
             )
-            or force_register
-        ):
+            and cls.__name__ not in excluded_classes
+        ) or force_register:
             if registry_key is None:
                 LOGGER.warning(
                     "Metric subclass %s has not defined a name. "
@@ -64,8 +72,11 @@ class Metric(ABC):
                 )
             else:
                 if registry_key in _METRIC_REGISTRY:
-                    raise ValueError(
-                        f"Metric with name {registry_key} is already registered."
+                    LOGGER.warning(
+                        "Metric %s has already been registered. "
+                        "It will be overwritten by %s.",
+                        registry_key,
+                        cls.__name__,
                     )
                 _METRIC_REGISTRY[registry_key] = cls
 
@@ -74,20 +85,16 @@ class Metric(ABC):
 
         Parameters
         ----------
-        name: str
+        name : str
             The name of the state variable.
-        default: Union[List, numpy.ndarray]
+        default : Union[List, numpy.ndarray]
             The default value of the state variable.
-
-        Returns
-        -------
-        None
 
         Raises
         ------
         AttributeError
             If the state variable already exists.
-        ValueError
+        TypeError
             If the state variable is not a numpy.ndarray or an empty list.
 
         """
@@ -97,14 +104,13 @@ class Metric(ABC):
         if not isinstance(default, (np.ndarray, list)) or (
             isinstance(default, list) and default
         ):
-            raise ValueError(
-                "state variable must be a numpy.ndarray or any empty list"
-                " (where numpy arrays can be appended)"
+            raise TypeError(
+                "State variable must be a numpy array or an empty list (where "
+                f"numpy arrays can be appended). Got {type(default)} instead."
             )
 
         if isinstance(default, np.ndarray):
             default = np.ascontiguousarray(default)
-
         setattr(self, name, default)
 
         self._defaults[name] = deepcopy(default)
@@ -112,9 +118,8 @@ class Metric(ABC):
     def reset_state(self) -> None:
         """Reset the metric to its initial state.
 
-        Returns
-        -------
-        None
+        Sets the ``_update_count`` attribute to 0 and the ``_computed`` attribute to
+        None. Also resets the state variables to their default values.
 
         """
         self._update_count = 0
@@ -125,6 +130,10 @@ class Metric(ABC):
                 setattr(self, attr, default.copy())
             else:
                 setattr(self, attr, [])
+
+    def clone(self) -> "Metric":
+        """Return a copy of the metric."""
+        return deepcopy(self)
 
     @abstractmethod
     def update_state(  # pylint: disable=method-hidden
@@ -144,12 +153,12 @@ class Metric(ABC):
 
         Parameters
         ----------
-        update: Callable
+        update : Callable
             The update method of the metric.
 
         Returns
         -------
-        wrapped_func: Callable
+        wrapped_func : Callable
             The wrapped update method.
 
         """
@@ -182,24 +191,22 @@ class Metric(ABC):
 
         Warns
         -----
-        UserWarning
-            If the ``compute`` method has not been called at least once.
+        If the ``compute`` method has not been called at least once.
 
         """
 
         @functools.wraps(compute)
         def wrapped_func(*args: Any, **kwargs: Any) -> Any:
             if self._update_count == 0:
-                warnings.warn(
-                    f"The ``compute`` method of metric {self.__class__.__name__}"
-                    " was called before the ``update`` method which may lead to errors,"
-                    " as metric states have not yet been updated.",
-                    UserWarning,
+                LOGGER.warning(
+                    "The ``compute`` method of metric %s was called before the "
+                    "``update`` method which may lead to errors, as metric states "
+                    "have not yet been updated.",
+                    self.__class__.__name__,
                 )
 
-            # return cached value
             if self._computed is not None:
-                return self._computed
+                return self._computed  # return cached result
 
             value = compute(*args, **kwargs)
             self._computed = _apply_function_recursively(
@@ -232,290 +239,458 @@ class Metric(ABC):
 
     def __repr__(self) -> str:
         """Return a string representation of the metric."""
-        return f"{self.__class__.__name__}()"
-
-    def __str__(self) -> str:
-        """Return a string representation of the metric."""
-        return self.__repr__()
-
-    def __add__(self, other: "Metric") -> "Metric":
-        """Add two metrics together."""
-        return _OperationMetric(np.add, self, other)
-
-    def __radd__(self, other: "Metric") -> "Metric":
-        """Add two metrics together."""
-        return _OperationMetric(np.add, other, self)
-
-    def __sub__(self, other: "Metric") -> "Metric":
-        """Subtract two metrics together."""
-        return _OperationMetric(np.subtract, self, other)
-
-    def __rsub__(self, other: "Metric") -> "Metric":
-        """Subtract two metrics together."""
-        return _OperationMetric(np.subtract, other, self)
-
-    def __mul__(self, other: "Metric") -> "Metric":
-        """Multiply two metrics together."""
-        return _OperationMetric(np.multiply, self, other)
-
-    def __rmul__(self, other: "Metric") -> "Metric":
-        """Multiply two metrics together."""
-        return _OperationMetric(np.multiply, other, self)
-
-    def __truediv__(self, other: "Metric") -> "Metric":
-        """Divide two metrics together."""
-        return _OperationMetric(np.true_divide, self, other)
-
-    def __rtruediv__(self, other: "Metric") -> "Metric":
-        """Divide two metrics together."""
-        return _OperationMetric(np.true_divide, other, self)
-
-    def __pow__(self, other: "Metric") -> "Metric":
-        """Raise two metrics to a power."""
-        return _OperationMetric(np.power, self, other)
-
-    def __rpow__(self, other: "Metric") -> "Metric":
-        """Raise two metrics to a power."""
-        return _OperationMetric(np.power, other, self)
-
-    def __eq__(self, other: object) -> bool:
-        """Compare two metrics for equality."""
-        if not isinstance(other, Metric):
-            return NotImplemented
-        return _OperationMetric(np.equal, self, other)  # type: ignore[return-value]
-
-    def __ne__(self, other: object) -> bool:
-        """Compare two metrics for inequality."""
-        if not isinstance(other, Metric):
-            return NotImplemented
-        return _OperationMetric(np.not_equal, self, other)  # type: ignore[return-value]
-
-    def __gt__(self, other: "Metric") -> "Metric":
-        """Compare two metrics for greater than."""
-        return _OperationMetric(np.greater, self, other)
-
-    def __ge__(self, other: "Metric") -> "Metric":
-        """Compare two metrics for greater than or equal to."""
-        return _OperationMetric(np.greater_equal, self, other)
-
-    def __lt__(self, other: "Metric") -> "Metric":
-        """Compare two metrics for less than."""
-        return _OperationMetric(np.less, self, other)
-
-    def __le__(self, other: "Metric") -> "Metric":
-        """Compare two metrics for less than or equal to."""
-        return _OperationMetric(np.less_equal, self, other)
-
-    def __and__(self, other: "Metric") -> "Metric":
-        """Bitwise AND two metrics together."""
-        return _OperationMetric(np.bitwise_and, self, other)
-
-    def __rand__(self, other: "Metric") -> "Metric":
-        """Bitwise AND two metrics together."""
-        return _OperationMetric(np.bitwise_and, other, self)
-
-    def __or__(self, other: "Metric") -> "Metric":
-        """Bitwise OR two metrics together."""
-        return _OperationMetric(np.bitwise_or, self, other)
-
-    def __ror__(self, other: "Metric") -> "Metric":
-        """Bitwise OR two metrics together."""
-        return _OperationMetric(np.bitwise_or, other, self)
-
-    def __xor__(self, other: "Metric") -> "Metric":
-        """Bitwise XOR two metrics together."""
-        return _OperationMetric(np.bitwise_xor, self, other)
-
-    def __rxor__(self, other: "Metric") -> "Metric":
-        """Bitwise XOR two metrics together."""
-        return _OperationMetric(np.bitwise_xor, other, self)
-
-    def __invert__(self) -> "Metric":
-        """Invert a metric."""
-        return _OperationMetric(np.invert, self, None)
-
-    def __neg__(self) -> "Metric":
-        """Negate a metric."""
-        return _OperationMetric(np.negative, self, None)
-
-    def __pos__(self) -> "Metric":
-        """Posit two metrics together."""
-        return _OperationMetric(np.absolute, self, None)
+        return f"{self.__class__.__name__}"
 
     def __abs__(self) -> "Metric":
         """Absolute value of two metrics together."""
-        return _OperationMetric(np.absolute, self, None)
+        return OperatorMetric(np.absolute, self, None)
 
-    def __matmul__(self, other: "Metric") -> "Metric":
-        """Matrix multiplication of two metrics together."""
-        return _OperationMetric(np.matmul, self, other)
+    def __add__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Add two metrics or a metric and a scalar together."""
+        return OperatorMetric(np.add, self, other)
 
-    def __rmatmul__(self, other: "Metric") -> "Metric":
-        """Matrix multiplication of two metrics together."""
-        return _OperationMetric(np.matmul, other, self)
+    def __and__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Bitwise AND two metrics together."""
+        return OperatorMetric(np.bitwise_and, self, other)
 
-    def __mod__(self, other: "Metric") -> "Metric":
-        """Modulo two metrics together."""
-        return _OperationMetric(np.mod, self, other)
+    def __eq__(self, other: object) -> bool:
+        """Compare two metrics for equality."""
+        if not isinstance(other, (bool, int, float, Metric, List, np.ndarray)):
+            return NotImplemented
+        return OperatorMetric(np.equal, self, other)  # type: ignore[return-value]
 
-    def __rmod__(self, other: "Metric") -> "Metric":
-        """Modulo two metrics together."""
-        return _OperationMetric(np.mod, other, self)
-
-    def __floordiv__(self, other: "Metric") -> "Metric":
+    def __floordiv__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
         """Floor division two metrics together."""
-        return _OperationMetric(np.floor_divide, self, other)
+        return OperatorMetric(np.floor_divide, self, other)
 
-    def __rfloordiv__(self, other: "Metric") -> "Metric":
+    def __ge__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Compare two metrics for greater than or equal to."""
+        return OperatorMetric(np.greater_equal, self, other)
+
+    def __gt__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Compare two metrics for greater than."""
+        return OperatorMetric(np.greater, self, other)
+
+    def __inv__(self) -> "Metric":
+        """Invert a metric."""
+        return OperatorMetric(np.bitwise_not, self, None)
+
+    def __invert__(self) -> "Metric":
+        """Invert a metric."""
+        return OperatorMetric(np.bitwise_not, self, None)
+
+    def __le__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Compare two metrics for less than or equal to."""
+        return OperatorMetric(np.less_equal, self, other)
+
+    def __lt__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Compare two metrics for less than."""
+        return OperatorMetric(np.less, self, other)
+
+    def __matmul__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Matrix multiplication of two metrics together."""
+        return OperatorMetric(np.matmul, self, other)
+
+    def __mod__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Modulo two metrics together."""
+        return OperatorMetric(np.mod, self, other)
+
+    def __mul__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Multiply two metrics or a metric and a scalar together."""
+        return OperatorMetric(np.multiply, self, other)
+
+    def __ne__(self, other: object) -> bool:
+        """Compare two metrics for inequality."""
+        if not isinstance(other, (bool, int, float, Metric, List, np.ndarray)):
+            return NotImplemented
+        return OperatorMetric(np.not_equal, self, other)  # type: ignore[return-value]
+
+    def __neg__(self) -> "Metric":
+        """Negate a metric."""
+        return OperatorMetric(np.negative, self, None)
+
+    def __or__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Bitwise OR two metrics together."""
+        return OperatorMetric(np.bitwise_or, self, other)
+
+    def __pos__(self) -> "Metric":
+        """Positive value of a metric."""
+        return OperatorMetric(np.absolute, self, None)
+
+    def __pow__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Raise two metrics to a power."""
+        return OperatorMetric(np.power, self, other)
+
+    def __radd__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Add two metrics or a metric and a scalar together."""
+        return OperatorMetric(np.add, other, self)
+
+    def __rand__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Bitwise AND two metrics together."""
+        return OperatorMetric(np.bitwise_and, other, self)
+
+    def __rfloordiv__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
         """Floor division two metrics together."""
-        return _OperationMetric(np.floor_divide, other, self)
+        return OperatorMetric(np.floor_divide, other, self)
+
+    def __rmatmul__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Matrix multiplication of two metrics together."""
+        return OperatorMetric(np.matmul, other, self)
+
+    def __rmod__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Modulo two metrics together."""
+        return OperatorMetric(np.mod, other, self)
+
+    def __rmul__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Multiply two metrics or a metric and a scalar together."""
+        return OperatorMetric(np.multiply, other, self)
+
+    def __ror__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Bitwise OR two metrics together."""
+        return OperatorMetric(np.bitwise_or, other, self)
+
+    def __rpow__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Raise two metrics to a power."""
+        return OperatorMetric(np.power, other, self)
+
+    def __rsub__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Subtract two metrics or a metric and a scalar from each other."""
+        return OperatorMetric(np.subtract, other, self)
+
+    def __rtruediv__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Divide two metrics together."""
+        return OperatorMetric(np.true_divide, other, self)
+
+    def __rxor__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Bitwise XOR two metrics together."""
+        return OperatorMetric(np.bitwise_xor, other, self)
+
+    def __sub__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Subtract two or a metric and a scalar from each other."""
+        return OperatorMetric(np.subtract, self, other)
+
+    def __truediv__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Divide two metrics or a metric and a scalar together."""
+        return OperatorMetric(np.true_divide, self, other)
+
+    def __xor__(
+        self, other: Union[bool, int, float, "Metric", npt.ArrayLike]
+    ) -> "Metric":
+        """Apply a bitwise XOR to the metric and other compatible object."""
+        return OperatorMetric(np.bitwise_xor, self, other)
 
 
-def create_metric(metric_name: str, **kwargs: Optional[Dict[str, Any]]) -> Metric:
-    """Create a metric instance from a name.
+class OperatorMetric(Metric):
+    """A metric used to apply an operation to one or two metrics.
 
     Parameters
     ----------
-    metric_name: str
-        The name of the metric.
-    **kwargs: Optional[Dict[str, Any]]
-        The keyword arguments to pass to the metric constructor.
-
-    Returns
-    -------
-    metric: Metric
-        The metric instance.
+    operator : Callable[..., Any]
+        The operator to apply. A numpy function is recommended.
+    metric1 : bool, int, float, Metric, ArrayLike
+        The first metric to apply the operator to.
+    metric2 : bool, int, float, Metric, ArrayLike, None
+        The second metric to apply the operator to. For unary operators, this
+        should be None.
 
     """
-    metric_class = _METRIC_REGISTRY.get(metric_name, None)
-    if metric_class is None:
-        similar_keys_list: List[str] = get_close_matches(
-            metric_name, _METRIC_REGISTRY.keys(), n=5
-        )
-        similar_keys: str = ", ".join(similar_keys_list)
-        similar_keys = (
-            f" Did you mean one of: {similar_keys}?"
-            if similar_keys
-            else " It may not be registered."
-        )
-        raise ValueError(f"Metric {metric_name} not found.{similar_keys}")
 
-    metric: Metric = metric_class(**kwargs)
-
-    return metric
-
-
-class _OperationMetric(Metric):
     def __init__(
         self,
         operator: Callable[..., Any],
-        metric1: Union[int, float, Metric],
-        metric2: Union[int, float, Metric, None],
+        metric_a: Union[bool, int, float, Metric, npt.ArrayLike],
+        metric_b: Union[bool, int, float, Metric, npt.ArrayLike, None],
     ):
         super().__init__()
 
         self.op = operator  # pylint: disable=invalid-name
-        self.metric1 = metric1
-        self.metric2 = metric2
+        self.metric_a = metric_a
+        self.metric_b = metric_b
 
     def update_state(self, *args: Any, **kwargs: Any) -> None:
-        if isinstance(self.metric1, Metric):
-            # TODO: filter kwargs
-            self.metric1.update_state(*args, **kwargs)
+        """Update the state of each metric."""
+        if isinstance(self.metric_a, Metric):
+            self.metric_a.update_state(*args, **kwargs)
 
-        if isinstance(self.metric2, Metric):
-            self.metric2.update_state(*args, **kwargs)
+        if isinstance(self.metric_b, Metric):
+            self.metric_b.update_state(*args, **kwargs)
 
     def compute(self) -> Any:
-        if isinstance(self.metric1, Metric):
-            metric1 = self.metric1.compute()
+        """Compute the value of each metric, then apply the operator."""
+        if isinstance(self.metric_a, Metric):
+            metric1_result = self.metric_a.compute()
         else:
-            metric1 = self.metric1
+            metric1_result = self.metric_a
 
-        if isinstance(self.metric2, Metric):
-            metric2 = self.metric2.compute()
+        if isinstance(self.metric_b, Metric):
+            metric2_result = self.metric_b.compute()
         else:
-            metric2 = self.metric2
+            metric2_result = self.metric_b
 
-        if self.metric2 is None:
-            return self.op(metric1)
+        if self.metric_b is None:
+            return self.op(metric1_result)
 
-        return self.op(metric1, metric2)
+        return self.op(metric1_result, metric2_result)
 
     def reset_state(self) -> None:
-        if isinstance(self.metric1, Metric):
-            self.metric1.reset_state()
+        """Reset the state of each metric."""
+        if isinstance(self.metric_a, Metric):
+            self.metric_a.reset_state()
 
-        if isinstance(self.metric2, Metric):
-            self.metric2.reset_state()
+        if isinstance(self.metric_b, Metric):
+            self.metric_b.reset_state()
 
     def _wrap_compute(self, compute: Callable[..., Any]) -> Callable[..., Any]:
+        """Wrap the compute function to apply the operator."""
         return compute
 
     def __repr__(self) -> str:
+        """Return a string representation of the metric."""
         _op_metrics = (
-            f"(\n  {self.op.__name__}(\n    {repr(self.metric1)},\n    "
-            f"{repr(self.metric2)}\n  )\n)"
+            f"(\n  {self.op.__name__}(\n    {repr(self.metric_a)},\n    "
+            f"{repr(self.metric_b)}\n  )\n)"
         )
 
-        return _op_metrics
+        return self.__class__.__name__ + _op_metrics
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if hasattr(self.metric1, name):
-            setattr(self.metric1, name, value)
-        if hasattr(self.metric2, name):
-            setattr(self.metric2, name, value)
+        """Set an attribute on the metric or one of its submetrics."""
+        # only use after __init__ is done and avoid infinite recursion
+        # use __dict__
+        if name in ("metric_a", "metric_b", "op"):
+            super().__setattr__(name, value)
+            return
+
+        attr_set = False
+        if (  # bool, int, float and arraylikes don't have __dict__
+            self.__dict__.get("metric_a") is not None
+            and isinstance(self.__dict__["metric_a"], Metric)
+            and name in self.__dict__["metric_a"].__dict__
+        ):
+            setattr(self.metric_a, name, value)
+            attr_set = True
+        if (
+            self.__dict__.get("metric_b") is not None
+            and isinstance(self.__dict__["metric_b"], Metric)
+            and name in self.__dict__["metric_b"].__dict__
+        ):
+            setattr(self.metric_b, name, value)
+            attr_set = True
+
+        if attr_set:
+            return
 
         super().__setattr__(name, value)
 
     def __getattr__(self, name: str) -> Any:
-        if hasattr(self.metric1, name) and hasattr(self.metric2, name):
-            return getattr(self.metric1, name)
+        """Get an attribute from the metric or its sub-metrics."""
+        if name not in ("metric_a", "metric_a", "op"):
+            # if only one of them is a Metric, return the attribute from that one
+            if hasattr(self.metric_a, name) and not isinstance(self.metric_b, Metric):
+                return getattr(self.metric_a, name)
+            if hasattr(self.metric_b, name) and not isinstance(self.metric_a, Metric):
+                return getattr(self.metric_b, name)
+            # if they are both Metrics, only return if they both have the attribute
+            # with the same value
+            if (
+                hasattr(self.metric_a, name)
+                and hasattr(self.metric_b, name)
+                and getattr(self.metric_a, name) == getattr(self.metric_b, name)
+            ):
+                return getattr(self.metric_a, name)
+            # otherwise raise an error telling the user that they are both Metrics
+            # and have different values for the attribute
+            if hasattr(self.metric_a, name) and hasattr(self.metric_b, name):
+                raise AttributeError(
+                    f"Both {self.metric_a.__class__.__name__} and "
+                    f"{self.metric_b.__class__.__name__} have attribute {name} "
+                    f"but they have different values: {getattr(self.metric_a, name)} "
+                    f"and {getattr(self.metric_b, name)}."
+                )
 
         raise AttributeError(
-            f"Attribute {name} not found in {self.__class__.__name__} or "
-            f"{self.metric1.__class__.__name__} and {self.metric2.__class__.__name__}"
+            f"Neither the metric nor its sub-metrics have attribute {name}."
         )
 
 
-class MetricCollection(Metric):
+class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
     """A collection of metrics.
 
-    Provides a convenient way to compute multiple metrics at once. It groups
-    metrics that have similar state variables and only updates the state variables
-    once per group, reducing the amount of computation required.
+    This class is used to group metrics together. It is useful for when you want
+    to compute multiple metrics at the same time. It behaves like a dictionary
+    where the keys are the names of the metrics and the values are the metrics
+    themselves. Internally, it groups metrics with similar states together to
+    reduce the number of times the state is updated.
 
     Parameters
     ----------
-    metrics: List[Metric]
-        The list of metrics to collect.
+    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric]]
+        The metrics to add to the collection. This can be a single metric, a
+        sequence of metrics, or a dictionary mapping names to metrics.
+    *other_metrics : Metric
+        Additional metrics to add to the collection. This is only used if
+        `metrics` is a single metric or a sequence of metrics.
+    prefix : str, optional, default=None
+        A prefix to add to the names of the metrics.
+    postfix : str, optional, default=None
+        A postfix to add to the names of the metrics.
+
+    Raises
+    ------
+    TypeError
+        If `metrics` is not a single metric, a sequence of metrics, or a
+        dictionary mapping names to metrics.
+    TypeError
+        If `prefix` or `postfix` is not a string.
+    TypeError
+        If `metrics` is a dictionary and `other_metrics` is not empty.
 
     """
 
-    def __init__(self, metrics: Union[Metric, Sequence[Metric], Dict[str, Metric]]):
+    _metric_groups: Dict[int, List[str]]
+
+    def __init__(
+        self,
+        metrics: Union[Metric, Sequence[Metric], Dict[str, Metric]],
+        *other_metrics: Metric,
+        prefix: Optional[str] = None,
+        postfix: Optional[str] = None,
+    ) -> None:
         super().__init__()
 
-        self._validate_input(metrics)
+        self._check_prefix_postfix(prefix, postfix)
+        self.prefix = prefix
+        self.postfix = postfix
 
+        self.add_metrics(metrics, *other_metrics)
+
+    def _check_prefix_postfix(
+        self, prefix: Optional[str], postfix: Optional[str]
+    ) -> None:
+        """Check that the prefix and postfix are strings."""
+        if prefix is not None and not isinstance(prefix, str):
+            raise TypeError(
+                f"Expected `prefix` to be a string, but got {type(prefix).__name__}."
+            )
+        if postfix is not None and not isinstance(postfix, str):
+            raise TypeError(
+                f"Expected `postfix` to be a string, but got {type(postfix).__name__}."
+            )
+
+    def add_metrics(  # pylint: disable=too-many-branches
+        self,
+        metrics: Union[Metric, Sequence[Metric], Dict[str, Metric]],
+        *other_metrics: Metric,
+    ) -> None:
+        """Add metrics to the collection."""
         if isinstance(metrics, Metric):
-            self._metrics = {metrics.__class__.__name__: metrics}
+            metrics = [metrics]
+        if isinstance(metrics, Sequence):
+            metrics = list(metrics)
+            extras: List[Any] = []
+            for metric in other_metrics:
+                (metrics if isinstance(metric, Metric) else extras).append(metric)
+
+            if extras:
+                LOGGER.warning(
+                    "Received additional metrics that are not of type `Metric`: %s."
+                    "These metrics will be ignored.",
+                    extras,
+                )
+        elif other_metrics:
+            raise TypeError(
+                "`other_metrics` can only be used with a single `Metric` object "
+                "or a sequence of `Metric` objects."
+            )
+
+        if isinstance(metrics, dict):
+            for name in sorted(metrics.keys()):
+                metric = metrics[name]
+                if not isinstance(metric, (MetricCollection, Metric)):
+                    raise TypeError(
+                        f"Expected value {metric} for key {name} to be of type "
+                        f"`Metric` or `MetricCollection`, but got {type(metric)}."
+                    )
+                if isinstance(metric, MetricCollection):
+                    for sub_name, sub_metric in metric.items():
+                        self[f"{name}_{sub_name}"] = sub_metric
+                else:
+                    self[name] = metric
         elif isinstance(metrics, Sequence):
-            self._metrics = {metric.__class__.__name__: metric for metric in metrics}
+            for metric in metrics:
+                if not isinstance(metric, (MetricCollection, Metric)):
+                    raise TypeError(
+                        f"Expected metric {metric} to be of type `Metric` or "
+                        f"`MetricCollection`, but got {type(metric)}."
+                    )
+                if isinstance(metric, MetricCollection):
+                    for name, sub_metric in metric.items():
+                        self[name] = sub_metric
+                else:
+                    name = metric.__class__.__name__
+                    if name in self:
+                        raise ValueError(
+                            f"Metric {metric} has the same name as another metric "
+                            f"in the collection: {name}."
+                        )
+                    self[name] = metric
         else:
-            self._metrics = metrics
+            raise TypeError(
+                f"Expected `metrics` to be of type `Metric`, `Sequence[Metric]` or "
+                f"`Dict[str, Metric]`, but got {type(metrics)}."
+            )
 
-        self.metric_groups = self._get_metric_groups()
-
-    def add_state(self, *args: Any, **kwargs: Any) -> None:
-        """Add state variables to the metric.
-
-        Not implemented for ``MetricCollection``.
-
-        """
-        raise NotImplementedError(
-            "The ``add_state`` method is not supported for the ``MetricCollection``"
-            " class."
-        )
+        self._group_metrics()
 
     def update_state(self, *args: Any, **kwargs: Any) -> None:
         """Update the state of all metrics in the collection.
@@ -531,170 +706,38 @@ class MetricCollection(Metric):
 
         """
         # find metrics with the same state and update them only once
-        for metric_names in self.metric_groups.values():
-            base_metric = self._metrics[metric_names[0]]
+        for metrics in self._metric_groups.values():
+            base_metric = self.data[metrics[0]]
             base_metric.update_state(*args, **kwargs)
 
-            for metric_name in metric_names[1:]:
-                metric = self._metrics[metric_name]
-                for attr in metric._defaults.keys():  # pylint: disable=protected-access
-                    setattr(metric, attr, getattr(base_metric, attr))
-
-                # pylint: disable=protected-access
-                metric._computed = base_metric._computed
-                metric._update_count = base_metric._update_count
-                # pylint: enable=protected-access
+        self._create_metric_group_state_ref()
 
     def compute(self) -> Dict[str, Any]:
         """Compute the metrics in the collection."""
-        return {name: metric.compute() for name, metric in self._metrics.items()}
+        result = {name: metric.compute() for name, metric in self.items(keep_base=True)}
+        result = _flatten_dict(result)
+        return {self._set_name(k): v for k, v in result.items()}
 
     def reset_state(self) -> None:
         """Reset the state of all metrics in the collection."""
-        for metric in self._metrics.values():  # pylint: disable=protected-access
+        for _, metric in self.items(keep_base=True):
             metric.reset_state()
 
-    def _validate_input(
-        self, metrics: Union[Metric, Sequence[Metric], Dict[str, Metric]]
-    ) -> None:
-        """Validate the input to the constructor.
+        self._create_metric_group_state_ref()  # reset the references
 
-        Parameters
-        ----------
-        metrics: Union[Metric, Sequence[Metric], Dict[str, Metric]]
-            The input to the constructor.
+    def _create_metric_group_state_ref(self) -> None:
+        """Create references to the state variables for metrics in the same group."""
+        for metric_names in self._metric_groups.values():
+            base_metric = self.data[metric_names[0]]
 
-        Raises
-        ------
-        TypeError
-            If the input is not a metric, sequence of metrics, or dictionary of metrics.
+            for metric_name in metric_names[1:]:
+                metric = self.data[metric_name]
+                for state in getattr(metric, "_defaults"):
+                    setattr(metric, state, getattr(base_metric, state))
 
-        """
-        if isinstance(metrics, Metric):
-            if not isinstance(metrics, Metric):
-                raise TypeError(
-                    f"Metric {metrics.__class__.__name__} is not a subclass of Metric."
-                )
-        elif isinstance(metrics, Sequence):
-            for metric in metrics:
-                if not isinstance(metric, Metric):
-                    raise TypeError(
-                        f"Metric {metric.__class__.__name__} is not an instance"
-                        " of `Metric`."
-                    )
-                self._has_same_update_state_parameters_check(metrics[0], metric)
-                self._has_same_task_type_check(metrics[0], metric)
-        elif isinstance(metrics, Dict):
-            first_metric = next(iter(metrics.values()))
-            for metric in metrics.values():
-                if not isinstance(metric, Metric):
-                    raise TypeError(
-                        f"Metric {metric.__class__.__name__} is not an instance of"
-                        " `Metric`."
-                    )
-                self._has_same_update_state_parameters_check(first_metric, metric)
-                self._has_same_task_type_check(first_metric, metric)
-        else:
-            raise TypeError(
-                f"Metrics must be a Metric, a Sequence of Metrics or a Dict of Metrics,"
-                f" but got {type(metrics)}."
-            )
+                setattr(metric, "_update_count", getattr(base_metric, "_update_count"))
 
-    @staticmethod
-    def _has_same_update_state_parameters_check(
-        metric_a: Metric, metric_b: Metric
-    ) -> None:
-        """Check if two metrics have the same ``update_state`` method parameters.
-
-        Parameters
-        ----------
-        metric_a: Metric
-            The first metric.
-        metric_b: Metric
-            The second metric.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If the metrics do not have the same signature for their ``update_state``
-            method.
-
-        """
-        if (
-            not inspect.signature(metric_a.update_state).parameters
-            == inspect.signature(metric_b.update_state).parameters
-        ):
-            raise ValueError(
-                "All metrics in the collection must have the same signature for"
-                f" the `update_state` method. Metric {metric_a.__class__.__name__}"
-                f" has signature {inspect.signature(metric_a.update_state)},"
-                f" but metric {metric_b.__class__.__name__} has signature"
-            )
-
-    @staticmethod
-    def _has_same_task_type_check(metric_a: Metric, metric_b: Metric) -> None:
-        """Check if two metrics are for the same task.
-
-        Parameters
-        ----------
-        metric_a: Metric
-            The first metric.
-        metric_b: Metric
-            The second metric.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If the metrics are not for the same task. If both metrics are for
-            multilabel tasks, then they must have the same ``num_labels``
-            parameter. If both metrics are for multiclass tasks, then they must
-            have the same ``num_classes`` parameter.
-
-        """
-        metric_types = re.compile(r"(Binary|Multiclass|Multilabel)(.*)")
-        metric_a_match = metric_types.match(metric_a.__class__.__name__)
-        metric_b_match = metric_types.match(metric_b.__class__.__name__)
-
-        if (
-            metric_a_match is None
-            or metric_b_match is None
-            or (metric_a_match.group(1) != metric_b_match.group(1))
-        ):
-            raise ValueError(
-                "All metrics in the collection must be for the same task type"
-                " (binary, multiclass, or multilabel)."
-            )
-
-        if metric_a_match.group(1) == "Multiclass" and (
-            metric_a.__dict__["num_classes"] != metric_b.__dict__["num_classes"]
-        ):
-            raise ValueError(
-                "All multiclass metrics in the collection must have the same"
-                f" number of classes. Metric {metric_a.__class__.__name__}"
-                f" has {metric_a.__dict__['num_classes']} classes, but metric"
-                f" {metric_b.__class__.__name__} has {metric_b.__dict__['num_classes']}"
-                " classes."
-            )
-        if metric_a_match.group(1) == "Multilabel" and (
-            metric_a.__dict__["num_labels"] != metric_b.__dict__["num_labels"]
-        ):
-            raise ValueError(
-                "All multilabel metrics in the collection must have the same"
-                f" number of labels. Metric {metric_a.__class__.__name__}"
-                f" has {metric_a.__dict__['num_labels']} labels, but metric"
-                f" {metric_b.__class__.__name__} has {metric_b.__dict__['num_labels']}"
-                " labels."
-            )
-
-    def _get_metric_groups(self) -> Dict[int, List[str]]:
+    def _group_metrics(self) -> None:
         """Group metrics by the state variables they use.
 
         Returns
@@ -704,46 +747,127 @@ class MetricCollection(Metric):
             as the value.
 
         """
-        metrics_by_state = defaultdict(list)
-        for metric_name, metric in self._metrics.items():
-            metrics_by_state[
-                tuple(metric._defaults.keys())  # pylint: disable=protected-access
-            ].append(metric_name)
+        metrics_by_state: Dict[int, List[str]] = {}
+        for name, metric in self.data.items():
+            # serialize the state variables and use the hash as the key
+            # use JSON, but make sure numpy arrays are converted to lists
+            state = hash(
+                json.dumps(
+                    getattr(metric, "_defaults"),
+                    default=lambda x: x.tolist() if isinstance(x, np.ndarray) else x,
+                    sort_keys=True,
+                )
+            )
+            if state not in metrics_by_state:
+                metrics_by_state[state] = []
+            metrics_by_state[state].append(name)
 
-        metric_groups: Dict[int, List[str]] = {}
-        for i, metric_names in enumerate(metrics_by_state.values()):
-            metric_groups[i] = metric_names
+        self._metric_groups = dict(enumerate(metrics_by_state.values()))
 
-        return metric_groups
+    def _set_name(self, base: str) -> str:
+        """Adjust name of metric with both prefix and postfix."""
+        name = base if self.prefix is None else self.prefix + base
+        return name if self.postfix is None else name + self.postfix
+
+    def _to_renamed_ordered_dict(
+        self,
+    ) -> OrderedDict[str, Union[Metric, "MetricCollection"]]:
+        """Return an ordered dict with the renamed keys."""
+        ordered_data = OrderedDict()
+        for key, value in self.data.items():
+            ordered_data[self._set_name(key)] = value
+        return ordered_data
+
+    def keys(self, keep_base: bool = False) -> Iterable[Hashable]:  # type: ignore
+        """Return an iterable of the ModuleDict key.
+
+        Parameters
+        ----------
+        keep_base : bool
+            Whether to add prefix/postfix on the items collection.
+
+        """
+        if keep_base:
+            return self.data.keys()
+        return self._to_renamed_ordered_dict().keys()
+
+    def values(  # type: ignore[override]
+        self,
+    ) -> Iterable[Union[Metric, "MetricCollection"]]:
+        """Return an iterable of the ModuleDict values.
+
+        Parameters
+        ----------
+        keep_base : bool
+            Whether to add prefix/postfix on the collection.
+
+        """
+        self._create_metric_group_state_ref()  # update the references
+        return self.data.values()
+
+    def items(  # type: ignore[override]
+        self, keep_base: bool = False
+    ) -> Iterable[Tuple[str, Union[Metric, "MetricCollection"]]]:
+        """Return an iterable of the underlying dictionary's items.
+
+        Parameters
+        ----------
+        keep_base : bool
+            Whether to add prefix/postfix on the collection.
+
+        """
+        self._create_metric_group_state_ref()  # update the references
+        if keep_base:
+            return self.data.items()
+        return self._to_renamed_ordered_dict().items()
+
+    def clone(
+        self, prefix: Optional[str] = None, postfix: Optional[str] = None
+    ) -> "MetricCollection":
+        """Create a copy of the metric collection.
+
+        Parameters
+        ----------
+        prefix : str, optional
+            Prefix to add to the name of the metric.
+        postfix : str, optional
+            Postfix to add to the name of the metric.
+
+        Returns
+        -------
+        MetricCollection
+            A copy of the metric collection.
+
+        """
+        new_mc = deepcopy(self)
+        self._check_prefix_postfix(prefix, postfix)
+        if prefix:
+            new_mc.prefix = prefix
+        if postfix:
+            new_mc.postfix = postfix
+        return new_mc
+
+    def __getitem__(self, key: str) -> Union[Metric, "MetricCollection"]:
+        """Return the metric with the given name."""
+        self._create_metric_group_state_ref()  # update the references
+        return self.data[key]
 
     def __call__(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-        """Update the global metric state and compute the metric for a batch."""
-        # global accumulation
-        self.update_state(*args, **kwargs)
-        update_count = self._update_count
-        cache = {
-            i: {
-                attr: getattr(self._metrics[metric_names[0]], attr)
-                for attr in self._metrics[metric_names[0]]._defaults.keys()
-            }
-            for i, metric_names in self.metric_groups.items()
-        }  # cache the _defaults attribute for each group of metrics
+        """Apply the __call__ method of all metrics in the collection."""
+        batch_result = {
+            name: metric(*args, **kwargs) for name, metric in self.items(keep_base=True)
+        }
+        batch_result = _flatten_dict(batch_result)
+        return {self._set_name(k): v for k, v in batch_result.items()}
 
-        # batch computation
-        self.reset_state()
-        self.update_state(*args, **kwargs)
-        batch_result = self.compute()
 
-        # restore global state
-        self._update_count = update_count
-        self._computed = None
-        for i, metric_names in self.metric_groups.items():
-            for metric_name in metric_names:
-                metric = self._metrics[metric_name]
-                for attr, value in cache[i].items():
-                    setattr(metric, attr, value)
-
-                metric._computed = None
-                metric._update_count = self._update_count
-
-        return batch_result
+def _flatten_dict(a_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Flatten dict of dicts into single dict."""
+    new_dict = {}
+    for key, value in a_dict.items():
+        if isinstance(value, dict):
+            for sub_key, sub_value in value.items():
+                new_dict[sub_key] = sub_value
+        else:
+            new_dict[key] = value
+    return new_dict
