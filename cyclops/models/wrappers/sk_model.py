@@ -184,9 +184,9 @@ class SKModel:
             if preprocessor is not None:
                 try:
                     X_train = preprocessor.transform(X_train)
-                except NotFittedError as e:
-                    LOGGER.warn(
-                        f"{e} Fitting preprocessor on batch of size {len(X_train)}"
+                except NotFittedError:
+                    LOGGER.warning(
+                        "Fitting preprocessor on batch of size %d", len(X_train)
                     )
                     X_train = preprocessor.fit_transform(X_train)
 
@@ -202,21 +202,21 @@ class SKModel:
                 batched=True,
                 batch_size=batch_size,
             )
-        except AttributeError:
+        except AttributeError as exc:
             LOGGER.info(
-                f"Model {self.model_.__class__.__name__} does not have "
-                "a `partial_fit` method. Calling `fit` directly."
+                "Model %s does not have a `partial_fit` method. \
+                Calling `fit` directly.", self.model_.__class__.__name__
             )
             if is_out_of_core(dataset_size=dataset.dataset_size):
-                raise ValueError("Dataset is too large to fit in memory.")
-            ds = dataset.with_format("numpy", columns=feature_columns + target_columns)
-            X_train = np.stack([ds[feature] for feature in feature_columns], axis=1)
+                raise ValueError("Dataset is too large to fit in memory.") from exc
+            dataset = dataset.with_format("numpy", columns=feature_columns + target_columns)
+            X_train = np.stack([dataset[feature] for feature in feature_columns], axis=1)
             if preprocessor is not None:
                 try:
                     X_train = preprocessor.transform(X_train)
                 except NotFittedError:
                     X_train = preprocessor.fit_transform(X_train)
-            y_train = np.stack([ds[target] for target in target_columns], axis=1)
+            y_train = np.stack([dataset[target] for target in target_columns], axis=1)
             self.model_.fit(X_train, y_train)
 
         return self
@@ -279,8 +279,8 @@ class SKModel:
             if preprocessor is not None:
                 try:
                     X_eval = preprocessor.transform(X_eval)
-                except NotFittedError as e:
-                    LOGGER.warn(f"{e} Fitting preprocessor on evaluation data.")
+                except NotFittedError:
+                    LOGGER.warning("Fitting preprocessor on evaluation data.")
                     X_eval = preprocessor.fit_transform(X_eval)
 
             if proba and hasattr(self.model_, "predict_proba"):

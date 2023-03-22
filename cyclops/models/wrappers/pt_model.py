@@ -7,10 +7,8 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from datasets import Dataset, config
+from datasets import Dataset
 from monai.data.meta_tensor import MetaTensor
-from sklearn.compose import ColumnTransformer
-from sklearn.exceptions import NotFittedError
 from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
@@ -39,7 +37,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 # ignore errors about attributes defined dynamically
-# pylint: disable=no-member, fixme
+# pylint: disable=no-member, fixme, too-many-lines
 
 
 class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
@@ -592,7 +590,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         if isinstance(X, MetaTensor):
             return PTDataset(X.data, y)
 
-        if isinstance(X, np.ndarray) or isinstance(X, torch.Tensor):
+        if isinstance(X, (np.ndarray, torch.Tensor)):
             return PTDataset(X, y)
 
         raise ValueError(
@@ -944,21 +942,21 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             return examples
 
         if transforms is not None:
-            ds = dataset.with_transform(
+            ds_with_preds = dataset.with_transform(
                 transforms,
                 columns=feature_columns,
                 output_all_columns=True,
             ).map(get_predictions, batched=True, batch_size=batch_size)
 
-            ds.set_format("numpy")
-            preds = ds[pred_column]
-            del ds
+            ds_with_preds.set_format("numpy")
+            preds = ds_with_preds[pred_column]
+            del ds_with_preds
 
             if only_predictions:
                 return np.array(preds)
 
             indices = dataset[index_column]
-            preds_dict = {k: v for k, v in zip(indices, preds)}
+            preds_dict = dict(zip(indices, preds))
 
             def add_pred_col(examples):
                 examples[pred_column] = [preds_dict[i] for i in examples[index_column]]
