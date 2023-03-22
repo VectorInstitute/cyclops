@@ -26,10 +26,6 @@ jobs:
   run-code-check:
     runs-on: self-hosted
     steps:
-      - name: Install apt dependencies
-        run: |
-          apt-get update
-          apt-get install libcurl4-openssl-dev libssl-dev
       - uses: actions/checkout@v3
       - name: Install poetry
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
