@@ -93,9 +93,6 @@ python3 -m ipykernel install --user --name <name_of_kernel>
 Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 ``<name_of_kernel>``.
 
-Tutorial notebooks in ``docs/source/tutorials`` can be useful to view the
-functionality of the framework.
-
 ## 🎓 Citation
 Reference to cite when you use CyclOps in a project or a research paper:
 ```
