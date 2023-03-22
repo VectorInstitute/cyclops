@@ -205,12 +205,17 @@ class SKModel:
         except AttributeError as exc:
             LOGGER.info(
                 "Model %s does not have a `partial_fit` method. \
-                Calling `fit` directly.", self.model_.__class__.__name__
+                Calling `fit` directly.",
+                self.model_.__class__.__name__,
             )
             if is_out_of_core(dataset_size=dataset.dataset_size):
                 raise ValueError("Dataset is too large to fit in memory.") from exc
-            dataset = dataset.with_format("numpy", columns=feature_columns + target_columns)
-            X_train = np.stack([dataset[feature] for feature in feature_columns], axis=1)
+            dataset = dataset.with_format(
+                "numpy", columns=feature_columns + target_columns
+            )
+            X_train = np.stack(
+                [dataset[feature] for feature in feature_columns], axis=1
+            )
             if preprocessor is not None:
                 try:
                     X_train = preprocessor.transform(X_train)
