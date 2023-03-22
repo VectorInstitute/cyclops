@@ -7,6 +7,10 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from datasets import Dataset, config
+from monai.data.meta_tensor import MetaTensor
+from sklearn.compose import ColumnTransformer
+from sklearn.exceptions import NotFittedError
 from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
@@ -16,6 +20,7 @@ from torch.utils.data import Dataset as TorchDataset
 from cyclops.models.data import PTDataset
 from cyclops.models.utils import (
     LossMeter,
+    get_device,
     get_module,
     is_pytorch_instance,
     is_pytorch_model,
@@ -123,7 +128,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         reweight: str = "mini-batch",
         save_every: int = -1,
         save_best_only: bool = True,
-        device: Union[str, torch.device] = "cpu",
+        device: Union[str, torch.device] = get_device(),
         seed: Optional[int] = None,
         deterministic: bool = False,
         **kwargs,
@@ -583,7 +588,11 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         if isinstance(X, TorchDataset):
             return X
-        if isinstance(X, np.ndarray):
+
+        if isinstance(X, MetaTensor):
+            return PTDataset(X.data, y)
+
+        if isinstance(X, np.ndarray) or isinstance(X, torch.Tensor):
             return PTDataset(X, y)
 
         raise ValueError(
@@ -743,6 +752,34 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         return self
 
+    def fit_on_hf_dataset(
+        self,
+        dataset: Dataset,
+        feature_columns: List[str],
+        target_columns: List[str],
+        transform: Optional[Callable] = None,
+    ):
+        """Fit the model on a Hugging Face dataset.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            Hugging Face dataset containing features and labels.
+        feature_columns : List[str]
+            List of feature columns in the dataset.
+        target_columns : List[str]
+            List of target columns in the dataset.
+        transform : Optional[Callable], optional
+            Transform function, by default None
+
+        Raises
+        ------
+        NotImplementedError
+            _description_
+
+        """
+        raise NotImplementedError
+
     def find_best(
         self,
         X,
@@ -851,6 +888,102 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         """
         return self.predict_proba(X, **predict_params)
+
+    def predict_on_hf_dataset(
+        self,
+        dataset: Dataset,
+        index_column: str,
+        feature_columns: List[str],
+        prediction_column_prefix: str = "predictions",
+        model_name: Optional[str] = None,
+        transforms: Optional[Callable] = None,
+        batch_size: int = 64,
+        only_predictions: bool = False,
+    ) -> Union[Dataset, np.ndarray]:
+        """Predict the output of the model for the given Hugging Face dataset.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            Hugging Face dataset containing features and possibly target labels.
+        index_column : str
+            The name of the column to identify each item in the dataset, \
+                used for mapping the predictions.
+        feature_columns : List[str]
+            List of feature columns in the dataset.
+        prediction_column_prefix : str, optional
+            Name of the prediction column to be added to the dataset, \
+                by default "prediction"
+        model_name : Optional[str], optional
+            Model name used as suffix to the prediction column, \
+                by default None
+        transforms : Optional[Callable], optional
+            The transform function to be applied to the data, \
+                by default None
+        only_predictions : bool, optional
+            Whether to return only the predictions rather than the dataset \
+                with predictions, by default False
+
+        Returns
+        -------
+        Union[Dataset, np.ndarray]
+            Dataset containing the predictions or the predictions array.
+
+        """
+        if model_name:
+            pred_column = f"{prediction_column_prefix}.{model_name}"
+        else:
+            pred_column = f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
+
+        def get_predictions(examples):
+            stacked = []
+            for feature in feature_columns:
+                stacked.append(torch.stack(examples[feature]))
+            X = torch.cat(stacked, dim=1)
+            examples[pred_column] = self.predict(X)
+            return examples
+
+        if transforms is not None:
+            ds = dataset.with_transform(
+                transforms,
+                columns=feature_columns,
+                output_all_columns=True,
+            ).map(get_predictions, batched=True, batch_size=batch_size)
+
+            ds.set_format("numpy")
+            preds = ds[pred_column]
+            del ds
+
+            if only_predictions:
+                return np.array(preds)
+
+            indices = dataset[index_column]
+            preds_dict = {k: v for k, v in zip(indices, preds)}
+
+            def add_pred_col(examples):
+                examples[pred_column] = [preds_dict[i] for i in examples[index_column]]
+                return examples
+
+            ds_with_preds = dataset.map(
+                add_pred_col,
+                batched=True,
+                batch_size=batch_size,
+            )
+
+        else:
+            # XXX: check if this is the right way to do this
+            ds_with_preds = dataset.with_format(
+                "torch", columns=feature_columns, output_all_columns=True
+            ).map(
+                get_predictions,
+                batched=True,
+                batch_size=batch_size,
+            )
+
+            if only_predictions:
+                return np.array(ds_with_preds[pred_column])
+
+        return ds_with_preds
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save the model to a file.
