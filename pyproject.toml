@@ -123,6 +123,9 @@ implicit_reexport = false
 strict_equality = true
 strict_concatenate = true
 
+[tool.isort]
+profile = "black"
+
 [tool.pylint]
     [tool.pylint.master]
     disable=["import-error", "duplicate-code", "no-value-for-parameter"]
