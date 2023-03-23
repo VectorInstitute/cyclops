@@ -45,7 +45,7 @@ class _AbstractScores(Metric):
         """
         assert size > 0, "``size`` must be greater than 0."
 
-        def default():
+        def default() -> npt.NDArray[np.int_]:
             return np.zeros(shape=size, dtype=np.int_)
 
         self.add_state("tp", default())
