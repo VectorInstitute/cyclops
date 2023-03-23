@@ -4,7 +4,7 @@ from typing import Callable, Dict
 
 from datasets.arrow_dataset import Dataset
 
-from cyclops.datasets.slicing import SlicingConfig
+from cyclops.datasets.slicer import SliceSpec
 
 
 class ClinicalShiftApplicator:
@@ -125,8 +125,8 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SlicingConfig(
-            feature_values=[
+        source_slice = SliceSpec(
+            spec_list=[
                 {
                     shift_id: {
                         "min_value": source[0],
@@ -142,8 +142,8 @@ class ClinicalShiftApplicator:
                 shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
             )
 
-        target_slice = SlicingConfig(
-            feature_values=[
+        target_slice = SliceSpec(
+            spec_list=[
                 {
                     shift_id: {
                         "min_value": target[0],
@@ -199,13 +199,13 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SlicingConfig(feature_values=[{shift_id: {"value": source}}])
+        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
         for _, shift_func in source_slice.get_slices().items():
             ds_source = dataset.filter(
                 shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
             )
 
-        target_slice = SlicingConfig(feature_values=[{shift_id: {"value": target}}])
+        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
         for _, shift_func in target_slice.get_slices().items():
             ds_target = dataset.filter(
                 shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
@@ -251,13 +251,13 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SlicingConfig(feature_values=[{shift_id: {"value": source}}])
+        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
         for _, shift_func in source_slice.get_slices().items():
             ds_source = dataset.filter(
                 shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
             )
 
-        target_slice = SlicingConfig(feature_values=[{shift_id: {"value": target}}])
+        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
         for _, shift_func in target_slice.get_slices().items():
             ds_target = dataset.filter(
                 shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
@@ -267,8 +267,8 @@ class ClinicalShiftApplicator:
     def custom(
         self,
         dataset: Dataset,
-        source: SlicingConfig,
-        target: SlicingConfig,
+        source: SliceSpec,
+        target: SliceSpec,
         shift_id: str = None,
         batched: bool = True,
         batch_size: int = 1000,
@@ -276,16 +276,16 @@ class ClinicalShiftApplicator:
     ):
         """Build custom shift.
 
-        Build a custom shift by passing in a SlicingConfig for source and target data.
+        Build a custom shift by passing in a SliceSpec for source and target data.
 
         Parameters
         ----------
         dataset: huggingface Dataset
             Dataset to apply shift to.
-        source: SlicingConfig
-            SlicingConfig for source data.
-        target: SlicingConfig
-            SlicingConfig for target data.
+        source: SliceSpec
+            SliceSpec for source data.
+        target: SliceSpec
+            SliceSpec for target data.
         shift_id: str
             Column name for shift id.
         batched: bool
