@@ -65,7 +65,7 @@ def _run_metric_collection_test(metrics, target, preds) -> None:
 
     metric_dict = {m.__class__.__name__: m for m in metrics}
 
-    metric_collection = MetricCollection(metric_dict)
+    metric_collection = MetricCollection(metrics)
 
     for i in range(num_batches):
         metric_dict_batch_results = {}

@@ -141,8 +141,8 @@ def _assert_allclose(data_a: Any, data_b: Any, atol: float = 1e-8):
             _assert_allclose(element_a, element_b, atol=atol)
     elif isinstance(data_a, Mapping):
         assert data_a.keys() == data_b.keys()
-        for value_a, value_b in zip(data_a.values(), data_b.values()):
-            _assert_allclose(value_a, value_b, atol=atol)
+        for key in data_a.keys():
+            _assert_allclose(data_a[key], data_b[key], atol=atol)
     else:
         raise ValueError(
             f"Unknown format for comparison: {type(data_a)} and" f" {type(data_b)}"

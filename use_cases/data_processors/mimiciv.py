@@ -1,4 +1,4 @@
-"""MIMICIV processor."""
+"""MIMICIV processor."""  # pylint: disable=too-many-lines
 
 import logging
 from os import path
@@ -32,7 +32,7 @@ from cyclops.utils.file import (
 from cyclops.utils.log import setup_logging
 from use_cases.util import get_top_events, get_use_case_params, valid_events
 
-# pylint: disable=invalid-name, unnecessary-lambda-assignment, too-many-lines
+# pylint: disable=invalid-name, unnecessary-lambda-assignment
 # pylint: disable=too-many-instance-attributes,
 
 LOGGER = logging.getLogger(__name__)
