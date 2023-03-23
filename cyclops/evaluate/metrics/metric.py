@@ -39,12 +39,13 @@ class Metric(ABC):
     """Abstract base class for metrics classes."""
 
     def __init__(self) -> None:
+        """Initialize the metric."""
         self.update_state: Callable[..., Any] = self._wrap_update(  # type: ignore
             self.update_state
-        )  # pylint: disable=method-hidden
+        )
         self.compute: Callable[..., Any] = self._wrap_compute(  # type: ignore
             self.compute
-        )  # pylint: disable=method-hidden
+        )
         self._update_count: int = 0
         self._computed: Any = None
         self._defaults: Dict[str, Union[List[Any], npt.NDArray[Any]]] = {}
@@ -137,13 +138,11 @@ class Metric(ABC):
         return deepcopy(self)
 
     @abstractmethod
-    def update_state(  # pylint: disable=method-hidden
-        self, *args: Any, **kwargs: Any
-    ) -> None:
+    def update_state(self, *args: Any, **kwargs: Any) -> None:
         """Update the state of the metric."""
 
     @abstractmethod
-    def compute(self) -> Any:  # pylint: disable=method-hidden
+    def compute(self) -> Any:
         """Compute the final value of the metric from the state variables."""
 
     def _wrap_update(self, update: Callable[..., None]) -> Callable[..., None]:
@@ -452,9 +451,10 @@ class OperatorMetric(Metric):
         metric_a: Union[bool, int, float, Metric, npt.ArrayLike],
         metric_b: Union[bool, int, float, Metric, npt.ArrayLike, None],
     ):
+        """Initialize the metric."""
         super().__init__()
 
-        self.op = operator  # pylint: disable=invalid-name
+        self.op = operator
         self.metric_a = metric_a
         self.metric_b = metric_b
 
@@ -575,10 +575,10 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
 
     Parameters
     ----------
-    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric]]
+    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection]
         The metrics to add to the collection. This can be a single metric, a
         sequence of metrics, or a dictionary mapping names to metrics.
-    *other_metrics : Metric
+    *other_metrics : Metric, MetricCollection, optional
         Additional metrics to add to the collection. This is only used if
         `metrics` is a single metric or a sequence of metrics.
     prefix : str, optional, default=None
@@ -602,11 +602,12 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
 
     def __init__(
         self,
-        metrics: Union[Metric, Sequence[Metric], Dict[str, Metric]],
-        *other_metrics: Metric,
+        metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], "MetricCollection"],
+        *other_metrics: Union[Metric, "MetricCollection"],
         prefix: Optional[str] = None,
         postfix: Optional[str] = None,
     ) -> None:
+        """Initialize the metric collection."""
         super().__init__()
 
         self._check_prefix_postfix(prefix, postfix)
@@ -628,10 +629,10 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
                 f"Expected `postfix` to be a string, but got {type(postfix).__name__}."
             )
 
-    def add_metrics(  # pylint: disable=too-many-branches
+    def add_metrics(  # noqa: C901
         self,
-        metrics: Union[Metric, Sequence[Metric], Dict[str, Metric]],
-        *other_metrics: Metric,
+        metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], "MetricCollection"],
+        *other_metrics: Union[Metric, "MetricCollection"],
     ) -> None:
         """Add metrics to the collection."""
         if isinstance(metrics, Metric):
@@ -663,10 +664,10 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
                         f"`Metric` or `MetricCollection`, but got {type(metric)}."
                     )
                 if isinstance(metric, MetricCollection):
-                    for sub_name, sub_metric in metric.items():
-                        self[f"{name}_{sub_name}"] = sub_metric
+                    for sub_name, sub_metric in metric.items(keep_base=False):
+                        self.data[f"{name}_{sub_name}"] = sub_metric
                 else:
-                    self[name] = metric
+                    self.data[name] = metric
         elif isinstance(metrics, Sequence):
             for metric in metrics:
                 if not isinstance(metric, (MetricCollection, Metric)):
@@ -675,8 +676,8 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
                         f"`MetricCollection`, but got {type(metric)}."
                     )
                 if isinstance(metric, MetricCollection):
-                    for name, sub_metric in metric.items():
-                        self[name] = sub_metric
+                    for name, sub_metric in metric.items(keep_base=False):
+                        self.data[name] = sub_metric
                 else:
                     name = metric.__class__.__name__
                     if name in self:
@@ -684,7 +685,7 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
                             f"Metric {metric} has the same name as another metric "
                             f"in the collection: {name}."
                         )
-                    self[name] = metric
+                    self.data[name] = metric
         else:
             raise TypeError(
                 f"Expected `metrics` to be of type `Metric`, `Sequence[Metric]` or "
@@ -732,11 +733,11 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
             base_metric = self.data[metric_names[0]]
 
             for metric_name in metric_names[1:]:
-                metric = self.data[metric_name]
+                metric: Metric = self.data[metric_name]  # type: ignore
                 for state in metric._defaults:
                     setattr(metric, state, getattr(base_metric, state))
 
-                metric._update_count = base_metric._update_count
+                metric._update_count = base_metric._update_count  # type: ignore
 
     def _group_metrics(self) -> None:
         """Group metrics by the state variables they use.
@@ -754,7 +755,7 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
             # use JSON, but make sure numpy arrays are converted to lists
             state = hash(
                 json.dumps(
-                    metric._defaults,
+                    metric._defaults,  # type: ignore
                     default=lambda x: x.tolist() if isinstance(x, np.ndarray) else x,
                     sort_keys=True,
                 )
@@ -772,12 +773,12 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
 
     def _to_renamed_ordered_dict(
         self,
-    ) -> OrderedDict[str, Union[Metric, "MetricCollection"]]:
+    ) -> OrderedDict[str, Metric]:
         """Return an ordered dict with the renamed keys."""
         ordered_data = OrderedDict()
         for key, value in self.data.items():
             ordered_data[self._set_name(key)] = value
-        return ordered_data
+        return ordered_data  # type: ignore
 
     def keys(self, keep_base: bool = False) -> Iterable[Hashable]:  # type: ignore
         """Return an iterable of the ModuleDict key.
@@ -794,7 +795,7 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
 
     def values(  # type: ignore[override]
         self,
-    ) -> Iterable[Union[Metric, "MetricCollection"]]:
+    ) -> Iterable[Metric]:
         """Return an iterable of the ModuleDict values.
 
         Parameters
@@ -804,11 +805,11 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
 
         """
         self._create_metric_group_state_ref()  # update the references
-        return self.data.values()
+        return self.data.values()  # type: ignore
 
     def items(  # type: ignore[override]
         self, keep_base: bool = False
-    ) -> Iterable[Tuple[str, Union[Metric, "MetricCollection"]]]:
+    ) -> Iterable[Tuple[str, Metric]]:
         """Return an iterable of the underlying dictionary's items.
 
         Parameters
@@ -819,7 +820,7 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
         """
         self._create_metric_group_state_ref()  # update the references
         if keep_base:
-            return self.data.items()
+            return self.data.items()  # type: ignore
         return self._to_renamed_ordered_dict().items()
 
     def clone(
@@ -848,10 +849,10 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
             new_mc.postfix = postfix
         return new_mc
 
-    def __getitem__(self, key: str) -> Union[Metric, "MetricCollection"]:
+    def __getitem__(self, key: str) -> Metric:
         """Return the metric with the given name."""
         self._create_metric_group_state_ref()  # update the references
-        return self.data[key]
+        return self.data[key]  # type: ignore
 
     def __call__(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         """Apply the __call__ method of all metrics in the collection."""

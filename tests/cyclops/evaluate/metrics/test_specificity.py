@@ -34,18 +34,18 @@ def _reduce_specificity(
 
     Parameters
     ----------
-        tn : np.ndarray
-            True negatives.
-        fp : np.ndarray
-            False positives.
-        support : np.ndarray
-            Support. Number of true instances for each class.
-        average : Literal["micro", "macro", "weighted", None]
-            If not None, return the average specificity.
+    tn : np.ndarray
+        True negatives.
+    fp : np.ndarray
+        False positives.
+    support : np.ndarray
+        Support. Number of true instances for each class.
+    average : Literal["micro", "macro", "weighted", None]
+        If not None, return the average specificity.
 
     Returns
     -------
-        specificity : float or np.ndarray (if average is None).
+    specificity : float or np.ndarray (if average is None).
 
     """
     if average == "micro":
@@ -74,14 +74,14 @@ def _calc_specificity(
 
     Parameters
     ----------
-        tn : np.ndarray or int
-            True negatives.
-        fp : np.ndarray or int
-            False positives.
+    tn : np.ndarray or int
+        True negatives.
+    fp : np.ndarray or int
+        False positives.
 
     Returns
     -------
-        specificity : np.ndarray
+    specificity : np.ndarray
 
     """
     denominator = tn + fp
