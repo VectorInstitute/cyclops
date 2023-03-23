@@ -3,6 +3,7 @@
 import logging
 from typing import Optional, Union
 
+
 LOG_FORMAT = "%(asctime)-15s %(levelname)-5s %(name)-15s - %(message)s"
 
 # https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output

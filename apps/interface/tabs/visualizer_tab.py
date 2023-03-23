@@ -11,6 +11,7 @@ from cyclops.process.column_names import ENCOUNTER_ID
 
 from ..css import CONTENT_STYLE, SIDEBAR_LIST_STYLE, SIDEBAR_STYLE, TEXT_ALIGN_CENTER
 
+
 STATIC = "static"
 TEMPORAL = "temporal"
 

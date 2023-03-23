@@ -43,6 +43,7 @@ from cyclops.query.ops import (
 )
 from cyclops.query.util import process_column
 
+
 QUERIER = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
 
 

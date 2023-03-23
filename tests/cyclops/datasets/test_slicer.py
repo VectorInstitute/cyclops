@@ -10,10 +10,8 @@ from datasets.splits import Split
 
 import cyclops.query.ops as qo
 from cyclops.datasets.slicer import (
-    _maybe_convert_to_datetime,  # pylint: disable=protected-access
-)
-from cyclops.datasets.slicer import (
     SliceSpec,
+    _maybe_convert_to_datetime,  # pylint: disable=protected-access
     compound_filter,
     filter_datetime,
     filter_non_null,
@@ -23,6 +21,7 @@ from cyclops.datasets.slicer import (
     overall,
 )
 from cyclops.query.omop import OMOPQuerier
+
 
 SYNTHEA = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
 

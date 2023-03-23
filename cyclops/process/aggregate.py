@@ -25,6 +25,7 @@ from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -90,7 +91,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
         # Parameter checking
         if self.agg_meta_for is not None:
-            if not set(self.agg_meta_for).issubset(set(list(self.aggfuncs))):
+            if not set(self.agg_meta_for).issubset(set(self.aggfuncs)):
                 raise ValueError(
                     "Cannot compute meta for a column not being aggregated."
                 )

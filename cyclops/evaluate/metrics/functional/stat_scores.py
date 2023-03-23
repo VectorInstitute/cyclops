@@ -559,7 +559,7 @@ def _multilabel_stat_scores_format(
             f"The argument `target` must be multilabel-indicator, got {type_target}."
         )
 
-    if not (type_preds in ["multilabel-indicator", "continuous-multioutput"]):
+    if type_preds not in ["multilabel-indicator", "continuous-multioutput"]:
         raise ValueError(
             f"The argument `preds` must be multilabel-indicator, or continuous "
             f"multioutput, got {type_preds}."

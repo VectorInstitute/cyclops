@@ -10,6 +10,7 @@ from cyclops.process.column_names import DIAGNOSIS_TRAJECTORY
 from cyclops.process.constants import EMPTY_STRING, TRAJECTORIES
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)

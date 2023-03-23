@@ -31,6 +31,7 @@ from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)

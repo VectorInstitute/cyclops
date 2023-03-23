@@ -274,20 +274,20 @@ def test_vectorized_normalizer_subset(  # pylint: disable=redefined-outer-name
 
     # Split along the normalized axis, should affect the normalizers
     vec_in, vec_out = vectorized.split_out("B", ["1-0"])
-    assert set(vec_in.normalizer.normalizer_map.keys()) == set(["1-1"])
-    assert set(vec_in.normalizer.normalizers.keys()) == set(["1-1"])
-    assert set(vec_out.normalizer.normalizer_map.keys()) == set(["1-0"])
-    assert set(vec_out.normalizer.normalizers.keys()) == set(["1-0"])
+    assert set(vec_in.normalizer.normalizer_map.keys()) == {"1-1"}
+    assert set(vec_in.normalizer.normalizers.keys()) == {"1-1"}
+    assert set(vec_out.normalizer.normalizer_map.keys()) == {"1-0"}
+    assert set(vec_out.normalizer.normalizers.keys()) == {"1-0"}
 
     vec_in.normalize()
     vec_out.normalize()
 
     # Split along a different axis, should not affect the normalizers
     vec_in, vec_out = vectorized.split_out("A", ["0-0"])
-    assert set(vec_in.normalizer.normalizer_map.keys()) == set(["1-0", "1-1"])
-    assert set(vec_in.normalizer.normalizers.keys()) == set(["1-0", "1-1"])
-    assert set(vec_out.normalizer.normalizer_map.keys()) == set(["1-0", "1-1"])
-    assert set(vec_out.normalizer.normalizers.keys()) == set(["1-0", "1-1"])
+    assert set(vec_in.normalizer.normalizer_map.keys()) == {"1-0", "1-1"}
+    assert set(vec_in.normalizer.normalizers.keys()) == {"1-0", "1-1"}
+    assert set(vec_out.normalizer.normalizer_map.keys()) == {"1-0", "1-1"}
+    assert set(vec_out.normalizer.normalizers.keys()) == {"1-0", "1-1"}
 
     vec_in.normalize()
     vec_out.normalize()

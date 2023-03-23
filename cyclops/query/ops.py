@@ -50,6 +50,7 @@ from cyclops.query.util import (
 from cyclops.utils.common import to_datetime_format, to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
@@ -1827,7 +1828,7 @@ class RandomizeOrder(metaclass=QueryOp):
     Useful when the data is ordered, so certain rows cannot
     be seen or analyzed when limited.
 
-    Warnings
+    Warnings:
     --------
     Becomes quite slow on large tables.
 

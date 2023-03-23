@@ -10,6 +10,7 @@ from cyclops.process.clean import normalize_events
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)

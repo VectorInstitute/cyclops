@@ -5,6 +5,11 @@ from typing import Any, List, Tuple
 import numpy as np
 import pytest
 import scipy as sp
+from sklearn.metrics import roc_curve as sk_roc_curve
+
+from cyclops.evaluate.metrics.functional import roc_curve as cyclops_roc_curve
+from cyclops.evaluate.metrics.roc import ROCCurve
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -13,11 +18,6 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from sklearn.metrics import roc_curve as sk_roc_curve
-
-from cyclops.evaluate.metrics.functional import roc_curve as cyclops_roc_curve
-from cyclops.evaluate.metrics.roc import ROCCurve
-from cyclops.evaluate.metrics.utils import sigmoid
 
 
 def _sk_binary_roc_curve(

@@ -30,6 +30,7 @@ from cyclops.models.wrappers.utils import (
 from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
@@ -296,8 +297,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             all learnable parameters
 
         """
-        model = getattr(self, "model_")
-        criterion = getattr(self, "criterion_")
+        model = self.model_
+        criterion = self.criterion_
 
         if model is None or criterion is None:
             raise ValueError(

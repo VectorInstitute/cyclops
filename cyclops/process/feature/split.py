@@ -85,10 +85,10 @@ def fractions_to_split(
     else:
         frac_list = [fractions]
 
-    if any(map(lambda x: not isinstance(x, (float, int)), frac_list)):
+    if any((not isinstance(x, (float, int)) for x in frac_list)):
         raise TypeError("fractions must be int or float.")
 
-    if any(map(lambda x: x < 0, frac_list)):
+    if any((x < 0 for x in frac_list)):
         raise ValueError("fractions must be non-negative.")
 
     if 0.0 <= sum(frac_list) < 1.0:

@@ -11,6 +11,7 @@ from cyclops.query.interface import QueryInterface
 from cyclops.utils.common import to_list
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -47,7 +48,7 @@ GENDER_CONCEPT_NAME = "gender_concept_name"
 RACE_CONCEPT_NAME = "race_concept_name"
 ETHNICITY_CONCEPT_NAME = "ethnicity_concept_name"
 
-# Other constants
+# Other constants.
 ID = "id"
 NAME = "name"
 

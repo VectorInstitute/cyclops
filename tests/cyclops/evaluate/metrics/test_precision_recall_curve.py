@@ -5,6 +5,13 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 import scipy as sp
+from sklearn.metrics import precision_recall_curve as sk_precision_recall_curve
+
+from cyclops.evaluate.metrics.functional import (
+    precision_recall_curve as cyclops_precision_recall_curve,
+)
+from cyclops.evaluate.metrics.precision_recall_curve import PrecisionRecallCurve
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -13,13 +20,6 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from sklearn.metrics import precision_recall_curve as sk_precision_recall_curve
-
-from cyclops.evaluate.metrics.functional import (
-    precision_recall_curve as cyclops_precision_recall_curve,
-)
-from cyclops.evaluate.metrics.precision_recall_curve import PrecisionRecallCurve
-from cyclops.evaluate.metrics.utils import sigmoid
 
 
 def _sk_binary_precision_recall_curve(

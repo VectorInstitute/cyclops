@@ -20,10 +20,10 @@ repos:
     hooks:
     - id: black
 
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.258'
     hooks:
-    - id: isort
+    - id: ruff
 
   - repo: https://github.com/myint/docformatter
     rev: v1.5.1
@@ -31,21 +31,6 @@ repos:
     - id: docformatter
       args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88, --blank]
       files: ".*.py$"
-
-  - repo: local
-    hooks:
-    - id: flake8
-      name: flake8
-      language: python
-      entry: pflake8
-      files: ".*.py$"
-
-  - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.3.0
-    hooks:
-    - id: pydocstyle
-      args: [--convention=numpy]
-      additional_dependencies: [toml, tomli]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.0.1
@@ -55,15 +40,6 @@ repos:
       language: system
       types: [python]
       exclude: "apps|use_cases|tests|cyclops/(process|models|monitor|workflow)"
-
-  - repo: local
-    hooks:
-    - id: pylint
-      name: pylint
-      language: python
-      entry: pylint
-      files: ".*.py$"
-      exclude: fsd
 
   - repo: local
     hooks:

@@ -16,6 +16,7 @@ from cyclops.process.constants import ALL, MEAN, STANDARD, TARGETS
 from cyclops.process.impute import np_ffill_bfill
 from cyclops.utils.file import join, process_dir_save_path
 
+
 CONST_NAME = "mortality_decompensation"
 OUTCOME_DEATH = "outcome_death"
 DEATHTIME = "deathtime"

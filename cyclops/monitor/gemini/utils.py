@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
+
 # unable to detect unidentified names, star import
 # from .constants import *
 # from .query import ENCOUNTER_ID

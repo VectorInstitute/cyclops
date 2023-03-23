@@ -21,6 +21,7 @@ from cyclops.process.column_names import (
 )
 from cyclops.process.constants import MEAN, MEDIAN
 
+
 DATE1 = datetime(2022, 11, 3, hour=13)
 DATE2 = datetime(2022, 11, 3, hour=14)
 DATE3 = datetime(2022, 11, 4, hour=3)
@@ -322,9 +323,9 @@ def test_vectorization(  # pylint: disable=redefined-outer-name
 
     agg_col_index, encounter_id_index, event_name_index, timestep_index = indexes
 
-    assert set(list(encounter_id_index)) == set([1, 2])
-    assert set(list(event_name_index)) == set(["eventA", "eventB"])
-    assert set(list(timestep_index)) == set(range(15))
+    assert set(encounter_id_index) == {1, 2}
+    assert set(event_name_index) == {"eventA", "eventB"}
+    assert set(timestep_index) == set(range(15))
 
     assert vectorized.shape == (3, 2, 2, 15)
     assert np.array_equal(

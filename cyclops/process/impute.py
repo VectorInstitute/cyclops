@@ -23,6 +23,7 @@ from cyclops.process.util import has_columns
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)

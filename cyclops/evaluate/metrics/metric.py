@@ -28,6 +28,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
@@ -732,10 +733,10 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
 
             for metric_name in metric_names[1:]:
                 metric = self.data[metric_name]
-                for state in getattr(metric, "_defaults"):
+                for state in metric._defaults:
                     setattr(metric, state, getattr(base_metric, state))
 
-                setattr(metric, "_update_count", getattr(base_metric, "_update_count"))
+                metric._update_count = base_metric._update_count
 
     def _group_metrics(self) -> None:
         """Group metrics by the state variables they use.
@@ -753,7 +754,7 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
             # use JSON, but make sure numpy arrays are converted to lists
             state = hash(
                 json.dumps(
-                    getattr(metric, "_defaults"),
+                    metric._defaults,
                     default=lambda x: x.tolist() if isinstance(x, np.ndarray) else x,
                     sort_keys=True,
                 )

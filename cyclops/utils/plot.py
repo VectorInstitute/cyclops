@@ -16,6 +16,7 @@ from plotly.subplots import make_subplots
 from cyclops.process.util import has_columns
 from cyclops.utils.common import to_list, to_timestamp
 
+
 PLOT_HEIGHT = 520
 
 

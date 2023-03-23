@@ -31,6 +31,7 @@ from cyclops.process.util import assert_has_columns, gather_columns, log_counts_
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)

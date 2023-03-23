@@ -13,6 +13,7 @@ from cyclops.query.util import get_column
 
 from .consts import APP_DIAG, APP_ENC  # , APP_EVENT
 
+
 db = MIMICIVQuerier()
 
 

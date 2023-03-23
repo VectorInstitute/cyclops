@@ -11,6 +11,7 @@ from cyclops.query.base import DatasetQuerier
 from cyclops.query.interface import QueryInterface
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)

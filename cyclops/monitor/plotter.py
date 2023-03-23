@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+
 # Plotting parameters
 linestyles = ["-", "-.", "--", ":"]
 lineformat = ["-o", "-h", "-p", "-s", "-D", "-<", "->", "-X"]

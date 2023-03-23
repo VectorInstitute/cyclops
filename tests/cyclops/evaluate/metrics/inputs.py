@@ -8,6 +8,7 @@ import pytest
 import scipy as sp
 from numpy.typing import ArrayLike
 
+
 BATCH_SIZE = 32
 NUM_BATCHES = 10
 NUM_CLASSES = 10

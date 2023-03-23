@@ -540,7 +540,7 @@ def _valid_binary(
     """
     unique = get_unique(series, unique=unique)
     nonnull_unique = unique[~pd.isnull(unique)]
-    valid = set(nonnull_unique) == set([0, 1])
+    valid = set(nonnull_unique) == {0, 1}
 
     if valid:
         return True

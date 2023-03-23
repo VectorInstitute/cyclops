@@ -4,6 +4,14 @@ from functools import partial
 
 import numpy as np
 import pytest
+from sklearn.metrics import confusion_matrix as sk_confusion_matrix
+from sklearn.metrics import (
+    multilabel_confusion_matrix as sk_multilabel_confusion_matrix,
+)
+
+from cyclops.evaluate.metrics.functional.stat_scores import stat_scores
+from cyclops.evaluate.metrics.stat_scores import StatScores
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -13,14 +21,6 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from sklearn.metrics import confusion_matrix as sk_confusion_matrix
-from sklearn.metrics import (
-    multilabel_confusion_matrix as sk_multilabel_confusion_matrix,
-)
-
-from cyclops.evaluate.metrics.functional.stat_scores import stat_scores
-from cyclops.evaluate.metrics.stat_scores import StatScores
-from cyclops.evaluate.metrics.utils import sigmoid
 
 
 def _sk_stat_scores_binary(

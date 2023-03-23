@@ -101,7 +101,7 @@ def process_care_unit_changepoints(
         )
         care_units = data[is_between][CARE_UNIT].unique()
         if len(care_units) > 0:
-            care_unit_inds = list(map(lambda x: hierarchy[x], care_units))
+            care_unit_inds = [hierarchy[x] for x in care_units]
             care_unit_selected = hierarchy_inv[min(care_unit_inds)]
         else:
             care_unit_selected = "unknown"

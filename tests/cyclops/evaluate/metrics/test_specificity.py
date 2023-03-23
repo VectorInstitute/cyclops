@@ -5,6 +5,9 @@ from typing import Literal, Union
 
 import numpy as np
 import pytest
+
+from cyclops.evaluate.metrics.functional.specificity import specificity
+from cyclops.evaluate.metrics.specificity import Specificity
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -19,9 +22,6 @@ from metrics.test_stat_scores import (
     _sk_stat_scores_multiclass,
     _sk_stat_scores_multilabel,
 )
-
-from cyclops.evaluate.metrics.functional.specificity import specificity
-from cyclops.evaluate.metrics.specificity import Specificity
 
 
 def _reduce_specificity(

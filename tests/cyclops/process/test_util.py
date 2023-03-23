@@ -84,7 +84,7 @@ def test_assert_has_columns():
             int_keyword=int_keyword,
             df_kwarg=df_kwarg,
         )
-        assert False
+        raise AssertionError()
     except ValueError as error:
         assert "B" in str(error)
 
@@ -100,7 +100,7 @@ def test_assert_has_columns():
             int_keyword=int_keyword,
             df_kwarg=df_kwarg_fail,
         )
-        assert False
+        raise AssertionError()
     except ValueError as error:
         assert "sauce" in str(error)
 

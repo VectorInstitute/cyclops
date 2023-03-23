@@ -4,6 +4,7 @@ from cyclops.process.column_names import AGE, SEX
 from cyclops.process.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
 
+
 CONST_NAME = "mortality_decompensation"
 USECASE_ROOT_DIR = join(
     "/mnt/data",

@@ -32,6 +32,7 @@ from cyclops.utils.file import (
 from cyclops.utils.log import setup_logging
 from use_cases.util import get_top_events, get_use_case_params, valid_events
 
+
 # pylint: disable=invalid-name, unnecessary-lambda-assignment
 # pylint: disable=too-many-instance-attributes,
 

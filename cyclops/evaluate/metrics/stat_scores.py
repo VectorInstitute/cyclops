@@ -1,6 +1,6 @@
 """Classes for computing stat scores."""
 
-from typing import Callable, Literal, Optional, Tuple, Type, Union
+from typing import Literal, Optional, Tuple, Type, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -44,9 +44,9 @@ class _AbstractScores(Metric):
 
         """
         assert size > 0, "``size`` must be greater than 0."
-        default: Callable[[], npt.NDArray[np.int_]] = lambda: np.zeros(
-            shape=size, dtype=np.int_
-        )
+
+        def default():
+            return np.zeros(shape=size, dtype=np.int_)
 
         self.add_state("tp", default())
         self.add_state("fp", default())

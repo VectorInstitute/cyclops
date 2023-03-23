@@ -7,6 +7,7 @@ from dash import dcc, html
 from ..component_utils import table_result
 from ..consts import APP_PAGE_ANALYZE
 
+
 upload_components = (
     html.Label("Specify filename from results"),
     dmc.Space(h=10),

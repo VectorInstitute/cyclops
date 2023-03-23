@@ -16,6 +16,7 @@ from cyclops.query.post_process.mimiciv import process_mimic_care_units
 from cyclops.query.util import get_column
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)

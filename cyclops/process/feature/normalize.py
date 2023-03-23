@@ -14,6 +14,7 @@ from cyclops.process.util import has_columns, has_range_index
 from cyclops.utils.common import to_list_optional
 from cyclops.utils.index import index_axis
 
+
 METHOD_MAP = {STANDARD: StandardScaler, MIN_MAX: MinMaxScaler}
 
 

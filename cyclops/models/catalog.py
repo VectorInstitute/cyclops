@@ -12,6 +12,7 @@ from cyclops.models.utils import is_pytorch_model, is_sklearn_model
 from cyclops.models.wrappers import PTModel, SKModel, WrappedModel
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 

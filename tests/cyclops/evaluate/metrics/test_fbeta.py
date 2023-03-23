@@ -5,6 +5,11 @@ from typing import Literal
 
 import numpy as np
 import pytest
+from sklearn.metrics import fbeta_score as sk_fbeta_score
+
+from cyclops.evaluate.metrics.f_beta import F1Score, FbetaScore
+from cyclops.evaluate.metrics.functional.f_beta import f1_score, fbeta_score
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -14,11 +19,6 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from sklearn.metrics import fbeta_score as sk_fbeta_score
-
-from cyclops.evaluate.metrics.f_beta import F1Score, FbetaScore
-from cyclops.evaluate.metrics.functional.f_beta import f1_score, fbeta_score
-from cyclops.evaluate.metrics.utils import sigmoid
 
 
 def _sk_binary_fbeta_score(

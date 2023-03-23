@@ -44,6 +44,7 @@ from .tabs.visualizer_tab import (
     visualizer_page_components,
 )
 
+
 ANALYZE_DATA = None
 
 app = Dash(external_stylesheets=[dbc.themes.UNITED], suppress_callback_exceptions=True)

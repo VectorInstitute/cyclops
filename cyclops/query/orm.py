@@ -28,6 +28,7 @@ from cyclops.utils.file import exchange_extension, process_file_save_path
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)

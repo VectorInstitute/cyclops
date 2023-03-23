@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 from sklearn.utils.multiclass import type_of_target
 
+
 # boolean, unsigned integer, signed integer, float, complex.
 _NUMERIC_KINDS = set("buifc")
 

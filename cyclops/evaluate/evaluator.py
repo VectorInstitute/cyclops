@@ -19,6 +19,7 @@ from cyclops.evaluate.utils import choose_split
 from cyclops.models.wrappers import WrappedModel
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 

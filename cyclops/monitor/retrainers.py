@@ -188,7 +188,7 @@ class CumulativeRetrainer:
 
                     self.model.load_state_dict(torch.load(self.retrain_model_path))
                     self.optimizer.model = self.model
-                    setattr(self.shift_detector, "model_path", self.retrain_model_path)
+                    self.shift_detector.model_path = self.retrain_model_path
 
                 elif self.model_name == "gbt":
                     # undefined name: X_retrain, y_retrain
@@ -467,7 +467,7 @@ class MostRecentRetrainer:
 
                     self.model.load_state_dict(torch.load(self.retrain_model_path))
                     self.optimizer.model = self.model
-                    setattr(self.shift_detector, "model_path", self.retrain_model_path)
+                    self.shift_detector.model_path = self.retrain_model_path
 
                 elif self.model_name == "gbt":
                     # undefined name: X_retrain, y_retrain

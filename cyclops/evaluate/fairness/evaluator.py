@@ -30,6 +30,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
@@ -732,7 +733,7 @@ def _compute_metrics(
             # set the threshold for each metric in the collection
             for name, metric in metrics.items():
                 if hasattr(metric, "threshold"):
-                    setattr(metric, "threshold", threshold)
+                    metric.threshold = threshold
                 else:
                     LOGGER.warning(
                         "Metric %s does not have a threshold attribute. "

@@ -22,6 +22,7 @@ from cyclops.models.wrappers import PTModel, WrappedModel
 from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 

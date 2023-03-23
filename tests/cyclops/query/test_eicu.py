@@ -4,6 +4,7 @@ import pytest
 
 from cyclops.query import EICUQuerier
 
+
 # pylint: disable=no-member
 
 

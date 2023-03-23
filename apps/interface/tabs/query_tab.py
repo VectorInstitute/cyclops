@@ -8,6 +8,7 @@ from dash import dcc, html
 from ..component_utils import flatten_2d_tuple, table_result
 from ..consts import APP_DIAG, APP_ENC, APP_EVENT, APP_PAGE_QUERY, TABLE_IDS, TABLES
 
+
 encounter_components = (
     dmc.Checkbox(
         id=f"{APP_ENC}-checkbox",

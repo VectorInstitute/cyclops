@@ -74,6 +74,7 @@ pytest-cov = "^3.0.0"
 codecov = "^2.1.12"
 nbstripout = "^0.6.1"
 mypy = "^1.0.0"
+ruff = "^0.0.258"
 
 [tool.poetry.group.docs.dependencies]
 numpydoc = "^1.2"
@@ -99,9 +100,6 @@ Flask-Caching = "^1.10.1"
 query = ["SQLAlchemy", "psycopg2", "pyarrow", "dask", "hydra-core"]
 evaluate = ["torch", "xgboost", "datasets", "monai"]
 monitor = ["hydra-core", "torchxrayvision", "alibi", "alibi-detect", "llvmlite"]
-
-[tool.isort]
-profile = "black"
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -148,9 +146,16 @@ strict_concatenate = true
     good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP", "lr", "db"]
     good-names-rgxs=["X_.+", "x_.+", "y_.+", "df_.+"]
 
-[tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203", "W503", "F401"]
+[tool.ruff]
+select = ["B", "C", "D", "E", "F", "I", "W"]
+line-length = 88
+
+# Ignore import violations in all `__init__.py` files.
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["E402", "F401", "F403", "F811"]
+
+[tool.ruff.isort]
+lines-after-imports = 2
 
 [tool.pytest.ini_options]
 markers = [
