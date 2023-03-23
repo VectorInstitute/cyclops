@@ -54,6 +54,7 @@ class BinaryAccuracy(BinaryStatScores, registry_key="binary_accuracy"):
         pos_label: int = 1,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
@@ -121,6 +122,7 @@ class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(num_classes=num_classes, top_k=top_k, classwise=True)
         _check_average_arg(average)
 
@@ -195,6 +197,7 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
             num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True
         )

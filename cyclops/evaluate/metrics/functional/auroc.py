@@ -1,6 +1,5 @@
 """Functions for computing the area under the ROC curve (AUROC)."""
-
-import warnings
+import logging
 from typing import Any, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -22,6 +21,11 @@ from cyclops.evaluate.metrics.functional.roc import (
     _multilabel_roc_compute,
 )
 from cyclops.evaluate.metrics.utils import _check_thresholds
+from cyclops.utils.log import setup_logging
+
+
+LOGGER = logging.getLogger(__name__)
+setup_logging(print_level="WARN", logger=LOGGER)
 
 
 def _reduce_auroc(
@@ -58,16 +62,16 @@ def _reduce_auroc(
 
     """
     result = [
-        auc(x, y) for x, y in zip(fpr, tpr)
+        auc(x, y) for x, y in zip(fpr, tpr)  # noqa: B905
     ]  # without the loop: np.trapz(tpr, fpr, axis=1) * direction
     result = np.stack(result)
 
     if average is not None:
         if np.isnan(result).any():
-            warnings.warn(
-                "Average precision score for one or more classes was `nan`."
-                f" Ignoring these classes in {average}-average",
-                UserWarning,
+            LOGGER.warning(
+                "Average precision score for one or more classes was `nan`. "
+                "Ignoring these classes in %s-average",
+                average,
             )
         idx = ~np.isnan(result)
 
@@ -460,7 +464,7 @@ def multilabel_auroc(
     )
 
 
-def auroc(  # pylint: disable=too-many-arguments
+def auroc(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],

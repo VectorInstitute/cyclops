@@ -1,4 +1,4 @@
-"""Functions for computing the precision-recall curve for different input types."""  # pylint: disable=C0302,C0301 # noqa: E501
+"""Functions for computing the precision-recall curve for different input types."""  # noqa: E501
 
 from typing import Any, List, Literal, Optional, Tuple, Union
 
@@ -42,7 +42,6 @@ def _ovr_multi_threshold_confusion_matrix(
     fn = target_sum - tp
     tn = target.shape[0] - tp - fp - fn
 
-    # pylint: disable=too-many-function-args
     confmat = np.array([tn, fp, fn, tp]).T.reshape(num_thresholds, num_classes, 2, 2)
 
     return confmat
@@ -911,7 +910,7 @@ def multilabel_precision_recall_curve(
     )
 
 
-def precision_recall_curve(  # pylint: disable=too-many-arguments
+def precision_recall_curve(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],

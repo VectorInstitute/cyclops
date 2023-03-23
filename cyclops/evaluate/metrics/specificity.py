@@ -55,12 +55,12 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
         threshold: float = 0.5,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
     def compute(self) -> float:  # type: ignore[override]
         """Compute the specificity score from the state."""
-        # pylint: disable=invalid-name # for tp, tn, fp, fn
         tp, fp, tn, fn = self._final_state()
         score = _specificity_reduce(
             tp=tp,
@@ -126,6 +126,7 @@ class MulticlassSpecificity(
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(num_classes=num_classes, top_k=top_k, classwise=True)
         _check_average_arg(average)
 
@@ -204,6 +205,7 @@ class MultilabelSpecificity(
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
             num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True
         )

@@ -118,6 +118,9 @@ def binary_specificity(  # pylint: disable=too-many-arguments
         The threshold to use for converting the predictions to binary
         values. Logits will be converted to probabilities using the sigmoid
         function.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Sets the value to return when there is a zero division. If set to ``warn``,
+        this acts as 0, but warnings are also raised.
 
     Returns
     -------

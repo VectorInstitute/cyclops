@@ -21,7 +21,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 
 
-def _accuracy_reduce(  # pylint: disable=too-many-arguments
+def _accuracy_reduce(
     tp: Union[npt.NDArray[np.int_], np.int_],
     fp: Union[npt.NDArray[np.int_], np.int_],
     tn: Union[npt.NDArray[np.int_], np.int_],
@@ -108,7 +108,7 @@ def _accuracy_reduce(  # pylint: disable=too-many-arguments
     return cast(Union[float, npt.NDArray[np.float_]], ret_value)
 
 
-def binary_accuracy(  # pylint: disable=too-many-arguments
+def binary_accuracy(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     pos_label: int = 1,
@@ -170,7 +170,7 @@ def binary_accuracy(  # pylint: disable=too-many-arguments
     return cast(float, acc_score)
 
 
-def multiclass_accuracy(  # pylint: disable=too-many-arguments
+def multiclass_accuracy(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -238,7 +238,6 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
         target, preds, num_classes=num_classes, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
     tp, fp, tn, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
     return cast(
@@ -255,7 +254,7 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
     )
 
 
-def multilabel_accuracy(  # pylint: disable=too-many-arguments
+def multilabel_accuracy(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -324,7 +323,6 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
         target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
     )
 
-    # pylint: disable=invalid-name
     tp, fp, tn, fn = _multilabel_stat_scores_update(target, preds, num_labels)
 
     return _accuracy_reduce(
@@ -338,7 +336,7 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
     )
 
 
-def accuracy(  # pylint: disable=too-many-arguments
+def accuracy(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],

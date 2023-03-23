@@ -78,7 +78,6 @@ class _AbstractScores(Metric):
         None
 
         """
-        # pylint: disable=no-member
         self.tp += tp  # type: ignore[attr-defined]
         self.fp += fp  # type: ignore[attr-defined]
         self.tn += tn  # type: ignore[attr-defined]
@@ -101,7 +100,6 @@ class _AbstractScores(Metric):
             false positives (fp), true negatives (tn), and false negatives
 
         """
-        # pylint: disable=no-member
         tp = self.tp  # type: ignore[attr-defined]
         fp = self.fp  # type: ignore[attr-defined]
         tn = self.tn  # type: ignore[attr-defined]
@@ -140,6 +138,7 @@ class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
     """
 
     def __init__(self, pos_label: int = 1, threshold: float = 0.5) -> None:
+        """Initialize the class."""
         super(_AbstractScores, self).__init__()
 
         _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
@@ -149,9 +148,7 @@ class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
 
         self._create_state(size=1)
 
-    def update_state(  # pylint: disable=arguments-differ
-        self, target: npt.ArrayLike, preds: npt.ArrayLike
-    ) -> None:
+    def update_state(self, target: npt.ArrayLike, preds: npt.ArrayLike) -> None:
         """Update the state variables."""
         target, preds = _binary_stat_scores_format(
             target, preds, threshold=self.threshold, pos_label=self.pos_label
@@ -232,6 +229,7 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
     def __init__(
         self, num_classes: int, top_k: Optional[int] = None, classwise: bool = True
     ) -> None:
+        """Initialize the class."""
         super(_AbstractScores, self).__init__()
 
         assert num_classes > 1, "``num_classes`` must be greater than 1"
@@ -242,9 +240,7 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
 
         self._create_state(size=num_classes)
 
-    def update_state(  # pylint: disable=arguments-differ
-        self, target: npt.ArrayLike, preds: npt.ArrayLike
-    ) -> None:
+    def update_state(self, target: npt.ArrayLike, preds: npt.ArrayLike) -> None:
         """Update the state variables."""
         target, preds = _multiclass_stat_scores_format(
             target, preds, num_classes=self.num_classes, top_k=self.top_k
@@ -317,6 +313,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         top_k: Optional[int] = None,
         labelwise: bool = True,
     ) -> None:
+        """Initialize the class."""
         super().__init__()
 
         _binary_stat_scores_args_check(threshold=threshold, pos_label=1)
@@ -328,9 +325,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
 
         self._create_state(size=num_labels)
 
-    def update_state(  # pylint: disable=arguments-differ
-        self, target: npt.ArrayLike, preds: npt.ArrayLike
-    ) -> None:
+    def update_state(self, target: npt.ArrayLike, preds: npt.ArrayLike) -> None:
         """Update the state variables."""
         target, preds = _multilabel_stat_scores_format(
             target,

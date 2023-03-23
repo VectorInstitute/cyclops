@@ -137,7 +137,7 @@ def _assert_allclose(data_a: Any, data_b: Any, atol: float = 1e-8):
     if isinstance(data_a, (np.ndarray, np.ScalarType)):
         np.allclose(data_a, data_b, atol=atol)
     elif isinstance(data_a, Sequence):
-        for element_a, element_b in zip(data_a, data_b, strict=True):
+        for element_a, element_b in zip(data_a, data_b):
             _assert_allclose(element_a, element_b, atol=atol)
     elif isinstance(data_a, Mapping):
         assert data_a.keys() == data_b.keys()

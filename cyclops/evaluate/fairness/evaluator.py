@@ -35,7 +35,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
 
-def evaluate_fairness(  # pylint: disable=too-many-arguments
+def evaluate_fairness(
     metrics: Union[str, Callable[..., Any], Metric, MetricCollection],
     dataset: Dataset,
     groups: Union[str, List[str]],
@@ -104,6 +104,11 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments
     compute_optimal_threshold : bool, optional, default=False
         Whether to compute the optimal threshold for each metric. This is an
         expensive operation, and should only be used when necessary.
+    remove_columns : Union[str, List[str]], optional, default=None
+        The name of the column(s) to remove from the dataset before filtering
+        and computing metrics. This is useful if the dataset contains columns
+        that are not needed for computing metrics but may be expensive to
+        keep in memory (e.g. image columns).
     metric_name : Optional[str], optional, default=None
         The name of the metric. If None, the name of the metric will be used.
     metric_kwargs : Optional[Dict[str, Any]], optional, default=None
@@ -208,9 +213,7 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments
 
         if group_base_values is not None:
             # since we have base values, remove overall slice
-            slice_spec._registry.pop(  # pylint: disable=protected-access
-                "overall", None
-            )
+            slice_spec._registry.pop("overall", None)
 
         results: Dict[str, Dict[str, Any]] = {}
 
@@ -250,7 +253,6 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments
                     results[prediction_column].setdefault(key, {}).update(slice_result)
 
                 if compute_optimal_threshold:
-                    # pylint: disable=fixme
                     # TODO: generate a comprehensive list of thresholds and compute
                     # the metric for each threshold. Next compute the parity metrics
                     # for each threshold and select the threshold that leads to
@@ -674,7 +676,7 @@ def _get_slice_spec(
 
     for combination in group_combinations:
         slice_dict = {}
-        for group, value in zip(groups, combination):
+        for group, value in zip(groups, combination):  # noqa: B905
             if isinstance(value, pd.Interval):
                 slice_dict[group] = {
                     "min_value": -np.inf
@@ -694,7 +696,7 @@ def _get_slice_spec(
     return SliceSpec(slices, validate=True, column_names=column_names)
 
 
-def _compute_metrics(
+def _compute_metrics(  # noqa: C901
     metrics: Union[Callable[..., Any], MetricCollection],
     dataset: Dataset,
     target_columns: List[str],
@@ -910,12 +912,8 @@ def _compute_parity_metrics(
     ----------
     results : Dict[str, Dict[str, Dict[str, Dict[str, float]]]]
         A dictionary mapping the prediction column to the metrics dictionary.
-    group_base_values : Dict[str, Any]
-        A dictionary mapping the group name to the base value.
-    group_names : List[str]
-        A list of group names.
-    thresholds : Optional[List[float]]
-        A list of thresholds.
+    base_slice_name : str
+        The name of the base slice.
 
     Returns
     -------

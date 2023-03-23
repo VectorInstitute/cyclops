@@ -319,7 +319,7 @@ def binary_stat_scores(
     return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=True)
 
 
-def _multiclass_stat_scores_format(
+def _multiclass_stat_scores_format(  # noqa: C901
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -421,7 +421,7 @@ def _multiclass_stat_scores_format(
     return target.astype(np.int_), preds.astype(np.int_)  # type: ignore[union-attr]
 
 
-def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
+def _multiclass_stat_scores_update(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -457,7 +457,7 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
     return _stat_scores_from_confmat(target, preds, labels=np.arange(num_classes))
 
 
-def multiclass_stat_scores(  # pylint: disable=too-many-arguments
+def multiclass_stat_scores(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -589,7 +589,7 @@ def _multilabel_stat_scores_format(
     return target.astype(np.int_), preds.astype(np.int_)
 
 
-def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
+def _multilabel_stat_scores_update(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -627,7 +627,7 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
     return _stat_scores_from_confmat(target, preds, labels=np.arange(num_labels))
 
 
-def multilabel_stat_scores(  # pylint: disable=too-many-arguments
+def multilabel_stat_scores(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -693,7 +693,7 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
     return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=labelwise)
 
 
-def stat_scores(  # pylint: disable=too-many-arguments
+def stat_scores(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],

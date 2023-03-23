@@ -1,6 +1,5 @@
 """Functions for computing the receiver operating characteristic (ROC) curve."""
-
-import warnings
+import logging
 from typing import Any, List, Literal, Optional, Tuple, Union
 
 import numpy as np
@@ -17,6 +16,11 @@ from cyclops.evaluate.metrics.functional.precision_recall_curve import (
     _multilabel_precision_recall_curve_update,
 )
 from cyclops.evaluate.metrics.utils import _check_thresholds
+from cyclops.utils.log import setup_logging
+
+
+LOGGER = logging.getLogger(__name__)
+setup_logging(print_level="WARN", logger=LOGGER)
 
 
 def _roc_compute_from_confmat(
@@ -31,6 +35,7 @@ def _roc_compute_from_confmat(
         A multi-threshold confusion matrix of size (num_thresholds, 2, 2) or
         (num_thresholds, num_classes, 2, 2).
     thresholds : numpy.ndarray of floats, default=None
+        Thresholds used to binarize the predicted probabilities.
 
     Returns
     -------
@@ -105,20 +110,18 @@ def _binary_roc_compute(
         thresholds = np.hstack((1, thresholds))  # type: ignore[arg-type]
 
         if fps[-1] <= 0:
-            warnings.warn(
-                "No negative samples in `target`, false positive value should be"
-                " meaningless. Returning zero array in false positive score",
-                UserWarning,
+            LOGGER.warning(
+                "No negative samples in `target`, false positive value should be "
+                "meaningless. Returning zero array in false positive score"
             )
             fpr = np.zeros_like(thresholds, dtype=np.float64)
         else:
             fpr = fps / fps[-1]
 
         if tps[-1] <= 0:
-            warnings.warn(
+            LOGGER.warning(
                 "No positive samples in `target`, true positive value should be"
-                " meaningless. Returning zero array in true positive score",
-                UserWarning,
+                " meaningless. Returning zero array in true positive score"
             )
             tpr = np.zeros_like(thresholds, dtype=np.float64)
         else:

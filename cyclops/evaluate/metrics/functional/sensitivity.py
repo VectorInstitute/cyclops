@@ -157,6 +157,10 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
         Number of labels in the dataset.
     threshold : float, default=0.5
         Threshold for deciding the positive class.
+    top_k : int, optional, default=None
+        If given, and predictions are probabilities/logits, the top k scores
+        will be converted to 1s and the rest will be converted to 0s. Otherwise,
+        the threshold will be used to convert scores to 0s and 1s.
     average : Literal["micro", "macro", "weighted", None], default=None
         If ``None``, return the sensitivity score for each class. Otherwise,
         use one of the following options to compute the average score:

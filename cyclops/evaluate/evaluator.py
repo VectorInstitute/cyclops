@@ -23,10 +23,8 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
-# pylint: disable=fixme # TODOs
 
-
-def evaluate(  # pylint: disable=too-many-function-args
+def evaluate(
     dataset: Union[str, Dataset, DatasetDict],
     metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
     target_columns: Union[str, List[str]],

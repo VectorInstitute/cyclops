@@ -27,8 +27,6 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
-# pylint: disable=fixme
-
 
 @dataclass
 class MedicalImage(Image):  # type: ignore
@@ -200,8 +198,8 @@ def _encode_ndarray(
 
     Parameters
     ----------
-    array_or_tensor : NdarrayOrTensor
-        Numpy array or torch tensor.
+    array : numpy.ndarray
+        Numpy array to encode.
     metadata : dict, optional, default=None
         Metadata dictionary.
     image_format : str, optional, default=".png"

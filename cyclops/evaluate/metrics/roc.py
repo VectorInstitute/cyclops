@@ -58,7 +58,6 @@ class BinaryROCCurve(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"
         self,
     ) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
         """Compute the ROC curve from the state variables."""
-        # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
             state = (
                 np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
@@ -139,7 +138,6 @@ class MulticlassROCCurve(
         ],
     ]:
         """Compute the ROC curve from the state variables."""
-        # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
             state = (
                 np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
@@ -211,7 +209,6 @@ class MultilabelROCCurve(
         ],
     ]:
         """Compute the ROC curve from the state variables."""
-        # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
             state = (
                 np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
