@@ -123,6 +123,8 @@ def wrap_model(model: Union[torch.nn.Module, BaseEstimator], **kwargs) -> Wrappe
     ----------
     model : Union[torch.nn.Module, sklearn.base.BaseEstimator]
         The model to wrap.
+    **kwargs : dict, optional
+        Keyword arguments passed to the wrapper class.
 
     Returns
     -------

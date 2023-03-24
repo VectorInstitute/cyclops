@@ -139,8 +139,7 @@ class VectorizedLoader:
 
     @property
     def val_c_counts(self) -> dict:
-        """Get the number of instances for each label in the validation set, as an \
-        attribute.
+        """Get the number of instances for each label in the val set, as an attribute.
 
         Returns
         -------

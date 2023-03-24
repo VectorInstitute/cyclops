@@ -676,7 +676,7 @@ def _get_slice_spec(
 
     for combination in group_combinations:
         slice_dict = {}
-        for group, value in zip(groups, combination):  # noqa: B905
+        for group, value in zip(groups, combination):
             if isinstance(value, pd.Interval):
                 slice_dict[group] = {
                     "min_value": -np.inf

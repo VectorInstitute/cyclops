@@ -199,6 +199,8 @@ def set_params(cls, **params):
 
     Parameters
     ----------
+    cls : class
+        The class to set the parameters for.
     **params : dict, optional
         Parameters to set.
 

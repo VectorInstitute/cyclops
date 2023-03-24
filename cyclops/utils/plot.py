@@ -32,6 +32,10 @@ def plot_admit_discharge(
     data: pandas.DataFrame
         DataFrame with 'admit', 'discharge', and description columns.
         The admit and discharge columns must be convertable to Timestamps.
+    description: str, optional
+        Description column name.
+    figsize: tuple, optional
+        Figure size.
 
     """
     data = data.copy()
@@ -146,6 +150,10 @@ def plot_histogram(
         Feature columns.
     names: list, optional
         Names of feature to plot over all encounters.
+    return_fig: bool, optional
+        Return fig.
+    title: str, optional
+        Title of plot.
 
     """
     if features is None:
@@ -198,6 +206,8 @@ def plot_temporal_features(
         Temporal features for a single encounter.
     names: list, optional
         Names of features to plot for the given encounter.
+    return_fig: bool, optional
+        Return fig.
 
     Raises
     ------

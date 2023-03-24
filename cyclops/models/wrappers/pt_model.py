@@ -129,6 +129,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         deterministic: bool = False,
         **kwargs,
     ):
+        """Initialize."""
         assert is_pytorch_model(
             model
         ), "`model` must be an instance or subclass of `torch.nn.Module`."
@@ -504,7 +505,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             The batch of data.
         training : bool, default=False
             Whether to set the model to training mode.
-        **predict_params : dict, optional
+        **fit_params : dict, optional
             Additional parameters to pass to the model's `forward` method.
 
         Returns
@@ -786,7 +787,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             The batch of data
         training : bool, default=False
             Whether to run the model in training mode.
-        **predict_params : dict, optional
+        **fit_params : dict, optional
             Additional parameters to pass to the model's `forward` method.
 
         Returns
@@ -853,7 +854,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         return self.predict_proba(X, **predict_params)
 
-    def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
+    def save_model(self, filepath: str, overwrite: bool = True, **kwargs):  # noqa: C901
         """Save the model to a file.
 
         Parameters

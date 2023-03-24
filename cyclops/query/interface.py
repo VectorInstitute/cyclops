@@ -111,7 +111,7 @@ class QueryInterface:
 
         Parameters
         ----------
-        save_path
+        path
             Path where the file will be saved.
         file_format
             File format of the file to save.
@@ -253,7 +253,7 @@ class QueryInterfaceProcessed:
 
         Parameters
         ----------
-        save_path
+        path
             Path where the file will be saved.
         file_format
             File format of the file to save.

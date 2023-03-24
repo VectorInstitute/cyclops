@@ -216,7 +216,7 @@ def is_sklearn_model(model: object) -> bool:
     return is_sklearn_class(model) or is_sklearn_instance(model)
 
 
-def is_pytorch_instance(module: object) -> bool:
+def is_pytorch_instance(model: object) -> bool:
     """Check if object is an instance of a PyTorch module.
 
     Parameters
@@ -230,7 +230,7 @@ def is_pytorch_instance(module: object) -> bool:
         True if ``model`` is an instance of a PyTorch model.
 
     """
-    return isinstance(module, torch.nn.Module)
+    return isinstance(model, torch.nn.Module)
 
 
 def is_pytorch_class(model: object) -> bool:
@@ -358,17 +358,18 @@ def metrics_binary(  # pylint: disable=too-many-locals, invalid-name
     Parameters
     ----------
     y_pred_values : np.ndarray
-        predicted values/probs
+        Predicted values/probs.
     y_pred_labels : np.ndarray
-        predicted labels
-
+        Predicted labels.
+    y_test_labels : np.ndarray
+        Test labels.
     verbose : bool
-        print the metric values
+        Print the metric values.
 
     Returns
     -------
     dict
-        dict of metric names and values
+        Dict of metric names and values.
 
     """
     cf = metrics.confusion_matrix(y_test_labels, y_pred_labels)

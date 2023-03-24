@@ -62,7 +62,7 @@ def _reduce_auroc(
 
     """
     result = [
-        auc(x, y) for x, y in zip(fpr, tpr)  # noqa: B905
+        auc(x, y) for x, y in zip(fpr, tpr)
     ]  # without the loop: np.trapz(tpr, fpr, axis=1) * direction
     result = np.stack(result)
 

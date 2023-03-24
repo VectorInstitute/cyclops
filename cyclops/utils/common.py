@@ -99,6 +99,7 @@ def add_years_exact(timestamp_series: pd.Series, years_series: pd.Series) -> pd.
             "Consider using the quick, approximate calculation."
         ),
         PerformanceWarning,
+        stacklevel=1,
     )
     return timestamp_series + years_series.apply(lambda x: pd.DateOffset(years=x))
 

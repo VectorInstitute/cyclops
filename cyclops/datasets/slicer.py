@@ -260,7 +260,7 @@ class SliceSpec:
             registration_key = f"{column_name}:" + ", ".join(
                 [
                     f"{k}={v}"
-                    for k, v in zip(  # noqa: B905
+                    for k, v in zip(
                         ("year", "month", "day", "hour"), (year, month, day, hour)
                     )
                     if v is not None

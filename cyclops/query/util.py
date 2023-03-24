@@ -452,6 +452,8 @@ def drop_columns(
         The table.
     col : str or list of str
         Names of columns to drop.
+    drop_cols: str or list of str
+        Names of columns to drop.
 
     Returns
     -------
@@ -475,7 +477,7 @@ def rename_columns(table: TableTypes, rename_map: dict) -> Subquery:
     ----------
     table: cyclops.query.util.TableTypes
         The table.
-    d : dict
+    rename_map : dict
         Dictionary mapping current column names (key) to new ones (value).
 
     Returns
@@ -764,7 +766,7 @@ def equals(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -803,7 +805,7 @@ def greater_than(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -848,7 +850,7 @@ def less_than(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -888,7 +890,7 @@ def not_equals(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.

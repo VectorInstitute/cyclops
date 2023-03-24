@@ -1,6 +1,6 @@
 """MLP models."""
 import math
-from typing import List, Union
+from typing import Tuple, Union
 
 import torch
 from torch import nn
@@ -21,7 +21,7 @@ class MLPModel(nn.Module):
     def __init__(  # pylint: disable=dangerous-default-value
         self,
         input_dim: int,
-        hidden_dims: List = [64, 64],
+        hidden_dims: Tuple = (64, 64),
         output_dim: int = 1,
         activation: Union[str, nn.Module] = "ReLU",
     ) -> None:
