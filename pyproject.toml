@@ -126,29 +126,6 @@ strict_concatenate = true
 [tool.isort]
 profile = "black"
 
-[tool.pylint]
-    [tool.pylint.master]
-    disable=["import-error", "duplicate-code", "no-value-for-parameter"]
-
-    [tool.pylint.format]
-    max-line-length=88
-    max-args=20
-    max-attributes=20
-    max-branches=15
-    max-locals=40
-    max-statements=100
-    min-public-methods=1
-
-    [tool.pylint.typecheck]
-    generated-members=["numpy.*", "torch.*"]
-
-    [tool.pylint.similarities]
-    ignore-imports=["yes"]
-
-    [tool.pylint.basic]
-    good-names=["i", "j", "k", "ex", "Run", "X", "x", "y", "df", "fc", "h0", "hn", "c0", "cn", "id", "ax", "tn", "fn", "tp", "fp", "TN", "FN", "TP", "FP", "lr", "db"]
-    good-names-rgxs=["X_.+", "x_.+", "y_.+", "df_.+"]
-
 [tool.ruff]
 select = ["B", "C", "D", "E", "F", "I", "W"]
 line-length = 88
