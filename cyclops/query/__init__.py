@@ -1,4 +1,4 @@
-"""Query package."""
+"""The ``query`` API provides classes to query EHR databases."""
 
 
 try:
