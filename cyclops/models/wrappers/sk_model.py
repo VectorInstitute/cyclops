@@ -5,10 +5,18 @@ import os
 from functools import wraps
 from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 
+import numpy as np
+import pandas as pd
+from datasets import Dataset, config
+from evaluate.evaluator.utils import DatasetColumn
+from multipledispatch import dispatch
 from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator as SKBaseEstimator
+from sklearn.compose import ColumnTransformer
+from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
+from cyclops.datasets.utils import is_out_of_core
 from cyclops.models.utils import is_sklearn_class, is_sklearn_instance
 from cyclops.utils.file import join, load_pickle, save_pickle
 from cyclops.utils.log import setup_logging
@@ -16,7 +24,7 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
-# pylint: disable=fixme
+# pylint: disable=fixme, function-redefined
 
 
 class SKModel:
@@ -99,7 +107,7 @@ class SKModel:
 
         Returns
         -------
-        self
+        self: `SKModel`
 
         """
         # TODO: check the `metric` argument; allow using cyclops.evaluate.metrics
@@ -140,6 +148,301 @@ class SKModel:
         )
 
         return self
+
+    @dispatch((np.ndarray, pd.DataFrame), (np.ndarray, pd.Series))
+    def partial_fit(self, X, y, classes, **kwargs):
+        """Fit the model to the data incrementally.
+
+        Parameters
+        ----------
+        X : np.ndarray or pd.DataFrame
+            The features of the data.
+        y : np.ndarray or pd.Series
+            The labels of the data.
+        classes : np.ndarray
+            All the possible classes in the dataset.
+
+        Returns
+        -------
+        self: `SKModel`
+
+        """
+        return self.model_.partial_fit(X, y, classes=classes, **kwargs)
+
+    @dispatch(Dataset, list, list)
+    def partial_fit(  # noqa: F811
+        self,
+        dataset: Dataset,
+        feature_columns: List[str],
+        target_columns: List[str],
+        preprocessor: Optional[ColumnTransformer] = None,
+        transforms: Optional[Callable] = None,
+        batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
+        **kwargs,
+    ):
+        """Fit the model to the data incrementally.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            Hugging Face dataset containing features and labels.
+        feature_columns : List[str]
+            List of feature columns in the dataset.
+        target_columns : List[str]
+            List of target columns in the dataset.
+        preprocessor : Optional[ColumnTransformer], optional
+            Transformations to be applied to the data before fitting the model, \
+                by default None
+        transforms : Optional[Callable], optional
+            Transform function to be applied when __getitem__ is called, \
+                by default None
+        batch_size : Optional[int], optional
+            Batch size for batched fitting by default config.DEFAULT_MAX_BATCH_SIZE
+
+        Returns
+        -------
+        self: `SKModel`
+
+        Raises
+        ------
+        AttributeError
+            Model does not have partial_fit method.
+
+        """
+        if not hasattr(self.model_, "partial_fit"):
+            raise AttributeError(
+                f"Model {self.model_.__class__.__name__}"
+                "does not have a `partial_fit` method.",
+            )
+
+        def fit_model(examples):
+            X_train = np.stack(
+                [examples[feature] for feature in feature_columns], axis=1
+            ).squeeze()
+            if preprocessor is not None:
+                try:
+                    X_train = preprocessor.transform(X_train)
+                except NotFittedError:
+                    LOGGER.warning(
+                        "Fitting preprocessor on batch of size %d", len(X_train)
+                    )
+                    X_train = preprocessor.fit_transform(X_train)
+
+            y_train = np.stack(
+                [examples[target] for target in target_columns], axis=1
+            ).squeeze()
+            self.model_.partial_fit(
+                X_train, y_train, classes=np.unique(y_train), **kwargs
+            )
+            return examples
+
+        format_kwargs = {} if transforms is None else {"transform": transforms}
+        with dataset.formatted_as(
+            "custom" if transforms is not None else "numpy",
+            columns=feature_columns + target_columns,
+            **format_kwargs,
+        ):
+            dataset.map(
+                fit_model,
+                batched=True,
+                batch_size=batch_size,
+            )
+
+        return self
+
+    @dispatch((np.ndarray, pd.DataFrame, list), (np.ndarray, pd.Series, list))
+    def fit(self, X, y):
+        """Fit the model to the data.
+
+        Parameters
+        ----------
+        X : np.ndarray or pd.DataFrame
+            The features of the data.
+        y : np.ndarray or pd.Series
+            The labels of the data.
+
+        Returns
+        -------
+        self: `SKModel`
+
+        """
+        return self.model_.fit(X, y)
+
+    @dispatch(Dataset, list, list)
+    def fit(  # noqa: F811
+        self,
+        dataset: Dataset,
+        feature_columns: List[str],
+        target_columns: List[str],
+        preprocessor: Optional[ColumnTransformer] = None,
+        transforms: Optional[Callable] = None,
+        batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
+        **kwargs,
+    ):
+        """Fit the model on a Hugging Face dataset.
+
+        Parameters
+        ----------
+        dataset : Dataset
+             Hugging Face dataset containing features and labels.
+        feature_columns : List[str]
+            List of feature columns in the dataset.
+        target_columns : List[str]
+            List of target columns in the dataset.
+        preprocessor : Optional[ColumnTransformer], optional
+            Transformations to be applied to the data before fitting the model, \
+                by default None
+        transforms : Optional[Callable], optional
+            Transform function to be applied when __getitem__ is called, \
+                by default None
+        batch_size : Optional[int], optional
+            Batch size for batched fitting, used only for estimators with partial fit,
+            by default config.DEFAULT_MAX_BATCH_SIZE
+
+        Returns
+        -------
+        self : `SKModel`
+
+        """
+        if is_out_of_core(dataset_size=dataset.dataset_size):
+            LOGGER.warning(
+                "Dataset size cannot fit into memory. Will call partial fit."
+            )
+            return self.partial_fit(
+                Dataset,
+                feature_columns,
+                target_columns,
+                preprocessor=preprocessor,
+                batch_size=batch_size,
+                **kwargs,
+            )
+
+        format_kwargs = {} if transforms is None else {"transform": transforms}
+        with dataset.formatted_as(
+            "custom" if transforms is not None else "numpy",
+            columns=feature_columns + target_columns,
+            **format_kwargs,
+        ):
+            X_train = np.stack(
+                [dataset[feature] for feature in feature_columns], axis=1
+            ).squeeze()
+            if preprocessor is not None:
+                try:
+                    X_train = preprocessor.transform(X_train)
+                except NotFittedError:
+                    X_train = preprocessor.fit_transform(X_train)
+            y_train = np.stack(
+                [dataset[target] for target in target_columns], axis=1
+            ).squeeze()
+            self.fit(X_train, y_train)
+
+        return self
+
+    @dispatch((np.ndarray, pd.DataFrame))
+    def predict(self, X):
+        """Predict the output of the model for the given data.
+
+        Parameters
+        ----------
+        X : np.ndarray or pd.DataFrame
+            The input to the model.
+
+        Returns
+        -------
+        self: `SKModel`
+
+        """
+        return self.model_.predict(X)
+
+    @dispatch(Dataset, list)
+    def predict(  # noqa: F811
+        self,
+        dataset: Dataset,
+        feature_columns: List[str],
+        prediction_column_prefix: str = "predictions",
+        model_name: Optional[str] = None,
+        preprocessor: Optional[ColumnTransformer] = None,
+        transforms: Optional[Callable] = None,
+        batched: bool = True,
+        batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
+        proba: bool = True,
+        only_predictions: bool = False,
+    ) -> Union[Dataset, DatasetColumn]:
+        """Predict the output of the model for the given Hugging Face dataset.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            Hugging Face dataset containing features and possibly target labels.
+        feature_columns : List[str]
+            List of feature columns in the dataset.
+        prediction_column_prefix : str, optional
+            Name of the prediction column to be added to the dataset, \
+                by default "predictions"
+        model_name : Optional[str], optional
+            Model name used as suffix to the prediction column, by default None
+        preprocessor : Optional[ColumnTransformer], optional
+            The transformation to be applied to the data before prediction, \
+                by default None
+        transforms : Optional[Callable], optional
+            Transform function to be applied when __getitem__ is called, \
+                by default None
+        batched : bool, optional
+            Whether to do prediction in mini-batches, by default True
+        batch_size : int, optional
+            Batch size for batched prediction, by default config.DEFAULT_MAX_BATCH_SIZE
+        proba : bool, optional
+            Whether to output the prediction probabilities rather than \
+                the predicted classes, by default True
+        only_predictions : bool, optional
+            Whether to return only the predictions rather than \
+            the dataset with predictions,
+                by default False
+
+        Returns
+        -------
+        Union[Dataset, DatasetColumn]
+            Dataset containing the predictions or the predictions array.
+
+        """
+        if model_name:
+            pred_column = f"{prediction_column_prefix}.{model_name}"
+        else:
+            pred_column = f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
+
+        def get_predictions(examples: Dict[str, Union[List, np.ndarray]]) -> dict:
+            X_eval = np.stack(
+                [examples[feature] for feature in feature_columns], axis=1
+            )
+            if preprocessor is not None:
+                try:
+                    X_eval = preprocessor.transform(X_eval)
+                except NotFittedError:
+                    LOGGER.warning("Fitting preprocessor on evaluation data.")
+                    X_eval = preprocessor.fit_transform(X_eval)
+
+            if proba and hasattr(self.model_, "predict_proba"):
+                examples[pred_column] = self.model_.predict_proba(X_eval)
+            else:
+                examples[pred_column] = self.predict(X_eval)
+            return examples
+
+        format_kwargs = {} if transforms is None else {"transform": transforms}
+        with dataset.formatted_as(
+            "custom" if transforms is not None else "numpy",
+            columns=feature_columns,
+            output_all_columns=True**format_kwargs,
+        ):
+            ds_with_preds = dataset.map(
+                get_predictions,
+                batched=batched,
+                batch_size=batch_size,
+            )
+
+        if only_predictions:
+            return DatasetColumn(ds_with_preds.with_format("numpy"), pred_column)
+
+        return ds_with_preds
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save model to file."""
