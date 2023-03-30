@@ -7,9 +7,9 @@ from typing import Dict, List, Mapping, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import psutil
 from datasets import Dataset, DatasetDict
 
+from cyclops.datasets.utils import is_out_of_core
 from cyclops.process.column_names import EVENT_NAME, EVENT_VALUE
 from cyclops.utils.file import yield_dataframes
 
@@ -85,11 +85,6 @@ def valid_events(events: pd.DataFrame, top_events: np.ndarray) -> pd.DataFrame:
 
     """
     return events[events[EVENT_NAME].isin(top_events)]
-
-
-def is_out_of_core(dataset_size) -> bool:
-    """Check if dataset is too large to fit in memory."""
-    return dataset_size > psutil.virtual_memory().available
 
 
 def get_pandas_df(
