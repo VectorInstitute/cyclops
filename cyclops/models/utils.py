@@ -4,7 +4,6 @@ from difflib import get_close_matches
 from typing import Dict, List, Optional
 
 import numpy as np
-import psutil
 import torch
 from sklearn import metrics
 from sklearn.base import BaseEstimator
@@ -418,8 +417,3 @@ def metrics_binary(  # pylint: disable=too-many-locals, invalid-name
         "auprc": auprc,
         "minpse": minpse,
     }
-
-
-def is_out_of_core(dataset_size) -> bool:
-    """Check if dataset is too large to fit in memory."""
-    return dataset_size > psutil.virtual_memory().available
