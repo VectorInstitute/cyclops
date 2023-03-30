@@ -1,26 +1,26 @@
 """Chest X-ray Classification Task."""
 import logging
 from functools import partial
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, get_args
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from datasets import Dataset
 from monai.transforms import Compose
 
-from cyclops.datasets.slicing import SlicingConfig as SliceSpec
-from cyclops.evaluate.evaluator import Evaluator
-from cyclops.evaluate.metrics.metric import Metric, MetricCollection, create_metric
+from cyclops.datasets.slicer import SliceSpec
+from cyclops.evaluate.evaluator import evaluate
+from cyclops.evaluate.metrics.factory import create_metric
+from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import _img_model_keys
 from cyclops.models.utils import get_device
 from cyclops.models.wrappers import WrappedModel
-from cyclops.tasks.util import apply_image_transforms
+from cyclops.tasks.utils import CXR_TARGET, apply_image_transforms, prepare_models
 from cyclops.utils.log import setup_logging
-
-# from cyclops.datasets.slice import SliceSpec XXX: Add when the branch is merged
-
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
+
+# pylint: disable=dangerous-default-value
 
 
 class CXRClassification:
@@ -28,26 +28,38 @@ class CXRClassification:
 
     def __init__(
         self,
-        models: Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]],
-        task_features: List[str],
-        task_target: str,
+        models: Union[
+            str,
+            WrappedModel,
+            Sequence[Union[str, WrappedModel]],
+            Dict[str, WrappedModel],
+        ],
+        models_config_path: Union[str, Dict[str, str]] = None,
+        task_features: List[str] = "image",
+        task_target: Union[str, List[str]] = CXR_TARGET,
     ):
         """Chest X-ray classification task.
 
         Parameters
         ----------
-        models : Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
+        models : Union[
+            str, WrappedModel,
+            Sequence[Union[str, WrappedModel]],
+            Dict[str, WrappedModel],
+        ],
             The model(s) to be used for prediction, and evaluation.
+        models_config_path : Union[str, Dict[str, str]], optional
+            Path to the configuration file(s) for the model(s), by default None
         task_features : List[str]
             List of feature names.
         task_target : str
             List of target names.
 
         """
-        self.models = self._prepare_models(models)
+        self.models = prepare_models(models, models_config_path)
+        self._validate_models()
         self.task_features = task_features
         self.task_target = task_target
-        self.evaluator = Evaluator()
         self.device = get_device()
 
     @property
@@ -74,44 +86,14 @@ class CXRClassification:
         """
         return "image"
 
-    def _prepare_models(
-        self,
-        models: Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]],
-    ) -> Dict[str, WrappedModel]:
-        """Prepare and validate the model(s) for the task.
+    def _validate_models(self):
+        """Validate the models for the task data type."""
+        assert all(
+            model.model.__name__ in _img_model_keys for model in self.models.values()
+        ), "All models must be image classification model."
 
-        Parameters
-        ----------
-        model : Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
-            Initial model(s) of the task.
-
-        Returns
-        -------
-        model : Dict[str, WrappedModel]
-            A dictionary of model(s) with their names as the keys.
-
-        """
-        if isinstance(models, get_args(WrappedModel)):
-            model_name = models.model.__name__
-            assert (
-                model_name in _img_model_keys
-            ), "Model must be a image classification model."
-            models = {model_name: models}  # type: ignore
-        elif isinstance(models, (list, tuple)):
-            assert all(isinstance(m, get_args(WrappedModel)) for m in models)
-            assert all(
-                m.model.__name__ in _img_model_keys for m in models
-            ), "All models must be image classification model."
-            models = {m.model.__name__: m for m in models}
-        elif isinstance(models, dict):
-            assert all(isinstance(m, get_args(WrappedModel)) for m in models.values())
-            assert all(
-                m.model.__name__ in _img_model_keys for m in models.values()
-            ), "All models must be image classification model."
-        else:
-            raise ValueError(f"Invalid model type: {type(models)}")
-
-        return models
+        for model in self.models.values():
+            model.initialize()
 
     @property
     def models_count(self):
@@ -137,26 +119,29 @@ class CXRClassification:
         models = list(self.models.keys())
         return models if len(models) > 1 else models[0]
 
-    def add_model(self, model: WrappedModel, model_name: Optional[str] = None):
+    def add_model(
+        self,
+        model: Union[str, WrappedModel, Dict[str, WrappedModel]],
+        model_config_path: Optional[str] = None,
+    ):
         """Add a model to the task.
 
         Parameters
         ----------
-        model : WrappedModel
+        model : Union[str, WrappedModel, Dict[str, WrappedModel]]
             Model to be added.
-        model_name : Optional[str], optional
-            Model name, by default None
+        model_config_path : Optional[str], optional
+            Path to the configuration file for the model.
 
         """
-        model_name = model_name if model_name else model.model.__name__
-        if model_name in self.list_models():
+        model_dict = prepare_models(model, model_config_path)
+        if set(model_dict.keys()).issubset(self.list_models()):
             LOGGER.error(
                 "Failed to add the model. A model with same name already exists."
             )
         else:
-            model = self._prepare_models({model_name: model})
-            self.models.update(model)
-            LOGGER.info("%s is added to task models.", model_name)
+            self.models.update(model_dict)
+            LOGGER.info("%s is added to task models.", ", ".join(model_dict.keys()))
 
     def get_model(self, model_name: str) -> Tuple[str, WrappedModel]:
         """Get a model. If more than one model exists, the name should be specified.
@@ -196,7 +181,6 @@ class CXRClassification:
         self,
         dataset: Union[np.ndarray, Dataset],
         model_name: Optional[str] = None,
-        index_column: Optional[str] = None,
         transforms: Optional[Compose] = None,
         **kwargs,
     ) -> Union[np.ndarray, Dataset]:
@@ -208,9 +192,6 @@ class CXRClassification:
             Image representation as a numpy array or a Hugging Face dataset.
         model_name : Optional[str], optional
              Model name, required if more than one model exists, by default None
-        index_column : Optional[str], optional
-            The name of the column to identify each item in the dataset,
-            required if input is a dataset, by default None
         transforms : Optional[Compose], optional
             Transforms to be applied to the data, by default None
 
@@ -226,13 +207,8 @@ class CXRClassification:
             transforms = partial(apply_image_transforms, transforms=transforms)
 
         if isinstance(dataset, Dataset):
-            if not index_column:
-                raise ValueError(
-                    "Please specify the index_column when input is a dataset."
-                )
-            return model.predict_on_hf_dataset(
+            return model.predict(
                 dataset,
-                index_column,
                 self.task_features,
                 transforms=transforms,
                 model_name=model_name,
@@ -244,8 +220,7 @@ class CXRClassification:
     def evaluate(
         self,
         dataset: Dataset,
-        index_column: str,
-        metrics: Union[List[str], List[Metric], MetricCollection],
+        metrics: Union[List[str], MetricCollection],
         model_names: Union[str, List[str]] = None,
         transforms: Optional[Compose] = None,
         prediction_column_prefix: str = "predictions",
@@ -259,9 +234,7 @@ class CXRClassification:
         ----------
         dataset : Dataset
             HuggingFace dataset.
-        index_column : str
-            The name of the column to identify each item in the dataset
-        metrics : Union[List[str], List[Metric], MetricCollection]
+        metrics : Union[List[str], MetricCollection]
             Metrics to be evaluated.
         model_names : Union[str, List[str]], optional
             Model names to be evaluated, required if more than one model exists, \
@@ -293,8 +266,11 @@ class CXRClassification:
                 dataset = dataset.add_column(label_name, zeros_column)
 
         if isinstance(metrics, list) and len(metrics):
-            metrics = [create_metric(m, task=self.task_type) for m in metrics]
-        metrics = self.evaluator.prepare_metrics(metrics)  # pylint: disable=no-member
+            metrics = [
+                create_metric(m, task=self.task_type, num_labels=len(self.task_target))
+                for m in metrics
+            ]
+            metrics = MetricCollection(metrics)
 
         if isinstance(model_names, str):
             model_names = [model_names]
@@ -305,14 +281,13 @@ class CXRClassification:
             dataset = self.predict(
                 dataset,
                 model_name=model_name,
-                index_column=index_column,
                 transforms=transforms,
                 prediction_column_prefix=prediction_column_prefix,
                 batch_size=batch_size,
                 only_predictions=False,
             )
 
-        return self.evaluator.compute_metrics(  # pylint: disable=no-member
+        return evaluate(
             dataset,
             metrics,
             slice_spec=slice_spec,

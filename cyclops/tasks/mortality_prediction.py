@@ -1,25 +1,28 @@
 """Mortality Prediction Task."""
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, get_args
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from datasets import Dataset, config
+from multipledispatch import dispatch
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
 
-from cyclops.datasets.slicing import SlicingConfig as SliceSpec
-
-# from cyclops.datasets.slice import SliceSpec XXX: Add when the branch is merged
-from cyclops.evaluate.evaluator import Evaluator
-from cyclops.evaluate.metrics.metric import Metric, MetricCollection, create_metric
+from cyclops.datasets.slicer import SliceSpec
+from cyclops.evaluate.evaluator import evaluate
+from cyclops.evaluate.metrics.factory import create_metric
+from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import _static_model_keys
 from cyclops.models.wrappers import WrappedModel
-from cyclops.tasks.util import to_numpy
+from cyclops.tasks.utils import prepare_models, to_numpy
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
+
+# pylint: disable=function-redefined, dangerous-default-value
+# noqa: F811
 
 
 class MortalityPrediction:
@@ -27,26 +30,43 @@ class MortalityPrediction:
 
     def __init__(
         self,
-        models: Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]],
-        task_features: List[str],
-        task_target: str,
+        models: Union[
+            str,
+            WrappedModel,
+            Sequence[Union[str, WrappedModel]],
+            Dict[str, WrappedModel],
+        ],
+        models_config_path: Union[str, Dict[str, str]] = None,
+        task_features: List[str] = [
+            "age",
+            "sex",
+            "admission_type",
+            "admission_location",
+        ],
+        task_target: List[str] = ["outcome_death"],
     ):
         """Mortality prediction task for tabular data.
 
         Parameters
         ----------
-        models : Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
+        models : Union[
+            str, WrappedModel,
+            Sequence[Union[str, WrappedModel]],
+            Dict[str, WrappedModel],
+        ],
             The model(s) to be used for training, prediction, and evaluation.
+        models_config_path : Union[str, Dict[str, str]], optional
+            Path to the configuration file(s) for the model(s), by default None
         task_features : List[str]
             List of feature names.
         task_target : str
             List of target names.
 
         """
-        self.models = self._prepare_models(models)
+        self.models = prepare_models(models, models_config_path)
+        self._validate_models()
         self.task_features = task_features
         self.task_target = task_target
-        self.evaluator = Evaluator()
         self.trained_models = []
         self.pretrained_models = []
 
@@ -74,43 +94,11 @@ class MortalityPrediction:
         """
         return "tabular"
 
-    def _prepare_models(
-        self,
-        models: Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]],
-    ) -> Dict[str, WrappedModel]:
-        """Prepare and validate the model(s) for the task.
-
-        Parameters
-        ----------
-        model : Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
-            Initial model(s) of the task.
-
-        Returns
-        -------
-        model : Dict[str, WrappedModel]
-            A dictionary of model(s) with their names as the keys.
-
-        """
-        if isinstance(models, get_args(WrappedModel)):
-            model_name = models.model_.__class__.__name__
-            assert model_name in _static_model_keys, "Model must be static"
-            models = {model_name: models}
-        elif isinstance(models, (list, tuple)):
-            assert all(isinstance(m, get_args(WrappedModel)) for m in models)
-            assert all(
-                m.model_.__class__.__name__ in _static_model_keys for m in models
-            ), "All models must be static"
-            models = {getattr(m, "model_").__class__.__name__: m for m in models}
-        elif isinstance(models, dict):
-            assert all(isinstance(m, get_args(WrappedModel)) for m in models.values())
-            assert all(
-                m.model_.__class__.__name__ in _static_model_keys
-                for m in models.values()
-            ), "All models must be static"
-        else:
-            raise ValueError(f"Invalid model type: {type(models)}")
-
-        return models
+    def _validate_models(self):
+        """Validate the models for the task data type."""
+        assert all(
+            m.model.__name__ in _static_model_keys for m in self.models.values()
+        ), "All models must be image classification model."
 
     @property
     def models_count(self) -> int:
@@ -146,26 +134,29 @@ class MortalityPrediction:
         """
         return {n: m.get_params() for n, m in self.models.items()}
 
-    def add_model(self, model: WrappedModel, model_name: Optional[str] = None) -> None:
+    def add_model(
+        self,
+        model: Union[str, WrappedModel, Dict[str, WrappedModel]],
+        model_config_path: Optional[str] = None,
+    ):
         """Add a model to the task.
 
         Parameters
         ----------
-        model : WrappedModel
+        model : Union[str, WrappedModel, Dict[str, WrappedModel]]
             Model to be added.
-        model_name : Optional[str], optional
-            Model name, by default None
+        model_config_path : Optional[str], optional
+            Path to the configuration file for the model.
 
         """
-        model_name = model_name if model_name else model.model_.__class__.__name__
-        if model_name in self.list_models():
+        model_dict = prepare_models(model, model_config_path)
+        if set(model_dict.keys()).issubset(self.list_models()):
             LOGGER.error(
                 "Failed to add the model. A model with same name already exists."
             )
         else:
-            model = self._prepare_models({model_name: model})
-            self.models.update(model)
-            LOGGER.info("%s is added to the task models.", model_name)
+            self.models.update(model_dict)
+            LOGGER.info("%s is added to task models.", ", ".join(model_dict.keys()))
 
     def get_model(self, model_name: Optional[str] = None) -> Tuple[str, WrappedModel]:
         """Get a model. If more than one model exists, the name should be specified.
@@ -201,7 +192,8 @@ class MortalityPrediction:
 
         return model_name, model
 
-    def train_on_hf_dataset(
+    @dispatch(Dataset)
+    def train(
         self,
         dataset: Dataset,
         model_name: Optional[str] = None,
@@ -230,7 +222,7 @@ class MortalityPrediction:
 
         """
         model_name, model = self.get_model(model_name)
-        model.fit_on_hf_dataset(
+        model.fit(
             dataset,
             self.task_features,
             self.task_target,
@@ -242,10 +234,11 @@ class MortalityPrediction:
         self.trained_models.append(model_name)
         return model
 
-    def train(
+    @dispatch((np.ndarray, pd.DataFrame), (np.ndarray, pd.Series))
+    def train(  # noqa: F811
         self,
         X_train: Union[np.ndarray, pd.DataFrame],
-        y_train: Union[np.ndarray, pd.DataFrame],
+        y_train: Union[np.ndarray, pd.Series],
         model_name: Optional[str] = None,
         preprocessor: Optional[ColumnTransformer] = None,
         best_model_params: Optional[Dict] = None,
@@ -257,7 +250,7 @@ class MortalityPrediction:
         ----------
         X_train : Union[np.ndarray, pd.DataFrame]
             Data features.
-        y_train : Union[np.ndarray, pd.DataFrame]
+        y_train : Union[np.ndarray, pd.Series]
             Data labels.
         model_name : Optional[str], optional
             Model name, required if more than one model exists, \
@@ -390,7 +383,7 @@ class MortalityPrediction:
             )
 
         if isinstance(dataset, Dataset):
-            return model.predict_on_hf_dataset(
+            return model.predict(
                 dataset,
                 self.task_features,
                 preprocessor=preprocessor,
@@ -418,7 +411,7 @@ class MortalityPrediction:
     def evaluate(
         self,
         dataset: Dataset,
-        metrics: Union[List[str], List[Metric], MetricCollection],
+        metrics: Union[List[str], MetricCollection],
         model_names: Union[str, List[str]] = None,
         preprocessor: Optional[ColumnTransformer] = None,
         prediction_column_prefix: str = "predictions",
@@ -432,7 +425,7 @@ class MortalityPrediction:
         ----------
         dataset : Dataset
             HuggingFace dataset.
-        metrics : Union[List[str], List[Metric], MetricCollection]
+        metrics : Union[List[str], MetricCollection]
             Metrics to be evaluated.
         model_names : Union[str, List[str]], optional
             Model names to be evaluated, if not specified all fitted models \
@@ -458,8 +451,13 @@ class MortalityPrediction:
 
         """
         if isinstance(metrics, list) and len(metrics):
-            metrics = [create_metric(m, task=self.task_type) for m in metrics]
-        metrics = self.evaluator.prepare_metrics(metrics)  # pylint: disable=no-member
+            metrics = [
+                create_metric(
+                    m, task=self.task_type, num_labels=len(self.task_features)
+                )
+                for m in metrics
+            ]
+            metrics = MetricCollection(metrics)
 
         if isinstance(model_names, str):
             model_names = [model_names]
@@ -484,11 +482,11 @@ class MortalityPrediction:
                 only_predictions=False,
             )
 
-        return self.evaluator.compute_metrics(  # pylint: disable=no-member
+        return evaluate(
             dataset,
             metrics,
-            slice_spec=slice_spec,
             target_columns=self.task_target,
+            slice_spec=slice_spec,
             prediction_column_prefix=prediction_column_prefix,
             batch_size=batch_size,
             remove_columns=remove_columns,
