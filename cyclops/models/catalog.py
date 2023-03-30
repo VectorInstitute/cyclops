@@ -107,6 +107,8 @@ def list_models(
         model_list = list(_static_model_keys)
     elif category == "temporal":
         model_list = list(_temporal_model_keys)
+    elif category == "image":
+        model_list = list(_img_model_keys)
     elif category == "pytorch":
         model_list = list(_pt_model_keys)
     elif category == "sklearn":
