@@ -8,7 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from datasets import Dataset
+from datasets.combine import concatenate_datasets
+from evaluate.evaluator.utils import DatasetColumn
 from monai.data.meta_tensor import MetaTensor
+from multipledispatch import dispatch
 from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
@@ -37,7 +40,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 # ignore errors about attributes defined dynamically
-# pylint: disable=no-member, fixme, too-many-lines
+# pylint: disable=no-member, fixme, too-many-lines, function-redefined, arguments-differ
 
 
 class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
@@ -584,7 +587,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             The dataset object.
 
         """
-        if isinstance(X, TorchDataset):
+        if isinstance(X, (Dataset, TorchDataset)):
             return X
 
         if isinstance(X, MetaTensor):
@@ -726,6 +729,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         return self
 
+    @dispatch((np.ndarray, TorchDataset))
     def fit(self, X, y=None, **fit_params):
         """Fit the model to the data.
 
@@ -750,12 +754,13 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         return self
 
-    def fit_on_hf_dataset(
+    @dispatch(Dataset, list, list)
+    def fit(  # noqa: F811
         self,
         dataset: Dataset,
         feature_columns: List[str],
         target_columns: List[str],
-        transform: Optional[Callable] = None,
+        transforms: Optional[Callable] = None,
     ):
         """Fit the model on a Hugging Face dataset.
 
@@ -767,16 +772,22 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             List of feature columns in the dataset.
         target_columns : List[str]
             List of target columns in the dataset.
-        transform : Optional[Callable], optional
+        transforms : Optional[Callable], optional
             Transform function, by default None
 
-        Raises
-        ------
-        NotImplementedError
-            _description_
-
         """
-        raise NotImplementedError
+        if not self.warm_start or not self.initialized_:
+            self.initialize()
+
+        format_kwargs = {} if transforms is None else {"transform": transforms}
+        with dataset.formatted_as(
+            "custom" if transforms is not None else "torch",
+            columns=feature_columns + target_columns,
+            **format_kwargs,
+        ):
+            self.partial_fit(dataset)
+
+        return self
 
     def find_best(
         self,
@@ -870,7 +881,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         return preds
 
-    def predict(self, X, **predict_params):
+    @dispatch((np.ndarray, TorchDataset, torch.Tensor))
+    def predict(self, X: Union[np.ndarray, TorchDataset], **predict_params):
         """Predict the output of the model for the given input.
 
         Parameters
@@ -887,26 +899,23 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         return self.predict_proba(X, **predict_params)
 
-    def predict_on_hf_dataset(
+    @dispatch(Dataset, list)
+    def predict(  # noqa: F811
         self,
         dataset: Dataset,
-        index_column: str,
         feature_columns: List[str],
         prediction_column_prefix: str = "predictions",
         model_name: Optional[str] = None,
         transforms: Optional[Callable] = None,
         batch_size: int = 64,
         only_predictions: bool = False,
-    ) -> Union[Dataset, np.ndarray]:
+    ) -> Union[Dataset, DatasetColumn]:
         """Predict the output of the model for the given Hugging Face dataset.
 
         Parameters
         ----------
         dataset : Dataset
             Hugging Face dataset containing features and possibly target labels.
-        index_column : str
-            The name of the column to identify each item in the dataset, \
-                used for mapping the predictions.
         feature_columns : List[str]
             List of feature columns in the dataset.
         prediction_column_prefix : str, optional
@@ -924,7 +933,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         Returns
         -------
-        Union[Dataset, np.ndarray]
+        Union[Dataset, DatasetColumn]
             Dataset containing the predictions or the predictions array.
 
         """
@@ -938,50 +947,25 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             for feature in feature_columns:
                 stacked.append(torch.stack(examples[feature]))
             X = torch.cat(stacked, dim=1)
-            examples[pred_column] = self.predict(X)
-            return examples
+            return {pred_column: self.predict(X)}
 
-        if transforms is not None:
-            ds_with_preds = dataset.with_transform(
-                transforms,
-                columns=feature_columns,
-                output_all_columns=True,
-            ).map(get_predictions, batched=True, batch_size=batch_size)
-
-            ds_with_preds.set_format("numpy")
-            preds = ds_with_preds[pred_column]
-            del ds_with_preds
-
-            if only_predictions:
-                return np.array(preds)
-
-            indices = dataset[index_column]
-            preds_dict = dict(zip(indices, preds))
-
-            def add_pred_col(examples):
-                examples[pred_column] = [preds_dict[i] for i in examples[index_column]]
-                return examples
-
-            ds_with_preds = dataset.map(
-                add_pred_col,
-                batched=True,
-                batch_size=batch_size,
-            )
-
-        else:
-            # XXX: check if this is the right way to do this
-            ds_with_preds = dataset.with_format(
-                "torch", columns=feature_columns, output_all_columns=True
-            ).map(
+        format_kwargs = {} if transforms is None else {"transform": transforms}
+        with dataset.formatted_as(
+            "custom" if transforms is not None else "torch",
+            columns=feature_columns,
+            **format_kwargs,
+        ):
+            preds_ds = dataset.map(
                 get_predictions,
                 batched=True,
                 batch_size=batch_size,
+                remove_columns=dataset.column_names,
             )
 
             if only_predictions:
-                return np.array(ds_with_preds[pred_column])
-
-        return ds_with_preds
+                return DatasetColumn(preds_ds.with_format("numpy"), pred_column)
+            dataset = concatenate_datasets([dataset, preds_ds], axis=1)
+            return dataset
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save the model to a file.
