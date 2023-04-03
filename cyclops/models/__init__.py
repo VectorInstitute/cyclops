@@ -10,7 +10,7 @@ from cyclops.models.neural_nets import GRUModel, LSTMModel, MLPModel, RNNModel
 
 register_model(name="sgd_classifier", model_type="static")(SGDClassifier)
 register_model(name="sgd_regressor", model_type="static")(SGDRegressor)
-register_model("random_forest", model_type="static")(RandomForestClassifier)
+register_model("rf_classifier", model_type="static")(RandomForestClassifier)
 register_model("xgb_classifier", model_type="static")(XGBClassifier)
 register_model("logistic_regression", model_type="static")(LogisticRegression)
 register_model("mlp", model_type="static")(MLPClassifier)

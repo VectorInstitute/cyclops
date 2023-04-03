@@ -1,0 +1,6 @@
+model_params:
+  verbose: 1
+  loss: "log_loss"
+  random_state: 42
+  early_stopping: True
+  class_weight: "balanced"
