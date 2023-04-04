@@ -1,10 +1,11 @@
 """Evaluate one or more models on a dataset."""
 import logging
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Sequence, Union, get_args
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union, get_args
 
 from datasets import Dataset, DatasetDict, config, load_dataset
 from datasets.splits import Split
+from sklearn.compose import ColumnTransformer
 
 from cyclops.datasets.slicer import SliceSpec
 from cyclops.datasets.utils import (
@@ -35,6 +36,7 @@ def evaluate(  # pylint: disable=too-many-function-args
     models: Optional[
         Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
     ] = None,
+    transforms: Optional[Union[Callable[..., Any], ColumnTransformer]] = None,
     slice_spec: Optional[SliceSpec] = None,
     split: Optional[Union[str, Split]] = None,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
@@ -73,6 +75,10 @@ def evaluate(  # pylint: disable=too-many-function-args
         be evaluated on the entire dataset and the model class name will be used as
         the model name. If a `Dict` of `WrappedModel`, each model will be evaluated
         on the entire dataset and the keys will be used as the model names.
+    transforms : Callable, optional
+        A function that transforms the dataset before doing inference. This is
+        useful if the dataset needs to be transformed before being passed to
+        the model.
     slice_spec : SliceSpec, optional
         The slice specification to use for computing metrics. If None, no slices
         will be computed - the metrics will be computed on the entire dataset.
@@ -141,13 +147,20 @@ def evaluate(  # pylint: disable=too-many-function-args
     if models is not None:
         if feature_columns is None:
             raise ValueError(
-                "Got `model` but `feature_columns` is None. Please specify "
-                "`feature_columns`."
+                "Got `models` but `feature_columns` is None. Please specify "
+                "`feature_columns` argument."
             )
         models = _prepare_models(models)
-        # TODO: compute predictions for each model and add them to the dataset
-        # with name `prediction_column_prefix.model_name`
-        raise NotImplementedError
+        for model_name, model in models.items():
+            dataset = model.predict(
+                dataset,
+                feature_columns,
+                prediction_column_prefix=prediction_column_prefix,
+                model_name=model_name,
+                transforms=transforms,
+                batch_size=batch_size,
+                only_predictions=False,
+            )
 
     # compute metrics for each model
     results = {}
@@ -327,6 +340,12 @@ def _compute_metrics(
                 batch_size=batch_size,
                 desc=f"Filter -> {slice_name}",
             )
+
+            if len(sliced_dataset) == 0:
+                raise RuntimeError(
+                    f"Slice {slice_name} is empty. Please check your slice "
+                    f"configuration or the data."
+                )
 
             for prediction_column in prediction_columns:
                 if (

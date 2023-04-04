@@ -899,16 +899,16 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         return self.predict_proba(X, **predict_params)
 
-    @dispatch(Dataset, list)
+    @dispatch(Dataset, (str, list))
     def predict(  # noqa: F811
         self,
         dataset: Dataset,
-        feature_columns: List[str],
+        feature_columns: Union[str, List[str]],
         prediction_column_prefix: str = "predictions",
         model_name: Optional[str] = None,
         transforms: Optional[Callable] = None,
-        batch_size: int = 64,
         only_predictions: bool = False,
+        **predict_params,
     ) -> Union[Dataset, DatasetColumn]:
         """Predict the output of the model for the given Hugging Face dataset.
 
@@ -916,8 +916,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         ----------
         dataset : Dataset
             Hugging Face dataset containing features and possibly target labels.
-        feature_columns : List[str]
-            List of feature columns in the dataset.
+        feature_columns : str, List[str]
+            Feature column(s) in the dataset.
         prediction_column_prefix : str, optional
             Name of the prediction column to be added to the dataset, \
                 by default "prediction"
@@ -942,6 +942,9 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         else:
             pred_column = f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
 
+        if isinstance(feature_columns, str):
+            feature_columns = [feature_columns]
+
         def get_predictions(examples):
             stacked = []
             for feature in feature_columns:
@@ -958,7 +961,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             preds_ds = dataset.map(
                 get_predictions,
                 batched=True,
-                batch_size=batch_size,
+                batch_size=self.batch_size,
                 remove_columns=dataset.column_names,
             )
 

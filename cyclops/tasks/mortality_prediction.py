@@ -477,7 +477,6 @@ class MortalityPrediction:
                 preprocessor=preprocessor,
                 proba=True,
                 prediction_column_prefix=prediction_column_prefix,
-                batched=True,
                 batch_size=batch_size,
                 only_predictions=False,
             )

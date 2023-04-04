@@ -8,9 +8,11 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 import numpy as np
 import pandas as pd
 from datasets import Dataset, config
+from datasets.combine import concatenate_datasets
 from evaluate.evaluator.utils import DatasetColumn
 from multipledispatch import dispatch
 from numpy.typing import ArrayLike
+from scipy.sparse import issparse
 from sklearn.base import BaseEstimator as SKBaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
@@ -266,7 +268,10 @@ class SKModel:
         self: `SKModel`
 
         """
-        return self.model_.fit(X, y)
+        self.model_ = self.model_.fit(  # pylint: disable=attribute-defined-outside-init
+            X, y
+        )
+        return self
 
     @dispatch(Dataset, list, list)
     def fit(  # noqa: F811
@@ -334,6 +339,9 @@ class SKModel:
             y_train = np.stack(
                 [dataset[target] for target in target_columns], axis=1
             ).squeeze()
+
+            if issparse(X_train):
+                X_train = X_train.toarray()
             self.fit(X_train, y_train)
 
         return self
@@ -354,16 +362,14 @@ class SKModel:
         """
         return self.model_.predict(X)
 
-    @dispatch(Dataset, list)
+    @dispatch(Dataset, (str, list))
     def predict(  # noqa: F811
         self,
         dataset: Dataset,
-        feature_columns: List[str],
+        feature_columns: Union[str, List[str]],
         prediction_column_prefix: str = "predictions",
         model_name: Optional[str] = None,
-        preprocessor: Optional[ColumnTransformer] = None,
-        transforms: Optional[Callable] = None,
-        batched: bool = True,
+        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
         proba: bool = True,
         only_predictions: bool = False,
@@ -374,8 +380,8 @@ class SKModel:
         ----------
         dataset : Dataset
             Hugging Face dataset containing features and possibly target labels.
-        feature_columns : List[str]
-            List of feature columns in the dataset.
+        feature_columns : str, List[str]
+            Feature column(s) in the dataset.
         prediction_column_prefix : str, optional
             Name of the prediction column to be added to the dataset, \
                 by default "predictions"
@@ -387,8 +393,6 @@ class SKModel:
         transforms : Optional[Callable], optional
             Transform function to be applied when __getitem__ is called, \
                 by default None
-        batched : bool, optional
-            Whether to do prediction in mini-batches, by default True
         batch_size : int, optional
             Batch size for batched prediction, by default config.DEFAULT_MAX_BATCH_SIZE
         proba : bool, optional
@@ -410,39 +414,53 @@ class SKModel:
         else:
             pred_column = f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
 
+        if isinstance(feature_columns, str):
+            feature_columns = [feature_columns]
+
+        format_kwargs = {}
+        is_callable_transform = callable(transforms)
+        if is_callable_transform:
+            format_kwargs["transform"] = transforms
+
         def get_predictions(examples: Dict[str, Union[List, np.ndarray]]) -> dict:
             X_eval = np.stack(
                 [examples[feature] for feature in feature_columns], axis=1
             )
-            if preprocessor is not None:
-                try:
-                    X_eval = preprocessor.transform(X_eval)
-                except NotFittedError:
-                    LOGGER.warning("Fitting preprocessor on evaluation data.")
-                    X_eval = preprocessor.fit_transform(X_eval)
+            if transforms is not None:
+                if is_callable_transform:
+                    X_eval = transforms(X_eval)
+                else:
+                    try:
+                        X_eval = transforms.transform(X_eval)
+                    except NotFittedError:
+                        LOGGER.warning("Fitting preprocessor on evaluation data.")
+                        X_eval = transforms.fit_transform(X_eval)
 
             if proba and hasattr(self.model_, "predict_proba"):
-                examples[pred_column] = self.model_.predict_proba(X_eval)
+                predictions = self.model_.predict_proba(X_eval)
             else:
-                examples[pred_column] = self.predict(X_eval)
-            return examples
+                predictions = self.predict(X_eval)
+            return {pred_column: predictions}
 
-        format_kwargs = {} if transforms is None else {"transform": transforms}
         with dataset.formatted_as(
-            "custom" if transforms is not None else "numpy",
+            "custom" if is_callable_transform else "numpy",
             columns=feature_columns,
-            output_all_columns=True**format_kwargs,
+            output_all_columns=True,
+            **format_kwargs,
         ):
-            ds_with_preds = dataset.map(
+            pred_ds = dataset.map(
                 get_predictions,
-                batched=batched,
+                batched=True,
                 batch_size=batch_size,
+                remove_columns=dataset.column_names,
             )
 
-        if only_predictions:
-            return DatasetColumn(ds_with_preds.with_format("numpy"), pred_column)
+            if only_predictions:
+                return DatasetColumn(pred_ds.with_format("numpy"), pred_column)
 
-        return ds_with_preds
+            dataset = concatenate_datasets([dataset, pred_ds], axis=1)
+
+        return dataset
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save model to file."""
