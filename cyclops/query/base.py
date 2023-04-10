@@ -1,22 +1,47 @@
 """Base querier class."""
-
 import logging
 from functools import partial
-from typing import Any, Callable, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from hydra import compose, initialize
 from omegaconf import OmegaConf
+from sqlalchemy import MetaData
 from sqlalchemy.sql.selectable import Subquery
 
 from cyclops.query import ops as qo
 from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.orm import Database
-from cyclops.query.util import DBTable, TableTypes, _to_subquery, table_params_to_type
+from cyclops.query.util import (
+    DBSchema,
+    TableTypes,
+    _to_subquery,
+    get_attr_name,
+    table_params_to_type,
+)
 from cyclops.utils.log import setup_logging
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
+
+
+def _create_get_table_lambdafn(schema_name: str, table_name: str) -> Callable[..., Any]:
+    """Create a lambda function to access a table.
+
+    Parameters
+    ----------
+    schema_name: str
+        The schema name.
+    table_name: str
+        The table name.
+
+    Returns
+    -------
+    Callable
+        The lambda function.
+
+    """
+    return lambda db: getattr(getattr(db, schema_name), table_name)
 
 
 def _cast_timestamp_cols(table: Subquery) -> Subquery:
@@ -48,32 +73,28 @@ class DatasetQuerier:
 
     Attributes
     ----------
-    _db: cyclops.query.orm.Database
+    db: cyclops.query.orm.Database
         ORM Database used to run queries.
-    _table_map: Mapping
-        A dictionary mapping table names to table objects in the DB.
 
     Notes
     -----
     This class is intended to be subclassed to provide methods for querying tables in
-    the database. The subclass accepts a table map as an argument, which is a mapping
-    from table names to table objects. By default, the methods are named after the
-    table names. The subclass can override the table methods by defining a method with
-    the same name as the table. The subclass can also add additional methods.
+    the database. This class automatically creates methods for querying tables in the
+    database. The methods are named after the schema and table name, i.e.
+    `self.schema_name.table_name()`. The methods are created when the class is
+    instantiated. The subclass can provide custom methods for querying tables in the
+    database which can build on the methods created by this class.
 
     """
 
     def __init__(
         self,
-        table_map: Mapping[str, Callable[..., DBTable]],
         **config_overrides: Dict[str, Any],
     ) -> None:
         """Initialize.
 
         Parameters
         ----------
-        table_map: Mapping
-            A dictionary mapping table names to table objects in the DB.
         **config_overrides
              Override configuration parameters, specified as kwargs.
 
@@ -88,9 +109,22 @@ class DatasetQuerier:
             config = compose(config_name="config", overrides=overrides)
             LOGGER.debug(OmegaConf.to_yaml(config))
 
-        self._db = Database(config)
-        self._table_map = table_map
+        self.db = Database(config)
+        if not self.db.is_connected:
+            LOGGER.error("Database is not connected, cannot run queries.")
+            return
         self._setup_table_methods()
+
+    def list_schemas(self) -> List[str]:
+        """List schemas in the database to query.
+
+        Returns
+        -------
+        List[str]
+            List of schema names.
+
+        """
+        return list(self.db.inspector.get_schema_names())
 
     def list_tables(self) -> List[str]:
         """List table methods that can be queried using the database.
@@ -101,7 +135,33 @@ class DatasetQuerier:
             List of table names.
 
         """
-        return list(self._table_map.keys())
+        return self.db.list_tables()
+
+    def list_custom_tables(self) -> List[str]:
+        """List custom tables methods provided by the dataset API.
+
+        Returns
+        -------
+        List[str]
+            List of custom table names.
+
+        """
+        method_list = dir(self)
+        custom_tables = []
+        for method in method_list:
+            if (
+                not method.startswith(  # pylint: disable=too-many-boolean-expressions
+                    "__"
+                )
+                and not method.startswith("_")
+                and method not in self.list_schemas()
+                and not method.startswith("list_")
+                and not method.startswith("get_")
+                and method not in ["db"]
+            ):
+                custom_tables.append(method)
+
+        return custom_tables
 
     @table_params_to_type(Subquery)
     def get_interface(
@@ -129,18 +189,22 @@ class DatasetQuerier:
 
         """
         if process_fn is None:
-            return QueryInterface(self._db, table, ops=ops)
+            return QueryInterface(self.db, table, ops=ops)
 
-        return QueryInterfaceProcessed(self._db, table, ops=ops, process_fn=process_fn)
+        return QueryInterfaceProcessed(self.db, table, ops=ops, process_fn=process_fn)
 
-    def get_table(self, table_name: str, cast_timestamp_cols: bool = True) -> Subquery:
+    def get_table(
+        self, schema_name: str, table_name: str, cast_timestamp_cols: bool = True
+    ) -> Subquery:
         """Get a table and possibly map columns to have standard names.
 
-        Standardizing column names allows for for columns to be
+        Standardizing column names allows for columns to be
         recognized in downstream processing.
 
         Parameters
         ----------
+        schema_name: str
+            Name of schema in the database.
         table_name: str
             Name of GEMINI table.
         cast_timestamp_cols: bool
@@ -152,10 +216,7 @@ class DatasetQuerier:
             Table with mapped columns.
 
         """
-        if table_name not in self._table_map:
-            raise ValueError(f"{table_name} not a recognised table.")
-
-        table = self._table_map[table_name](self._db).data
+        table = _create_get_table_lambdafn(schema_name, table_name)(self.db).data
 
         if cast_timestamp_cols:
             table = _cast_timestamp_cols(table)
@@ -164,6 +225,7 @@ class DatasetQuerier:
 
     def _template_table_method(
         self,
+        schema_name: str,
         table_name: str,
         join: Optional[qo.JoinArgs] = None,
         ops: Optional[qo.Sequential] = None,
@@ -172,11 +234,13 @@ class DatasetQuerier:
 
         Parameters
         ----------
+        schema_name: str
+            Name of schema in the database.
         table_name: str
             Name of table in the database.
         join: cyclops.query.ops.JoinArgs
             Join arguments.
-        ops: cyclops.query.ops.Sequential
+        ops: cyclops.query.ops.Sequential or cyclops.query.ops.QueryOp, optional
             Operations to perform on the query.
 
         Returns
@@ -185,9 +249,10 @@ class DatasetQuerier:
             A query interface object.
 
         """
-        table = self.get_table(table_name)
+        table = getattr(getattr(self.db, schema_name), table_name).data
+        table = _to_subquery(table)
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def _setup_table_methods(self) -> None:
         """Add table methods.
@@ -196,10 +261,21 @@ class DatasetQuerier:
         the database. The methods are named after the table names.
 
         """
-        for table_name in self._table_map:
-            if not hasattr(self, table_name):
+        schemas = self.list_schemas()
+        meta: Dict[str, MetaData] = {}
+        for schema_name in schemas:
+            metadata = MetaData(schema=schema_name)
+            metadata.reflect(bind=self.db.engine)
+            meta[schema_name] = metadata
+            schema = DBSchema(schema_name, meta[schema_name])
+            for table_name in meta[schema_name].tables:
                 setattr(
-                    self,
-                    table_name,
-                    partial(self._template_table_method, table_name=table_name),
+                    schema,
+                    get_attr_name(table_name),
+                    partial(
+                        self._template_table_method,
+                        schema_name=schema_name,
+                        table_name=get_attr_name(table_name),
+                    ),
                 )
+            setattr(self, schema_name, schema)

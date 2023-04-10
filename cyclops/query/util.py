@@ -1,6 +1,4 @@
-# pylint: disable=too-many-lines
-
-"""Utility functions for querying."""
+"""Utility functions for querying."""  # pylint: disable=too-many-lines
 
 # mypy: ignore-errors
 
@@ -25,6 +23,11 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 COLUMN_OBJECTS = [Column, ColumnClause]
+
+
+def get_attr_name(name: str) -> str:
+    """Get attribute name (second part of first.second)."""
+    return name.split(".")[-1]
 
 
 @dataclass

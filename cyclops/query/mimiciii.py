@@ -17,37 +17,6 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-# Constants.
-PATIENTS = "patients"
-ADMISSIONS = "admissions"
-DIAGNOSES_ICD = "diagnoses_icd"
-LABEVENTS = "labevents"
-CHARTEVENTS = "chartevents"
-TRANSFERS = "transfers"
-PRESCRIPTIONS = "prescriptions"
-MICROBIOLOGYEVENTS = "microbiologyevents"
-PROCEDUREEVENTS_MV = "procedureevents_mv"
-DIM_ITEMS = "dim_items"
-DIM_LABITEMS = "dim_labitems"
-DIM_ICD_DIAGNOSES = "dim_icd_diagnoses"
-
-
-TABLE_MAP = {
-    PATIENTS: lambda db: db.mimiciii.patients,
-    ADMISSIONS: lambda db: db.mimiciii.admissions,
-    DIAGNOSES_ICD: lambda db: db.mimiciii.diagnoses_icd,
-    LABEVENTS: lambda db: db.mimiciii.labevents,
-    CHARTEVENTS: lambda db: db.mimiciii.chartevents,
-    TRANSFERS: lambda db: db.mimiciii.transfers,
-    PRESCRIPTIONS: lambda db: db.mimiciii.prescriptions,
-    MICROBIOLOGYEVENTS: lambda db: db.mimiciii.microbiologyevents,
-    PROCEDUREEVENTS_MV: lambda db: db.mimiciii.procedureevents_mv,
-    DIM_LABITEMS: lambda db: db.mimiciii.d_labitems,
-    DIM_ITEMS: lambda db: db.mimiciii.d_items,
-    DIM_ICD_DIAGNOSES: lambda db: db.mimiciii.d_icd_diagnoses,
-}
-
-
 class MIMICIIIQuerier(DatasetQuerier):
     """MIMIC-III dataset querier."""
 
@@ -63,9 +32,9 @@ class MIMICIIIQuerier(DatasetQuerier):
         overrides = {}
         if config_overrides:
             overrides = config_overrides
-        super().__init__(TABLE_MAP, **overrides)
+        super().__init__(**overrides)
 
-    def diagnoses_icd(
+    def diagnoses(
         self,
         join: Optional[qo.JoinArgs] = None,
         ops: Optional[qo.Sequential] = None,
@@ -85,16 +54,16 @@ class MIMICIIIQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(DIAGNOSES_ICD)
+        table = self.get_table("mimiciii", "diagnoses_icd")
 
         # Join with diagnoses dimension table.
         table = qo.Join(
-            join_table=self.get_table(DIM_ICD_DIAGNOSES),
+            join_table=self.get_table("mimiciii", "d_icd_diagnoses"),
             on=["icd9_code"],
             on_to_type=["str"],
         )(table)
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def labevents(
         self,
@@ -116,16 +85,16 @@ class MIMICIIIQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(LABEVENTS)
+        table = self.get_table("mimiciii", "labevents")
 
         # Join with lab dimension table.
         table = qo.Join(
-            join_table=self.get_table(DIM_LABITEMS),
+            join_table=self.get_table("mimiciii", "d_labitems"),
             on=["itemid"],
             on_to_type=["str"],
         )(table)
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)
 
     def chartevents(
         self,
@@ -147,13 +116,13 @@ class MIMICIIIQuerier(DatasetQuerier):
             Constructed query, wrapped in an interface object.
 
         """
-        table = self.get_table(CHARTEVENTS)
+        table = self.get_table("mimiciii", "chartevents")
 
         # Join with dimension table.
         table = qo.Join(
-            join_table=self.get_table(DIM_ITEMS),
+            join_table=self.get_table("mimiciii", "d_items"),
             on=["itemid"],
             on_to_type=["str"],
         )(table)
 
-        return QueryInterface(self._db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table, join=join, ops=ops)

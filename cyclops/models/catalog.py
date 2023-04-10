@@ -21,19 +21,22 @@ setup_logging(print_level="WARN", logger=LOGGER)
 _model_catalog: Dict[str, Any] = {}
 _temporal_model_keys: Set[str] = set()
 _static_model_keys: Set[str] = set()
+_img_model_keys: Set[str] = set()
 _pt_model_keys: Set[str] = set()
 _sk_model_keys: Set[str] = set()
 
 
-def register_model(name: str, model_type: Literal["static", "temporal"]) -> Callable:
+def register_model(
+    name: str, model_type: Literal["static", "temporal", "image"]
+) -> Callable:
     """Register model in the catalog.
 
     Parameters
     ----------
     name : str
         The name of the model.
-    model_type : "static", "temporal"
-        The temporal or static nature of the model.
+    model_type : "static", "temporal", "image"
+        The type of model.
 
     Returns
     -------
@@ -61,6 +64,8 @@ def register_model(name: str, model_type: Literal["static", "temporal"]) -> Call
             _static_model_keys.add(name)
         elif model_type == "temporal":
             _temporal_model_keys.add(name)
+        elif model_type == "image":
+            _img_model_keys.add(name)
         else:
             raise NotImplementedError(f"Model type {model_type} is not supported.")
 
@@ -81,13 +86,15 @@ def register_model(name: str, model_type: Literal["static", "temporal"]) -> Call
 
 
 def list_models(
-    category: Optional[Literal["static", "temporal", "pytorch", "sklearn"]] = None
+    category: Optional[
+        Literal["static", "temporal", "image", "pytorch", "sklearn"]
+    ] = None
 ) -> List[str]:
     """List models.
 
     Parameters
     ----------
-    category : "static", "temporal", "pytorch", "sklearn", optional
+    category : "static", "temporal", "image", "pytorch", "sklearn", optional
         The type of model to list. If None, all models are listed.
 
     Returns
@@ -102,6 +109,8 @@ def list_models(
         model_list = list(_static_model_keys)
     elif category == "temporal":
         model_list = list(_temporal_model_keys)
+    elif category == "image":
+        model_list = list(_img_model_keys)
     elif category == "pytorch":
         model_list = list(_pt_model_keys)
     elif category == "sklearn":

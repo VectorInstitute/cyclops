@@ -1,12 +1,11 @@
 """Classes for computing precision-recall curves."""
 
-from typing import List, Literal, Optional, Tuple, Type, Union
+from typing import Any, List, Literal, Optional, Tuple, Type, Union
 
 import numpy as np
 import numpy.typing as npt
 
-# pylint: disable=line-too-long
-from cyclops.evaluate.metrics.functional.precision_recall_curve import (  # type: ignore[attr-defined] # noqa: E501
+from cyclops.evaluate.metrics.functional.precision_recall_curve import (  # type: ignore # noqa: E501 # pylint: disable=line-too-long
     _binary_precision_recall_curve_compute,
     _binary_precision_recall_curve_format,
     _binary_precision_recall_curve_update,
@@ -113,6 +112,44 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
         return _binary_precision_recall_curve_compute(
             state=state, thresholds=self.thresholds, pos_label=self.pos_label
         )
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set the attribute ``name`` to ``value``.
+
+        This is defined for the case where `thresholds` is modified and the state
+        needs to be updated. For example, if thresholds was `None` and is later
+        set to a list or integer, we need to add the state "confmat" and remove
+        the states "preds" and "target"
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute to set.
+        value : Any
+            The value to set the attribute to.
+
+        """
+        if name == "thresholds" and "thresholds" in self.__dict__:
+            _check_thresholds(thresholds=value)
+            value = _format_thresholds(thresholds=value)
+            self.reset_state()
+            if self.thresholds is None and value is not None:
+                self.__dict__["thresholds"] = value
+                self.add_state(
+                    "confmat", default=np.zeros((len(value), 2, 2), dtype=np.int_)
+                )
+                del self.__dict__["preds"]
+                del self.__dict__["target"]
+            elif self.thresholds is not None and value is None:
+                self.__dict__["thresholds"] = value
+                self.add_state("preds", default=[])
+                self.add_state("target", default=[])
+                del self.__dict__["confmat"]
+            else:
+                self.__dict__["thresholds"] = value
+            return
+
+        super().__setattr__(name, value)
 
 
 class MulticlassPrecisionRecallCurve(
@@ -237,6 +274,44 @@ class MulticlassPrecisionRecallCurve(
             num_classes=self.num_classes,
         )
 
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set the attribute ``name`` to ``value``.
+
+        This is defined for the case where `thresholds` is modified and the state
+        needs to be updated. For example, if thresholds was `None` and is later
+        set to a list or integer, we need to add the state "confmat" and remove
+        the states "preds" and "target"
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute to set.
+        value : Any
+            The value to set the attribute to.
+
+        """
+        if name == "thresholds" and "thresholds" in self.__dict__:
+            _check_thresholds(thresholds=value)
+            value = _format_thresholds(thresholds=value)
+            self.reset_state()
+            if self.thresholds is None and value is not None:
+                self.__dict__["thresholds"] = value
+                self.add_state(
+                    "confmat", default=np.zeros((len(value), 2, 2), dtype=np.int_)
+                )
+                del self.__dict__["preds"]
+                del self.__dict__["target"]
+            elif self.thresholds is not None and value is None:
+                self.__dict__["thresholds"] = value
+                self.add_state("preds", default=[])
+                self.add_state("target", default=[])
+                del self.__dict__["confmat"]
+            else:
+                self.__dict__["thresholds"] = value
+            return
+
+        super().__setattr__(name, value)
+
 
 class MultilabelPrecisionRecallCurve(
     Metric, registry_key="multilabel_precision_recall_curve"
@@ -348,6 +423,44 @@ class MultilabelPrecisionRecallCurve(
             thresholds=self.thresholds,  # type: ignore[arg-type]
             num_labels=self.num_labels,
         )
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set the attribute ``name`` to ``value``.
+
+        This is defined for the case where `thresholds` is modified and the state
+        needs to be updated. For example, if thresholds was `None` and is later
+        set to a list or integer, we need to add the state "confmat" and remove
+        the states "preds" and "target"
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute to set.
+        value : Any
+            The value to set the attribute to.
+
+        """
+        if name == "thresholds" and "thresholds" in self.__dict__:
+            _check_thresholds(thresholds=value)
+            value = _format_thresholds(thresholds=value)
+            self.reset_state()
+            if self.thresholds is None and value is not None:
+                self.__dict__["thresholds"] = value
+                self.add_state(
+                    "confmat", default=np.zeros((len(value), 2, 2), dtype=np.int_)
+                )
+                del self.__dict__["preds"]
+                del self.__dict__["target"]
+            elif self.thresholds is not None and value is None:
+                self.__dict__["thresholds"] = value
+                self.add_state("preds", default=[])
+                self.add_state("target", default=[])
+                del self.__dict__["confmat"]
+            else:
+                self.__dict__["thresholds"] = value
+            return
+
+        super().__setattr__(name, value)
 
 
 class PrecisionRecallCurve(

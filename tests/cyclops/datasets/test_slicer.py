@@ -1,4 +1,4 @@
-"""Tests for cyclops.evaluate.slicing module."""
+"""Tests for cyclops.datasets.slicer module."""
 from functools import partial
 from typing import Any, Callable, List, Union
 
@@ -9,17 +9,18 @@ from datasets import Dataset
 from datasets.splits import Split
 
 import cyclops.query.ops as qo
-from cyclops.datasets.slicing import (
+from cyclops.datasets.slicer import (
     _maybe_convert_to_datetime,  # pylint: disable=protected-access
 )
-from cyclops.datasets.slicing import (
-    SlicingConfig,
-    filter_compound_feature_value,
-    filter_feature_value,
-    filter_feature_value_datetime,
-    filter_feature_value_range,
+from cyclops.datasets.slicer import (
+    SliceSpec,
+    compound_filter,
+    filter_datetime,
     filter_non_null,
-    no_filter,
+    filter_range,
+    filter_string_contains,
+    filter_value,
+    overall,
 )
 from cyclops.query.omop import OMOPQuerier
 
@@ -79,10 +80,10 @@ def get_filtered_dataset(table: pd.DataFrame, filter_func: Callable) -> Dataset:
 
 
 @pytest.mark.integration_test
-def test_no_filter():
-    """Test no filter."""
+def test_overall():
+    """Test overall filter."""
     table = visits_table()
-    filtered_ds = get_filtered_dataset(table=table, filter_func=no_filter)
+    filtered_ds = get_filtered_dataset(table=table, filter_func=overall)
     assert len(table) == len(filtered_ds)
 
 
@@ -93,7 +94,7 @@ def test_filter_non_null(column_name: str):
     table = measurement_table()
     filtered_ds = get_filtered_dataset(
         table=table,
-        filter_func=partial(filter_non_null, feature_keys=column_name),
+        filter_func=partial(filter_non_null, column_names=column_name),
     )
     assert None not in filtered_ds.unique(column_name)
 
@@ -107,7 +108,7 @@ def test_filter_non_null(column_name: str):
         ("unit_source_value", "n/a", True, True),
     ],
 )
-def test_filter_feature_value(
+def test_filter_value(
     column_name: str,
     value: Any,
     negate: bool,
@@ -115,8 +116,8 @@ def test_filter_feature_value(
 ):
     """Test filter feature value."""
     filter_func = partial(
-        filter_feature_value,
-        feature_key=column_name,
+        filter_value,
+        column_name=column_name,
         value=value,
         negate=negate,
         keep_nulls=keep_nulls,
@@ -148,7 +149,7 @@ def test_filter_feature_value(
         ("value_as_number", -np.inf, 69, True, False, True, False),
     ],
 )
-def test_filter_feature_value_range(
+def test_filter_range(
     column_name: str,
     min_value: Any,
     max_value: Any,
@@ -159,8 +160,8 @@ def test_filter_feature_value_range(
 ):
     """Test filter feature value range."""
     filter_func = partial(
-        filter_feature_value_range,
-        feature_key=column_name,
+        filter_range,
+        column_name=column_name,
         min_value=min_value,
         max_value=max_value,
         min_inclusive=min_inclusive,
@@ -188,7 +189,7 @@ def test_filter_feature_value_range(
     if not (
         np.issubdtype(col_dtype, np.number) or np.issubdtype(col_dtype, np.datetime64)
     ):
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
         return
 
@@ -239,7 +240,7 @@ def test_filter_feature_value_range(
         ("visit_start_date", 2014, 1, 14, 0, True, True),
     ],
 )
-def test_filter_feature_value_datetime(
+def test_filter_datetime(
     column_name: str,
     year: Union[int, str, List[int], List[str]],
     month: Union[int, List[int]],
@@ -250,8 +251,8 @@ def test_filter_feature_value_datetime(
 ):
     """Test filter feature value datetime."""
     filter_func = partial(
-        filter_feature_value_datetime,
-        feature_key=column_name,
+        filter_datetime,
+        column_name=column_name,
         year=year,
         month=month,
         day=day,
@@ -291,6 +292,52 @@ def test_filter_feature_value_datetime(
 
 @pytest.mark.integration_test
 @pytest.mark.parametrize(
+    "column_name,contains,negate,keep_nulls",
+    [
+        ("unit_source_value", "kg", False, False),
+        ("unit_source_value", ["kg", "mm"], False, False),
+        ("unit_source_value", ["kg", "mm"], True, False),
+        ("unit_source_value", ["kg", "mm"], True, True),
+    ],
+)
+def test_filter_string_contains(
+    column_name: str, contains: str, negate: bool, keep_nulls: bool
+):
+    """Test filter feature value string contains."""
+    filter_func = partial(
+        filter_string_contains,
+        column_name=column_name,
+        contains=contains,
+        negate=negate,
+        keep_nulls=keep_nulls,
+    )
+    table = measurement_table()
+
+    filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
+    examples = filtered_ds[column_name]
+    col = table[column_name]
+
+    if isinstance(contains, str):
+        contains = [contains]
+
+    result = np.zeros_like(col, dtype=bool)
+    for substring in contains:
+        result |= col.str.contains(substring, case=False).to_numpy(dtype=bool)
+
+    if negate:
+        result = ~result
+
+    if keep_nulls:
+        result |= pd.isnull(col)
+    else:
+        result &= pd.notnull(col)
+
+    expected = table[result][column_name]
+    assert np.array_equal(examples, expected)
+
+
+@pytest.mark.integration_test
+@pytest.mark.parametrize(
     "value_col,value,range_col,range_min,range_max, datetime_col,year,month",
     [
         (
@@ -305,7 +352,7 @@ def test_filter_feature_value_datetime(
         )
     ],
 )
-def test_compound_feature_value(
+def test_compound_filter(
     value_col: str,
     value: Any,
     range_col: str,
@@ -318,8 +365,8 @@ def test_compound_feature_value(
     """Test compound feature value filter."""
     # filter specific value(s)
     filter_func_values = partial(
-        filter_feature_value,
-        feature_key=value_col,
+        filter_value,
+        column_name=value_col,
         value=value,
         negate=False,
         keep_nulls=False,
@@ -328,8 +375,8 @@ def test_compound_feature_value(
 
     # filter range
     filter_func_range = partial(
-        filter_feature_value_range,
-        feature_key=range_col,
+        filter_range,
+        column_name=range_col,
         min_value=range_min,
         max_value=range_max,
         min_inclusive=False,
@@ -340,8 +387,8 @@ def test_compound_feature_value(
 
     # filter datetime
     filter_func_datetime = partial(
-        filter_feature_value_datetime,
-        feature_key=datetime_col,
+        filter_datetime,
+        column_name=datetime_col,
         year=year,
         month=month,
         day=None,
@@ -353,7 +400,7 @@ def test_compound_feature_value(
     filtered_ds = get_filtered_dataset(
         table=table,
         filter_func=partial(
-            filter_compound_feature_value,
+            compound_filter,
             slice_functions=[
                 filter_func_values,
                 filter_func_range,
@@ -390,17 +437,18 @@ def test_compound_feature_value(
 
 
 @pytest.mark.integration_test
-def test_slicing_config():
-    """Test SlicingConfig class."""
+def test_slice_spec():
+    """Test SliceSpec class."""
     value1 = ["mmHg", "kg", "mL", "mL/min"]
-    value2 = ["mm", "cm"]
+    value2 = "cm"
     min_value = 100
     max_value = 1000
     year = [2000, 2005, 2010, 2015]
     month = [1, 2, 3, 4, 5, 10, 11, 12]
 
-    feature_keys = ["unit_source_value", "value_as_number"]
-    feature_values = [
+    spec_list = [
+        {"unit_source_value": {"keep_nulls": False}},
+        {"value_as_number": {"keep_nulls": False}},
         {"unit_source_value": {"value": value1}},
         {"value_as_number": {"min_value": min_value, "max_value": max_value}},
         {"measurement_datetime": {"year": year}},
@@ -417,43 +465,41 @@ def test_slicing_config():
 
     table = measurement_table()
 
-    slice_config = SlicingConfig(
-        feature_keys=feature_keys,
-        feature_values=feature_values,
-        column_names=table.columns,
-    )
-    assert slice_config.feature_keys == feature_keys
-    assert slice_config.feature_values == feature_values
+    slice_spec = SliceSpec(spec_list=spec_list, column_names=table.columns)
+    assert slice_spec.spec_list == spec_list
 
-    for slice_name, slice_func in slice_config.get_slices().items():
+    for slice_name, slice_func in slice_spec.slices():
         assert callable(slice_func)
 
         filtered_ds = get_filtered_dataset(table, filter_func=slice_func)
 
         # check that the filtered dataset has the correct values
-        if slice_name == "filter_non_null:unit_source_value":
+        if slice_name == "unit_source_value:non_null":
             assert None not in filtered_ds.unique("unit_source_value")
-        if slice_name == "filter_non_null:value_as_number":
+        if slice_name == "value_as_number:non_null":
             assert None not in filtered_ds.unique("value_as_number")
-        if "filter_feature_value" in slice_name:
+        if "unit_source_value:['mmHg', 'kg', 'mL', 'mL/min']" in slice_name:
             assert np.all(
                 np.isin(
                     filtered_ds["unit_source_value"], ["mmHg", "kg", "mL", "mL/min"]
                 )
             )
-        if "filter_feature_value_range" in slice_name:
+        if f"value_as_number:[{min_value} - {max_value}]" in slice_name:
             assert np.all(
-                np.greater(filtered_ds["value_as_number"], min_value)
-                & np.less(filtered_ds["value_as_number"], max_value)
+                np.greater_equal(filtered_ds["value_as_number"], min_value)
+                & np.less_equal(filtered_ds["value_as_number"], max_value)
             )
-        if "filter_feature_value_datetime" in slice_name:
+        if f"measurement_datetime:year={year}" in slice_name:
             assert np.all(
                 np.isin(
                     pd.to_datetime(filtered_ds["measurement_datetime"]).year,
                     year,
                 )
             )
-        if "filter_compound_feature_value" in slice_name:
+        if (
+            f"unit_source_value:cm&!(value_as_number:-inf - {max_value})&measurement_datetime:month={month}"  # noqa: E501 # pylint: disable=line-too-long
+            in slice_name
+        ):
             assert np.all(
                 np.isin(filtered_ds["unit_source_value"], value2)
                 & (np.greater(filtered_ds["value_as_number"], max_value))

@@ -1,4 +1,4 @@
-"""MIMICIV processor."""
+"""MIMICIV processor."""  # pylint: disable=too-many-lines
 
 import logging
 from os import path
@@ -32,7 +32,7 @@ from cyclops.utils.file import (
 from cyclops.utils.log import setup_logging
 from use_cases.util import get_top_events, get_use_case_params, valid_events
 
-# pylint: disable=invalid-name, unnecessary-lambda-assignment, too-many-lines
+# pylint: disable=invalid-name, unnecessary-lambda-assignment
 # pylint: disable=too-many-instance-attributes,
 
 LOGGER = logging.getLogger(__name__)
@@ -1294,7 +1294,7 @@ class MIMICIVProcessor:
         cleaned_generator = self._load_batches(self.cleaned_dir)
         filter_fn = None
         if (
-            self.temp_params["query"] == mimic.CHARTEVENTS
+            self.temp_params["query"] == mimic.CHARTEVENTS  # pylint: disable=no-member
             and self.temp_params["top_n_events"]
         ):
             LOGGER.info("Getting top %d events", self.temp_params["top_n_events"])

@@ -1,3 +1,6 @@
+.. role:: hidden
+    :class: hidden-section
+
 cyclops.query
 =============
 
@@ -5,8 +8,8 @@ cyclops.query
 
 .. autosummary::
     :toctree: _autosummary
+    :nosignatures:
     :template: custom-module-template.rst
-    :recursive:
 
     interface
     ops
@@ -17,8 +20,8 @@ dataset APIs
 
 .. autosummary::
     :toctree: _autosummary
+    :nosignatures:
     :template: custom-module-template.rst
-    :recursive:
 
     mimiciv
     omop
