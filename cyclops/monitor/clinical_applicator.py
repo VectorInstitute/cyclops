@@ -4,12 +4,8 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from datasets.arrow_dataset import Dataset
 
-<<<<<<< HEAD
-from cyclops.datasets.slicing import SlicingConfig
-from cyclops.monitor.utils import set_decode, sync_transforms
-=======
 from cyclops.datasets.slicer import SliceSpec
->>>>>>> origin/main
+from cyclops.monitor.utils import set_decode, sync_transforms
 
 
 class ClinicalShiftApplicator:
@@ -50,8 +46,8 @@ class ClinicalShiftApplicator:
     def __init__(
         self,
         shift_type: str,
-        source: Union[str, SlicingConfig],
-        target: Union[str, SlicingConfig],
+        source: Union[str, SliceSpec],
+        target: Union[str, SliceSpec],
         shift_id: Optional[str] = None,
     ):
         self.shift_type = shift_type
@@ -158,9 +154,8 @@ class ClinicalShiftApplicator:
                     num_proc=num_proc,
                 )
 
-<<<<<<< HEAD
-            target_slice = SlicingConfig(
-                feature_values=[
+            target_slice = SliceSpec(
+                spec_list=[
                     {
                         shift_id: {
                             "min_value": target[0],
@@ -168,16 +163,6 @@ class ClinicalShiftApplicator:
                             "min_inclusive": True,
                             "max_inclusive": True,
                         }
-=======
-        target_slice = SliceSpec(
-            spec_list=[
-                {
-                    shift_id: {
-                        "min_value": target[0],
-                        "max_value": target[1],
-                        "min_inclusive": True,
-                        "max_inclusive": True,
->>>>>>> origin/main
                     }
                 ]
             )
@@ -234,10 +219,9 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-<<<<<<< HEAD
         set_decode(dataset, False)
         with dataset.formatted_as("numpy", output_all_columns=True):
-            source_slice = SlicingConfig(feature_values=[{shift_id: {"value": source}}])
+            source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
             for _, shift_func in source_slice.get_slices().items():
                 ds_source = dataset.filter(
                     shift_func,
@@ -246,7 +230,7 @@ class ClinicalShiftApplicator:
                     num_proc=num_proc,
                 )
 
-            target_slice = SlicingConfig(feature_values=[{shift_id: {"value": target}}])
+            target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
             for _, shift_func in target_slice.get_slices().items():
                 ds_target = dataset.filter(
                     shift_func,
@@ -259,19 +243,6 @@ class ClinicalShiftApplicator:
         set_decode(ds_target, True)
         ds_source = sync_transforms(dataset, ds_source)
         ds_target = sync_transforms(dataset, ds_target)
-=======
-        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
-        for _, shift_func in source_slice.get_slices().items():
-            ds_source = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
-
-        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
-        for _, shift_func in target_slice.get_slices().items():
-            ds_target = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
->>>>>>> origin/main
         return ds_source, ds_target
 
     def hospital_type(
@@ -313,10 +284,9 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-<<<<<<< HEAD
         set_decode(dataset, False)
         with dataset.formatted_as("numpy", output_all_columns=True):
-            source_slice = SlicingConfig(feature_values=[{shift_id: {"value": source}}])
+            source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
             for _, shift_func in source_slice.get_slices().items():
                 ds_source = dataset.filter(
                     shift_func,
@@ -325,7 +295,7 @@ class ClinicalShiftApplicator:
                     num_proc=num_proc,
                 )
 
-            target_slice = SlicingConfig(feature_values=[{shift_id: {"value": target}}])
+            target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
             for _, shift_func in target_slice.get_slices().items():
                 ds_target = dataset.filter(
                     shift_func,
@@ -338,33 +308,14 @@ class ClinicalShiftApplicator:
         set_decode(ds_target, True)
         ds_source = sync_transforms(dataset, ds_source)
         ds_target = sync_transforms(dataset, ds_target)
-=======
-        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
-        for _, shift_func in source_slice.get_slices().items():
-            ds_source = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
-
-        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
-        for _, shift_func in target_slice.get_slices().items():
-            ds_target = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
->>>>>>> origin/main
         return ds_source, ds_target
 
     def custom(
         self,
         dataset: Dataset,
-<<<<<<< HEAD
-        source: SlicingConfig,
-        target: SlicingConfig,
-        shift_id: Optional[str] = None,
-=======
         source: SliceSpec,
         target: SliceSpec,
-        shift_id: str = None,
->>>>>>> origin/main
+        shift_id: Optional[str] = None,
         batched: bool = True,
         batch_size: int = 1000,
         num_proc: int = 1,
