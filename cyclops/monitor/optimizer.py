@@ -6,7 +6,7 @@ from typing import Any, Callable, Generator, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
 
 class Optimizer:

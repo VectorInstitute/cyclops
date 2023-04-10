@@ -1,15 +1,17 @@
 """Utilities for the drift detector module."""
 
+import datetime
 import importlib
 import inspect
 import os
 import pickle
 from datetime import timedelta
+from functools import partial
 from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -17,26 +19,34 @@ import PIL
 import torch
 from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
 from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
-from scipy.special import softmax
+from datasets import Image
+from datasets.arrow_dataset import Dataset
+from monai.transforms import Compose, Lambdad, Resized, ToDeviced  # type: ignore
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset as TorchDataset
+from torch.utils.data import TensorDataset
 from torchvision.transforms import PILToTensor
 
 from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
 from cyclops.models.neural_nets.rnn import RNNModel
-from cyclops.models.wrappers import SKModel
+from cyclops.models.wrappers import SKModel  # type: ignore
+from cyclops.monitor.reductor import Reductor
 
 
-def apply_transforms(examples: Dict[str, List], transforms: callable) -> dict:
+def apply_transforms(
+    examples: Dict[str, Any], transforms: Callable[..., Any]
+) -> Dict[str, Any]:
     """Apply transforms to examples."""
     # examples is a dict of lists; convert to list of dicts.
     # doing a conversion from PIL to tensor is necessary here when working
     # with the Image feature type.
     value_len = len(list(examples.values())[0])
-    examples = [
+    examples_list = [
         {
             k: PILToTensor()(v[i]) if isinstance(v[i], PIL.Image.Image) else v[i]
             for k, v in examples.items()
@@ -45,15 +55,97 @@ def apply_transforms(examples: Dict[str, List], transforms: callable) -> dict:
     ]
 
     # apply the transforms to each example
-    examples = [transforms(example) for example in examples]
+    examples_list = [transforms(example) for example in examples_list]
 
     # convert back to a dict of lists
-    examples = {k: [d[k] for d in examples] for k in examples[0]}
+    examples = {k: [d[k] for d in examples_list] for k in examples_list[0]}
 
     return examples
 
 
-def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1):
+def set_decode(
+    dataset: Dataset, decode: bool = True, exclude: Optional[List[str]] = None
+) -> None:
+    """Set decode attribute of dataset features that have it.
+
+    Parameters
+    ----------
+    dataset : Dataset
+       A Hugging Face dataset object.
+    decode : bool, optional, default=True
+        Whether to set decode attribute to True or False for features that have
+        it.
+    exclude : List[str], optional, default=None
+        List of feature names to exclude. If None, no features are excluded.
+        An example of when this might be useful is when dealing with image
+        segmentation tasks where the target and prediction are images that need
+        to be decoded, whereas the original image may not need to be decoded.
+
+    """
+    assert isinstance(dataset, Dataset), "dataset must be a Hugging Face dataset"
+    if exclude is not None:
+        if not isinstance(exclude, list) or not all(
+            feature in dataset.column_names for feature in exclude
+        ):
+            raise ValueError(
+                "`exclude` must be a list of feature names that are present in "
+                f"dataset. Got {exclude} of type `{type(exclude)}` and dataset "
+                f"with columns {dataset.column_names}."
+            )
+
+    for feature_name, feature in dataset.features.items():
+        if feature_name not in (exclude or []) and hasattr(feature, "decode"):
+            # dataset.cast_column(feature_name, Image(decode = decode))
+            dataset.features[feature_name].decode = decode
+
+
+def load_nihcxr(path: str, device: str = "cpu") -> Dataset:
+    """Load NIH Chest X-Ray dataset as a Huggingface dataset."""
+    transforms = Compose(
+        [
+            Resized(
+                keys=("features",), spatial_size=(1, 224, 224), allow_missing_keys=True
+            ),
+            Lambdad(
+                keys=("features",),
+                func=lambda x: ((2 * (x / 255.0)) - 1.0) * 1024,
+                allow_missing_keys=True,
+            ),
+            ToDeviced(keys=("features",), device=device, allow_missing_keys=True),
+        ],
+    )
+    df = pd.read_csv(os.path.join(path, "Data_Entry_2017.csv"))
+    df = nihcxr_preprocess(df, path)
+    nih_ds = Dataset.from_pandas(df, preserve_index=False)
+    nih_ds.add_column(
+        "timestamp",
+        pd.date_range(start="1/1/2019", end="12/25/2019", periods=nih_ds.num_rows),
+    )
+    nih_ds = nih_ds.cast_column("features", Image(decode=True))
+    nih_ds = nih_ds.with_transform(
+        partial(apply_transforms, transforms=transforms),
+        columns=["features"],
+        output_all_columns=True,
+    )
+    return nih_ds
+
+
+def sync_transforms(ds1: Dataset, ds2: Dataset) -> Dataset:
+    """Sync transforms from dataset 1 to dataset 2."""
+    # check if "transform is in ds1.format"
+    if "transform" in ds1.format["format_kwargs"]:
+        transforms = ds1.format["format_kwargs"]["transform"].keywords["transforms"]
+        ds2 = ds2.with_transform(
+            partial(apply_transforms, transforms=transforms),
+            columns=ds1.format["columns"],
+            output_all_columns=ds1.format["output_all_columns"],
+        )
+    return ds2
+
+
+def print_metrics_binary(
+    y_test_labels: Any, y_pred_values: Any, y_pred_labels: Any, verbose: int = 1
+) -> Dict[str, Any]:
     """Print metrics for binary classification."""
     conf_matrix = metrics.confusion_matrix(y_test_labels, y_pred_labels)
     if verbose:
@@ -97,15 +189,17 @@ def print_metrics_binary(y_test_labels, y_pred_values, y_pred_labels, verbose=1)
     }
 
 
-def load_ckp(checkpoint_fpath, model):
+def load_ckp(
+    checkpoint_fpath: str, model: nn.Module
+) -> Tuple[nn.Module, Optimizer, int]:
     """Load checkpoint."""
-    checkpoint = torch.load(checkpoint_fpath)
+    checkpoint = torch.load(checkpoint_fpath)  # type: ignore
     model.load_state_dict(checkpoint["model"])
     optimizer = checkpoint["optimizer"]
     return model, optimizer, checkpoint["n_epochs"]
 
 
-def get_device():
+def get_device() -> torch.device:
     """Get device."""
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -114,7 +208,7 @@ def get_device():
     return device
 
 
-def get_temporal_model(model, model_params):
+def get_temporal_model(model: str, model_params: Dict[str, Any]) -> nn.Module:
     """Get temporal model.
 
     Parameters
@@ -124,34 +218,18 @@ def get_temporal_model(model, model_params):
 
     """
     models = {"rnn": RNNModel, "lstm": LSTMModel, "gru": GRUModel}
-    return models.get(model.lower())(**model_params)
+    return models[model.lower()](**model_params)
 
 
-def get_data(X, y):
-    """Convert pandas dataframe to dataset.
-
-    Parameters
-    ----------
-    X: numpy matrix
-        Data containing features in the form of [samples, timesteps, features].
-    y: list
-        List of labels.
-
-    """
-    inputs = torch.tensor(X, dtype=torch.float32)
-    target = torch.tensor(y, dtype=torch.float32)
-    return Data(inputs, target)
-
-
-class Data:
+class Data(TorchDataset[Tuple[torch.Tensor, torch.Tensor]]):
     """Data class."""
 
-    def __init__(self, inputs, target):
+    def __init__(self, inputs: pd.DataFrame, target: pd.DataFrame):
         """Initialize Data class."""
         self.inputs = inputs
         self.target = target
 
-    def __getitem__(self, idx: int) -> tuple:
+    def __getitem__(self, idx: int) -> Tuple[Any, Any]:
         """Get item for iterator.
 
         Parameters
@@ -178,7 +256,7 @@ class Data:
         """
         return len(self.target)
 
-    def dim(self) -> int:
+    def dim(self) -> Any:
         """Get dataset dimensions (no. of features).
 
         Returns
@@ -189,7 +267,13 @@ class Data:
         """
         return self.inputs.size(dim=1)
 
-    def to_loader(self, batch_size, num_workers=0, shuffle=False, pin_memory=True):
+    def to_loader(
+        self,
+        batch_size: int,
+        num_workers: int = 0,
+        shuffle: bool = False,
+        pin_memory: bool = True,
+    ) -> DataLoader[Any]:
         """Create dataloader.
 
         Returns
@@ -206,7 +290,29 @@ class Data:
         )
 
 
-def run_model(model_name, X, y, X_val, y_val):
+def get_data(X: np.ndarray[float, np.dtype[np.float64]], y: List[int]) -> Data:
+    """Convert pandas dataframe to dataset.
+
+    Parameters
+    ----------
+    X: numpy matrix
+        Data containing features in the form of [samples, timesteps, features].
+    y: list
+        List of labels.
+
+    """
+    inputs = torch.tensor(X, dtype=torch.float32)
+    target = torch.tensor(y, dtype=torch.float32)
+    return Data(inputs, target)
+
+
+def run_model(
+    model_name: str,
+    X: pd.DataFrame,
+    y: pd.DataFrame,
+    X_val: pd.DataFrame,
+    y_val: pd.DataFrame,
+) -> SKModel:
     """Choose and run a model on the data and return the best model."""
     if model_name == "mlp":
         model = SKModel("mlp", save_path="./mlp.pkl")
@@ -223,7 +329,7 @@ def run_model(model_name, X, y, X_val, y_val):
     return model
 
 
-def get_args(obj, kwargs):
+def get_args(obj: Any, kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """Get valid arguments from kwargs to pass to object.
 
     Parameters
@@ -246,12 +352,13 @@ def get_args(obj, kwargs):
             if key in inspect.signature(obj).parameters:
                 args[key] = kwargs[key]
         elif inspect.ismethod(obj) or inspect.isfunction(obj):
-            if key in obj.__code__.co_varnames:
+            # if key in obj.__code__.co_varnames:
+            if key in inspect.getfullargspec(obj).args:
                 args[key] = kwargs[key]
     return args
 
 
-def get_obj_from_str(string, reload=False):
+def get_obj_from_str(string: str, reload: bool = False) -> Any:
     """Get object from string."""
     module, cls = string.rsplit(".", 1)
     if reload:
@@ -260,7 +367,7 @@ def get_obj_from_str(string, reload=False):
     return getattr(importlib.import_module(module, package=None), cls)
 
 
-def load_model(model_path: str):
+def load_model(model_path: str) -> Any:
     """Load pre-trained model from path.
 
     Loads pre-trained model from specified model path.
@@ -278,11 +385,11 @@ def load_model(model_path: str):
         with open(model_path, "rb") as file:
             model = pickle.load(file)
     elif file_type == "pt":
-        model = torch.load(model_path)
+        model = torch.load(model_path)  # type: ignore
     return model
 
 
-def save_model(model, output_path: str):
+def save_model(model: Any, output_path: str) -> None:
     """Save the model to disk.
 
     For scikit-learn models, a pickle is saved to disk.
@@ -307,33 +414,29 @@ class ContextMMDWrapper:
 
     def __init__(
         self,
-        X_s,
+        X_s: np.ndarray[float, np.dtype[np.float64]],
+        ds_source: Dataset,
+        context_generator: Reductor,
         *,
-        backend="pytorch",
-        p_val=0.05,
-        preprocess_x_ref=True,
-        update_ref=None,
-        preprocess_fn=None,
-        x_kernel=None,
-        c_kernel=None,
-        n_permutations=100,
-        prop_c_held=0.25,
-        n_folds=5,
-        batch_size=64,
-        device=None,
-        input_shape=None,
-        data_type=None,
-        verbose=False,
-        context_type="lstm",
-        model_path=None,
+        backend: str = "tensorflow",
+        p_val: float = 0.05,
+        preprocess_x_ref: bool = False,
+        update_ref: Optional[Dict[str, int]] = None,
+        preprocess_fn: Optional[Callable[..., Any]] = None,
+        x_kernel: Optional[Callable[..., Any]] = None,
+        c_kernel: Optional[Callable[..., Any]] = None,
+        n_permutations: int = 1000,
+        prop_c_held: float = 0.25,
+        n_folds: int = 5,
+        batch_size: Optional[int] = 256,
+        device: Optional[Union[str, torch.device]] = None,
+        input_shape: Optional[Tuple[int, ...]] = None,
+        data_type: Optional[str] = None,
+        verbose: bool = False,
     ):
-        self.context_type = context_type
-        self.model_path = model_path
+        self.context_generator = context_generator
 
-        self.device = device
-        if self.device is None:
-            self.device = get_device()
-        c_source = self.context(X_s)
+        c_source = context_generator.transform(ds_source)
 
         args = [
             backend,
@@ -355,36 +458,17 @@ class ContextMMDWrapper:
 
         self.tester = ContextMMDDrift(X_s, c_source, *args)
 
-    def predict(self, X_t, **kwargs):
+    def predict(
+        self,
+        X_t: np.ndarray[float, np.dtype[np.float64]],
+        ds_target: Dataset,
+        **kwargs: Dict[str, Any],
+    ) -> Any:
         """Predict if there is drift in the data."""
-        c_target = self.context(X_t)
+        c_target = self.context_generator.transform(ds_target)
         return self.tester.predict(
             X_t, c_target, **get_args(self.tester.predict, kwargs)
         )
-
-    def context(self, X: np.ndarray):
-        """Get context for context mmd drift detection.
-
-        Parameters
-        ----------
-        X
-            Data to build context for context mmd drift detection.
-
-        """
-        if self.context_type == "sklearn":
-            model = load_model(self.model_path)
-            pred_proba = model.predict_proba(X)
-            output = pred_proba
-        elif self.context_type in ["rnn", "gru", "lstm"]:
-            model = recurrent_neural_network(self.context_type, X.shape[-1])
-            model.load_state_dict(load_model(self.model_path)["model"])
-            model.to(self.device).eval()
-            with torch.no_grad():
-                output = model(torch.from_numpy(X).to(self.device)).cpu().numpy()
-                output = softmax(output, -1)
-        else:
-            raise ValueError("Context not supported")
-        return output
 
 
 class LKWrapper:
@@ -392,39 +476,37 @@ class LKWrapper:
 
     def __init__(
         self,
-        X_s,
+        X_s: np.ndarray[float, np.dtype[np.float64]],
+        projection: torch.nn.Module,
         *,
         backend: str = "tensorflow",
         p_val: float = 0.05,
         x_ref_preprocessed: bool = False,
         preprocess_at_init: bool = True,
         update_x_ref: Optional[Dict[str, int]] = None,
-        preprocess_fn: Optional[Callable] = None,
+        preprocess_fn: Optional[Callable[..., Any]] = None,
         n_permutations: int = 100,
         var_reg: float = 1e-5,
-        reg_loss_fn: Callable = (lambda kernel: 0),
+        reg_loss_fn: Callable[..., Any] = (lambda kernel: 0),
         train_size: Optional[float] = 0.75,
         retrain_from_scratch: bool = True,
-        optimizer: Optional[Callable] = None,
+        optimizer: Optional[Callable[..., Any]] = None,
         learning_rate: float = 1e-3,
         batch_size: int = 32,
-        preprocess_batch_fn: Optional[Callable] = None,
+        preprocess_batch_fn: Optional[Callable[..., Any]] = None,
         epochs: int = 3,
         verbose: int = 0,
-        train_kwargs: Optional[dict] = None,
+        train_kwargs: Optional[Dict[str, Any]] = None,
         device: Optional[str] = None,
-        dataset: Optional[Callable] = None,
-        dataloader: Optional[Callable] = None,
-        input_shape: Optional[tuple] = None,
+        dataset: Optional[Callable[..., Any]] = None,
+        dataloader: Optional[Callable[..., Any]] = None,
+        input_shape: Optional[Tuple[int, ...]] = None,
         data_type: Optional[str] = None,
-        kernel_a=GaussianRBF(trainable=True),
-        kernel_b=GaussianRBF(trainable=True),
-        eps="trainable",
-        proj_type="ffnn",
-        num_features=None,
-        num_classes=None,
+        kernel_a: nn.Module = GaussianRBF(trainable=True),
+        kernel_b: nn.Module = GaussianRBF(trainable=True),
+        eps: str = "trainable",
     ):
-        self.proj = self.choose_proj(X_s, proj_type, num_features, num_classes)
+        self.proj = projection
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
@@ -456,105 +538,14 @@ class LKWrapper:
 
         self.tester = LearnedKernelDrift(X_s, kernel, *args)
 
-    def predict(self, X_t, **kwargs):
+    def predict(
+        self, X_t: np.ndarray[float, np.dtype[np.float64]], **kwargs: Dict[str, Any]
+    ) -> Any:
         """Predict if there is drift in the data."""
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
 
-    def choose_proj(self, X_s, proj_type, num_features, num_classes):
-        """Choose projection for learned kernel drift detection."""
-        num_features = num_features or X_s.shape[-1]
-        num_classes = num_classes or X_s.shape[-1]
-        if proj_type in ["rnn", "gru", "lstm"]:
-            proj = recurrent_neural_network(proj_type, num_features, num_classes)
-        elif proj_type == "ffnn":
-            proj = feed_forward_neural_network(num_features, num_classes)
-        elif proj_type == "cnn":
-            proj = convolutional_neural_network(num_features, num_classes)
-        else:
-            raise ValueError("Invalid projection type.")
-        return proj
 
-
-def recurrent_neural_network(
-    model_name: str,
-    input_dim: int,
-    hidden_dim=64,
-    layer_dim=2,
-    dropout=0.2,
-    output_dim=1,
-    last_timestep_only=False,
-):
-    """Create a recurrent neural network model.
-
-    Parameters
-    ----------
-    model_name
-        type of rnn model, one of: "rnn", "lstm", "gru"
-    input_dim
-        number of features
-
-    Returns
-    -------
-    model: torch.nn.Module
-        recurrent neural network model.
-
-    """
-    model_params = {
-        "device": get_device(),
-        "input_dim": input_dim,
-        "hidden_dim": hidden_dim,
-        "layer_dim": layer_dim,
-        "output_dim": output_dim,
-        "dropout_prob": dropout,
-        "last_timestep_only": last_timestep_only,
-    }
-    model = get_temporal_model(model_name, model_params)
-    return model
-
-
-def feed_forward_neural_network(
-    num_features: int, num_classes: int, ff_dim: int = 256
-) -> nn.Module:
-    """Create a feed forward neural network model.
-
-    Returns
-    -------
-    model: torch.nn.Module
-        feed forward neural network model.
-
-    """
-    ffnn = nn.Sequential(
-        nn.Linear(num_features, ff_dim),
-        nn.SiLU(),
-        nn.Linear(ff_dim, ff_dim),
-        nn.SiLU(),
-        nn.Linear(ff_dim, num_classes),
-    ).eval()
-    return ffnn
-
-
-def convolutional_neural_network(num_channels, num_classes, cnn_dim=256) -> nn.Module:
-    """Create a convolutional neural network model.
-
-    Returns
-    -------
-    torch.nn.Module
-        convolutional neural network for dimensionality reduction.
-
-    """
-    cnn = nn.Sequential(
-        nn.Conv2d(num_channels, cnn_dim, 4, stride=2, padding=0),
-        nn.ReLU(),
-        nn.Conv2d(cnn_dim, cnn_dim, 4, stride=2, padding=0),
-        nn.ReLU(),
-        nn.AdaptiveAvgPool2d(1),
-        nn.Flatten(1, -1),
-        nn.Linear(cnn_dim, num_classes),
-    ).eval()
-    return cnn
-
-
-def scale(x: pd.DataFrame):
+def scale(x: pd.DataFrame) -> pd.DataFrame:
     """Scale columns of temporal dataframe.
 
     Returns
@@ -577,7 +568,9 @@ def scale(x: pd.DataFrame):
     return x
 
 
-def daterange(start_date, end_date, stride: int, window: int):
+def daterange(
+    start_date: datetime.date, end_date: datetime.date, stride: int, window: int
+) -> Generator[datetime.date, None, None]:
     """Output a range of dates.
 
     Outputs a range of dates after applying a shift of
@@ -595,17 +588,17 @@ def daterange(start_date, end_date, stride: int, window: int):
 
 
 def get_serving_data(
-    X,
-    y,
-    admin_data,
-    start_date,
-    end_date,
-    stride=1,
-    window=1,
-    ids_to_exclude=None,
-    encounter_id="encounter_id",
-    admit_timestamp="admit_timestamp",
-):
+    X: pd.DataFrame,
+    y: pd.DataFrame,
+    admin_data: pd.DataFrame,
+    start_date: datetime.date,
+    end_date: datetime.date,
+    stride: int = 1,
+    window: int = 1,
+    ids_to_exclude: Optional[List[str]] = None,
+    encounter_id: str = "encounter_id",
+    admit_timestamp: str = "admit_timestamp",
+) -> Dict[str, Any]:
     """Transform a static set of patient encounters with timestamps into serving data.
 
     Transforms a static set of patient encounters with timestamps into
@@ -660,7 +653,7 @@ def get_serving_data(
     return target_data
 
 
-def reshape_2d_to_3d(data, num_timesteps):
+def reshape_2d_to_3d(data: pd.DataFrame, num_timesteps: int) -> pd.DataFrame:
     """Reshape 2D data to 3D data."""
     data = data.unstack()
     num_encounters = data.shape[0]
@@ -672,7 +665,9 @@ def reshape_2d_to_3d(data, num_timesteps):
 class Loader:
     """Loaing animation."""
 
-    def __init__(self, desc="Loading...", end="Done!", timeout=0.1):
+    def __init__(
+        self, desc: str = "Loading...", end: str = "Done!", timeout: float = 0.1
+    ) -> None:
         """Loader-like context manager.
 
         Parameters
@@ -690,12 +685,12 @@ class Loader:
         self.steps = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"]
         self.done = False
 
-    def start(self):
+    def start(self) -> "Loader":
         """Start the loader."""
         self._thread.start()
         return self
 
-    def _animate(self):
+    def _animate(self) -> None:
         """Animate the loader."""
         for cycle_itr in cycle(self.steps):
             if self.done:
@@ -703,18 +698,18 @@ class Loader:
             print(f"\r{self.desc} {cycle_itr}", flush=True, end="")
             sleep(self.timeout)
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         """Start the thread."""
         self.start()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the loader."""
         self.done = True
         cols = get_terminal_size((80, 20)).columns
         print("\r" + " " * cols, end="", flush=True)
         print(f"\r{self.end}", flush=True)
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(self, exc_type: Any, exc_value: Any, exc_traceback: Any) -> None:
         """Stop the thread."""
         # handle exceptions with those variables ^
         self.stop()

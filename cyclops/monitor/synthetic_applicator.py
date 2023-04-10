@@ -1,6 +1,6 @@
 """SyntheticShiftApplicator class."""
 import math
-from typing import Callable, Dict
+from typing import Any, Callable, Dict
 
 import numpy as np
 import pandas as pd
@@ -30,27 +30,27 @@ class SyntheticShiftApplicator:
 
     """
 
-    def __init__(self, shift_type: str, **kwargs):
+    def __init__(self, shift_type: str, **kwargs: Dict[str, Any]):
         self.shift_type = shift_type
 
         self.shift_types: Dict[str, Callable[..., Dataset]] = {
             "gn_shift": gaussian_noise_shift,
+            "bn_shift": binary_noise_shift,
             "ko_shift": knockout_shift,
             "fs_shift": feature_swap_shift,
             "fa_shift": feature_association_shift,
-            "bn_shift": binary_noise_shift,
         }
         self.shift_args = get_args(self.shift_types[self.shift_type], kwargs)
 
         if self.shift_type not in self.shift_types:
             raise ValueError(f"shift_type must be one of {self.shift_types.keys()}")
 
-    def apply_shift(self, dataset: Dataset):
+    def apply_shift(self, dataset: Dataset) -> Dataset:
         """apply_shift.
 
         Returns
         -------
-        X: numpy.matrix
+        ds_shift: Dataset
             Data to have noise added
 
         """
@@ -60,12 +60,12 @@ class SyntheticShiftApplicator:
 
 
 def gaussian_noise_shift(
-    X: np.matrix,
+    X: np.ndarray[float, np.dtype[np.float64]],
     noise_amt: float = 0.5,
     normalization: float = 1,
     delta: float = 0.5,
     clip: bool = False,
-):
+) -> np.ndarray[float, np.dtype[np.float64]]:
     """Create gaussian noise of specificed parameters in input data.
 
     Parameters
@@ -115,11 +115,11 @@ def gaussian_noise_shift(
 
 # Remove instances of a single class.
 def knockout_shift(
-    X: np.matrix,
-    y: np.ndarray,
+    X: np.ndarray[float, np.dtype[np.float64]],
+    y: np.ndarray[float, np.dtype[np.float64]],
     delta: float = 0.5,
     shift_class: int = 1,
-):
+) -> np.ndarray[float, np.dtype[np.float64]]:
     """Create class imbalance by removing a fraction of samples from a class.
 
     Parameters
@@ -152,14 +152,12 @@ def knockout_shift(
 
 
 def feature_swap_shift(
-    X: np.matrix,
-    y: np.ndarray,
-    X_ref: np.matrix = None,
-    # y_ref: np.ndarray = None,
+    X: np.ndarray[float, np.dtype[np.float64]],
+    y: np.ndarray[float, np.dtype[np.float64]],
     shift_class: int = 1,
     n_shuffle: float = 0.25,
     rank: bool = False,
-):
+) -> np.ndarray[float, np.dtype[np.float64]]:
     """Feature swap shift swaps features on a changepoint axis.
 
     Parameters
@@ -187,8 +185,7 @@ def feature_swap_shift(
         labels for covariate data
 
     """
-    if isinstance(X_ref, np.ndarray):
-        n_feats = X_ref.shape[1]
+    n_feats = X.shape[1]
     n_shuffle_feats = int(n_shuffle * n_feats)
 
     # Get importance values - should sub for model-specific
@@ -221,11 +218,11 @@ def feature_swap_shift(
 
 
 def feature_association_shift(
-    X: np.matrix,
+    X: np.ndarray[float, np.dtype[np.float64]],
     n_shuffle: float = 0.25,
     keep_rows_constant: bool = True,
     repermute_each_column: bool = True,
-):
+) -> np.ndarray[float, np.dtype[np.float64]]:
     """Multiway feature association shift swaps individuals within features.
 
     Parameters
@@ -276,10 +273,10 @@ def feature_association_shift(
 
 
 def binary_noise_shift(
-    X: np.matrix,
+    X: np.ndarray[float, np.dtype[np.float64]],
     prob: float = 0.5,
     delta: float = 0.5,
-):
+) -> np.ndarray[float, np.dtype[np.float64]]:
     """Create binary noise of specificed parameters in input data.
 
     Parameters

@@ -172,11 +172,11 @@ def normalize(X: pd.DataFrame, aggregation_type: str) -> pd.DataFrame:
 
     elif aggregation_type == "first":
         y_first: Optional[np.ndarray[float, np.dtype[np.float64]]] = None
-        X_normalized, y = temporal_first(X, y_first)
+        X_normalized, _ = temporal_first(X, y_first)
 
     elif aggregation_type == "last":
         y_last: np.ndarray[float, np.dtype[np.float64]] = np.zeros((X.shape[0], 1))
-        X_normalized, y = temporal_last(X, y_last)
+        X_normalized, _ = temporal_last(X, y_last)
 
     elif aggregation_type == "time_flatten":
         X_normalized = X.copy()

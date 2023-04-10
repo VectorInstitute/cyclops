@@ -1,5 +1,7 @@
 """Mortality decompensation use-case constants."""
 
+from typing import Any, Dict
+
 from cyclops.process.column_names import AGE, DIAGNOSIS_TRAJECTORY, HOSPITAL_ID, SEX
 from cyclops.process.constants import TARGETS
 from cyclops.utils.file import join, process_dir_save_path
@@ -38,7 +40,7 @@ TAB_FEATURES = [
     "triage_level",
     "admit_via_ambulance",
 ] + TAB_TARGETS
-TAB_FEATURES_TYPES: dict = {}
+TAB_FEATURES_TYPES: Dict[str, Any] = {}
 
 # Temporal
 TIMESTEP_SIZE = 24

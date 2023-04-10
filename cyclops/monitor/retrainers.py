@@ -1,6 +1,6 @@
 """Retrainer that uses a cumulative set of data to retrain the model."""
 
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -37,7 +37,7 @@ class CumulativeRetrainer:
         self,
         shift_detector: Detector,
         optimizer: Optimizer,
-        model=None,
+        model: torch.nn.Module,
         model_name: Optional[str] = None,
         retrain_model_path: Optional[str] = None,
         verbose: bool = False,
@@ -52,7 +52,7 @@ class CumulativeRetrainer:
     def retrain(
         self,
         # datastreams is dictionary of numpy arrays, static typing
-        data_streams,
+        data_streams: Dict[str, np.ndarray[float, np.dtype[np.float64]]],
         sample: int = 1000,
         stat_window: int = 30,
         lookup_window: int = 0,
@@ -60,9 +60,9 @@ class CumulativeRetrainer:
         p_val_threshold: float = 0.05,
         n_epochs: int = 1,
         correct_only: bool = False,
-        aggregation_type="time",
-        **kwargs
-    ):
+        aggregation_type: str = "time",
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """Retrain the model.
 
         Parameters
@@ -185,17 +185,18 @@ class CumulativeRetrainer:
                         update_loader,
                         n_epochs=n_epochs,
                     )
-
-                    self.model.load_state_dict(torch.load(self.retrain_model_path))
+                    model_weight = torch.load(self.retrain_model_path)  # type: ignore
+                    self.model.load_state_dict(model_weight)
                     self.optimizer.model = self.model
                     setattr(self.shift_detector, "model_path", self.retrain_model_path)
 
                 elif self.model_name == "gbt":
-                    # undefined name: X_retrain, y_retrain
-                    X_retrain, y_retrain = None, None
-                    self.model = self.model.fit(
-                        X_retrain, y_retrain, xgb_model=self.model.get_booster()
-                    )
+                    pass
+                    # X_retrain = None
+                    # y_retrain = None
+                    # self.model = self.model.fit(
+                    #     X_retrain, y_retrain, xgb_model=self.model.get_booster()
+                    # )
 
                 else:
                     print("Invalid Model Name")
@@ -306,7 +307,7 @@ class MostRecentRetrainer:
         self,
         shift_detector: Detector,
         optimizer: Optimizer,
-        model=None,
+        model: torch.nn.Module,
         model_name: Optional[str] = None,
         retrain_model_path: Optional[str] = None,
         verbose: bool = False,
@@ -320,7 +321,7 @@ class MostRecentRetrainer:
 
     def retrain(
         self,
-        data_streams,
+        data_streams: Dict[str, np.ndarray[float, np.dtype[np.float64]]],
         retrain_window: int = 30,
         sample: int = 1000,
         stat_window: int = 30,
@@ -329,9 +330,9 @@ class MostRecentRetrainer:
         p_val_threshold: float = 0.05,
         n_epochs: int = 1,
         correct_only: bool = False,
-        aggregation_type="time",
-        **kwargs
-    ):
+        aggregation_type: str = "time",
+        **kwargs: Any,
+    ) -> List[Dict[Any, Any]]:
         """Retrain the model on the target data.
 
         Parameters
@@ -465,17 +466,18 @@ class MostRecentRetrainer:
                         model_path=self.retrain_model_path,
                     )
 
-                    self.model.load_state_dict(torch.load(self.retrain_model_path))
+                    model_weights = torch.load(self.retrain_model_path)  # type: ignore
+                    self.model.load_state_dict(model_weights)
                     self.optimizer.model = self.model
                     setattr(self.shift_detector, "model_path", self.retrain_model_path)
 
                 elif self.model_name == "gbt":
-                    # undefined name: X_retrain, y_retrain
-                    X_retrain, y_retrain = None, None
+                    pass
+                    # X_retrain, y_retrain = None, None
 
-                    self.model = self.model.fit(
-                        X_retrain, y_retrain, xgb_model=self.model.get_booster()
-                    )
+                    # self.model = self.model.fit(
+                    #     X_retrain, y_retrain, xgb_model=self.model.get_booster()
+                    # )
 
                 else:
                     print("Invalid Model Name")
