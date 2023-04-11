@@ -3,6 +3,7 @@ import datetime
 import importlib
 import random
 import types
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -34,14 +35,32 @@ def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
     )
 
 
-def unison_shuffled_copies(array_a, array_b):
+def unison_shuffled_copies(
+    array_a: np.ndarray[float, np.dtype[np.float64]],
+    array_b: np.ndarray[float, np.dtype[np.float64]],
+) -> tuple[
+    np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]]
+]:
     """Shuffle two arrays in unison."""
     assert len(array_a) == len(array_b)
     perm = np.random.permutation(len(array_a))
     return array_a[perm], array_b[perm]
 
 
-def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
+def random_shuffle_and_split(
+    x_train: np.ndarray[float, np.dtype[np.float64]],
+    y_train: np.ndarray[float, np.dtype[np.float64]],
+    x_test: np.ndarray[float, np.dtype[np.float64]],
+    y_test: np.ndarray[float, np.dtype[np.float64]],
+    split_index: int,
+) -> tuple[
+    tuple[
+        np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]]
+    ],
+    tuple[
+        np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]]
+    ],
+]:
     """Randomly shuffle and split data into train and test sets."""
     x = np.append(x_train, x_test, axis=0)
     y = np.append(y_train, y_test, axis=0)
@@ -56,7 +75,12 @@ def random_shuffle_and_split(x_train, y_train, x_test, y_test, split_index):
     return (x_train, y_train), (x_test, y_test)
 
 
-def get_label(admin_data, X, label="mortality", encounter_id="encounter_id"):
+def get_label(
+    admin_data: pd.DataFrame,
+    X: pd.DataFrame,
+    label: str = "mortality",
+    encounter_id: str = "encounter_id",
+) -> np.ndarray[float, np.dtype[np.float64]]:
     """Get label from admin data."""
     admin_data = admin_data.drop_duplicates(encounter_id)
     X_admin_data = admin_data[
@@ -67,11 +91,11 @@ def get_label(admin_data, X, label="mortality", encounter_id="encounter_id"):
         .reindex(list(X.index.get_level_values(0).unique()))
         .reset_index()
     )
-    y = X_admin_data[label].astype(int)
+    y: np.ndarray[float, np.dtype[np.float64]] = X_admin_data[label].astype(int)
     return y
 
 
-def reshape_2d_to_3d(data, num_timesteps):
+def reshape_2d_to_3d(data: pd.DataFrame, num_timesteps: int) -> pd.DataFrame:
     """Reshape 2D data to 3D data."""
     data = data.unstack()
     num_encounters = data.shape[0]
@@ -79,19 +103,23 @@ def reshape_2d_to_3d(data, num_timesteps):
     return data
 
 
-def flatten(X):
+def flatten(X: pd.DataFrame) -> np.ndarray[float, np.dtype[np.float64]]:
     """Flatten 3D data to 2D data."""
-    X_flattened = X.unstack(1).dropna().to_numpy()
+    X_flattened: np.ndarray[float, np.dtype[np.float64]] = (
+        X.unstack(1).dropna().to_numpy()
+    )
     return X_flattened
 
 
-def temporal_mean(X):
+def temporal_mean(X: pd.DataFrame) -> pd.DataFrame:
     """Get temporal mean of data."""
     X_mean = X.groupby(level=[0]).mean()
     return X_mean
 
 
-def temporal_first(X, y=None):
+def temporal_first(
+    X: pd.DataFrame, y: Optional[np.ndarray[float, np.dtype[np.float64]]] = None
+) -> tuple[pd.DataFrame, Optional[np.ndarray[float, np.dtype[np.float64]]]]:
     """Get temporal first of data."""
     y_first = None
     X_first = X.groupby(level=[0]).first()
@@ -100,7 +128,9 @@ def temporal_first(X, y=None):
     return X_first, y_first
 
 
-def temporal_last(X, y):
+def temporal_last(
+    X: pd.DataFrame, y: np.ndarray[float, np.dtype[np.float64]]
+) -> tuple[pd.DataFrame, np.ndarray[float, np.dtype[np.float64]]]:
     """Get temporal last of data."""
     X_last = X.groupby(level=[0]).last()
     num_timesteps = y.shape[1]
@@ -108,7 +138,7 @@ def temporal_last(X, y):
     return X_last, y_last
 
 
-def get_numerical_cols(X: pd.DataFrame):
+def get_numerical_cols(X: pd.DataFrame) -> List[str]:
     """Get numerical columns of temporal dataframe."""
     numerical_cols = [
         col for col in X if not np.isin(X[col].dropna().unique(), [0, 1]).all()
@@ -116,7 +146,7 @@ def get_numerical_cols(X: pd.DataFrame):
     return numerical_cols
 
 
-def scale(X: pd.DataFrame):
+def scale(X: pd.DataFrame) -> pd.DataFrame:
     """Scale columns of temporal dataframe.
 
     Returns
@@ -135,32 +165,33 @@ def scale(X: pd.DataFrame):
     return X
 
 
-def normalize(X, aggregation_type):
+def normalize(X: pd.DataFrame, aggregation_type: str) -> pd.DataFrame:
     """Normalize data."""
-    y = None
-
     if aggregation_type == "mean":
         X_normalized = temporal_mean(X)
+
     elif aggregation_type == "first":
-        (
-            X_normalized,
-            y,
-        ) = temporal_first(X, y)
+        y_first: Optional[np.ndarray[float, np.dtype[np.float64]]] = None
+        X_normalized, _ = temporal_first(X, y_first)
+
     elif aggregation_type == "last":
-        (
-            X_normalized,
-            y,
-        ) = temporal_last(X, y)
+        y_last: np.ndarray[float, np.dtype[np.float64]] = np.zeros((X.shape[0], 1))
+        X_normalized, _ = temporal_last(X, y_last)
+
     elif aggregation_type == "time_flatten":
         X_normalized = X.copy()
+
     elif aggregation_type == "time":
         X_normalized = X.copy()
+
     else:
         raise ValueError("Incorrect Aggregation Type")
     return X_normalized
 
 
-def process(X, aggregation_type, timesteps):
+def process(
+    X: pd.DataFrame, aggregation_type: str, timesteps: int
+) -> np.ndarray[float, np.dtype[np.float64]]:
     """Process data."""
     if aggregation_type == "time_flatten":
         X_preprocessed = flatten(X)
@@ -172,19 +203,26 @@ def process(X, aggregation_type, timesteps):
 
 
 def get_dataset_hospital(
-    admin_data, x, y, dataset, hospitals, encounter_id="encounter_id", train_frac=0.8
-):
+    admin_data: pd.DataFrame,
+    x: pd.DataFrame,
+    y: np.ndarray[float, np.dtype[np.float64]],
+    dataset: str,
+    hospitals: str,
+    encounter_id: str = "encounter_id",
+    train_frac: float = 0.8,
+) -> Tuple[
+    pd.DataFrame,
+    np.ndarray[float, np.dtype[np.float64]],
+    pd.DataFrame,
+    np.ndarray[float, np.dtype[np.float64]],
+    List[str],
+    pd.DataFrame,
+]:
     """Get dataset for hospital."""
     # filter hospital
     admin_data = admin_data.loc[admin_data["hospital_id"].isin(hospitals)]
     encounter_ids = list(x.index.get_level_values(0).unique())
     x = x[np.in1d(x.index.get_level_values(0), admin_data[encounter_id])]
-
-    # get source and target data
-    x_s = None
-    y_s = None
-    x_t = None
-    y_t = None
 
     # get experimental dataset
     if dataset == "covid":
@@ -381,16 +419,22 @@ def get_dataset_hospital(
 
 
 def import_dataset_hospital(
-    admin_data,
-    x,
-    y,
-    dataset,
-    hospital,
-    encounter_id,
-    seed=1,
-    shuffle=True,
-    train_frac=0.8,
-):
+    admin_data: pd.DataFrame,
+    x: pd.DataFrame,
+    y: np.ndarray[float, np.dtype[np.float64]],
+    dataset: str,
+    hospital: str,
+    encounter_id: str,
+    seed: int = 1,
+    shuffle: bool = True,
+    train_frac: float = 0.8,
+) -> Tuple[
+    Tuple[pd.DataFrame, np.ndarray[float, np.dtype[np.float64]]],
+    Tuple[pd.DataFrame, np.ndarray[float, np.dtype[np.float64]]],
+    Tuple[pd.DataFrame, np.ndarray[float, np.dtype[np.float64]]],
+    List[str],
+    pd.DataFrame,
+]:
     """Import dataset for hospital-level analysis."""
     # get source and target data
     x_source, y_source, x_test, y_test, feats, admin_data = get_dataset_hospital(

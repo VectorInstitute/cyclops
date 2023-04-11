@@ -1,10 +1,11 @@
 """Clinical Shift Applicator module."""
 
-from typing import Callable, Dict
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from datasets.arrow_dataset import Dataset
 
 from cyclops.datasets.slicer import SliceSpec
+from cyclops.monitor.utils import set_decode, sync_transforms
 
 
 class ClinicalShiftApplicator:
@@ -20,7 +21,7 @@ class ClinicalShiftApplicator:
     --------
     >>> from cyclops.monitor.clinical_applicator import ClinicalShiftApplicator
     >>> from cyclops.datasets.utils import load_nih
-    >>> ds = load_dataset("nih-cxr", path="/mnt/data/nihcxr")
+    >>> ds = load_nih(path="/mnt/data/nihcxr")
     >>> applicator = ClinicalShiftApplicator("hospital_type",
                     source = ["hospital_type_1", "hospital_type_2"]
                     target = ["hospital_type_3", "hospital_type_4", "hospital_type_5"]
@@ -42,7 +43,13 @@ class ClinicalShiftApplicator:
 
     """
 
-    def __init__(self, shift_type: str, source, target, shift_id: str = None):
+    def __init__(
+        self,
+        shift_type: str,
+        source: Union[str, SliceSpec],
+        target: Union[str, SliceSpec],
+        shift_id: Optional[str] = None,
+    ):
         self.shift_type = shift_type
         self.shift_id = shift_id
         self.source = source
@@ -64,7 +71,7 @@ class ClinicalShiftApplicator:
         batched: bool = True,
         batch_size: int = 1000,
         num_proc: int = 1,
-    ):
+    ) -> Tuple[Dataset, Dataset]:
         """Apply shift to dataset using specified shift type.
 
         Returns
@@ -89,13 +96,13 @@ class ClinicalShiftApplicator:
     def time(
         self,
         dataset: Dataset,
-        source: list,
-        target: list,
+        source: List[str],
+        target: List[str],
         shift_id: str,
         batched: bool = True,
         batch_size: int = 1000,
         num_proc: int = 1,
-    ):
+    ) -> Tuple[Dataset, Dataset]:
         """Apply time shift to dataset.
 
         Parameters
@@ -137,39 +144,52 @@ class ClinicalShiftApplicator:
                 }
             ]
         )
-        for _, shift_func in source_slice.get_slices().items():
-            ds_source = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
+        set_decode(dataset, False)
+        with dataset.formatted_as("numpy", output_all_columns=True):
+            for _, shift_func in source_slice.get_slices().items():
+                ds_source = dataset.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
 
-        target_slice = SliceSpec(
-            spec_list=[
-                {
-                    shift_id: {
-                        "min_value": target[0],
-                        "max_value": target[1],
-                        "min_inclusive": True,
-                        "max_inclusive": True,
+            target_slice = SliceSpec(
+                spec_list=[
+                    {
+                        shift_id: {
+                            "min_value": target[0],
+                            "max_value": target[1],
+                            "min_inclusive": True,
+                            "max_inclusive": True,
+                        }
                     }
-                }
-            ]
-        )
-        for _, shift_func in target_slice.get_slices().items():
-            ds_target = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
+                ]
             )
+            for _, shift_func in target_slice.get_slices().items():
+                ds_target = dataset.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
+        set_decode(dataset, True)
+        set_decode(ds_source, True)
+        set_decode(ds_target, True)
+        ds_source = sync_transforms(dataset, ds_source)
+        ds_target = sync_transforms(dataset, ds_target)
         return ds_source, ds_target
 
     def month(
         self,
         dataset: Dataset,
-        source: list,
-        target: list,
+        source: List[str],
+        target: List[str],
         shift_id: str,
         batched: bool = True,
         batch_size: int = 1000,
         num_proc: int = 1,
-    ):
+    ) -> Tuple[Dataset, Dataset]:
         """Apply shift for selection of months.
 
         Parameters
@@ -199,29 +219,42 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
-        for _, shift_func in source_slice.get_slices().items():
-            ds_source = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
+        set_decode(dataset, False)
+        with dataset.formatted_as("numpy", output_all_columns=True):
+            source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
+            for _, shift_func in source_slice.get_slices().items():
+                ds_source = dataset.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
 
-        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
-        for _, shift_func in target_slice.get_slices().items():
-            ds_target = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
+            target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
+            for _, shift_func in target_slice.get_slices().items():
+                ds_target = dataset.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
+        set_decode(dataset, True)
+        set_decode(ds_source, True)
+        set_decode(ds_target, True)
+        ds_source = sync_transforms(dataset, ds_source)
+        ds_target = sync_transforms(dataset, ds_target)
         return ds_source, ds_target
 
     def hospital_type(
         self,
         dataset: Dataset,
-        source: list,
-        target: list,
+        source: List[str],
+        target: List[str],
         shift_id: str,
         batched: bool = True,
         batch_size: int = 1000,
         num_proc: int = 1,
-    ):
+    ) -> Tuple[Dataset, Dataset]:
         """Apply shift for selection of hospital types.
 
         Parameters
@@ -251,17 +284,30 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
-        for _, shift_func in source_slice.get_slices().items():
-            ds_source = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
+        set_decode(dataset, False)
+        with dataset.formatted_as("numpy", output_all_columns=True):
+            source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
+            for _, shift_func in source_slice.get_slices().items():
+                ds_source = dataset.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
 
-        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
-        for _, shift_func in target_slice.get_slices().items():
-            ds_target = dataset.filter(
-                shift_func, batched=batched, batch_size=batch_size, num_proc=num_proc
-            )
+            target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
+            for _, shift_func in target_slice.get_slices().items():
+                ds_target = dataset.filter(
+                    shift_func,
+                    batched=batched,
+                    batch_size=batch_size,
+                    num_proc=num_proc,
+                )
+        set_decode(dataset, True)
+        set_decode(ds_source, True)
+        set_decode(ds_target, True)
+        ds_source = sync_transforms(dataset, ds_source)
+        ds_target = sync_transforms(dataset, ds_target)
         return ds_source, ds_target
 
     def custom(
@@ -269,11 +315,11 @@ class ClinicalShiftApplicator:
         dataset: Dataset,
         source: SliceSpec,
         target: SliceSpec,
-        shift_id: str = None,
+        shift_id: Optional[str] = None,
         batched: bool = True,
         batch_size: int = 1000,
         num_proc: int = 1,
-    ):
+    ) -> Tuple[Dataset, Dataset]:
         """Build custom shift.
 
         Build a custom shift by passing in a SliceSpec for source and target data.
@@ -308,38 +354,47 @@ class ClinicalShiftApplicator:
                 "Shift id not required for custom shift. \
                 Please remove shift_id from method call."
             )
-        ds_source = None
+        set_decode(dataset, False)
+        with dataset.formatted_as("numpy", output_all_columns=True):
+            ds_source = None
+            for _, shift_func in source.get_slices().items():
+                if ds_source is None:
+                    ds_source = dataset.filter(
+                        shift_func,
+                        batched=batched,
+                        batch_size=batch_size,
+                        num_proc=num_proc,
+                    )
+                else:
+                    ds_source = ds_source.filter(
+                        shift_func,
+                        batched=batched,
+                        batch_size=batch_size,
+                        num_proc=num_proc,
+                    )
 
-        for _, shift_func in source.get_slices().items():
-            if ds_source is None:
-                ds_source = dataset.filter(
-                    shift_func,
-                    batched=batched,
-                    batch_size=batch_size,
-                    num_proc=num_proc,
-                )
-            else:
-                ds_source = ds_source.filter(
-                    shift_func,
-                    batched=batched,
-                    batch_size=batch_size,
-                    num_proc=num_proc,
-                )
+            ds_target = None
+            for _, shift_func in target.get_slices().items():
+                if ds_target is None:
+                    ds_target = dataset.filter(
+                        shift_func,
+                        batched=batched,
+                        batch_size=batch_size,
+                        num_proc=num_proc,
+                    )
+                else:
+                    ds_target = ds_target.filter(
+                        shift_func,
+                        batched=batched,
+                        batch_size=batch_size,
+                        num_proc=num_proc,
+                    )
 
-        ds_target = None
-        for _, shift_func in target.get_slices().items():
-            if ds_target is None:
-                ds_target = dataset.filter(
-                    shift_func,
-                    batched=batched,
-                    batch_size=batch_size,
-                    num_proc=num_proc,
-                )
-            else:
-                ds_target = ds_target.filter(
-                    shift_func,
-                    batched=batched,
-                    batch_size=batch_size,
-                    num_proc=num_proc,
-                )
+        set_decode(dataset, True)
+
+        # ds_source = sync_transforms(dataset, ds_source)
+        # ds_target = sync_transforms(dataset, ds_target)
+        set_decode(ds_source, True)
+        set_decode(ds_target, True)
+
         return ds_source, ds_target
