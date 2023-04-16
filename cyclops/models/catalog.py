@@ -19,6 +19,7 @@ setup_logging(print_level="WARN", logger=LOGGER)
 # Model catalogs   #
 ####################
 _model_catalog: Dict[str, Any] = {}
+_model_names_mapping: Dict[str, str] = {}
 _temporal_model_keys: Set[str] = set()
 _static_model_keys: Set[str] = set()
 _img_model_keys: Set[str] = set()
@@ -59,6 +60,7 @@ def register_model(
             )
 
         _model_catalog[name] = model_obj
+        _model_names_mapping[model_obj.__name__] = name
 
         if model_type == "static":
             _static_model_keys.add(name)
