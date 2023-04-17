@@ -9,9 +9,7 @@ import numpy as np
 import torch
 from datasets import Dataset
 from datasets.combine import concatenate_datasets
-from evaluate.evaluator.utils import DatasetColumn
 from monai.data.meta_tensor import MetaTensor
-from multipledispatch import dispatch
 from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
@@ -28,6 +26,7 @@ from cyclops.models.utils import (
 )
 from cyclops.models.wrappers.base import ModelWrapper
 from cyclops.models.wrappers.utils import (
+    DatasetColumn,
     check_is_fitted,
     set_random_seed,
     to_numpy,
@@ -707,7 +706,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
+        X : np.ndarray or torch.utils.data.Dataset or Dataset
             The features of the data.
         y : np.ndarray, optional
             The labels of the data.
@@ -729,63 +728,86 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         return self
 
-    @dispatch((np.ndarray, TorchDataset))
-    def fit(self, X, y=None, **fit_params):
-        """Fit the model to the data.
+    def fit(
+        self,
+        X: Union[Dataset, np.ndarray, TorchDataset],
+        y: Optional[np.ndarray] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        transforms: Optional[Callable] = None,
+        **fit_params,
+    ):
+        """Fit the model.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
-            The features of the data.
-        y : np.ndarray, optional
-            The labels of the data.
-        **fit_params : dict, optional
-            Additional parameters to pass to the model's `forward` method.
+        X : Union[Dataset, np.ndarray, TorchDataset]
+            The data features or a Hugging Face Dataset containing features and labels.
+        y : Optional[ArrayLike], optional
+            The labels of the data. This is required when the input data is not \
+                a Hugging Face Dataset and only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        transforms : Optional[Callable], optional
+            Transform function to be applied when __getitem__ is called \
+            when the input is a Hugging Face Dataset, by default None
 
         Returns
         -------
         self : `PTModel`
 
-        """
-        if not self.warm_start or not self.initialized_:
-            self.initialize()
-
-        self.partial_fit(X, y, **fit_params)
-
-        return self
-
-    @dispatch(Dataset, list, list)
-    def fit(  # noqa: F811
-        self,
-        dataset: Dataset,
-        feature_columns: List[str],
-        target_columns: List[str],
-        transforms: Optional[Callable] = None,
-    ):
-        """Fit the model on a Hugging Face dataset.
-
-        Parameters
-        ----------
-        dataset : Dataset
-            Hugging Face dataset containing features and labels.
-        feature_columns : List[str]
-            List of feature columns in the dataset.
-        target_columns : List[str]
-            List of target columns in the dataset.
-        transforms : Optional[Callable], optional
-            Transform function, by default None
+        Raises
+        ------
+        ValueError
+            If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
+        ValueError
+            If `X` is a Hugging Face Dataset and the target column(s) is not provided.
+        ValueError
+            If `X` is not a Hugging Face Dataset and \
+                the data labels `y` is not provided.
 
         """
         if not self.warm_start or not self.initialized_:
             self.initialize()
 
-        format_kwargs = {} if transforms is None else {"transform": transforms}
-        with dataset.formatted_as(
-            "custom" if transforms is not None else "torch",
-            columns=feature_columns + target_columns,
-            **format_kwargs,
-        ):
-            self.partial_fit(dataset)
+        if isinstance(X, Dataset):
+            if feature_columns is None:
+                raise ValueError(
+                    "Missing feature columns 'feature_columns'. Please provide \
+                    the name of feature columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(feature_columns, str):
+                feature_columns = [feature_columns]
+
+            if target_columns is None:
+                raise ValueError(
+                    "Missing target columns 'target_columns'. Please provide \
+                    the name of feature columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(target_columns, str):
+                feature_columns = [target_columns]
+
+            format_kwargs = {} if transforms is None else {"transform": transforms}
+            with X.formatted_as(
+                "custom" if transforms is not None else "torch",
+                columns=feature_columns + target_columns,
+                **format_kwargs,
+            ):
+                self.partial_fit(X)
+        else:
+            if y is None:
+                raise ValueError(
+                    "Missing data labels 'y'. Please provide the labels \
+                    for the training data when not using a \
+                    Hugging Face dataset as the input."
+                )
+            self.partial_fit(X, y, **fit_params)
 
         return self
 
@@ -881,94 +903,96 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         return preds
 
-    @dispatch((np.ndarray, TorchDataset, torch.Tensor))
-    def predict(self, X: Union[np.ndarray, TorchDataset], **predict_params):
-        """Predict the output of the model for the given input.
-
-        Parameters
-        ----------
-        X : np.ndarray or torch.utils.data.Dataset
-            The input to the model.
-        **predict_params : dict, optional
-            Additional parameters for the prediction.
-
-        Returns
-        -------
-            The output of the model.
-
-        """
-        return self.predict_proba(X, **predict_params)
-
-    @dispatch(Dataset, (str, list))
-    def predict(  # noqa: F811
+    def predict(
         self,
-        dataset: Dataset,
-        feature_columns: Union[str, List[str]],
+        X: Union[Dataset, np.ndarray, TorchDataset],
+        feature_columns: Optional[Union[str, List[str]]] = None,
         prediction_column_prefix: str = "predictions",
         model_name: Optional[str] = None,
         transforms: Optional[Callable] = None,
         only_predictions: bool = False,
         **predict_params,
-    ) -> Union[Dataset, DatasetColumn]:
-        """Predict the output of the model for the given Hugging Face dataset.
+    ) -> Union[Dataset, DatasetColumn, np.ndarray]:
+        """Predict the output of the model.
 
         Parameters
         ----------
-        dataset : Dataset
-            Hugging Face dataset containing features and possibly target labels.
-        feature_columns : str, List[str]
-            Feature column(s) in the dataset.
+        X : Dataset
+            The data features or a Hugging Face Dataset containing features and labels.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
         prediction_column_prefix : str, optional
-            Name of the prediction column to be added to the dataset, \
-                by default "prediction"
+            Name of the prediction column to be added to the dataset, This is used \
+                when the input is a Hugging Face Dataset, by default "predictions"
         model_name : Optional[str], optional
-            Model name used as suffix to the prediction column, \
-                by default None
+            Model name used as suffix to the prediction column, This is used \
+                when the input is a Hugging Face Dataset, by default None
         transforms : Optional[Callable], optional
-            The transform function to be applied to the data, \
+            Transform function to be applied when __getitem__ is called,
+                This is used when the input is a Hugging Face Dataset, \
                 by default None
         only_predictions : bool, optional
             Whether to return only the predictions rather than the dataset \
-                with predictions, by default False
+                with predictions when the input is a Hugging Face Datset, \
+                by default False
 
         Returns
         -------
-        Union[Dataset, DatasetColumn]
+        Union[Dataset, DatasetColumn, np.ndarray]
             Dataset containing the predictions or the predictions array.
 
+        Raises
+        ------
+        ValueError
+            If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
+
         """
-        if model_name:
-            pred_column = f"{prediction_column_prefix}.{model_name}"
-        else:
-            pred_column = f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
+        # Input is a Hugging Face Dataset
+        if isinstance(X, Dataset):
+            if feature_columns is None:
+                raise ValueError(
+                    "Missing feature columns 'feature_columns'. Please provide \
+                    the name of feature columns when using \
+                    a Hugging Face dataset as the input."
+                )
+            if isinstance(feature_columns, str):
+                feature_columns = [feature_columns]
 
-        if isinstance(feature_columns, str):
-            feature_columns = [feature_columns]
+            if model_name:
+                pred_column = f"{prediction_column_prefix}.{model_name}"
+            else:
+                pred_column = (
+                    f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
+                )
 
-        def get_predictions(examples):
-            stacked = []
-            for feature in feature_columns:
-                stacked.append(torch.stack(examples[feature]))
-            X = torch.cat(stacked, dim=1)
-            return {pred_column: self.predict(X)}
+            def get_predictions(examples):
+                stacked = []
+                for feature in feature_columns:
+                    stacked.append(torch.stack(examples[feature]))
+                X = torch.cat(stacked, dim=1)
+                return {pred_column: self.predict(X)}
 
-        format_kwargs = {} if transforms is None else {"transform": transforms}
-        with dataset.formatted_as(
-            "custom" if transforms is not None else "torch",
-            columns=feature_columns,
-            **format_kwargs,
-        ):
-            preds_ds = dataset.map(
-                get_predictions,
-                batched=True,
-                batch_size=self.batch_size,
-                remove_columns=dataset.column_names,
-            )
+            format_kwargs = {} if transforms is None else {"transform": transforms}
+            with X.formatted_as(
+                "custom" if transforms is not None else "torch",
+                columns=feature_columns,
+                **format_kwargs,
+            ):
+                preds_ds = X.map(
+                    get_predictions,
+                    batched=True,
+                    batch_size=self.batch_size,
+                    remove_columns=X.column_names,
+                )
 
-            if only_predictions:
-                return DatasetColumn(preds_ds.with_format("numpy"), pred_column)
-            dataset = concatenate_datasets([dataset, preds_ds], axis=1)
-            return dataset
+                if only_predictions:
+                    return DatasetColumn(preds_ds.with_format("numpy"), pred_column)
+                X = concatenate_datasets([X, preds_ds], axis=1)
+                return X
+
+        # Input is not a Hugging Face Dataset
+        return self.predict_proba(X, **predict_params)
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save the model to a file.
