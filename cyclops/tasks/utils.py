@@ -8,7 +8,7 @@ import torch
 import yaml
 from torchvision.transforms import PILToTensor
 
-from cyclops.models.catalog import create_model
+from cyclops.models.catalog import _model_names_mapping, create_model, list_models
 from cyclops.models.constants import CONFIG_ROOT
 from cyclops.models.wrappers import WrappedModel
 from cyclops.utils.file import join
@@ -145,23 +145,34 @@ def prepare_models(
 
     """
     models_dict = {}
-
+    # models contains one wrapped model (SKModel or PTModel)
     if isinstance(models, get_args(WrappedModel)):
-        model_name = models.model.__name__
+        model_name = _model_names_mapping.get(models.model.__name__)
         models_dict = {model_name: models}
+    # models contains one model name
     elif isinstance(models, str):
-        config_path = (
-            config_path if config_path else join(CONFIG_ROOT, models + ".yaml")
-        )
+        assert (
+            models in list_models()
+        ), f"Model name is not registered! \
+                    Available models are: {list_models()}"
+        if not config_path:
+            config_path = join(CONFIG_ROOT, models + ".yaml")
+        elif isinstance(config_path, dict):
+            config_path = config_path.get(models)
         with open(config_path, "r", encoding="utf8") as file:
             config = yaml.safe_load(file)
-            config = config.get("model_params", None) or config
         models_dict = {models: create_model(models, **config)}
+    # models contains a list or tuple of model names or wrapped models
     elif isinstance(models, (list, tuple)):
         for model in models:
             if isinstance(model, get_args(WrappedModel)):
-                models_dict[model.model.__name__] = model
+                model_name = _model_names_mapping.get(model.model.__name__)
+                models_dict[model_name] = model
             elif isinstance(model, str):
+                assert (
+                    model in list_models()
+                ), f"Model name is not registered! \
+                    Available models are: {list_models()}"
                 config_path = (
                     config_path[model]
                     if config_path and model in config_path
@@ -169,14 +180,13 @@ def prepare_models(
                 )
                 with open(config_path, "r", encoding="utf8") as file:
                     config = yaml.safe_load(file)
-                    config = config.get("model_params", None) or config
-                    print(config)
                 models_dict[model] = create_model(model, **config)
             else:
                 raise TypeError(
-                    "models must be lists or tuples of strings or \
+                    "models must be lists/tuples of strings,\
                     PTModel instances or SKModel instances."
                 )
+    # models contains a dictionary of model names and wrapped models
     elif isinstance(models, dict):
         assert all(isinstance(m, get_args(WrappedModel)) for m in models.values())
         models_dict = models
