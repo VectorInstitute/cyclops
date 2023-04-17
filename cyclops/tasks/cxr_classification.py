@@ -11,7 +11,7 @@ from cyclops.datasets.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection
-from cyclops.models.catalog import _img_model_keys
+from cyclops.models.catalog import _img_model_keys, _model_names_mapping
 from cyclops.models.utils import get_device
 from cyclops.models.wrappers import WrappedModel
 from cyclops.tasks.utils import CXR_TARGET, apply_image_transforms, prepare_models
@@ -89,7 +89,8 @@ class CXRClassification:
     def _validate_models(self):
         """Validate the models for the task data type."""
         assert all(
-            model.model.__name__ in _img_model_keys for model in self.models.values()
+            _model_names_mapping.get(model.model.__name__) in _img_model_keys
+            for model in self.models.values()
         ), "All models must be image classification model."
 
         for model in self.models.values():
@@ -215,7 +216,7 @@ class CXRClassification:
                 **kwargs,
             )
 
-        return model.predict(dataset)
+        return model.predict(dataset, **kwargs)
 
     def evaluate(
         self,
@@ -283,11 +284,10 @@ class CXRClassification:
                 model_name=model_name,
                 transforms=transforms,
                 prediction_column_prefix=prediction_column_prefix,
-                batch_size=batch_size,
                 only_predictions=False,
             )
 
-        return evaluate(
+        results = evaluate(
             dataset,
             metrics,
             slice_spec=slice_spec,
@@ -296,3 +296,5 @@ class CXRClassification:
             batch_size=batch_size,
             remove_columns=remove_columns,
         )
+
+        return results, dataset
