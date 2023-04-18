@@ -3,14 +3,11 @@
 import logging
 import os
 from functools import wraps
-from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
-import pandas as pd
-from datasets import Dataset, config
+from datasets import Dataset
 from datasets.combine import concatenate_datasets
-from evaluate.evaluator.utils import DatasetColumn
-from multipledispatch import dispatch
 from numpy.typing import ArrayLike
 from scipy.sparse import issparse
 from sklearn.base import BaseEstimator as SKBaseEstimator
@@ -20,6 +17,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 from cyclops.datasets.utils import is_out_of_core
 from cyclops.models.utils import is_sklearn_class, is_sklearn_instance
+from cyclops.models.wrappers.utils import DatasetColumn
 from cyclops.utils.file import join, load_pickle, save_pickle
 from cyclops.utils.log import setup_logging
 
@@ -47,10 +45,22 @@ class SKModel:
 
     """
 
-    def __init__(self, model: SKBaseEstimator, **kwargs) -> None:
+    def __init__(  # pylint: disable=dangerous-default-value
+        self,
+        model: SKBaseEstimator,
+        model_params: dict,
+        fit_params: dict = {},
+        best_model_params: dict = {},
+        batch_size: int = 64,
+        **kwargs,
+    ) -> None:
         """Initialize wrapper."""
         self.model = model  # possibly uninstantiated class
-        self.initialize_model(**kwargs)
+        self.initialize_model(**model_params)
+        self.fit_params = fit_params
+        self.best_model_params = best_model_params
+        self.batch_size = batch_size
+        vars(self).update(kwargs)
 
     def initialize_model(self, **kwargs):
         """Initialize model.
@@ -81,66 +91,142 @@ class SKModel:
 
         return self
 
-    def find_best(
+    def find_best(  # pylint: disable=too-many-branches
         self,
-        X: ArrayLike,
-        y: ArrayLike,
-        parameters: Union[Dict, List[Dict]],
-        metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
-        method: Literal["grid", "random"] = "grid",
+        X: Union[ArrayLike, Dataset],
+        y: Optional[ArrayLike] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         **kwargs,
     ):
-        """Tune model hyperparameters.
+        """Search on hyper parameters.
 
         Parameters
         ----------
-        X : ArrayLike
-            The feature matrix.
-        y : ArrayLike
-            The target vector.
-        parameters : dict or list of dicts
-            The hyperparameters to be tuned.
-        metric : str, callable, sequence, dict, optional
-            The metric to be used for model evaluation.
-        method : Literal["grid", "random"], default="grid"
-            The tuning method to be used.
+        X : Union[Dataset, ArrayLike]
+            The data features or a Hugging Face dataset containing features and labels.
+        y : Optional[ArrayLike], optional
+            The labels of the data. This is required when the input dataset is not \
+                a huggingface dataset and only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        transforms : Optional[Union[ColumnTransformer, Callable]], optional
+            The transformation to be applied to the data before prediction, \
+                This is used when the input is a Hugging Face Dataset, \
+                by default None
         **kwargs : dict, optional
-            Additional keyword arguments to be passed to the tuning method.
+            Additional keyword arguments to be passed to the search method.
 
         Returns
         -------
-        self: `SKModel`
+        self : `SKModel`
+
+        Raises
+        ------
+        ValueError
+            If search method is not supported.
+        ValueError
+            If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
+        ValueError
+            If `X` is a Hugging Face Dataset and the target column(s) is not provided.
+        RuntimeErrot
+            If dataset size is larger than the available memory.
+        ValueError
+            If `X` is not a Hugging Face Dataset and \
+                the data labels `y` is not provided.
 
         """
         # TODO: check the `metric` argument; allow using cyclops.evaluate.metrics
-
+        # TODO: allow passing group
         # TODO: handle data splits
         # split_index = [-1] * len(X_train) + [0] * len(X_val)
         # X = np.concatenate((X_train, X_val), axis=0)
         # y = np.concatenate((y_train, y_val), axis=0)
         # pds = PredefinedSplit(test_fold=split_index)
+        method = self.best_model_params.pop("method", "grid")
+        metric = self.best_model_params.pop("metric", None)
 
         if method == "grid":
             clf = GridSearchCV(
                 estimator=self.model_,
-                param_grid=parameters,
+                param_grid=self.best_model_params,
                 scoring=metric,
-                cv=5,
                 **kwargs,
             )
         elif method == "random":
             clf = RandomizedSearchCV(
                 estimator=self.model_,
-                param_distributions=parameters,
+                param_distributions=self.best_model_params,
                 scoring=metric,
-                cv=5,
                 **kwargs,
             )
         else:
             raise ValueError("Method must be either 'grid' or 'random'.")
 
-        # TODO: allow passing group and fit_params to fit
-        clf.fit(X, y)
+        if isinstance(X, Dataset):
+            if feature_columns is None:
+                raise ValueError(
+                    "Missing target columns 'target_columns'. Please provide \
+                    the name of feature columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(feature_columns, str):
+                feature_columns = [feature_columns]
+
+            if target_columns is None:
+                raise ValueError(
+                    "Missing target columns 'target_columns'. Please provide \
+                    the name of target columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(target_columns, str):
+                target_columns = [target_columns]
+
+            if X.dataset_size is not None and is_out_of_core(X.dataset_size):
+                raise RuntimeError("Dataset size cannot fit into memory!")
+
+            format_kwargs = {}
+            is_callable_transform = callable(transforms)
+            if is_callable_transform:
+                format_kwargs["transform"] = transforms
+
+            with X.formatted_as(
+                "custom" if is_callable_transform else "numpy",
+                columns=feature_columns + target_columns,
+                **format_kwargs,
+            ):
+                X_train = np.stack(
+                    [X[feature] for feature in feature_columns], axis=1
+                ).squeeze()
+
+                if transforms is not None and not is_callable_transform:
+                    try:
+                        X_train = transforms.transform(X_train)
+                    except NotFittedError:
+                        X_train = transforms.fit_transform(X_train)
+
+                y_train = np.stack(
+                    [X[target] for target in target_columns], axis=1
+                ).squeeze()
+
+                if issparse(X_train):
+                    X_train = X_train.toarray()
+
+                clf.fit(X_train, y_train, **self.fit_params)
+
+        else:
+            if y is None:
+                raise ValueError(
+                    "Missing data labels 'y'. Please provide the labels \
+                    for the training data when not using a \
+                    Hugging Face dataset as the input."
+                )
+            clf.fit(X, y, **self.fit_params)
 
         for key, value in clf.best_params_.items():
             LOGGER.info("Best %s: %f", key, value)
@@ -151,55 +237,39 @@ class SKModel:
 
         return self
 
-    @dispatch((np.ndarray, pd.DataFrame), (np.ndarray, pd.Series))
-    def partial_fit(self, X, y, classes, **kwargs):
-        """Fit the model to the data incrementally.
-
-        Parameters
-        ----------
-        X : np.ndarray or pd.DataFrame
-            The features of the data.
-        y : np.ndarray or pd.Series
-            The labels of the data.
-        classes : np.ndarray
-            All the possible classes in the dataset.
-
-        Returns
-        -------
-        self: `SKModel`
-
-        """
-        return self.model_.partial_fit(X, y, classes=classes, **kwargs)
-
-    @dispatch(Dataset, list, list)
-    def partial_fit(  # noqa: F811
+    def partial_fit(
         self,
-        dataset: Dataset,
-        feature_columns: List[str],
-        target_columns: List[str],
-        preprocessor: Optional[ColumnTransformer] = None,
-        transforms: Optional[Callable] = None,
-        batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
+        X: Union[ArrayLike, Dataset],
+        y: Optional[ArrayLike] = None,
+        classes: Optional[np.ndarray] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         **kwargs,
     ):
         """Fit the model to the data incrementally.
 
         Parameters
         ----------
-        dataset : Dataset
-            Hugging Face dataset containing features and labels.
-        feature_columns : List[str]
-            List of feature columns in the dataset.
-        target_columns : List[str]
-            List of target columns in the dataset.
-        preprocessor : Optional[ColumnTransformer], optional
-            Transformations to be applied to the data before fitting the model, \
+        X : Union[Dataset, ArrayLike]
+            The data features or Hugging Face dataset containing features and labels.
+        y : Optional[ArrayLike], optional
+            The labels of the data. This is required when the input dataset is not \
+                a huggingface dataset and only contains features, by default None
+        classes : Optional[np.ndarray], optional
+            All the possible classes in the dataset. This is required when \
+                the input dataset is not a huggingface dataset and \
+                only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when \
+                the input is a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when \
+                the input is a Hugging Face Dataset, by default None
+        transforms : Optional[Union[ColumnTransformer, Callable]], optional
+            The transformation to be applied to the data before prediction, \
+                This is used when the input is a Hugging Face Dataset, \
                 by default None
-        transforms : Optional[Callable], optional
-            Transform function to be applied when __getitem__ is called, \
-                by default None
-        batch_size : Optional[int], optional
-            Batch size for batched fitting by default config.DEFAULT_MAX_BATCH_SIZE
 
         Returns
         -------
@@ -209,6 +279,13 @@ class SKModel:
         ------
         AttributeError
             Model does not have partial_fit method.
+        ValueError
+            If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
+        ValueError
+            If `X` is a Hugging Face Dataset and the target column(s) is not provided.
+        ValueError
+            If `X` is not a Hugging Face Dataset and \
+                the data labels `y` is not provided.
 
         """
         if not hasattr(self.model_, "partial_fit"):
@@ -217,250 +294,312 @@ class SKModel:
                 "does not have a `partial_fit` method.",
             )
 
-        def fit_model(examples):
-            X_train = np.stack(
-                [examples[feature] for feature in feature_columns], axis=1
-            ).squeeze()
-            if preprocessor is not None:
-                try:
-                    X_train = preprocessor.transform(X_train)
-                except NotFittedError:
-                    LOGGER.warning(
-                        "Fitting preprocessor on batch of size %d", len(X_train)
-                    )
-                    X_train = preprocessor.fit_transform(X_train)
+        # Train data is a Hugging Face Dataset.
+        if isinstance(X, Dataset):
+            if feature_columns is None:
+                raise ValueError(
+                    "Missing feature columns 'feature_columns'. Please provide \
+                    the name of feature columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(feature_columns, str):
+                feature_columns = [feature_columns]
 
-            y_train = np.stack(
-                [examples[target] for target in target_columns], axis=1
-            ).squeeze()
-            self.model_.partial_fit(
-                X_train, y_train, classes=np.unique(y_train), **kwargs
-            )
-            return examples
+            if target_columns is None:
+                raise ValueError(
+                    "Missing target columns 'target_columns'. Please provide \
+                    the name of target columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(target_columns, str):
+                target_columns = [target_columns]
 
-        format_kwargs = {} if transforms is None else {"transform": transforms}
-        with dataset.formatted_as(
-            "custom" if transforms is not None else "numpy",
-            columns=feature_columns + target_columns,
-            **format_kwargs,
-        ):
-            dataset.map(
-                fit_model,
-                batched=True,
-                batch_size=batch_size,
-            )
+            format_kwargs = {}
+            is_callable_transform = callable(transforms)
+            if is_callable_transform:
+                format_kwargs["transform"] = transforms
+
+            def fit_model(examples):
+                X_train = np.stack(
+                    [examples[feature] for feature in feature_columns], axis=1
+                ).squeeze()
+
+                if transforms is not None:
+                    if not is_callable_transform:
+                        try:
+                            X_train = transforms.transform(X_train)
+                        except NotFittedError:
+                            LOGGER.warning(
+                                "Fitting preprocessor on batch of size %d", len(X_train)
+                            )
+                            X_train = transforms.fit_transform(X_train)
+
+                y_train = np.stack(
+                    [examples[target] for target in target_columns], axis=1
+                ).squeeze()
+                self.model_.partial_fit(
+                    X_train, y_train, classes=np.unique(y_train), **kwargs
+                )
+                return examples
+
+            with X.formatted_as(
+                "custom" if is_callable_transform else "numpy",
+                columns=feature_columns + target_columns,
+                **format_kwargs,
+            ):
+                X.map(
+                    fit_model,
+                    batched=True,
+                    batch_size=self.batch_size,
+                )
+        # Train data is not a Hugging Face Dataset.
+        else:
+            if y is None:
+                raise ValueError(
+                    "Missing data labels 'y'. Please provide the labels \
+                    for the training data when not using a \
+                    Hugging Face dataset as the input."
+                )
+            if classes is None:
+                LOGGER.warning(
+                    "Missing unique class labels. Please provide a list of classes \
+                    when using a numpy array or pandas dataframe as the input."
+                )
+
+            self.model_.partial_fit(X, y, classes=classes, **kwargs)
 
         return self
 
-    @dispatch((np.ndarray, pd.DataFrame, list), (np.ndarray, pd.Series, list))
-    def fit(self, X, y):
-        """Fit the model to the data.
-
-        Parameters
-        ----------
-        X : np.ndarray or pd.DataFrame
-            The features of the data.
-        y : np.ndarray or pd.Series
-            The labels of the data.
-
-        Returns
-        -------
-        self: `SKModel`
-
-        """
-        self.model_ = self.model_.fit(  # pylint: disable=attribute-defined-outside-init
-            X, y
-        )
-        return self
-
-    @dispatch(Dataset, list, list)
-    def fit(  # noqa: F811
+    def fit(
         self,
-        dataset: Dataset,
-        feature_columns: List[str],
-        target_columns: List[str],
-        preprocessor: Optional[ColumnTransformer] = None,
-        transforms: Optional[Callable] = None,
-        batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
+        X: Union[ArrayLike, Dataset],
+        y: Optional[ArrayLike] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         **kwargs,
     ):
-        """Fit the model on a Hugging Face dataset.
+        """Fit the model.
 
         Parameters
         ----------
-        dataset : Dataset
-             Hugging Face dataset containing features and labels.
-        feature_columns : List[str]
-            List of feature columns in the dataset.
-        target_columns : List[str]
-            List of target columns in the dataset.
-        preprocessor : Optional[ColumnTransformer], optional
-            Transformations to be applied to the data before fitting the model, \
+        X : Union[Dataset, ArrayLike]
+            The data features or a Hugging Face dataset containing features and labels.
+        y : Optional[ArrayLike], optional
+            The labels of the data. This is required when the input dataset is not \
+                a huggingface dataset and only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when \
+                the input is a Hugging Face Dataset, by default None
+        transforms : Optional[Union[ColumnTransformer, Callable]], optional
+            The transformation to be applied to the data before prediction,
+                This is used when the input is a Hugging Face Dataset, \
                 by default None
-        transforms : Optional[Callable], optional
-            Transform function to be applied when __getitem__ is called, \
-                by default None
-        batch_size : Optional[int], optional
-            Batch size for batched fitting, used only for estimators with partial fit,
-            by default config.DEFAULT_MAX_BATCH_SIZE
 
         Returns
         -------
         self : `SKModel`
 
+        Raises
+        ------
+        ValueError
+            If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
+        ValueError
+            If `X` is a Hugging Face Dataset and the target column(s) is not provided.
+        ValueError
+            If `X` is not a Hugging Face Dataset and \
+                the data labels `y` is not provided.
+
         """
-        if is_out_of_core(dataset_size=dataset.dataset_size):
-            LOGGER.warning(
-                "Dataset size cannot fit into memory. Will call partial fit."
+        # Train data is a Hugging Face Dataset.
+        if isinstance(X, Dataset):
+            if feature_columns is None:
+                raise ValueError(
+                    "Missing feature columns 'feature_columns'. Please provide \
+                    the name of feature columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(feature_columns, str):
+                feature_columns = [feature_columns]
+
+            if target_columns is None:
+                raise ValueError(
+                    "Missing target columns 'target_columns'. Please provide \
+                    the name of target columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(target_columns, str):
+                target_columns = [target_columns]
+
+            if X.dataset_size is not None and is_out_of_core(X.dataset_size):
+                LOGGER.warning(
+                    "Dataset size cannot fit into memory. Will call partial fit."
+                )
+                return self.partial_fit(
+                    Dataset,
+                    feature_columns,
+                    target_columns,
+                    transforms=transforms,
+                    batch_size=self.batch_size,
+                    **kwargs,
+                )
+
+            format_kwargs = {}
+            is_callable_transform = callable(transforms)
+            if is_callable_transform:
+                format_kwargs["transform"] = transforms
+
+            with X.formatted_as(
+                "custom" if is_callable_transform else "numpy",
+                columns=feature_columns + target_columns,
+                **format_kwargs,
+            ):
+                X_train = np.stack(
+                    [X[feature] for feature in feature_columns], axis=1
+                ).squeeze()
+
+                if transforms is not None and not is_callable_transform:
+                    try:
+                        X_train = transforms.transform(X_train)
+                    except NotFittedError:
+                        X_train = transforms.fit_transform(X_train)
+
+                y_train = np.stack(
+                    [X[target] for target in target_columns], axis=1
+                ).squeeze()
+
+                if issparse(X_train):
+                    X_train = X_train.toarray()
+                self.fit(X_train, y_train, **self.fit_params)
+        # Train data is not a Hugging Face Dataset.
+        else:
+            if y is None:
+                raise ValueError(
+                    "Missing data labels 'y'. Please provide the labels \
+                    for the training data when not using a \
+                    Hugging Face dataset as the input."
+                )
+
+            self.model_ = (  # pylint: disable=attribute-defined-outside-init
+                self.model_.fit(
+                    X,
+                    y,
+                    **self.fit_params,
+                )
             )
-            return self.partial_fit(
-                Dataset,
-                feature_columns,
-                target_columns,
-                preprocessor=preprocessor,
-                batch_size=batch_size,
-                **kwargs,
-            )
-
-        format_kwargs = {} if transforms is None else {"transform": transforms}
-        with dataset.formatted_as(
-            "custom" if transforms is not None else "numpy",
-            columns=feature_columns + target_columns,
-            **format_kwargs,
-        ):
-            X_train = np.stack(
-                [dataset[feature] for feature in feature_columns], axis=1
-            ).squeeze()
-            if preprocessor is not None:
-                try:
-                    X_train = preprocessor.transform(X_train)
-                except NotFittedError:
-                    X_train = preprocessor.fit_transform(X_train)
-            y_train = np.stack(
-                [dataset[target] for target in target_columns], axis=1
-            ).squeeze()
-
-            if issparse(X_train):
-                X_train = X_train.toarray()
-            self.fit(X_train, y_train)
-
         return self
 
-    @dispatch((np.ndarray, pd.DataFrame))
-    def predict(self, X):
-        """Predict the output of the model for the given data.
-
-        Parameters
-        ----------
-        X : np.ndarray or pd.DataFrame
-            The input to the model.
-
-        Returns
-        -------
-        self: `SKModel`
-
-        """
-        return self.model_.predict(X)
-
-    @dispatch(Dataset, (str, list))
-    def predict(  # noqa: F811
+    def predict(
         self,
-        dataset: Dataset,
-        feature_columns: Union[str, List[str]],
+        X: Union[ArrayLike, Dataset],
+        feature_columns: Optional[Union[str, List[str]]] = None,
         prediction_column_prefix: str = "predictions",
         model_name: Optional[str] = None,
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
-        batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
-        proba: bool = True,
         only_predictions: bool = False,
-    ) -> Union[Dataset, DatasetColumn]:
-        """Predict the output of the model for the given Hugging Face dataset.
+        proba: bool = True,
+    ) -> Union[Dataset, DatasetColumn, np.ndarray]:
+        """Predict the output of the model.
 
         Parameters
         ----------
-        dataset : Dataset
-            Hugging Face dataset containing features and possibly target labels.
-        feature_columns : str, List[str]
-            Feature column(s) in the dataset.
+        X : Dataset
+            The data features or Hugging Face dataset containing features and labels.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
         prediction_column_prefix : str, optional
-            Name of the prediction column to be added to the dataset, \
-                by default "predictions"
+            Name of the prediction column to be added to the dataset, This is used \
+                when the input is a Hugging Face Dataset, by default "predictions"
         model_name : Optional[str], optional
-            Model name used as suffix to the prediction column, by default None
-        preprocessor : Optional[ColumnTransformer], optional
-            The transformation to be applied to the data before prediction, \
-                by default None
+            Model name used as suffix to the prediction column, This is used \
+                when the input is a Hugging Face Dataset, by default None
         transforms : Optional[Callable], optional
-            Transform function to be applied when __getitem__ is called, \
+            The transformation to be applied to the data before prediction, \
+                This is used when the input is a Hugging Face Dataset, \
                 by default None
-        batch_size : int, optional
-            Batch size for batched prediction, by default config.DEFAULT_MAX_BATCH_SIZE
         proba : bool, optional
             Whether to output the prediction probabilities rather than \
                 the predicted classes, by default True
         only_predictions : bool, optional
-            Whether to return only the predictions rather than \
-            the dataset with predictions,
+            Whether to return only the predictions rather than the dataset \
+                with predictions when the input is a Hugging Face Dataset, \
                 by default False
 
         Returns
         -------
-        Union[Dataset, DatasetColumn]
+        Union[Dataset, DatasetColumn, np.ndarray]
             Dataset containing the predictions or the predictions array.
 
+        Raises
+        ------
+        ValueError
+            If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
+
         """
-        if model_name:
-            pred_column = f"{prediction_column_prefix}.{model_name}"
-        else:
-            pred_column = f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
+        # Data is a Hugging Face Dataset.
+        if isinstance(X, Dataset):
+            if feature_columns is None:
+                raise ValueError(
+                    "Missing feature columns 'feature_columns'. Please provide \
+                    the name of feature columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(feature_columns, str):
+                feature_columns = [feature_columns]
 
-        if isinstance(feature_columns, str):
-            feature_columns = [feature_columns]
+            if model_name:
+                pred_column = f"{prediction_column_prefix}.{model_name}"
+            else:
+                pred_column = (
+                    f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
+                )
 
-        format_kwargs = {}
-        is_callable_transform = callable(transforms)
-        if is_callable_transform:
-            format_kwargs["transform"] = transforms
+            format_kwargs = {}
+            is_callable_transform = callable(transforms)
+            if is_callable_transform:
+                format_kwargs["transform"] = transforms
 
-        def get_predictions(examples: Dict[str, Union[List, np.ndarray]]) -> dict:
-            X_eval = np.stack(
-                [examples[feature] for feature in feature_columns], axis=1
-            )
-            if transforms is not None:
-                if is_callable_transform:
-                    X_eval = transforms(X_eval)
-                else:
+            def get_predictions(examples: Dict[str, Union[List, np.ndarray]]) -> dict:
+                X_eval = np.stack(
+                    [examples[feature] for feature in feature_columns], axis=1
+                )
+                if transforms is not None and not is_callable_transform:
                     try:
                         X_eval = transforms.transform(X_eval)
                     except NotFittedError:
                         LOGGER.warning("Fitting preprocessor on evaluation data.")
                         X_eval = transforms.fit_transform(X_eval)
 
-            if proba and hasattr(self.model_, "predict_proba"):
-                predictions = self.model_.predict_proba(X_eval)
-            else:
-                predictions = self.predict(X_eval)
-            return {pred_column: predictions}
+                if proba and hasattr(self.model_, "predict_proba"):
+                    predictions = self.model_.predict_proba(X_eval)
+                else:
+                    predictions = self.predict(X_eval)
+                return {pred_column: predictions}
 
-        with dataset.formatted_as(
-            "custom" if is_callable_transform else "numpy",
-            columns=feature_columns,
-            output_all_columns=True,
-            **format_kwargs,
-        ):
-            pred_ds = dataset.map(
-                get_predictions,
-                batched=True,
-                batch_size=batch_size,
-                remove_columns=dataset.column_names,
-            )
+            with X.formatted_as(
+                "custom" if is_callable_transform else "numpy",
+                columns=feature_columns,
+                output_all_columns=True,
+                **format_kwargs,
+            ):
+                pred_ds = X.map(
+                    get_predictions,
+                    batched=True,
+                    batch_size=self.batch_size,
+                    remove_columns=X.column_names,
+                )
+                if only_predictions:
+                    return DatasetColumn(pred_ds.with_format("numpy"), pred_column)
 
-            if only_predictions:
-                return DatasetColumn(pred_ds.with_format("numpy"), pred_column)
+                X = concatenate_datasets([X, pred_ds], axis=1)
 
-            dataset = concatenate_datasets([dataset, pred_ds], axis=1)
-
-        return dataset
+            return X
+        # Data is not a Hugging Face Dataset.
+        return self.model_.predict(X)
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save model to file."""
