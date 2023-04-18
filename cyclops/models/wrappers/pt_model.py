@@ -787,11 +787,11 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             if target_columns is None:
                 raise ValueError(
                     "Missing target columns 'target_columns'. Please provide \
-                    the name of feature columns when using a \
+                    the name of target columns when using a \
                     Hugging Face dataset as the input."
                 )
             if isinstance(target_columns, str):
-                feature_columns = [target_columns]
+                target_columns = [target_columns]
 
             format_kwargs = {} if transforms is None else {"transform": transforms}
             with X.formatted_as(
