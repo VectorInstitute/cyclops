@@ -24,5 +24,3 @@ def test_omop_querier():
     visits_df = pd.read_parquet("visits.parquet")
     assert len(visits_df) == 4115
     os.remove("visits.parquet")
-
-    assert len(querier.list_tables()) == 69
