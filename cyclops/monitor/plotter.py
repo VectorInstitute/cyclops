@@ -1,4 +1,6 @@
 """Plotting functions for drift detection."""
+from typing import List, Optional
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,7 +24,7 @@ colors = [
 ]
 
 
-def clamp(val: int, minimum=0, maximum=255):
+def clamp(val: int, minimum: int = 0, maximum: int = 255) -> int:
     """Ensure colour intensity is within a specified range.
 
     Returns
@@ -38,7 +40,7 @@ def clamp(val: int, minimum=0, maximum=255):
     return val
 
 
-def colorscale(hexstr: str, scalefactor: float):
+def colorscale(hexstr: str, scalefactor: float) -> str:
     """Create color scale.
 
     Returns
@@ -62,15 +64,15 @@ def colorscale(hexstr: str, scalefactor: float):
 
 
 def errorfill(
-    x: np.array,
-    y: np.array,
-    yerr: np.array,
-    color=None,
-    alpha_fill=0.2,
-    ax=None,
-    fmt="-o",
-    label=None,
-):
+    x: np.ndarray[float, np.dtype[np.float64]],
+    y: np.ndarray[float, np.dtype[np.float64]],
+    yerr: np.ndarray[float, np.dtype[np.float64]],
+    color: Optional[str] = None,
+    alpha_fill: float = 0.2,
+    ax: Optional[mpl.axes.SubplotBase] = None,
+    fmt: str = "-o",
+    label: Optional[str] = None,
+) -> None:
     """Create custom error fill."""
     ax = ax if ax is not None else plt.gca()
     if color is None:
@@ -86,7 +88,9 @@ def errorfill(
     )
 
 
-def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
+def plot_roc(
+    ax: mpl.axes.SubplotBase, fpr: List[float], tpr: List[float], roc_auc: str
+) -> mpl.axes.SubplotBase:
     """Plot ROC curve.
 
     Returns
@@ -104,7 +108,9 @@ def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
     return ax
 
 
-def plot_pr(ax: mpl.axes.SubplotBase, recall: list, precision: list, roc_prc: str):
+def plot_pr(
+    ax: mpl.axes.SubplotBase, recall: List[float], precision: List[float], roc_prc: str
+) -> mpl.axes.SubplotBase:
     """Plot Precision-Recall curve.
 
     Returns
@@ -127,8 +133,8 @@ def setup_plot(
     title: str,
     xlabel: str,
     ylabel: str,
-    legend: list,
-):
+    legend: List[str],
+) -> None:
     """Plot setup.
 
     Parameters
@@ -151,7 +157,7 @@ def setup_plot(
     plot_handle.legend(legend, loc=1)
 
 
-def set_bars_color(bars: mpl.container.BarContainer, color: str):
+def set_bars_color(bars: mpl.container.BarContainer, color: str) -> None:
     """Set color attribute for bars in bar plots.
 
     Parameters
@@ -166,7 +172,9 @@ def set_bars_color(bars: mpl.container.BarContainer, color: str):
         bar_item.set_color(color)
 
 
-def plot_label_distribution(X, y, label, features):
+def plot_label_distribution(
+    X: pd.DataFrame, y: pd.DataFrame, label: str, features: List[str]
+) -> None:
     """Set color attribute for bars in bar plots.
 
     Parameters
@@ -238,7 +246,7 @@ def plot_label_distribution(X, y, label, features):
         feature_counts_pos = list(data_pos[feature].value_counts())
         if len(feature_counts) == 1:
             feature_counts.append(0)
-            icd_counts_pos = None
+            icd_counts_pos: List[int] = []
         if len(icd_counts_pos) == 1:
             feature_counts_pos.append(0)
         position = x + (width * (1 - len_features) / 2) + i * width
@@ -270,8 +278,20 @@ def plot_label_distribution(X, y, label, features):
     plt.show()
 
 
-def plot_drift_samples_pval(results, p_val_threshold):
-    """Plot drift experiement p-values."""
+def plot_drift_samples_pval(
+    results: dict[str, dict[str, np.ndarray[float, np.dtype[np.float64]]]],
+    p_val_threshold: float,
+) -> None:
+    """Plot drift experiement p-values.
+
+    Parameters
+    ----------
+    results: dict
+        Dictionary with results from drift experiment.
+    p_val_threshold: int
+        Threshold for p-value.
+
+    """
     fig = plt.figure(figsize=(11, 8))
     ax = fig.add_subplot(111)
     for shift_iter, shift in enumerate(results.keys()):
@@ -291,7 +311,7 @@ def plot_drift_samples_pval(results, p_val_threshold):
     plt.show()
 
 
-def plot_drift(results, p_val_threshold=0.05):
+def plot_drift(results: pd.DataFrame, p_val_threshold: float = 0.05) -> None:
     """Plot drift results.
 
     Parameters
@@ -351,7 +371,7 @@ def plot_drift(results, p_val_threshold=0.05):
     plt.show()
 
 
-def plot_performance(results, metric):
+def plot_performance(results: pd.DataFrame, metric: str) -> None:
     """Plot drift results.
 
     Parameters

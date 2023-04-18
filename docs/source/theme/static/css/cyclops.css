@@ -6,16 +6,18 @@ html {
   --text-color: #24292e;
   --heading-color: #404040;
   --link-color: #5097ba;
-  --sidebar-background-color: #f2f2f2;
+  --sidebar-background-color: #2e76d49d;
   --content-background-color: #ffffff;
 }
 
 body {
-  font-family: Lato, 'Helvetica Neue', sans-serif;
+  font-family: 'Roboto', sans-serif;
   font-weight: 400;
   color: var(--text-color);
   line-height: 1.5;
 }
+
+.wy-menu-vertical a { color: #98a8f5;; }
 
 h1, h2, h3, h4, h5, h6, legend, .rst-content .toctree-wrapper p.caption, .rst-content .sidebar .sidebar-title {
   font-family: Lato, 'Helvetica Neue', sans-serif;

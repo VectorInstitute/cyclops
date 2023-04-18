@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Union, get_args
 
 import numpy as np
 import numpy.typing as npt
+import psutil
 from datasets import Dataset
 from datasets.features import (
     Array2D,
@@ -200,3 +201,20 @@ def feature_is_datetime(feature: FEATURE_TYPES) -> bool:
         raise TypeError(f"Invalid type for `feature`: {type(feature)}.")
 
     return any(dtype.startswith(t) for t in DATETIME_FEATURE_TYPES)
+
+
+def is_out_of_core(dataset_size: int) -> Any:
+    """Check if dataset is too large to fit in memory.
+
+    Parameters
+    ----------
+    dataset_size : int
+        Size of dataset expressed in bytes
+
+    Returns
+    -------
+    Any
+        Whether dataset can fit in memory
+
+    """
+    return dataset_size > psutil.virtual_memory().available

@@ -1,6 +1,6 @@
 """Detector base class."""
 
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ from datasets.arrow_dataset import Dataset
 
 from cyclops.monitor.reductor import Reductor
 from cyclops.monitor.tester import DCTester, TSTester
-from cyclops.monitor.utils import get_args, get_device
+from cyclops.monitor.utils import get_args
 
 
 class Detector:
@@ -54,17 +54,15 @@ class Detector:
         experiment_type: str,
         reductor: Reductor,
         tester: Union[TSTester, DCTester],
-        device: str = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize Detector object."""
         self.experiment_type = experiment_type
 
-        self.experiment_types: dict = {
+        self.experiment_types: Dict[str, Any] = {
             "sensitivity_test": self.sensitivity_test,
             "balanced_sensitivity_test": self.balanced_sensitivity_test,
             "rolling_window_drift": self.rolling_window_drift,
-            "rolling_window_performance": self.rolling_window_performance,
         }
 
         if self.experiment_type not in self.experiment_types:
@@ -75,20 +73,15 @@ class Detector:
 
         self.reductor = reductor
         self.tester = tester
-        if device is None:
-            self.device = get_device()
-        else:
-            self.device = device
-
         self.method_args = get_args(self.experiment_types[self.experiment_type], kwargs)
 
-    def fit(self, ds_source: Dataset, **kwargs):
+    def fit(self, ds_source: Dataset, **kwargs: Any) -> None:
         """Fit Reductor and Tester to source data.
 
         Parameters
         ----------
-        X_source : np.ndarray
-            Source data.
+        X_source : Dataset
+            Source dataset.
         **kwargs
             Keyword arguments for Reductor.
 
@@ -99,9 +92,13 @@ class Detector:
             ds_source, **get_args(self.reductor.transform, kwargs)
         )
 
+        if self.tester.tester_method == "ctx_mmd":
+            kwargs["ds_source"] = ds_source
         self.tester.fit(source_features, **get_args(self.tester.fit, kwargs))
 
-    def transform(self, dataset: Dataset, batch_size: int = 32, num_workers: int = 1):
+    def transform(
+        self, dataset: Dataset, batch_size: int = 32, num_workers: int = 1
+    ) -> np.ndarray[float, np.dtype[np.float64]]:
         """Transform data.
 
         Parameters
@@ -121,13 +118,17 @@ class Detector:
         """
         return self.reductor.transform(dataset, batch_size, num_workers)
 
-    def test_shift(self, X_target):
+    def test_shift(
+        self, X_target: np.ndarray[float, np.dtype[np.float64]], **kwargs: Any
+    ) -> Dict[str, Any]:
         """Test shift between source and target data.
 
         Parameters
         ----------
         X_target : np.ndarray
             Target data.
+        **kwargs
+            Keyword arguments for tester.
 
         Returns
         -------
@@ -135,7 +136,7 @@ class Detector:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
 
         """
-        p_val, dist = self.tester.test_shift(X_target)
+        p_val, dist = self.tester.test_shift(X_target, **kwargs)
 
         if p_val < self.tester.p_val_threshold:
             shift_detected = 1
@@ -144,7 +145,7 @@ class Detector:
 
         return {"p_val": p_val, "distance": dist, "shift_detected": shift_detected}
 
-    def detect_shift(self, ds_source: Dataset, ds_target: Dataset):
+    def detect_shift(self, ds_source: Dataset, ds_target: Dataset) -> Any:
         """Detect shift between source and target data.
 
         Parameters
@@ -166,17 +167,15 @@ class Detector:
     def _detect_shift_sample(
         self,
         ds_target: Dataset,
-        batch_size,
-        num_workers,
-    ):
+        batch_size: int,
+        num_workers: int,
+    ) -> Dict[str, Any]:
         """Detect shift between source and target data across samples.
 
         Parameters
         ----------
-        X_source: np.ndarray or torch.utils.data.Dataset
-            Source data.
-        X_target: np.ndarray or torch.utils.data.Dataset
-            Target data.
+        ds_target: Dataset
+            target dataset.
         **kwargs
             Keyword arguments for Reductor and TSTester.
 
@@ -188,7 +187,10 @@ class Detector:
         """
         # get target features
         target_features = self.transform(ds_target, batch_size, num_workers)
-        results = self.test_shift(target_features)
+        if self.tester.tester_method == "ctx_mmd":
+            results = self.test_shift(target_features, ds_target=ds_target)
+        else:
+            results = self.test_shift(target_features)
 
         if results["p_val"] < self.tester.p_val_threshold:
             shift_detected = 1
@@ -210,7 +212,7 @@ class Detector:
         num_runs: int = 1,
         batch_size: int = 32,
         num_workers: int = 1,
-    ):
+    ) -> Dict[str, Any]:
         """Sensitivity test for drift detection.
 
         Parameters
@@ -236,6 +238,8 @@ class Detector:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
 
         """
+        if isinstance(target_sample_size, int):
+            target_sample_size = [target_sample_size]
         p_val = np.empty((num_runs, len(target_sample_size)))
         dist = np.empty((num_runs, len(target_sample_size)))
         shift_detected = np.empty((num_runs, len(target_sample_size)))
@@ -273,7 +277,7 @@ class Detector:
         num_runs: int = 1,
         batch_size: int = 32,
         num_workers: int = 1,
-    ):
+    ) -> Dict[str, Any]:
         """Perform balanced sensitivity test for drift detection.
 
         Parameters
@@ -299,6 +303,8 @@ class Detector:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
 
         """
+        if isinstance(target_sample_size, int):
+            target_sample_size = [target_sample_size]
         p_val = np.empty((num_runs, len(target_sample_size)))
         dist = np.empty((num_runs, len(target_sample_size)))
         shift_detected = np.empty((num_runs, len(target_sample_size)))
@@ -346,7 +352,7 @@ class Detector:
         num_runs: int = 1,
         batch_size: int = 32,
         num_workers: int = 1,
-    ):
+    ) -> Dict[str, Any]:
         """Perform rolling window drift detection.
 
         Parameters
@@ -410,46 +416,3 @@ class Detector:
             "distance": dist,
             "shift_detected": shift_detected,
         }
-
-    def rolling_window_performance(
-        self,
-        ds_source: Dataset,
-        ds_target: Dataset,
-        source_sample_size: int,
-        target_sample_size: int,
-        timestamp_column: str,
-        window_size: int,
-        num_runs: int = 1,
-        batch_size: int = 32,
-        num_workers: int = 1,
-    ):
-        """Perform rolling window performance test for drift detection.
-
-        Parameters
-        ----------
-        ds_source: Dataset
-            Source dataset.
-        ds_target: Dataset
-            Target dataset.
-        source_sample_size: int
-            Size of source sample.
-        target_sample_size: int
-            Size of target sample.
-        timestamp_column: str
-            Name of timestamp column.
-        window_size: str
-            Size of window.
-        num_runs: int
-            Number of runs.
-        batch_size: int
-            Batch size for data loader.
-        num_workers: int
-            Number of workers for data loader.
-
-        Returns
-        -------
-        dict
-            Dictionary containing p-value, distance, and boolean 'shift_detected'.
-
-        """
-        raise NotImplementedError
