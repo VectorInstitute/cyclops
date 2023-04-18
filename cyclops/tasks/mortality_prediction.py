@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import pandas as pd
 from datasets import Dataset, config
-from multipledispatch import dispatch
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
 
@@ -13,7 +12,7 @@ from cyclops.datasets.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection
-from cyclops.models.catalog import _static_model_keys
+from cyclops.models.catalog import _model_names_mapping, _static_model_keys
 from cyclops.models.wrappers import WrappedModel
 from cyclops.tasks.utils import prepare_models, to_numpy
 from cyclops.utils.log import setup_logging
@@ -22,7 +21,6 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 # pylint: disable=function-redefined, dangerous-default-value
-# noqa: F811
 
 
 class MortalityPrediction:
@@ -97,7 +95,8 @@ class MortalityPrediction:
     def _validate_models(self):
         """Validate the models for the task data type."""
         assert all(
-            m.model.__name__ in _static_model_keys for m in self.models.values()
+            _model_names_mapping.get(model.model.__name__) in _static_model_keys
+            for model in self.models.values()
         ), "All models must be image classification model."
 
     @property
@@ -192,75 +191,30 @@ class MortalityPrediction:
 
         return model_name, model
 
-    @dispatch(Dataset)
     def train(
         self,
-        dataset: Dataset,
+        X: Union[np.ndarray, pd.DataFrame, Dataset],
+        y: Optional[Union[np.ndarray, pd.Series]] = None,
         model_name: Optional[str] = None,
-        preprocessor: Optional[ColumnTransformer] = None,
-        batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
-        **kwargs,
-    ) -> WrappedModel:
-        """Train a model on a HuggingFace dataset.
-
-        Parameters
-        ----------
-        dataset : Dataset
-            HuggingFace dataset.
-        model_name : Optional[str], optional
-            Model name, required if more than one model exists, by default None
-        preprocessor : Optional[ColumnTransformer], optional
-            Transformations to be applied to the dataset before \
-                fitting the model, by default None
-        batch_size : int, optional
-            Size of the batch, by default config.DEFAULT_MAX_BATCH_SIZE
-
-        Returns
-        -------
-        WrappedModel
-            The trained model.
-
-        """
-        model_name, model = self.get_model(model_name)
-        model.fit(
-            dataset,
-            self.task_features,
-            self.task_target,
-            preprocessor=preprocessor,
-            batch_size=batch_size,
-            **kwargs,
-        )
-
-        self.trained_models.append(model_name)
-        return model
-
-    @dispatch((np.ndarray, pd.DataFrame), (np.ndarray, pd.Series))
-    def train(  # noqa: F811
-        self,
-        X_train: Union[np.ndarray, pd.DataFrame],
-        y_train: Union[np.ndarray, pd.Series],
-        model_name: Optional[str] = None,
-        preprocessor: Optional[ColumnTransformer] = None,
-        best_model_params: Optional[Dict] = None,
+        transforms: Optional[ColumnTransformer] = None,
+        find_best_model: bool = False,
         **kwargs,
     ) -> WrappedModel:
         """Fit a model on tabular data.
 
         Parameters
         ----------
-        X_train : Union[np.ndarray, pd.DataFrame]
+        X_train : Union[np.ndarray, pd.DataFrame, Dataset]
             Data features.
-        y_train : Union[np.ndarray, pd.Series]
-            Data labels.
+        y_train : Optional[Union[np.ndarray, pd.Series]]
+            Data labels, required when the input data is not a Hugging Face dataset, \
+                by default None
         model_name : Optional[str], optional
             Model name, required if more than one model exists, \
                 by default None
-        preprocessor : Optional[ColumnTransformer], optional
+        transforms : Optional[ColumnTransformer], optional
             Transformations to be applied to the data before \
                 fitting the model, by default Noney default None
-        best_model_params : Optional[Dict], optional
-            Parameters for finding the best model from hyperparameter search, \
-                by default None
 
         Returns
         -------
@@ -269,48 +223,56 @@ class MortalityPrediction:
 
         """
         # TODO: add support for evaluation metrics # pylint: disable=fixme
-
-        X_train = to_numpy(X_train)
-
-        if preprocessor is not None:
-            try:
-                X_train = preprocessor.transform(X_train)
-            except NotFittedError:
-                X_train = preprocessor.fit_transform(X_train)
-
-        y_train = to_numpy(y_train)
-
-        assert len(X_train) == len(y_train)
-
         model_name, model = self.get_model(model_name)
-
-        if best_model_params:
-            try:
-                metric = (
-                    best_model_params.pop("metric")
-                    if best_model_params.get("metric")
-                    else "auc-roc"
-                )
-                method = (
-                    best_model_params.pop("method")
-                    if best_model_params.get("method")
-                    else "grid"
-                )
+        if isinstance(X, Dataset):
+            if find_best_model:
                 model.find_best(
-                    X_train,
-                    y_train,
-                    parameters=best_model_params,
-                    metric=metric,
-                    method=method,
+                    X,
+                    feature_columns=self.task_features,
+                    target_columns=self.task_target,
+                    transforms=transforms,
                     **kwargs,
                 )
-            except AttributeError:
-                LOGGER.warning(
-                    "Model %s does not have a `find_best` method.", model_name
+            else:
+                model.fit(
+                    X,
+                    feature_columns=self.task_features,
+                    target_columns=self.task_target,
+                    transforms=transforms,
+                    **kwargs,
                 )
-                model.fit(X_train, y_train)
+
         else:
-            model.fit(X_train, y_train)
+            if y is None:
+                raise ValueError(
+                    "Missing data labels 'y'. Please provide the labels for \
+                    the training data when not using a Hugging Face dataset \
+                    as the input."
+                )
+
+            X = to_numpy(X)
+            if transforms is not None:
+                try:
+                    X = transforms.transform(X)
+                except NotFittedError:
+                    X = transforms.fit_transform(X)
+            y = to_numpy(y)
+            assert len(X) == len(y)
+
+            if find_best_model:
+                try:
+                    model.find_best(
+                        X,
+                        y=y,
+                        **kwargs,
+                    )
+                except AttributeError:
+                    LOGGER.warning(
+                        "Model %s does not have a `find_best` method.", model_name
+                    )
+                    model.fit(X, y)
+            else:
+                model.fit(X, y, **kwargs)
 
         self.trained_models.append(model_name)
         return model
@@ -345,8 +307,7 @@ class MortalityPrediction:
         self,
         dataset: Union[np.ndarray, pd.DataFrame, Dataset],
         model_name: Optional[str] = None,
-        preprocessor: Optional[ColumnTransformer] = None,
-        proba: bool = True,
+        transforms: Optional[ColumnTransformer] = None,
         **kwargs,
     ) -> Union[np.ndarray, Dataset]:
         """Predict mortality on the given dataset.
@@ -357,12 +318,10 @@ class MortalityPrediction:
             Data features.
         model_name : Optional[str], optional
             Model name, required if more than one model exists, by default None
-        preprocessor : Optional[ColumnTransformer], optional
+        transforms : Optional[ColumnTransformer], optional
             Transformations to be applied to the data before \
-                fitting the model, by default None
-        proba : bool, optional
-            Whether to output the prediction probabilities rather than \
-                predicted classes, by default True
+                prediction. This is used when the input is a \
+                Hugging Face Dataset, by default None, by default None
 
         Returns
         -------
@@ -385,26 +344,22 @@ class MortalityPrediction:
         if isinstance(dataset, Dataset):
             return model.predict(
                 dataset,
-                self.task_features,
-                preprocessor=preprocessor,
-                proba=proba,
+                feature_columns=self.task_features,
+                transforms=transforms,
                 model_name=model_name,
                 **kwargs,
             )
 
         dataset = to_numpy(dataset)
 
-        if preprocessor is not None:
+        if transforms is not None:
             try:
-                dataset = preprocessor.transform(dataset)
+                dataset = transforms.transform(dataset)
             except NotFittedError:
                 LOGGER.warning("Fitting preprocessor on evaluation dataset.")
-                dataset = preprocessor.fit_transform(dataset)
+                dataset = transforms.fit_transform(dataset)
 
-        if proba and hasattr(model, "predict_proba"):
-            predictions = model.predict_proba(dataset)
-        else:
-            predictions = model.predict(dataset)
+        predictions = model.predict(dataset, **kwargs)
 
         return predictions
 
@@ -413,7 +368,7 @@ class MortalityPrediction:
         dataset: Dataset,
         metrics: Union[List[str], MetricCollection],
         model_names: Union[str, List[str]] = None,
-        preprocessor: Optional[ColumnTransformer] = None,
+        transforms: Optional[ColumnTransformer] = None,
         prediction_column_prefix: str = "predictions",
         slice_spec: Optional[SliceSpec] = None,
         batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
@@ -430,7 +385,7 @@ class MortalityPrediction:
         model_names : Union[str, List[str]], optional
             Model names to be evaluated, if not specified all fitted models \
                 will be used for evaluation, by default None
-        preprocessor : Optional[ColumnTransformer], optional
+        transforms : Optional[ColumnTransformer], optional
             Transformations to be applied to the data before prediction, \
                 by default None
         prediction_column_prefix : str, optional
@@ -474,14 +429,15 @@ class MortalityPrediction:
             dataset = self.predict(
                 dataset,
                 model_name=model_name,
-                preprocessor=preprocessor,
-                proba=True,
+                transforms=transforms,
                 prediction_column_prefix=prediction_column_prefix,
-                batch_size=batch_size,
                 only_predictions=False,
             )
-
-        return evaluate(
+        # print(self.task_target)
+        # print(dataset.to_pandas()['outcome_death'].value_counts())
+        # import sys
+        # sys.exit()
+        results = evaluate(
             dataset,
             metrics,
             target_columns=self.task_target,
@@ -490,3 +446,4 @@ class MortalityPrediction:
             batch_size=batch_size,
             remove_columns=remove_columns,
         )
+        return results, dataset
