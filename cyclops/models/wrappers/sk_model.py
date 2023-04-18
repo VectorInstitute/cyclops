@@ -34,6 +34,17 @@ class SKModel:
     ----------
     model : sklearn.base.BaseEstimator
         Scikit-learn model instance or class.
+    model_params: dict
+        Scikit-learn estimator parameters
+    fit_params: dict, optional
+        Parameters to pass to the fit method
+        by default {}
+    best_model_params: dict, optional
+        Parameters to configure hyperparameter search
+        by default {}
+    batch_size: int, optional
+        The batch size used when using Hugging Face Dataset, \
+            by default 64
     **kwargs : dict, optional
         Additional keyword arguments to pass to model.
 
@@ -51,7 +62,7 @@ class SKModel:
         model_params: dict,
         fit_params: dict = {},
         best_model_params: dict = {},
-        batch_size: int = 64,
+        batch_size: int = 200,
         **kwargs,
     ) -> None:
         """Initialize wrapper."""
