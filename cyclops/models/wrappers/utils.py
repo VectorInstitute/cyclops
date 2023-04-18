@@ -287,3 +287,7 @@ class DatasetColumn(list):
     def __iter__(self):
         """Iterate over the column in the dataset."""
         return (self.dataset[i][self.key] for i in range(len(self)))
+
+    def __all__(self):
+        """Get the whole column."""
+        return self.dataset[self.key]
