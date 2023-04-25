@@ -245,6 +245,67 @@ def _process_checks(
 
 
 @dataclass
+class FillNull(metaclass=QueryOp):
+    """Fill NULL values with a given value.
+
+    Parameters
+    ----------
+    cols: str or list of str
+        Columns to fill.
+    fill_values: typing.Any or list of typing.Any
+        Value(s) to fill with.
+    new_col_names: str or list of str, optional
+        New column name(s) for the filled columns. If not provided,
+
+    """
+
+    cols: typing.Union[str, typing.List[str]]
+    fill_values: typing.Union[typing.Any, typing.List[typing.Any]]
+    new_col_names: typing.Optional[typing.Union[str, typing.List[str]]] = None
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Fill NULL values with a given value.
+
+        Parameters
+        ----------
+        table: TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        Subquery
+            Table with NULL values filled.
+
+        """
+        cols = to_list(self.cols)
+        fill_values = to_list(self.fill_values)
+        new_col_names = to_list_optional(self.new_col_names)
+        if new_col_names:
+            if len(cols) != len(new_col_names):
+                raise ValueError(
+                    """Number of columns to fill and number of new column names
+                    must match."""
+                )
+        table = _process_checks(table, cols=self.cols)
+        if len(fill_values) == 1:
+            fill_values = fill_values * len(cols)
+        for col, fill in zip(cols, fill_values):
+            coalesced_col = func.coalesce(table.c[col], fill).label(
+                f"coalesced_col_{col}"
+            )
+            table = select([table, coalesced_col]).subquery()
+        if new_col_names:
+            for col, new_col in zip(cols, new_col_names):
+                table = Rename({f"coalesced_col_{col}": new_col})(table)
+        else:
+            for col in cols:
+                table = drop_columns(table, col)
+                table = Rename({f"coalesced_col_{col}": col})(table)
+
+        return table
+
+
+@dataclass
 class Drop(metaclass=QueryOp):
     """Drop some columns.
 
