@@ -28,6 +28,7 @@ from cyclops.query.ops import (
     Drop,
     DropNulls,
     ExtractTimestampComponent,
+    FillNull,
     GroupByAggregate,
     Limit,
     Literal,
@@ -85,6 +86,34 @@ def test_drop(visits_input):  # pylint: disable=redefined-outer-name
     visits = Drop("care_site_source_value")(visits_input)
     visits = QUERIER.get_interface(visits).run()
     assert "care_site_source_value" not in visits.columns
+
+
+@pytest.mark.integration_test
+def test_fill_null(visits_input):  # pylint: disable=redefined-outer-name
+    """Test FillNull."""
+    visits_before = QUERIER.get_interface(visits_input).run()
+    unique_before = visits_before["preceding_visit_occurrence_id"].unique()
+    visits = FillNull(["preceding_visit_occurrence_id", "care_site_id"], 0)(
+        visits_input
+    )
+    visits_after = QUERIER.get_interface(visits).run()
+    unique_after = visits_after["preceding_visit_occurrence_id"].unique()
+    assert visits_after["preceding_visit_occurrence_id"].isna().sum() == 0
+    assert visits_after["care_site_id"].isna().sum() == 0
+    assert 0 not in unique_before
+    assert len(unique_after) == len(unique_before)
+    assert len(visits_after["care_site_id"].unique()) == 1
+
+    visits = FillNull(
+        ["preceding_visit_occurrence_id", "care_site_id"], [0, -99], ["col1", "col2"]
+    )(visits_input)
+    visits_after = QUERIER.get_interface(visits).run()
+    assert visits_after["preceding_visit_occurrence_id"].isna().sum() != 0
+    assert visits_after["care_site_id"].isna().sum() != 0
+    assert visits_after["col1"].isna().sum() == 0
+    assert visits_after["col2"].isna().sum() == 0
+    assert len(visits_after["col2"].unique()) == 1
+    assert -99 in visits_after["col2"].unique()
 
 
 @pytest.mark.integration_test
