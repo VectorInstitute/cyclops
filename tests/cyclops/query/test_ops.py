@@ -238,6 +238,21 @@ def test_apply(visits_input):  # pylint: disable=redefined-outer-name
     )(visits_input)
     visits = QUERIER.get_interface(visits).run()
     assert visits["visit_concept_name_exclaim"].iloc[0] == "Inpatient Visit!"
+    visits = Apply(
+        ["visit_occurrence_id", "preceding_visit_occurrence_id"],
+        lambda x, y: x + y,
+        "sum_id",
+    )(visits_input)
+    visits = QUERIER.get_interface(visits).run()
+    assert (
+        visits["sum_id"].iloc[0]
+        == visits["visit_occurrence_id"].iloc[0]
+        + visits["preceding_visit_occurrence_id"].iloc[0]
+    )
+    assert (
+        visits["sum_id"].isna().sum()
+        == visits["preceding_visit_occurrence_id"].isna().sum()
+    )
 
 
 @pytest.mark.integration_test
