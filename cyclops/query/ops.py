@@ -1983,6 +1983,18 @@ class Apply(metaclass=QueryOp):
             Processed table.
 
         """
+        arg_count = self.func.__code__.co_argcount
+        self.new_cols = to_list(self.new_cols)
+        if arg_count != 1:
+            if len(self.new_cols) != 1:
+                raise ValueError(
+                    """Only one result column possible, and needed when
+                computing function using multiple column args."""
+                )
+            cols = get_columns(table, self.cols)
+            result_col = self.func(*cols).label(self.new_cols[0])
+            return select(table).add_columns(result_col).subquery()
+
         return apply_to_columns(table, self.cols, self.func, self.new_cols)
 
 
