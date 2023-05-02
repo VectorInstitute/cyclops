@@ -51,7 +51,9 @@ class PTDataset(Dataset):
         X = self.X[idx]
         y = self.y[idx] if self.y is not None else None
 
-        return self.transform(X, y)
+        if y is not None:
+            return X, y
+        return X
 
 
 class VectorizedLoader:

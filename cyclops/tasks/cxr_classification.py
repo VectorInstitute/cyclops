@@ -4,15 +4,15 @@ from functools import partial
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from monai.transforms import Compose
 
 from cyclops.datasets.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection
-from cyclops.models.catalog import _img_model_keys
-from cyclops.models.utils import get_device
+from cyclops.models.catalog import _img_model_keys, _model_names_mapping
+from cyclops.models.utils import get_device, get_split
 from cyclops.models.wrappers import WrappedModel
 from cyclops.tasks.utils import CXR_TARGET, apply_image_transforms, prepare_models
 from cyclops.utils.log import setup_logging
@@ -89,7 +89,8 @@ class CXRClassification:
     def _validate_models(self):
         """Validate the models for the task data type."""
         assert all(
-            model.model.__name__ in _img_model_keys for model in self.models.values()
+            _model_names_mapping.get(model.model.__name__) in _img_model_keys
+            for model in self.models.values()
         ), "All models must be image classification model."
 
         for model in self.models.values():
@@ -116,8 +117,7 @@ class CXRClassification:
             List of model names.
 
         """
-        models = list(self.models.keys())
-        return models if len(models) > 1 else models[0]
+        return list(self.models.keys())
 
     def add_model(
         self,
@@ -172,28 +172,34 @@ class CXRClassification:
                 "You can add the model using Task.add_model()"
             )
 
-        model_name = model_name if self.models_count > 1 else self.list_models()
+        model_name = model_name if model_name else self.list_models()[0]
         model = self.models[model_name]
 
         return model_name, model
 
     def predict(
         self,
-        dataset: Union[np.ndarray, Dataset],
+        dataset: Union[np.ndarray, Dataset, DatasetDict],
         model_name: Optional[str] = None,
         transforms: Optional[Compose] = None,
+        splits_mapping: dict = {"test": "test"},
         **kwargs,
     ) -> Union[np.ndarray, Dataset]:
         """Predict the pathologies on the given dataset.
 
         Parameters
         ----------
-        dataset : Union[np.ndarray, Dataset]
+        dataset : Union[np.ndarray, Dataset, DatasetDict]
             Image representation as a numpy array or a Hugging Face dataset.
         model_name : Optional[str], optional
              Model name, required if more than one model exists, by default None
         transforms : Optional[Compose], optional
             Transforms to be applied to the data, by default None
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names, \
+                used when input is a dataset dictionary, by default {"test": "test"}
+        **kwargs: dict, optional
+            Additional parameters for the prediction.
 
         Returns
         -------
@@ -206,24 +212,26 @@ class CXRClassification:
         if transforms:
             transforms = partial(apply_image_transforms, transforms=transforms)
 
-        if isinstance(dataset, Dataset):
+        if isinstance(dataset, (Dataset, DatasetDict)):
             return model.predict(
                 dataset,
-                self.task_features,
+                feature_columns=self.task_features,
                 transforms=transforms,
                 model_name=model_name,
+                splits_mapping=splits_mapping,
                 **kwargs,
             )
 
-        return model.predict(dataset)
+        return model.predict(dataset, **kwargs)
 
     def evaluate(
         self,
-        dataset: Dataset,
+        dataset: Union[Dataset, DatasetDict],
         metrics: Union[List[str], MetricCollection],
         model_names: Union[str, List[str]] = None,
         transforms: Optional[Compose] = None,
         prediction_column_prefix: str = "predictions",
+        splits_mapping: dict = {"test": "test"},
         slice_spec: Optional[SliceSpec] = None,
         batch_size: int = 64,
         remove_columns: Optional[Union[str, List[str]]] = None,
@@ -232,7 +240,7 @@ class CXRClassification:
 
         Parameters
         ----------
-        dataset : Dataset
+        dataset : Union[Dataset, DatasetDict]
             HuggingFace dataset.
         metrics : Union[List[str], MetricCollection]
             Metrics to be evaluated.
@@ -244,6 +252,9 @@ class CXRClassification:
         prediction_column_prefix : str, optional
             Name of the prediction column to be added to the dataset, \
                 by default "predictions"
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names \
+                used when input is a dataset dictionary, by default {"test": "test"}
         slice_spec : Optional[SliceSpec], optional
             Specifications for creating a slices of a dataset, by default None
         batch_size : int, optional
@@ -257,13 +268,21 @@ class CXRClassification:
             Dictionary with evaluation results.
 
         """
+        if isinstance(dataset, DatasetDict):
+            split = get_split(dataset, "test", splits_mapping=splits_mapping)
+            dataset = dataset[split]
+
         missing_labels = [
             label for label in self.task_target if label not in dataset.column_names
         ]
         if len(missing_labels):
-            zeros_column = np.zeros(len(dataset))
-            for label_name in missing_labels:
-                dataset = dataset.add_column(label_name, zeros_column)
+
+            def add_missing_labels(examples):
+                for label in missing_labels:
+                    examples[label] = 0.0
+                return examples
+
+            dataset = dataset.map(add_missing_labels)
 
         if isinstance(metrics, list) and len(metrics):
             metrics = [
@@ -283,11 +302,11 @@ class CXRClassification:
                 model_name=model_name,
                 transforms=transforms,
                 prediction_column_prefix=prediction_column_prefix,
-                batch_size=batch_size,
                 only_predictions=False,
+                splits_mapping=splits_mapping,
             )
 
-        return evaluate(
+        results = evaluate(
             dataset,
             metrics,
             slice_spec=slice_spec,
@@ -296,3 +315,5 @@ class CXRClassification:
             batch_size=batch_size,
             remove_columns=remove_columns,
         )
+
+        return results, dataset
