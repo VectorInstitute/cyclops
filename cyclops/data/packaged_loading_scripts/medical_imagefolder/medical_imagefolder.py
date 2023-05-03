@@ -12,7 +12,7 @@ from datasets.features import Features
 from datasets.packaged_modules.folder_based_builder import folder_based_builder
 from datasets.tasks import ImageClassification
 
-from cyclops.datasets.features.medical_image import MedicalImage
+from cyclops.data.features.medical_image import MedicalImage
 from cyclops.utils.log import setup_logging
 
 # Logging.

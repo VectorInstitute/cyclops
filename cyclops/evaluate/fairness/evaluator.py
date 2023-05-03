@@ -11,8 +11,8 @@ import pandas as pd
 from datasets import Dataset, config
 from datasets.features import Features
 
-from cyclops.datasets.slicer import SliceSpec, is_datetime
-from cyclops.datasets.utils import (
+from cyclops.data.slicer import SliceSpec, is_datetime
+from cyclops.data.utils import (
     check_required_columns,
     feature_is_datetime,
     feature_is_numeric,

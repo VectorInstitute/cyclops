@@ -7,7 +7,7 @@ import numpy as np
 from datasets import Dataset, DatasetDict
 from monai.transforms import Compose
 
-from cyclops.datasets.slicer import SliceSpec
+from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection

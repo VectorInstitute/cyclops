@@ -15,7 +15,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, PredefinedSplit, RandomizedSearchCV
 
-from cyclops.datasets.utils import is_out_of_core
+from cyclops.data.utils import is_out_of_core
 from cyclops.models.utils import get_split, is_sklearn_class, is_sklearn_instance
 from cyclops.models.wrappers.utils import DatasetColumn
 from cyclops.utils.file import join, load_pickle, save_pickle
