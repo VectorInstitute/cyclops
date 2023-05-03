@@ -6,7 +6,6 @@ root_folder/test/label2/image1.dcm root_folder/test/label1/image2.dcm
 
 """
 import logging
-import os
 from typing import List
 
 from datasets.features import Features
@@ -86,6 +85,3 @@ IMAGE_EXTENSIONS = [
     ".vtk",
 ]
 MedicalImageFolder.EXTENSIONS = IMAGE_EXTENSIONS
-
-# for easy access of file path
-medicalimagefolder = os.path.dirname(os.path.abspath(__file__))

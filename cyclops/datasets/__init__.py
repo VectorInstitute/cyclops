@@ -1,5 +1,4 @@
-"""Medical Image Folder Packaged Script."""
-# pylint: disable=line-too-long
-from cyclops.datasets.packaged_loading_scripts.medical_imagefolder.medical_imagefolder import (  # noqa: E501
-    medicalimagefolder,
-)
+"""Cyclops datasets package."""
+from cyclops.datasets.features import MedicalImage
+from cyclops.datasets.packaged_loading_scripts import medical_imagefolder
+from cyclops.datasets.slicer import SliceSpec
