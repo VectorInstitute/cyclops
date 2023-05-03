@@ -257,7 +257,6 @@ class Reductor:
             features = torch.concat(examples["features"])
         elif isinstance(examples["features"][0], list):
             features = np.array(examples["features"])
-            print(features.shape, "1")
         examples["outputs"] = features
         return examples
 

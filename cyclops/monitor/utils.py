@@ -99,36 +99,47 @@ def set_decode(
             dataset.features[feature_name].decode = decode
 
 
-def load_nihcxr(path: str, device: str = "cpu") -> Dataset:
+# def load_nihcxr(path: str, device: str = "cpu") -> Dataset:
+#     """Load NIH Chest X-Ray dataset as a Huggingface dataset."""
+#     transforms = Compose(
+#         [
+#             Resized(
+#                 keys=("features",), spatial_size=(1, 224, 224), allow_missing_keys=True
+#             ),
+#             Lambdad(
+#                 keys=("features",),
+#                 func=lambda x: ((2 * (x / 255.0)) - 1.0) * 1024,
+#                 allow_missing_keys=True,
+#             ),
+#             ToDeviced(keys=("features",), device=device, allow_missing_keys=True),
+#         ],
+#     )
+#     df = pd.read_csv(os.path.join(path, "Data_Entry_2017.csv"))
+#     df = nihcxr_preprocess(df, path)
+#     nih_ds = Dataset.from_pandas(df, preserve_index=False)
+#     nih_ds.add_column(
+#         "timestamp",
+#         pd.date_range(start="1/1/2019", end="12/25/2019", periods=nih_ds.num_rows),
+#     )
+#     nih_ds = nih_ds.cast_column("features", Image(decode=True))
+#     nih_ds = nih_ds.with_transform(
+#         partial(apply_transforms, transforms=transforms),
+#         columns=["features"],
+#         output_all_columns=True,
+#     )
+#     return nih_ds
+
+def load_nihcxr(path: str) -> Dataset:
     """Load NIH Chest X-Ray dataset as a Huggingface dataset."""
-    transforms = Compose(
-        [
-            Resized(
-                keys=("features",), spatial_size=(1, 224, 224), allow_missing_keys=True
-            ),
-            Lambdad(
-                keys=("features",),
-                func=lambda x: ((2 * (x / 255.0)) - 1.0) * 1024,
-                allow_missing_keys=True,
-            ),
-            ToDeviced(keys=("features",), device=device, allow_missing_keys=True),
-        ],
-    )
     df = pd.read_csv(os.path.join(path, "Data_Entry_2017.csv"))
     df = nihcxr_preprocess(df, path)
     nih_ds = Dataset.from_pandas(df, preserve_index=False)
-    nih_ds.add_column(
+    nih_ds = nih_ds.add_column(
         "timestamp",
         pd.date_range(start="1/1/2019", end="12/25/2019", periods=nih_ds.num_rows),
     )
     nih_ds = nih_ds.cast_column("features", Image(decode=True))
-    nih_ds = nih_ds.with_transform(
-        partial(apply_transforms, transforms=transforms),
-        columns=["features"],
-        output_all_columns=True,
-    )
     return nih_ds
-
 
 def sync_transforms(ds1: Dataset, ds2: Dataset) -> Dataset:
     """Sync transforms from dataset 1 to dataset 2."""

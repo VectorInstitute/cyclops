@@ -44,9 +44,6 @@ class Detector:
         Run balanced sensitivity test.
     rolling_window_drift
         Run rolling window drift detection.
-    rolling_window_performance
-        Run rolling window performance detection.
-
     """
 
     def __init__(
@@ -382,11 +379,10 @@ class Detector:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
 
         """
-        indices = list(
-            pd.DataFrame(index=pd.to_datetime(ds_target[timestamp_column]))
-            .resample(window_size)
-            .indices.values()
-        )
+        resampler = pd.DataFrame(index=pd.to_datetime(ds_target[timestamp_column])).resample(window_size)
+        timestamps = resampler.mean().index
+        indices = list(resampler.indices.values())
+        
         p_val = np.empty((num_runs, len(indices)))
         dist = np.empty((num_runs, len(indices)))
         shift_detected = np.empty((num_runs, len(indices)))
@@ -415,4 +411,5 @@ class Detector:
             "p_val": p_val,
             "distance": dist,
             "shift_detected": shift_detected,
+            "timestamps": timestamps
         }
