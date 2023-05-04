@@ -1,10 +1,9 @@
 """Utilities for datasets."""
-from typing import Any, Dict, List, Optional, Union, get_args, Callable
-from torchvision.transforms import PILToTensor
-import PIL
+from typing import Any, Callable, Dict, List, Optional, Union, get_args
 
 import numpy as np
 import numpy.typing as npt
+import PIL
 import psutil
 from datasets import Dataset
 from datasets.features import (
@@ -17,6 +16,7 @@ from datasets.features import (
     Value,
 )
 from numpy.typing import ArrayLike
+from torchvision.transforms import PILToTensor
 
 NUMERIC_FEATURE_TYPES = (
     "bool",

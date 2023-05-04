@@ -1,9 +1,16 @@
-"""Preprocessing scripts for converting misc. datasets to huggingface datasets."""
+"""Preprocessing scripts for converting misc.
+
+datasets to huggingface datasets.
+
+"""
 import os
+
 import pandas as pd
 
 
-def nihcxr_preprocess(df: pd.DataFrame, nihcxr_dir: str, image_key="features") -> pd.DataFrame:
+def nihcxr_preprocess(
+    df: pd.DataFrame, nihcxr_dir: str, image_key: str = "features"
+) -> pd.DataFrame:
     """Preprocess NIHCXR dataframe.
 
     Add a column with the path to the image and create

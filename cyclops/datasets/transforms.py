@@ -1,15 +1,15 @@
 """Transforms for the datasets."""
 
-from functools import partial
 from typing import Tuple
+
+from monai.transforms import Lambdad, Resized, ToDeviced  # type: ignore
 from torchvision.transforms import Compose
-from monai.transforms import (
-    Resized,
-    Lambdad,
-    ToDeviced,
-)
-def txrv_transforms(keys: Tuple[str, ...] = ("features",), device: str = "cpu") -> Compose:
-    """Transforms for the models in the TXRV library."""
+
+
+def txrv_transforms(
+    keys: Tuple[str, ...] = ("features",), device: str = "cpu"
+) -> Compose:
+    """Set of transforms for the models in the TXRV library."""
     transforms = Compose(
         [
             Resized(
