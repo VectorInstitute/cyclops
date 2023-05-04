@@ -27,7 +27,7 @@ class Reductor:
     >>> from drift_detection.reductor import Reductor
     >>> from sklearn.datasets import load_diabetes
     >>> X, y = load_diabetes(return_X_y=True)
-    >>> reductor = Reductor("PCA")
+    >>> reductor = Reductor("pca")
     >>> reductor.fit(X)
     >>> X_transformed = reductor.transform(X)
 
@@ -75,13 +75,6 @@ class Reductor:
 
         # initialize model
         self.model = reductor_methods[self.dr_method](**kwargs)
-        if self.dr_method in (
-            "bbse-soft",
-            "bbse-hard",
-            "txrv-ae",
-            "bbse-soft+txrv-ae",
-        ):
-            self.model = self.model.to(self.device)
 
     def load_model(self) -> None:
         """Load pre-trained model from path.
@@ -201,6 +194,7 @@ class Reductor:
         elif self.dr_method in ("gmm"):
             features = self.model.predict_proba(dataset["features"])
         else:
+            self.model = self.model.to(self.device)
             dataset = dataset.map(
                 self.bbse_inference,
                 batched=True,
@@ -209,6 +203,8 @@ class Reductor:
             )
             features = np.array(dataset["outputs"])
             dataset.remove_columns("outputs")
+            self.model = self.model.to("cpu")
+            torch.cuda.empty_cache()
         return features
 
     def bbse_inference(self, examples: Dict[str, Any]) -> Dict[str, Any]:
@@ -257,7 +253,6 @@ class Reductor:
             features = torch.concat(examples["features"])
         elif isinstance(examples["features"][0], list):
             features = np.array(examples["features"])
-            print(features.shape, "1")
         examples["outputs"] = features
         return examples
 

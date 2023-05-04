@@ -6,7 +6,6 @@ import inspect
 import os
 import pickle
 from datetime import timedelta
-from functools import partial
 from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
@@ -15,13 +14,10 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import PIL
 import torch
 from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
 from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
-from datasets import Image
 from datasets.arrow_dataset import Dataset
-from monai.transforms import Compose, Lambdad, Resized, ToDeviced  # type: ignore
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from torch import nn
@@ -29,118 +25,12 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset as TorchDataset
 from torch.utils.data import TensorDataset
-from torchvision.transforms import PILToTensor
 
 from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
 from cyclops.models.neural_nets.rnn import RNNModel
 from cyclops.models.wrappers import SKModel  # type: ignore
 from cyclops.monitor.reductor import Reductor
-
-
-def apply_transforms(
-    examples: Dict[str, Any], transforms: Callable[..., Any]
-) -> Dict[str, Any]:
-    """Apply transforms to examples."""
-    # examples is a dict of lists; convert to list of dicts.
-    # doing a conversion from PIL to tensor is necessary here when working
-    # with the Image feature type.
-    value_len = len(list(examples.values())[0])
-    examples_list = [
-        {
-            k: PILToTensor()(v[i]) if isinstance(v[i], PIL.Image.Image) else v[i]
-            for k, v in examples.items()
-        }
-        for i in range(value_len)
-    ]
-
-    # apply the transforms to each example
-    examples_list = [transforms(example) for example in examples_list]
-
-    # convert back to a dict of lists
-    examples = {k: [d[k] for d in examples_list] for k in examples_list[0]}
-
-    return examples
-
-
-def set_decode(
-    dataset: Dataset, decode: bool = True, exclude: Optional[List[str]] = None
-) -> None:
-    """Set decode attribute of dataset features that have it.
-
-    Parameters
-    ----------
-    dataset : Dataset
-       A Hugging Face dataset object.
-    decode : bool, optional, default=True
-        Whether to set decode attribute to True or False for features that have
-        it.
-    exclude : List[str], optional, default=None
-        List of feature names to exclude. If None, no features are excluded.
-        An example of when this might be useful is when dealing with image
-        segmentation tasks where the target and prediction are images that need
-        to be decoded, whereas the original image may not need to be decoded.
-
-    """
-    assert isinstance(dataset, Dataset), "dataset must be a Hugging Face dataset"
-    if exclude is not None:
-        if not isinstance(exclude, list) or not all(
-            feature in dataset.column_names for feature in exclude
-        ):
-            raise ValueError(
-                "`exclude` must be a list of feature names that are present in "
-                f"dataset. Got {exclude} of type `{type(exclude)}` and dataset "
-                f"with columns {dataset.column_names}."
-            )
-
-    for feature_name, feature in dataset.features.items():
-        if feature_name not in (exclude or []) and hasattr(feature, "decode"):
-            # dataset.cast_column(feature_name, Image(decode = decode))
-            dataset.features[feature_name].decode = decode
-
-
-def load_nihcxr(path: str, device: str = "cpu") -> Dataset:
-    """Load NIH Chest X-Ray dataset as a Huggingface dataset."""
-    transforms = Compose(
-        [
-            Resized(
-                keys=("features",), spatial_size=(1, 224, 224), allow_missing_keys=True
-            ),
-            Lambdad(
-                keys=("features",),
-                func=lambda x: ((2 * (x / 255.0)) - 1.0) * 1024,
-                allow_missing_keys=True,
-            ),
-            ToDeviced(keys=("features",), device=device, allow_missing_keys=True),
-        ],
-    )
-    df = pd.read_csv(os.path.join(path, "Data_Entry_2017.csv"))
-    df = nihcxr_preprocess(df, path)
-    nih_ds = Dataset.from_pandas(df, preserve_index=False)
-    nih_ds.add_column(
-        "timestamp",
-        pd.date_range(start="1/1/2019", end="12/25/2019", periods=nih_ds.num_rows),
-    )
-    nih_ds = nih_ds.cast_column("features", Image(decode=True))
-    nih_ds = nih_ds.with_transform(
-        partial(apply_transforms, transforms=transforms),
-        columns=["features"],
-        output_all_columns=True,
-    )
-    return nih_ds
-
-
-def sync_transforms(ds1: Dataset, ds2: Dataset) -> Dataset:
-    """Sync transforms from dataset 1 to dataset 2."""
-    # check if "transform is in ds1.format"
-    if "transform" in ds1.format["format_kwargs"]:
-        transforms = ds1.format["format_kwargs"]["transform"].keywords["transforms"]
-        ds2 = ds2.with_transform(
-            partial(apply_transforms, transforms=transforms),
-            columns=ds1.format["columns"],
-            output_all_columns=ds1.format["output_all_columns"],
-        )
-    return ds2
 
 
 def print_metrics_binary(
