@@ -188,30 +188,36 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SliceSpec(
-            spec_list=[
-                {
-                    shift_id: {
-                        "min_value": source[0],
-                        "max_value": source[1],
-                        "min_inclusive": True,
-                        "max_inclusive": True,
+        if source:
+            source_slice = SliceSpec(
+                spec_list=[
+                    {
+                        shift_id: {
+                            "min_value": source[0],
+                            "max_value": source[1],
+                            "min_inclusive": True,
+                            "max_inclusive": True,
+                        }
                     }
-                }
-            ]
-        )
-        target_slice = SliceSpec(
-            spec_list=[
-                {
-                    shift_id: {
-                        "min_value": target[0],
-                        "max_value": target[1],
-                        "min_inclusive": True,
-                        "max_inclusive": True,
+                ]
+            )
+        else:
+            source_slice = None
+        if target:
+            target_slice = SliceSpec(
+                spec_list=[
+                    {
+                        shift_id: {
+                            "min_value": target[0],
+                            "max_value": target[1],
+                            "min_inclusive": True,
+                            "max_inclusive": True,
+                        }
                     }
-                }
-            ]
-        )
+                ]
+            )
+        else:
+            target_slice = None
         ds_source, ds_target = self._get_source_target(
             dataset, source_slice, target_slice, batched, batch_size, num_proc
         )
@@ -256,8 +262,14 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
-        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
+        if source:
+            source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
+        else:
+            source_slice = None
+        if target:
+            target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
+        else:
+            target_slice = None
         ds_source, ds_target = self._get_source_target(
             dataset, source_slice, target_slice, batched, batch_size, num_proc
         )
@@ -302,30 +314,36 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SliceSpec(
-            spec_list=[
-                {
-                    shift_id: {
-                        "min_value": source[0],
-                        "max_value": source[1],
-                        "min_inclusive": True,
-                        "max_inclusive": True,
+        if source:
+            source_slice = SliceSpec(
+                spec_list=[
+                    {
+                        shift_id: {
+                            "min_value": source[0],
+                            "max_value": source[1],
+                            "min_inclusive": True,
+                            "max_inclusive": True,
+                        }
                     }
-                }
-            ]
-        )
-        target_slice = SliceSpec(
-            spec_list=[
-                {
-                    shift_id: {
-                        "min_value": target[0],
-                        "max_value": target[1],
-                        "min_inclusive": True,
-                        "max_inclusive": True,
+                ]
+            )
+        else:
+            source_slice = None
+        if target:
+            target_slice = SliceSpec(
+                spec_list=[
+                    {
+                        shift_id: {
+                            "min_value": target[0],
+                            "max_value": target[1],
+                            "min_inclusive": True,
+                            "max_inclusive": True,
+                        }
                     }
-                }
-            ]
-        )
+                ]
+            )
+        else:
+            target_slice = None
         ds_source, ds_target = self._get_source_target(
             dataset, source_slice, target_slice, batched, batch_size, num_proc
         )
@@ -370,8 +388,14 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SliceSpec(spec_list=[{shift_id: {"month": source}}])
-        target_slice = SliceSpec(spec_list=[{shift_id: {"month": target}}])
+        if source:
+            source_slice = SliceSpec(spec_list=[{shift_id: {"month": source}}])
+        else:
+            source_slice = None
+        if target:
+            target_slice = SliceSpec(spec_list=[{shift_id: {"month": target}}])
+        else:
+            target_slice = None
         ds_source, ds_target = self._get_source_target(
             dataset, source_slice, target_slice, batched, batch_size, num_proc
         )
@@ -416,8 +440,14 @@ class ClinicalShiftApplicator:
             Dataset with target data.
 
         """
-        source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
-        target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
+        if source:
+            source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
+        else:
+            source_slice = None
+        if target:
+            target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
+        else:
+            target_slice = None
         ds_source, ds_target = self._get_source_target(
             dataset, source_slice, target_slice, batched, batch_size, num_proc
         )

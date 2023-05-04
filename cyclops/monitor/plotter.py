@@ -71,6 +71,7 @@ def errorfill(
     ax: Optional[mpl.axes.SubplotBase] = None,
     fmt: str = "-o",
     label: Optional[str] = None,
+    semilogx: bool = True,
 ) -> None:
     """Create custom error fill."""
     ax = ax if ax is not None else plt.gca()
@@ -81,7 +82,10 @@ def errorfill(
         ymax = y + yerr
     elif len(yerr) == 2:
         ymin, ymax = yerr
-    ax.semilogx(x, y, fmt, color=color, label=label)
+    if semilogx:
+        ax.semilogx(x, y, fmt, color=color, label=label)
+    else:
+        ax.plot(x, y, fmt, color=color, label=label)
     ax.fill_between(
         x, np.clip(ymax, 0, 1), np.clip(ymin, 0, 1), color=color, alpha=alpha_fill
     )
@@ -304,6 +308,9 @@ def plot_drift_experiment(
                 label=shift,
                 ax=ax1,
             )
+            ax1.set_xlabel("Number of samples from test")
+            ax1.set_ylabel("$p$-value")
+            ax1.axhline(y=results[shift]["p_val_threshold"], color="k")
             mean_distance = results[shift]["distance"].mean(axis=0)
             std_distance = results[shift]["distance"].std(axis=0)
             errorfill(
@@ -315,6 +322,8 @@ def plot_drift_experiment(
                 label=shift,
                 ax=ax2,
             )
+            ax2.set_xlabel("Number of samples from test")
+            ax2.set_ylabel("Distance")
     else:
         _, ax = plt.subplots(1, 1, figsize=(11, 8))
         for shift_iter, shift in enumerate(results.keys()):
@@ -330,9 +339,9 @@ def plot_drift_experiment(
                 label=shift,
                 ax=ax,
             )
-        plt.xlabel("Number of samples from test")
-        plt.ylabel("$p$-value")
-        plt.axhline(y=results["p_val_threshold"], color="k")
+            ax.set_xlabel("Number of samples from test")
+            ax.set_ylabel("$p$-value")
+            ax.axhline(y=results[shift]["p_val_threshold"], color="k")
         plt.legend()
         plt.show()
 
@@ -352,17 +361,26 @@ def plot_drift_timeseries(
     if plot_distance:
         _, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
         cmap = mpl.colors.ListedColormap(["lightgrey", "red"])
-        ax1.plot(
+        mean_p_vals = results["p_val"].mean(axis=0)
+        std_p_vals = results["p_val"].std(axis=0)
+        errorfill(
             results["samples"],
-            results["p_val"],
-            ".-",
+            mean_p_vals,
+            std_p_vals,
+            fmt=".-",
             color="red",
-            linewidth=0.5,
-            markersize=2,
+            label="$p$-value",
+            ax=ax1,
+            semilogx=False,
         )
-        ax1.set_xlim(results["samples"], results["samples"])
-        ax1.axhline(y=results["p_val_threshold"], color="dimgrey", linestyle="--")
+        ax1.axhline(
+            y=results["p_val_threshold"],
+            color="dimgrey",
+            linestyle="--",
+            label="$p$-value threshold",
+        )
         ax1.set_ylabel("$p$-vals", fontsize=16)
+        ax1.set_xlabel("timestamp", fontsize=16)
         ax1.set_xticklabels([])
         ax1.pcolorfast(
             ax1.get_xlim(),
@@ -371,18 +389,23 @@ def plot_drift_timeseries(
             cmap=cmap,
             alpha=0.4,
         )
+        ax1.legend()
 
-        ax2.plot(
+        mean_distance = results["distance"].mean(axis=0)
+        std_distance = results["distance"].std(axis=0)
+        errorfill(
             results["samples"],
-            results["distance"],
-            ".-",
+            mean_distance,
+            std_distance,
+            fmt=".-",
             color="red",
-            linewidth=0.5,
-            markersize=2,
+            label="Distance",
+            ax=ax2,
+            semilogx=False,
         )
-        ax2.set_xlim(results["samples"], results["samples"])
         ax2.set_ylabel("Distance", fontsize=16)
-        ax2.axhline(y=np.mean(results["dist"]), color="dimgrey", linestyle="--")
+        ax2.set_xlabel("timestamp", fontsize=16)
+        # ax2.axhline(y=np.mean(results["distance"]), color="dimgrey", linestyle="--")
         ax2.set_xticklabels([])
         ax2.pcolorfast(
             ax2.get_xlim(),
@@ -391,26 +414,26 @@ def plot_drift_timeseries(
             cmap=cmap,
             alpha=0.4,
         )
-
-        for index, label in enumerate(ax2.xaxis.get_ticklabels()):
-            if index % 28 != 0:
-                label.set_visible(False)
+        ax2.legend()
         plt.show()
     else:
         _, ax1 = plt.subplots(1, 1, figsize=(16, 10))
         cmap = mpl.colors.ListedColormap(["lightgrey", "red"])
-        ax1.plot(
+        mean_p_vals = results["p_val"].mean(axis=0)
+        std_p_vals = results["p_val"].std(axis=0)
+        errorfill(
             results["samples"],
-            results["p_val"],
-            ".-",
+            mean_p_vals,
+            std_p_vals,
+            fmt=".-",
             color="red",
-            linewidth=0.5,
-            markersize=2,
+            label="$p$-value",
+            ax=ax1,
+            semilogx=False,
         )
-        ax1.set_xlim(results["samples"], results["samples"])
         ax1.axhline(y=results["p_val_threshold"], color="dimgrey", linestyle="--")
         ax1.set_ylabel("$p$-vals", fontsize=16)
-        ax1.set_xlabel("time (s)", fontsize=16)
+        ax1.set_xlabel("timestamps", fontsize=16)
         ax1.pcolorfast(
             ax1.get_xlim(),
             ax1.get_ylim(),
@@ -418,6 +441,7 @@ def plot_drift_timeseries(
             cmap=cmap,
             alpha=0.4,
         )
+        ax1.legend()
         plt.show()
 
 
