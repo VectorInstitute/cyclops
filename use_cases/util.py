@@ -65,7 +65,7 @@ def get_top_events(events_path: str, n_events: int) -> np.ndarray:
 
     # Take only the events common to every file
     top_events = reduce(np.intersect1d, tuple(all_top_events))
-    return top_events
+    return sorted(top_events)
 
 
 def valid_events(events: pd.DataFrame, top_events: np.ndarray) -> pd.DataFrame:

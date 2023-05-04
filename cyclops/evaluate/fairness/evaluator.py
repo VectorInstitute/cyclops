@@ -845,8 +845,8 @@ def _get_metric_results_for_prediction_and_slice(
             metric_name=metric_name,
         )
 
-        # results format: {slice_name: {metric_name: metric_value}}
-        return {slice_name: {key: value} for key, value in metric_output.items()}
+        # result format -> {slice_name: {metric_name: metric_value}}
+        return {slice_name: metric_output}
 
     results: Dict[str, Dict[str, Any]] = {}
     for threshold in thresholds:
@@ -860,7 +860,7 @@ def _get_metric_results_for_prediction_and_slice(
             metric_name=metric_name,
         )
 
-        # results format: {slice_name: {metric_name@threshold: metric_value}}
+        # result format -> {slice_name: {metric_name@threshold: metric_value}}
         for key, value in metric_output.items():
             results.setdefault(slice_name, {}).update({f"{key}@{threshold}": value})
     return results

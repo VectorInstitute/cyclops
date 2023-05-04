@@ -1,14 +1,15 @@
 model_params:
   objective: "binary:logistic"
   eval_metric: "logloss"
-  min_child_weight: 1
-  learning_rate: 0.1
-  max_depth: 11
-  gamma: 1
+  min_child_weight: 3
+  learning_rate: 0.2
+  max_depth: 3
+  gamma: 5
   seed: 42
-fit_params:
-  early_stopping_rounds: 10
+# fit_params:
+#   early_stopping_rounds: 10
 best_model_params:
   max_depth: [3, 5, 7, 9, 11]
   gamma: [0.5, 1, 1.5, 2, 5]
   metric: 'roc_auc'
+batch_size: 500

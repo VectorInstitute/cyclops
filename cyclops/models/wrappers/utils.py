@@ -8,6 +8,7 @@ from typing import Mapping, Sequence, Union
 
 import numpy as np
 import torch
+from datasets import Dataset
 from sklearn.utils.validation import check_is_fitted as _check_is_fitted
 from torch.nn.utils.rnn import PackedSequence
 
@@ -254,3 +255,39 @@ def set_random_seed(seed: int, deterministic: bool = False) -> None:
         torch.use_deterministic_algorithms(mode=deterministic)
         if not deterministic and torch.backends.cudnn.is_available():
             torch.backends.cudnn.benchmark = True
+
+
+class DatasetColumn(list):
+    """Helper class to avoid loading a dataset column into memory when accessing it.\
+    From Hugging Face Evaluator."""
+
+    def __init__(self, dataset: Dataset, key: str):
+        """Initialize a new dataset column.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            Hugging Face Dataset
+        key : str
+            Column name
+
+        """
+        super().__init__()
+        self.dataset = dataset
+        self.key = key
+
+    def __len__(self):
+        """Get length of the dataset."""
+        return len(self.dataset)
+
+    def __getitem__(self, i):
+        """Get the `i`th item in the specified column."""
+        return self.dataset[i][self.key]
+
+    def __iter__(self):
+        """Iterate over the column in the dataset."""
+        return (self.dataset[i][self.key] for i in range(len(self)))
+
+    def __all__(self):
+        """Get the whole column."""
+        return self.dataset[self.key]

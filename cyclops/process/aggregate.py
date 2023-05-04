@@ -634,6 +634,62 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             axis_names=["aggfuncs"] + self.agg_by + [TIMESTEP],
         )
 
+    def aggregate_values(
+        self,
+        data: pd.DataFrame,
+        window_start_time: Optional[pd.DataFrame] = None,
+        window_stop_time: Optional[pd.DataFrame] = None,
+        start_bound_func: Optional[Callable] = None,
+        stop_bound_func: Optional[Callable] = None,
+    ):
+        """Aggregate temporal values.
+
+        The temporal values are restricted by start/stop and then aggregated.
+        No timestep is created.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            Input data.
+        window_start_time: pd.DataFrame, optional
+            An optionally provided window start time.
+        window_stop_time: pd.DataFrame, optional
+            An optionally provided window stop time. This cannot be provided if
+            window_duration was set.
+        start_bound_func : Optional[Callable[[pd.Series], pd.Series]], optional
+            A function to bound the start timestamp values, by default None
+        stop_bound_func : Optional[Callable], optional
+            A function to bound the start timestamp values, by default None
+
+        Returns
+        -------
+        pandas.DataFrame
+            The aggregated data.
+
+        """
+        has_columns(
+            data,
+            list(set([self.timestamp_col] + self.time_by + self.agg_by)),
+            raise_error=True,
+        )
+        # Ensure the timestamp column is a timestamp. Drop null times (NaT).
+        is_timestamp_series(data[self.timestamp_col], raise_error=True)
+        data = dropna_rows(data, self.timestamp_col)
+        self.window_times = self._compute_window_times(
+            data, window_start_time=window_start_time, window_stop_time=window_stop_time
+        )
+
+        # Restrict the data according to the start/stop
+        data = self._restrict_by_timestamp(data)
+
+        # Filter the data based on bounds on start/stop
+        data = start_bound_func(data) if start_bound_func else data
+        data = stop_bound_func(data) if stop_bound_func else data
+
+        grouped = data.groupby(self.agg_by, sort=False)
+        data = grouped.agg(self.aggfuncs)
+        return data
+
 
 def tabular_as_aggregated(  # pylint: disable=too-many-arguments
     tab: pd.DataFrame,

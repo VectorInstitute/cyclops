@@ -158,7 +158,6 @@ def evaluate(  # pylint: disable=too-many-function-args
                 prediction_column_prefix=prediction_column_prefix,
                 model_name=model_name,
                 transforms=transforms,
-                batch_size=batch_size,
                 only_predictions=False,
             )
 
