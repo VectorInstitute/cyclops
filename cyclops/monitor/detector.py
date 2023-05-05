@@ -44,8 +44,6 @@ class Detector:
         Run balanced sensitivity test.
     rolling_window_drift
         Run rolling window drift detection.
-    rolling_window_performance
-        Run rolling window performance detection.
 
     """
 
@@ -262,10 +260,13 @@ class Detector:
                 dist[run, i] = drift_results["distance"]
                 shift_detected[run, i] = drift_results["shift_detected"]
 
+        p_val_threshold = self.tester.p_val_threshold
         return {
             "p_val": p_val,
             "distance": dist,
             "shift_detected": shift_detected,
+            "samples": target_sample_size,
+            "p_val_threshold": p_val_threshold,
         }
 
     def balanced_sensitivity_test(
@@ -335,10 +336,13 @@ class Detector:
                 dist[run, i] = drift_results["distance"]
                 shift_detected[run, i] = drift_results["shift_detected"]
 
+        p_val_threshold = self.tester.p_val_threshold
         return {
             "p_val": p_val,
             "distance": dist,
             "shift_detected": shift_detected,
+            "samples": target_sample_size,
+            "p_val_threshold": p_val_threshold,
         }
 
     def rolling_window_drift(
@@ -382,11 +386,12 @@ class Detector:
             Dictionary containing p-value, distance, and boolean 'shift_detected'.
 
         """
-        indices = list(
-            pd.DataFrame(index=pd.to_datetime(ds_target[timestamp_column]))
-            .resample(window_size)
-            .indices.values()
-        )
+        resampler = pd.DataFrame(
+            index=pd.to_datetime(ds_target[timestamp_column])
+        ).resample(window_size)
+        timestamps = resampler.mean().index
+        indices = list(resampler.indices.values())
+
         p_val = np.empty((num_runs, len(indices)))
         dist = np.empty((num_runs, len(indices)))
         shift_detected = np.empty((num_runs, len(indices)))
@@ -411,8 +416,11 @@ class Detector:
                 dist[run, i] = drift_results["distance"]
                 shift_detected[run, i] = drift_results["shift_detected"]
 
+        p_val_threshold = self.tester.p_val_threshold
         return {
             "p_val": p_val,
             "distance": dist,
             "shift_detected": shift_detected,
+            "samples": timestamps,
+            "p_val_threshold": p_val_threshold,
         }
