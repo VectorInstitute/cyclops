@@ -23,6 +23,8 @@ dataset APIs
     :nosignatures:
     :template: custom-module-template.rst
 
+    mimiciii
     mimiciv
+    eicu
     omop
     gemini

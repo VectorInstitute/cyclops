@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from datasets import Dataset, DatasetDict
 
-from cyclops.datasets.utils import is_out_of_core
+from cyclops.data.utils import is_out_of_core
 from cyclops.process.column_names import EVENT_NAME, EVENT_VALUE
 from cyclops.utils.file import yield_dataframes
 

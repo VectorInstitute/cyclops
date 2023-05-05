@@ -1,4 +1,4 @@
-"""Tests for cyclops.datasets.slicer module."""
+"""Tests for cyclops.data.slicer module."""
 from functools import partial
 from typing import Any, Callable, List, Union
 
@@ -9,10 +9,10 @@ from datasets import Dataset
 from datasets.splits import Split
 
 import cyclops.query.ops as qo
-from cyclops.datasets.slicer import (
+from cyclops.data.slicer import (
     _maybe_convert_to_datetime,  # pylint: disable=protected-access
 )
-from cyclops.datasets.slicer import (
+from cyclops.data.slicer import (
     SliceSpec,
     compound_filter,
     filter_datetime,

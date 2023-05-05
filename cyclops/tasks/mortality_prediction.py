@@ -8,7 +8,7 @@ from datasets import Dataset, DatasetDict, config
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
 
-from cyclops.datasets.slicer import SliceSpec
+from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection

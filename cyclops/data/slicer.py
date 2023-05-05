@@ -77,7 +77,7 @@ class SliceSpec:
 
     Examples
     --------
-    >>> from cyclops.datasets.slicer import SliceSpec
+    >>> from cyclops.data.slicer import SliceSpec
     >>> slice_spec = SliceSpec(
     ...     spec_list=[
     ...         {"feature_1": {"keep_nulls": False}},

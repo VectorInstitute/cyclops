@@ -6,14 +6,13 @@ root_folder/test/label2/image1.dcm root_folder/test/label1/image2.dcm
 
 """
 import logging
-import os
 from typing import List
 
 from datasets.features import Features
 from datasets.packaged_modules.folder_based_builder import folder_based_builder
 from datasets.tasks import ImageClassification
 
-from cyclops.datasets.features.medical_image import MedicalImage
+from cyclops.data.features.medical_image import MedicalImage
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -86,6 +85,3 @@ IMAGE_EXTENSIONS = [
     ".vtk",
 ]
 MedicalImageFolder.EXTENSIONS = IMAGE_EXTENSIONS
-
-# for easy access of file path
-medicalimagefolder = os.path.dirname(os.path.abspath(__file__))

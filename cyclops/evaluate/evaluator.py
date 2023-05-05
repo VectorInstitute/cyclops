@@ -7,8 +7,8 @@ from datasets import Dataset, DatasetDict, config, load_dataset
 from datasets.splits import Split
 from sklearn.compose import ColumnTransformer
 
-from cyclops.datasets.slicer import SliceSpec
-from cyclops.datasets.utils import (
+from cyclops.data.slicer import SliceSpec
+from cyclops.data.utils import (
     check_required_columns,
     get_columns_as_numpy_array,
     set_decode,

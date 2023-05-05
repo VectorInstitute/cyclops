@@ -4,8 +4,8 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from datasets.arrow_dataset import Dataset
 
-from cyclops.datasets.slicer import SliceSpec
-from cyclops.datasets.utils import set_decode
+from cyclops.data.slicer import SliceSpec
+from cyclops.data.utils import set_decode
 
 
 class ClinicalShiftApplicator:
@@ -20,7 +20,7 @@ class ClinicalShiftApplicator:
     Examples
     --------
     >>> from cyclops.monitor.clinical_applicator import ClinicalShiftApplicator
-    >>> from cyclops.datasets.utils import load_nih
+    >>> from cyclops.data.utils import load_nih
     >>> ds = load_nih(path="/mnt/data/nihcxr")
     >>> applicator = ClinicalShiftApplicator("hospital_type",
                     source = ["hospital_type_1", "hospital_type_2"]
