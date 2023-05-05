@@ -6,7 +6,7 @@ import pandas as pd
 from datasets.arrow_dataset import Dataset
 from datasets.features import Image
 
-from cyclops.datasets.preprocess import nihcxr_preprocess
+from cyclops.data.preprocess import nihcxr_preprocess
 
 
 def load_nihcxr(path: str) -> Dataset:
