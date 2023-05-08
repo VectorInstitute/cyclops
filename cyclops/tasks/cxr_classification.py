@@ -42,11 +42,7 @@ class CXRClassification:
 
         Parameters
         ----------
-        models : Union[
-            str, WrappedModel,
-            Sequence[Union[str, WrappedModel]],
-            Dict[str, WrappedModel],
-        ],
+        models
             The model(s) to be used for prediction, and evaluation.
         models_config_path : Union[str, Dict[str, str]], optional
             Path to the configuration file(s) for the model(s), by default None
