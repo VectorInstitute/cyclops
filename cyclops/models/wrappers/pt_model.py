@@ -1,4 +1,4 @@
-# pylint: too-many-lines
+# pylint: disable=too-many-lines
 
 """PyTorch model wrapper."""
 
@@ -42,7 +42,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 # ignore errors about attributes defined dynamically
-# pylint: disable=no-member, too-many-lines, function-redefined, arguments-differ
+# pylint: disable=no-member, function-redefined, arguments-differ
 # pylint: disable=dangerous-default-value, too-many-branches, fixme
 
 
