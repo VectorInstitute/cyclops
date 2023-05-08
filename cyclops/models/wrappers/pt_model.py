@@ -1,3 +1,5 @@
+# pylint: too-many-lines
+
 """PyTorch model wrapper."""
 
 import logging
