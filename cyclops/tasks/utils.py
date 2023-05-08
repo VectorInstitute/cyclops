@@ -1,5 +1,5 @@
 """Tasks utility functions."""
-from typing import Dict, List, Mapping, Sequence, Union, get_args
+from typing import Dict, List, Mapping, Optional, Sequence, Union, get_args
 
 import numpy as np
 import pandas as pd
@@ -113,7 +113,7 @@ def prepare_models(
     models: Union[
         str, WrappedModel, Sequence[Union[str, WrappedModel]], Dict[str, WrappedModel]
     ],
-    config_path: Union[str, Dict[str, str]] = None,
+    config_path: Optional[Union[str, Dict[str, str]]] = None,
 ) -> Dict[str, WrappedModel]:
     """Prepare the models as a dictionary, and wrap those that are not wrapped.
 

@@ -3,7 +3,7 @@
 import importlib
 import types
 from functools import reduce
-from typing import Dict, List, Mapping, Tuple, Union
+from typing import Dict, List, Mapping, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -89,8 +89,8 @@ def valid_events(events: pd.DataFrame, top_events: np.ndarray) -> pd.DataFrame:
 
 def get_pandas_df(
     dataset: Union[Dataset, DatasetDict, Mapping],
-    feature_cols: List[str] = None,
-    label_cols: str = None,
+    feature_cols: Optional[List[str]] = None,
+    label_cols: Optional[str] = None,
 ) -> Union[Tuple[pd.DataFrame, pd.Series], Dict[str, Tuple[pd.DataFrame, pd.Series]]]:
     """Convert dataset to pandas dataframe.
 

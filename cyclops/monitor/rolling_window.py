@@ -38,7 +38,7 @@ class RollingWindow:
         admin_data: pd.DataFrame,
         shift_detector: Detector,
         optimizer: Optional[Optimizer] = None,
-        model: ClassifierMixin = None,
+        model: Optional[ClassifierMixin] = None,
         verbose: bool = False,
     ):
         self.admin_data = admin_data
