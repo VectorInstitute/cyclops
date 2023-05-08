@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.1.25"
+version = "0.1.26"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
