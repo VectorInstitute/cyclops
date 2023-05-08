@@ -34,7 +34,7 @@ class CXRClassification:
             Sequence[Union[str, WrappedModel]],
             Dict[str, WrappedModel],
         ],
-        models_config_path: Union[str, Dict[str, str]] = None,
+        models_config_path: Optional[Union[str, Dict[str, str]]] = None,
         task_features: List[str] = "image",
         task_target: Union[str, List[str]] = CXR_TARGET,
     ):
@@ -224,7 +224,7 @@ class CXRClassification:
         self,
         dataset: Union[Dataset, DatasetDict],
         metrics: Union[List[str], MetricCollection],
-        model_names: Union[str, List[str]] = None,
+        model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Compose] = None,
         prediction_column_prefix: str = "predictions",
         splits_mapping: dict = {"test": "test"},

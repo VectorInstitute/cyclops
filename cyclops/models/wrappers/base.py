@@ -101,7 +101,7 @@ class ModelWrapper(ABC):
         transforms: Optional[Callable] = None,
         metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
-        splits_mapping: dict = None,
+        splits_mapping: Optional[dict] = None,
         **kwargs,
     ):
         """Find the best model from hyperparameter search.
@@ -146,11 +146,11 @@ class ModelWrapper(ABC):
         self,
         X,
         feature_columns: Optional[Union[str, List[str]]] = None,
-        prediction_column_prefix: str = None,
+        prediction_column_prefix: Optional[str] = None,
         model_name: Optional[str] = None,
         transforms=None,
         only_predictions: bool = False,
-        splits_mapping: dict = None,
+        splits_mapping: Optional[dict] = None,
         **predict_params,
     ):
         """Predict the output of the model for the given input.

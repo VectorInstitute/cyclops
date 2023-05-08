@@ -2,7 +2,7 @@
 
 import pickle
 from multiprocessing import set_start_method
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -260,7 +260,7 @@ class Reductor:
 class NoReduction:
     """No reduction dummy function."""
 
-    def __init__(self, reduce: Any = None) -> None:
+    def __init__(self, reduce: Optional[Any] = None) -> None:
         self.reduce = reduce
 
     def fit(self, x: Any) -> None:

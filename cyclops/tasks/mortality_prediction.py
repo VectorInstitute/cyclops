@@ -35,7 +35,7 @@ class MortalityPrediction:
             Sequence[Union[str, WrappedModel]],
             Dict[str, WrappedModel],
         ],
-        models_config_path: Union[str, Dict[str, str]] = None,
+        models_config_path: Optional[Union[str, Dict[str, str]]] = None,
         task_features: List[str] = [
             "age",
             "sex",
@@ -194,7 +194,7 @@ class MortalityPrediction:
         y: Optional[Union[np.ndarray, pd.Series]] = None,
         model_name: Optional[str] = None,
         transforms: Optional[ColumnTransformer] = None,
-        best_model_params: dict = None,
+        best_model_params: Optional[dict] = None,
         splits_mapping: dict = {"train": "train", "validation": "validation"},
         **kwargs,
     ) -> WrappedModel:
@@ -395,7 +395,7 @@ class MortalityPrediction:
         self,
         dataset: Union[Dataset, DatasetDict],
         metrics: Union[List[str], MetricCollection],
-        model_names: Union[str, List[str]] = None,
+        model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[ColumnTransformer] = None,
         prediction_column_prefix: str = "predictions",
         splits_mapping: dict = {"test": "test"},
