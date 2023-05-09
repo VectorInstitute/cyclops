@@ -1,4 +1,6 @@
 """Plotting functions for drift detection."""
+from typing import List, Optional
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,7 +24,7 @@ colors = [
 ]
 
 
-def clamp(val: int, minimum=0, maximum=255):
+def clamp(val: int, minimum: int = 0, maximum: int = 255) -> int:
     """Ensure colour intensity is within a specified range.
 
     Returns
@@ -38,7 +40,7 @@ def clamp(val: int, minimum=0, maximum=255):
     return val
 
 
-def colorscale(hexstr: str, scalefactor: float):
+def colorscale(hexstr: str, scalefactor: float) -> str:
     """Create color scale.
 
     Returns
@@ -62,15 +64,16 @@ def colorscale(hexstr: str, scalefactor: float):
 
 
 def errorfill(
-    x: np.array,
-    y: np.array,
-    yerr: np.array,
-    color=None,
-    alpha_fill=0.2,
-    ax=None,
-    fmt="-o",
-    label=None,
-):
+    x: np.ndarray[float, np.dtype[np.float64]],
+    y: np.ndarray[float, np.dtype[np.float64]],
+    yerr: np.ndarray[float, np.dtype[np.float64]],
+    color: Optional[str] = None,
+    alpha_fill: float = 0.2,
+    ax: Optional[mpl.axes.SubplotBase] = None,
+    fmt: str = "-o",
+    label: Optional[str] = None,
+    semilogx: bool = True,
+) -> None:
     """Create custom error fill."""
     ax = ax if ax is not None else plt.gca()
     if color is None:
@@ -80,13 +83,18 @@ def errorfill(
         ymax = y + yerr
     elif len(yerr) == 2:
         ymin, ymax = yerr
-    ax.semilogx(x, y, fmt, color=color, label=label)
+    if semilogx:
+        ax.semilogx(x, y, fmt, color=color, label=label)
+    else:
+        ax.plot(x, y, fmt, color=color, label=label)
     ax.fill_between(
         x, np.clip(ymax, 0, 1), np.clip(ymin, 0, 1), color=color, alpha=alpha_fill
     )
 
 
-def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
+def plot_roc(
+    ax: mpl.axes.SubplotBase, fpr: List[float], tpr: List[float], roc_auc: str
+) -> mpl.axes.SubplotBase:
     """Plot ROC curve.
 
     Returns
@@ -104,7 +112,9 @@ def plot_roc(ax: mpl.axes.SubplotBase, fpr: list, tpr: list, roc_auc: str):
     return ax
 
 
-def plot_pr(ax: mpl.axes.SubplotBase, recall: list, precision: list, roc_prc: str):
+def plot_pr(
+    ax: mpl.axes.SubplotBase, recall: List[float], precision: List[float], roc_prc: str
+) -> mpl.axes.SubplotBase:
     """Plot Precision-Recall curve.
 
     Returns
@@ -127,8 +137,8 @@ def setup_plot(
     title: str,
     xlabel: str,
     ylabel: str,
-    legend: list,
-):
+    legend: List[str],
+) -> None:
     """Plot setup.
 
     Parameters
@@ -151,7 +161,7 @@ def setup_plot(
     plot_handle.legend(legend, loc=1)
 
 
-def set_bars_color(bars: mpl.container.BarContainer, color: str):
+def set_bars_color(bars: mpl.container.BarContainer, color: str) -> None:
     """Set color attribute for bars in bar plots.
 
     Parameters
@@ -166,7 +176,9 @@ def set_bars_color(bars: mpl.container.BarContainer, color: str):
         bar_item.set_color(color)
 
 
-def plot_label_distribution(X, y, label, features):
+def plot_label_distribution(
+    X: pd.DataFrame, y: pd.DataFrame, label: str, features: List[str]
+) -> None:
     """Set color attribute for bars in bar plots.
 
     Parameters
@@ -238,7 +250,7 @@ def plot_label_distribution(X, y, label, features):
         feature_counts_pos = list(data_pos[feature].value_counts())
         if len(feature_counts) == 1:
             feature_counts.append(0)
-            icd_counts_pos = None
+            icd_counts_pos: List[int] = []
         if len(icd_counts_pos) == 1:
             feature_counts_pos.append(0)
         position = x + (width * (1 - len_features) / 2) + i * width
@@ -270,88 +282,171 @@ def plot_label_distribution(X, y, label, features):
     plt.show()
 
 
-def plot_drift_samples_pval(results, p_val_threshold):
-    """Plot drift experiement p-values."""
-    fig = plt.figure(figsize=(11, 8))
-    ax = fig.add_subplot(111)
-    for shift_iter, shift in enumerate(results.keys()):
-        errorfill(
-            results[shift]["samples"],
-            results[shift]["mean_p_vals"],
-            results[shift]["std_p_vals"],
-            fmt=linestyles[shift_iter] + markers[shift_iter],
-            color=colorscale(colors[shift_iter], brightness[shift_iter]),
-            label=shift,
-            ax=ax,
-        )
-    plt.xlabel("Number of samples from test")
-    plt.ylabel("$p$-value")
-    plt.axhline(y=p_val_threshold, color="k")
-    plt.legend()
-    plt.show()
+def plot_drift_experiment(
+    results: dict[str, dict[str, np.ndarray[float, np.dtype[np.float64]]]],
+    plot_distance=False,
+) -> None:
+    """Plot drift experiement p-values.
+
+    Parameters
+    ----------
+    results: dict
+        Dictionary with results from drift experiment.
+
+    """
+    if plot_distance:
+        _, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 16))
+        for shift_iter, shift in enumerate(results.keys()):
+            samples = results[shift]["samples"]
+            mean_p_vals = results[shift]["p_val"].mean(axis=0)
+            std_p_vals = results[shift]["p_val"].std(axis=0)
+            errorfill(
+                samples,
+                mean_p_vals,
+                std_p_vals,
+                fmt=linestyles[shift_iter] + markers[shift_iter],
+                color=colorscale(colors[shift_iter], brightness[shift_iter]),
+                label=shift,
+                ax=ax1,
+            )
+            ax1.set_xlabel("Number of samples from test")
+            ax1.set_ylabel("$p$-value")
+            ax1.axhline(y=results[shift]["p_val_threshold"], color="k")
+            mean_distance = results[shift]["distance"].mean(axis=0)
+            std_distance = results[shift]["distance"].std(axis=0)
+            errorfill(
+                samples,
+                mean_distance,
+                std_distance,
+                fmt=linestyles[shift_iter] + markers[shift_iter],
+                color=colorscale(colors[shift_iter], brightness[shift_iter]),
+                label=shift,
+                ax=ax2,
+            )
+            ax2.set_xlabel("Number of samples from test")
+            ax2.set_ylabel("Distance")
+    else:
+        _, ax = plt.subplots(1, 1, figsize=(11, 8))
+        for shift_iter, shift in enumerate(results.keys()):
+            samples = results[shift]["samples"]
+            mean_p_vals = results[shift]["p_val"].mean(axis=0)
+            std_p_vals = results[shift]["p_val"].std(axis=0)
+            errorfill(
+                samples,
+                mean_p_vals,
+                std_p_vals,
+                fmt=linestyles[shift_iter] + markers[shift_iter],
+                color=colorscale(colors[shift_iter], brightness[shift_iter]),
+                label=shift,
+                ax=ax,
+            )
+            ax.set_xlabel("Number of samples from test")
+            ax.set_ylabel("$p$-value")
+            ax.axhline(y=results[shift]["p_val_threshold"], color="k")
+        plt.legend()
+        plt.show()
 
 
-def plot_drift(results, p_val_threshold=0.05):
+def plot_drift_timeseries(
+    results: dict[str, dict[str, np.ndarray[float, np.dtype[np.float64]]]],
+    plot_distance=False,
+) -> None:
     """Plot drift results.
 
     Parameters
     ----------
-    results: pd.DataFrame
-        Dataframe containing drift p-values and distance metric.
-    p_val_threshold: float
-        P-Value threshold.
+    results: dict
+        Dictionary with results from drift experiment.
 
     """
-    _, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
-    detection = np.where(results["pval"] < p_val_threshold, 1, 0)
-    cmap = mpl.colors.ListedColormap(["lightgrey", "red"])
-    ax1.plot(
-        results["dates"],
-        results["pval"],
-        ".-",
-        color="red",
-        linewidth=0.5,
-        markersize=2,
-    )
-    ax1.set_xlim(results["dates"], results["dates"])
-    ax1.axhline(y=p_val_threshold, color="dimgrey", linestyle="--")
-    ax1.set_ylabel("P-Values", fontsize=16)
-    ax1.set_xticklabels([])
-    ax1.pcolorfast(
-        ax1.get_xlim(),
-        ax1.get_ylim(),
-        detection[np.newaxis],
-        cmap=cmap,
-        alpha=0.4,
-    )
+    if plot_distance:
+        _, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
+        cmap = mpl.colors.ListedColormap(["lightgrey", "red"])
+        mean_p_vals = results["p_val"].mean(axis=0)
+        std_p_vals = results["p_val"].std(axis=0)
+        errorfill(
+            results["samples"],
+            mean_p_vals,
+            std_p_vals,
+            fmt=".-",
+            color="red",
+            label="$p$-value",
+            ax=ax1,
+            semilogx=False,
+        )
+        ax1.axhline(
+            y=results["p_val_threshold"],
+            color="dimgrey",
+            linestyle="--",
+            label="$p$-value threshold",
+        )
+        ax1.set_ylabel("$p$-vals", fontsize=16)
+        ax1.set_xlabel("timestamp", fontsize=16)
+        ax1.set_xticklabels([])
+        ax1.pcolorfast(
+            ax1.get_xlim(),
+            ax1.get_ylim(),
+            results["shift_detected"],
+            cmap=cmap,
+            alpha=0.4,
+        )
+        ax1.legend()
 
-    ax2.plot(
-        results["dates"],
-        results["dist"],
-        ".-",
-        color="red",
-        linewidth=0.5,
-        markersize=2,
-    )
-    ax2.set_xlim(results["dates"], results["dates"])
-    ax2.set_ylabel("Distance", fontsize=16)
-    ax2.axhline(y=np.mean(results["dist"]), color="dimgrey", linestyle="--")
-    ax2.set_xticklabels([])
-    ax2.pcolorfast(
-        ax2.get_xlim(),
-        ax2.get_ylim(),
-        results["detection"][np.newaxis],
-        cmap=cmap,
-        alpha=0.4,
-    )
+        mean_distance = results["distance"].mean(axis=0)
+        std_distance = results["distance"].std(axis=0)
+        errorfill(
+            results["samples"],
+            mean_distance,
+            std_distance,
+            fmt=".-",
+            color="red",
+            label="Distance",
+            ax=ax2,
+            semilogx=False,
+        )
+        ax2.set_ylabel("Distance", fontsize=16)
+        ax2.set_xlabel("timestamp", fontsize=16)
+        # ax2.axhline(y=np.mean(results["distance"]), color="dimgrey", linestyle="--")
+        ax2.set_xticklabels([])
+        ax2.pcolorfast(
+            ax2.get_xlim(),
+            ax2.get_ylim(),
+            results["shift_detected"],
+            cmap=cmap,
+            alpha=0.4,
+        )
+        ax2.legend()
+        plt.show()
+    else:
+        _, ax1 = plt.subplots(1, 1, figsize=(16, 10))
+        cmap = mpl.colors.ListedColormap(["lightgrey", "red"])
+        mean_p_vals = results["p_val"].mean(axis=0)
+        std_p_vals = results["p_val"].std(axis=0)
+        errorfill(
+            results["samples"],
+            mean_p_vals,
+            std_p_vals,
+            fmt=".-",
+            color="red",
+            label="$p$-value",
+            ax=ax1,
+            semilogx=False,
+        )
+        ax1.axhline(y=results["p_val_threshold"], color="dimgrey", linestyle="--")
+        ax1.set_ylabel("$p$-vals", fontsize=16)
+        ax1.set_xlabel("timestamps", fontsize=16)
+        ax1.pcolorfast(
+            ax1.get_xlim(),
+            ax1.get_ylim(),
+            results["shift_detected"],
+            cmap=cmap,
+            alpha=0.4,
+        )
+        ax1.legend()
+        plt.show()
 
-    for index, label in enumerate(ax2.xaxis.get_ticklabels()):
-        if index % 28 != 0:
-            label.set_visible(False)
-    plt.show()
 
-
-def plot_performance(results, metric):
+def plot_performance(results: pd.DataFrame, metric: str) -> None:
     """Plot drift results.
 
     Parameters

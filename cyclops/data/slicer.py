@@ -19,6 +19,7 @@ class SliceSpec:
         A list of slice specifications. Each specification is a dictionary mapping
         a column name to a slice specification for that column. A slice specification
         is a dictionary containing one or more of the following keys:
+
         - `value`: The exact value of a column to select. This can be a single value
           a list of values. If a list of values is provided, the slice selects rows
           where the column value is in the list. Time strings are supported (e.g.
@@ -77,7 +78,7 @@ class SliceSpec:
 
     Examples
     --------
-    >>> from cyclops.datasets.slicer import SliceSpec
+    >>> from cyclops.data.slicer import SliceSpec
     >>> slice_spec = SliceSpec(
     ...     spec_list=[
     ...         {"feature_1": {"keep_nulls": False}},

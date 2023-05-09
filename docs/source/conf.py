@@ -39,7 +39,6 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.autosummary",
     "sphinx.ext.viewcode",
-    "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
     "myst_parser",

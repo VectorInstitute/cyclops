@@ -1,8 +1,10 @@
 """Utilities for datasets."""
-from typing import Any, Dict, List, Optional, Union, get_args
+from typing import Any, Callable, Dict, List, Optional, Union, get_args
 
 import numpy as np
 import numpy.typing as npt
+import PIL
+import psutil
 from datasets import Dataset
 from datasets.features import (
     Array2D,
@@ -14,6 +16,7 @@ from datasets.features import (
     Value,
 )
 from numpy.typing import ArrayLike
+from torchvision.transforms import PILToTensor
 
 
 NUMERIC_FEATURE_TYPES = (
@@ -200,3 +203,45 @@ def feature_is_datetime(feature: FEATURE_TYPES) -> bool:
         raise TypeError(f"Invalid type for `feature`: {type(feature)}.")
 
     return any(dtype.startswith(t) for t in DATETIME_FEATURE_TYPES)
+
+
+def is_out_of_core(dataset_size: int) -> Any:
+    """Check if dataset is too large to fit in memory.
+
+    Parameters
+    ----------
+    dataset_size : int
+        Size of dataset expressed in bytes
+
+    Returns
+    -------
+    Any
+        Whether dataset can fit in memory
+
+    """
+    return dataset_size > psutil.virtual_memory().available
+
+
+def apply_transforms(
+    examples: Dict[str, Any], transforms: Callable[..., Any]
+) -> Dict[str, Any]:
+    """Apply transforms to examples."""
+    # examples is a dict of lists; convert to list of dicts.
+    # doing a conversion from PIL to tensor is necessary here when working
+    # with the Image feature type.
+    value_len = len(list(examples.values())[0])
+    examples_list = [
+        {
+            k: PILToTensor()(v[i]) if isinstance(v[i], PIL.Image.Image) else v[i]
+            for k, v in examples.items()
+        }
+        for i in range(value_len)
+    ]
+
+    # apply the transforms to each example
+    examples_list = [transforms(example) for example in examples_list]
+
+    # convert back to a dict of lists
+    examples = {k: [d[k] for d in examples_list] for k in examples_list[0]}
+
+    return examples

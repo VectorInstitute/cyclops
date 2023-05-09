@@ -14,17 +14,34 @@ class ModelWrapper(ABC):
     """
 
     @abstractmethod
-    def partial_fit(self, X, y=None, **fit_params):
-        """Fit the model on the given data incrementally.
+    def partial_fit(
+        self,
+        X,
+        y=None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        splits_mapping: Optional[dict] = None,
+        **fit_params,
+    ):
+        """Fit the model to the data.
 
         Parameters
         ----------
         X
             The features of the data.
         y
-            The labels of the data.
+            The labels of the data. This is required when the input dataset is not \
+                a huggingface dataset and only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names \
         **fit_params : dict, optional
-            Additional parameters for fitting the model.
+            Additional parameters to pass to the model's `forward` method.
 
         Returns
         -------
@@ -33,7 +50,16 @@ class ModelWrapper(ABC):
         """
 
     @abstractmethod
-    def fit(self, X, y=None, **fit_params):
+    def fit(
+        self,
+        X,
+        y=None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        transforms=None,
+        splits_mapping: Optional[dict] = None,
+        **fit_params,
+    ):
         """Fit the model on the given data.
 
         Parameters
@@ -41,7 +67,20 @@ class ModelWrapper(ABC):
         X
             The input to the model.
         y
-            The output of the model.
+            The labels of the data. This is required when the input dataset is not \
+                a huggingface dataset and only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        transforms
+            The transformation to be applied to the data before prediction, \
+                This is used when the input is a Hugging Face Dataset, \
+                by default None
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names \
         **fit_params : dict, optional
             Additional parameters for fitting the model.
 
@@ -54,29 +93,47 @@ class ModelWrapper(ABC):
     @abstractmethod
     def find_best(
         self,
-        X,
-        y,
         parameters: Union[Dict, List[Dict]],
+        X,
+        y=None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        transforms: Optional[Callable] = None,
         metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
+        splits_mapping: Optional[dict] = None,
         **kwargs,
     ):
         """Find the best model from hyperparameter search.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
-            The features of the data.
-        y : np.ndarray
-            The labels of the data.
         parameters : dict or list of dicts
-            The parameters to search over.
-        metric : str or callable, optional
-            The metric to use for scoring.
-        method : str, default="grid"
-            The method to use for hyperparameter search.
+            The hyperparameters to be tuned.
+        X
+            The data features or a Hugging Face dataset containing features and labels.
+        y
+            The labels of the data. This is required when the input dataset is not \
+                a huggingface dataset and only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        transforms
+            The transformation to be applied to the data before prediction, \
+                This is used when the input is a Hugging Face Dataset, \
+                by default None
+        metric : str, callable, sequence, dict, optional
+            The metric to be used for model evaluation.
+        method : Literal["grid", "random"], default="grid"
+            The tuning method to be used.
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names, \
+                used when input is a dataset dictionary,
         **kwargs : dict, optional
-            Additional parameters.
+            Additional keyword arguments to be passed to the search method.
 
         Returns
         -------
@@ -85,13 +142,43 @@ class ModelWrapper(ABC):
         """
 
     @abstractmethod
-    def predict(self, X, **predict_params):
+    def predict(
+        self,
+        X,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        prediction_column_prefix: Optional[str] = None,
+        model_name: Optional[str] = None,
+        transforms=None,
+        only_predictions: bool = False,
+        splits_mapping: Optional[dict] = None,
+        **predict_params,
+    ):
         """Predict the output of the model for the given input.
 
         Parameters
         ----------
         X
             The input to the model.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset
+        prediction_column_prefix : str, optional
+            Name of the prediction column to be added to the dataset, This is used \
+                when the input is a Hugging Face Dataset, by default "predictions"
+        model_name : Optional[str], optional
+            Model name used as suffix to the prediction column, This is used \
+                when the input is a Hugging Face Dataset, by default None
+        transforms :
+            Transform function to be applied.
+                This is used when the input is a Hugging Face Dataset, \
+                by default None
+        only_predictions : bool, optional
+            Whether to return only the predictions rather than the dataset \
+                with predictions when the input is a Hugging Face Datset, \
+                by default False
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names, \
+                used when input is a dataset dictionary
         **predict_params : dict, optional
             Additional parameters for the prediction.
 
@@ -102,15 +189,25 @@ class ModelWrapper(ABC):
         """
 
     @abstractmethod
-    def predict_proba(self, X, **predict_params):
+    def predict_proba(
+        self,
+        X,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        prediction_column=None,
+        **predict_params,
+    ):
         """Return the output probabilities of the model output for the given input.
 
         Parameters
         ----------
         X
             The input to the model.
-        **predict_params : dict, optional
-            Additional parameters for the prediction.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        prediction_column : Optional[Union[str, List[str]]],
+            Name of the prediction column to be added to the dataset
+
 
         Returns
         -------

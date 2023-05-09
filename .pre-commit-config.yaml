@@ -21,7 +21,7 @@ repos:
     - id: black
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.258'
+    rev: 'v0.0.264'
     hooks:
     - id: ruff
       entry: ruff check --fix .
@@ -34,13 +34,13 @@ repos:
       files: ".*.py$"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.0.1
+    rev: v1.2.0
     hooks:
     - id: mypy
       entry: python3 -m mypy --config-file pyproject.toml
       language: system
       types: [python]
-      exclude: "apps|use_cases|tests|cyclops/(process|models|monitor|workflow)"
+      exclude: "apps|use_cases|tests|cyclops/(process|models|tasks|monitor|workflow)"
 
   - repo: local
     hooks:

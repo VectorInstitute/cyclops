@@ -1,9 +1,8 @@
 """Reductor Module."""
 
-import os
 import pickle
 from multiprocessing import set_start_method
-from typing import Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -28,7 +27,7 @@ class Reductor:
     >>> from drift_detection.reductor import Reductor
     >>> from sklearn.datasets import load_diabetes
     >>> X, y = load_diabetes(return_X_y=True)
-    >>> reductor = Reductor("PCA")
+    >>> reductor = Reductor("pca")
     >>> reductor.fit(X)
     >>> X_transformed = reductor.transform(X)
 
@@ -49,10 +48,9 @@ class Reductor:
 
     """
 
-    def __init__(self, dr_method: str, device: str = "cpu", **kwargs):
+    def __init__(self, dr_method: str, device: str = "cpu", **kwargs: Any):
         self.dr_method = dr_method.lower()
         self.device = device
-        self.model_path = None
 
         # dictionary of string methods with corresponding functions
         reductor_methods = {
@@ -65,7 +63,7 @@ class Reductor:
             "bbse-soft": BlackBoxShiftEstimatorSoft,
             "bbse-hard": BlackBoxShiftEstimatorHard,
             "txrv-ae": TXRVAutoencoder,
-            "bbse-soft+txrv-tae": BBSETAE,
+            "bbse-soft+txrv-ae": BBSETAE,
         }
 
         # check if dr_method is valid
@@ -77,29 +75,25 @@ class Reductor:
 
         # initialize model
         self.model = reductor_methods[self.dr_method](**kwargs)
-        if self.dr_method in (
-            "bbse-soft",
-            "bbse-hard",
-            "txrv-ae",
-            "bbse-soft+txrv-tae",
-        ):
-            self.model = self.model.to(self.device)
 
-    def load_model(self):
+    def load_model(self) -> None:
         """Load pre-trained model from path.
 
         For scikit-learn models, a pickle is loaded from disk. For the torch models, the
         "state_dict" is loaded from disk.
 
         """
-        if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
-            with open(self.model_path, "rb") as file:
-                self.model = pickle.load(file)
+        if hasattr(self, "model_path"):
+            if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
+                with open(self.model_path, "rb") as file:
+                    self.model = pickle.load(file)
+            else:
+                self.model.load_state_dict(torch.load(self.model_path))  # type: ignore
+            print(f"Model loadded from {self.model_path}")
         else:
-            self.model.load_state_dict(torch.load(self.model_path)["model"])
-        print(f"Model loadded from {self.model_path}")
+            raise ValueError("model_path not set.")
 
-    def save_model(self, output_path: str):
+    def save_model(self, output_path: str) -> None:
         """Save the model to disk.
 
         Parameters
@@ -115,7 +109,7 @@ class Reductor:
             torch.save(self.model.state_dict(), output_path)
         print(f"{self.dr_method} saved to {output_path}")
 
-    def get_available_dr_methods(self):
+    def get_available_dr_methods(self) -> List[str]:
         """Return a list of available dimensionality reduction methods.
 
         Returns
@@ -137,7 +131,7 @@ class Reductor:
             "bbse-soft+txrv-ae",
         ]
 
-    def fit(self, dataset: Dataset):
+    def fit(self, dataset: Dataset) -> None:
         """Fit the reductor to the data.
 
         For scikit-learn models, the model is fit to the data
@@ -157,20 +151,21 @@ class Reductor:
 
     def transform(
         self,
-        dataset: Union[Dataset, np.ndarray],
+        dataset: Dataset,
         batch_size: int = 32,
         num_workers: int = 1,
-    ) -> np.ndarray:
+    ) -> np.ndarray[float, np.dtype[np.float64]]:
         """Transform the data using the chosen dimensionality reduction method.
 
         Parameters
         ----------
-        dataset: huggingface Dataset or np.ndarray
+        dataset: huggingface Dataset
             data to transform.
         batch_size: int
-            batch size for pytorch dataloader. Default: 32
+            batch size for huggingface map operation. Default: 32
         num_workers: int
-            number of workers for pytorch dataloader. If -1, uses max number of cpus.
+            number of workers for huggingface map operation.
+            If -1, uses max number of cpus. Default: 1
 
         Returns
         -------
@@ -178,8 +173,6 @@ class Reductor:
             transformed data
 
         """
-        if num_workers == -1:
-            num_workers = os.cpu_count()
         if num_workers > 1:
             try:
                 set_start_method("spawn")
@@ -201,6 +194,7 @@ class Reductor:
         elif self.dr_method in ("gmm"):
             features = self.model.predict_proba(dataset["features"])
         else:
+            self.model = self.model.to(self.device)
             dataset = dataset.map(
                 self.bbse_inference,
                 batched=True,
@@ -209,9 +203,11 @@ class Reductor:
             )
             features = np.array(dataset["outputs"])
             dataset.remove_columns("outputs")
+            self.model = self.model.to("cpu")
+            torch.cuda.empty_cache()
         return features
 
-    def bbse_inference(self, examples):
+    def bbse_inference(self, examples: Dict[str, Any]) -> Dict[str, Any]:
         """Inference function for Black Box Shift Estimator models.
 
         Parameters
@@ -237,7 +233,7 @@ class Reductor:
         examples["outputs"] = self.model(features)
         return examples
 
-    def nored_inference(self, examples):
+    def nored_inference(self, examples: Dict[str, Any]) -> Dict[str, Any]:
         """Inference function for no dimensionality reduction.
 
         Parameters
@@ -257,33 +253,29 @@ class Reductor:
             features = torch.concat(examples["features"])
         elif isinstance(examples["features"][0], list):
             features = np.array(examples["features"])
-            print(features.shape, "1")
         examples["outputs"] = features
         return examples
 
 
 class NoReduction:
-    """No reduction function."""
+    """No reduction dummy function."""
 
-    def __init__(self):
-        pass
+    def __init__(self, reduce: Optional[Any] = None) -> None:
+        self.reduce = reduce
 
-    def fit(self, data: Dataset):
-        """Fit the model to the data."""
-
-    def transform(self, data: Dataset):
-        """Transform the data."""
+    def fit(self, x: Any) -> None:
+        """Run dummy fit function."""
 
 
 class BlackBoxShiftEstimatorSoft(nn.Module):
     """Wrapper for Black Box Shift Estimator Soft model."""
 
-    def __init__(self, model, softmax=False):
+    def __init__(self, model: nn.Module, softmax: bool = False):
         super().__init__()
         self.model = model
         self.softmax = softmax
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model."""
         x = self.model(x)
         if self.softmax:
@@ -294,11 +286,11 @@ class BlackBoxShiftEstimatorSoft(nn.Module):
 class BlackBoxShiftEstimatorHard(nn.Module):
     """Wrapper for Black Box Shift Estimator Hard model."""
 
-    def __init__(self, model):
+    def __init__(self, model: nn.Module):
         super().__init__()
-        self.model = model()
+        self.model = model
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model."""
         x = self.model(x)
         return x.argmax(dim=-1)
@@ -307,11 +299,11 @@ class BlackBoxShiftEstimatorHard(nn.Module):
 class TXRVAutoencoder(nn.Module):
     """Wrapper for TXRV Autoencoder model."""
 
-    def __init__(self, weights="101-elastic"):
+    def __init__(self) -> None:
         super().__init__()
-        self.model = xrv.autoencoders.ResNetAE(weights)
+        self.model = xrv.autoencoders.ResNetAE("101-elastic")
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model."""
         x = self.model.encode(x).mean(dim=(2, 3))
         return x
@@ -320,12 +312,12 @@ class TXRVAutoencoder(nn.Module):
 class BBSETAE(nn.Module):
     """Wrapper for Black Box Shift Estimator Soft + TXRV Autoencoder model."""
 
-    def __init__(self, model):
+    def __init__(self, model: nn.Module):
         super().__init__()
         self.model = model
         self.tae = TXRVAutoencoder()
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model."""
         x_bbse = self.model(x)
         x_tae = self.tae(x)

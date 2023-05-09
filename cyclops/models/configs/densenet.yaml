@@ -1,0 +1,26 @@
+model__weights: "densenet121-res224-nih"
+model__growth_rate: 32
+model__block_config: [6, 12, 24, 16]
+model__num_init_features: 64
+model__drop_rate: 0
+model__in_channels: 1
+model__op_threshs: null
+model__apply_sigmoid: False
+criterion: 'BCEWithLogitsLoss'
+optimizer: 'Adagrad'
+optimizer__weight_decay: 1.e-6
+activation: 'Sigmoid'
+lr_scheduler: 'StepLR'
+lr_scheduler__gamma: 0.5
+lr_scheduler__step_size: 128
+lr_update_per_batch: True
+lr: 2.e-3
+batch_size: 64
+max_epochs: 256
+reweight: "mini-batch"
+train_loader__num_workers: 2
+train_loader__shuffle: True
+train_loader__pin_memory: True
+test_loader__num_workers: 2
+test_loader__shuffle: False
+test_loader__pin_memory: True

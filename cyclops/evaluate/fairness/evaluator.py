@@ -11,8 +11,8 @@ import pandas as pd
 from datasets import Dataset, config
 from datasets.features import Features
 
-from cyclops.datasets.slicer import SliceSpec, is_datetime
-from cyclops.datasets.utils import (
+from cyclops.data.slicer import SliceSpec, is_datetime
+from cyclops.data.utils import (
     check_required_columns,
     feature_is_datetime,
     feature_is_numeric,
@@ -35,7 +35,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
 
-def evaluate_fairness(
+def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
     metrics: Union[str, Callable[..., Any], Metric, MetricCollection],
     dataset: Dataset,
     groups: Union[str, List[str]],
@@ -233,8 +233,8 @@ def evaluate_fairness(
 
             for prediction_column in fmt_prediction_columns:
                 results.setdefault(prediction_column, {})
-                results[prediction_column].setdefault("Group Size", {}).update(
-                    {slice_name: sliced_dataset.num_rows}
+                results[prediction_column].setdefault(slice_name, {}).update(
+                    {"Group Size": sliced_dataset.num_rows}
                 )
 
                 pred_result = _get_metric_results_for_prediction_and_slice(
@@ -275,8 +275,9 @@ def evaluate_fairness(
         )
 
     # add parity metrics to the results
-    for prediction_column, parity_metrics in parity_results.items():
-        results[prediction_column].update(parity_metrics)
+    for pred_column, pred_results in parity_results.items():
+        for slice_name, slice_results in pred_results.items():
+            results[pred_column][slice_name].update(slice_results)
 
     if len(fmt_prediction_columns) == 1:
         return results[fmt_prediction_columns[0]]
@@ -847,10 +848,10 @@ def _get_metric_results_for_prediction_and_slice(
             metric_name=metric_name,
         )
 
-        # results format: {metric_name: {slice_name: metric_value}}
-        return {key: {slice_name: value} for key, value in metric_output.items()}
+        # result format -> {slice_name: {metric_name: metric_value}}
+        return {slice_name: metric_output}
 
-    results = {}
+    results: Dict[str, Dict[str, Any]] = {}
     for threshold in thresholds:
         metric_output = _compute_metrics(
             metrics=metrics,
@@ -862,10 +863,9 @@ def _get_metric_results_for_prediction_and_slice(
             metric_name=metric_name,
         )
 
-        # results format: {metric_name@threshold: {slice_name: metric_value}}
+        # result format -> {slice_name: {metric_name@threshold: metric_value}}
         for key, value in metric_output.items():
-            results[f"{key}@{threshold}"] = {slice_name: value}
-
+            results.setdefault(slice_name, {}).update({f"{key}@{threshold}": value})
     return results
 
 
@@ -925,11 +925,10 @@ def _compute_parity_metrics(
 
     for key, prediction_result in results.items():
         parity_results[key] = {}
-        for metric_name, slice_result in prediction_result.items():
-            if metric_name == "Group Size":
-                continue
-
-            for slice_name, metric_value in slice_result.items():
+        for slice_name, slice_result in prediction_result.items():
+            for metric_name, metric_value in slice_result.items():
+                if metric_name == "Group Size":
+                    continue
                 # add 'Parity' to the metric name before @threshold, if specified
                 metric_name_parts = metric_name.split("@")
                 parity_metric_name = f"{metric_name_parts[0]} Parity"
@@ -937,7 +936,7 @@ def _compute_parity_metrics(
                     parity_metric_name += f"@{metric_name_parts[1]}"
 
                 numerator = metric_value
-                denominator = slice_result[base_slice_name]
+                denominator = prediction_result[base_slice_name][metric_name]
                 parity_metric_value = np.divide(  # type: ignore[call-overload]
                     numerator,
                     denominator,
@@ -946,8 +945,12 @@ def _compute_parity_metrics(
                 )
 
                 # add the parity metric to the results
-                parity_results[key].setdefault(parity_metric_name, {}).update(
-                    {slice_name: _get_value_if_singleton_array(parity_metric_value)}
+                parity_results[key].setdefault(slice_name, {}).update(
+                    {
+                        parity_metric_name: _get_value_if_singleton_array(
+                            parity_metric_value
+                        )
+                    }
                 )
 
     return parity_results

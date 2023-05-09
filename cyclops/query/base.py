@@ -138,6 +138,26 @@ class DatasetQuerier:
         """
         return self.db.list_tables()
 
+    def list_columns(self, schema_name: str, table_name: str) -> List[str]:
+        """List columns in a table.
+
+        Parameters
+        ----------
+        schema_name: str
+            Name of schema in the database.
+        table_name: str
+            Name of GEMINI table.
+
+        Returns
+        -------
+        List[str]
+            List of column names.
+
+        """
+        return list(
+            getattr(getattr(self.db, schema_name), table_name).data.columns.keys()
+        )
+
     def list_custom_tables(self) -> List[str]:
         """List custom tables methods provided by the dataset API.
 

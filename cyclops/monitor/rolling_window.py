@@ -1,14 +1,15 @@
 """Rolling window class for detecting drift on time series data."""
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
 import torch
+from sklearn.base import ClassifierMixin
 from tqdm import tqdm
 
 from cyclops.monitor.detector import Detector
 from cyclops.monitor.gemini.utils import get_label, process
 from cyclops.monitor.optimizer import Optimizer
-from cyclops.monitor.utils import get_data, print_metrics_binary, scale
+from cyclops.monitor.utils import Data, get_data, print_metrics_binary, scale
 
 
 class RollingWindow:
@@ -37,7 +38,7 @@ class RollingWindow:
         admin_data: pd.DataFrame,
         shift_detector: Detector,
         optimizer: Optional[Optimizer] = None,
-        model=None,
+        model: Optional[ClassifierMixin] = None,
         verbose: bool = False,
     ):
         self.admin_data = admin_data
@@ -46,7 +47,7 @@ class RollingWindow:
         self.model = model
         self.verbose = verbose
 
-    def mean(self, X: pd.DataFrame, window: int = 30):
+    def mean(self, X: pd.DataFrame, window: int = 30) -> pd.DataFrame:
         """Get rolling mean of time series data.
 
         Parameters
@@ -64,7 +65,7 @@ class RollingWindow:
         """
         return X.rolling(window).mean().dropna(inplace=True)
 
-    def stdev(self, X: pd.DataFrame, window: int = 30):
+    def stdev(self, X: pd.DataFrame, window: int = 30) -> pd.DataFrame:
         """Get rolling standard deviation of time series data.
 
         Parameters
@@ -84,13 +85,13 @@ class RollingWindow:
 
     def performance(
         self,
-        data_streams: dict,
+        data_streams: Dict[str, Any],
         stat_window: int = 30,
         lookup_window: int = 0,
         stride: int = 1,
-        aggregation_type="time",
-        outcome="mortality",
-    ):
+        aggregation_type: str = "time",
+        outcome: str = "mortality",
+    ) -> Dict[str, Any]:
         """Perform rolling window to measure performance over time series.
 
         Parameters
@@ -143,8 +144,8 @@ class RollingWindow:
                 break
 
             if self.optimizer is not None:
-                test_dataset = get_data(X_next, y_next)
-                test_loader = torch.utils.data.DataLoader(
+                test_dataset: Data = get_data(X_next, y_next)
+                test_loader: Any = torch.utils.data.DataLoader(
                     test_dataset, batch_size=1, shuffle=False
                 )
                 y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
@@ -178,15 +179,15 @@ class RollingWindow:
 
     def drift(
         self,
-        data_streams: dict,
+        data_streams: Dict[str, Any],
         sample: int = 1000,
         stat_window: int = 30,
         lookup_window: int = 0,
         stride: int = 1,
         threshold: float = 0.05,
-        aggregation_type="time",
-        **kwargs
-    ):
+        aggregation_type: str = "time",
+        **kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Perform rolling window to measure drift over time series.
 
         Parameters

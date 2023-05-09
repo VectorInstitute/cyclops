@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.1.20"
+version = "0.1.26"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -15,8 +15,9 @@ readme = "README.md"
 python = ">=3.8, <3.11"
 pandas = "^1.4.1"
 numpy = "<=1.23.0"
+spacy = { version = "^3.2.1", extras = ["lookups"] }
 pyarrow = { version = "^11.0.0", optional = true }
-psycopg2 = { version = "^2.9.5", optional = true }
+psycopg2 = { version = "2.9.6", optional = true }
 hydra-core = { version = "^1.2.0", optional = true }
 SQLAlchemy = { version = "^1.4.32, <2.0", optional = true }
 dask = { version = "^2022.9.1", optional = true, extras = ["dataframe"] }
@@ -47,6 +48,7 @@ psutil = "^5.9.4"
 [tool.poetry.group.monitor.dependencies]
 hydra-core = "^1.2.0"
 torchxrayvision = "^0.0.37"
+spacy = { version = "^3.2.1", extras = ["lookups"] }
 alibi = { version = "^0.8.0", extras = ["shap"] }
 alibi-detect = { version = "^0.10.4", extras = ["torch"] }
 llvmlite = "0.38.0"
@@ -58,23 +60,25 @@ psutil = "^5.9.4"
 seaborn = "^0.11.2"
 plotly = "^5.7.0"
 matplotlib = "^3.5.1"
-evidently = "0.1.45.dev0"
 mlflow = "^1.24.0"
 jupyter = "^1.0.0"
 jupyterlab = "^3.4.2"
 prefect = "^2.7.10"
+ipympl = "^0.9.3"
+evidently = "^0.2.8"
+verifyml = "^0.0.6"
+protobuf = "3.20.0"
 
 [tool.poetry.group.codestyle.dependencies]
 pytest = "^7.1.1"
-pylint = "^2.12.2"
 pre-commit = "^2.17.0"
 black = "^22.1.0"
 pyproject-flake8 = "^5.0.4"
 pytest-cov = "^3.0.0"
-codecov = "^2.1.12"
+codecov = "^2.1.13"
 nbstripout = "^0.6.1"
 mypy = "^1.0.0"
-ruff = "^0.0.258"
+ruff = "^0.0.264"
 
 [tool.poetry.group.docs.dependencies]
 numpydoc = "^1.2"

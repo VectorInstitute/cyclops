@@ -1,3 +1,5 @@
+# pylint: disable=too-many-lines
+
 """PyTorch model wrapper."""
 
 import logging
@@ -7,6 +9,9 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from datasets import Dataset, DatasetDict
+from datasets.combine import concatenate_datasets
+from monai.data.meta_tensor import MetaTensor
 from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
@@ -16,18 +21,21 @@ from torch.utils.data import Dataset as TorchDataset
 from cyclops.models.data import PTDataset
 from cyclops.models.utils import (
     LossMeter,
+    get_device,
     get_module,
+    get_split,
     is_pytorch_instance,
     is_pytorch_model,
 )
 from cyclops.models.wrappers.base import ModelWrapper
 from cyclops.models.wrappers.utils import (
+    DatasetColumn,
     check_is_fitted,
     set_random_seed,
     to_numpy,
     to_tensor,
 )
-from cyclops.utils.file import join
+from cyclops.utils.file import join, process_dir_save_path
 from cyclops.utils.log import setup_logging
 
 
@@ -35,7 +43,8 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 # ignore errors about attributes defined dynamically
-# pylint: disable=no-member, fixme
+# pylint: disable=no-member, function-redefined, arguments-differ
+# pylint: disable=dangerous-default-value, too-many-branches, fixme
 
 
 class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
@@ -124,7 +133,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         reweight: str = "mini-batch",
         save_every: int = -1,
         save_best_only: bool = True,
-        device: Union[str, torch.device] = "cpu",
+        save_dir: Optional[str] = None,
+        device: Union[str, torch.device] = get_device(),
         seed: Optional[int] = None,
         deterministic: bool = False,
         **kwargs,
@@ -149,6 +159,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         self.reweight = reweight
         self.save_every = save_every
         self.save_best_only = save_best_only
+        self.save_dir = save_dir
         self.device = device
         self.seed = seed
         self.deterministic = deterministic
@@ -482,12 +493,20 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         self._set_mode(training=True)
         self.optimizer_.zero_grad(set_to_none=True)  # type: ignore[attr-defined]
 
-        # XXX: batch may not always be a tuple of two elements
-        X, target = batch
-        target = to_tensor(target, device=self.device)
+        if isinstance(batch, (tuple, list)):
+            X, target = batch
+            target = to_tensor(target, device=self.device)
+        else:
+            X = batch
+            target = None
 
         preds = self._forward_pass(X, **fit_params)
-        loss = self._get_loss(target, preds)
+        if target is not None:
+            loss = self._get_loss(target, preds)
+        else:
+            # XXX: batch may not always be a tuple of two elements
+            raise NotImplementedError
+
         loss.backward()
         self.optimizer_.step()  # type: ignore[attr-defined]
 
@@ -516,18 +535,31 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         self._set_mode(training=False)
 
-        # XXX: `batch` may not always be a tuple
-        X, y = batch
-        y = to_tensor(y, device=self.device)
+        if isinstance(batch, (tuple, list)):
+            X, y = batch
+            y = to_tensor(y, device=self.device)
+        else:
+            X = batch
+            y = None
 
         with torch.no_grad():
             preds = self._forward_pass(X, **fit_params)
-            loss = self._get_loss(y, preds)
+            if y is not None:
+                loss = self._get_loss(y, preds)
+            else:
+                # XXX: `batch` may not always be a tuple
+                raise NotImplementedError
 
         return {"loss": loss, "preds": preds}
 
     def _run_one_epoch(
-        self, data_loader, step_fn: Callable, training: bool, **fit_params
+        self,
+        data_loader,
+        step_fn: Callable,
+        training: bool,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        **fit_params,
     ):
         """Run one epoch of training or validation.
 
@@ -539,6 +571,12 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             Function to call for each step.
         training : bool
             Whether the run is for training or not.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when \
+                the input is a Hugging Face Dataset, by default None
         **fit_params : dict, optional
             Additional parameters to pass to the model's `forward` method.
 
@@ -553,11 +591,35 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         """
         batch_losses = []
-        for batch in data_loader:
-            output = step_fn(batch, **fit_params)
-            loss = output["loss"].item()
-            assert not np.isnan(loss).any(), "Loss is NaN. Aborting training."
-            batch_losses.append(loss)
+        # if data is a HF dataset
+        if feature_columns is not None:
+            if target_columns is not None:
+                for batch in data_loader:
+                    batch_features = torch.cat(
+                        [batch[feature] for feature in feature_columns], dim=1
+                    )
+                    try:
+                        batch_labels = torch.cat(
+                            [batch[target] for target in target_columns], dim=1
+                        )
+                    except IndexError:
+                        batch_labels = torch.cat(
+                            [batch[target].unsqueeze(1) for target in target_columns],
+                            dim=1,
+                        )
+                    batch = (batch_features, batch_labels)
+                    output = step_fn(batch, **fit_params)
+                    loss = output["loss"].item()
+                    assert not np.isnan(loss).any(), "Loss is NaN. Aborting training."
+                    batch_losses.append(loss)
+            else:
+                raise NotImplementedError
+        else:
+            for batch in data_loader:
+                output = step_fn(batch, **fit_params)
+                loss = output["loss"].item()
+                assert not np.isnan(loss).any(), "Loss is NaN. Aborting training."
+                batch_losses.append(loss)
 
         if training:
             self.train_loss_.add(np.mean(batch_losses))
@@ -567,12 +629,16 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         if training and not self.lr_update_per_batch:
             self.lr_scheduler_.step()  # type: ignore[attr-defined]
 
-    def _get_dataset(self, X, y=None) -> TorchDataset:
+    def _get_dataset(
+        self,
+        X: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor],
+        y: Optional[Union[np.ndarray, torch.Tensor]] = None,
+    ) -> Union[Dataset, DatasetDict, TorchDataset]:
         """Get dataset.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
+        X : Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor]
             The features of the data.
         y : np.ndarray, optional
             The labels of the data.
@@ -583,9 +649,13 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             The dataset object.
 
         """
-        if isinstance(X, TorchDataset):
+        if isinstance(X, (Dataset, TorchDataset, DatasetDict)):
             return X
-        if isinstance(X, np.ndarray):
+
+        if isinstance(X, MetaTensor):
+            return PTDataset(X.data, y)
+
+        if isinstance(X, (np.ndarray, torch.Tensor)):
             return PTDataset(X, y)
 
         raise ValueError(
@@ -593,7 +663,9 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             f" Got {type(X)} instead."
         )
 
-    def _get_dataloader(self, dataset: TorchDataset, test: bool = False):
+    def _get_dataloader(
+        self, dataset: Union[Dataset, TorchDataset], test: bool = False
+    ):
         """Get PyTorch DataLoader for the data.
 
         Parameters
@@ -608,9 +680,9 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         A dataloader for the data.
 
         """
-        assert isinstance(dataset, TorchDataset), (
-            "`dataset` must be a `torch.utils.data.Dataset` instance."
-            f" Got {type(dataset)} instead."
+        assert isinstance(dataset, (TorchDataset, Dataset)), (
+            "`dataset` must be a `torch.utils.data.Dataset` or"
+            f"`datasets.Dataset` instance. Got {type(dataset)} instead."
         )
 
         if test:
@@ -628,15 +700,32 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         return data_loader(dataset, **kwargs)
 
-    def _train_loop(self, X, y=None, **fit_params):
+    def _train_loop(
+        self,
+        X: Union[Dataset, DatasetDict, np.ndarray, TorchDataset],
+        y: Optional[np.ndarray] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        splits_mapping: Optional[dict] = None,
+        **fit_params,
+    ):
         """Run the training loop.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
+        X : Union[Dataset, DatasetDict, np.ndarray, TorchDataset],
             The features of the data.
         y : np.ndarray, optional
             The labels of the data.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when \
+                the input is a Hugging Face Dataset, by default None
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names, \
+                used when input is a dataset dictionary, by default None
         **fit_params : dict, optional
             Additional parameters to pass to the model's `forward` method.
 
@@ -647,42 +736,32 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         dataset = self._get_dataset(X, y)
 
-        # TODO: split the data into train and validation
-        train_dataset = dataset
-        # val_dataset = dataset
+        do_validation = isinstance(dataset, DatasetDict)
+
+        if do_validation:
+            train_dataset = dataset[splits_mapping["train"]]
+            val_dataset = dataset[splits_mapping["validation"]]
+        else:
+            train_dataset = dataset
 
         # get the data loaders
         train_loader = self._get_dataloader(train_dataset)
-        # val_loader = self.get_dataloader(val_dataset, test=True)
+        if do_validation:
+            val_loader = self._get_dataloader(val_dataset, test=True)
 
-        # best_loss = np.inf
-        # TODO: make model_dir user-configurable?
-        model_dir = join(os.getcwd(), "output", self.model_.__class__.__name__)
+        save_dir = self.save_dir if self.save_dir else os.getcwd()
+        model_dir = join(save_dir, "saved_models", self.model_.__class__.__name__)
 
+        best_loss = np.inf
         for epoch in range(1, self.max_epochs + 1):
             self._run_one_epoch(
                 data_loader=train_loader,
                 step_fn=self._train_step,
                 training=True,
+                feature_columns=feature_columns,
+                target_columns=target_columns,
                 **fit_params,
             )
-            # self._run_one_epoch(
-            #     data_loader=val_loader,
-            #     step_fn=self._validation_step,
-            #     training=False,
-            #     **fit_params,
-            # )
-
-            if (
-                self.save_every < 0 or epoch % self.save_every == 0
-            ) and not self.save_best_only:
-                self.save_model(filepath=model_dir, epoch=epoch)
-
-            # TODO: uncomment this when validation is implemented
-            # val_loss = self.val_loss_.pop()
-            # if val_loss < best_loss:
-            #     LOGGER.info("Best model saved at epoch %d in %s", epoch, model_dir)
-            #     self.save_model(filepath=model_dir, epoch=epoch, is_best=True)
 
             LOGGER.info(
                 "[%d/%d] \
@@ -692,17 +771,62 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                 self.train_loss_.pop(),
             )
 
+            if do_validation:
+                self._run_one_epoch(
+                    data_loader=val_loader,
+                    step_fn=self._validation_step,
+                    training=False,
+                    feature_columns=feature_columns,
+                    target_columns=target_columns,
+                    **fit_params,
+                )
+
+                val_loss = self.val_loss_.pop()
+                LOGGER.info(
+                    "[%d/%d] \
+                    Validation loss: %0.4f \t",
+                    epoch,
+                    self.max_epochs,
+                    val_loss,
+                )
+
+                if val_loss < best_loss:
+                    LOGGER.info("Best model saved at epoch %d in %s", epoch, model_dir)
+                    self.save_model(filepath=model_dir, epoch=epoch, is_best=True)
+
+            if (
+                self.save_every < 0 or epoch % self.save_every == 0
+            ) and not self.save_best_only:
+                self.save_model(filepath=model_dir, epoch=epoch)
+
         return self
 
-    def partial_fit(self, X, y=None, **fit_params):
+    def partial_fit(
+        self,
+        X: Union[Dataset, DatasetDict, np.ndarray, TorchDataset],
+        y: Optional[np.ndarray] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        splits_mapping: Optional[dict] = None,
+        **fit_params,
+    ):
         """Fit the model to the data.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
+        X : Union[Dataset, DatasetDict, np.ndarray, TorchDataset],
             The features of the data.
         y : np.ndarray, optional
             The labels of the data.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when \
+                the input is a Hugging Face Dataset, by default None
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names, \
+                used when input is a dataset dictionary, by default None
         **fit_params : dict, optional
             Additional parameters to pass to the model's `forward` method.
 
@@ -715,61 +839,188 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             self.initialize()
 
         try:
-            self._train_loop(X, y, **fit_params)
+            self._train_loop(
+                X,
+                y=y,
+                feature_columns=feature_columns,
+                target_columns=target_columns,
+                splits_mapping=splits_mapping,
+                **fit_params,
+            )
         except KeyboardInterrupt:
             pass
 
         return self
 
-    def fit(self, X, y=None, **fit_params):
-        """Fit the model to the data.
+    def fit(
+        self,
+        X: Union[Dataset, DatasetDict, np.ndarray, TorchDataset],
+        y: Optional[np.ndarray] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        transforms: Optional[Callable] = None,
+        splits_mapping: dict = {"train": "train", "validation": "validation"},
+        **fit_params,
+    ):
+        """Fit the model.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
-            The features of the data.
-        y : np.ndarray, optional
-            The labels of the data.
-        **fit_params : dict, optional
-            Additional parameters to pass to the model's `forward` method.
+        X : Union[Dataset, np.ndarray, TorchDataset]
+            The data features or a Hugging Face Dataset containing features and labels.
+        y : Optional[ArrayLike], optional
+            The labels of the data. This is required when the input data is not \
+                a Hugging Face Dataset and only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        transforms : Optional[Callable], optional
+            Transform function to be applied when __getitem__ is called \
+            when the input is a Hugging Face Dataset, by default None
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names, \
+                used when input is a dataset dictionary,
+                by default {"train": "train", "validation": "validation"}
 
         Returns
         -------
         self : `PTModel`
 
+        Raises
+        ------
+        ValueError
+            If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
+
         """
         if not self.warm_start or not self.initialized_:
             self.initialize()
 
-        self.partial_fit(X, y, **fit_params)
+        if isinstance(X, (Dataset, DatasetDict)):
+            if feature_columns is None:
+                raise ValueError(
+                    "Missing feature columns 'feature_columns'. Please provide \
+                    the name of feature columns when using a \
+                    Hugging Face dataset as the input."
+                )
+            if isinstance(feature_columns, str):
+                feature_columns = [feature_columns]
+
+            if target_columns is None:
+                LOGGER.warning(
+                    "Missing target columns 'target_columns'. Please provide \
+                    the name of target columns when using a \
+                    Hugging Face dataset for supervised training."
+                )
+            if isinstance(target_columns, str):
+                target_columns = [target_columns]
+
+            if isinstance(X, DatasetDict):
+                train_split = get_split(X, "train", splits_mapping)
+                try:
+                    val_split = get_split(X, "validation", splits_mapping)
+                except ValueError:
+                    LOGGER.info("No validation split was found.")
+                    val_split = None
+
+                if val_split is None:
+                    return self.fit(
+                        X[train_split],
+                        feature_columns=feature_columns,
+                        target_columns=target_columns,
+                        transforms=transforms,
+                    )
+
+                splits_mapping["train"] = train_split
+                splits_mapping["validation"] = val_split
+
+                format_kwargs = {} if transforms is None else {"transform": transforms}
+                with X[train_split].formatted_as(
+                    "custom" if transforms is not None else "torch",
+                    columns=feature_columns + target_columns,
+                    **format_kwargs,
+                ), X[val_split].formatted_as(
+                    "custom" if transforms is not None else "torch",
+                    columns=feature_columns + target_columns,
+                    **format_kwargs,
+                ):
+                    self.partial_fit(
+                        X,
+                        feature_columns=feature_columns,
+                        target_columns=target_columns,
+                        splits_mapping=splits_mapping,
+                        **fit_params,
+                    )
+            else:
+                format_kwargs = {} if transforms is None else {"transform": transforms}
+                with X.formatted_as(
+                    "custom" if transforms is not None else "torch",
+                    columns=feature_columns + target_columns,
+                    **format_kwargs,
+                ):
+                    self.partial_fit(
+                        X,
+                        feature_columns=feature_columns,
+                        target_columns=target_columns,
+                        **fit_params,
+                    )
+        else:
+            if y is None:
+                LOGGER.warning(
+                    "Missing data labels 'y'. Please provide the labels \
+                    for supervised training when not using a \
+                    Hugging Face dataset as the input."
+                )
+            self.partial_fit(X, y, **fit_params)
 
         return self
 
     def find_best(
         self,
-        X,
-        y,
         parameters: Union[Dict, List[Dict]],
+        X: Union[Dataset, DatasetDict],
+        y: Optional[np.ndarray] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        target_columns: Optional[Union[str, List[str]]] = None,
+        transforms: Optional[Callable] = None,
         metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
+        splits_mapping: dict = {"train": "train", "validation": "validation"},
         **kwargs,
     ):
         """Find the best model from hyperparameter search.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
-            The features of the data.
-        y : np.ndarray, optional
-            The labels of the data.
         parameters : dict or list of dicts
-            The parameters to search over.
-        metric : str or callable, optional
-            The metric to use for scoring.
-        method : str, default="grid"
-            The method to use for hyperparameter search.
+            The hyperparameters to be tuned.
+        X : Union[Dataset, DatasetDict]
+            The data features or a Hugging Face dataset containing features and labels.
+        y : Optional[np.ndarray], optional
+            The labels of the data. This is required when the input dataset is not \
+                a huggingface dataset and only contains features, by default None
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        target_columns : Optional[Union[str, List[str]]], optional
+            List of target columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        transforms : Optional[Union[Callable], optional
+            The transformation to be applied to the data before prediction, \
+                This is used when the input is a Hugging Face Dataset, \
+                by default None
+        metric : str, callable, sequence, dict, optional
+            The metric to be used for model evaluation.
+        method : Literal["grid", "random"], default="grid"
+            The tuning method to be used.
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names, \
+                used when input is a dataset dictionary,
+                by default {"train": "train", "validation": "validation"}
         **kwargs : dict, optional
-            Additional parameters.
+            Additional keyword arguments to be passed to the search method.
 
         Returns
         -------
@@ -796,20 +1047,33 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             The output of the model.
 
         """
-        # XXX: `batch` may not always be a tuple
-        X, _ = batch
+        if isinstance(batch, (tuple, list)):
+            X, _ = batch
+        else:
+            X = batch
 
         with torch.set_grad_enabled(mode=training):
             self._set_mode(training=training)
             return self._forward_pass(X, **fit_params)
 
-    def predict_proba(self, X, **predict_params):
+    def predict_proba(
+        self,
+        X: Union[Dataset, np.ndarray, TorchDataset],
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        prediction_column=None,
+        **predict_params,
+    ):
         """Return the output probabilities of the model output for the given input.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
+        X : Union[Dataset, np.ndarray, TorchDataset]
             The input to the model.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        prediction_column : Optional[Union[str, List[str]]],
+            Name of the prediction column to be added to the dataset
         **predict_params : dict, optional
             Additional parameters for the prediction.
 
@@ -827,31 +1091,123 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         dataset = self._get_dataset(X)
         dataloader = self._get_dataloader(dataset, test=True)
 
-        preds = []
-        for batch in dataloader:
-            output = self._evaluation_step(batch, training=False, **predict_params)
-            output = self.activation_(output)
-            preds.append(to_numpy(output))
-
-        preds = np.concatenate(preds)
+        if isinstance(X, Dataset):
+            preds = Dataset.from_dict({prediction_column: []})
+            for batch in dataloader:
+                batch = torch.cat(
+                    [batch[feature] for feature in feature_columns], dim=1
+                )
+                output = self._evaluation_step(batch, training=False, **predict_params)
+                output = self.activation_(output)
+                batch_ds = Dataset.from_dict({prediction_column: output})
+                preds = concatenate_datasets([preds, batch_ds], axis=0)
+        else:
+            preds = []
+            for batch in dataloader:
+                output = self._evaluation_step(batch, training=False, **predict_params)
+                output = self.activation_(output)
+                preds.append(to_numpy(output))
+            preds = np.concatenate(preds)
 
         return preds
 
-    def predict(self, X, **predict_params):
-        """Predict the output of the model for the given input.
+    def predict(
+        self,
+        X: Union[Dataset, DatasetDict, np.ndarray, TorchDataset],
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        prediction_column_prefix: str = "predictions",
+        model_name: Optional[str] = None,
+        transforms: Optional[Callable] = None,
+        only_predictions: bool = False,
+        splits_mapping: dict = {"test": "test"},
+        **predict_params,
+    ) -> Union[Dataset, DatasetColumn, np.ndarray]:
+        """Predict the output of the model.
 
         Parameters
         ----------
-        X : np.ndarray or torch.utils.data.Dataset
-            The input to the model.
-        **predict_params : dict, optional
-            Additional parameters for the prediction.
+        X : Dataset
+            The data features or a Hugging Face Dataset containing features and labels.
+        feature_columns : Optional[Union[str, List[str]]], optional
+            List of feature columns in the dataset. This is required when the input is \
+                a Hugging Face Dataset, by default None
+        prediction_column_prefix : str, optional
+            Name of the prediction column to be added to the dataset, This is used \
+                when the input is a Hugging Face Dataset, by default "predictions"
+        model_name : Optional[str], optional
+            Model name used as suffix to the prediction column, This is used \
+                when the input is a Hugging Face Dataset, by default None
+        transforms : Optional[Callable], optional
+            Transform function to be applied when __getitem__ is called,
+                This is used when the input is a Hugging Face Dataset, \
+                by default None
+        only_predictions : bool, optional
+            Whether to return only the predictions rather than the dataset \
+                with predictions when the input is a Hugging Face Datset, \
+                by default False
+        splits_mapping: Optional[dict], optional
+            Mapping from 'train', 'validation' and 'test' to dataset splits names, \
+                used when input is a dataset dictionary, by default {"test": "test"}
 
         Returns
         -------
-            The output of the model.
+        Union[Dataset, DatasetColumn, np.ndarray]
+            Dataset containing the predictions or the predictions array.
+
+        Raises
+        ------
+        ValueError
+            If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
 
         """
+        # Input is a Hugging Face Dataset Dictionary
+        if isinstance(X, DatasetDict):
+            test_split = get_split(X, "test", splits_mapping=splits_mapping)
+            return self.predict(
+                X[test_split],
+                feature_columns=feature_columns,
+                prediction_column_prefix=prediction_column_prefix,
+                model_name=model_name,
+                transforms=transforms,
+                only_predictions=only_predictions,
+            )
+        # Input is a Hugging Face Dataset
+        if isinstance(X, Dataset):
+            if feature_columns is None:
+                raise ValueError(
+                    "Missing feature columns 'feature_columns'. Please provide \
+                    the name of feature columns when using \
+                    a Hugging Face dataset as the input."
+                )
+            if isinstance(feature_columns, str):
+                feature_columns = [feature_columns]
+
+            if model_name:
+                pred_column = f"{prediction_column_prefix}.{model_name}"
+            else:
+                pred_column = (
+                    f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
+                )
+
+            format_kwargs = {} if transforms is None else {"transform": transforms}
+            with X.formatted_as(
+                "custom" if transforms is not None else "torch",
+                columns=feature_columns,
+                **format_kwargs,
+            ):
+                preds_ds = self.predict_proba(
+                    X,
+                    feature_columns=feature_columns,
+                    prediction_column=pred_column,
+                    **predict_params,
+                )
+
+                if only_predictions:
+                    return DatasetColumn(preds_ds.with_format("numpy"), pred_column)
+                X = concatenate_datasets([X, preds_ds], axis=1)
+                return X
+
+        # Input is not a Hugging Face Dataset
         return self.predict_proba(X, **predict_params)
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):  # noqa: C901
@@ -882,6 +1238,10 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         """
         use_default_filepath = False  # whether the filepath is the default
+
+        if len(os.path.basename(filepath).split(".")) == 1:
+            process_dir_save_path(filepath)
+
         if os.path.isdir(filepath):
             filepath = join(filepath, "model.pt")
             use_default_filepath = True

@@ -31,6 +31,9 @@ def test_tstester(source_target, method):
         model_path = "./model.pt"
         torch.save({"model": model.state_dict()}, model_path)
         tester = TSTester(method, model_path=model_path)
+    elif method == "lk":
+        model = torch.nn.Linear(10, 1)
+        tester = TSTester(method, projection=model)
     else:
         tester = TSTester(method)
     if method == "fet":

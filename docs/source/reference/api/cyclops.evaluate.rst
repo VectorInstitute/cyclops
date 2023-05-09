@@ -1,3 +1,7 @@
+.. role:: hidden
+    :class: hidden-section
+
+
 cyclops.evaluate
 ================
 
@@ -5,49 +9,65 @@ cyclops.evaluate
 
 .. autosummary::
     :toctree: _autosummary
+    :nosignatures:
     :template: custom-module-template.rst
-    :recursive:
 
     evaluator
 
 
-cyclops.evaluate.metrics.functional
-===================================
-
-.. automodule:: cyclops.evaluate.metrics.functional
-
-.. autosummary::
-    :toctree: _autosummary
-    :template: custom-module-template.rst
-    :recursive:
-
-    accuracy
-    auroc
-    f_beta
-    precision_recall
-    precision_recall_curve
-    roc
-    sensitivity
-    specificity
-    stat_scores
-
-
 cyclops.evaluate.metrics
-========================
+------------------------
 
 .. automodule:: cyclops.evaluate.metrics
 
 .. autosummary::
     :toctree: _autosummary
+    :nosignatures:
     :template: custom-module-template.rst
-    :recursive:
 
+    metric
+    factory
     accuracy
     auroc
-    f_beta
     precision_recall
     precision_recall_curve
     roc
     sensitivity
     specificity
+    f_beta
     stat_scores
+
+
+cyclops.evaluate.metrics.functional
+-----------------------------------
+
+.. automodule:: cyclops.evaluate.metrics.functional
+
+.. autosummary::
+    :toctree: _autosummary
+    :nosignatures:
+    :template: custom-module-template.rst
+
+    accuracy
+    auroc
+    precision_recall
+    precision_recall_curve
+    roc
+    sensitivity
+    specificity
+    f_beta
+    stat_scores
+
+
+cyclops.evaluate.fairness
+--------------------------
+
+.. automodule:: cyclops.evaluate.fairness
+
+.. autosummary::
+    :toctree: _autosummary
+    :nosignatures:
+    :template: custom-module-template.rst
+
+    evaluator
+    config
