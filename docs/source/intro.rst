@@ -72,11 +72,20 @@ sure it is installed and then run:
    python3 -m poetry install
    source $(poetry env info --path)/bin/activate
 
+API documentation is built using [Sphinx]
+(https://www.sphinx-doc.org/en/master/) and can be locally built by:
+
+.. code:: bash
+
+   cd docs
+   make html SPHINXOPTS="-D nbsphinx_allow_errors=True"
+
 Contributing
 ------------
 
 Contributing to cyclops is welcomed. See
-`Contributing <CONTRIBUTING.md>`__ for guidelines.
+`Contributing <https://vectorinstitute.github.io/cyclops/api/intro.html>`__
+for guidelines.
 
 📚 `Documentation <https://vectorinstitute.github.io/cyclops/>`__
 =================================================================
@@ -94,9 +103,6 @@ virtual environment, run:
 
 Now, you can navigate to the notebook’s ``Kernel`` tab and set it as
 ``<name_of_kernel>``.
-
-Tutorial notebooks in ``docs/source/tutorials`` can be useful to view
-the functionality of the framework.
 
 🎓 Citation
 ===========
