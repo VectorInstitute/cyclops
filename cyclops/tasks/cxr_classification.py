@@ -17,6 +17,7 @@ from cyclops.models.wrappers import WrappedModel
 from cyclops.tasks.utils import CXR_TARGET, apply_image_transforms, prepare_models
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 

@@ -18,6 +18,7 @@ from cyclops.models.wrappers.sk_model import SKModel
 from cyclops.tasks.utils import prepare_models, to_numpy
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 

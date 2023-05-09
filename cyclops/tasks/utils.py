@@ -13,6 +13,7 @@ from cyclops.models.constants import CONFIG_ROOT
 from cyclops.models.wrappers import WrappedModel
 from cyclops.utils.file import join
 
+
 CXR_TARGET = [
     "Atelectasis",
     "Consolidation",

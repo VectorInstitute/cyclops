@@ -22,9 +22,8 @@ from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 from torch.optim import Optimizer
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.data import Dataset as TorchDataset
-from torch.utils.data import TensorDataset
 
 from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
