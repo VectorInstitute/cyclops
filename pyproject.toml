@@ -93,7 +93,6 @@ sphinx-autoapi = "^2.0.0"
 nbsphinx = "^0.8.11"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
-ipywidgets = "^8.0.6"
 
 [tool.poetry.group.interface.dependencies]
 dash = "^2.4.1"
