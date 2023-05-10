@@ -74,7 +74,7 @@ python3 -m poetry install
 source $(poetry env info --path)/bin/activate
 ```
 
-API documentation is built using [Sphinx] (https://www.sphinx-doc.org/en/master/) and
+API documentation is built using [Sphinx](https://www.sphinx-doc.org/en/master/) and
 can be locally built by:
 
 ```bash
