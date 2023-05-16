@@ -1,5 +1,6 @@
+from datetime import date as dt_date
+from datetime import datetime as dt_datetime
 from typing import Any, List, Optional, Union
-from datetime import date as dt_date, datetime as dt_datetime
 
 from pydantic import BaseModel, Extra, Field
 
@@ -503,8 +504,9 @@ class FairnessAnalysis(BaseModel):
 class ModelCard(BaseModel):
     """Model Card for reporting information about a model.
 
-    Schema adapted from: https://github.com/cylynx/verifyml
-    Based on: https://arxiv.org/abs/1810.03993.
+    Schema adapted from: https://github.com/cylynx/verifyml Based on:
+    https://arxiv.org/abs/1810.03993.
+
     """
 
     class Config:
