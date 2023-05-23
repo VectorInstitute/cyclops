@@ -74,8 +74,17 @@ python3 -m poetry install
 source $(poetry env info --path)/bin/activate
 ```
 
+API documentation is built using [Sphinx](https://www.sphinx-doc.org/en/master/) and
+can be locally built by:
+
+```bash
+cd docs
+make html SPHINXOPTS="-D nbsphinx_allow_errors=True"
+```
+
 ### Contributing
-Contributing to cyclops is welcomed. See [Contributing](CONTRIBUTING.md) for
+Contributing to cyclops is welcomed.
+See [Contributing](https://vectorinstitute.github.io/cyclops/api/intro.html) for
 guidelines.
 
 
