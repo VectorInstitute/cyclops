@@ -53,15 +53,12 @@ class SKModel:
     def __init__(  # pylint: disable=dangerous-default-value
         self,
         model: SKBaseEstimator,
-        model_params: dict,
-        batch_size: int = 64,
-        **kwargs,
+        **params: Dict[str, Any],
     ) -> None:
         """Initialize wrapper."""
         self.model = model  # possibly uninstantiated class
-        self.initialize_model(**model_params)
-        self.batch_size = batch_size
-        vars(self).update(kwargs)
+        self.batch_size = params.pop("batch_size", 64)
+        self.initialize_model(**params)
 
     def initialize_model(self, **kwargs):
         """Initialize model.
