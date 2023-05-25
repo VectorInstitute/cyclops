@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+
+
+{% macro render_if_exist(name, value) %}
+{# Set name to bold and capitalize#}
+{% if value %}
+<div style="text-transform: capitalize">
+  <b> {{ name }}: </b>
+  {{ value }}
+</div>
+{%- endif %}
+{% endmacro %}
+
+
+{% macro render_considerations(list) %}
+{% if list %}
+<ul>
+  {% for item in list %}
+  <li>{{ item.description }}</li>
+  {% endfor %}
+</ul>
+{%- endif %}
+{% endmacro %}
+
+
+{% macro render_uri_list(list) %}
+{% if list %}
+<ul>
+  {% for item in list %}
+  <li><a href="{{ item }}">{{ item }}</a></li>
+  {% endfor %}
+</ul>
+{%- endif %}
+{% endmacro %}
+
+
+{% macro render_all_datasets(datasets) %}
+<div class="col card" id="datasets">
+  <h2>Datasets</h2>
+  {% for dataset in datasets %}
+  <div class="row">
+    <div class="col card">
+      {% if dataset.name %}<h3>{{ dataset.name }}</h3>{% endif %}
+      {% if dataset.description %}<p>{{ dataset.description }}</p>{% endif %}
+      {% if dataset.sensitive.sensitive_data %}
+      <h4>Sensitive data</h4>
+      <ul>
+        {% for sensitive_data in dataset.sensitive.sensitive_data %}
+        <li>{{ sensitive_data }}</li>
+        {% endfor %}
+      </ul>
+      {% if dataset.sensitive.sensitive_data_used %}
+      <h4>Sensitive data used in model</h4>
+      <ul>
+        {% for sensitive_data_used in dataset.sensitive.sensitive_data_used %}
+        <li>{{ sensitive_data_used }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% if dataset.sensitive.justification %}
+      <h4>Justification</h4>
+      <p> {{ dataset.sensitive.justification }}</p>
+      {% endif %}
+      {% endif %}
+      {% if dataset.link %}<a href="{{ dataset.link }}">{{ dataset.link }}</a>{% endif %}
+      {% if dataset.graphics and dataset.graphics.collection %}
+      {{ render_graphics(dataset.graphics.collection) }}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+
+{% macro render_graphics(graphics) %}
+<div class="img-container">
+  {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
+  {% for graph in graphics %}
+  <div class="img-item">
+    {% if 'data' in graph.image %}
+    <img src='{{ graph.image }}' alt='{{ graph.name }}' />
+    {% else %}
+    <img src='data:image/png;base64,{{ graph.image }}' alt='{{ graph.name }}' />
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+
+{% macro render_license(license) %}
+{% if license.identifier %}
+<li>{{ license.identifier }}{% endif %}{% if license.custom_text %}{{ license.custom_text }}{% endif %}</li>
+{% endmacro %}
+
+
+{% macro metric_name(metric) %}
+{{ metric.type }}{% if metric.threshold %}@{{ metric.threshold }}{% endif %}{% if metric.slice %}, {{ metric.slice }}{%
+endif %}
+{% endmacro %}
+
+
+{% macro metric_value(metric) %}
+{{ metric.value }}{% if metric.confidence_interval %} ({{ metric.confidence_interval.lower_bound }}, {{
+metric.confidence_interval.upper_bound }}){% endif %}
+{% endmacro %}
+
+
+{% macro render_test(test) %}
+<div class="col card">
+  {% if test.name %}
+  <h4> {{ test.name }} </h4>
+  {% endif %}
+  {% if test.description %}
+  <div>
+    <b> Description: </b>
+    {{ test.description }}
+  </div>
+  {% endif %}
+  {% if test.threshold %}
+  <div>
+    <b> Threshold: </b>
+    {{ test.threshold }}
+  </div>
+  {% endif %}
+  {% if test.result %}
+  <div>
+    <b> Result: </b>
+    {# looks like a csv file #}
+    {% if '\n' in test.result and ',' in test.result %}
+    {{ render_results_table(test.result) }}
+    {% else %}
+    {{ test.result }}
+    {% endif %}
+  </div>
+  {% endif %}
+  {% if test.passed == true %}
+  <div><b style="color:green;"> Passed</b></div>
+  {% else %}
+  <div><b style="color:red;"> Failed</b></div>
+  {% endif %}
+  {% if test.graphics.collection %}
+  {{ render_metrics_graphics(test.graphics) }}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_report(report) %}
+<div class="col card">
+  <h3>{{ report.type }} {% if report.value %}- {{ report.value }}{% endif %} {% if report.slice %}({{ report.slice }}){%
+    endif %}</h3>
+  {% if report.segment %}
+  <div>
+    <b> Segment: </b>
+    {{ report.segment }}
+  </div>
+  {% endif %}
+  {% if report.description %}
+  <div>
+    <b> Description: </b>
+    {{ report.description }}
+  </div>
+  {% endif %}
+  {% if report.graphics.collection %}
+  {{ render_metrics_graphics(report.graphics) }}
+  {% endif %}
+  {% if report.tests %}
+  {% for test in report.tests %}
+  {{ render_test(test)}}
+  {% endfor %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_quantitative_analysis(quantitative_analysis) %}
+<div class="col card" id="quantitative">
+  <h2>Quantitative Analysis</h2>
+  {% if quantitative_analysis.performance_metrics %}
+  {% for metric in quantitative_analysis.performance_metrics %}
+  {{ render_report(metric)}}
+  {% endfor %}
+  {% endif %}
+  {% if quantitative_analysis.graphics.collection %}
+  {{ render_metrics_graphics(quantitative_analysis.graphics) }}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_explainability_analysis(explainability_analysis) %}
+<div class="col card" id="explainability">
+  <h2>Explainability Analysis</h2>
+  {% if explainability_analysis.explainability_reports %}
+  {% for report in explainability_analysis.explainability_reports %}
+  {{ render_report(report)}}
+  {% endfor %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_fairness_analysis(fairness_analysis) %}
+<div class="col card" id="fairness">
+  <h2>Fairness Analysis</h2>
+  {% if fairness_analysis.fairness_reports %}
+  {% for report in fairness_analysis.fairness_reports %}
+  {{ render_report(report)}}
+  {% endfor %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_results_table(results) %}
+<table>
+  {% set results_list = results.split('\n') %}
+  {% for row in results_list %}
+  {% if (row is defined) and row %}
+  <tr>
+    {% set items = row.split(',') %}
+    {% for item in items %}
+    <td>{{ item }}</td>
+    {% endfor %}
+  </tr>
+  {% endif %}
+  {% endfor %}
+</table>
+{% endmacro %}
+
+
+{% macro render_metrics_table(metrics) %}
+<table class="center">
+  <caption>Performance Metrics</caption>
+  <tr>
+    <th>Name</th>
+    <th>Value</th>
+  </tr>
+  {% for metric in metrics %}
+  <tr>
+    <td>{{ metric_name(metric) }}</td>
+    <td>{{ metric_value(metric) }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+
+
+{% macro render_metrics_graphics(graphics) %}
+<div class="row">
+  <div class="col">
+    {% if graphics.description %}
+    <div class="center"><i>{{ graphics.description }}</i></div>
+    {% endif %}
+    {{ render_graphics(graphics.collection) }}
+  </div>
+</div>
+{% endmacro %}
+
+
+<html lang="en">
+
+<head>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    h1 {
+      color: #214d87;
+      position: relative;
+      top: 65px;
+      left: 30px;
+      font-size: 48px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: lighter;
+    }
+
+    h2 {
+      color: #214d87;
+    }
+
+    h3 {
+      color: #0073e4;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+
+    .col {
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      padding: 1em;
+      border: 1px solid #DADCE0;
+      margin: 10px;
+      background-color: #ffffff;
+    }
+
+    .card .card {
+      padding: 0.5em;
+      padding-bottom: 0em;
+      border: none;
+    }
+
+    .img-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      text-align: center;
+    }
+
+    .img-item {
+      flex: 1;
+    }
+
+    .center {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+
+    #banner {
+      width: 100%;
+      height: 170px;
+      position: relative;
+      z-index: 0;
+      top: 0;
+      left: 0;
+    }
+
+    #banner #logo {
+      float: left;
+      max-width: 500px;
+      width: auto;
+      height: auto;
+    }
+
+    #sidebar {
+      background-color: #ffffff;
+      height: 100%;
+      width: 15rem;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      display: block;
+      box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2);
+      transition: left 0.3s ease-in-out;
+    }
+
+    #sidebar-btn:hover {
+      color: #0073e4;
+      background-color: #0000001a;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #maximize_icon {
+      display: none;
+    }
+
+    /* change color to green when cursor hovers over */
+    #sidebar-toggle {
+      display: none;
+    }
+
+    #sidebar-btn {
+      position: fixed;
+      top: 8px;
+      left: 201px;
+      z-index: 2;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      background-color: #ffffff;
+      transition: left 0.3s ease-in-out;
+    }
+
+    #sidebar-toggle:checked+#sidebar-btn+#sidebar {
+      left: -12rem;
+    }
+
+    #sidebar-toggle:checked+#sidebar-btn+#sidebar>hr {
+      margin: 0.5em 0.5em 0.5em 12.5em;
+    }
+
+    hr {
+      border: 0.75px solid;
+      color: #e5e7eb;
+      opacity: 0.7;
+      margin: 0.5em 0.5em 0.5em 0.5em;
+      transition: margin 0.3s ease-in-out;
+    }
+
+    #sidebar-toggle:checked+#sidebar-btn {
+      left: 5px;
+    }
+
+    #sidebar-toggle:checked+#sidebar-btn>#minimize_icon {
+      display: none;
+    }
+
+    #sidebar-toggle:checked+#sidebar-btn>#maximize_icon {
+      display: block;
+    }
+
+    #sidebar-toggle:checked~#sidebar #button_min {
+      display: block;
+    }
+
+    #sidebar-toggle:checked~#container {
+      margin-left: 50px;
+    }
+
+    #sidebar .title {
+      display: block;
+      font-size: .75rem;
+      line-height: 1rem;
+      font-weight: 900;
+      padding: 3.0rem 1rem 0rem 1rem
+    }
+
+    #sidebar #contents {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #sidebar #button:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    #sidebar #button {
+      display: block;
+      font-size: .75rem;
+      line-height: 0.5rem;
+      font-weight: 500;
+      font-size: 15px;
+      padding: 1rem 1rem 1rem 1.2rem;
+      text-decoration: none;
+      color: #000000;
+    }
+
+    #sidebar #button_min {
+      display: none;
+      float:right;
+      font-size: .75rem;
+      line-height: 0.5rem;
+      font-weight: 500;
+      font-size: 15px;
+      margin-top: -2.5rem;
+      padding: 1rem 1rem 1rem 1.3rem;
+      text-decoration: none;
+      color: #000000;
+    }
+
+    #sidebar #button_min:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #container {
+      margin-left: 250px;
+      transition: margin-left 0.3s ease-in-out;
+    }
+
+    body {
+      background-color: #f3f4f6;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid black;
+    }
+
+    th,
+    td {
+      border: 1px solid #CCC;
+      height: 30px;
+    }
+
+    caption {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <input class=minimizer type='checkbox' id='sidebar-toggle' />
+  <label for="sidebar-toggle" id='sidebar-btn'>
+    <div id='minimize_icon'>
+      <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" height="18" width="18"
+        xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z">
+        </path>
+      </svg>
+    </div>
+    <div id='maximize_icon'>
+      <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" height="18" width="18"
+        xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM142.4 642.1L298.7 519a8.84 8.84 0 0 0 0-13.9L142.4 381.9c-5.8-4.6-14.4-.5-14.4 6.9v246.3a8.9 8.9 0 0 0 14.4 7z">
+          </path>
+      </svg>
+    </div>
+  </label>
+  <div id='sidebar'>
+    <span class='title'>CARD SECTIONS</span>
+    <hr>
+    <ul id='contents'>
+      {# render li if section exists #}
+      {% if overview %}<a href="#overview">
+        <li id="button">Overview</li>
+        <li id="button_min">O</li>
+      </a>{% endif %}
+      {% if model_details %}<a href="#details">
+        <li id="button">Model Details</li>
+        <li id="button_min">MD</li>
+      </a>{% endif %}
+      {% if model_parameters %}<a href="#parameters">
+        <li id="button">Model Parameters</li>
+        <li id="button_min">MP</li>
+      </a>{% endif %}
+      {% if considerations %}<a href="#considerations">
+        <li id="button">Considerations</li>
+        <li id="button_min">C</li>
+      </a>{% endif %}
+      {% if model_parameters.data %}<a href="#datasets">
+        <li id="button">Datasets</li>
+        <li id="button_min">D</li>
+      </a>{% endif %}
+      {% if quantitative_analysis %}<a href="#quantitative">
+        <li id="button">Quantitative Analysis</li>
+        <li id="button_min">QA</li>
+      </a>{% endif %}
+      {% if explainability_analysis %}<a href="#explainability">
+        <li id="button">Explainability Analysis</li>
+        <li id="button_min">EA</li>
+      </a>{% endif %}
+      {% if fairness_analysis %}<a href="#fairness">
+        <li id="button">Fairness Analysis</li>
+        <li id="button_min">FA</li>
+      </a>{% endif %}
+    </ul>
+  </div>
+  <main id="container">
+    <div id="banner">
+      <img
+        src="https://raw.githubusercontent.com/VectorInstitute/cyclops/main/docs/source/theme/static/cyclops_logo-dark.png"
+        alt="CyclOps Logo" id="logo">
+      <h1>
+        Transparency Report
+      </h1>
+    </div>
+    <div class="row">
+
+      <div class="col card" id="details">
+        <h2>Model Details</h2>
+        {% if model_details.overview %}<h3>Overview</h3>
+        {{ model_details.overview }}{% endif %}
+        {% if model_details.version and model_details.version.name %}<h3>Version</h3>
+        {{ render_if_exist('name', model_details.version.name) }}
+        {{ render_if_exist('date', model_details.version.date) }}
+        {{ render_if_exist('diff', model_details.version.diff) }}
+        {% endif %}
+        {% if model_details.documentation %}<h3>Documentation</h3>
+        {{ model_details.documentation }}{% endif %}
+        {% if model_details.owners %}<h3>Owners</h3>
+        {% if model_details.owners|length > 1 %}
+        {% for owner in model_details.owners %}
+        <li>{{ owner.name }}{% if owner.role %}, {{ owner.role }}{% endif %}{% if owner.contact %}, {{ owner.contact }}
+          {% endif %}</li>
+        {% endfor %}
+        {% else %}
+        {{ model_details.owners[0].name }}, {{ model_details.owners[0].contact }}
+        {% endif %}
+        {% endif %}
+        {% if model_details.licenses %}
+        <h3>Licenses</h3>
+        <ul>{% for license in model_details.licenses %}{{ render_license(license) }}{% endfor %}
+        </ul>{% endif %}
+        {% if model_details.references %}
+        <h3>References</h3>
+        <ul>
+          {% for reference in model_details.references %}
+          <li><a href="{{ reference.reference }}">{{ reference.reference }}</a></li>
+          {% endfor %}
+        </ul>{% endif %}
+        {% if model_details.citations %}
+        <h3>Citations</h3>
+        <ul>
+          {% for citation in model_details.citations %}
+          <li>{{ citation.citation }}</li>
+          {% endfor %}
+        </ul>{% endif %}
+        {% if model_details.regulatory_requirements %}
+        <h3>Regulatory requirements</h3>
+        <ul>{% for regulation in model_details.regulatory_requirements %}<li>{{ regulation.regulation }}</li>{% endfor
+          %}
+        </ul>{% endif %}
+      </div>
+
+      {% if model_parameters.model_architecture or model_parameters.input_format or model_parameters.output_format %}
+      <div class="col card" id="parameters">
+        <h2>Model Parameters</h2>
+        {% if model_parameters.model_architecture %}
+        <h3>Model Architecture</h3>
+        <div style="white-space:pre-wrap;">{{ model_parameters.model_architecture }}</div>{% endif %}
+        {% if model_parameters.input_format %}
+        <h3>Input Format</h3>
+        <div style="white-space:pre-wrap;">{{ model_parameters.input_format }}</div>{% endif %}
+        {% if model_parameters.output_format %}
+        <h3>Output Format</h3>
+        <div style="white-space:pre-wrap;">{{ model_parameters.output_format }}</div>{% endif %}
+        {% endif %}
+        {% if considerations and (considerations.users or considerations.use_cases or considerations.limitations or
+        considerations.tradeoffs or considerations.ethical_considerations or considerations.fairness_assessment) %}
+        <div class="col card" , id="considerations">
+          <h2>Considerations</h2>
+          {% if considerations.users %}
+          <h3>Intended Users</h3>
+          {{ render_considerations(considerations.users) }}
+          {% endif %}
+          {% if considerations.use_cases %}
+          <h3>Use Cases</h3>
+          {{ render_considerations(considerations.use_cases) }}
+          {% endif %}
+          {% if considerations.limitations %}
+          <h3>Limitations</h3>
+          {{ render_considerations(considerations.limitations) }}
+          {% endif %}
+          {% if considerations.tradeoffs %}
+          <h3>Tradeoffs</h3>
+          {{ render_considerations(considerations.tradeoffs) }}
+          {% endif %}
+          {% if considerations.ethical_considerations %}
+          <h3>Ethical Considerations</h3>
+          <ul>{% for risk in considerations.ethical_considerations %}
+            <li>
+              <div><b>Risk:</b> {{ risk.name }}</div>
+              <div><b>Mitigation Strategy:</b> {{ risk.mitigation_strategy }}</div>
+            </li>{% endfor %}
+          </ul>
+          {% endif %}
+          {% if considerations.fairness_assessment %}
+          <h3>Fairness Considerations</h3>
+          <ul>{% for fairness_assessment in considerations.fairness_assessment %}
+            <li>
+              <div><b>Group at risk:</b> {{ fairness_assessment.group_at_risk }}</div>
+              <div><b>Benefits:</b> {{ fairness_assessment.benefits }}</div>
+              <div><b>Harms:</b> {{ fairness_assessment.harms }}</div>
+              <div><b>Mitigation Strategy:</b> {{ fairness_assessment.mitigation_strategy }}</div>
+            </li>{% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      {% if model_parameters.data %}
+      {{ render_all_datasets(model_parameters.data) }}
+      {% endif %}
+      {% if quantitative_analysis.performance_metrics or quantitative_analysis.graphics.collection %}
+      {{ render_quantitative_analysis(quantitative_analysis) }}
+      {% endif %}
+      {% if explainability_analysis.explainability_reports %}
+      {{ render_explainability_analysis(explainability_analysis) }}
+      {% endif %}
+      {% if fairness_analysis.fairness_reports %}
+      {{ render_fairness_analysis(fairness_analysis) }}
+      {% endif %}
+  </main>
+</body>
+
+</html>
