@@ -292,6 +292,8 @@ metric.confidence_interval.upper_bound }}){% endif %}
 
     .row {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
     }
 
     .col {
@@ -536,11 +538,15 @@ metric.confidence_interval.upper_bound }}){% endif %}
         <li id="button">Model Details</li>
         <li id="button_min">MD</li>
       </a>{% endif %}
+      {% if model_parameters %}<a href="#parameters">
+        <li id="button">Model Parameters</li>
+        <li id="button_min">MP</li>
+      </a>{% endif %}
       {% if considerations %}<a href="#considerations">
         <li id="button">Considerations</li>
         <li id="button_min">C</li>
       </a>{% endif %}
-      {% if datasets %}<a href="#datasets">
+      {% if model_parameters.data %}<a href="#datasets">
         <li id="button">Datasets</li>
         <li id="button_min">D</li>
       </a>{% endif %}
