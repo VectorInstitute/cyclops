@@ -1,4 +1,5 @@
 """Factory for creating metrics."""
+
 from difflib import get_close_matches
 from typing import Any, List, Mapping, Optional
 

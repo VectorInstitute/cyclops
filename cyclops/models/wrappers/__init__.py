@@ -1,4 +1,5 @@
 """Wrapper classes for models."""
+
 from typing import Union
 
 from cyclops.models.wrappers.pt_model import PTModel

@@ -1,4 +1,5 @@
 """MLP models."""
+
 import math
 from typing import List, Union
 

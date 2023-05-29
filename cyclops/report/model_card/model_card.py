@@ -1,4 +1,5 @@
 """Model Card schema."""
+
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 from typing import Any, List, Optional, Union

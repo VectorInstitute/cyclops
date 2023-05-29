@@ -1,4 +1,5 @@
 """Tasks utility functions."""
+
 from typing import Dict, List, Mapping, Optional, Sequence, Union, get_args
 
 import numpy as np

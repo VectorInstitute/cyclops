@@ -1,4 +1,5 @@
 """SyntheticShiftApplicator class."""
+
 import math
 from typing import Any, Callable, Dict
 
@@ -7,7 +8,7 @@ import pandas as pd
 from datasets.arrow_dataset import Dataset
 from sklearn.feature_selection import SelectKBest
 
-from .utils import get_args
+from cyclops.monitor.utils import get_args
 
 
 class SyntheticShiftApplicator:
