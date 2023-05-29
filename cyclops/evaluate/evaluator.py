@@ -1,4 +1,5 @@
 """Evaluate one or more models on a dataset."""
+
 import logging
 from dataclasses import asdict
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union, get_args

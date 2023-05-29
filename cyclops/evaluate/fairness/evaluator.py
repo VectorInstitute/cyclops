@@ -1,4 +1,5 @@
 """Fairness evaluator."""
+
 import inspect
 import itertools
 import logging

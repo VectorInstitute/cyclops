@@ -1,4 +1,5 @@
 """Medical image feature."""
+
 import logging
 import os
 import tempfile
