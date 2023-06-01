@@ -46,6 +46,7 @@ def test_dataset_column():
         assert isinstance(item, int)
 
 
+@pytest.mark.integration_test
 def test_to_numpy():
     """Test to_numpy function."""
     test_array = np.random.rand(10, 10)
