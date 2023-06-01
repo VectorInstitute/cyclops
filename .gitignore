@@ -26,3 +26,4 @@ dist/
 outputs/
 multirun/
 _autosummary
+.vscode/
