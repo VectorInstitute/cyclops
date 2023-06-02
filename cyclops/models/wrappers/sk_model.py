@@ -312,7 +312,7 @@ class SKModel:
             clf.fit(X, y)
 
         for key, value in clf.best_params_.items():
-            LOGGER.info("Best %s: %f", key, value)
+            LOGGER.info("Best %s: %s", key, value)
 
         self.model_ = (  # pylint: disable=attribute-defined-outside-init
             clf.best_estimator_
