@@ -35,8 +35,7 @@ class CXRClassification:
             Sequence[Union[str, WrappedModel]],
             Dict[str, WrappedModel],
         ],
-        models_config_path: Optional[Union[str, Dict[str, str]]] = None,
-        task_features: List[str] = "image",
+        task_features: Union[str, List[str]] = "image",
         task_target: Union[str, List[str]] = CXR_TARGET,
     ):
         """Chest X-ray classification task.
@@ -45,18 +44,20 @@ class CXRClassification:
         ----------
         models
             The model(s) to be used for prediction, and evaluation.
-        models_config_path : Union[str, Dict[str, str]], optional
-            Path to the configuration file(s) for the model(s), by default None
         task_features : List[str]
             List of feature names.
         task_target : str
             List of target names.
 
         """
-        self.models = prepare_models(models, models_config_path)
+        self.models = prepare_models(models)
         self._validate_models()
-        self.task_features = task_features
-        self.task_target = task_target
+        self.task_features = (
+            [task_features] if isinstance(task_features, str) else task_features
+        )
+        self.task_target = (
+            [task_target] if isinstance(task_target, str) else task_target
+        )
         self.device = get_device()
 
     @property
@@ -119,7 +120,6 @@ class CXRClassification:
     def add_model(
         self,
         model: Union[str, WrappedModel, Dict[str, WrappedModel]],
-        model_config_path: Optional[str] = None,
     ):
         """Add a model to the task.
 
@@ -127,11 +127,9 @@ class CXRClassification:
         ----------
         model : Union[str, WrappedModel, Dict[str, WrappedModel]]
             Model to be added.
-        model_config_path : Optional[str], optional
-            Path to the configuration file for the model.
 
         """
-        model_dict = prepare_models(model, model_config_path)
+        model_dict = prepare_models(model)
         if set(model_dict.keys()).issubset(self.list_models()):
             LOGGER.error(
                 "Failed to add the model. A model with same name already exists."
