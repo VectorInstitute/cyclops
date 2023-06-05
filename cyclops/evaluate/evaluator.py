@@ -153,9 +153,9 @@ def evaluate(  # pylint: disable=too-many-function-args
             )
         models = _prepare_models(models)
         for model_name, model in models.items():
-            dataset = model.predict(
+            dataset = model.predict_proba(
                 dataset,
-                feature_columns,
+                feature_columns=feature_columns,
                 prediction_column_prefix=prediction_column_prefix,
                 model_name=model_name,
                 transforms=transforms,
