@@ -1,8 +1,10 @@
 """Base querier class."""
 import logging
+import os
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
 
+import yaml
 from hydra import compose, initialize
 from omegaconf import OmegaConf
 from sqlalchemy import MetaData
@@ -18,6 +20,7 @@ from cyclops.query.util import (
     get_attr_name,
     table_params_to_type,
 )
+from cyclops.utils.file import join as join_path
 from cyclops.utils.log import setup_logging
 
 # Logging.
@@ -101,8 +104,14 @@ class DatasetQuerier:
         """
         overrides = []
         if config_overrides:
+            config_file = join_path(os.path.dirname(__file__), "configs", "config.yaml")
+            with open(config_file, "r", encoding="utf-8") as file:
+                config_keys = list(yaml.safe_load(file).keys())
             for key, value in config_overrides.items():
-                overrides.append(f"{key}={value}")
+                if key in config_keys:
+                    overrides.append(f"{key}={value}")
+                else:
+                    overrides.append(f"+{key}={value}")
         with initialize(
             version_base=None, config_path="configs", job_name="DatasetQuerier"
         ):

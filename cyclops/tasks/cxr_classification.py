@@ -36,9 +36,8 @@ class CXRClassificationTask(BaseTask):
             Sequence[Union[str, WrappedModel]],
             Dict[str, WrappedModel],
         ],
-        task_features: List[str] = "image",
+        task_features: Union[str, List[str]] = "image",
         task_target: Union[str, List[str]] = CXR_TARGET,
-        models_config_path: Optional[Union[str, Dict[str, str]]] = None,
     ):
         """Chest X-ray classification task.
 
@@ -46,15 +45,13 @@ class CXRClassificationTask(BaseTask):
         ----------
         models
             The model(s) to be used for prediction, and evaluation.
-        models_config_path : Union[str, Dict[str, str]], optional
-            Path to the configuration file(s) for the model(s), by default None
         task_features : List[str]
             List of feature names.
         task_target : str
             List of target names.
 
         """
-        super().__init__(models, task_features, task_target, models_config_path)
+        super().__init__(models, task_features, task_target)
 
     @property
     def task_type(self):
