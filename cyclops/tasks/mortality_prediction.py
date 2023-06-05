@@ -11,6 +11,7 @@ from sklearn.exceptions import NotFittedError
 
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
+from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import _model_names_mapping, _static_model_keys
@@ -315,6 +316,8 @@ class MortalityPredictionTask(BaseTask):
         slice_spec: Optional[SliceSpec] = None,
         batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
         remove_columns: Optional[Union[str, List[str]]] = None,
+        fairness_config: Optional[FairnessConfig] = None,
+        override_fairness_metrics: bool = False,
     ) -> Dict[str, Any]:
         """Evaluate model(s) on a HuggingFace dataset.
 
@@ -343,6 +346,12 @@ class MortalityPredictionTask(BaseTask):
                 by default config.DEFAULT_MAX_BATCH_SIZE
         remove_columns : Optional[Union[str, List[str]]], optional
             Unnecessary columns to be removed from the dataset, by default None
+        fairness_config : Optional[FairnessConfig], optional
+            The configuration for computing fairness metrics. If None, no fairness \
+            metrics will be computed, by default None
+        override_fairness_metrics : bool, optional
+            If True, the `metrics` argument in fairness_config will be overridden by \
+            the `metrics`, by default False
 
         Returns
         -------
@@ -381,12 +390,15 @@ class MortalityPredictionTask(BaseTask):
             )
 
         results = evaluate(
-            dataset,
-            metrics,
+            dataset=dataset,
+            metrics=metrics,
             target_columns=self.task_target,
             slice_spec=slice_spec,
             prediction_column_prefix=prediction_column_prefix,
-            batch_size=batch_size,
             remove_columns=remove_columns,
+            split=splits_mapping["test"],
+            batch_size=batch_size,
+            fairness_config=fairness_config,
+            override_fairness_metrics=override_fairness_metrics,
         )
         return results, dataset
