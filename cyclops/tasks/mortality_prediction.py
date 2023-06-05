@@ -1,7 +1,7 @@
 """Mortality Prediction Task."""
 
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,8 @@ from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import _model_names_mapping, _static_model_keys
 from cyclops.models.wrappers import WrappedModel
 from cyclops.models.wrappers.sk_model import SKModel
-from cyclops.tasks.utils import prepare_models, to_numpy
+from cyclops.tasks.base import BaseTask
+from cyclops.tasks.utils import to_numpy
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ setup_logging(print_level="INFO", logger=LOGGER)
 # pylint: disable=function-redefined, dangerous-default-value
 
 
-class MortalityPrediction:
+class MortalityPredictionTask(BaseTask):
     """Mortality prediction task for tabular data as binary classification."""
 
     def __init__(
@@ -56,16 +57,7 @@ class MortalityPrediction:
             List of target names.
 
         """
-        self.models = prepare_models(models)
-        self._validate_models()
-        self.task_features = (
-            [task_features] if isinstance(task_features, str) else task_features
-        )
-        self.task_target = (
-            [task_target] if isinstance(task_target, str) else task_target
-        )
-        self.trained_models = []
-        self.pretrained_models = []
+        super().__init__(models, task_features, task_target)
 
     @property
     def task_type(self) -> str:
@@ -96,30 +88,7 @@ class MortalityPrediction:
         assert all(
             _model_names_mapping.get(model.model.__name__) in _static_model_keys
             for model in self.models.values()
-        ), "All models must be image classification model."
-
-    @property
-    def models_count(self) -> int:
-        """Number of models in the task.
-
-        Returns
-        -------
-        int
-            Number of models.
-
-        """
-        return len(self.models)
-
-    def list_models(self) -> List[str]:
-        """List the names of the models in the task.
-
-        Returns
-        -------
-        List[str]
-            List of model names.
-
-        """
-        return list(self.models.keys())
+        ), "All models must be static type model."
 
     def list_models_params(self) -> Dict[str, Any]:
         """List the parameters of the models in the task.
@@ -131,61 +100,6 @@ class MortalityPrediction:
 
         """
         return {n: m.get_params() for n, m in self.models.items()}
-
-    def add_model(
-        self,
-        model: Union[str, WrappedModel, Dict[str, WrappedModel]],
-    ):
-        """Add a model to the task.
-
-        Parameters
-        ----------
-        model : Union[str, WrappedModel, Dict[str, WrappedModel]]
-            Model to be added.
-
-        """
-        model_dict = prepare_models(model)
-        if set(model_dict.keys()).issubset(self.list_models()):
-            LOGGER.error(
-                "Failed to add the model. A model with same name already exists."
-            )
-        else:
-            self.models.update(model_dict)
-            LOGGER.info("%s is added to task models.", ", ".join(model_dict.keys()))
-
-    def get_model(self, model_name: Optional[str] = None) -> Tuple[str, WrappedModel]:
-        """Get a model. If more than one model exists, the name should be specified.
-
-        Parameters
-        ----------
-        model_name : Optional[str], optional
-            Model name, required if more than one model exists, by default None
-
-        Returns
-        -------
-        Tuple[str, WrappedModel]
-            The model name and the model object.
-
-        Raises
-        ------
-        ValueError
-            If more than one model exists and no name is specified.
-        ValueError
-            If no model exists with the specified name.
-
-        """
-        if self.models_count > 1 and not model_name:
-            raise ValueError(f"Please specify a model from {self.list_models()}")
-        if model_name and model_name not in self.list_models():
-            raise ValueError(
-                f"The model {model_name} does not exist. "
-                "You can add the model using Task.add_model()"
-            )
-
-        model_name = model_name if model_name else self.list_models()[0]
-        model = self.models[model_name]
-
-        return model_name, model
 
     def train(
         self,
