@@ -178,6 +178,12 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
                 groups=fmt_groups,
                 unique_values=unique_values,
             )
+            # reorder keys to match order in `groups`
+            group_base_values = {
+                group: group_base_values[group]
+                for group in fmt_groups
+                if group in group_base_values
+            }
 
         if group_bins is None:
             warn_too_many_unique_values(unique_values=unique_values)
@@ -185,6 +191,10 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
             _validate_group_bins(
                 group_bins=group_bins, groups=fmt_groups, unique_values=unique_values
             )
+
+            group_bins = {
+                group: group_bins[group] for group in fmt_groups if group in group_bins
+            }  # reorder keys to match order given in `groups`
 
             bins = _create_bins(
                 group_bins=group_bins,

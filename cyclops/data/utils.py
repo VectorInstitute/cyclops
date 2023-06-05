@@ -105,11 +105,14 @@ def get_columns_as_numpy_array(
 
     if isinstance(dataset, Dataset) and dataset.format != "numpy":
         with dataset.formatted_as("numpy", columns=columns, output_all_columns=True):
-            return np.stack(  # type: ignore[no-any-return]
-                [dataset[col] for col in columns], axis=-1
-            ).squeeze()
+            out_arr = np.stack([dataset[col] for col in columns], axis=-1).squeeze()
+    else:
+        out_arr = np.stack([dataset[col] for col in columns], axis=-1).squeeze()
 
-    return np.stack([dataset[col] for col in columns], axis=-1).squeeze()
+    if out_arr.ndim == 0:
+        out_arr = np.expand_dims(out_arr, axis=-1)
+
+    return out_arr  # type: ignore[no-any-return]
 
 
 def check_required_columns(
