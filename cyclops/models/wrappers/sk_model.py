@@ -18,7 +18,7 @@ from sklearn.model_selection import GridSearchCV, PredefinedSplit, RandomizedSea
 from cyclops.data.utils import is_out_of_core
 from cyclops.models.utils import get_split, is_sklearn_class, is_sklearn_instance
 from cyclops.models.wrappers.utils import DatasetColumn
-from cyclops.utils.file import join, load_pickle, save_pickle
+from cyclops.utils.file import join, load_pickle, process_dir_save_path, save_pickle
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
@@ -835,12 +835,25 @@ class SKModel:
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save model to file."""
-        # filepath could be a directory or a file
+        # filepath could be a directory
+        if len(os.path.basename(filepath).split(".")) == 1:
+            process_dir_save_path(filepath)
+
         if os.path.isdir(filepath):
             filepath = join(filepath, self.model_.__class__.__name__, "model.pkl")
 
+        # filepath could be a file
+        dir_path = os.path.dirname(filepath)
+        if dir_path == "":
+            dir_path = f"./{self.model_.__class__.__name__}"
+            filepath = join(dir_path, filepath)
+        process_dir_save_path(dir_path)
+
+        # filepath could be an exisiting file
         if os.path.exists(filepath) and not overwrite:
-            LOGGER.warning("The file already exists and will not be overwritten.")
+            LOGGER.warning(
+                "The file %s already exists and will not be overwritten.", filepath
+            )
             return
 
         save_pickle(self.model_, filepath, log=kwargs.get("log", True))
