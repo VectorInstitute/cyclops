@@ -1,6 +1,7 @@
 """Mortality Prediction Task."""
 
 import logging
+import os
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
@@ -198,32 +199,6 @@ class MortalityPredictionTask(BaseTask):
         self.trained_models.append(model_name)
         return model
 
-    def load_pretrained_model(
-        self,
-        filepath: str,
-        model_name: Optional[str] = None,
-        **kwargs,
-    ) -> WrappedModel:
-        """Load a pretrained model.
-
-        Parameters
-        ----------
-        filepath : str
-            Path to the save model.
-        model_name : Optional[str], optional
-            Model name, required if more than one model exists, by default Nonee
-
-        Returns
-        -------
-        WrappedModel
-            The loaded model.
-
-        """
-        model_name, model = self.get_model(model_name)
-        model.load_model(filepath, **kwargs)
-        self.pretrained_models.append(model_name)
-        return model
-
     def predict(
         self,
         dataset: Union[np.ndarray, pd.DataFrame, Dataset, DatasetDict],
@@ -265,7 +240,7 @@ class MortalityPredictionTask(BaseTask):
         model_name, model = self.get_model(model_name)
         if model_name not in self.pretrained_models + self.trained_models:
             raise NotFittedError(
-                "It seems you have neither trained the model nor \
+                f"It seems you have neither trained the {model_name} model nor \
                 loaded a pretrained model."
             )
 
@@ -402,3 +377,80 @@ class MortalityPredictionTask(BaseTask):
             override_fairness_metrics=override_fairness_metrics,
         )
         return results, dataset
+
+    def save_model(
+        self,
+        filepath: Union[str, Dict[str, str]],
+        model_names: Optional[Union[str, List[str]]] = None,
+        **kwargs,
+    ) -> None:
+        """Save the model to a specified filepath.
+
+        Parameters
+        ----------
+        filepath : Union[str, Dict[str, str]]
+            The destination path(s) where the model(s) will be saved.
+            Can be a dictionary of model names and their corresponding paths
+            or a single parent dirctory.
+        model_name : Optional[Union[str, List[str]]], optional
+            Model name, required if more than one model exists, by default None.
+        **kwargs : Any
+            Additional keyword arguments to be passed to the model's save method.
+
+        Returns
+        -------
+        None
+
+        """
+        if isinstance(model_names, str):
+            model_names = [model_names]
+        elif not model_names:
+            model_names = self.trained_models
+
+        if isinstance(filepath, Dict):
+            assert len(filepath) == len(model_names), (
+                "Number of filepaths must match number of models"
+                "if a dictionary is given."
+            )
+        if isinstance(filepath, str) and len(model_names) > 1:
+            assert len(os.path.basename(filepath).split(".")) == 1, (
+                "Filepath must be a directory if a single string is given"
+                "for multiple models."
+            )
+
+        for model_name in model_names:
+            if model_name not in self.trained_models:
+                LOGGER.warning(
+                    "It seems you have not trained the %s model.", model_name
+                )
+            model_name, model = self.get_model(model_name)
+            model_path = (
+                filepath[model_name] if isinstance(filepath, Dict) else filepath
+            )
+            model.save_model(model_path, **kwargs)
+
+    def load_model(
+        self,
+        filepath: str,
+        model_name: Optional[str] = None,
+        **kwargs,
+    ) -> WrappedModel:
+        """Load a pretrained model.
+
+        Parameters
+        ----------
+        filepath : str
+            Path to the save model.
+        model_name : Optional[str], optional
+            Model name, required if more than one model exists, by default Nonee
+
+        Returns
+        -------
+        WrappedModel
+            The loaded model.
+
+        """
+        model_name, model = self.get_model(model_name)
+        model.load_model(filepath, **kwargs)
+        self.pretrained_models.append(model_name)
+        return model
