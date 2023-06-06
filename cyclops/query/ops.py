@@ -2104,7 +2104,7 @@ class GroupByAggregate(metaclass=QueryOp):
             "min": func.min,
             "max": func.max,
             "count": func.count,
-            "median": func.percentile_disc(0.5).within_group,
+            "median": func.percentile_cont(0.5).within_group,
             "string_agg": func.string_agg,
         }
 
