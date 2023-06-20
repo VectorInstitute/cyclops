@@ -91,7 +91,8 @@
 
 {% macro render_license(license) %}
 {% if license.identifier %}
-<li>{{ license.identifier }}{% endif %}{% if license.custom_text %}{{ license.custom_text }}{% endif %}</li>
+<li><b>{{ license.identifier }}</b>{% endif %}</li>
+{% if license.text %}{{ license.text }}{% endif %}
 {% endmacro %}
 
 
@@ -182,9 +183,6 @@ metric.confidence_interval.upper_bound }}){% endif %}
   {% for metric in quantitative_analysis.performance_metrics %}
   {{ render_report(metric)}}
   {% endfor %}
-  {% endif %}
-  {% if quantitative_analysis.graphics.collection %}
-  {{ render_metrics_graphics(quantitative_analysis.graphics) }}
   {% endif %}
 </div>
 {% endmacro %}
@@ -461,7 +459,7 @@ metric.confidence_interval.upper_bound }}){% endif %}
 
     #sidebar #button_min {
       display: none;
-      float:right;
+      float: right;
       font-size: .75rem;
       line-height: 0.5rem;
       font-weight: 500;
@@ -521,7 +519,7 @@ metric.confidence_interval.upper_bound }}){% endif %}
         xmlns="http://www.w3.org/2000/svg">
         <path
           d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM142.4 642.1L298.7 519a8.84 8.84 0 0 0 0-13.9L142.4 381.9c-5.8-4.6-14.4-.5-14.4 6.9v246.3a8.9 8.9 0 0 0 14.4 7z">
-          </path>
+        </path>
       </svg>
     </div>
   </label>
@@ -577,23 +575,25 @@ metric.confidence_interval.upper_bound }}){% endif %}
 
       <div class="col card" id="details">
         <h2>Model Details</h2>
-        {% if model_details.overview %}<h3>Overview</h3>
-        {{ model_details.overview }}{% endif %}
-        {% if model_details.version and model_details.version.name %}<h3>Version</h3>
-        {{ render_if_exist('name', model_details.version.name) }}
+        {% if model_details.description %}<h3>Description</h3>
+        {{ model_details.description }}{% endif %}
+        {% if model_details.version and model_details.version.version_str %}<h3>Version</h3>
+        {{ render_if_exist('id', model_details.version.version_str) }}
         {{ render_if_exist('date', model_details.version.date) }}
-        {{ render_if_exist('diff', model_details.version.diff) }}
+        {{ render_if_exist('description', model_details.version.description) }}
         {% endif %}
-        {% if model_details.documentation %}<h3>Documentation</h3>
-        {{ model_details.documentation }}{% endif %}
         {% if model_details.owners %}<h3>Owners</h3>
         {% if model_details.owners|length > 1 %}
         {% for owner in model_details.owners %}
-        <li>{{ owner.name }}{% if owner.role %}, {{ owner.role }}{% endif %}{% if owner.contact %}, {{ owner.contact }}
-          {% endif %}</li>
+        <ul "list-style-type:none;">
+          <b>{{ owner.name }}</b>{% if owner.role %} - {{ owner.role }}{% endif %}{% if owner.contact %} ({{
+          owner.contact }})
+          {% endif %}
+        </ul>
         {% endfor %}
         {% else %}
-        {{ model_details.owners[0].name }}, {{ model_details.owners[0].contact }}
+        <b>{{ model_details.owners[0].name }}</b> - {{ model_details.owners[0].role }} ({{
+        model_details.owners[0].contact }})
         {% endif %}
         {% endif %}
         {% if model_details.licenses %}
@@ -604,14 +604,14 @@ metric.confidence_interval.upper_bound }}){% endif %}
         <h3>References</h3>
         <ul>
           {% for reference in model_details.references %}
-          <li><a href="{{ reference.reference }}">{{ reference.reference }}</a></li>
+          <li><a href="{{ reference.link }}">{{ reference.link }}</a></li>
           {% endfor %}
         </ul>{% endif %}
         {% if model_details.citations %}
         <h3>Citations</h3>
         <ul>
           {% for citation in model_details.citations %}
-          <li>{{ citation.citation }}</li>
+          <li>{{ citation.content }}</li>
           {% endfor %}
         </ul>{% endif %}
         {% if model_details.regulatory_requirements %}
@@ -658,7 +658,7 @@ metric.confidence_interval.upper_bound }}){% endif %}
           <h3>Ethical Considerations</h3>
           <ul>{% for risk in considerations.ethical_considerations %}
             <li>
-              <div><b>Risk:</b> {{ risk.name }}</div>
+              <div><b>Risk:</b> {{ risk.risk }}</div>
               <div><b>Mitigation Strategy:</b> {{ risk.mitigation_strategy }}</div>
             </li>{% endfor %}
           </ul>
@@ -667,7 +667,7 @@ metric.confidence_interval.upper_bound }}){% endif %}
           <h3>Fairness Considerations</h3>
           <ul>{% for fairness_assessment in considerations.fairness_assessment %}
             <li>
-              <div><b>Group at risk:</b> {{ fairness_assessment.group_at_risk }}</div>
+              <div><b>Group at risk:</b> {{ fairness_assessment.affected_group }}</div>
               <div><b>Benefits:</b> {{ fairness_assessment.benefits }}</div>
               <div><b>Harms:</b> {{ fairness_assessment.harms }}</div>
               <div><b>Mitigation Strategy:</b> {{ fairness_assessment.mitigation_strategy }}</div>
@@ -681,7 +681,7 @@ metric.confidence_interval.upper_bound }}){% endif %}
       {% if model_parameters.data %}
       {{ render_all_datasets(model_parameters.data) }}
       {% endif %}
-      {% if quantitative_analysis.performance_metrics or quantitative_analysis.graphics.collection %}
+      {% if quantitative_analysis.performance_metrics %}
       {{ render_quantitative_analysis(quantitative_analysis) }}
       {% endif %}
       {% if explainability_analysis.explainability_reports %}

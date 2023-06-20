@@ -1,1 +1,834 @@
 """Cyclops report module."""
+import keyword
+import os
+from datetime import date as dt_date
+from datetime import datetime as dt_datetime
+from typing import Any, Dict, List, Literal, Optional, Type, Union
+
+import jinja2
+from pydantic import BaseModel, StrictStr, create_model
+from pydantic.fields import FieldInfo, ModelField
+
+from cyclops.report.model_card.model_card import (
+    BaseModelCardField,
+    Citation,
+    FairnessAssessment,
+    License,
+    ModelCard,
+    Owner,
+    Reference,
+    RegulatoryRequirement,
+    Risk,
+    UseCase,
+    User,
+    Version,
+)
+from cyclops.report.utils import (
+    _object_is_in_model_card_module,
+    _raise_if_not_dict_with_str_keys,
+    str_to_snake_case,
+)
+
+_TEMPLATE_DIR = "../model_card/template"
+_DEFAULT_TEMPLATE_FILENAME = "cyclops_template.jinja"
+
+
+class ModelCardReport:
+    """Model card report.
+
+    This class serves as an interface to populate a `ModelCard` object and generate
+    an HTML report from it.
+
+    Parameters
+    ----------
+    output_dir : str, optional
+        Path to the directory where the model card report will be saved. If not
+        provided, the report will be saved in the current working directory.
+    report_name : str, optional
+        Name of the model card report. If not provided, the report will be saved with
+        the name `0`.
+
+    """
+
+    DEFAULT_REPORT_NAME = "0"
+    _model_card = ModelCard()  # type: ignore[call-arg]
+
+    def __init__(
+        self, output_dir: Optional[str] = None, report_name: Optional[str] = None
+    ):
+        self.output_dir = output_dir or "./cyclops_reports"
+        self.report_name = report_name or self.DEFAULT_REPORT_NAME
+
+    def _get_section(self, name: str) -> BaseModel:
+        """Get a section of the model card.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not in the model card.
+        TypeError
+            If the given section name is not a subclass of `BaseModel`.
+
+        """
+        name_ = str_to_snake_case(name)
+
+        model_card_sections = self._model_card.__fields__
+        if name_ not in model_card_sections:
+            raise KeyError(
+                f"Expected `section_name` to be in {list(model_card_sections.keys())}."
+                f" Got {name} instead."
+            )
+
+        section_type = model_card_sections[name_].type_
+
+        # instantiate section if not already instantiated
+        if not isinstance(getattr(self._model_card, name_), section_type):
+            setattr(self._model_card, name_, section_type())
+
+        model_card_section: BaseModel = getattr(self._model_card, name_)
+
+        # all model sections must subclass `BaseModel`
+        if not issubclass(model_card_section.__class__, BaseModel):
+            raise TypeError(
+                f"Expected section `{name}` to be a subclass of `BaseModel`."
+                f" Got {model_card_section.__class__} instead."
+            )
+
+        return model_card_section
+
+    # GETTING DATA IN
+    # generic logging methods
+    def _log_field(
+        self,
+        data: Any,
+        section_name: str,
+        field_name: str,
+        field_type: Optional[Type[BaseModel]] = None,
+    ) -> None:
+        """Populate a field in the model card.
+
+        Parameters
+        ----------
+        data : Any
+            Data to populate the field with.
+        section_name : str
+            Name of the section to populate.
+        field_name : str
+            Name of the field to populate. If the field does not exist, it will be
+            created and added to the section.
+        field_type : BaseModel, optional
+            Type of the field to populate. If not provided, the type will be inferred
+            from the data.
+
+        Raises
+        ------
+        ValueError
+            If `field_name` is not a valid python identifier.
+
+        """
+        section = self._get_section(section_name)
+
+        section_fields = section.__fields__
+        if field_name in section_fields:
+            field = section_fields[field_name]
+            field_type = field.type_  # [!] can be any (serializable) type
+            field_value = _get_field_value(field_type, data)
+
+            _check_allowable_sections(  # check if field can be added to section
+                field=field_value, section_name=section_name, field_name=field_name
+            )
+
+            # add object to section
+            if field.default_factory == list:
+                # NOTE: pydantic does not trigger validation when appending to a list,
+                # but if `validate_assignment` is set to `True`, then validation will
+                # be triggered when the list is assigned to the field.
+                field_values = getattr(section, field_name, [])
+                field_values.append(field_value)
+                setattr(section, field_name, field_values)  # trigger validation
+            else:
+                setattr(section, field_name, field_value)
+        else:
+            # verify that `field_name` is a valid python identifier
+            if not field_name.isidentifier() or keyword.iskeyword(field_name):
+                raise ValueError(
+                    f"Expected `field_name` to be a valid python identifier."
+                    f" Got {field_name} instead."
+                )
+
+            field_value = _get_field_value(field_type, data)
+            _check_allowable_sections(  # check if field can be added to section
+                field=field_value, section_name=section_name, field_name=field_name
+            )
+
+            type_ = field_type or type(field_value)
+            default_factory = None
+            if (
+                isinstance(field_value, BaseModel)
+                and hasattr(field_value.__config__, "list_factory")
+                and field_value.__config__.list_factory
+            ):
+                default_factory = list
+                field_value = [field_value]  # add field as a list
+                type_ = List[type_]
+
+            setattr(section, field_name, field_value)
+
+            # modify __fields__ to include new field
+            section_fields[field_name] = ModelField(
+                name=field_name,
+                type_=type_,
+                required=False,
+                class_validators=None,
+                model_config=BaseModelCardField.Config,
+                default_factory=default_factory,
+                field_info=FieldInfo(unique_items=True)
+                if default_factory == list
+                else None,
+            )
+
+    def log_fields_from_dict(self, data: Dict[str, Any], section_name: str) -> None:
+        """Populate fields in the model card from a dictionary.
+
+        The keys of the dictionary serve as the field names in the specified section.
+
+        Parameters
+        ----------
+        data : Dict[str, Any]
+            Dictionary of data to populate the fields with.
+        section_name : str
+            Name of the section to populate.
+
+        """
+        _raise_if_not_dict_with_str_keys(data)
+        for key, value in data.items():
+            self._log_field(value, section_name, key)
+
+    def log_graphic(self, data_or_path: str, caption: str) -> None:  # TODO[fcogidi]
+        """Add a graphic to the model card."""
+        raise NotImplementedError()
+
+    # loggers for `Model Details` section
+    def log_owner(
+        self,
+        name: str,
+        contact: Optional[str] = None,
+        role: Optional[str] = None,
+        section_name: str = "model_details",
+        **extra: Any,
+    ) -> None:
+        """Add an owner to a section of the report.
+
+        Parameters
+        ----------
+        name : str
+            The name of the owner.
+        contact : str, optional
+            The contact information for the owner.
+        role : str, optional
+            The role of the owner.
+        section_name : str, optional
+            The name of the section of the report to log the owner to. If not provided,
+            the owner will be added to the `model_details` section, representing
+            the model owner.
+        **extra
+            Any extra fields to add to the Owner.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        self._log_field(
+            data={"name": name, "contact": contact, "role": role, **extra},
+            section_name=section_name,
+            field_name="owners",
+            field_type=Owner,
+        )
+
+    def log_version(
+        self,
+        version_str: str,
+        date: Optional[Union[dt_date, dt_datetime, str, int, float]] = None,
+        description: Optional[str] = None,
+        section_name: str = "model_details",
+        **extra: Any,
+    ) -> None:
+        """Add a version to a section of the report.
+
+        Parameters
+        ----------
+        version_str : str
+            The version number or identifier as a string. This can be a semantic
+            version number, e.g. "1.0.0", or a custom identifier, e.g. "v1".
+        date : Union[dt_date, dt_datetime, str, int, float], optional
+            The date of the version. This can be a datetime/date object, an integer
+            or float representing a UNIX timestamp, or a string in the format
+            `YYYY-MM-DD[T]HH:MM[:SS[.ffffff]][Z or [±]HH[:]MM]]` or `YYYY-MM-DD`.
+        description : str, optional
+            A description of the version. This can be used to summarize the changes
+            made in the version or to provide additional context.
+        section_name : str, optional
+            The section of the report to add the version to. If not provided,
+            the version will be added to the `model_details` section, representing
+            the version of the model as a whole.
+        **extra
+            Any extra fields to add to the Version.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        self._log_field(
+            data={
+                "version": version_str,
+                "date": date,
+                "description": description,
+                **extra,
+            },
+            section_name=section_name,
+            field_name="version",
+            field_type=Version,
+        )
+
+    def log_license(
+        self,
+        identifier: str,
+        text: Optional[str] = None,
+        section_name: str = "model_details",
+        **extra: Any,
+    ) -> None:
+        """Add a license to a section of the report.
+
+        Parameters
+        ----------
+        identifier : str
+            The SPDX identifier of the license, e.g. "Apache-2.0".
+            See https://spdx.org/licenses/ for a list of valid identifiers.
+            For custom licenses, set the `identifier` to "unknown", "unlicensed",
+            or "proprietary" and provide the full license text in the `text` field,
+            if available.
+        text : str, optional
+            The full text of the license. This is useful for custom licenses
+            that are not in the SPDX list.
+        section_name : str, optional
+            The section of the report to add the license to. If not provided,
+            the license will be added to the `model_details` section, representing
+            the license for the model as a whole.
+        **extra
+            Any extra fields to add to the License.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        Notes
+        -----
+        If the license is not found in the SPDX list, the license text will be
+        left blank. If the license text is provided, it will be used instead.
+
+        """
+        self._log_field(
+            data={"identifier": identifier, "text": text, **extra},
+            section_name=section_name,
+            field_name="licenses",
+            field_type=License,
+        )
+
+    def log_citation(
+        self, citation: str, section_name: str = "model_details", **extra: Any
+    ) -> None:
+        """Add a citation to a section of the report.
+
+        Parameters
+        ----------
+        citation : str
+            The citation content.
+        section_name : str, optional
+            The section of the report to add the citation to. If not provided,
+            the citation will be added to the `model_details` section, representing
+            the citation for the model.
+        **extra
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        Notes
+        -----
+        If the citation content is a valid BibTeX entry, the citation will be
+        formatted as plain text and added to the report.
+
+        """
+        self._log_field(
+            data={"content": citation, **extra},
+            section_name=section_name,
+            field_name="citations",
+            field_type=Citation,
+        )
+
+    def log_reference(
+        self, link: str, section_name: str = "model_details", **extra: Any
+    ) -> None:
+        """Add a reference to a section of the report.
+
+        Parameters
+        ----------
+        link : str
+            A link to a resource that provides relevant context.
+        section_name : str, optional
+            The section of the report to add the reference to. If not provided,
+            the reference will be added to the `model_details` section, representing
+            the reference for the model.
+        **extra
+            Any extra fields to add to the Reference.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        self._log_field(
+            data={"link": link, **extra},
+            section_name=section_name,
+            field_name="references",
+            field_type=Reference,
+        )
+
+    def log_regulation(
+        self,
+        regulation: str,
+        section_name: str = "model_details",
+        **extra: Any,
+    ) -> None:
+        """Add a regulatory requirement to a section of the report.
+
+        Parameters
+        ----------
+        regulation : str
+            The regulatory requirement that must be complied with.
+        section_name : str, optional
+            The section of the report to add the regulatory requirement to.
+            If not provided, the regulatory requirement will be added to the
+            `model_details` section.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        self._log_field(
+            data={"regulation": regulation, **extra},
+            section_name=section_name,
+            field_name="regulatory_requirements",
+            field_type=RegulatoryRequirement,
+        )
+
+    # loggers for `Model Parameters` section
+    def log_model(self, model: Any) -> None:  # TODO[fcogidi]
+        """Log model info."""
+        # fields to get:
+        # - model_architecture -> framework-specific model introspection tools
+        # - input_format, input_format_map -> inspect.signature(model_object)
+        # - data -> self.log_dataset
+        raise NotImplementedError()
+
+    def log_dataset(self, dataset: Any, split: Optional[str] = None):  # TODO[fcogidi]
+        """Log dataset info."""
+        # Support huggingface datasets and pandas dataframes
+        # for huggingface datasets, get:
+        # - dataset.info.description -> ModelParameters.data.description
+        # - dataset.info.citation -> ModelParameters.data.citations
+        # - dataset.info.license -> ModelParameters.data.licenses
+        # - dataset.info.version -> ModelParameters.data.version
+        # - dataset.num_rows -> ModelParameters.data.size
+        # - dataset.info.features -> ModelParameters.data.features
+        # - dataset.info.splits -> ModelParameters.data.split
+        # - dataset.info.homepage -> ModelParameters.data.references
+        # for pandas dataframes, use dataframe.info() and/or dataframe.describe()?
+
+        raise NotImplementedError()
+
+    # loggers for `Considerations` section
+    def log_user(
+        self,
+        description: str,
+        section_name: str = "considerations",
+        **extra: Any,
+    ) -> None:
+        """Add a user description to a section of the report.
+
+        Parameters
+        ----------
+        description : str
+            A description of the user.
+        section_name : str, optional
+            The section of the report to add the user to. If not provided, the user
+            will be added to the `considerations` section.
+        **extra
+            Any extra fields to add to the User.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        self._log_field(
+            data={"description": description, **extra},
+            section_name=section_name,
+            field_name="users",
+            field_type=User,
+        )
+
+    def log_use_case(
+        self,
+        description: str,
+        kind: Optional[Literal["primary", "downstream", "out-of-scope"]] = "primary",
+        section_name: str = "considerations",
+        **extra: Any,
+    ) -> None:
+        """Add a use case to a section of the report.
+
+        Parameters
+        ----------
+        description : str
+            A description of the use case.
+        kind : Literal["primary", "downstream", "out-of-scope"], optional
+            The kind of use case. If not provided, the use case will be
+            considered primary.
+        section_name : str, optional
+            The section of the report to add the use case to. If not provided,
+            the use case will be added to the `considerations` section.
+        **extra
+            Any extra fields to add to the UseCase.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        self._log_field(
+            data={"description": description, "kind": kind, **extra},
+            section_name=section_name,
+            field_name="use_cases",
+            field_type=UseCase,
+        )
+
+    def log_risk(
+        self,
+        risk: str,
+        mitigation_strategy: str,
+        section_name: str = "considerations",
+        **extra: Any,
+    ) -> None:
+        """Add a risk to a section of the report.
+
+        Parameters
+        ----------
+        risk : str
+            A description of the risk.
+        mitigation_strategy : str
+            A description of the mitigation strategy.
+        section_name : str, optional
+            The section of the report to add the risk to. If not provided, the
+            risk will be added to the `considerations` section.
+        **extra
+            Any extra information to add in relation to the risk.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        self._log_field(
+            data={
+                "risk": risk,
+                "mitigation_strategy": mitigation_strategy,
+                **extra,
+            },
+            section_name=section_name,
+            field_name="ethical_considerations",
+            field_type=Risk,
+        )
+
+    def log_fairness_assessment(
+        self,
+        affected_group: str,
+        benefit: str,
+        harm: str,
+        mitigation_strategy: str,
+        section_name: str = "considerations",
+        **extra: Any,
+    ) -> None:
+        """Add a fairness assessment to a section of the report.
+
+        Parameters
+        ----------
+        affected_group : str
+            A description of the affected group.
+        benefit : str
+            A description of the benefit(s) to the affected group.
+        harm : str
+            A description of the harm(s) to the affected group.
+        mitigation_strategy : str
+            A description of the mitigation strategy.
+        section_name : str, optional
+            The section of the report to add the fairness assessment to. If not
+            provided, the fairness assessment will be added to the `considerations`
+            section.
+        **extra
+            Any extra information to add in relation to the fairness assessment.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        self._log_field(
+            data={
+                "affected_group": affected_group,
+                "benefits": benefit,
+                "harms": harm,
+                "mitigation_strategy": mitigation_strategy,
+                **extra,
+            },
+            section_name=section_name,
+            field_name="fairness_assessment",
+            field_type=FairnessAssessment,
+        )
+
+    def log_descriptor(
+        self, name: str, description: str, section_name: str, **extra: Any
+    ) -> None:
+        """Add a descriptor to a section of the report.
+
+        This method will create a new pydantic `BaseModel` subclass with the given
+        name, which has a field named `description` of type `str`. As long as the
+        descriptor name does not conflict with a defined class in the `model_card`
+        module, the descriptor can be added to any section of the report.
+
+        Parameters
+        ----------
+        name : str
+            The name of the descriptor.
+        description : str
+            A description of the descriptor.
+        section_name : str
+            The section of the report to add the descriptor to.
+        **extra
+            Any extra fields to add to the descriptor.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+        ValueError
+            If the given name conflicts with a defined class in the `model_card`
+            module.
+
+        Examples
+        --------
+        >>> from cylops.report import ModelCardReport
+        >>> report = ModelCardReport()
+        >>> report.log_descriptor(
+        ...     name="tradeoff",
+        ...     description="We trade off performance for interpretability.",
+        ...     section_name="considerations",
+        ... )
+
+        """
+        # use `name` to create BaseModel subclass
+        field_obj = create_model(
+            "".join(char for char in name.title() if not char.isspace()),  # PascalCase
+            __base__=BaseModelCardField,
+            __cls_kwargs__={"list_factory": True},  # all descriptors are lists
+            description=(
+                StrictStr,
+                None,
+            ),  # <field_name>=(<field_type>, <default_value>)
+        )
+
+        # make sure the field_obj doesn't conflict with any of the existing objects
+        if _object_is_in_model_card_module(field_obj):
+            raise ValueError(
+                "Encountered name conflict when trying to create a descriptor for "
+                f"{name}. Please use a different name."
+            )
+
+        self._log_field(
+            data={"description": description, **extra},
+            section_name=section_name,
+            field_name=str_to_snake_case(name),
+            field_type=field_obj,
+        )
+
+    # loggers for `Quantitative Analysis` section
+    def log_performance_metric(self, metrics: Dict[str, Any]) -> None:  # TODO[fcogidi]
+        """Add a performance metric to the `Quantitative Analysis` section."""
+        # Add or update metric in model card
+        # section = get_section("quantitative_analysis")
+
+        # parsed_perf_metrics = _parse_metrics(metrics, model_name)
+
+        # create plot
+
+        # for parsed_metric in parsed_perf_metrics:
+        #     self._model_card.quantitative_analysis.performance_metrics.append(
+        #         PerformanceMetric(
+        #             type=parsed_metric["name"],
+        #             value=parsed_metric["value"],
+        #             slice=parsed_metric["slice_name"],
+        #             description=parsed_metric["metric_description"],
+        #         )
+        #     )
+        raise NotImplementedError()
+
+    # TODO: UPDATE SECTIONS OF THE MODEL CARD
+
+    # TODO: COMPARE MODEL CARDS
+
+    # TODO: MERGE MODEL CARDS
+
+    # EXPORTING THE REPORT
+    def validate(self) -> None:
+        """Validate the model card."""
+        ModelCard.validate(self._model_card.dict())
+
+    def _write_file(self, path: str, content: str) -> None:
+        """Write a file to the given path.
+
+        If the path does not exist, create it.
+
+        """
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w+") as f_handle:
+            f_handle.write(content)
+
+    def _jinja_loader(self, template_dir: str) -> jinja2.FileSystemLoader:
+        """Create a jinja2 file system loader."""
+        return jinja2.FileSystemLoader(template_dir)
+
+    def _get_jinja_template(
+        self, template_path: Optional[str] = None
+    ) -> jinja2.Template:
+        """Get a jinja2 template."""
+        _template_path = template_path or os.path.join(
+            _TEMPLATE_DIR, _DEFAULT_TEMPLATE_FILENAME
+        )
+        template_dir = os.path.dirname(_template_path)
+        template_file = os.path.basename(_template_path)
+
+        jinja_env = jinja2.Environment(
+            loader=self._jinja_loader(template_dir),
+            autoescape=True,
+            auto_reload=True,
+            cache_size=0,
+        )
+
+        return jinja_env.get_template(template_file)
+
+    def export(
+        self,
+        output_filename: str = "report",
+        template_path: Optional[str] = None,
+    ) -> str:
+        """Export the model card report to a file.
+
+        Parameters
+        ----------
+        output_filename : str, optional
+            The name of the output file. The default is "report".
+        template_path : str, optional
+            The path to the jinja2 template to use. The default is None, which uses
+            the default template provided by Cylops.
+
+        Returns
+        -------
+        str
+            The HTML content of the report.
+
+        """
+        self.validate()
+        template = self._get_jinja_template(template_path=template_path)
+        content = template.render(**self._model_card.dict())
+
+        # write to file
+        output_filename = os.path.splitext(output_filename)[0]  # remove extension
+        report_path = os.path.join(
+            self.output_dir, self.report_name, output_filename + ".html"
+        )
+        self._write_file(report_path, content)
+
+        return content
+
+
+def _get_field_value(field_type: Any, data: Any) -> Any:
+    """Get the value of a field."""
+    if field_type is None:
+        return data
+
+    if issubclass(field_type, BaseModel):
+        _raise_if_not_dict_with_str_keys(data)
+        return field_type(**data)
+
+    # explicitly handle `Union` types
+    if field_type.__class__.__module__ == "typing" and field_type.__origin__ == Union:
+        # try to match `data` to one of the types in the `Union`
+        for union_type in field_type.__args__:
+            try:
+                return _get_field_value(union_type, data)
+            except TypeError:
+                pass
+        # if no match is found, raise an error
+        raise TypeError(
+            f"Expected `data` to be one of {field_type.__args__} types."
+            f"Got {type(data)} instead."
+        )
+
+    return data
+
+
+def _check_allowable_sections(
+    field: BaseModel, section_name: str, field_name: str
+) -> None:
+    """Check if a field can be added to a section.
+
+    Parameters
+    ----------
+    field : BaseModel
+        The field to add to the section.
+    section_name : str
+        The name of the section.
+    field_name : str
+        The name of the field.
+
+    Raises
+    ------
+    ValueError
+        If the field cannot be added to the section.
+
+    """
+    if (
+        field is not None
+        and isinstance(field, BaseModel)
+        and hasattr(field.__config__, "allowable_sections")
+    ):
+        allowable_sections = field.__config__.allowable_sections
+        if (allowable_sections is not None and len(allowable_sections) > 0) and (
+            section_name not in allowable_sections
+        ):
+            raise ValueError(
+                f"Field `{field_name}` cannot be added to section `{section_name}`."
+                f"Expected section to be one of {allowable_sections}."
+            )
