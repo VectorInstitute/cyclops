@@ -4,7 +4,7 @@ import inspect
 from re import sub
 from typing import Any, Mapping
 
-from cyclops.report.model_card.model_card import ModelCard
+from cyclops.report.model_card import ModelCard
 
 
 def str_to_snake_case(string: str) -> str:

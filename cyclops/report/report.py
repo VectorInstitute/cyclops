@@ -3,22 +3,25 @@ import keyword
 import os
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
-from typing import Any, Dict, List, Literal, Optional, Type, Union
+from typing import Any, BinaryIO, Dict, List, Literal, Optional, TextIO, Type, Union
 
 import jinja2
 from pydantic import BaseModel, StrictStr, create_model
 from pydantic.fields import FieldInfo, ModelField
 
-from cyclops.report.model_card.model_card import (
+from cyclops.report.model_card import (
     BaseModelCardField,
     Citation,
+    Dataset,
     FairnessAssessment,
     License,
     ModelCard,
     Owner,
+    PerformanceMetric,
     Reference,
     RegulatoryRequirement,
     Risk,
+    SensitiveData,
     UseCase,
     User,
     Version,
@@ -29,7 +32,9 @@ from cyclops.report.utils import (
     str_to_snake_case,
 )
 
-_TEMPLATE_DIR = "../model_card/template"
+# pylint: disable=fixme
+
+_TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
 _DEFAULT_TEMPLATE_FILENAME = "cyclops_template.jinja"
 
 
@@ -44,20 +49,13 @@ class ModelCardReport:
     output_dir : str, optional
         Path to the directory where the model card report will be saved. If not
         provided, the report will be saved in the current working directory.
-    report_name : str, optional
-        Name of the model card report. If not provided, the report will be saved with
-        the name `0`.
 
     """
 
-    DEFAULT_REPORT_NAME = "0"
     _model_card = ModelCard()  # type: ignore[call-arg]
 
-    def __init__(
-        self, output_dir: Optional[str] = None, report_name: Optional[str] = None
-    ):
-        self.output_dir = output_dir or "./cyclops_reports"
-        self.report_name = report_name or self.DEFAULT_REPORT_NAME
+    def __init__(self, output_dir: Optional[str] = None) -> None:
+        self.output_dir = output_dir or os.getcwd()
 
     def _get_section(self, name: str) -> BaseModel:
         """Get a section of the model card.
@@ -79,15 +77,13 @@ class ModelCardReport:
                 f" Got {name} instead."
             )
 
-        section_type = model_card_sections[name_].type_
-
         # instantiate section if not already instantiated
+        section_type = model_card_sections[name_].type_
         if not isinstance(getattr(self._model_card, name_), section_type):
             setattr(self._model_card, name_, section_type())
 
         model_card_section: BaseModel = getattr(self._model_card, name_)
 
-        # all model sections must subclass `BaseModel`
         if not issubclass(model_card_section.__class__, BaseModel):
             raise TypeError(
                 f"Expected section `{name}` to be a subclass of `BaseModel`."
@@ -96,8 +92,6 @@ class ModelCardReport:
 
         return model_card_section
 
-    # GETTING DATA IN
-    # generic logging methods
     def _log_field(
         self,
         data: Any,
@@ -149,7 +143,6 @@ class ModelCardReport:
             else:
                 setattr(section, field_name, field_value)
         else:
-            # verify that `field_name` is a valid python identifier
             if not field_name.isidentifier() or keyword.iskeyword(field_name):
                 raise ValueError(
                     f"Expected `field_name` to be a valid python identifier."
@@ -166,11 +159,11 @@ class ModelCardReport:
             if (
                 isinstance(field_value, BaseModel)
                 and hasattr(field_value.__config__, "list_factory")
-                and field_value.__config__.list_factory
+                and getattr(field_value.__config__, "list_factory") is True
             ):
                 default_factory = list
                 field_value = [field_value]  # add field as a list
-                type_ = List[type_]
+                type_ = List[type_]  # type: ignore[valid-type]
 
             setattr(section, field_name, field_value)
 
@@ -187,7 +180,7 @@ class ModelCardReport:
                 else None,
             )
 
-    def log_fields_from_dict(self, data: Dict[str, Any], section_name: str) -> None:
+    def log_from_dict(self, data: Dict[str, Any], section_name: str) -> None:
         """Populate fields in the model card from a dictionary.
 
         The keys of the dictionary serve as the field names in the specified section.
@@ -201,10 +194,81 @@ class ModelCardReport:
 
         """
         _raise_if_not_dict_with_str_keys(data)
-        for key, value in data.items():
-            self._log_field(value, section_name, key)
+        section = self._get_section(section_name)
+        populated_section = section.parse_obj(data)
+        setattr(self._model_card, section_name, populated_section)
 
-    def log_graphic(self, data_or_path: str, caption: str) -> None:  # TODO[fcogidi]
+    def log_descriptor(
+        self, name: str, description: str, section_name: str, **extra: Any
+    ) -> None:
+        """Add a descriptor to a section of the report.
+
+        This method will create a new pydantic `BaseModel` subclass with the given
+        name, which has a field named `description` of type `str`. As long as the
+        descriptor name does not conflict with a defined class in the `model_card`
+        module, the descriptor can be added to any section of the report.
+
+        Parameters
+        ----------
+        name : str
+            The name of the descriptor.
+        description : str
+            A description of the descriptor.
+        section_name : str
+            The section of the report to add the descriptor to.
+        **extra
+            Any extra fields to add to the descriptor.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+        ValueError
+            If the given name conflicts with a defined class in the `model_card`
+            module.
+
+        Examples
+        --------
+        >>> from cylops.report import ModelCardReport
+        >>> report = ModelCardReport()
+        >>> report.log_descriptor(
+        ...     name="tradeoff",
+        ...     description="We trade off performance for interpretability.",
+        ...     section_name="considerations",
+        ... )
+
+        """
+        # use `name` to create BaseModel subclass
+        field_obj = create_model(
+            "".join(char for char in name.title() if not char.isspace()),  # PascalCase
+            __base__=BaseModelCardField,
+            __cls_kwargs__={"list_factory": True},  # all descriptors are lists
+            description=(
+                StrictStr,
+                None,
+            ),  # <field_name>=(<field_type>, <default_value>)
+        )
+
+        # make sure the field_obj doesn't conflict with any of the existing objects
+        if _object_is_in_model_card_module(field_obj):
+            raise ValueError(
+                "Encountered name conflict when trying to create a descriptor for "
+                f"{name}. Please use a different name."
+            )
+
+        self._log_field(
+            data={"description": description, **extra},
+            section_name=section_name,
+            field_name=str_to_snake_case(name),
+            field_type=field_obj,
+        )
+
+    def log_graphic(
+        self,
+        data_or_path: Union[str, bytes, BinaryIO, TextIO],
+        caption: str,
+        section_name: str,
+    ) -> None:  # TODO
         """Add a graphic to the model card."""
         raise NotImplementedError()
 
@@ -432,29 +496,94 @@ class ModelCardReport:
         )
 
     # loggers for `Model Parameters` section
-    def log_model(self, model: Any) -> None:  # TODO[fcogidi]
-        """Log model info."""
-        # fields to get:
-        # - model_architecture -> framework-specific model introspection tools
-        # - input_format, input_format_map -> inspect.signature(model_object)
-        # - data -> self.log_dataset
-        raise NotImplementedError()
+    def log_model_parameters(self, params: Dict[str, Any]) -> None:
+        """Log model parameters.
 
-    def log_dataset(self, dataset: Any, split: Optional[str] = None):  # TODO[fcogidi]
-        """Log dataset info."""
-        # Support huggingface datasets and pandas dataframes
-        # for huggingface datasets, get:
-        # - dataset.info.description -> ModelParameters.data.description
-        # - dataset.info.citation -> ModelParameters.data.citations
-        # - dataset.info.license -> ModelParameters.data.licenses
-        # - dataset.info.version -> ModelParameters.data.version
-        # - dataset.num_rows -> ModelParameters.data.size
-        # - dataset.info.features -> ModelParameters.data.features
-        # - dataset.info.splits -> ModelParameters.data.split
-        # - dataset.info.homepage -> ModelParameters.data.references
-        # for pandas dataframes, use dataframe.info() and/or dataframe.describe()?
+        Parameters
+        ----------
+        params : Dict[str, Any]
+            A dictionary of model parameters.
 
-        raise NotImplementedError()
+        """
+        self.log_from_dict(params, section_name="model_parameters")
+
+    def log_dataset(
+        self,
+        description: Optional[str] = None,
+        citation: Optional[str] = None,
+        link: Optional[str] = None,
+        license_id: Optional[str] = None,
+        version: Optional[str] = None,
+        features: Optional[List[str]] = None,
+        split: Optional[str] = None,
+        sensitive_features: Optional[List[str]] = None,
+        sensitive_feature_justification: Optional[str] = None,
+        **extra: Any,
+    ) -> None:
+        """Log information about the dataset used to train/evaluate the model.
+
+        Parameters
+        ----------
+        description : str, optional
+            A description of the dataset.
+        citation : str, optional
+            A citation for the dataset. This can be a BibTeX entry or a plain-text
+            citation.
+        link : str, optional
+            A link to a resource that provides relevant context e.g. the homepage
+            of the dataset.
+        license_id : str, optional
+            The SPDX identifier of the license, e.g. "Apache-2.0".
+            See https://spdx.org/licenses/ for a list of valid identifiers.
+            For custom licenses, set the `identifier` to "unknown", "unlicensed",
+            or "proprietary".
+        version : str, optional
+            The version of the dataset.
+        features : list of str, optional
+            The names of the features used to train/evaluate the model.
+        split : str, optional
+            The name of the split used to train/evaluate the model.
+        sensitive_features : list of str, optional
+            The names of the sensitive features used to train/evaluate the model.
+        sensitive_feature_justification : str, optional
+            A justification for the sensitive features used to train/evaluate the
+            model.
+        **extra
+            Any extra fields to add to the Dataset.
+
+        Raises
+        ------
+        AssertionError
+            If the sensitive features are not in the features list.
+
+        """
+        # sensitive features must be in features
+        if features is None and sensitive_features is not None:
+            assert all(
+                feature in features for feature in sensitive_features  # type: ignore
+            ), "All sensitive features must be in the features list."
+
+        # TODO: plot dataset distribution
+        data = {
+            "description": description,
+            "citation": Citation(content=citation),
+            "reference": Reference(link=link),  # type: ignore
+            "license": License(identifier=license_id),  # type: ignore
+            "version": Version(version_str=version),  # type: ignore
+            "features": features,
+            "split": split,
+            "sensitive_data": SensitiveData(
+                sensitive_data_used=sensitive_features,
+                justification=sensitive_feature_justification,
+            ),
+            **extra,
+        }
+        self._log_field(
+            data=data,
+            section_name="model_parameters",
+            field_name="data",
+            field_type=Dataset,
+        )
 
     # loggers for `Considerations` section
     def log_user(
@@ -608,93 +737,69 @@ class ModelCardReport:
             field_type=FairnessAssessment,
         )
 
-    def log_descriptor(
-        self, name: str, description: str, section_name: str, **extra: Any
-    ) -> None:
-        """Add a descriptor to a section of the report.
-
-        This method will create a new pydantic `BaseModel` subclass with the given
-        name, which has a field named `description` of type `str`. As long as the
-        descriptor name does not conflict with a defined class in the `model_card`
-        module, the descriptor can be added to any section of the report.
+    # loggers for `Quantitative Analysis` section
+    def log_performance_metrics(self, metrics: Dict[str, Any]) -> None:
+        """Add a performance metric to the `Quantitative Analysis` section.
 
         Parameters
         ----------
-        name : str
-            The name of the descriptor.
-        description : str
-            A description of the descriptor.
-        section_name : str
-            The section of the report to add the descriptor to.
-        **extra
-            Any extra fields to add to the descriptor.
+        metrics : Dict[str, Any]
+            A dictionary of performance metrics. The keys should be the name of the
+            metric, and the values should be the value of the metric. If the metric
+            is a slice metric, the key should be the slice name followed by a slash
+            and then the metric name (e.g. "slice_name/metric_name"). If no slice
+            name is provided, the slice name will be "overall".
 
         Raises
         ------
-        KeyError
-            If the given section name is not valid.
-        ValueError
-            If the given name conflicts with a defined class in the `model_card`
-            module.
-
-        Examples
-        --------
-        >>> from cylops.report import ModelCardReport
-        >>> report = ModelCardReport()
-        >>> report.log_descriptor(
-        ...     name="tradeoff",
-        ...     description="We trade off performance for interpretability.",
-        ...     section_name="considerations",
-        ... )
+        TypeError
+            If the given metrics are not a dictionary with string keys.
 
         """
-        # use `name` to create BaseModel subclass
-        field_obj = create_model(
-            "".join(char for char in name.title() if not char.isspace()),  # PascalCase
-            __base__=BaseModelCardField,
-            __cls_kwargs__={"list_factory": True},  # all descriptors are lists
-            description=(
-                StrictStr,
-                None,
-            ),  # <field_name>=(<field_type>, <default_value>)
-        )
+        _raise_if_not_dict_with_str_keys(metrics)
+        for metric_name, metric_value in metrics.items():
+            name_split = metric_name.split("/")
+            if len(name_split) == 1:
+                slice_name = "overall"
+                metric_name = name_split[0]
+            else:  # everything before the last slash is the slice name
+                slice_name = "/".join(name_split[:-1])
+                metric_name = name_split[-1]
 
-        # make sure the field_obj doesn't conflict with any of the existing objects
-        if _object_is_in_model_card_module(field_obj):
-            raise ValueError(
-                "Encountered name conflict when trying to create a descriptor for "
-                f"{name}. Please use a different name."
+            # TODO: create plot
+
+            self._log_field(
+                data={"type": metric_name, "value": metric_value, "slice": slice_name},
+                section_name="quantitative_analysis",
+                field_name="performance_metrics",
+                field_type=PerformanceMetric,
             )
 
-        self._log_field(
-            data={"description": description, **extra},
-            section_name=section_name,
-            field_name=str_to_snake_case(name),
-            field_type=field_obj,
-        )
+    @classmethod
+    def from_json_file(
+        cls, path: str, output_dir: Optional[str] = None
+    ) -> "ModelCardReport":
+        """Load a model card from a file.
 
-    # loggers for `Quantitative Analysis` section
-    def log_performance_metric(self, metrics: Dict[str, Any]) -> None:  # TODO[fcogidi]
-        """Add a performance metric to the `Quantitative Analysis` section."""
-        # Add or update metric in model card
-        # section = get_section("quantitative_analysis")
+        Parameters
+        ----------
+        path : str
+            The path to a JSON file containing model card data.
+        output_dir : str, optional
+            The directory to save the report to. If not provided, the report will
+            be saved in a directory called `cyclops_reports` in the current working
+            directory.
 
-        # parsed_perf_metrics = _parse_metrics(metrics, model_name)
+        Returns
+        -------
+        ModelCardReport
+            The model card report.
 
-        # create plot
-
-        # for parsed_metric in parsed_perf_metrics:
-        #     self._model_card.quantitative_analysis.performance_metrics.append(
-        #         PerformanceMetric(
-        #             type=parsed_metric["name"],
-        #             value=parsed_metric["value"],
-        #             slice=parsed_metric["slice_name"],
-        #             description=parsed_metric["metric_description"],
-        #         )
-        #     )
-        raise NotImplementedError()
-
-    # TODO: UPDATE SECTIONS OF THE MODEL CARD
+        """
+        model_card = ModelCard.parse_file(path)
+        report = ModelCardReport(output_dir=output_dir)
+        report._model_card = model_card  # pylint: disable=protected-access
+        return report
 
     # TODO: COMPARE MODEL CARDS
 
@@ -712,7 +817,7 @@ class ModelCardReport:
 
         """
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w+") as f_handle:
+        with open(path, "w+", encoding="utf-8") as f_handle:
             f_handle.write(content)
 
     def _jinja_loader(self, template_dir: str) -> jinja2.FileSystemLoader:
@@ -740,23 +845,22 @@ class ModelCardReport:
 
     def export(
         self,
-        output_filename: str = "report",
+        output_filename: Optional[str] = None,
         template_path: Optional[str] = None,
-    ) -> str:
-        """Export the model card report to a file.
+        save_json: bool = True,
+    ) -> None:
+        """Export the model card report to an HTML file.
 
         Parameters
         ----------
         output_filename : str, optional
-            The name of the output file. The default is "report".
+            The name of the output file. If not provided, the file will be named
+            with the current date and time.
         template_path : str, optional
             The path to the jinja2 template to use. The default is None, which uses
             the default template provided by Cylops.
-
-        Returns
-        -------
-        str
-            The HTML content of the report.
+        save_json : bool, optional
+            Whether to save the model card as a JSON file. The default is True.
 
         """
         self.validate()
@@ -764,13 +868,22 @@ class ModelCardReport:
         content = template.render(**self._model_card.dict())
 
         # write to file
-        output_filename = os.path.splitext(output_filename)[0]  # remove extension
         report_path = os.path.join(
-            self.output_dir, self.report_name, output_filename + ".html"
+            self.output_dir,
+            "cyclops_reports",
+            output_filename or dt_datetime.now().strftime("%Y%m%d_%H%M%S") + ".html",
         )
         self._write_file(report_path, content)
 
-        return content
+        if save_json:
+            json_path = os.path.join(
+                self.output_dir,
+                "cyclops_reports",
+                "model_card.json",
+            )
+            self._write_file(
+                json_path, self._model_card.json(indent=2, exclude_unset=True)
+            )
 
 
 def _get_field_value(field_type: Any, data: Any) -> Any:
@@ -824,7 +937,7 @@ def _check_allowable_sections(
         and isinstance(field, BaseModel)
         and hasattr(field.__config__, "allowable_sections")
     ):
-        allowable_sections = field.__config__.allowable_sections
+        allowable_sections = getattr(field.__config__, "allowable_sections")
         if (allowable_sections is not None and len(allowable_sections) > 0) and (
             section_name not in allowable_sections
         ):

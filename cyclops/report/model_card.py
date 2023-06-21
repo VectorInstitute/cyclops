@@ -26,31 +26,6 @@ from pydantic import (
 # pylint: disable=too-few-public-methods
 
 
-def _get_license_text(identifier: Optional[str]) -> Optional[str]:
-    """Get the license text for a given SPDX identifier."""
-    if identifier in ["proprietary", "unlicensed", "unknown", None]:
-        return None
-
-    license_index = get_license_index()
-
-    # convert the license index to a dictionary
-    license_index_dict = {
-        item["spdx_license_key"].lower(): item
-        for item in license_index
-        if item.get("spdx_license_key")
-    }
-
-    try:
-        license_text_path = (
-            "https://scancode-licensedb.aboutcode.org/"
-            + license_index_dict[identifier.lower()].get("json")
-        )
-        with HTTPFileSystem().open(license_text_path) as http_f:
-            return json.load(http_f).get("text")
-    except Exception:
-        return None
-
-
 class BaseModelCardField(BaseModel):
     """Base class for model card fields."""
 
@@ -122,15 +97,15 @@ class License(
     )
 
     @root_validator(skip_on_failure=True)
-    def validate_spdx_identifier(
+    def validate_spdx_identifier(  # pylint: disable=no-self-argument
         cls: "License", values: Dict[str, StrictStr]
     ) -> Dict[str, StrictStr]:
         """Validate the SPDX license identifier."""
-        spdx_id = values.get("identifier")
+        spdx_id = values["identifier"]
         try:
             get_spdx_licensing().parse(spdx_id, validate=True)
             if spdx_id not in [None, ""] and values.get("text") is None:
-                values["text"] = _get_license_text(spdx_id)
+                values["text"] = StrictStr(cls._get_license_text(spdx_id))
         except ExpressionError as exc:
             if spdx_id.lower() not in ["proprietary", "unlicensed", "unknown"]:
                 raise ValueError(
@@ -138,6 +113,32 @@ class License(
                     f"(https://spdx.org/licenses/). Got {spdx_id} instead."
                 ) from exc
         return values
+
+    @staticmethod
+    def _get_license_text(identifier: Optional[str]) -> Optional[str]:
+        """Get the license text for a given SPDX identifier."""
+        if identifier in ["proprietary", "unlicensed", "unknown", None]:
+            return None
+
+        identifier = str(identifier).lower()
+
+        # get the license index
+        license_index = get_license_index()
+        license_index_dict = {
+            item["spdx_license_key"].lower(): item
+            for item in license_index
+            if item.get("spdx_license_key")
+        }
+
+        try:
+            license_text_path = (
+                "https://scancode-licensedb.aboutcode.org/"
+                + license_index_dict[identifier].get("json")
+            )
+            with HTTPFileSystem().open(license_text_path) as http_f:
+                return json.load(http_f).get("text")  # type: ignore[no-any-return]
+        except Exception:  # pylint: disable=broad-except
+            return None
 
 
 class Reference(
@@ -161,7 +162,9 @@ class Citation(
     )
 
     @validator("content")
-    def parse_content(cls: "Citation", value: StrictStr) -> StrictStr:
+    def parse_content(  # pylint: disable=no-self-argument
+        cls: "Citation", value: StrictStr
+    ) -> StrictStr:
         """Parse the citation content."""
         try:
             formatted_citation: StrictStr = PybtexEngine().format_from_string(
@@ -246,7 +249,11 @@ class GraphicsCollection(BaseModelCardField):
     )
 
 
-class SensitiveData(BaseModelCardField):
+class SensitiveData(
+    BaseModelCardField,
+    allowable_sections=["datasets"],
+    list_factory=True,
+):
     """Details about sensitive data used in the model."""
 
     sensitive_data: Optional[List[StrictStr]] = Field(
@@ -276,28 +283,39 @@ class SensitiveData(BaseModelCardField):
     )
 
 
-class Dataset(BaseModelCardField):
+class Dataset(
+    BaseModelCardField,
+    allowable_sections=["model_parameters"],
+    list_factory=True,
+):
     """Details about the dataset."""
 
-    # dataset description
-    name: Optional[StrictStr] = Field(None, description="The name of the dataset.")
     description: Optional[StrictStr] = Field(
         None, description="A high-level description of the dataset."
+    )
+    citations: Optional[List[Citation]] = Field(
+        description="How should the dataset be cited?",
+        default_factory=list,
+        unique_items=True,
     )
     references: Optional[List[Reference]] = Field(
         description="Provide any additional links to resources the reader may need.",
         default_factory=list,
         unique_items=True,
     )
-
-    # dataset structure
-    graphics: Optional[GraphicsCollection] = Field(
-        None, description="Visualizations of the dataset."
+    licenses: Optional[List[License]] = Field(
+        description="The license information for the dataset.",
+        default_factory=list,
+        unique_items=True,
     )
+    version: Optional[Version] = Field(None, description="The version of the dataset.")
     features: Optional[List[StrictStr]] = Field(
         description="A list of features in the dataset.",
         default_factory=list,
         unique_items=True,
+    )
+    graphics: Optional[GraphicsCollection] = Field(
+        None, description="Visualizations of the dataset."
     )
     split: Optional[StrictStr] = Field(
         None, description="The split of the dataset e.g. train, test, validation."
@@ -307,24 +325,6 @@ class Dataset(BaseModelCardField):
     )
     sensitive: Optional[SensitiveData] = Field(
         None, description="Does this dataset contain any human, PII, or sensitive data?"
-    )
-
-    # additional information
-    owners: Optional[List[Owner]] = Field(
-        description="The individuals or teams who created/contributed to the dataset.",
-        default_factory=list,
-        unique_items=True,
-    )
-    version: Optional[Version] = Field(None, description="The version of the dataset.")
-    licenses: Optional[List[License]] = Field(
-        description="The license information for the dataset.",
-        default_factory=list,
-        unique_items=True,
-    )
-    citations: Optional[List[Citation]] = Field(
-        description="How should the dataset be cited?",
-        default_factory=list,
-        unique_items=True,
     )
 
 
@@ -390,7 +390,11 @@ class Test(BaseModelCardField):
     )
 
 
-class PerformanceMetric(BaseModelCardField):
+class PerformanceMetric(
+    BaseModelCardField,
+    allowable_sections=["quantitative_analysis"],
+    list_factory=True,
+):
     """Performance metrics for model evaluation."""
 
     type: Optional[StrictStr] = Field(
@@ -461,7 +465,9 @@ class UseCase(
     )
 
     @validator("kind")
-    def kind_must_be_valid(cls: "UseCase", value: str) -> str:
+    def kind_must_be_valid(  # pylint: disable=no-self-argument
+        cls: "UseCase", value: str
+    ) -> str:
         """Validate the use case kind."""
         if isinstance(value, str):
             value = value.lower()
