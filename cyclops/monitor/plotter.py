@@ -283,7 +283,7 @@ def plot_label_distribution(
 
 def plot_drift_experiment(
     results: dict[str, dict[str, np.ndarray[float, np.dtype[np.float64]]]],
-    plot_distance=False,
+    plot_distance=False, axes_color="black"
 ) -> None:
     """Plot drift experiement p-values.
 
@@ -293,8 +293,13 @@ def plot_drift_experiment(
         Dictionary with results from drift experiment.
 
     """
+    params = {"ytick.color" : axes_color,
+            "xtick.color" : axes_color,
+            "axes.labelcolor" : axes_color,
+            "axes.edgecolor" : axes_color,}
+    plt.rcParams.update(params)
     if plot_distance:
-        _, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 16))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 16))
         for shift_iter, shift in enumerate(results.keys()):
             samples = results[shift]["samples"]
             mean_p_vals = results[shift]["p_val"].mean(axis=0)
@@ -310,7 +315,11 @@ def plot_drift_experiment(
             )
             ax1.set_xlabel("Number of samples from test")
             ax1.set_ylabel("$p$-value")
-            ax1.axhline(y=results[shift]["p_val_threshold"], color="k")
+            if (axes_color == "white") or (axes_color == "w"):
+                p_val_color = "black"
+            else:
+                p_val_color = "white"
+
             mean_distance = results[shift]["distance"].mean(axis=0)
             std_distance = results[shift]["distance"].std(axis=0)
             errorfill(
@@ -322,10 +331,13 @@ def plot_drift_experiment(
                 label=shift,
                 ax=ax2,
             )
-            ax2.set_xlabel("Number of samples from test")
-            ax2.set_ylabel("Distance")
+        ax1.axhline(y=results[shift]["p_val_threshold"], label='$p$-value threshold',
+                color=p_val_color)
+        ax2.set_xlabel("Number of samples from test")
+        ax2.set_ylabel("Distance")
+        plt.legend()
     else:
-        _, ax = plt.subplots(1, 1, figsize=(11, 8))
+        fig, ax = plt.subplots(1, 1, figsize=(11, 8))
         for shift_iter, shift in enumerate(results.keys()):
             samples = results[shift]["samples"]
             mean_p_vals = results[shift]["p_val"].mean(axis=0)
@@ -339,11 +351,16 @@ def plot_drift_experiment(
                 label=shift,
                 ax=ax,
             )
-            ax.set_xlabel("Number of samples from test")
-            ax.set_ylabel("$p$-value")
-            ax.axhline(y=results[shift]["p_val_threshold"], color="k")
+        ax.set_xlabel("Number of samples from test")
+        ax.set_ylabel("$p$-value")
+        if (axes_color == "white") or (axes_color == "w"):
+            p_val_color = "white"
+        else:
+            p_val_color = "black"
+        ax.axhline(y=results[shift]["p_val_threshold"], label='$p$-value threshold',
+                        color=p_val_color)
         plt.legend()
-        plt.show()
+        return fig
 
 
 def plot_drift_timeseries(
