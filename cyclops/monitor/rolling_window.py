@@ -1,4 +1,5 @@
 """Rolling window class for detecting drift on time series data."""
+
 from typing import Any, Dict, Optional
 
 import pandas as pd

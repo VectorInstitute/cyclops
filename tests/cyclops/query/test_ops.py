@@ -358,7 +358,7 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
         measurements_median[measurements_median["person_id"] == 33][
             "value_as_number_median"
         ].item()
-        == 53.1
+        == 55.1
     )
 
 

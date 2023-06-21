@@ -1,4 +1,5 @@
 """Plotting functions for drift detection."""
+
 from typing import List, Optional
 
 import matplotlib as mpl

@@ -1,8 +1,5 @@
-"""Preprocessing scripts for converting misc.
+"""Preprocessing scripts for converting misc datasets to huggingface datasets."""
 
-datasets to huggingface datasets.
-
-"""
 import os
 
 import pandas as pd
