@@ -6,10 +6,15 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
 import torch.nn.modules
 import torch.optim
+import yaml
+from hydra import compose, initialize
+from omegaconf import OmegaConf
 from sklearn.base import BaseEstimator
 
+from cyclops.models.constants import CONFIG_ROOT
 from cyclops.models.utils import is_pytorch_model, is_sklearn_model
 from cyclops.models.wrappers import PTModel, SKModel, WrappedModel
+from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
@@ -152,7 +157,9 @@ def wrap_model(model: Union[torch.nn.Module, BaseEstimator], **kwargs) -> Wrappe
     raise TypeError("``model`` must be a pyTorch or sklearn model")
 
 
-def create_model(model_name: str, wrap: bool = True, **kwargs) -> WrappedModel:
+def create_model(
+    model_name: str, wrap: bool = True, **config_overrides
+) -> WrappedModel:
     """Create model and optionally wrap it.
 
     Parameters
@@ -161,8 +168,9 @@ def create_model(model_name: str, wrap: bool = True, **kwargs) -> WrappedModel:
         Model name.
     wrap : bool, optional
         Whether to wrap model.
-    **kwargs : dict, optional
-        Keyword arguments passed to the wrapper class or model class.
+    **config_overrides : dict, optional
+        Keyword arguments passed to the wrapper class or model class \
+            to override the predefined config.
 
     Returns
     -------
@@ -183,9 +191,23 @@ def create_model(model_name: str, wrap: bool = True, **kwargs) -> WrappedModel:
         )
         raise ValueError(f"Model {model_name} not found.{similar_keys}")
 
+    overrides = []
+    if config_overrides:
+        config_file = join(CONFIG_ROOT, f"{model_name}.yaml")
+        with open(config_file, "r", encoding="utf-8") as file:
+            config_keys = list(yaml.safe_load(file).keys())
+        for key, value in config_overrides.items():
+            if key in config_keys:
+                overrides.append(f"{key}={value}")
+            else:
+                overrides.append(f"+{key}={value}")
+    with initialize(version_base=None, config_path="configs", job_name="create_model"):
+        config = compose(config_name=f"{model_name}.yaml", overrides=overrides)
+        LOGGER.debug(OmegaConf.to_yaml(config))
+
     if wrap:
-        model = wrap_model(model_class, **kwargs)
+        model = wrap_model(model_class, **config)
     else:
-        model = model_class(**kwargs)
+        model = model_class(**config)
 
     return model

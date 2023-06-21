@@ -35,12 +35,13 @@ def _input_squeeze(
     target: npt.NDArray[Any], preds: npt.NDArray[Any]
 ) -> Tuple[npt.NDArray[Any], npt.NDArray[Any]]:
     """Remove excess dimensions."""
-    if preds.shape[0] == 1:
+    if target.shape[0] == 1:
         target, preds = np.expand_dims(target.squeeze(), axis=0), np.expand_dims(
             preds.squeeze(), axis=0
         )
     else:
         target, preds = target.squeeze(), preds.squeeze()
+
     return target, preds
 
 

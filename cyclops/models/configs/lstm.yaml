@@ -5,6 +5,8 @@ model__output_dim: 1
 model__dropout_prob: 0.2
 model__last_timestep_only: False
 criterion: 'BCEWithLogitsLoss'
+criterion__reduction: 'mean'
+criterion__pos_weight: null
 optimizer: 'Adagrad'
 optimizer__weight_decay: 1.e-6
 activation: 'Sigmoid'

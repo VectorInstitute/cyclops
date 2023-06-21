@@ -1,4 +1,5 @@
 """Standard dataclass for metadata mapping."""
+
 from dataclasses import dataclass
 from typing import List, Optional
 

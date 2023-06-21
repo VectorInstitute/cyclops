@@ -96,9 +96,6 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
     warm_start : bool, default=False
         Whether to re-use the weights from the previous fit call. If `True`, the
         model will continue training from the weights of the previous fit call.
-    reweight : str, default="mini-batch"
-        The method to use for reweighting the loss function. It is currently
-        not being used.
     save_every : int, default=-1
         The number of epochs to train before saving the model. If it is a negative
         only the latest model will be saved.
@@ -129,7 +126,6 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         train_loader=DataLoader,
         test_loader=DataLoader,
         warm_start: bool = False,
-        reweight: str = "mini-batch",
         save_every: int = -1,
         save_best_only: bool = True,
         save_dir: Optional[str] = None,
@@ -154,7 +150,6 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.warm_start = warm_start
-        self.reweight = reweight
         self.save_every = save_every
         self.save_best_only = save_best_only
         self.save_dir = save_dir
@@ -426,26 +421,6 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         X = to_tensor(batch, device=self.device)
         return self.model_(X, **fit_params)  # type: ignore[attr-defined]
 
-    def _reweight_loss(self, loss: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        """Reweight loss for unbalanced data.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-            Loss tensor.
-        target : torch.Tensor
-            Target tensor.
-
-        Returns
-        -------
-        loss : torch.Tensor
-            Reweighted loss tensor.
-
-        """
-        # TODO: generalize to multi-class and multi-label cases or leave it to
-        # the user to implement a criterion that accounts for class imbalance?
-        raise NotImplementedError
-
     def _get_loss(self, target: torch.Tensor, preds: torch.Tensor) -> torch.Tensor:
         """Apply criterion and get the loss value.
 
@@ -466,10 +441,6 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             preds.squeeze(),
             target.squeeze(),
         )
-        # TODO: loss reweighting + post-processing?
-        # loss = self._reweight_loss(loss, target)
-        # loss *= ~target.eq(-1).squeeze()
-        # loss = loss.sum() / (~target.eq(-1)).sum()
         return loss
 
     def _train_step(self, batch, **fit_params) -> Dict[str, torch.Tensor]:

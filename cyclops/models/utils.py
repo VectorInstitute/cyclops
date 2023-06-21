@@ -1,4 +1,5 @@
 """Utility functions for building models."""
+
 import inspect
 from difflib import get_close_matches
 from typing import Dict, List, Literal, Optional

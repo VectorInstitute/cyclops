@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.1.26"
+version = "0.1.28"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -93,6 +93,8 @@ sphinx-autoapi = "^2.0.0"
 nbsphinx = "^0.8.11"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
+kaggle = "^1.5.13"
+plotly = "^5.7.0"
 
 [tool.poetry.group.interface.dependencies]
 dash = "^2.4.1"

@@ -92,4 +92,4 @@ repos:
       name: nbstripout
       language: python
       entry: nbstripout
-      exclude: ^docs/source/tutorials/.*/.*\.ipynb$
+      exclude: ^docs/source/tutorials/gemini/.*\.ipynb$

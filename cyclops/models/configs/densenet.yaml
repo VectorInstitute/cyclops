@@ -1,4 +1,4 @@
-model__weights: "densenet121-res224-nih"
+model__weights: "densenet121-res224-all"
 model__growth_rate: 32
 model__block_config: [6, 12, 24, 16]
 model__num_init_features: 64
@@ -7,6 +7,8 @@ model__in_channels: 1
 model__op_threshs: null
 model__apply_sigmoid: False
 criterion: 'BCEWithLogitsLoss'
+criterion__reduction: 'mean'
+criterion__pos_weight: null
 optimizer: 'Adagrad'
 optimizer__weight_decay: 1.e-6
 activation: 'Sigmoid'
