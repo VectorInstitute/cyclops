@@ -1,6 +1,8 @@
 """Cyclops report module."""
+import inspect
 import keyword
 import os
+from re import sub as re_sub
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 from typing import Any, BinaryIO, Dict, List, Literal, Optional, TextIO, Type, Union
@@ -14,6 +16,7 @@ from cyclops.report.model_card import (
     Citation,
     Dataset,
     FairnessAssessment,
+    GraphicsCollection,
     License,
     ModelCard,
     Owner,
@@ -35,7 +38,7 @@ from cyclops.report.utils import (
 # pylint: disable=fixme
 
 _TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
-_DEFAULT_TEMPLATE_FILENAME = "cyclops_template.jinja"
+_DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template_dark.jinja"
 
 
 class ModelCardReport:
@@ -841,6 +844,29 @@ class ModelCardReport:
             cache_size=0,
         )
 
+        def regex_replace(s, find, replace):
+            """A non-optimal implementation of a regex filter"""
+            return re_sub(find, replace, s)
+
+        def empty(x):
+            empty = True
+            if x is not None:
+                for _, obj in x:
+                    if isinstance(obj, list):
+                        if len(obj) > 0:
+                            empty = False
+                    elif isinstance(obj, GraphicsCollection):
+                        if len(obj.collection) > 0:
+                            empty = False
+                    elif obj is not None:
+                        empty = False
+            return empty
+
+        jinja_env.tests["list"] = lambda x: isinstance(x, list)
+        jinja_env.tests["class"] = lambda x: inspect.isclass(x)
+        jinja_env.filters["regex_replace"] = regex_replace
+        jinja_env.tests["empty"] = empty
+
         return jinja_env.get_template(template_file)
 
     def export(
@@ -865,7 +891,7 @@ class ModelCardReport:
         """
         self.validate()
         template = self._get_jinja_template(template_path=template_path)
-        content = template.render(**self._model_card.dict())
+        content = template.render(model_card=self._model_card)
 
         # write to file
         report_path = os.path.join(
