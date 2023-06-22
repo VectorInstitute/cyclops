@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+
+{% macro render_if_exist_list(values) %}
+  <li>
+  {% if values.__class__.__name__ == "User"%}
+    {% for name, value in values%}
+      {% if value %}
+          {{ value }}
+      {% endif %}
+    {% endfor %}
+  {% elif values.__class__.__name__ == "Citation"%}
+    {# {% for name, value in values %} #}
+      {# {% if value %} #}
+        {{ values|render_citation|safe }}
+      {# {% endif %} #}
+    {# {% endfor %} #}
+  {% else %}
+    {% for name, value in values%}
+      {% if value %}
+        {% if value.__class__.__name__ == "GraphicsCollection" %}
+          {{ render_graphics(value.collection) }}
+        {% elif (name == "description") or (name == "reference")%}
+          {{ value }}
+        {% else %}
+          <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
+        {% endif %}
+        <br>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  </li>
+{% endmacro %}
+
+{% macro render_graphics(graphics) %}
+<div class="img-container">
+  {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
+  {% for graph in graphics %}
+    <div class="img-item">
+      {% if 'data' in graph.image %}
+        <img class="img" src='{{ graph.image }}' alt='{{ graph.name }}' />
+      {% else %}
+        <img class="img" src='data:image/png;base64,{{ graph.image }}' alt='{{ graph.name }}' />
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro render_section(name, section)%}
+  {% if section is not empty%}
+    <div class = "col card" id={{name}}>
+      <h2>{{ section.__class__.__name__|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
+      {# {% endif %} #}
+      {# loop through objects in each section if not None#}
+      {% for name, object in section %}
+        {% if (object is list) and object|length != 0 %}
+          <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+          {% for objects in object%}
+              <ul>
+              {{ render_if_exist_list(objects) }}
+              </ul>
+          {% endfor %}
+        {% endif %}
+        {% if (object is string) %} {# if object is a string and not a class, print it as "Name: Content" if it is not None #}
+          <h3>{{ name|title|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h3>
+          {{ object }}
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endmacro %}
+
+
+<html lang="en">
+
+<head>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    h1 {
+      color: #214d87;
+      position: relative;
+      top: 65px;
+      left: 30px;
+      font-size: 48px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: lighter;
+    }
+
+    h2 {
+      color: #214d87;
+    }
+
+    h3 {
+      color: #0073e4;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+
+    .col {
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      padding: 1em;
+      border: 1px solid #DADCE0;
+      margin: 10px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      min-width: 768px;
+    }
+
+    .card .card {
+      padding: 0.5em;
+      padding-bottom: 0em;
+      border: none;
+    }
+
+    .img-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      text-align: center;
+    }
+
+    .img-item {
+      flex: 1;
+    }
+
+
+    .img {
+      width: 100%;
+      min-width: 640px;
+      max-width: 1024px;
+      height: auto;
+    }
+    .center {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+
+    #banner {
+      width: 100%;
+      height: 170px;
+      position: relative;
+      z-index: 0;
+      top: 0;
+      left: 0;
+    }
+
+    #banner #logo {
+      float: left;
+      max-width: 500px;
+      width: auto;
+      height: auto;
+    }
+
+    #sidebar {
+      background-color: #ffffff;
+      height: 100%;
+      width: 15rem;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      display: block;
+      box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2);
+      transition: left 0.2s ease-in-out;
+    }
+
+    #sidebar-btn:hover {
+      background-color: #0000001a;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #sidebar-toggle {
+      display: none;
+    }
+
+    #sidebar-btn {
+      position: fixed;
+      top: 10px;
+      left: 190px;
+      z-index: 2;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      background-color: #ffffff;
+      transition: left 0.2s ease-in-out;
+      outline: 2px solid #000000;
+      border-radius: 5px;
+    }
+
+    #sidebar-toggle:checked+#sidebar-btn+#sidebar {
+      left: -16rem;
+    }
+
+    #sidebar-toggle:checked+#sidebar-btn+#sidebar>hr {
+      margin: 0.5em 0.5em 0.5em 12.5em;
+    }
+
+    hr {
+      border: 0.75px solid;
+      color: #e5e7eb;
+      opacity: 0.7;
+      margin: 0.5em 0.5em 0.5em 0.5em;
+      transition: margin 0.2s ease-in-out;
+    }
+
+    #sidebar-toggle:checked+#sidebar-btn {
+      left: 10px;
+    }
+
+    #sidebar-toggle:checked~#container {
+      margin-left: 50px;
+    }
+
+    #sidebar .title {
+      display: block;
+      font-size: .75rem;
+      line-height: 1rem;
+      font-weight: 900;
+      padding: 3.0rem 1rem 0rem 1rem
+    }
+
+    #sidebar #contents {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #sidebar #button:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    #sidebar #button {
+      display: block;
+      font-size: .75rem;
+      line-height: 0.5rem;
+      font-weight: 500;
+      font-size: 15px;
+      padding: 1rem 1rem 1rem 1.2rem;
+      text-decoration: none;
+      color: #000000;
+    }
+
+    #sidebar #button_min {
+      display: none;
+      float: right;
+      font-size: .75rem;
+      line-height: 0.5rem;
+      font-weight: 500;
+      font-size: 15px;
+      margin-top: -2.5rem;
+      padding: 1rem 1rem 1rem 1.3rem;
+      text-decoration: none;
+      color: #000000;
+    }
+
+    #sidebar #button_min:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #container {
+      margin-left: 250px;
+      margin-right: 25px;
+      transition: margin-left 0.2s ease-in-out;
+    }
+
+    body {
+      background-color: #f3f4f6;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid black;
+    }
+
+    th,
+    td {
+      border: 1px solid #CCC;
+      height: 30px;
+    }
+
+    caption {
+      font-weight: bold;
+    }
+
+  </style>
+</head>
+
+<body>
+  <input class=minimizer type='checkbox' id='sidebar-toggle' />
+  <label for="sidebar-toggle" id='sidebar-btn'>
+    <div id='sidebar_toggle_icon'>
+      <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H9V18H6C5.44772 18 5 17.5523 5 17V7ZM11 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H11V18Z" fill="#000000"/>
+      </svg>
+    </div>
+  </label>
+  <div id='sidebar'>
+    <span class='title'>CARD SECTIONS</span>
+    <hr>
+    <ul id='contents'>
+      {% for name, section in model_card %}
+        {% if section is not empty%}
+          <a href="#{{ name }}">
+            <li id="button">{{ section.__class__.__name__|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</li>
+          </a>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+  <main id="container">
+    <div id="banner">
+      <img
+        src="https://raw.githubusercontent.com/VectorInstitute/cyclops/main/docs/source/theme/static/cyclops_logo-dark.png"
+        alt="CyclOps Logo" id="logo">
+      <h1>
+        Transparency Report
+      </h1>
+    </div>
+    <div class="row">
+        {# loop through each section in model card #}
+        {% for name, section in model_card %}
+          {{ render_section(name, section)}}
+        {% endfor %}
+    </div>
+  </main>
+</body>
+
+</html>
