@@ -8,7 +8,7 @@
       {% if value %}
           {{ value }}
       {% endif %}
-    {% endfor %}    
+    {% endfor %}
   {% elif values.__class__.__name__ == "Citation"%}
     {# {% for name, value in values %} #}
       {# {% if value %} #}
@@ -187,7 +187,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    /* change color to green when cursor hovers over */
+
     #sidebar-toggle {
       display: none;
     }
@@ -224,7 +224,7 @@
     #sidebar-toggle:checked+#sidebar-btn {
       left: 10px;
     }
-    
+
     #sidebar-toggle:checked~#container {
       margin-left: 50px;
     }
@@ -319,12 +319,6 @@
       <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H9V18H6C5.44772 18 5 17.5523 5 17V7ZM11 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H11V18Z" fill="#000000"/>
       </svg>
-      {# <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" height="18" width="18"
-        xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z">
-        </path>
-      </svg> #}
     </div>
   </label>
   <div id='sidebar'>

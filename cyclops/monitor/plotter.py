@@ -284,7 +284,8 @@ def plot_label_distribution(
 
 def plot_drift_experiment(
     results: dict[str, dict[str, np.ndarray[float, np.dtype[np.float64]]]],
-    plot_distance=False, axes_color="black"
+    plot_distance=False,
+    axes_color="black",
 ) -> None:
     """Plot drift experiement p-values.
 
@@ -294,11 +295,14 @@ def plot_drift_experiment(
         Dictionary with results from drift experiment.
 
     """
-    params = {"ytick.color" : axes_color,
-            "xtick.color" : axes_color,
-            "axes.labelcolor" : axes_color,
-            "axes.edgecolor" : axes_color,}
+    params = {
+        "ytick.color": axes_color,
+        "xtick.color": axes_color,
+        "axes.labelcolor": axes_color,
+        "axes.edgecolor": axes_color,
+    }
     plt.rcParams.update(params)
+    p_val_threshold = results[list(results.keys())[0]]["p_val_threshold"]
     if plot_distance:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 16))
         for shift_iter, shift in enumerate(results.keys()):
@@ -316,7 +320,7 @@ def plot_drift_experiment(
             )
             ax1.set_xlabel("Number of samples from test")
             ax1.set_ylabel("$p$-value")
-            if (axes_color == "white") or (axes_color == "w"):
+            if axes_color in ["white", "w"]:
                 p_val_color = "black"
             else:
                 p_val_color = "white"
@@ -332,8 +336,11 @@ def plot_drift_experiment(
                 label=shift,
                 ax=ax2,
             )
-        ax1.axhline(y=results[shift]["p_val_threshold"], label='$p$-value threshold',
-                color=p_val_color)
+        ax1.axhline(
+            y=p_val_threshold,
+            label="$p$-value threshold",
+            color=p_val_color,
+        )
         ax2.set_xlabel("Number of samples from test")
         ax2.set_ylabel("Distance")
         plt.legend()
@@ -354,14 +361,17 @@ def plot_drift_experiment(
             )
         ax.set_xlabel("Number of samples from test")
         ax.set_ylabel("$p$-value")
-        if (axes_color == "white") or (axes_color == "w"):
+        if axes_color in ["white", "w"]:
             p_val_color = "white"
         else:
             p_val_color = "black"
-        ax.axhline(y=results[shift]["p_val_threshold"], label='$p$-value threshold',
-                        color=p_val_color)
+        ax.axhline(
+            y=p_val_threshold,
+            label="$p$-value threshold",
+            color=p_val_color,
+        )
         plt.legend()
-        return fig
+    return fig
 
 
 def plot_drift_timeseries(
