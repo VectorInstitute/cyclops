@@ -12,7 +12,7 @@
   {% elif values.__class__.__name__ == "Citation"%}
     {# {% for name, value in values %} #}
       {# {% if value %} #}
-        {{ values.content }}
+        {{ values.content | safe }}
       {# {% endif %} #}
     {# {% endfor %} #}
   {% else %}
@@ -20,7 +20,7 @@
       {% if value %}
         {% if value.__class__.__name__ == "GraphicsCollection" %}
           {{ render_graphics(value.collection) }}
-        {% elif (name == "description") or (name == "reference")%}
+        {% elif (name == "description") or (name == "link")%}
           {{ value }}
         {% else %}
           <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
