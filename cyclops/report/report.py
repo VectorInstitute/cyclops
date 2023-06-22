@@ -197,9 +197,10 @@ class ModelCardReport:
 
         """
         _raise_if_not_dict_with_str_keys(data)
-        section = self._get_section(section_name)
+        section_name_ = str_to_snake_case(section_name)
+        section = self._get_section(section_name_)
         populated_section = section.parse_obj(data)
-        setattr(self._model_card, section_name, populated_section)
+        setattr(self._model_card, section_name_, populated_section)
 
     def log_descriptor(
         self, name: str, description: str, section_name: str, **extra: Any

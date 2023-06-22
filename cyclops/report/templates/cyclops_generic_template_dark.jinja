@@ -12,7 +12,7 @@
   {% elif values.__class__.__name__ == "Citation"%}
     {# {% for name, value in values %} #}
       {# {% if value %} #}
-        {{ values }}
+        {{ values.content }}
       {# {% endif %} #}
     {# {% endfor %} #}
   {% else %}
