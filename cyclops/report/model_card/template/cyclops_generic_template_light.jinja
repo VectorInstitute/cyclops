@@ -33,14 +33,18 @@
 {% endmacro %}
 
 {% macro render_graphics(graphics) %}
-<div class="img-container">
+<div class="graph-container">
   {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
   {% for graph in graphics %}
-    <div class="img-item">
-      {% if 'data' in graph.image %}
-        <img class="img" src='{{ graph.image }}' alt='{{ graph.name }}' />
+    <div class="graph-item">
+      {% if graph.image.startswith('<div') %}
+      {{ graph.image|safe }}
       {% else %}
-        <img class="img" src='data:image/png;base64,{{ graph.image }}' alt='{{ graph.name }}' />
+      {% if 'data' in graph.image %}
+      <img class="img" src='{{ graph.image }}' alt='{{ graph.name }}' />
+      {% else %}
+      <img class="img" src='data:image/png;base64,{{ graph.image }}' alt='{{ graph.name }}' />
+      {% endif %}
       {% endif %}
     </div>
   {% endfor %}
@@ -310,6 +314,7 @@
     }
 
   </style>
+  <script>{{ plotlyjs|safe }}</script>
 </head>
 
 <body>
