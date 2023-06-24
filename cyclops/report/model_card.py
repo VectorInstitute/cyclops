@@ -1,11 +1,11 @@
 """Model Card schema."""
 import inspect
-import json
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
-from fsspec.implementations.http import HTTPFileSystem
+import numpy as np
+import numpy.typing as npt
 from license_expression import ExpressionError, get_license_index, get_spdx_licensing
 from pybtex import PybtexEngine
 from pybtex.exceptions import PybtexError
@@ -38,6 +38,7 @@ class BaseModelCardField(BaseModel):
         validate_assignment: bool = True
         allowable_sections: List[str] = []  # sections this field is allowed in
         list_factory: bool = False  # whether to use a list factory for this field
+        json_encoders = {np.ndarray: lambda v: v.tolist()}
 
 
 class Owner(
@@ -95,17 +96,18 @@ class License(
         None,
         description="The license text, which be used to provide a custom license.",
     )
+    text_url: Optional[AnyUrl] = Field(None, description="A URL to the license text.")
 
     @root_validator(skip_on_failure=True)
     def validate_spdx_identifier(  # pylint: disable=no-self-argument
         cls: "License", values: Dict[str, StrictStr]
-    ) -> Dict[str, StrictStr]:
+    ) -> Dict[str, Union[StrictStr, AnyUrl]]:
         """Validate the SPDX license identifier."""
         spdx_id = values["identifier"]
         try:
             get_spdx_licensing().parse(spdx_id, validate=True)
-            if spdx_id not in [None, ""] and values.get("text") is None:
-                values["text"] = StrictStr(cls._get_license_text(spdx_id))
+            if spdx_id not in [None, ""] and values.get("text_url") is None:
+                values["text_url"] = cls._get_license_text_url(spdx_id)  # type: ignore
         except ExpressionError as exc:
             if spdx_id.lower() not in ["proprietary", "unlicensed", "unknown"]:
                 raise ValueError(
@@ -115,7 +117,7 @@ class License(
         return values
 
     @staticmethod
-    def _get_license_text(identifier: Optional[str]) -> Optional[str]:
+    def _get_license_text_url(identifier: Optional[str]) -> Optional[str]:
         """Get the license text for a given SPDX identifier."""
         if identifier in ["proprietary", "unlicensed", "unknown", None]:
             return None
@@ -130,21 +132,14 @@ class License(
             if item.get("spdx_license_key")
         }
 
-        try:
-            license_text_path = (
-                "https://scancode-licensedb.aboutcode.org/"
-                + license_index_dict[identifier].get("json")
-            )
-            with HTTPFileSystem().open(license_text_path) as http_f:
-                return json.load(http_f).get("text")  # type: ignore[no-any-return]
-        except Exception:  # pylint: disable=broad-except
-            return None
+        text_urls = license_index_dict[identifier].get("text_urls")
+        if text_urls is not None and isinstance(text_urls, list) and len(text_urls) > 0:
+            return text_urls[0]  # type: ignore[no-any-return]
+
+        return None
 
 
-class Reference(
-    BaseModelCardField,
-    list_factory=True,
-):
+class Reference(BaseModelCardField, list_factory=True):
     """Reference to additional resources related to the model or dataset."""
 
     link: Optional[AnyUrl] = Field(None, description="A URL to the reference resource.")
@@ -178,9 +173,7 @@ class Citation(
 
 
 class RegulatoryRequirement(
-    BaseModelCardField,
-    allowable_sections=["model_details"],
-    list_factory=True,
+    BaseModelCardField, allowable_sections=["model_details"], list_factory=True
 ):
     """Regulatory requirements for the model or dataset."""
 
@@ -228,7 +221,7 @@ class ModelDetails(BaseModelCardField):
     )
 
 
-class Graphic(BaseModelCardField):
+class Graphic(BaseModelCardField, list_factory=True):
     """A graphic to be displayed in the model card."""
 
     name: Optional[StrictStr] = Field(None, description="The name of the graphic.")
@@ -250,9 +243,7 @@ class GraphicsCollection(BaseModelCardField):
 
 
 class SensitiveData(
-    BaseModelCardField,
-    allowable_sections=["datasets"],
-    list_factory=True,
+    BaseModelCardField, allowable_sections=["datasets"], list_factory=True
 ):
     """Details about sensitive data used in the model."""
 
@@ -284,9 +275,7 @@ class SensitiveData(
 
 
 class Dataset(
-    BaseModelCardField,
-    allowable_sections=["model_parameters"],
-    list_factory=True,
+    BaseModelCardField, allowable_sections=["model_parameters"], list_factory=True
 ):
     """Details about the dataset."""
 
@@ -394,15 +383,30 @@ class PerformanceMetric(
     BaseModelCardField,
     allowable_sections=["quantitative_analysis"],
     list_factory=True,
+    arbitrary_types_allowed=True,
 ):
     """Performance metrics for model evaluation."""
 
     type: Optional[StrictStr] = Field(
         None, description="The type of performance metric."
     )
-    value: Optional[Union[StrictFloat, StrictInt]] = Field(
-        None, description="The value of the performance metric."
-    )
+    value: Optional[
+        Union[
+            StrictFloat,
+            StrictInt,
+            npt.NDArray[Union[np.int_, np.float_]],
+            List[Union[StrictFloat, StrictInt]],
+            Tuple[
+                Union[
+                    StrictFloat,
+                    StrictInt,
+                    npt.NDArray[Union[np.int_, np.float_]],
+                    List[Union[StrictFloat, StrictInt]],
+                ],
+                ...,
+            ],
+        ]
+    ] = Field(None, description="The value of the performance metric.")
     slice: Optional[StrictStr] = Field(
         None,
         description=inspect.cleandoc(
@@ -610,7 +614,7 @@ class FairnessReport(BaseModelCardField):
         None,
         description=inspect.cleandoc(
             """
-            Segment of dataset which the fairness report is meant to assess e.g.
+            Segment(s) of dataset which the fairness report is meant to assess e.g.
             age, gender, age and gender, etc.""",
         ),
     )
