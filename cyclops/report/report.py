@@ -1,21 +1,27 @@
-"""Cyclops report module."""
+"""Cyclops report module."""  # pylint: disable=too-many-lines
+import base64
 import inspect
 import keyword
 import os
-from re import sub as re_sub
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
-from typing import Any, BinaryIO, Dict, List, Literal, Optional, TextIO, Type, Union
+from io import BytesIO
+from re import sub as re_sub
+from typing import Any, Dict, List, Literal, Optional, Type, Union
 
 import jinja2
+from plotly.graph_objects import Figure
+from plotly.io import write_image
 from pydantic import BaseModel, StrictStr, create_model
 from pydantic.fields import FieldInfo, ModelField
+from scour import scour
 
 from cyclops.report.model_card import (
     BaseModelCardField,
     Citation,
     Dataset,
     FairnessAssessment,
+    Graphic,
     GraphicsCollection,
     License,
     ModelCard,
@@ -60,6 +66,32 @@ class ModelCardReport:
     def __init__(self, output_dir: Optional[str] = None) -> None:
         self.output_dir = output_dir or os.getcwd()
 
+    @classmethod
+    def from_json_file(
+        cls, path: str, output_dir: Optional[str] = None
+    ) -> "ModelCardReport":
+        """Load a model card from a file.
+
+        Parameters
+        ----------
+        path : str
+            The path to a JSON file containing model card data.
+        output_dir : str, optional
+            The directory to save the report to. If not provided, the report will
+            be saved in a directory called `cyclops_reports` in the current working
+            directory.
+
+        Returns
+        -------
+        ModelCardReport
+            The model card report.
+
+        """
+        model_card = ModelCard.parse_file(path)
+        report = ModelCardReport(output_dir=output_dir)
+        report._model_card = model_card  # pylint: disable=protected-access
+        return report
+
     def _get_section(self, name: str) -> BaseModel:
         """Get a section of the model card.
 
@@ -72,7 +104,6 @@ class ModelCardReport:
 
         """
         name_ = str_to_snake_case(name)
-
         model_card_sections = self._model_card.__fields__
         if name_ not in model_card_sections:
             raise KeyError(
@@ -86,7 +117,6 @@ class ModelCardReport:
             setattr(self._model_card, name_, section_type())
 
         model_card_section: BaseModel = getattr(self._model_card, name_)
-
         if not issubclass(model_card_section.__class__, BaseModel):
             raise TypeError(
                 f"Expected section `{name}` to be a subclass of `BaseModel`."
@@ -135,7 +165,6 @@ class ModelCardReport:
                 field=field_value, section_name=section_name, field_name=field_name
             )
 
-            # add object to section
             if field.default_factory == list:
                 # NOTE: pydantic does not trigger validation when appending to a list,
                 # but if `validate_assignment` is set to `True`, then validation will
@@ -153,7 +182,7 @@ class ModelCardReport:
                 )
 
             field_value = _get_field_value(field_type, data)
-            _check_allowable_sections(  # check if field can be added to section
+            _check_allowable_sections(  # check if field is allowed in section
                 field=field_value, section_name=section_name, field_name=field_name
             )
 
@@ -267,14 +296,40 @@ class ModelCardReport:
             field_type=field_obj,
         )
 
-    def log_graphic(
-        self,
-        data_or_path: Union[str, bytes, BinaryIO, TextIO],
-        caption: str,
-        section_name: str,
-    ) -> None:  # TODO
-        """Add a graphic to the model card."""
-        raise NotImplementedError()
+    def log_plotly_figure(self, fig: Figure, alt: str, section_name: str) -> None:
+        """Add a plotly figure to a section of the report.
+
+        Parameters
+        ----------
+        fig : Figure
+            The plotly figure to add.
+        alt : str
+            The alt text for the figure.
+        section_name : str
+            The section of the report to add the figure to.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+
+        """
+        buffer = BytesIO()
+        write_image(fig, buffer, format="svg", validate=True)
+
+        scour_options = scour.sanitizeOptions()
+        scour_options.remove_descriptive_elements = True
+        svg: str = scour.scourString(buffer.getvalue(), options=scour_options)
+
+        # convert svg to base64
+        svg = base64.b64encode(svg.encode("utf-8")).decode("utf-8")
+
+        self._log_field(
+            data={"name": alt, "image": f"data:image/svg+xml;base64,{svg}"},
+            section_name=section_name,
+            field_name="figures",
+            field_type=Graphic,
+        )
 
     # loggers for `Model Details` section
     def log_owner(
@@ -779,35 +834,7 @@ class ModelCardReport:
                 field_type=PerformanceMetric,
             )
 
-    @classmethod
-    def from_json_file(
-        cls, path: str, output_dir: Optional[str] = None
-    ) -> "ModelCardReport":
-        """Load a model card from a file.
-
-        Parameters
-        ----------
-        path : str
-            The path to a JSON file containing model card data.
-        output_dir : str, optional
-            The directory to save the report to. If not provided, the report will
-            be saved in a directory called `cyclops_reports` in the current working
-            directory.
-
-        Returns
-        -------
-        ModelCardReport
-            The model card report.
-
-        """
-        model_card = ModelCard.parse_file(path)
-        report = ModelCardReport(output_dir=output_dir)
-        report._model_card = model_card  # pylint: disable=protected-access
-        return report
-
-    # TODO: COMPARE MODEL CARDS
-
-    # TODO: MERGE MODEL CARDS
+    # TODO: MERGE/COMPARE MODEL CARDS
 
     # EXPORTING THE REPORT
     def validate(self) -> None:
@@ -845,11 +872,12 @@ class ModelCardReport:
             cache_size=0,
         )
 
-        def regex_replace(s, find, replace):
-            """A non-optimal implementation of a regex filter"""
-            return re_sub(find, replace, s)
+        def regex_replace(string: str, find: str, replace: str) -> str:
+            """Replace a regex pattern with a string."""
+            return re_sub(find, replace, string)
 
-        def empty(x):
+        def empty(x: Optional[List[Any]]) -> bool:
+            """Check if a variable is empty."""
             empty = True
             if x is not None:
                 for _, obj in x:
@@ -857,14 +885,14 @@ class ModelCardReport:
                         if len(obj) > 0:
                             empty = False
                     elif isinstance(obj, GraphicsCollection):
-                        if len(obj.collection) > 0:
+                        if len(obj.collection) > 0:  # type: ignore[arg-type]
                             empty = False
                     elif obj is not None:
                         empty = False
             return empty
 
         jinja_env.tests["list"] = lambda x: isinstance(x, list)
-        jinja_env.tests["class"] = lambda x: inspect.isclass(x)
+        jinja_env.tests["class"] = inspect.isclass
         jinja_env.filters["regex_replace"] = regex_replace
         jinja_env.tests["empty"] = empty
 
@@ -890,24 +918,29 @@ class ModelCardReport:
             Whether to save the model card as a JSON file. The default is True.
 
         """
+        assert (
+            output_filename is None
+            or isinstance(output_filename, str)
+            and output_filename.endswith(".html")
+        ), "`output_filename` must be a string ending with '.html'"
         self.validate()
         template = self._get_jinja_template(template_path=template_path)
         content = template.render(model_card=self._model_card)
 
         # write to file
+        today = dt_date.today().strftime("%Y-%m-%d")
+        now = dt_datetime.now().strftime("%H-%M-%S")
         report_path = os.path.join(
             self.output_dir,
             "cyclops_reports",
-            output_filename or dt_datetime.now().strftime("%Y%m%d_%H%M%S") + ".html",
+            today,
+            now,
+            output_filename or "model_card.html",
         )
         self._write_file(report_path, content)
 
         if save_json:
-            json_path = os.path.join(
-                self.output_dir,
-                "cyclops_reports",
-                "model_card.json",
-            )
+            json_path = report_path.replace(".html", ".json")
             self._write_file(
                 json_path, self._model_card.json(indent=2, exclude_unset=True)
             )

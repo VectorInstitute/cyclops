@@ -71,6 +71,7 @@ evidently = "^0.2.8"
 verifyml = "^0.0.6"
 protobuf = "3.20.0"
 ipywidgets = "^8.0.6"
+kaleido = "0.2.1"
 
 [tool.poetry.group.codestyle.dependencies]
 pytest = "^7.1.1"
