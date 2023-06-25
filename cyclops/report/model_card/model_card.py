@@ -136,7 +136,7 @@ class Graphic(BaseModelCardField):
 
     name: Optional[StrictStr] = Field(None, description="The name of the graphic.")
     image: Optional[StrictStr] = Field(
-        None, description="The image, encoded as a base64 string."
+        None, description="The image, encoded as a base64 string or an html string."
     )
 
 
