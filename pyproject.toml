@@ -104,7 +104,6 @@ dash-cool-components = "0.1.8"
 dash-bootstrap-components = "^1.1.0"
 Flask-Caching = "^1.10.1"
 
-
 [tool.poetry.group.report.dependencies]
 pydantic = "^1.10.7"
 spdx-tools = "0.8.0a2"
