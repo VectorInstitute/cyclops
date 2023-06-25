@@ -5,10 +5,11 @@ difference in shap values for a chosen domain classifier to provide insight into
 most significant features in the drift detection.
 
 """
-
+import warnings
 from typing import Any, Optional
 
-import shap
+warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
+import shap  # noqa: E402 # pylint: disable=wrong-import-position
 
 
 class Explainer:
