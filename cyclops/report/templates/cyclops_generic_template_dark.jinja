@@ -12,16 +12,20 @@
   {% elif values.__class__.__name__ == "Citation"%}
     {# {% for name, value in values %} #}
       {# {% if value %} #}
-        {{ values|render_citation|safe }}
+        {{ values.content | safe }}
       {# {% endif %} #}
     {# {% endfor %} #}
+  {% elif values.__class__.__name__ == "Graphic"%}
+    {{ render_graphic(values) }}
   {% else %}
     {% for name, value in values%}
       {% if value %}
         {% if value.__class__.__name__ == "GraphicsCollection" %}
           {{ render_graphics(value.collection) }}
-        {% elif (name == "description") or (name == "reference")%}
+        {% elif (name == "description")%}
           {{ value }}
+        {% elif (name == "link")%}
+          <a href="{{ value }}">{{ value }}</a>
         {% else %}
           <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
         {% endif %}
@@ -32,21 +36,21 @@
   </li>
 {% endmacro %}
 
+{% macro render_graphic(graphic) %}
+<div class="img-item">
+  {% if 'data' in graphic.image %}
+    <img class="img" src='{{ graphic.image }}' alt='{{ graphic.name }}' />
+  {% else %}
+    <img class="img" src='data:image/png;base64,{{ graphic.image }}' alt='{{ graphic.name }}' />
+  {% endif %}
+</div>
+{% endmacro %}
+
 {% macro render_graphics(graphics) %}
 <div class="graph-container">
   {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
   {% for graph in graphics %}
-    <div class="graph-item">
-      {% if graph.image.startswith('<div') %}
-      {{ graph.image|safe }}
-      {% else %}
-      {% if 'data' in graph.image %}
-      <img class="img" src='{{ graph.image }}' alt='{{ graph.name }}' />
-      {% else %}
-      <img class="img" src='data:image/png;base64,{{ graph.image }}' alt='{{ graph.name }}' />
-      {% endif %}
-      {% endif %}
-    </div>
+    {{ render_graphic(graph) }}
   {% endfor %}
 </div>
 {% endmacro %}

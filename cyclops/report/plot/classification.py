@@ -1,7 +1,8 @@
 """Classification plotter."""
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 import plotly.graph_objs as go
 
 from cyclops.report.plot.base import Plotter
@@ -15,9 +16,9 @@ class ClassificationPlotter(Plotter):
     def __init__(
         self,
         task_type: Literal["binary", "multiclass", "multilabel"],
-        task_name: str = None,
-        class_num: int = None,
-        class_names: List[str] = None,
+        task_name: Optional[str] = None,
+        class_num: Optional[int] = None,
+        class_names: Optional[List[str]] = None,
     ):
         """Initialize the plotter.
 
@@ -37,8 +38,8 @@ class ClassificationPlotter(Plotter):
         super().__init__()
         self.task_name = task_name
         self.task_type = task_type
-        self._set_class_num(class_num)
-        self._set_class_names(class_names)
+        self._set_class_num(class_num)  # type: ignore[arg-type]
+        self._set_class_names(class_names)  # type: ignore[arg-type]
 
     def _set_class_num(self, class_num: int) -> None:
         """Set the number of classes or labels.
@@ -84,11 +85,13 @@ class ClassificationPlotter(Plotter):
 
     def roc_curve(
         self,
-        roc_curve: Tuple[np.ndarray, np.ndarray, np.ndarray],
-        auroc: Optional[Union[float, list, np.ndarray]] = None,
-        title_suffix: str = None,
+        roc_curve: Tuple[
+            npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]
+        ],
+        auroc: Optional[Union[float, List[float], npt.NDArray[np.float_]]] = None,
+        title_suffix: Optional[str] = None,
         layout: Optional[go.Layout] = None,
-        **plot_kwargs,
+        **plot_kwargs: Any,
     ) -> go.Figure:
         """Plot ROC curve for a single group or subpopulation.
 
@@ -99,7 +102,7 @@ class ClassificationPlotter(Plotter):
         auroc : Union[float, list, np.ndarray], optional
             AUROCs, by default None
         title_suffix : str, optional
-            Suffix used in the figure title showing the group or other useful info, \
+            Suffix used in the figure title showing the group or other useful info,
             by default None
         layout : go.Layout, optional
             Customized figure layout, by default None
@@ -140,10 +143,10 @@ class ClassificationPlotter(Plotter):
             for i in range(self.class_num):
                 if auroc is not None:
                     assert (
-                        len(auroc) == self.class_num
+                        len(auroc) == self.class_num  # type: ignore[arg-type]
                     ), "Aurocs must be of length class_num for \
                         multiclass/multilabel tasks"
-                    name = f"{self.class_names[i]} (AUC = {auroc[i]:.2f})"
+                    name = f"{self.class_names[i]} (AUC = {auroc[i]:.2f})"  # type: ignore[index] # noqa: E501 # pylint: disable=line-too-long
                 else:
                     name = self.class_names[i]
                 trace.append(
@@ -179,21 +182,22 @@ class ClassificationPlotter(Plotter):
 
     def roc_curve_comparison(
         self,
-        roc_curves: Dict[str, Tuple],
-        aurocs: Dict[str, Union[float, list, np.ndarray]] = None,
+        roc_curves: Dict[str, Tuple[npt.NDArray[np.float_], ...]],
+        aurocs: Optional[
+            Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
+        ] = None,
         layout: Optional[go.Layout] = None,
-        **plot_kwargs,
+        **plot_kwargs: Any,
     ) -> go.Figure:
         """Compare ROC curves among subpopulations or groups.
 
         Parameters
         ----------
         roc_curves : Dict[str, Tuple]
-            Dictioanry of roc curves, with keys being the name of \
-                the subpopulation or group
+            Dictionary of roc curves, with keys being the name of the subpopulation
+            or group
         aurocs : Dict[str, Union[float, list, np.ndarray]], optional
-            Aurcos for each subpopulation or group specified by name, \
-                by default None
+            AUROCs for each subpopulation or group specified by name, by default None
         layout : Optional[go.Layout], optional
             Customized figure layout, by default None
         **plot_kwargs : dict
@@ -234,11 +238,11 @@ class ClassificationPlotter(Plotter):
                 for i in range(self.class_num):
                     if aurocs and slice_name in aurocs:
                         assert (
-                            len(aurocs[slice_name]) == self.class_num
+                            len(aurocs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501 # pylint: disable=line-too-long
                         ), "Aurocs must be of length class_num for \
                             multiclass/multilabel tasks"
                         name = f"{slice_name}, {self.class_names[i]} \
-                            (AUC = {aurocs[i]:.2f})"
+                            (AUC = {aurocs[i]:.2f})"  # type: ignore[index]
                     else:
                         name = f"{slice_name}, {self.class_names[i]}"
                     fprs = slice_curve[0][i]
@@ -277,10 +281,12 @@ class ClassificationPlotter(Plotter):
 
     def precision_recall_curve(
         self,
-        precision_recall_curve: Tuple[np.ndarray, np.ndarray, np.ndarray],
-        title_suffix: str = None,
+        precision_recall_curve: Tuple[
+            npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]
+        ],
+        title_suffix: Optional[str] = None,
         layout: Optional[go.Layout] = None,
-        **plot_kwargs,
+        **plot_kwargs: Any,
     ) -> go.Figure:
         """Plot precision-recall curve for a single group or subpopulation.
 
@@ -347,9 +353,9 @@ class ClassificationPlotter(Plotter):
 
     def precision_recall_curve_comparison(
         self,
-        precision_recall_curves: Dict[str, Tuple],
+        precision_recall_curves: Dict[str, Tuple[npt.NDArray[np.float_], ...]],
         layout: Optional[go.Layout] = None,
-        **plot_kwargs,
+        **plot_kwargs: Any,
     ) -> go.Figure:
         """Plot precision-recall curves for multiple groups or subpopulations.
 
@@ -416,10 +422,10 @@ class ClassificationPlotter(Plotter):
 
     def classification_metrics(
         self,
-        metrics: Dict[str, Union[float, list, np.ndarray]],
-        title_suffix: str = None,
+        metrics: Dict[str, Union[float, List[float], npt.NDArray[Any]]],
+        title_suffix: Optional[str] = None,
         layout: Optional[go.Layout] = None,
-        **plot_kwargs,
+        **plot_kwargs: Any,
     ) -> go.Figure:
         """Plot classification metrics such as precision, recall, auroc, and f_beta \
         for a single group or subpopulation.
@@ -448,22 +454,22 @@ class ClassificationPlotter(Plotter):
                 isinstance(value, float) for value in metrics.values()
             ), "Every metric must be a float for binary tasks"
             trace = bar_plot(
-                x=list(metrics.keys()),
-                y=list(metrics.values()),
+                x=list(metrics.keys()),  # type: ignore[arg-type]
+                y=list(metrics.values()),  # type: ignore[arg-type]
                 **plot_kwargs,
             )
         else:
             trace = []
             layout_kwargs["barmode"] = "group"
             assert all(
-                len(value) == self.class_num for value in metrics.values()
+                len(value) == self.class_num for value in metrics.values()  # type: ignore[arg-type] # noqa: E501 # pylint: disable=line-too-long
             ), "Every metric must be of length class_num for \
                 multiclass/multilabel tasks"
             for i in range(self.class_num):
                 trace.append(
                     bar_plot(
-                        x=list(metrics.keys()),
-                        y=[value[i] for value in metrics.values()],
+                        x=list(metrics.keys()),  # type: ignore[arg-type]
+                        y=[value[i] for value in metrics.values()],  # type: ignore
                         name=self.class_names[i],
                         **plot_kwargs,
                     )
@@ -489,10 +495,10 @@ class ClassificationPlotter(Plotter):
 
     def metrics_history(
         self,
-        metric_history: Dict[str, Union[list, np.ndarray]],
+        metric_history: Dict[str, Union[List[float], npt.NDArray[Any]]],
         time_steps: Optional[List[str]] = None,
         layout: Optional[go.Layout] = None,
-        **plot_kwargs,
+        **plot_kwargs: Any,
     ) -> go.Figure:
         """Plot the history of metrics such as precision, recall, and f_beta.
 
@@ -525,10 +531,10 @@ class ClassificationPlotter(Plotter):
                 x_values = (
                     time_steps
                     if time_steps is not None
-                    else list(range(len(metric_values)))
+                    else list(range(len(metric_values)))  # type: ignore[arg-type]
                 )
                 plot = line_plot(
-                    x=x_values,
+                    x=x_values,  # type: ignore[arg-type]
                     y=metric_values,
                     name=metric_name,
                     **plot_kwargs,
@@ -538,19 +544,19 @@ class ClassificationPlotter(Plotter):
         else:
             for metric_name, metric_values in metric_history.items():
                 assert all(
-                    len(value) == self.class_num for value in metric_values
+                    len(value) == self.class_num for value in metric_values  # type: ignore[arg-type] # noqa: E501 # pylint: disable=line-too-long
                 ), "Metric values must be of length class_num for \
                     multiclass/multilabel tasks"
                 for i in range(self.class_num):
                     x_values = (
                         time_steps
                         if time_steps is not None
-                        else list(range(len(metric_values)))
+                        else list(range(len(metric_values)))  # type: ignore[arg-type]
                     )
                     name = f"{metric_name}: {self.class_names[i]}"
                     plot = line_plot(
-                        x=x_values,
-                        y=metric_values[i],
+                        x=x_values,  # type: ignore[arg-type]
+                        y=metric_values[i],  # type: ignore[arg-type]
                         trace_name=name,
                         **plot_kwargs,
                     )
@@ -573,9 +579,11 @@ class ClassificationPlotter(Plotter):
 
     def metrics_comparison(
         self,
-        slice_metrics: Dict[str, Dict[str, Union[float, np.ndarray, list]]],
+        slice_metrics: Dict[
+            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
+        ],
         layout: Optional[go.Layout] = None,
-        **plot_kwargs,
+        **plot_kwargs: Any,
     ) -> go.Figure:
         """Plot the comparison of metrics such as precision, recall, and f_beta.
 
@@ -609,8 +617,8 @@ class ClassificationPlotter(Plotter):
                 ), "Every metric must be a float for binary tasks"
                 trace.append(
                     radar_plot(
-                        r=list(metrics.values()),
-                        theta=metric_names,
+                        radial=list(metrics.values()),  # type: ignore[arg-type]
+                        theta=metric_names,  # type: ignore[arg-type]
                         name=slice_name,
                         **plot_kwargs,
                     )
@@ -618,8 +626,8 @@ class ClassificationPlotter(Plotter):
         else:
             for slice_name, metrics in slice_metrics.items():
                 metric_names = list(metrics.keys())
-                radial_data = []
-                theta_data = []
+                radial_data: List[float] = []
+                theta_data: List[float] = []
                 for metric_name, metric_values in metrics.items():
                     if isinstance(metric_values, (list, np.ndarray)):
                         assert (
@@ -631,10 +639,10 @@ class ClassificationPlotter(Plotter):
                             f"{metric_name}: {self.class_names[i]}"
                             for i in range(self.class_num)
                         ]
-                        theta_data.extend(theta)
+                        theta_data.extend(theta)  # type: ignore[arg-type]
                     elif isinstance(metric_values, float):
                         radial_data.append(metric_values)
-                        theta_data.append(metric_name)
+                        theta_data.append(metric_name)  # type: ignore[arg-type]
                     else:
                         raise ValueError(
                             "Metric values must be either a float or \
@@ -642,7 +650,7 @@ class ClassificationPlotter(Plotter):
                         )
                 trace.append(
                     radar_plot(
-                        r=radial_data,
+                        radial=radial_data,
                         theta=theta_data,
                         name=slice_name,
                         **plot_kwargs,

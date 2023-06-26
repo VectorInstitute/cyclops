@@ -1,8 +1,9 @@
 """Utility functions for plotting."""
 import base64
-from typing import List, Union
+from typing import Any, List, Optional, Union
 
 import numpy as np
+import numpy.typing as npt
 import plotly.graph_objs as go
 import plotly.io as pio
 from plotly.basedatatypes import BaseTraceType
@@ -32,7 +33,7 @@ def fig_to_html(
     fig: go.Figure,
     include_plotlyjs: bool = False,
     full_html: bool = False,
-    **kwargs,
+    **kwargs: Any,
 ) -> str:
     """Convert figure to html.
 
@@ -51,14 +52,13 @@ def fig_to_html(
         HTML string
 
     """
-    return fig.to_html(include_plotlyjs=include_plotlyjs, full_html=full_html, **kwargs)
+    return fig.to_html(  # type: ignore[no-any-return]
+        include_plotlyjs=include_plotlyjs, full_html=full_html, **kwargs
+    )
 
 
 def fig_to_image(  # pylint: disable=redefined-builtin
-    fig: go.Figure,
-    format: str = "png",
-    scale: int = 1,
-    **kwargs,
+    fig: go.Figure, format: str = "png", scale: int = 1, **kwargs: Any
 ) -> bytes:
     """Get image bytes from figure.
 
@@ -77,7 +77,9 @@ def fig_to_image(  # pylint: disable=redefined-builtin
         Image bytes
 
     """
-    return fig.to_image(format=format, scale=scale, **kwargs)
+    return fig.to_image(  # type: ignore[no-any-return]
+        format=format, scale=scale, **kwargs
+    )
 
 
 def save_fig(fig: go.Figure, path: str) -> None:
@@ -95,10 +97,10 @@ def save_fig(fig: go.Figure, path: str) -> None:
 
 
 def line_plot(
-    x: Union[list, np.ndarray],
-    y: Union[list, np.ndarray],
-    trace_name: str = None,
-    **kwargs,
+    x: Union[List[float], npt.NDArray[Any]],
+    y: Union[List[float], npt.NDArray[Any]],
+    trace_name: Optional[str] = None,
+    **kwargs: Any,
 ) -> go.Scatter:
     """Create a line plot.
 
@@ -127,17 +129,17 @@ def line_plot(
     return trace
 
 
-def radar_plot(  # pylint: disable=invalid-name
-    r: Union[list, np.ndarray],
-    theta: Union[list, np.ndarray],
-    trace_name: str = None,
-    **kwargs,
+def radar_plot(
+    radial: Union[List[float], npt.NDArray[Any]],
+    theta: Union[List[float], npt.NDArray[np.float_]],
+    trace_name: Optional[str] = None,
+    **kwargs: Any,
 ) -> go.Scatterpolar:
     """Create a radar plot.
 
     Parameters
     ----------
-    r : Union[list, np.ndarray]
+    radial : Union[list, np.ndarray]
         radial values
     theta : Union[list, np.ndarray]
         theta values
@@ -151,7 +153,7 @@ def radar_plot(  # pylint: disable=invalid-name
 
     """
     trace = go.Scatterpolar(
-        r=r,
+        r=radial,
         theta=theta,
         name=trace_name,
         fill="toself",
@@ -161,10 +163,10 @@ def radar_plot(  # pylint: disable=invalid-name
 
 
 def bar_plot(
-    x: Union[list, np.ndarray],
-    y: Union[list, np.ndarray],
-    trace_name: str = None,
-    **kwargs,
+    x: Union[List[float], npt.NDArray[Any]],
+    y: Union[List[float], npt.NDArray[Any]],
+    trace_name: Optional[str] = None,
+    **kwargs: Any,
 ) -> go.Bar:
     """Create a bar plot.
 
@@ -176,6 +178,9 @@ def bar_plot(
         y-axis values
     trace_name : str, optional
         Name of the trace, by default None
+    **kwargs : Any
+        Additional keyword arguments to pass to the update method of the
+        go.Bar object.
 
     Returns
     -------
@@ -194,7 +199,7 @@ def bar_plot(
 
 def create_figure(
     data: Union[BaseTraceType, List[BaseTraceType]],
-    **kwargs,
+    **kwargs: Any,
 ) -> go.Figure:
     """Create a figure.
 
@@ -202,6 +207,9 @@ def create_figure(
     ----------
     data : Union[BaseTraceType, List[BaseTraceType]]
         The traces to plot
+    **kwargs : Any
+        Additional keyword arguments to pass to go.Layout constructor (see
+        https://plotly.com/python/reference/layout/)
 
     Returns
     -------
