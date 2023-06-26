@@ -68,10 +68,7 @@ jupyterlab = "^3.4.2"
 prefect = "^2.7.10"
 ipympl = "^0.9.3"
 evidently = "^0.2.8"
-verifyml = "^0.0.6"
-protobuf = "3.20.0"
 ipywidgets = "^8.0.6"
-kaleido = "0.2.1"
 
 [tool.poetry.group.codestyle.dependencies]
 pytest = "^7.1.1"
@@ -112,6 +109,9 @@ Flask-Caching = "^1.10.1"
 pydantic = "^1.10.7"
 spdx-tools = "0.8.0a2"
 pybtex = "^0.24.0"
+kaleido = "0.2.1"
+scour = "^0.38.2"
+category-encoders = "^2.6.1"
 
 [tool.poetry.extras]
 query = ["SQLAlchemy", "psycopg2", "pyarrow", "dask", "hydra-core"]
