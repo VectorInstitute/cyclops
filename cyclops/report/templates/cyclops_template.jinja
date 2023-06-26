@@ -74,14 +74,18 @@
 
 
 {% macro render_graphics(graphics) %}
-<div class="img-container">
+<div class="graph-container">
   {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
   {% for graph in graphics %}
-  <div class="img-item">
+  <div class="graph-item">
+    {% if graph.image.startswith('<div') %}
+    {{ graph.image|safe }}
+    {% else %}
     {% if 'data' in graph.image %}
     <img src='{{ graph.image }}' alt='{{ graph.name }}' />
     {% else %}
     <img src='data:image/png;base64,{{ graph.image }}' alt='{{ graph.name }}' />
+    {% endif %}
     {% endif %}
   </div>
   {% endfor %}
@@ -502,6 +506,7 @@ metric.confidence_interval.upper_bound }}){% endif %}
       font-weight: bold;
     }
   </style>
+  <script>{{ plotlyjs|safe }}</script>
 </head>
 
 <body>

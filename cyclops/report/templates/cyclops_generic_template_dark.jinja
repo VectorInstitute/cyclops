@@ -47,7 +47,7 @@
 {% endmacro %}
 
 {% macro render_graphics(graphics) %}
-<div class="img-container">
+<div class="graph-container">
   {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
   {% for graph in graphics %}
     {{ render_graphic(graph) }}
@@ -323,6 +323,7 @@
     }
 
   </style>
+  <script>{{ plotlyjs|safe }}</script>
 </head>
 
 <body>
