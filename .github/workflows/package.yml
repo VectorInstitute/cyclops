@@ -76,10 +76,10 @@ jobs:
           python-version: 3.9
       - name: Install package and test import
         run: |
-          pip install -e ".[models]"
+          pip install -e ".[monitor]"
           pip install pytest
-          python3 -m pytest tests/package/extras/models.py
-  extra-models-package-install-check:
+          python3 -m pytest tests/package/extras/monitor.py
+  extra-report-package-install-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -90,7 +90,7 @@ jobs:
           python-version: 3.9
       - name: Install package and test import
         run: |
-          pip install -e ".[models]"
+          pip install -e ".[report]"
           pip install pytest
-          python3 -m pytest tests/package/extras/models.py
+          python3 -m pytest tests/package/extras/report.py
 
