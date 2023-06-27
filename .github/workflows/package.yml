@@ -1,0 +1,100 @@
+name: package install checks
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/package.yml
+      - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - '**.ipynb'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/package.yml
+      - '**.py'
+      - poetry.lock
+      - pyproject.toml
+      - '**.ipynb'
+
+jobs:
+  base-package-install-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install pip
+        run: python3 -m pip install --upgrade pip
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.9
+          cache: 'pip'
+      - name: Install package and test import
+        run: |
+          pip install -e .
+          pip install pytest
+          python3 -m pytest tests/package/*.py
+  extra-query-package-install-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install pip
+        run: python3 -m pip install --upgrade pip
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.9
+          cache: 'pip'
+      - name: Install package and test import
+        run: |
+          pip install -e ".[query]"
+          pip install pytest
+          python3 -m pytest tests/package/extras/query.py
+  extra-models-package-install-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install pip
+        run: python3 -m pip install --upgrade pip
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.9
+          cache: 'pip'
+      - name: Install package and test import
+        run: |
+          pip install -e ".[models]"
+          pip install pytest
+          python3 -m pytest tests/package/extras/models.py
+  extra-monitor-package-install-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install pip
+        run: python3 -m pip install --upgrade pip
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.9
+          cache: 'pip'
+      - name: Install package and test import
+        run: |
+          pip install -e ".[monitor]"
+          pip install pytest
+          python3 -m pytest tests/package/extras/monitor.py
+  extra-report-package-install-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install pip
+        run: python3 -m pip install --upgrade pip
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.9
+          cache: 'pip'
+      - name: Install package and test import
+        run: |
+          pip install -e ".[report]"
+          pip install pytest
+          python3 -m pytest tests/package/extras/report.py

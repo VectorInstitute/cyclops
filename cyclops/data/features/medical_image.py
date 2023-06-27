@@ -49,7 +49,10 @@ class MedicalImage(Image):  # type: ignore
     reader: Union[str, ImageReader] = "ITKReader"
     suffix: str = ".jpg"  # used when decoding/encoding bytes to image
     _loader = Compose(
-        [LoadImage(reader=reader, simple_keys=True, dtype=None), ToNumpy()]
+        [
+            LoadImage(reader=reader, simple_keys=True, dtype=None, image_only=True),
+            ToNumpy(),
+        ]
     )
     # Automatically constructed
     dtype: ClassVar[str] = "dict"

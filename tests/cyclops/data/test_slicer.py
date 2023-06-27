@@ -9,11 +9,9 @@ from datasets import Dataset
 from datasets.splits import Split
 
 import cyclops.query.ops as qo
-from cyclops.data.slicer import (
-    _maybe_convert_to_datetime,  # pylint: disable=protected-access
-)
-from cyclops.data.slicer import (
+from cyclops.data.slicer import (  # pylint: disable=protected-access
     SliceSpec,
+    _maybe_convert_to_datetime,
     compound_filter,
     filter_datetime,
     filter_non_null,

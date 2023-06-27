@@ -8280,11 +8280,12 @@ docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker
 testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
 
 [extras]
-evaluate = ["datasets", "monai", "torch", "xgboost"]
+models = ["scikit-learn", "torch", "torchxrayvision", "xgboost"]
 monitor = ["alibi", "alibi-detect", "hydra-core", "llvmlite", "torchxrayvision"]
-query = ["SQLAlchemy", "dask", "hydra-core", "psycopg2", "pyarrow"]
+query = ["SQLAlchemy", "hydra-core", "psycopg2"]
+report = ["category-encoders", "kaleido", "plotly", "pybtex", "pybtex-apa-style", "pydantic", "scour", "spdx-tools"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.11"
-content-hash = "7c24703a94761d1ea3e3fa6f48a4f0ca88daeb106f3d5cae649a33afb8221f84"
+content-hash = "17d525a38fa6720f6c3e239296fa567f64a41e7d9dcf93bc70dde7afcddb824f"
