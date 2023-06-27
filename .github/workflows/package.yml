@@ -93,4 +93,3 @@ jobs:
           pip install -e ".[report]"
           pip install pytest
           python3 -m pytest tests/package/extras/report.py
-
