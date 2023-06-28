@@ -15,60 +15,53 @@ readme = "README.md"
 python = ">=3.8, <3.11"
 pandas = "^1.4.1"
 numpy = "<=1.23.0"
-spacy = { version = "^3.2.1", extras = ["lookups"] }
-pyarrow = { version = "^11.0.0", optional = true }
+datasets = "^2.10.1"
+psutil = "^5.9.4"
+pyarrow = "^11.0.0"
+monai = { version = "^1.1.0", extras = ["itk"] }
+dask = { version = "^2022.9.1", extras = ["dataframe"] }
+
 psycopg2 = { version = "2.9.6", optional = true }
 hydra-core = { version = "^1.2.0", optional = true }
 SQLAlchemy = { version = "^1.4.32, <2.0", optional = true }
-dask = { version = "^2022.9.1", optional = true, extras = ["dataframe"] }
+scikit-learn = { version = "^1.2.2", optional = true }
 torch = { version = "^1.11.0", optional = true }
-xgboost = { version = "^1.5.2", optional = true }
 torchxrayvision = { version = "^0.0.37", optional = true }
+xgboost = { version = "^1.5.2", optional = true }
 alibi = { version = "^0.8.0", optional = true, extras = ["shap"] }
 alibi-detect = { version = "^0.10.4", optional = true, extras = ["torch"] }
 llvmlite = { version = "0.38.0", optional = true }
-datasets = { version = "^2.10.1", optional = true }
-monai = { version = "^1.1.0", optional = true, extras = ["itk"] }
-psutil = { version = "^5.9.4", optional = true }
-pybtex = "^0.24.0"
-pybtex-apa-style = "^1.3"
+pydantic = { version = "^1.10.7", optional = true }
+spdx-tools = { version = "0.8.0a2", optional = true }
+pybtex = { version = "^0.24.0", optional = true }
+kaleido = { version = "^0.2.1", optional = true }
+scour = { version = "^0.38.2", optional = true }
+category-encoders = { version = "^2.6.1", optional = true }
+plotly = { version = "^5.7.0", optional = true }
 
 [tool.poetry.group.query.dependencies]
-pyarrow = "^11.0.0"
 psycopg2 = "^2.9.5"
 hydra-core = "^1.2.0"
 SQLAlchemy = "^1.4.32, <2.0"
-dask = { version = "^2022.9.1", extras = ["dataframe"] }
 
-[tool.poetry.group.evaluate.dependencies]
-torch = "^1.11.0"
-xgboost = "^1.5.2"
-datasets = "^2.10.1"
-monai = { extras = ["itk"], version = "^1.1.0" }
-psutil = "^5.9.4"
-
-[tool.poetry.group.monitor.dependencies]
+[tool.poetry.group.models.dependencies]
 hydra-core = "^1.2.0"
+scikit-learn = "^1.2.2"
+torch = "^1.11.0"
 torchxrayvision = "^0.0.37"
-spacy = { version = "^3.2.1", extras = ["lookups"] }
+xgboost = "^1.5.2"
 alibi = { version = "^0.8.0", extras = ["shap"] }
 alibi-detect = { version = "^0.10.4", extras = ["torch"] }
 llvmlite = "0.38.0"
-datasets = "^2.10.1"
-monai = { extras = ["itk"], version = "^1.1.0" }
-psutil = "^5.9.4"
 
-[tool.poetry.group.dev.dependencies]
-seaborn = "^0.11.2"
+[tool.poetry.group.report.dependencies]
+pydantic = "^1.10.7"
+spdx-tools = "0.8.0a2"
+pybtex = "^0.24.0"
+kaleido = "0.2.1"
+scour = "^0.38.2"
+category-encoders = "^2.6.1"
 plotly = "^5.7.0"
-matplotlib = "^3.5.1"
-mlflow = "^1.24.0"
-jupyter = "^1.0.0"
-jupyterlab = "^3.4.2"
-prefect = "^2.7.10"
-ipympl = "^0.9.3"
-evidently = "^0.2.8"
-ipywidgets = "^8.0.6"
 
 [tool.poetry.group.codestyle.dependencies]
 pytest = "^7.1.1"
@@ -94,7 +87,17 @@ nbsphinx = "^0.8.11"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
 kaggle = "^1.5.13"
-plotly = "^5.7.0"
+
+[tool.poetry.group.dev.dependencies]
+seaborn = "^0.11.2"
+matplotlib = "^3.5.1"
+mlflow = "^1.24.0"
+jupyter = "^1.0.0"
+jupyterlab = "^3.4.2"
+prefect = "^2.7.10"
+ipympl = "^0.9.3"
+evidently = "^0.2.8"
+ipywidgets = "^8.0.6"
 
 [tool.poetry.group.interface.dependencies]
 dash = "^2.4.1"
@@ -104,19 +107,10 @@ dash-cool-components = "0.1.8"
 dash-bootstrap-components = "^1.1.0"
 Flask-Caching = "^1.10.1"
 
-
-[tool.poetry.group.report.dependencies]
-pydantic = "^1.10.7"
-spdx-tools = "0.8.0a2"
-pybtex = "^0.24.0"
-kaleido = "0.2.1"
-scour = "^0.38.2"
-category-encoders = "^2.6.1"
-
 [tool.poetry.extras]
-query = ["SQLAlchemy", "psycopg2", "pyarrow", "dask", "hydra-core"]
-evaluate = ["torch", "xgboost", "datasets", "monai"]
-monitor = ["hydra-core", "torchxrayvision", "alibi", "alibi-detect", "llvmlite"]
+query = ["psycopg2", "hydra-core", "SQLAlchemy"]
+models = ["hydra-core", "scikit-learn", "torch", "torchxrayvision", "xgboost", "alibi", "alibi-detect", "llvmlite"]
+report = ["pydantic", "spdx-tools", "pybtex", "kaleido", "scour", "category-encoders", "plotly"]
 
 [tool.isort]
 profile = "black"
@@ -146,6 +140,7 @@ strict_concatenate = true
 [tool.pylint]
     [tool.pylint.master]
     disable=["import-error", "duplicate-code", "no-value-for-parameter"]
+    ignore-paths=["^tests/package/.*$"]
 
     [tool.pylint.format]
     max-line-length=88
