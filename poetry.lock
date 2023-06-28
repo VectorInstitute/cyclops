@@ -5257,17 +5257,6 @@ six = "*"
 test = ["pytest"]
 
 [[package]]
-name = "pybtex-apa-style"
-version = "1.3"
-description = "Pybtex APA-like style"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pybtex-apa-style-1.3.tar.gz", hash = "sha256:38a6d11e8f40f259b1d0a6974b6dbae93edbe009c247d83de14c26bdd965afb2"},
-    {file = "pybtex_apa_style-1.3-py3-none-any.whl", hash = "sha256:d4433acd5a6ddf37489f0f8e0e4e1e8f71df4f3acd98628ea61994e89df96caf"},
-]
-
-[[package]]
 name = "pycodestyle"
 version = "2.9.1"
 description = "Python style guide checker"
@@ -8282,9 +8271,9 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [extras]
 models = ["alibi", "alibi-detect", "hydra-core", "llvmlite", "scikit-learn", "torch", "torchxrayvision", "xgboost"]
 query = ["SQLAlchemy", "hydra-core", "psycopg2"]
-report = ["category-encoders", "kaleido", "plotly", "pybtex", "pybtex-apa-style", "pydantic", "scour", "spdx-tools"]
+report = ["category-encoders", "kaleido", "plotly", "pybtex", "pydantic", "scour", "spdx-tools"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.11"
-content-hash = "8044ef876f7ecb990dfdf60c6c5e5382acdd502be08cc1ae4868e62e0ceb61de"
+content-hash = "4d07d5bbd4d6df3efbcd8f2fd7dbde4679130b431001f28f53d0afa439f1b4bb"

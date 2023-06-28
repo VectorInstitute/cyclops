@@ -34,7 +34,6 @@ llvmlite = { version = "0.38.0", optional = true }
 pydantic = { version = "^1.10.7", optional = true }
 spdx-tools = { version = "0.8.0a2", optional = true }
 pybtex = { version = "^0.24.0", optional = true }
-pybtex-apa-style = { version = "^1.3", optional = true }
 kaleido = { version = "^0.2.1", optional = true }
 scour = { version = "^0.38.2", optional = true }
 category-encoders = { version = "^2.6.1", optional = true }
@@ -59,7 +58,6 @@ llvmlite = "0.38.0"
 pydantic = "^1.10.7"
 spdx-tools = "0.8.0a2"
 pybtex = "^0.24.0"
-pybtex-apa-style = "^1.3"
 kaleido = "0.2.1"
 scour = "^0.38.2"
 category-encoders = "^2.6.1"
@@ -112,7 +110,7 @@ Flask-Caching = "^1.10.1"
 [tool.poetry.extras]
 query = ["psycopg2", "hydra-core", "SQLAlchemy"]
 models = ["hydra-core", "scikit-learn", "torch", "torchxrayvision", "xgboost", "alibi", "alibi-detect", "llvmlite"]
-report = ["pydantic", "spdx-tools", "pybtex", "pybtex-apa-style", "kaleido", "scour", "category-encoders", "plotly"]
+report = ["pydantic", "spdx-tools", "pybtex", "kaleido", "scour", "category-encoders", "plotly"]
 
 [tool.isort]
 profile = "black"
