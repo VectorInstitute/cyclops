@@ -8,12 +8,13 @@ def test_import_cyclops():
     import cyclops
 
     assert cyclops.__name__ == "cyclops"
+
     import cyclops.data as data
 
     assert data.__name__ == "cyclops.data"
-    import cyclops.evaluate as evaluate
 
-    assert evaluate.__name__ == "cyclops.evaluate"
+    with pytest.raises(ImportError):
+        import cyclops.evaluate
     with pytest.raises(ImportError):
         import cyclops.query
     with pytest.raises(ImportError):
