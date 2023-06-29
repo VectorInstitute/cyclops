@@ -8271,9 +8271,9 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [extras]
 models = ["alibi", "alibi-detect", "hydra-core", "llvmlite", "scikit-learn", "torch", "torchxrayvision", "xgboost"]
 query = ["SQLAlchemy", "hydra-core", "psycopg2"]
-report = ["category-encoders", "kaleido", "plotly", "pybtex", "pydantic", "scour", "spdx-tools"]
+report = ["category-encoders", "kaleido", "pillow", "plotly", "pybtex", "pydantic", "scour", "spdx-tools"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.11"
-content-hash = "4d07d5bbd4d6df3efbcd8f2fd7dbde4679130b431001f28f53d0afa439f1b4bb"
+content-hash = "3c5aa6a06070156a5877dee2e6ac0aba90af6d72c9120057f5037cc2739ca274"
