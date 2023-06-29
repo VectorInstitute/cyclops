@@ -38,10 +38,14 @@
 
 {% macro render_graphic(graphic) %}
 <div class="img-item">
-  {% if 'data' in graphic.image %}
-    <img class="img" src='{{ graphic.image }}' alt='{{ graphic.name }}' />
+  {% if graphic.image.startswith('<div') %}
+    {{ graphic.image|safe }}
   {% else %}
-    <img class="img" src='data:image/png;base64,{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% if 'data' in graphic.image %}
+      <img class="img" src='{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% else %}
+      <img class="img" src='data:image/png;base64,{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% endif %}
   {% endif %}
 </div>
 {% endmacro %}
