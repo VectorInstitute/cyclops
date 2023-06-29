@@ -10,8 +10,10 @@ from re import sub as re_sub
 from typing import Any, Dict, List, Literal, Optional, Type, Union
 
 import jinja2
+from PIL import Image
 from plotly.graph_objects import Figure
 from plotly.io import write_image
+from plotly.offline import get_plotlyjs
 from pydantic import BaseModel, StrictStr, create_model
 from pydantic.fields import FieldInfo, ModelField
 from scour import scour
@@ -296,7 +298,44 @@ class ModelCardReport:
             field_type=field_obj,
         )
 
-    def log_plotly_figure(self, fig: Figure, alt: str, section_name: str) -> None:
+    def log_image(self, img_path: str, alt: str, section_name: str) -> None:
+        """Add an image to a section of the report.
+
+        Parameters
+        ----------
+        img_path : str
+            The path to the image file.
+        alt : str
+            The alt text for the image.
+        section_name : str
+            The section of the report to add the image to.
+
+        Raises
+        ------
+        KeyError
+            If the given section name is not valid.
+        ValueError
+            If the given image path does not exist.
+
+        """
+        if not os.path.exists(img_path):
+            raise ValueError(f"Image path {img_path} does not exist.")
+
+        with Image.open(img_path) as img:
+            buffered = BytesIO()
+            img.save(buffered, format=img.format)
+            img_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+        self._log_field(
+            data={"name": alt, "image": f"data:image/{img.format};base64,{img_base64}"},
+            section_name=section_name,
+            field_name="figures",
+            field_type=Graphic,
+        )
+
+    def log_plotly_figure(
+        self, fig: Figure, alt: str, section_name: str, interactive: bool = True
+    ) -> None:
         """Add a plotly figure to a section of the report.
 
         Parameters
@@ -307,6 +346,8 @@ class ModelCardReport:
             The alt text for the figure.
         section_name : str
             The section of the report to add the figure to.
+        interactive : bool, optional
+            Whether or not the figure should be an interactive plot, by default True
 
         Raises
         ------
@@ -314,22 +355,34 @@ class ModelCardReport:
             If the given section name is not valid.
 
         """
-        buffer = BytesIO()
-        write_image(fig, buffer, format="svg", validate=True)
+        if interactive:
+            self._log_field(
+                data={
+                    "name": alt,
+                    "image": fig.to_html(full_html=False, include_plotlyjs=False),
+                },
+                section_name=section_name,
+                field_name="figures",
+                field_type=Graphic,
+            )
 
-        scour_options = scour.sanitizeOptions()
-        scour_options.remove_descriptive_elements = True
-        svg: str = scour.scourString(buffer.getvalue(), options=scour_options)
+        else:
+            buffer = BytesIO()
+            write_image(fig, buffer, format="svg", validate=True)
 
-        # convert svg to base64
-        svg = base64.b64encode(svg.encode("utf-8")).decode("utf-8")
+            scour_options = scour.sanitizeOptions()
+            scour_options.remove_descriptive_elements = True
+            svg: str = scour.scourString(buffer.getvalue(), options=scour_options)
 
-        self._log_field(
-            data={"name": alt, "image": f"data:image/svg+xml;base64,{svg}"},
-            section_name=section_name,
-            field_name="figures",
-            field_type=Graphic,
-        )
+            # convert svg to base64
+            svg = base64.b64encode(svg.encode("utf-8")).decode("utf-8")
+
+            self._log_field(
+                data={"name": alt, "image": f"data:image/svg+xml;base64,{svg}"},
+                section_name=section_name,
+                field_name="figures",
+                field_type=Graphic,
+            )
 
     # loggers for `Model Details` section
     def log_owner(
@@ -902,6 +955,7 @@ class ModelCardReport:
         self,
         output_filename: Optional[str] = None,
         template_path: Optional[str] = None,
+        interactive: bool = True,
         save_json: bool = True,
     ) -> None:
         """Export the model card report to an HTML file.
@@ -925,7 +979,8 @@ class ModelCardReport:
         ), "`output_filename` must be a string ending with '.html'"
         self.validate()
         template = self._get_jinja_template(template_path=template_path)
-        content = template.render(model_card=self._model_card)
+        plotlyjs = get_plotlyjs() if interactive else None
+        content = template.render(model_card=self._model_card, plotlyjs=plotlyjs)
 
         # write to file
         today = dt_date.today().strftime("%Y-%m-%d")

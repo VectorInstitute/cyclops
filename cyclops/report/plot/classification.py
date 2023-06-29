@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 import numpy as np
 import numpy.typing as npt
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 
 from cyclops.report.plot.base import Plotter
 from cyclops.report.plot.utils import bar_plot, create_figure, line_plot, radar_plot
@@ -89,7 +90,7 @@ class ClassificationPlotter(Plotter):
             npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]
         ],
         auroc: Optional[Union[float, List[float], npt.NDArray[np.float_]]] = None,
-        title_suffix: Optional[str] = None,
+        title: Optional[str] = "ROC Curve",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
@@ -101,9 +102,8 @@ class ClassificationPlotter(Plotter):
             Tuple of (fprs, tprs, thresholds)
         auroc : Union[float, list, np.ndarray], optional
             AUROCs, by default None
-        title_suffix : str, optional
-            Suffix used in the figure title showing the group or other useful info,
-            by default None
+        title: str, optional
+            Plot title, by default "ROC Curve"
         layout : go.Layout, optional
             Customized figure layout, by default None
         **plot_kwargs : dict
@@ -164,9 +164,6 @@ class ClassificationPlotter(Plotter):
             )
         )
 
-        title = (
-            f"ROC Curve: {title_suffix}" if title_suffix is not None else "ROC Curve"
-        )
         xaxis_title = "False Positive Rate"
         yaxis_title = "True Positive Rate"
 
@@ -186,18 +183,21 @@ class ClassificationPlotter(Plotter):
         aurocs: Optional[
             Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
         ] = None,
+        title: Optional[str] = "ROC Curve Comparison",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Compare ROC curves among subpopulations or groups.
+        """Plot ROC curves for multiple subpopulations or groups.
 
         Parameters
         ----------
         roc_curves : Dict[str, Tuple]
             Dictionary of roc curves, with keys being the name of the subpopulation
-            or group
+            or group and values being the roc curve tuple (fprs, tprs, thresholds)
         aurocs : Dict[str, Union[float, list, np.ndarray]], optional
             AUROCs for each subpopulation or group specified by name, by default None
+        title: str, optional
+            Plot title, by default "ROC Curve Comparison"
         layout : Optional[go.Layout], optional
             Customized figure layout, by default None
         **plot_kwargs : dict
@@ -262,7 +262,6 @@ class ClassificationPlotter(Plotter):
             )
         )
 
-        title = f'ROC Curve Comparison of: {", ".join(roc_curves.keys())}'
         xaxis_title = "False Positive Rate"
         yaxis_title = "True Positive Rate"
 
@@ -284,7 +283,7 @@ class ClassificationPlotter(Plotter):
         precision_recall_curve: Tuple[
             npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]
         ],
-        title_suffix: Optional[str] = None,
+        title: Optional[str] = "Precision-Recall Curve",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
@@ -294,9 +293,8 @@ class ClassificationPlotter(Plotter):
         ----------
         precision_recall_curve : Tuple[np.ndarray, np.ndarray, np.ndarray]
             Tuple of (recalls, precisions, thresholds)
-        title_suffix : str, optional
-            Suffix used in the figure title showing the group or other useful info, \
-            by default None
+        title : str, optional
+            Plot title, by default "Precision-Recall Curve"
         layout : go.Layout, optional
             Customized figure layout, by default None
         **plot_kwargs : dict
@@ -333,11 +331,6 @@ class ClassificationPlotter(Plotter):
                     )
                 )
 
-        title = (
-            f"Precision-Recall Curve: {title_suffix}"
-            if title_suffix
-            else "Precision-Recall Curve"
-        )
         xaxis_title = "Recall"
         yaxis_title = "Precision"
 
@@ -354,6 +347,7 @@ class ClassificationPlotter(Plotter):
     def precision_recall_curve_comparison(
         self,
         precision_recall_curves: Dict[str, Tuple[npt.NDArray[np.float_], ...]],
+        title: Optional[str] = "Precision-Recall Curve Comparison",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
@@ -363,9 +357,12 @@ class ClassificationPlotter(Plotter):
         ----------
         precision_recall_curves : Dict[str, Tuple]
             Dictionary of precision-recall curves, where the key is \
-                the group or subpopulation name
+                the group or subpopulation name and the value is a tuple \
+                of (recalls, precisions, thresholds)
         layout : Optional[go.Layout], optional
             Customized figure layout, by default None
+        title: str, optional
+            Plot title, by default "Precision-Recall Curve Comparison"
         **plot_kwargs : dict
             Additional keyword arguments for plotly.graph_objects.Scatter
 
@@ -378,7 +375,6 @@ class ClassificationPlotter(Plotter):
         trace = []
         if self.task_type == "binary":
             for slice_name, slice_curve in precision_recall_curves.items():
-                print(slice_name, slice_curve)
                 name = f"{slice_name}"
                 trace.append(
                     line_plot(
@@ -405,8 +401,6 @@ class ClassificationPlotter(Plotter):
                         )
                     )
 
-        title = f'Precision-Recall Curve Comparison of: \
-            {", ".join(precision_recall_curves.keys())}'
         xaxis_title = "Recall"
         yaxis_title = "Precision"
 
@@ -420,24 +414,24 @@ class ClassificationPlotter(Plotter):
             fig.update_layout(layout)
         return fig
 
-    def classification_metrics(
+    def metrics_value(
         self,
         metrics: Dict[str, Union[float, List[float], npt.NDArray[Any]]],
-        title_suffix: Optional[str] = None,
+        title: Optional[str] = "Metrics",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot classification metrics such as precision, recall, auroc, and f_beta \
-        for a single group or subpopulation.
+        """Plot values of metrics for a single group or subpopulation.
+
+        This includes metrics such as precision, recall, auroc, and f_beta.
 
         Parameters
         ----------
         metrics : Dict[str, Union[float, list, np.ndarray]]
             Dictionary of metrics, where the key is the metric name \
             and the value is the metric value
-        title_suffix : str, optional
-            Suffix used in the figure title showing the group or other useful info, \
-            by default None
+        title : str, optional
+            plot title, by default "Metrics"
         layout : Optional[go.Layout], optional
             Customized figure layout, by default None
         **plot_kwargs : dict
@@ -448,11 +442,10 @@ class ClassificationPlotter(Plotter):
             Figure object
 
         """
-        layout_kwargs = {}
         if self.task_type == "binary":
             assert all(
-                isinstance(value, float) for value in metrics.values()
-            ), "Every metric must be a float for binary tasks"
+                not isinstance(value, (list, np.ndarray)) for value in metrics.values()
+            ), ("Metrics must not be of type list or np.ndarray for" "binary tasks")
             trace = bar_plot(
                 x=list(metrics.keys()),  # type: ignore[arg-type]
                 y=list(metrics.values()),  # type: ignore[arg-type]
@@ -460,26 +453,21 @@ class ClassificationPlotter(Plotter):
             )
         else:
             trace = []
-            layout_kwargs["barmode"] = "group"
             assert all(
-                len(value) == self.class_num for value in metrics.values()  # type: ignore[arg-type] # noqa: E501 # pylint: disable=line-too-long
+                len(value) == self.class_num  # type: ignore[arg-type]
+                for value in metrics.values()
             ), "Every metric must be of length class_num for \
                 multiclass/multilabel tasks"
             for i in range(self.class_num):
                 trace.append(
                     bar_plot(
-                        x=list(metrics.keys()),  # type: ignore[arg-type]
+                        x=list(metrics.keys()),  # type: ignore
                         y=[value[i] for value in metrics.values()],  # type: ignore
                         name=self.class_names[i],
                         **plot_kwargs,
                     )
                 )
 
-        title = (
-            f"Classification Metrics: {title_suffix}"
-            if title_suffix
-            else "Classification Metrics"
-        )
         xaxis_title = "Metric"
         yaxis_title = "Score"
 
@@ -488,6 +476,7 @@ class ClassificationPlotter(Plotter):
             title=dict(text=title),
             xaxis=dict(title=xaxis_title),
             yaxis=dict(title=yaxis_title),
+            barmode="group" if self.task_type in ["multiclass", "multilabel"] else None,
         )
         if layout is not None:
             fig.update_layout(layout)
@@ -497,19 +486,23 @@ class ClassificationPlotter(Plotter):
         self,
         metric_history: Dict[str, Union[List[float], npt.NDArray[Any]]],
         time_steps: Optional[List[str]] = None,
+        title: Optional[str] = "Metrics History",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot the history of metrics such as precision, recall, and f_beta.
+        """Plot the history of non-curve metrics such as precision, recall, and f_beta \
+        for a single group or subpopulation.
 
         Parameters
         ----------
         metric_history : Dict[str, Union[list, np.ndarray]]
             Dictionary of metric histories, where the key is the metric name \
-                and the value is the metric history
+                and the value is the metric history as a list or np.ndarray
         time_steps : Optional[List[str]], optional
             List of time steps for the metric history used as the x-axis, \
                 by default None
+        title: str, optional
+            Plot title, by default "Metrics History"
         layout : Optional[go.Layout], optional
             Customized figure layout, by default None
         **plot_kwargs : dict
@@ -563,7 +556,6 @@ class ClassificationPlotter(Plotter):
                     plot.update(mode="lines+markers")
                     trace.append(plot)
 
-        title = "Metric History"
         xaxis_title = "Time Step"
         yaxis_title = "Score"
 
@@ -577,21 +569,26 @@ class ClassificationPlotter(Plotter):
             fig.update_layout(layout)
         return fig
 
-    def metrics_comparison(
+    def metrics_comparison_radar(
         self,
         slice_metrics: Dict[
             str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
         ],
+        title: Optional[str] = "Metrics Comparison",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot the comparison of metrics such as precision, recall, and f_beta.
+        """Plot metrics such as precision, recall, and f_beta for multiple groups or \
+        subpopulations in a radar chart.
 
         Parameters
         ----------
         slice_metrics : Dict[str, Dict[str, Union[float, np.ndarray, list]]]
             Dictionary of metrics, where the key is the slice name and \
-                the value is the metric dictionary
+                the value is the metric dictionary containing the metric names \
+                and values
+        title: str, optional
+            Plot title, by default "Metrics Comparison"
         layout : Optional[go.Layout], optional
             Customized figure layout, by default None
         **plot_kwargs : dict
@@ -613,8 +610,12 @@ class ClassificationPlotter(Plotter):
             for slice_name, metrics in slice_metrics.items():
                 metric_names = list(metrics.keys())
                 assert all(
-                    isinstance(value, float) for value in metrics.values()
-                ), "Every metric must be a float for binary tasks"
+                    not isinstance(value, (list, np.ndarray))
+                    for value in metrics.values()
+                ), (
+                    "Generic metrics must not be of type list or np.ndarray for"
+                    "binary tasks"
+                )
                 trace.append(
                     radar_plot(
                         radial=list(metrics.values()),  # type: ignore[arg-type]
@@ -645,7 +646,7 @@ class ClassificationPlotter(Plotter):
                         theta_data.append(metric_name)  # type: ignore[arg-type]
                     else:
                         raise ValueError(
-                            "Metric values must be either a float or \
+                            "Metric values must be either a number or \
                             of length class_num for multiclass/multilabel tasks"
                         )
                 trace.append(
@@ -657,14 +658,132 @@ class ClassificationPlotter(Plotter):
                     )
                 )
 
-        title = f"Model Performance on Subpopulations {slice_metrics.keys()}"
-
         fig = create_figure(
             data=trace,
             title=dict(text=title),
             polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
             showlegend=True,
         )
+        if layout is not None:
+            fig.update_layout(layout)
+        return fig
+
+    def metrics_comparison_bar(
+        self,
+        slice_metrics: Dict[
+            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
+        ],
+        title: Optional[str] = "Metrics Comparison",
+        layout: Optional[go.Layout] = None,
+        **plot_kwargs: Any,
+    ) -> go.Figure:
+        """Plot values of metrics for multiple group or subpopulation.
+
+        This includes metrics such as precision, recall, auroc, and f_beta.
+
+        Parameters
+        ----------
+        slice_metrics : Dict[str, Dict[str, Union[float, np.ndarray, list]]]
+            Dictionary of metrics, where the key is the slice name and \
+                the value is the metric dictionary containing the metric names \
+                and values
+        title: str, optional
+            Plot title, by default "Metrics Comparison"
+        layout : Optional[go.Layout], optional
+            Customized figure layout, by default None
+        **plot_kwargs : dict
+            Additional keyword arguments for plotly.graph_objects.Scatterpolar
+
+        Returns
+        -------
+        go.Figure
+            Figure object
+
+        Raises
+        ------
+        ValueError
+            If the metric values are not of the correct type
+
+        """
+        trace = []
+        if self.task_type == "binary":
+            for slice_name, metrics in slice_metrics.items():
+                metric_names = list(metrics.keys())
+                metric_values = list(metrics.values())
+                assert all(
+                    not isinstance(value, (list, np.ndarray))
+                    for value in metrics.values()
+                ), (
+                    "Generic metrics must not be of type list or np.ndarray for"
+                    "binary tasks"
+                )
+                trace.append(
+                    bar_plot(
+                        x=metric_names,  # type: ignore[arg-type]
+                        y=metric_values,  # type: ignore[arg-type]
+                        name=slice_name,
+                        **plot_kwargs,
+                    )
+                )
+
+            xaxis_title = "Metric"
+            yaxis_title = "Score"
+
+            fig = create_figure(
+                data=trace,
+                title=dict(text=title),
+                xaxis=dict(title=xaxis_title),
+                yaxis=dict(title=yaxis_title),
+                barmode="group",
+            )
+
+        else:
+            rows = len(slice_metrics)
+            fig = make_subplots(
+                rows=rows,
+                cols=1,
+                subplot_titles=list(slice_metrics.keys()),
+                x_title="Metric",
+                y_title="Score",
+            )
+
+            if len(self.template.layout.colorway) >= self.class_num:
+                colors = self.template.layout.colorway[: self.class_num]
+            else:
+                difference = self.class_num - len(self.template.layout.colorway)
+                colors = (
+                    self.template.layout.colorway
+                    + self.template.layout.colorway[:difference]
+                )
+
+            for i, (slice_name, metrics) in enumerate(slice_metrics.items()):
+                metric_names = list(metrics.keys())
+                for num in range(self.class_num):
+                    for metric_name in metric_names:
+                        if isinstance(metrics[metric_name], (list, np.ndarray)):
+                            metric_values = metrics[metric_name][num]  # type: ignore
+                        else:
+                            metric_values = metrics[metric_name]  # type: ignore
+                    fig.append_trace(
+                        bar_plot(
+                            x=metric_names,  # type: ignore[arg-type]
+                            y=metric_values,  # type: ignore[arg-type]
+                            name=self.class_names[num],
+                            legendgroup=self.class_names[num],
+                            showlegend=(i == 0),
+                            marker_color=colors[num],
+                            **plot_kwargs,
+                        ),
+                        row=i + 1,
+                        col=1,
+                    )
+
+            xaxis_title = "Metric"
+            yaxis_title = "Score"
+            fig.update_layout(
+                title=dict(text=title), barmode="group", height=rows * 300
+            )
+
         if layout is not None:
             fig.update_layout(layout)
         return fig
