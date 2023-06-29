@@ -29,9 +29,9 @@ jobs:
           python-version: 3.9
           cache: 'poetry'
       - run: |
-          poetry env use 3.9
-          source $(poetry env info --path)/bin/activate
-          poetry install --without dev,interface
+          python3 -m poetry env use 3.9
+          source $(python3 -m poetry env info --path)/bin/activate
+          python3 -m poetry install --without dev,interface
           python3 -m ipykernel install --user --name cyclops
           # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && rm -rf source/reference/api/_autosummary && make html

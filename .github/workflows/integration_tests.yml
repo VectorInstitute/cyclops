@@ -46,9 +46,9 @@ jobs:
           python-version: 3.9
       - name: Install dependencies and check code
         run: |
-          poetry env use 3.9
-          source $(poetry env info --path)/bin/activate
-          poetry install --without dev,docs,interface
+          python3 -m poetry env use 3.9
+          source $(python3 -m poetry env info --path)/bin/activate
+          python3 -m poetry install --without dev,docs,interface
           pytest -m integration_test
           coverage run -m pytest -m integration_test && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
