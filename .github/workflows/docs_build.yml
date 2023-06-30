@@ -27,9 +27,7 @@ jobs:
       - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9
-          cache: 'poetry'
       - run: |
-          python3 -m pip install --upgrade pip && python3 -m pip install poetry
           poetry env use 3.9
           source $(poetry env info --path)/bin/activate
           poetry install --without dev,interface
