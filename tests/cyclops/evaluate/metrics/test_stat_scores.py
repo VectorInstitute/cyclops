@@ -17,6 +17,7 @@ from sklearn.metrics import confusion_matrix as sk_confusion_matrix
 from sklearn.metrics import (
     multilabel_confusion_matrix as sk_multilabel_confusion_matrix,
 )
+from sklearn.preprocessing import label_binarize
 
 from cyclops.evaluate.metrics.functional.stat_scores import stat_scores
 from cyclops.evaluate.metrics.stat_scores import StatScores
@@ -31,6 +32,11 @@ def _sk_stat_scores_binary(
         if not ((0 < preds) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= threshold).astype(np.uint8)
+
+    if target.ndim == 0:
+        target = label_binarize(np.expand_dims(target, axis=0), classes=[0, 1])
+    if preds.ndim == 0:
+        preds = label_binarize(np.expand_dims(preds, axis=0), classes=[0, 1])
 
     tn, fp, fn, tp = sk_confusion_matrix(
         y_true=target, y_pred=preds, labels=[0, 1]
@@ -72,7 +78,18 @@ def _sk_stat_scores_multiclass(
 ) -> np.ndarray:
     """Compute stat scores for multiclass case using sklearn."""
     if preds.ndim == target.ndim + 1:
-        preds = np.argmax(preds, axis=1)
+        preds = np.argmax(preds, axis=-1)
+
+    # convert 0D arrays to one-hot
+    if target.ndim == 0:
+        target = label_binarize(
+            np.expand_dims(target, axis=0), classes=list(range(NUM_CLASSES))
+        )
+    if preds.ndim == 0:
+        preds = label_binarize(
+            np.expand_dims(preds, axis=0), classes=list(range(NUM_CLASSES))
+        )
+
     confmat = sk_multilabel_confusion_matrix(
         y_true=target, y_pred=preds, labels=list(range(NUM_CLASSES))
     )

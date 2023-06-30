@@ -33,7 +33,7 @@ def _sk_binary_auroc(
     return sk_roc_auc_score(y_true=target, y_score=preds, max_fpr=max_fpr)
 
 
-@pytest.mark.parametrize("inputs", _binary_cases[1:])
+@pytest.mark.parametrize("inputs", _binary_cases[2:])
 @pytest.mark.parametrize("max_fpr", [None, 0.7])
 class TestBinaryAUROC(MetricTester):
     """Test function and class for computing AUCROC for binary targets."""
@@ -84,7 +84,7 @@ def _sk_multiclass_auroc(
     )
 
 
-@pytest.mark.parametrize("inputs", _multiclass_cases[1:])
+@pytest.mark.parametrize("inputs", _multiclass_cases[2:])
 @pytest.mark.parametrize("average", ["macro", "weighted"])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # no positive samples
 class TestMulticlassAUROC(MetricTester):
@@ -137,7 +137,7 @@ def _sk_multilabel_auroc(
     )
 
 
-@pytest.mark.parametrize("inputs", _multilabel_cases[1:])
+@pytest.mark.parametrize("inputs", _multilabel_cases[2:])
 @pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # no positive samples
 class TestMultilabelAUROC(MetricTester):

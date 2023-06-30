@@ -37,7 +37,7 @@ def _sk_binary_roc_curve(
     return [np.nan_to_num(x, nan=0.0) for x in [fpr, tpr, thresholds]]
 
 
-@pytest.mark.parametrize("inputs", _binary_cases[1:])
+@pytest.mark.parametrize("inputs", _binary_cases[2:])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # np.nan_to_num warning
 class TestBinaryROCCurve(MetricTester):
     """Test function and class for computing the ROC curve for binary targets."""
@@ -86,7 +86,7 @@ def _sk_multiclass_roc_curve(
     return [np.nan_to_num(x, nan=0.0) for x in [fpr, tpr, thresholds]]
 
 
-@pytest.mark.parametrize("inputs", _multiclass_cases[1:])
+@pytest.mark.parametrize("inputs", _multiclass_cases[2:])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # np.nan_to_num warning
 class TestMulticlassROCCurve(MetricTester):
     """Test function and class for computing the ROC curve for multiclass input."""
@@ -121,6 +121,11 @@ def _sk_multilabel_roc_curve(
     preds: np.ndarray,
 ) -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
     """Compute ROC curve for multilabel case using sklearn."""
+    if preds.ndim == 1:
+        preds = np.expand_dims(preds, axis=0)
+    if target.ndim == 1:
+        target = np.expand_dims(target, axis=0)
+
     fpr, tpr, thresholds = [], [], []
     for i in range(NUM_LABELS):
         res = _sk_binary_roc_curve(target[:, i], preds[:, i])
@@ -131,7 +136,7 @@ def _sk_multilabel_roc_curve(
     return fpr, tpr, thresholds
 
 
-@pytest.mark.parametrize("inputs", _multilabel_cases[1:])
+@pytest.mark.parametrize("inputs", _multilabel_cases[2:])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # no positive samples
 class TestMultilabelROCCurve(MetricTester):
     """Test function and class for computing ROC curve for multilabel targets."""

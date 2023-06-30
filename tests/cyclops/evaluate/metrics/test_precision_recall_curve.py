@@ -36,7 +36,7 @@ def _sk_binary_precision_recall_curve(
     )
 
 
-@pytest.mark.parametrize("inputs", _binary_cases[1:])
+@pytest.mark.parametrize("inputs", _binary_cases[2:])
 class TestBinaryPrecisionRecallCurve(MetricTester):
     """Test function and class for computing binary precision-recall curve."""
 
@@ -83,7 +83,7 @@ def _sk_multiclass_precision_recall_curve(
     return [np.nan_to_num(x, nan=0.0) for x in [precision, recall, thresholds]]
 
 
-@pytest.mark.parametrize("inputs", _multiclass_cases[1:])
+@pytest.mark.parametrize("inputs", _multiclass_cases[2:])
 @pytest.mark.filterwarnings("ignore::UserWarning")
 class TestMulticlassPrecisionRecallCurve(MetricTester):
     """Test function and class for computing multiclass precision-recall curve."""
@@ -116,6 +116,11 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
 def _sk_multilabel_precision_recall_curve(
     target: np.ndarray, preds: np.ndarray
 ) -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
+    if preds.ndim == 1:
+        preds = np.expand_dims(preds, axis=0)
+    if target.ndim == 1:
+        target = np.expand_dims(target, axis=0)
+
     precision, recall, thresholds = [], [], []
     for i in range(NUM_LABELS):
         res = _sk_binary_precision_recall_curve(target[:, i], preds[:, i])
@@ -126,7 +131,7 @@ def _sk_multilabel_precision_recall_curve(
     return precision, recall, thresholds
 
 
-@pytest.mark.parametrize("inputs", _multilabel_cases[1:])
+@pytest.mark.parametrize("inputs", _multilabel_cases[2:])
 class TestMultilabelPrecisionRecallCurve(MetricTester):
     """Test function and class for computing multilabel precision-recall curve."""
 

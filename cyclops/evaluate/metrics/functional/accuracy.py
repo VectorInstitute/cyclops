@@ -78,8 +78,8 @@ def _accuracy_reduce(  # pylint: disable=too-many-arguments
             denominator = tp + fn
 
     score = _prf_divide(
-        np.array(numerator) if np.isscalar(numerator) else numerator,
-        np.array(denominator) if np.isscalar(denominator) else denominator,
+        np.expand_dims(numerator, axis=0) if numerator.ndim == 0 else numerator,
+        np.expand_dims(denominator, axis=0) if denominator.ndim == 0 else denominator,
         metric="accuracy",
         modifier="true",
         average=average,
