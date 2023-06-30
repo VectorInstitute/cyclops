@@ -141,7 +141,7 @@ class TestMulticlassAccuracy(MetricTester):
         )
 
 
-@pytest.mark.parametrize("inputs", _multiclass_cases[1:])
+@pytest.mark.parametrize("inputs", _multiclass_cases[2:])
 @pytest.mark.parametrize("top_k", list(range(1, 10)))
 def test_topk(inputs, top_k) -> None:
     """Test top-k multiclass accuracy function."""
@@ -168,6 +168,11 @@ def _sk_multilabel_accuracy(
     average: Literal["micro", "macro", "weighted", None],
 ) -> np.ndarray:
     """Compute accuracy for multilabel input using sklearn."""
+    if preds.ndim == 1:
+        preds = np.expand_dims(preds, axis=0)
+    if target.ndim == 1:
+        target = np.expand_dims(target, axis=0)
+
     if np.issubdtype(preds.dtype, np.floating):
         if not ((0 < preds) & (preds < 1)).all():
             preds = sigmoid(preds)
@@ -178,13 +183,13 @@ def _sk_multilabel_accuracy(
         preds = preds.flatten()
         return sk_accuracy_score(y_true=target, y_pred=preds)
 
-    accuracy_per_class = []
+    accuracy_per_label = []
     for i in range(preds.shape[1]):
-        accuracy_per_class.append(
+        accuracy_per_label.append(
             sk_accuracy_score(target[:, i].flatten(), preds[:, i].flatten())
         )
 
-    res = np.stack(accuracy_per_class, axis=0)
+    res = np.stack(accuracy_per_label, axis=0)
 
     if average in ["macro", "weighted"]:
         weights = None

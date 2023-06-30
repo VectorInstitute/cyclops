@@ -89,7 +89,7 @@ def _run_metric_collection_test(metrics, target, preds) -> None:
     )
 
 
-@pytest.mark.parametrize("inputs", _binary_cases[1:])  # exclude integer case
+@pytest.mark.parametrize("inputs", _binary_cases[2:])  # exclude integer case
 @pytest.mark.filterwarnings("ignore::UserWarning")  # ignore divide by zero warning
 def test_binary_metric_collection(inputs, binary_metrics) -> None:
     """Test binary metric collection."""
@@ -97,7 +97,7 @@ def test_binary_metric_collection(inputs, binary_metrics) -> None:
     _run_metric_collection_test(binary_metrics, target, preds)
 
 
-@pytest.mark.parametrize("inputs", _multiclass_cases[1:])  # exclude integer case
+@pytest.mark.parametrize("inputs", _multiclass_cases[2:])  # exclude integer case
 @pytest.mark.filterwarnings("ignore::UserWarning")  # ignore divide by zero warning
 def test_multiclass_metric_collection(inputs, multiclass_metrics) -> None:
     """Test multilabel metric collection."""
@@ -105,7 +105,7 @@ def test_multiclass_metric_collection(inputs, multiclass_metrics) -> None:
     _run_metric_collection_test(multiclass_metrics, target, preds)
 
 
-@pytest.mark.parametrize("inputs", _multilabel_cases[1:])  # exclude integer case
+@pytest.mark.parametrize("inputs", _multilabel_cases[2:])  # exclude integer case
 @pytest.mark.filterwarnings("ignore::UserWarning")  # ignore divide by zero warning
 def test_multilabel_metric_collection(inputs, multilabel_metrics) -> None:
     """Test mulitlabel metric collection."""

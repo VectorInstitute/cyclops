@@ -31,43 +31,38 @@ def is_numeric(*arrays: npt.ArrayLike) -> bool:
     return all(np.asanyarray(array).dtype.kind in _NUMERIC_KINDS for array in arrays)
 
 
-def _input_squeeze(
-    target: npt.NDArray[Any], preds: npt.NDArray[Any]
-) -> Tuple[npt.NDArray[Any], npt.NDArray[Any]]:
-    """Remove excess dimensions."""
-    if target.shape[0] == 1:
-        target, preds = np.expand_dims(target.squeeze(), axis=0), np.expand_dims(
-            preds.squeeze(), axis=0
-        )
-    else:
-        target, preds = target.squeeze(), preds.squeeze()
+def _adjust_dim(inp: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    """Adjust the dimension of the input."""
+    if inp.ndim == 0:
+        inp = np.expand_dims(inp, axis=0)
+    if inp.ndim == 2 and inp.shape[1] == 1:
+        inp = np.squeeze(inp, axis=-1)
 
-    return target, preds
+    return inp
 
 
-def _check_muldim_input(target: npt.NDArray[Any], preds: npt.NDArray[Any]) -> None:
-    """Check if the input has more than two dimensions.
+def _check_input_dims(*arrays: npt.NDArray[Any]) -> None:
+    """Check the dimensions of the input arrays.
 
-    None of the metrics support multidimensional input.
+    Singleton arrays and arrays with more than two dimensions are not allowed.
 
     Parameters
     ----------
-    preds: np.ndarray
-        The predictions.
-    target: np.ndarray
-        The target.
+    arrays: numpy.ndarray
+        The arrays to check.
 
     Raises
     ------
     ValueError
-        If the input is multidimensional.
+        If any of the input arrays have more than two dimensions or if the
 
     """
-    if preds.ndim > 2 or target.ndim > 2:
-        raise ValueError(
-            "preds and target should be 1D or 2D arrays. "
-            f"Got {preds.ndim}D and {target.ndim}D arrays."
-        )
+    for array in arrays:
+        if array.ndim == 0 or array.ndim > 2:
+            raise ValueError(
+                f"Input contains {array.ndim} dimensions, but only 1 or 2 dimensional "
+                "arrays are supported."
+            )
 
 
 def common_input_checks_and_format(
@@ -125,11 +120,10 @@ def common_input_checks_and_format(
     if not is_numeric(target, preds):
         raise ValueError("The input `target` and `preds` must be numeric.")
 
-    _check_muldim_input(
-        target, preds
-    )  # multidimensional-multiclass input is not supported
+    target = _adjust_dim(target)
+    preds = _adjust_dim(preds)
 
-    target, preds = _input_squeeze(target, preds)
+    _check_input_dims(target, preds)  # only 1D or 2D arrays are allowed
 
     type_target = type_of_target(target)
     type_preds = type_of_target(preds)
@@ -194,14 +188,14 @@ def select_topk(
 
     """
     if top_k == 1:
-        topk_indices = np.argmax(prob_scores, axis=1, keepdims=True)
+        topk_indices = np.argmax(prob_scores, axis=-1, keepdims=True)
     else:
-        topk_indices = np.argsort(prob_scores, axis=1)[:, ::-1][
+        topk_indices = np.argsort(prob_scores, axis=-1)[:, ::-1][
             :, :top_k
         ]  # sort in descending order, then slice the top k
 
     topk_array = np.zeros_like(prob_scores)
-    np.put_along_axis(topk_array, topk_indices, 1.0, axis=1)
+    np.put_along_axis(topk_array, topk_indices, 1.0, axis=-1)
 
     return topk_array.astype(np.int_)
 
