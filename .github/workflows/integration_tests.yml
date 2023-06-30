@@ -36,7 +36,7 @@ on:
 
 jobs:
   integration-tests:
-    runs-on: self-hosted
+    runs-on: [self-hosted, gpu, db]
     steps:
       - uses: actions/checkout@v3
       - name: Install poetry
