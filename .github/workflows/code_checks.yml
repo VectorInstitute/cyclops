@@ -35,7 +35,7 @@ jobs:
           cache: 'poetry'
       - name: Install dependencies and check code
         run: |
-          python3 -m poetry env use 3.9
-          source $(python3 -m poetry env info --path)/bin/activate
-          python3 -m poetry install --without dev,docs,interface
+          poetry env use 3.9
+          source $(poetry env info --path)/bin/activate
+          poetry install --without dev,docs,interface
           pre-commit run --all-files
