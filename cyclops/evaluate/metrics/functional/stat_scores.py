@@ -385,13 +385,18 @@ def _multiclass_stat_scores_format(
     # check the preds
     if type_preds == "binary" and num_classes > 2:
         type_preds = "multiclass"
-    if type_preds not in ["multiclass", "continuous-multioutput"]:
+    if type_preds == "continuous" and target.size != 1:  # type: ignore[union-attr]
+        raise ValueError(
+            "Expected a single element in `target` when `preds` is an array of "
+            f"continuous values, but found {target.size} elements in `target`."  # type: ignore[union-attr] # noqa: E501 # pylint: disable=line-too-long
+        )
+    if type_preds not in ["multiclass", "continuous-multioutput", "continuous"]:
         raise ValueError(
             f"The argument `preds` must be multiclass or continuous multioutput, "
             f"got {type_preds}."
         )
 
-    if type_preds != "continuous-multioutput":
+    if type_preds == "multiclass":
         num_implied_classes = len(np.unique(preds))
         if num_implied_classes > num_classes:
             raise ValueError(
@@ -404,19 +409,25 @@ def _multiclass_stat_scores_format(
         check_topk(top_k, type_preds, type_target, num_classes)
 
     # handle probabilities and logits
-    if type_preds == "continuous-multioutput":
+    if type_preds in ["continuous-multioutput", "continuous"]:
         if not np.all(np.logical_and(preds >= 0.0, preds <= 1.0)):  # type: ignore
-            preds = sp.special.softmax(preds, axis=1)  # convert logits to probabilities
+            preds = sp.special.softmax(
+                preds, axis=-1
+            )  # convert logits to probabilities
 
-        if not np.allclose(1, preds.sum(axis=1)):  # type: ignore[union-attr]
+        if not np.allclose(1, preds.sum(axis=-1)):  # type: ignore[union-attr]
             raise ValueError(
                 "``preds`` need to be probabilities for multiclass problems"
                 " i.e. they should sum up to 1.0 over classes"
             )
 
-        # convert ``preds`` and ``target`` to multilabel-indicator format
+        # convert `preds` and `target` to multilabel-indicator format
         preds = select_topk(preds, top_k or 1)
         target = label_binarize(target, classes=np.arange(num_classes))
+
+        if type_preds == "continuous":
+            # target shape is (1, num_classes), remove the first dimension
+            target = target.squeeze(0)  # type: ignore[union-attr]
 
     return target.astype(np.int_), preds.astype(np.int_)  # type: ignore[union-attr]
 
@@ -554,6 +565,19 @@ def _multilabel_stat_scores_format(
         target, preds
     )
 
+    # allow single-sample inputs
+    if type_preds in ["continuous", "binary"] and type_target == "binary":
+        preds = np.expand_dims(preds, axis=0)
+        type_preds = (
+            "continuous-multioutput"
+            if type_preds == "continuous"
+            else "multilabel-indicator"
+        )
+    if type_target == "binary":
+        target = np.expand_dims(target, axis=0)
+        type_target = "multilabel-indicator"
+
+    # validate input type
     if not type_target == "multilabel-indicator":
         raise ValueError(
             f"The argument `target` must be multilabel-indicator, got {type_target}."

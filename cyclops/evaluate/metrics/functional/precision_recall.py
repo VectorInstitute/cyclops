@@ -66,8 +66,8 @@ def _precision_recall_reduce(  # pylint: disable=too-many-arguments
     modifier = "predicted" if metric == "precision" else "true"
 
     score = _prf_divide(
-        np.array(numerator) if np.isscalar(tp) else numerator,
-        np.array(denominator) if np.isscalar(tp) else denominator,
+        np.expand_dims(numerator, axis=0) if numerator.ndim == 0 else numerator,
+        np.expand_dims(denominator, axis=0) if denominator.ndim == 0 else denominator,
         metric,
         modifier,
         average,

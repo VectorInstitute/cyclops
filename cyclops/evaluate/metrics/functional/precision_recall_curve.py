@@ -684,6 +684,19 @@ def _multilabel_precision_recall_curve_format(
         target, preds
     )
 
+    # allow single-sample inputs
+    if type_preds in ["continuous", "binary"] and type_target == "binary":
+        preds = np.expand_dims(preds, axis=0)
+        type_preds = (
+            "continuous-multioutput"
+            if type_preds == "continuous"
+            else "multilabel-indicator"
+        )
+    if type_target == "binary":
+        target = np.expand_dims(target, axis=0)
+        type_target = "multilabel-indicator"
+
+    # validate input types
     if type_target != "multilabel-indicator":
         raise ValueError(
             "Expected argument `target` to be a multilabel indicator array, but got "

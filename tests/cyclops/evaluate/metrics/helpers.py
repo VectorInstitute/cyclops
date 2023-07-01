@@ -125,8 +125,9 @@ class MetricTester:
 
         cyclops_global_result = metric.compute()
 
-        all_target = np.concatenate(list(target))
-        all_preds = np.concatenate(list(preds))
+        all_target = np.concatenate(list(target), axis=0)
+        all_preds = np.concatenate(list(preds), axis=0)
+        print("Shapes: ", all_target.shape, all_preds.shape)
         sk_global_result = sk_metric(all_target, all_preds, **kwargs_update)
 
         _assert_allclose(cyclops_global_result, sk_global_result, atol=atol)
