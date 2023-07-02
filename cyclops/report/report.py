@@ -46,7 +46,7 @@ from cyclops.report.utils import (
 # pylint: disable=fixme
 
 _TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
-_DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template_dark.jinja"
+_DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template_light.jinja"
 
 
 class ModelCardReport:
@@ -957,7 +957,7 @@ class ModelCardReport:
         template_path: Optional[str] = None,
         interactive: bool = True,
         save_json: bool = True,
-    ) -> None:
+    ) -> str:
         """Export the model card report to an HTML file.
 
         Parameters
@@ -967,9 +967,14 @@ class ModelCardReport:
             with the current date and time.
         template_path : str, optional
             The path to the jinja2 template to use. The default is None, which uses
-            the default template provided by Cylops.
+            the default template provided by CyclOps.
         save_json : bool, optional
             Whether to save the model card as a JSON file. The default is True.
+
+        Returns
+        -------
+        str
+            Path of the saved HTML report file.
 
         """
         assert (
@@ -999,6 +1004,8 @@ class ModelCardReport:
             self._write_file(
                 json_path, self._model_card.json(indent=2, exclude_unset=True)
             )
+
+        return report_path
 
 
 def _get_field_value(field_type: Any, data: Any) -> Any:
