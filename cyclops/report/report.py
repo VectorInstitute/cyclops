@@ -970,7 +970,7 @@ class ModelCardReport:
             the default template provided by CyclOps.
         save_json : bool, optional
             Whether to save the model card as a JSON file. The default is True.
-            
+
         Returns
         -------
         str
@@ -1004,7 +1004,7 @@ class ModelCardReport:
             self._write_file(
                 json_path, self._model_card.json(indent=2, exclude_unset=True)
             )
-        
+
         return report_path
 
 
