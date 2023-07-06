@@ -74,7 +74,7 @@
               </ul>
           {% endfor %}
         {% endif %}
-        {% if (object is string) %} {# if object is a string and not a class, print it as "Name: Content" if it is not None #}
+        {% if (object is string or (object|int != 0) or (object|float != 0)) %} {# if object is a string and not a class, print it as "Name: Content" if it is not None #}
           <h3>{{ name|title|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h3>
           {{ object }}
         {% endif %}
