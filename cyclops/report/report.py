@@ -63,10 +63,9 @@ class ModelCardReport:
 
     """
 
-    _model_card = ModelCard()  # type: ignore[call-arg]
-
     def __init__(self, output_dir: Optional[str] = None) -> None:
         self.output_dir = output_dir or os.getcwd()
+        self._model_card = ModelCard()  # type: ignore[call-arg]
 
     @classmethod
     def from_json_file(
@@ -230,7 +229,12 @@ class ModelCardReport:
         _raise_if_not_dict_with_str_keys(data)
         section_name_ = str_to_snake_case(section_name)
         section = self._get_section(section_name_)
-        populated_section = section.parse_obj(data)
+
+        # get data already in section and update with new data
+        section_data = section.dict()
+        section_data.update(data)
+
+        populated_section = section.__class__.parse_obj(section_data)
         setattr(self._model_card, section_name_, populated_section)
 
     def log_descriptor(

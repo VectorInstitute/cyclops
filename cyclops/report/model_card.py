@@ -153,7 +153,7 @@ class Citation(
     """Citation information for the model or dataset."""
 
     content: Optional[StrictStr] = Field(
-        None, description="The citation content e.g. BibTeX, APA, etc."
+        None, description="The citation content in BibTeX format."
     )
 
     @validator("content")
@@ -162,13 +162,16 @@ class Citation(
     ) -> StrictStr:
         """Parse the citation content."""
         try:
-            formatted_citation: StrictStr = PybtexEngine().format_from_string(
+            formatted_citation = PybtexEngine().format_from_string(
                 value, style="unsrt", output_backend="text"
             )
-            if formatted_citation != "":
-                value = formatted_citation
+            if formatted_citation == "":
+                raise ValueError(f"Expected a valid BibTeX entry. Got {value}.")
         except PybtexError as exc:
-            raise ValueError(f"Could not parse citation: {exc}") from exc
+            raise ValueError(
+                f"Encountered an error while parsing the citation content: {value}"
+                f"\n\n{exc}"
+            ) from exc
         return value
 
 
