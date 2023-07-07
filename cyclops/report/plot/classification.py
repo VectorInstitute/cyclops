@@ -7,7 +7,13 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
 from cyclops.report.plot.base import Plotter
-from cyclops.report.plot.utils import bar_plot, create_figure, line_plot, radar_plot
+from cyclops.report.plot.utils import (
+    bar_plot,
+    create_figure,
+    line_plot,
+    radar_plot,
+    scatter_plot,
+)
 
 
 # pylint: disable=use-dict-literal
@@ -775,6 +781,120 @@ class ClassificationPlotter(Plotter):
                             **plot_kwargs,
                         ),
                         row=i + 1,
+                        col=1,
+                    )
+
+            xaxis_title = "Metric"
+            yaxis_title = "Score"
+            fig.update_layout(
+                title=dict(text=title), barmode="group", height=rows * 300
+            )
+
+        if layout is not None:
+            fig.update_layout(layout)
+        return fig
+
+    def metrics_comparison_scatter(
+        self,
+        slice_metrics: Dict[
+            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
+        ],
+        title: Optional[str] = "Metrics Comparison",
+        layout: Optional[go.Layout] = None,
+        **plot_kwargs: Any,
+    ) -> go.Figure:
+        """Plot values of metrics for multiple group or subpopulation.
+
+        This includes metrics such as parity, and other fairness ratios.
+
+        Parameters
+        ----------
+        slice_metrics : Dict[str, Dict[str, Union[float, np.ndarray, list]]]
+            Dictionary of metrics, where the key is the slice name and \
+                the value is the metric dictionary containing the metric names \
+                and values
+        title: str, optional
+            Plot title, by default "Metrics Comparison"
+        layout : Optional[go.Layout], optional
+            Customized figure layout, by default None
+        **plot_kwargs : dict
+            Additional keyword arguments for plotly.graph_objects.Scatterpolar
+
+        Returns
+        -------
+        go.Figure
+            Figure object
+
+        Raises
+        ------
+        ValueError
+            If the metric values are not of the correct type
+
+        """
+        trace = []
+        if self.task_type == "binary":
+            for slice_name, metrics in slice_metrics.items():
+                metric_names = list(metrics.keys())
+                metric_values = list(metrics.values())
+                assert all(
+                    not isinstance(value, (list, np.ndarray))
+                    for value in metrics.values()
+                ), (
+                    "Generic metrics must not be of type list or np.ndarray for"
+                    "binary tasks"
+                )
+                trace.append(
+                    scatter_plot(
+                        x=metric_names,  # type: ignore[arg-type]
+                        y=metric_values,  # type: ignore[arg-type]
+                        name=slice_name,
+                        **plot_kwargs,
+                    )
+                )
+
+            xaxis_title = "Metric"
+            yaxis_title = "Score"
+
+            fig = create_figure(
+                data=trace,
+                title=dict(text=title),
+                xaxis=dict(title=xaxis_title),
+                yaxis=dict(title=yaxis_title),
+            )
+        else:
+            metric_names = list(slice_metrics[list(slice_metrics.keys())[0]].keys())
+            rows = len(metric_names)
+
+            fig = make_subplots(
+                rows=rows,
+                cols=1,
+                subplot_titles=metric_names,
+                x_title="Labels" if self.task_type == "multilabel" else "Classes",
+                y_title="Score",
+            )
+
+            if len(self.template.layout.colorway) >= self.class_num:
+                colors = self.template.layout.colorway[: self.class_num]
+            else:
+                difference = self.class_num - len(self.template.layout.colorway)
+                colors = (
+                    self.template.layout.colorway
+                    + self.template.layout.colorway[:difference]
+                )
+            for i, (slice_name, metrics) in enumerate(slice_metrics.items()):
+                for metric_name, metric_value in metrics.items():
+                    row_idx = metric_names.index(metric_name) + 1
+                    fig.add_trace(
+                        scatter_plot(
+                            x=self.class_names,  # type: ignore[arg-type]
+                            y=metric_value,  # type: ignore[arg-type]
+                            name=slice_name,
+                            legendgroup=slice_name,
+                            showlegend=(row_idx == 1),
+                            marker_color=colors[i],
+                            **plot_kwargs,
+                        ),
+                        row=row_idx,
                         col=1,
                     )
 
