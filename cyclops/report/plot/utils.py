@@ -197,6 +197,37 @@ def bar_plot(
     return trace
 
 
+def scatter_plot(
+    x: Union[List[float], npt.NDArray[Any]],
+    y: Union[List[float], npt.NDArray[Any]],
+    trace_name: Optional[str] = None,
+    **kwargs: Any,
+) -> go.Scatter:
+    """Create a scatter plot.
+
+    Parameters
+    ----------
+    x : Union[list, np.ndarray]
+        X-axis values
+    y : Union[list, np.ndarray]
+        y-axis values
+    trace_name : str, optional
+        Name of the trace, by default None
+    **kwargs : Any
+        Additional keyword arguments to pass to the update method of the
+        go.Scatter object.
+
+    Returns
+    -------
+    go.Scatter
+        The scatter plot
+
+    """
+    trace = go.Scatter(x=x, y=y, name=trace_name, mode="markers", marker={"size": 12})
+    trace.update(**kwargs)
+    return trace
+
+
 def create_figure(
     data: Union[BaseTraceType, List[BaseTraceType]],
     **kwargs: Any,
