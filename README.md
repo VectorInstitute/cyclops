@@ -9,19 +9,23 @@
 [![codecov](https://codecov.io/gh/VectorInstitute/cyclops/branch/main/graph/badge.svg)](https://codecov.io/gh/VectorInstitute/cyclops)
 [![license](https://img.shields.io/github/license/VectorInstitute/cyclops.svg)](https://github.com/VectorInstitute/cyclops/blob/main/LICENSE)
 
-``cyclops`` is a framework for facilitating research and deployment of ML models
-in the health (or clinical) setting. It provides a few high-level APIs namely:
+``cyclops`` is a framework for facilitating research and deployment of ML models for healthcare. It provides a few high-level APIs namely:
 
-
-* `query` - Querying EHR databases (such as MIMIC-IV)
-* `process` - Process static and temporal EHR data
+* `query` - Query EHR databases (such as MIMIC-IV)
+* `data` - Create datasets for training, inference and evaluation. We use the popular 🤗 [datasets](https://github.com/huggingface/datasets) to efficiently load and slice different modalities of data.
+* `models` - Use common model implementations using [scikit-learn](https://scikit-learn.org/stable/) and [PyTorch](https://pytorch.org/).
+* `tasks` - Use canonical Healthcare ML tasks such as
+    * Mortality prediction
+    * Chest X-ray classification
 * `evaluate` - Evaluate models on clinical prediction tasks
-* `monitor` - Detect data drift relevant for clinical use cases
+* `monitor` - Detect dataset shift relevant for clinical use cases
+* `report` - Create [model cards](https://vectorinstitute.github.io/cyclops/api/tutorials/mimiciii/model_card.html) for clinical ML models
 
-``cyclops`` also provides a library of use-cases on clinical datasets. The implemented
-use cases include:
+``cyclops`` also provides a library of end-to-end use cases on clinical datasets such as
 
-* Mortality decompensation prediction
+* [MIMIC-III](https://physionet.org/content/mimiciii/1.4/)
+* [MIMIC-IV](https://physionet.org/content/mimiciv/2.0/)
+* [eICU-CRD](https://eicu-crd.mit.edu/about/eicu/)
 
 
 ## 🐣 Getting Started
@@ -32,8 +36,10 @@ use cases include:
 python3 -m pip install pycyclops
 ```
 
-The core package only includes support for the `process` API. To install support for
-`query`, `evaluate` and `monitor` APIs, install them as extra dependency installs.
+The base package installation supports the use of the `data` and `process` APIs to load
+and transform clinical data, for downstream tasks.
+
+To install additional functionality from the other APIs, they can be installed as extras.
 
 To install with `query` API support,
 
@@ -41,23 +47,23 @@ To install with `query` API support,
 python3 -m pip install 'pycyclops[query]'
 ```
 
-To install with `evaluate` API support,
+To install with `models`, `tasks`, `evaluate` and `monitor` API support,
 
 ```bash
-python3 -m pip install 'pycyclops[evaluate]'
+python3 -m pip install 'pycyclops[models]'
 ```
 
-To install with `monitor` API support,
+To install with `report` API support,
 
 ```bash
-python3 -m pip install 'pycyclops[monitor]'
+python3 -m pip install 'pycyclops[report]'
 ```
 
 Multiple extras could also be combined, for example to install with both `query` and
-`evaluate` API support:
+`models` support:
 
 ```bash
-python3 -m pip install 'pycyclops[query,evaluate]'
+python3 -m pip install 'pycyclops[query,models]'
 ```
 
 
