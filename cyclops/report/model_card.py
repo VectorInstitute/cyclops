@@ -356,6 +356,8 @@ class ModelParameters(BaseModelCardField):
 
 
 class Datasets(BaseModelCardField):
+    """Datasets used to train/validate/evaluate the model."""
+
     data: Optional[List[Dataset]] = Field(
         description="Specifies the datasets used to train and evaluate your model.",
         default_factory=list,
