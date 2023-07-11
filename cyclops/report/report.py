@@ -696,7 +696,7 @@ class ModelCardReport:
         }
         self._log_field(
             data=data,
-            section_name="model_parameters",
+            section_name="datasets",
             field_name="data",
             field_type=Dataset,
         )

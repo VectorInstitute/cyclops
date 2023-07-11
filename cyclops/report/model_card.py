@@ -277,9 +277,7 @@ class SensitiveData(
     )
 
 
-class Dataset(
-    BaseModelCardField, allowable_sections=["model_parameters"], list_factory=True
-):
+class Dataset(BaseModelCardField, allowable_sections=["datasets"], list_factory=True):
     """Details about the dataset."""
 
     description: Optional[StrictStr] = Field(
@@ -315,7 +313,7 @@ class Dataset(
     size: Optional[StrictInt] = Field(
         None, description="The number of samples in the dataset."
     )
-    sensitive: Optional[SensitiveData] = Field(
+    sensitive_data: Optional[SensitiveData] = Field(
         None, description="Does this dataset contain any human, PII, or sensitive data?"
     )
 
@@ -355,6 +353,9 @@ class ModelParameters(BaseModelCardField):
         ),
         default_factory=list,
     )
+
+
+class Datasets(BaseModelCardField):
     data: Optional[List[Dataset]] = Field(
         description="Specifies the datasets used to train and evaluate your model.",
         default_factory=list,
@@ -657,6 +658,11 @@ class ModelCard(BaseModelCardField):
     )
     model_parameters: Optional[ModelParameters] = Field(
         None, description="Technical metadata for the model."
+    )
+    datasets: Optional[Datasets] = Field(
+        None,
+        description="Information about the datasets used to train, validate \
+        and/or test the model.",
     )
     considerations: Optional[Considerations] = Field(
         None,
