@@ -2,38 +2,54 @@
 
 
 {% macro render_if_exist_list(values) %}
-  <li>
+  {# <li> #}
   {% if values.__class__.__name__ == "User"%}
-    {% for name, value in values%}
+  <li>
+    {% for name, value in values %}
       {% if value %}
           {{ value }}
       {% endif %}
     {% endfor %}
+  </li>
   {% elif values.__class__.__name__ == "Citation"%}
+  <li>
     {# {% for name, value in values %} #}
       {# {% if value %} #}
         {{ values.content | safe }}
       {# {% endif %} #}
     {# {% endfor %} #}
+  </li>
   {% elif values.__class__.__name__ == "Graphic"%}
     {{ render_graphic(values) }}
   {% else %}
-    {% for name, value in values%}
-      {% if value %}
-        {% if value.__class__.__name__ == "GraphicsCollection" %}
-          {{ render_graphics(value.collection) }}
-        {% elif (name == "description")%}
-          {{ value }}
-        {% elif (name == "link")%}
-          <a href="{{ value }}">{{ value }}</a>
-        {% else %}
-          <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
+    {% if (values is string) or (values|int != 0) or (values|float != 0) %}
+    <li>
+      {{ values }}
+    </li>
+    {% else %}
+    <li>
+      {% for name, value in values %}
+        {% if value %}
+          {% if value.__class__.__name__ == "GraphicsCollection" %}
+            {{ render_graphics(value.collection) }}
+          {% elif (name == "description")%}
+            {{ value }}
+          {% elif (name == "link")%}
+            <a href="{{ value }}">{{ value }}</a>
+          {% else %}
+            {% if "str" in name%}
+              {{ value }}
+            {% else %}
+              <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
+            {% endif %}
+          {% endif %}
+          <br>
         {% endif %}
-        <br>
-      {% endif %}
-    {% endfor %}
+      {% endfor %}
+    </li>
+    {% endif %}
   {% endif %}
-  </li>
+  {# </li> #}
 {% endmacro %}
 
 {% macro render_graphic(graphic) %}
@@ -59,26 +75,46 @@
 </div>
 {% endmacro %}
 
+{% macro render_objects(section)%}
+{% for name, object in section %}
+  {% if name == "performance_metrics" %}
+  {% else %}
+    {% if (object is list) and object|length != 0 %}
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      {% for objects in object%}
+          <ul>
+          {{ render_if_exist_list(objects) }}
+          </ul>
+      {% endfor %}
+    {% elif ( (object is string) or (object is int) or (object is float) or (object is bool) ) %}
+      <h3>{{ name|title|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h3>
+      {{ object }}
+    {% elif (object is None) or (object is empty) %}
+    {% else %}
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      <ul>
+      {{render_if_exist_list(object)}}
+      </ul>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% endmacro %}
+
 {% macro render_section(name, section)%}
   {% if section is not empty%}
     <div class = "col card" id={{name}}>
-      <h2>{{ section.__class__.__name__|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
-      {# {% endif %} #}
-      {# loop through objects in each section if not None#}
-      {% for name, object in section %}
-        {% if (object is list) and object|length != 0 %}
-          <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
-          {% for objects in object%}
-              <ul>
-              {{ render_if_exist_list(objects) }}
-              </ul>
-          {% endfor %}
-        {% endif %}
-        {% if (object is string or (object|int != 0) or (object|float != 0)) %} {# if object is a string and not a class, print it as "Name: Content" if it is not None #}
-          <h3>{{ name|title|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h3>
-          {{ object }}
-        {% endif %}
-      {% endfor %}
+    {% set name = section.__class__.__name__ %}
+      <h2>{{ name|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
+      {% if name == "Datasets"%}
+        {% for dataset in section.data %}
+            {{ render_objects(dataset) }}
+        {% endfor %}
+      {% elif name == "QuantitativeAnalysis"%}
+        {{ section.performance_metrics|render_table|safe}}
+        {{ render_objects(section) }}
+      {% else %}
+        {{ render_objects(section) }}
+      {% endif %}
     </div>
   {% endif %}
 {% endmacro %}
@@ -195,7 +231,8 @@
     }
 
     #sidebar-btn:hover {
-      background-color: #0000001a;
+      {# background-color: #0000001a; #}
+      background-color: rgba(247, 247, 248, 0.9);
       border-radius: 5px;
       cursor: pointer;
     }
@@ -213,7 +250,7 @@
       padding: 0.25rem 0.5rem;
       background-color: #ffffff;
       transition: left 0.2s ease-in-out;
-      outline: 2px solid #000000;
+      outline: 2px solid #0000001a;
       border-radius: 5px;
     }
 
