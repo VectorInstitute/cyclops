@@ -1,6 +1,5 @@
 """Cyclops report module."""  # pylint: disable=too-many-lines
 import base64
-import inspect
 import keyword
 import os
 from datetime import date as dt_date
@@ -696,7 +695,7 @@ class ModelCardReport:
         }
         self._log_field(
             data=data,
-            section_name="model_parameters",
+            section_name="datasets",
             field_name="data",
             field_type=Dataset,
         )
@@ -948,10 +947,13 @@ class ModelCardReport:
                         empty = False
             return empty
 
-        jinja_env.tests["list"] = lambda x: isinstance(x, list)
-        jinja_env.tests["class"] = inspect.isclass
         jinja_env.filters["regex_replace"] = regex_replace
+        jinja_env.tests["list"] = lambda x: isinstance(x, list)
         jinja_env.tests["empty"] = empty
+        jinja_env.tests["None"] = lambda x: x is None
+        jinja_env.tests["int"] = lambda x: isinstance(x, int)
+        jinja_env.tests["float"] = lambda x: isinstance(x, float)
+        jinja_env.tests["bool"] = lambda x: isinstance(x, bool)
 
         return jinja_env.get_template(template_file)
 
