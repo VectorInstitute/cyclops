@@ -948,28 +948,14 @@ class ModelCardReport:
                         empty = False
             return empty
 
-        def render_table(metrics: List[PerformanceMetric]) -> str:
-            """Render an HTML table with given performance metrics."""
-            table = "<table>"
-            table += "<tr><th>Metric</th><th>Value</th><th>Slice</th></tr>"
-            for metric in metrics:
-                table += (
-                    f"<tr><td>{metric.type}</td><td>{metric.value}</td><td>{metric.slice}</td></tr>"
-                )
-            table += "</table>"
-            return table
-
         jinja_env.filters["regex_replace"] = regex_replace
-        jinja_env.filters["render_table"] = render_table
         jinja_env.filters["type"] = lambda x: type(x)
         jinja_env.tests["list"] = lambda x: isinstance(x, list)
-        jinja_env.tests["class"] = inspect.isclass
         jinja_env.tests["empty"] = empty
         jinja_env.tests["None"] = lambda x: x is None
         jinja_env.tests["int"] = lambda x: isinstance(x, int)
         jinja_env.tests["float"] = lambda x: isinstance(x, float)
         jinja_env.tests["bool"] = lambda x: isinstance(x, bool)
-        jinja_env.tests["class"] = lambda x: inspect.isclass(x)
 
         return jinja_env.get_template(template_file)
 

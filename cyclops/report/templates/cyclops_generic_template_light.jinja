@@ -52,6 +52,15 @@
   {# </li> #}
 {% endmacro %}
 
+{% macro render_table(metrics) %}
+<table>
+  <tr><th>Metric</th><th>Value</th><th>Slice</th></tr>
+  {% for metric in metrics %}
+    <tr><td>{{ metric.type }}</td><td>{{ metric.value|round(2) }}</td><td>{{ metric.slice }}</td></tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+
 {% macro render_graphic(graphic) %}
 <div class="img-item">
   {% if graphic.image.startswith('<div') %}
@@ -110,7 +119,8 @@
             {{ render_objects(dataset) }}
         {% endfor %}
       {% elif name == "QuantitativeAnalysis"%}
-        {{ section.performance_metrics|render_table|safe}}
+        {{render_table(section.performance_metrics)}}
+        {# {{ section.performance_metrics|render_table|safe}} #}
         {{ render_objects(section) }}
       {% else %}
         {{ render_objects(section) }}
