@@ -1,6 +1,5 @@
 """Cyclops report module."""  # pylint: disable=too-many-lines
 import base64
-import keyword
 import os
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
@@ -14,18 +13,17 @@ from plotly.graph_objects import Figure
 from plotly.io import write_image
 from plotly.offline import get_plotlyjs
 from pydantic import BaseModel, StrictStr, create_model
-from pydantic.fields import FieldInfo, ModelField
 from scour import scour
 
-from cyclops.report.model_card import (
-    BaseModelCardField,
+from cyclops.report.model_card import ModelCard
+from cyclops.report.model_card.base import BaseModelCardField
+from cyclops.report.model_card.fields import (
     Citation,
     Dataset,
     FairnessAssessment,
     Graphic,
     GraphicsCollection,
     License,
-    ModelCard,
     Owner,
     PerformanceMetric,
     Reference,
@@ -92,125 +90,36 @@ class ModelCardReport:
         report._model_card = model_card  # pylint: disable=protected-access
         return report
 
-    def _get_section(self, name: str) -> BaseModel:
-        """Get a section of the model card.
-
-        Raises
-        ------
-        KeyError
-            If the given section name is not in the model card.
-        TypeError
-            If the given section name is not a subclass of `BaseModel`.
-
-        """
-        name_ = str_to_snake_case(name)
-        model_card_sections = self._model_card.__fields__
-        if name_ not in model_card_sections:
-            raise KeyError(
-                f"Expected `section_name` to be in {list(model_card_sections.keys())}."
-                f" Got {name} instead."
-            )
-
-        # instantiate section if not already instantiated
-        section_type = model_card_sections[name_].type_
-        if not isinstance(getattr(self._model_card, name_), section_type):
-            setattr(self._model_card, name_, section_type())
-
-        model_card_section: BaseModel = getattr(self._model_card, name_)
-        if not issubclass(model_card_section.__class__, BaseModel):
-            raise TypeError(
-                f"Expected section `{name}` to be a subclass of `BaseModel`."
-                f" Got {model_card_section.__class__} instead."
-            )
-
-        return model_card_section
-
     def _log_field(
         self,
-        data: Any,
+        data: Dict[str, Any],
         section_name: str,
         field_name: str,
-        field_type: Optional[Type[BaseModel]] = None,
+        field_type: Type[BaseModel],
     ) -> None:
         """Populate a field in the model card.
 
         Parameters
         ----------
-        data : Any
+        data : Dict[str, Any]
             Data to populate the field with.
         section_name : str
             Name of the section to populate.
         field_name : str
             Name of the field to populate. If the field does not exist, it will be
             created and added to the section.
-        field_type : BaseModel, optional
-            Type of the field to populate. If not provided, the type will be inferred
-            from the data.
-
-        Raises
-        ------
-        ValueError
-            If `field_name` is not a valid python identifier.
+        field_type : BaseModel
+            Type of the field to populate.
 
         """
-        section = self._get_section(section_name)
+        section_name = str_to_snake_case(section_name)
+        section = self._model_card.get_section(section_name)
+        field_value = field_type.parse_obj(data)
 
-        section_fields = section.__fields__
-        if field_name in section_fields:
-            field = section_fields[field_name]
-            field_type = field.type_  # [!] can be any (serializable) type
-            field_value = _get_field_value(field_type, data)
-
-            _check_allowable_sections(  # check if field can be added to section
-                field=field_value, section_name=section_name, field_name=field_name
-            )
-
-            if field.default_factory == list:
-                # NOTE: pydantic does not trigger validation when appending to a list,
-                # but if `validate_assignment` is set to `True`, then validation will
-                # be triggered when the list is assigned to the field.
-                field_values = getattr(section, field_name, [])
-                field_values.append(field_value)
-                setattr(section, field_name, field_values)  # trigger validation
-            else:
-                setattr(section, field_name, field_value)
+        if field_name in section.__fields__:
+            section.update_field(field_name, field_value)
         else:
-            if not field_name.isidentifier() or keyword.iskeyword(field_name):
-                raise ValueError(
-                    f"Expected `field_name` to be a valid python identifier."
-                    f" Got {field_name} instead."
-                )
-
-            field_value = _get_field_value(field_type, data)
-            _check_allowable_sections(  # check if field is allowed in section
-                field=field_value, section_name=section_name, field_name=field_name
-            )
-
-            type_ = field_type or type(field_value)
-            default_factory = None
-            if (
-                isinstance(field_value, BaseModel)
-                and hasattr(field_value.__config__, "list_factory")
-                and getattr(field_value.__config__, "list_factory") is True
-            ):
-                default_factory = list
-                field_value = [field_value]  # add field as a list
-                type_ = List[type_]  # type: ignore[valid-type]
-
-            setattr(section, field_name, field_value)
-
-            # modify __fields__ to include new field
-            section_fields[field_name] = ModelField(
-                name=field_name,
-                type_=type_,
-                required=False,
-                class_validators=None,
-                model_config=BaseModelCardField.Config,
-                default_factory=default_factory,
-                field_info=FieldInfo(unique_items=True)
-                if default_factory == list
-                else None,
-            )
+            section.add_field(field_name, field_value)
 
     def log_from_dict(self, data: Dict[str, Any], section_name: str) -> None:
         """Populate fields in the model card from a dictionary.
@@ -226,15 +135,15 @@ class ModelCardReport:
 
         """
         _raise_if_not_dict_with_str_keys(data)
-        section_name_ = str_to_snake_case(section_name)
-        section = self._get_section(section_name_)
+        section_name = str_to_snake_case(section_name)
+        section = self._model_card.get_section(section_name)
 
         # get data already in section and update with new data
         section_data = section.dict()
         section_data.update(data)
 
         populated_section = section.__class__.parse_obj(section_data)
-        setattr(self._model_card, section_name_, populated_section)
+        setattr(self._model_card, section_name, populated_section)
 
     def log_descriptor(
         self, name: str, description: str, section_name: str, **extra: Any
@@ -370,12 +279,12 @@ class ModelCardReport:
             )
 
         else:
-            buffer = BytesIO()
-            write_image(fig, buffer, format="svg", validate=True)
+            bytes_buffer = BytesIO()
+            write_image(fig, bytes_buffer, format="svg", validate=True)
 
             scour_options = scour.sanitizeOptions()
             scour_options.remove_descriptive_elements = True
-            svg: str = scour.scourString(buffer.getvalue(), options=scour_options)
+            svg: str = scour.scourString(bytes_buffer.getvalue(), options=scour_options)
 
             # convert svg to base64
             svg = base64.b64encode(svg.encode("utf-8")).decode("utf-8")
@@ -387,7 +296,6 @@ class ModelCardReport:
                 field_type=Graphic,
             )
 
-    # loggers for `Model Details` section
     def log_owner(
         self,
         name: str,
@@ -610,7 +518,6 @@ class ModelCardReport:
             field_type=RegulatoryRequirement,
         )
 
-    # loggers for `Model Parameters` section
     def log_model_parameters(self, params: Dict[str, Any]) -> None:
         """Log model parameters.
 
@@ -700,7 +607,6 @@ class ModelCardReport:
             field_type=Dataset,
         )
 
-    # loggers for `Considerations` section
     def log_user(
         self,
         description: str,
@@ -852,7 +758,6 @@ class ModelCardReport:
             field_type=FairnessAssessment,
         )
 
-    # loggers for `Quantitative Analysis` section
     def log_performance_metrics(self, metrics: Dict[str, Any]) -> None:
         """Add a performance metric to the `Quantitative Analysis` section.
 
@@ -892,7 +797,6 @@ class ModelCardReport:
 
     # TODO: MERGE/COMPARE MODEL CARDS
 
-    # EXPORTING THE REPORT
     def validate(self) -> None:
         """Validate the model card."""
         ModelCard.validate(self._model_card.dict())
@@ -1012,64 +916,3 @@ class ModelCardReport:
             )
 
         return report_path
-
-
-def _get_field_value(field_type: Any, data: Any) -> Any:
-    """Get the value of a field."""
-    if field_type is None:
-        return data
-
-    if issubclass(field_type, BaseModel):
-        _raise_if_not_dict_with_str_keys(data)
-        return field_type(**data)
-
-    # explicitly handle `Union` types
-    if field_type.__class__.__module__ == "typing" and field_type.__origin__ == Union:
-        # try to match `data` to one of the types in the `Union`
-        for union_type in field_type.__args__:
-            try:
-                return _get_field_value(union_type, data)
-            except TypeError:
-                pass
-        # if no match is found, raise an error
-        raise TypeError(
-            f"Expected `data` to be one of {field_type.__args__} types."
-            f"Got {type(data)} instead."
-        )
-
-    return data
-
-
-def _check_allowable_sections(
-    field: BaseModel, section_name: str, field_name: str
-) -> None:
-    """Check if a field can be added to a section.
-
-    Parameters
-    ----------
-    field : BaseModel
-        The field to add to the section.
-    section_name : str
-        The name of the section.
-    field_name : str
-        The name of the field.
-
-    Raises
-    ------
-    ValueError
-        If the field cannot be added to the section.
-
-    """
-    if (
-        field is not None
-        and isinstance(field, BaseModel)
-        and hasattr(field.__config__, "allowable_sections")
-    ):
-        allowable_sections = getattr(field.__config__, "allowable_sections")
-        if (allowable_sections is not None and len(allowable_sections) > 0) and (
-            section_name not in allowable_sections
-        ):
-            raise ValueError(
-                f"Field `{field_name}` cannot be added to section `{section_name}`."
-                f"Expected section to be one of {allowable_sections}."
-            )

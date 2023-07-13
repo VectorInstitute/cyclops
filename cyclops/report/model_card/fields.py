@@ -1,4 +1,3 @@
-"""Model Card schema."""
 import inspect
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
@@ -11,9 +10,6 @@ from pybtex import PybtexEngine
 from pybtex.exceptions import PybtexError
 from pydantic import (
     AnyUrl,
-    BaseConfig,
-    BaseModel,
-    Extra,
     Field,
     StrictBool,
     StrictFloat,
@@ -23,27 +19,12 @@ from pydantic import (
     validator,
 )
 
-# pylint: disable=too-few-public-methods
-
-
-class BaseModelCardField(BaseModel):
-    """Base class for model card fields."""
-
-    class Config(BaseConfig):
-        """Global config for model card fields."""
-
-        extra: Extra = Extra.allow
-        smart_union: bool = True
-        validate_all: bool = True
-        validate_assignment: bool = True
-        allowable_sections: List[str] = []  # sections this field is allowed in
-        list_factory: bool = False  # whether to use a list factory for this field
-        json_encoders = {np.ndarray: lambda v: v.tolist()}
+from cyclops.report.model_card.base import BaseModelCardField
 
 
 class Owner(
     BaseModelCardField,
-    allowable_sections=["model_details", "datasets"],
+    allowable_sections=["ModelDetails", "Datasets"],
     list_factory=True,
 ):
     """Information about the model/data owner(s)."""
@@ -61,7 +42,7 @@ class Owner(
 
 class Version(
     BaseModelCardField,
-    allowable_sections=["model_details", "datasets"],
+    allowable_sections=["ModelDetails", "Datasets"],
     list_factory=False,
 ):
     """Model or dataset version information."""
@@ -79,7 +60,7 @@ class Version(
 
 class License(
     BaseModelCardField,
-    allowable_sections=["model_details", "datasets"],
+    allowable_sections=["ModelDetails", "Datasets"],
     list_factory=True,
 ):
     """Model or dataset license information."""
@@ -147,7 +128,7 @@ class Reference(BaseModelCardField, list_factory=True):
 
 class Citation(
     BaseModelCardField,
-    allowable_sections=["model_details", "datasets"],
+    allowable_sections=["ModelDetails", "Datasets"],
     list_factory=True,
 ):
     """Citation information for the model or dataset."""
@@ -176,52 +157,11 @@ class Citation(
 
 
 class RegulatoryRequirement(
-    BaseModelCardField, allowable_sections=["model_details"], list_factory=True
+    BaseModelCardField, allowable_sections=["ModelDetails"], list_factory=True
 ):
     """Regulatory requirements for the model or dataset."""
 
     regulation: Optional[StrictStr] = Field(None, description="Name of the regulation")
-
-
-class ModelDetails(BaseModelCardField):
-    """Details about the model."""
-
-    description: Optional[StrictStr] = Field(
-        None,
-        description=(
-            "A high-level description of the model and its usage for a general "
-            "audience."
-        ),
-    )
-    version: Optional[Version] = Field(None, description="The version of the model.")
-    owners: Optional[List[Owner]] = Field(
-        description="The individuals or teams who own the model.",
-        default_factory=list,
-        unique_items=True,
-    )
-    licenses: Optional[List[License]] = Field(
-        description="The license information for the model.",
-        default_factory=list,
-        unique_items=True,
-    )
-    citations: Optional[List[Citation]] = Field(
-        description="How should the model be cited?",
-        default_factory=list,
-        unique_items=True,
-    )
-    references: Optional[List[Reference]] = Field(
-        description="Provide any additional references the reader may need.",
-        default_factory=list,
-        unique_items=True,
-    )
-    path: Optional[StrictStr] = Field(None, description="Where is this model stored?")
-    regulatory_requirements: Optional[List[RegulatoryRequirement]] = Field(
-        description=(
-            "Provide any regulatory requirements that the model should comply to."
-        ),
-        default_factory=list,
-        unique_items=True,
-    )
 
 
 class Graphic(BaseModelCardField, list_factory=True):
@@ -246,7 +186,7 @@ class GraphicsCollection(BaseModelCardField):
 
 
 class SensitiveData(
-    BaseModelCardField, allowable_sections=["datasets"], list_factory=True
+    BaseModelCardField, allowable_sections=["Datasets"], list_factory=True
 ):
     """Details about sensitive data used in the model."""
 
@@ -277,7 +217,7 @@ class SensitiveData(
     )
 
 
-class Dataset(BaseModelCardField, allowable_sections=["datasets"], list_factory=True):
+class Dataset(BaseModelCardField, allowable_sections=["Datasets"], list_factory=True):
     """Details about the dataset."""
 
     description: Optional[StrictStr] = Field(
@@ -325,45 +265,6 @@ class KeyVal(BaseModelCardField):
     value: Any = None
 
 
-class ModelParameters(BaseModelCardField):
-    """Parameters for the model."""
-
-    model_architecture: Optional[StrictStr] = Field(
-        None, description="Specifies the architecture of your model."
-    )
-    input_format: Optional[StrictStr] = Field(
-        None, description="Describes the data format for inputs to your model."
-    )
-    input_format_map: Optional[List[KeyVal]] = Field(
-        description=inspect.cleandoc(
-            """
-            A mapping of input format to the data format for inputs to your model.
-            """
-        ),
-        default_factory=list,
-    )
-    output_format: Optional[StrictStr] = Field(
-        None, description="Describes the data format for outputs from your model."
-    )
-    output_format_map: Optional[List[KeyVal]] = Field(
-        description=inspect.cleandoc(
-            """
-            A mapping of output format to the data format for outputs from your model.
-            """
-        ),
-        default_factory=list,
-    )
-
-
-class Datasets(BaseModelCardField):
-    """Datasets used to train/validate/evaluate the model."""
-
-    data: Optional[List[Dataset]] = Field(
-        description="Specifies the datasets used to train and evaluate your model.",
-        default_factory=list,
-    )
-
-
 class Test(BaseModelCardField):
     """Tests for the model."""
 
@@ -387,7 +288,7 @@ class Test(BaseModelCardField):
 
 class PerformanceMetric(
     BaseModelCardField,
-    allowable_sections=["quantitative_analysis"],
+    allowable_sections=["QuantitativeAnalysis"],
     list_factory=True,
     arbitrary_types_allowed=True,
 ):
@@ -434,18 +335,9 @@ class PerformanceMetric(
     )
 
 
-class QuantitativeAnalysis(BaseModelCardField):
-    """Quantitative analysis of the model."""
-
-    performance_metrics: Optional[List[PerformanceMetric]] = Field(
-        description="The performance metrics being reported.",
-        default_factory=list,
-    )
-
-
 class User(
     BaseModelCardField,
-    allowable_sections=["considerations", "dataset"],
+    allowable_sections=["Considerations", "Datasets"],
     list_factory=True,
 ):
     """Details about the user."""
@@ -457,7 +349,7 @@ class User(
 
 class UseCase(
     BaseModelCardField,
-    allowable_sections=["considerations", "dataset"],
+    allowable_sections=["Considerations", "Datasets"],
     list_factory=True,
 ):
     """Details about the use case."""
@@ -492,7 +384,7 @@ class UseCase(
 
 class Risk(
     BaseModelCardField,
-    allowable_sections=["considerations", "dataset"],
+    allowable_sections=["Considerations", "Datasets"],
     list_factory=True,
 ):
     """A description of the risks posed by the model."""
@@ -509,7 +401,7 @@ class Risk(
 
 class FairnessAssessment(
     BaseModelCardField,
-    allowable_sections=["considerations", "dataset"],
+    allowable_sections=["Considerations", "Datasets"],
     list_factory=True,
 ):
     """Details on the fairness assessment of the model."""
@@ -533,34 +425,6 @@ class FairnessAssessment(
             "With respect to the benefits and harms outlined, please describe any "
             "mitigation strategy implemented."
         ),
-    )
-
-
-class Considerations(BaseModelCardField):
-    """Considerations for the model."""
-
-    # uses, risks/social impact, bias + recommendations for mitigation, limitations
-    users: Optional[List[User]] = Field(
-        description="Who are the intended users of the model?",
-        default_factory=list,
-        unique_items=True,
-    )
-    use_cases: Optional[List[UseCase]] = Field(
-        description="What are the intended use cases of the model?",
-        default_factory=list,
-        unique_items=True,
-    )
-    fairness_assessment: Optional[List[FairnessAssessment]] = Field(
-        description="""
-        How does the model affect groups at risk of being systematically disadvantaged?
-        What are the harms and benefits to the various affected groups?
-        """,
-        default_factory=list,
-    )
-    ethical_considerations: Optional[List[Risk]] = Field(
-        description="What are the ethical risks involved in application of this model?",
-        default_factory=list,
-        unique_items=True,
     )
 
 
@@ -588,17 +452,6 @@ class ExplainabilityReport(BaseModelCardField):
     )
     tests: Optional[List[Test]] = Field(
         description="A collection of tests associated with the explainability method.",
-        default_factory=list,
-    )
-
-
-class ExplainabilityAnalysis(BaseModelCardField):
-    """Explainability analysis of the model."""
-
-    explainability_reports: Optional[List[ExplainabilityReport]] = Field(
-        description=(
-            "Model explainability report e.g. feature importance, decision trees etc."
-        ),
         default_factory=list,
     )
 
@@ -633,53 +486,4 @@ class FairnessReport(BaseModelCardField):
     )
     tests: Optional[List[Test]] = Field(
         description="Tests related to fairness considerations.", default_factory=list
-    )
-
-
-class FairnessAnalysis(BaseModelCardField):
-    """Fairness analysis of the model."""
-
-    fairness_reports: Optional[List[FairnessReport]] = Field(
-        description=(
-            "Fairness report to evaluate the model performance on various groups."
-        ),
-        default_factory=list,
-    )
-
-
-class ModelCard(BaseModelCardField):
-    """Model Card for reporting information about a model.
-
-    Schema adapted from: https://github.com/cylynx/verifyml Based on:
-    https://arxiv.org/abs/1810.03993.
-
-    """
-
-    model_details: Optional[ModelDetails] = Field(
-        None, description="Descriptive metadata for the model."
-    )
-    model_parameters: Optional[ModelParameters] = Field(
-        None, description="Technical metadata for the model."
-    )
-    datasets: Optional[Datasets] = Field(
-        None,
-        description="Information about the datasets used to train, validate \
-        and/or test the model.",
-    )
-    considerations: Optional[Considerations] = Field(
-        None,
-        description=inspect.cleandoc(
-            """
-            Any considerations related to model construction, training, and
-             application""",
-        ),
-    )
-    quantitative_analysis: Optional[QuantitativeAnalysis] = Field(
-        None, description="Quantitative analysis of model performance."
-    )
-    explainability_analysis: Optional[ExplainabilityAnalysis] = Field(
-        None, description="Explainability analysis being reported."
-    )
-    fairness_analysis: Optional[FairnessAnalysis] = Field(
-        None, description="Fairness analysis being reported."
     )

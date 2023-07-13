@@ -1,0 +1,161 @@
+"""Base classes for model card fields and sections."""
+import keyword
+from typing import Any, Callable, Dict, List, Optional
+
+import numpy as np
+from pydantic import BaseConfig, BaseModel, Extra, root_validator
+from pydantic.fields import FieldInfo, ModelField
+
+
+class BaseModelCardConfig(BaseConfig):
+    """Global config for model card fields.
+
+    Attributes
+    ----------
+        extra : Extra
+            Whether to allow extra attributes in the field object.
+        smart_union : bool
+           Whether `Union` should check all allowed types before even trying to
+           coerce.
+        validate_all : bool
+            Whether to validate all attributes in the field object.
+        validate_assignment : bool
+            Whether to validate assignments of attributes in the field object.
+        allowable_sections : List[BaseModelCardSection]
+            The sections this field can be dynamically added to. If None,
+            the field will not be dynamically added to any sections - it
+            must be explicitly added to a section.
+        default_factory : Optional[Callable[[], Any]]
+            A callable that returns the default container for the field.
+        json_encoders : Dict[Any, Callable]
+            Custom JSON encoders.
+    """
+
+    extra: Extra = Extra.allow
+    smart_union: bool = True
+    validate_all: bool = True
+    validate_assignment: bool = True
+    json_encoders: Dict[Any, Callable[..., Any]] = {np.ndarray: lambda v: v.tolist()}
+
+
+class BaseModelCardField(BaseModel):
+    """Base class for model card fields."""
+
+    class Config(BaseModelCardConfig):
+        """Global config for model card fields.
+
+        Attributes
+        ----------
+            allowable_sections : List[BaseModelCardSection]
+                The sections this field can be dynamically added to. If None,
+                the field will not be dynamically added to any sections - it
+                must be explicitly added to a section.
+            default_factory : Optional[Callable[[], Any]]
+                A callable that returns the default container for the field.
+
+        """
+
+        allowable_sections: Optional[List[BaseModel]] = None
+        list_factory: bool = False
+
+
+class BaseModelCardSection(BaseModel):
+    """Base class for model card sections."""
+
+    Config = BaseModelCardConfig
+
+    @root_validator(pre=True)
+    def check_allowable_sections(cls, values):
+        """Check that the type of the field is allowed in the section."""
+        for attr, value in values.items():
+            if (
+                issubclass(type(value), BaseModelCardField)
+                and value.__config__.allowable_sections is not None
+                and cls.__name__ not in value.__config__.allowable_sections
+            ):
+                raise ValueError(
+                    f"Field {attr}<type={type(value)}> is not allowed in "
+                    f"section {cls.__name__}."
+                )
+
+        return values
+
+    def update_field(self, name: str, value: Any) -> None:
+        """Update the field with the given name to the given value.
+
+        Appends to the field if it is a list.
+
+        Parameters
+        ----------
+        name : str
+            Name of the field to update.
+        value : Any
+            Value to update the field to.
+
+        Raises
+        ------
+        ValueError
+            If the field does not exist.
+        """
+        if name not in self.__fields__:
+            raise ValueError(f"Field {name} does not exist.")
+
+        field = self.__fields__[name]
+        if field.default_factory == list or isinstance(getattr(self, name), list):
+            # NOTE: pydantic does not trigger validation when appending to a list,
+            # but if `validate_assignment` is set to `True`, then validation will
+            # be triggered when the list is assigned to the field.
+            field_values = getattr(self, name, [])
+            field_values.append(value)
+            setattr(self, name, field_values)  # trigger validation
+        else:
+            setattr(self, name, value)
+
+    def add_field(self, name: str, value: Any) -> None:
+        """Dynamically add a field to the section.
+
+        Parameters
+        ----------
+        name : str
+            Name of the field to add.
+        value : Any
+            Value to add to the field.
+
+        Raises
+        ------
+        ValueError
+            If the field name is not a valid python identifier.
+
+        """
+        if not name.isidentifier() or keyword.iskeyword(name):
+            raise ValueError(
+                f"Expected `field_name` to be a valid python identifier."
+                f" Got {name} instead."
+            )
+
+        type_ = type(value)
+        default_factory = None
+        if isinstance(value, list):
+            default_factory = list
+        if (
+            isinstance(value, BaseModelCardField)
+            and getattr(value.__config__, "list_factory") is True
+        ):
+            default_factory = list
+            value = [value]  # add field as a list
+            type_ = List[type_]  # type: ignore[valid-type]
+
+        setattr(self, name, value)
+
+        # modify __fields__ to include new field
+        self.__fields__[name] = ModelField(
+            name=name,
+            type_=type_,
+            required=False,
+            class_validators=None,
+            model_config=BaseModelCardField.Config,
+            default_factory=default_factory,
+            field_info=FieldInfo(unique_items=True)
+            if default_factory == list
+            else None,
+        )
