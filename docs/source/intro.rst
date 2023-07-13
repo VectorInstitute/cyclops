@@ -3,7 +3,8 @@
 
 --------------
 
-|PyPI| |code checks| |integration tests| |docs| |codecov| |license|
+|PyPI| |code checks| |integration tests| |docs| |codecov| |docker|
+|license|
 
 ``cyclops`` is a framework for facilitating research and deployment of
 ML models for healthcare. It provides a few high-level APIs namely:
@@ -152,5 +153,7 @@ Reference to cite when you use CyclOps in a project or a research paper:
    :target: https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml
 .. |codecov| image:: https://codecov.io/gh/VectorInstitute/cyclops/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/VectorInstitute/cyclops
+.. |docker| image:: https://github.com/VectorInstitute/cyclops/actions/workflows/docker.yml/badge.svg
+   :target: https://hub.docker.com/r/vectorinstitute/cyclops
 .. |license| image:: https://img.shields.io/github/license/VectorInstitute/cyclops.svg
    :target: https://github.com/VectorInstitute/cyclops/blob/main/LICENSE
