@@ -120,6 +120,13 @@
         {% for dataset in section.data %}
             {{ render_objects(dataset) }}
         {% endfor %}
+
+        {# Display global plots from GraphicsCollection in Datasets, temporary fix #}
+        {% if section is hasattr "graphics"%}
+          <h3>{{ "Graphics" }}</h3>
+          {{ render_if_exist_list(section.graphics) }}
+        {% endif %}
+        
       {% elif name == "QuantitativeAnalysis"%}
         {{render_table(section.performance_metrics)}}
         {{ render_objects(section) }}
