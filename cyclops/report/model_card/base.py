@@ -44,12 +44,6 @@ class BaseModelCardConfig(BaseConfig):
             Whether to validate all attributes in the field object.
         validate_assignment : bool
             Whether to validate assignments of attributes in the field object.
-        allowable_sections : List[BaseModelCardSection]
-            The sections this field can be dynamically added to. If None,
-            the field will not be dynamically added to any sections - it
-            must be explicitly added to a section.
-        default_factory : Optional[Callable[[], Any]]
-            A callable that returns the default container for the field.
         json_encoders : Dict[Any, Callable]
             Custom JSON encoders.
 
@@ -70,12 +64,17 @@ class BaseModelCardField(BaseModel):
 
         Attributes
         ----------
-            allowable_sections : List[BaseModelCardSection]
-                The sections this field can be dynamically added to. If None,
-                the field will not be dynamically added to any sections - it
-                must be explicitly added to a section.
-            default_factory : Optional[Callable[[], Any]]
-                A callable that returns the default container for the field.
+        composable_with : Literal["Any"], List[str], optional
+            The sections this field can be dynamically composed with. If "Any",
+            the field can be composed with any subclass of `BaseModelCardSection`
+            or `BaseModelCardField`. If None, the field cannot be dynamically
+            composed with any other fields or sections - it must be explicitly
+            added to a section. If a list of strings, the strings are the names 
+            treated as class names for subclasses of `BaseModelCardSection` or
+            `BaseModelCardField`.
+        list_factory : bool, default=False
+            Whether multiple instances of this field can be added to a section 
+            in a list.
 
         """
 
