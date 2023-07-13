@@ -21,6 +21,8 @@
   </li>
   {% elif values.__class__.__name__ == "Graphic"%}
     {{ render_graphic(values) }}
+  {% elif values.__class__.__name__ == "GraphicsCollection" %}
+    {{ render_graphics(values.collection) }}
   {% else %}
     {% if (values is string) or (values|int != 0) or (values|float != 0) %}
     <li>
@@ -120,7 +122,6 @@
         {% endfor %}
       {% elif name == "QuantitativeAnalysis"%}
         {{render_table(section.performance_metrics)}}
-        {# {{ section.performance_metrics|render_table|safe}} #}
         {{ render_objects(section) }}
       {% else %}
         {{ render_objects(section) }}
