@@ -868,7 +868,7 @@ class ModelCardReport:
         jinja_env.filters["regex_replace"] = regex_replace
         jinja_env.tests["list"] = lambda x: isinstance(x, list)
         jinja_env.tests["empty"] = empty
-        jinja_env.tests["hasattr"] = lambda x, y: hasattr(x, y)
+        jinja_env.tests["hasattr"] = hasattr
         jinja_env.tests["None"] = lambda x: x is None
         jinja_env.tests["int"] = lambda x: isinstance(x, int)
         jinja_env.tests["float"] = lambda x: isinstance(x, float)
