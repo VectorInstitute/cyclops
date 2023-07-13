@@ -1,4 +1,4 @@
-"""Model Card schema."""
+"""Model Card."""
 import inspect
 from typing import Optional
 
@@ -67,6 +67,7 @@ class ModelCard(BaseModel):
             If the given `section_name` is not in the model card.
         TypeError
             If the given `section_name` is not a subclass of `BaseModel`.
+
         """
         sections = self.__fields__
         if section_name not in sections:
@@ -75,7 +76,7 @@ class ModelCard(BaseModel):
                 f"Available sections are: {list(sections.keys())}"
             )
 
-        section = getattr(self, section_name)
+        section: Optional[BaseModelCardSection] = getattr(self, section_name)
         if section is None:
             section = sections[section_name].type_()
             setattr(self, section_name, section)

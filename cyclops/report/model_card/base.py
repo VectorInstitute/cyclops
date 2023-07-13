@@ -1,10 +1,33 @@
 """Base classes for model card fields and sections."""
 import keyword
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 import numpy as np
 from pydantic import BaseConfig, BaseModel, Extra, root_validator
 from pydantic.fields import FieldInfo, ModelField
+
+
+def _check_composable_fields(  # pylint: disable=no-self-argument
+    cls: BaseModel, values: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Check that the type of the field is allowed in the section."""
+    # pylint: disable=no-member
+    for attr, value in values.items():
+        if issubclass(type(value), BaseModelCardField) and (
+            value.__config__.composable_with is None
+            or (
+                value.__config__.composable_with != "Any"
+                and cls.__name__ not in value.__config__.composable_with  # type: ignore [attr-defined] # noqa: E501 pylint: disable=line-too-long
+            )
+        ):
+            print(issubclass(type(value), BaseModelCardField))
+            print(value.__config__.composable_with)
+            raise ValueError(
+                f"Field `{attr}`(type={type(value)}) is not allowed in "
+                f"`{cls.__name__}` section."  # type: ignore[attr-defined]
+            )
+
+    return values
 
 
 class BaseModelCardConfig(BaseConfig):
@@ -29,6 +52,7 @@ class BaseModelCardConfig(BaseConfig):
             A callable that returns the default container for the field.
         json_encoders : Dict[Any, Callable]
             Custom JSON encoders.
+
     """
 
     extra: Extra = Extra.allow
@@ -55,8 +79,12 @@ class BaseModelCardField(BaseModel):
 
         """
 
-        allowable_sections: Optional[List[BaseModel]] = None
+        composable_with: Optional[Union[Literal["Any"], List[str]]] = "Any"
         list_factory: bool = False
+
+    _validate_composition = root_validator(pre=True, allow_reuse=True)(
+        _check_composable_fields
+    )
 
 
 class BaseModelCardSection(BaseModel):
@@ -64,21 +92,9 @@ class BaseModelCardSection(BaseModel):
 
     Config = BaseModelCardConfig
 
-    @root_validator(pre=True)
-    def check_allowable_sections(cls, values):
-        """Check that the type of the field is allowed in the section."""
-        for attr, value in values.items():
-            if (
-                issubclass(type(value), BaseModelCardField)
-                and value.__config__.allowable_sections is not None
-                and cls.__name__ not in value.__config__.allowable_sections
-            ):
-                raise ValueError(
-                    f"Field {attr}<type={type(value)}> is not allowed in "
-                    f"section {cls.__name__}."
-                )
-
-        return values
+    _validate_composition = root_validator(pre=True, allow_reuse=True)(
+        _check_composable_fields
+    )
 
     def update_field(self, name: str, value: Any) -> None:
         """Update the field with the given name to the given value.
@@ -96,6 +112,7 @@ class BaseModelCardSection(BaseModel):
         ------
         ValueError
             If the field does not exist.
+
         """
         if name not in self.__fields__:
             raise ValueError(f"Field {name} does not exist.")

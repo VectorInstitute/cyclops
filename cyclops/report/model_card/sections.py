@@ -1,3 +1,4 @@
+"""Model Card sections."""
 import inspect
 from typing import List, Optional
 
@@ -10,6 +11,7 @@ from cyclops.report.model_card.fields import (
     ExplainabilityReport,
     FairnessAssessment,
     FairnessReport,
+    GraphicsCollection,
     KeyVal,
     License,
     Owner,
@@ -101,6 +103,9 @@ class Datasets(BaseModelCardSection):
         description="Specifies the datasets used to train and evaluate your model.",
         default_factory=list,
     )
+    graphics: Optional[GraphicsCollection] = Field(
+        None, description="A collection of graphics related to the datasets."
+    )
 
 
 class Considerations(BaseModelCardSection):
@@ -108,7 +113,7 @@ class Considerations(BaseModelCardSection):
 
     # uses, risks/social impact, bias + recommendations for mitigation, limitations
     users: Optional[List[User]] = Field(
-        description="Who are the intended users of the model?",
+        description="Who are the primary intended users of the model?",
         default_factory=list,
         unique_items=True,
     )
@@ -138,6 +143,9 @@ class QuantitativeAnalysis(BaseModelCardSection):
         description="The performance metrics being reported.",
         default_factory=list,
     )
+    graphics: Optional[GraphicsCollection] = Field(
+        None, description="A collection of graphics related to the metrics."
+    )
 
 
 class ExplainabilityAnalysis(BaseModelCardSection):
@@ -149,6 +157,10 @@ class ExplainabilityAnalysis(BaseModelCardSection):
         ),
         default_factory=list,
     )
+    graphics: Optional[GraphicsCollection] = Field(
+        None,
+        description="A collection of graphics related the explainability analysis.",
+    )
 
 
 class FairnessAnalysis(BaseModelCardSection):
@@ -159,4 +171,7 @@ class FairnessAnalysis(BaseModelCardSection):
             "Fairness report to evaluate the model performance on various groups."
         ),
         default_factory=list,
+    )
+    graphics: Optional[GraphicsCollection] = Field(
+        None, description="A collection of graphics related to the fairness analysis."
     )

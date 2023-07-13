@@ -1,3 +1,4 @@
+"""Model card field definitions."""
 import inspect
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
@@ -24,7 +25,7 @@ from cyclops.report.model_card.base import BaseModelCardField
 
 class Owner(
     BaseModelCardField,
-    allowable_sections=["ModelDetails", "Datasets"],
+    composable_with=["ModelDetails", "Dataset"],
     list_factory=True,
 ):
     """Information about the model/data owner(s)."""
@@ -42,7 +43,7 @@ class Owner(
 
 class Version(
     BaseModelCardField,
-    allowable_sections=["ModelDetails", "Datasets"],
+    composable_with=["ModelDetails", "Dataset"],
     list_factory=False,
 ):
     """Model or dataset version information."""
@@ -60,7 +61,7 @@ class Version(
 
 class License(
     BaseModelCardField,
-    allowable_sections=["ModelDetails", "Datasets"],
+    composable_with=["ModelDetails", "Dataset"],
     list_factory=True,
 ):
     """Model or dataset license information."""
@@ -120,7 +121,11 @@ class License(
         return None
 
 
-class Reference(BaseModelCardField, list_factory=True):
+class Reference(
+    BaseModelCardField,
+    list_factory=True,
+    composable_with=["ModelDetails", "Dataset"],
+):
     """Reference to additional resources related to the model or dataset."""
 
     link: Optional[AnyUrl] = Field(None, description="A URL to the reference resource.")
@@ -128,7 +133,7 @@ class Reference(BaseModelCardField, list_factory=True):
 
 class Citation(
     BaseModelCardField,
-    allowable_sections=["ModelDetails", "Datasets"],
+    composable_with=["ModelDetails", "Dataset"],
     list_factory=True,
 ):
     """Citation information for the model or dataset."""
@@ -157,14 +162,16 @@ class Citation(
 
 
 class RegulatoryRequirement(
-    BaseModelCardField, allowable_sections=["ModelDetails"], list_factory=True
+    BaseModelCardField, composable_with=["ModelDetails"], list_factory=True
 ):
     """Regulatory requirements for the model or dataset."""
 
     regulation: Optional[StrictStr] = Field(None, description="Name of the regulation")
 
 
-class Graphic(BaseModelCardField, list_factory=True):
+class Graphic(
+    BaseModelCardField, list_factory=True, composable_with=["GraphicsCollection"]
+):
     """A graphic to be displayed in the model card."""
 
     name: Optional[StrictStr] = Field(None, description="The name of the graphic.")
@@ -173,7 +180,7 @@ class Graphic(BaseModelCardField, list_factory=True):
     )
 
 
-class GraphicsCollection(BaseModelCardField):
+class GraphicsCollection(BaseModelCardField, composable_with="Any"):
     """A collection of graphics to be displayed in the model card."""
 
     description: Optional[StrictStr] = Field(
@@ -185,9 +192,7 @@ class GraphicsCollection(BaseModelCardField):
     )
 
 
-class SensitiveData(
-    BaseModelCardField, allowable_sections=["Datasets"], list_factory=True
-):
+class SensitiveData(BaseModelCardField, composable_with=["Dataset"], list_factory=True):
     """Details about sensitive data used in the model."""
 
     sensitive_data: Optional[List[StrictStr]] = Field(
@@ -217,7 +222,7 @@ class SensitiveData(
     )
 
 
-class Dataset(BaseModelCardField, allowable_sections=["Datasets"], list_factory=True):
+class Dataset(BaseModelCardField, composable_with=["Datasets"], list_factory=True):
     """Details about the dataset."""
 
     description: Optional[StrictStr] = Field(
@@ -258,14 +263,20 @@ class Dataset(BaseModelCardField, allowable_sections=["Datasets"], list_factory=
     )
 
 
-class KeyVal(BaseModelCardField):
+class KeyVal(
+    BaseModelCardField, list_factory=True, composable_with=["ModelParameters"]
+):
     """A key-value pair."""
 
     key: Optional[StrictStr] = None
     value: Any = None
 
 
-class Test(BaseModelCardField):
+class Test(
+    BaseModelCardField,
+    composable_with=["PerformanceMetric", "FairnessReport", "ExplainabilityReport"],
+    list_factory=True,
+):
     """Tests for the model."""
 
     name: Optional[StrictStr] = Field(None, description="The name of the test.")
@@ -288,7 +299,7 @@ class Test(BaseModelCardField):
 
 class PerformanceMetric(
     BaseModelCardField,
-    allowable_sections=["QuantitativeAnalysis"],
+    composable_with=["QuantitativeAnalysis"],
     list_factory=True,
     arbitrary_types_allowed=True,
 ):
@@ -337,7 +348,7 @@ class PerformanceMetric(
 
 class User(
     BaseModelCardField,
-    allowable_sections=["Considerations", "Datasets"],
+    composable_with=["Considerations", "Dataset"],
     list_factory=True,
 ):
     """Details about the user."""
@@ -349,7 +360,7 @@ class User(
 
 class UseCase(
     BaseModelCardField,
-    allowable_sections=["Considerations", "Datasets"],
+    composable_with=["Considerations", "Dataset"],
     list_factory=True,
 ):
     """Details about the use case."""
@@ -357,7 +368,7 @@ class UseCase(
     description: Optional[StrictStr] = Field(
         None, description="A description of a use case."
     )
-    kind: Optional[Literal["primary", "downstream", "out-of-scope"]] = Field(
+    kind: Optional[Literal["primary", "out-of-scope"]] = Field(
         None,
         description=inspect.cleandoc(
             """
@@ -374,17 +385,16 @@ class UseCase(
         if isinstance(value, str):
             value = value.lower()
 
-        if value not in ["primary", "downstream", "out-of-scope"]:
+        if value not in ["primary", "out-of-scope"]:
             raise ValueError(
-                "Use case kind must be one of 'primary', 'downstream', or "
-                "'out-of-scope'."
+                "Use case kind must be one of 'primary', or 'out-of-scope'."
             )
         return value
 
 
 class Risk(
     BaseModelCardField,
-    allowable_sections=["Considerations", "Datasets"],
+    composable_with=["Considerations", "Dataset"],
     list_factory=True,
 ):
     """A description of the risks posed by the model."""
@@ -401,7 +411,7 @@ class Risk(
 
 class FairnessAssessment(
     BaseModelCardField,
-    allowable_sections=["Considerations", "Datasets"],
+    composable_with=["Considerations", "Dataset"],
     list_factory=True,
 ):
     """Details on the fairness assessment of the model."""
@@ -428,7 +438,9 @@ class FairnessAssessment(
     )
 
 
-class ExplainabilityReport(BaseModelCardField):
+class ExplainabilityReport(
+    BaseModelCardField, composable_with=["ExplainabilityAnalysis"]
+):
     """Explainability reports for the model."""
 
     type: Optional[StrictStr] = Field(
@@ -456,7 +468,7 @@ class ExplainabilityReport(BaseModelCardField):
     )
 
 
-class FairnessReport(BaseModelCardField):
+class FairnessReport(BaseModelCardField, composable_with=["FairnessAnalysis"]):
     """Fairness reports for the model."""
 
     type: Optional[StrictStr] = Field(

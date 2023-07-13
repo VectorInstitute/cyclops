@@ -15,7 +15,7 @@ from plotly.offline import get_plotlyjs
 from pydantic import BaseModel, StrictStr, create_model
 from scour import scour
 
-from cyclops.report.model_card import ModelCard
+from cyclops.report.model_card import ModelCard  # type: ignore[attr-defined]
 from cyclops.report.model_card.base import BaseModelCardField
 from cyclops.report.model_card.fields import (
     Citation,
@@ -119,6 +119,7 @@ class ModelCardReport:
         if field_name in section.__fields__:
             section.update_field(field_name, field_value)
         else:
+            field_name = str_to_snake_case(field_name)
             section.add_field(field_name, field_value)
 
     def log_from_dict(self, data: Dict[str, Any], section_name: str) -> None:
@@ -210,15 +211,37 @@ class ModelCardReport:
             field_type=field_obj,
         )
 
-    def log_image(self, img_path: str, alt: str, section_name: str) -> None:
+    def _log_graphic_collection(
+        self, graphic: Graphic, description: str, section_name: str
+    ) -> None:
+        # get the section
+        section_name = str_to_snake_case(section_name)
+        section = self._model_card.get_section(section_name)
+
+        # append graphic to exisiting GraphicsCollection or create new one
+        if (
+            "graphics" in section.__fields__
+            and section.__fields__["graphics"].type_ is GraphicsCollection
+            and section.graphics is not None  # type: ignore
+        ):
+            section.graphics.collection.append(graphic)  # type: ignore
+        else:
+            self._log_field(
+                data={"description": description, "collection": [graphic]},
+                section_name=section_name,
+                field_name="graphics",
+                field_type=GraphicsCollection,
+            )
+
+    def log_image(self, img_path: str, caption: str, section_name: str) -> None:
         """Add an image to a section of the report.
 
         Parameters
         ----------
         img_path : str
             The path to the image file.
-        alt : str
-            The alt text for the image.
+        caption : str
+            The caption for the image.
         section_name : str
             The section of the report to add the image to.
 
@@ -238,15 +261,14 @@ class ModelCardReport:
             img.save(buffered, format=img.format)
             img_base64 = base64.b64encode(buffered.getvalue()).decode()
 
-        self._log_field(
-            data={"name": alt, "image": f"data:image/{img.format};base64,{img_base64}"},
-            section_name=section_name,
-            field_name="figures",
-            field_type=Graphic,
+        graphic = Graphic.parse_obj(
+            {"name": caption, "image": f"data:image/{img.format};base64,{img_base64}"}
         )
 
+        self._log_graphic_collection(graphic, "Images", section_name)
+
     def log_plotly_figure(
-        self, fig: Figure, alt: str, section_name: str, interactive: bool = True
+        self, fig: Figure, caption: str, section_name: str, interactive: bool = True
     ) -> None:
         """Add a plotly figure to a section of the report.
 
@@ -254,12 +276,12 @@ class ModelCardReport:
         ----------
         fig : Figure
             The plotly figure to add.
-        alt : str
-            The alt text for the figure.
+        caption : str
+            The caption for the figure.
         section_name : str
             The section of the report to add the figure to.
-        interactive : bool, optional
-            Whether or not the figure should be an interactive plot, by default True
+        interactive : bool, optional, default=True
+            Whether or not the figure should be an interactive plot.
 
         Raises
         ------
@@ -268,16 +290,10 @@ class ModelCardReport:
 
         """
         if interactive:
-            self._log_field(
-                data={
-                    "name": alt,
-                    "image": fig.to_html(full_html=False, include_plotlyjs=False),
-                },
-                section_name=section_name,
-                field_name="figures",
-                field_type=Graphic,
-            )
-
+            data = {
+                "name": caption,
+                "image": fig.to_html(full_html=False, include_plotlyjs=False),
+            }
         else:
             bytes_buffer = BytesIO()
             write_image(fig, bytes_buffer, format="svg", validate=True)
@@ -289,12 +305,11 @@ class ModelCardReport:
             # convert svg to base64
             svg = base64.b64encode(svg.encode("utf-8")).decode("utf-8")
 
-            self._log_field(
-                data={"name": alt, "image": f"data:image/svg+xml;base64,{svg}"},
-                section_name=section_name,
-                field_name="figures",
-                field_type=Graphic,
-            )
+            data = {"name": caption, "image": f"data:image/svg+xml;base64,{svg}"}
+
+        graphic = Graphic.parse_obj(data)  # create Graphic object from data
+
+        self._log_graphic_collection(graphic, "Plots", section_name)
 
     def log_owner(
         self,
@@ -641,7 +656,7 @@ class ModelCardReport:
     def log_use_case(
         self,
         description: str,
-        kind: Optional[Literal["primary", "downstream", "out-of-scope"]] = "primary",
+        kind: Literal["primary", "out-of-scope"],
         section_name: str = "considerations",
         **extra: Any,
     ) -> None:
@@ -651,9 +666,8 @@ class ModelCardReport:
         ----------
         description : str
             A description of the use case.
-        kind : Literal["primary", "downstream", "out-of-scope"], optional
-            The kind of use case. If not provided, the use case will be
-            considered primary.
+        kind : Literal["primary", "out-of-scope"]
+            The kind of use case - either "primary" or "out-of-scope".
         section_name : str, optional
             The section of the report to add the use case to. If not provided,
             the use case will be added to the `considerations` section.
