@@ -21,6 +21,8 @@
   </li>
   {% elif values.__class__.__name__ == "Graphic"%}
     {{ render_graphic(values) }}
+  {% elif values.__class__.__name__ == "GraphicsCollection" %}
+    {{ render_graphics(values.collection) }}
   {% else %}
     {% if (values is string) or (values|int != 0) or (values|float != 0) %}
     <li>
@@ -118,9 +120,15 @@
         {% for dataset in section.data %}
             {{ render_objects(dataset) }}
         {% endfor %}
+
+        {# Display global plots from GraphicsCollection in Datasets, temporary fix #}
+        {% if section is hasattr "graphics"%}
+          <h3>{{ "Graphics" }}</h3>
+          {{ render_if_exist_list(section.graphics) }}
+        {% endif %}
+
       {% elif name == "QuantitativeAnalysis"%}
         {{render_table(section.performance_metrics)}}
-        {# {{ section.performance_metrics|render_table|safe}} #}
         {{ render_objects(section) }}
       {% else %}
         {{ render_objects(section) }}
