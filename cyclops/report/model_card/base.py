@@ -69,11 +69,11 @@ class BaseModelCardField(BaseModel):
             the field can be composed with any subclass of `BaseModelCardSection`
             or `BaseModelCardField`. If None, the field cannot be dynamically
             composed with any other fields or sections - it must be explicitly
-            added to a section. If a list of strings, the strings are the names 
+            added to a section. If a list of strings, the strings are the names
             treated as class names for subclasses of `BaseModelCardSection` or
             `BaseModelCardField`.
         list_factory : bool, default=False
-            Whether multiple instances of this field can be added to a section 
+            Whether multiple instances of this field can be added to a section
             in a list.
 
         """
