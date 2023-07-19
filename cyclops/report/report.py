@@ -5,7 +5,7 @@ from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 from io import BytesIO
 from re import sub as re_sub
-from typing import Any, Dict, List, Literal, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Type, Union
 
 import jinja2
 from PIL import Image
@@ -20,7 +20,9 @@ from cyclops.report.model_card.base import BaseModelCardField
 from cyclops.report.model_card.fields import (
     Citation,
     Dataset,
+    ExplainabilityReport,
     FairnessAssessment,
+    FairnessReport,
     Graphic,
     GraphicsCollection,
     License,
@@ -30,6 +32,7 @@ from cyclops.report.model_card.fields import (
     RegulatoryRequirement,
     Risk,
     SensitiveData,
+    Test,
     UseCase,
     User,
     Version,
@@ -770,6 +773,73 @@ class ModelCardReport:
             section_name=section_name,
             field_name="fairness_assessment",
             field_type=FairnessAssessment,
+        )
+
+    def log_quantitative_analysis(
+        self,
+        type: Literal["performance", "fairness", "explainability"],
+        name: str,
+        value: Any,
+        slice: Optional[str] = None,
+        decision_threshold: Optional[float] = None,
+        description: Optional[str] = None,
+        pass_fail_thresholds: Optional[Union[float, List[float]]] = None,
+        pass_fail_threshold_fns: Optional[
+            Union[Callable[[Any, float], bool], List[Callable[[Any, float], bool]]]
+        ] = None,
+        **extra: Any,
+    ) -> None:
+        if type not in ["performance", "fairness", "explainability"]:
+            raise ValueError(
+                f"Invalid metric type {type}. Must be one of 'performance', "
+                "'fairness', or 'explainability'."
+            )
+
+        section_name, field_name, field_type = {
+            "performance": (
+                "quantitative_analysis",
+                "performance_metrics",
+                PerformanceMetric,
+            ),
+            "fairness": ("fairness_analysis", "fairness_reports", FairnessReport),
+            "explainability": (
+                "explainability_analysis",
+                "explainability_reports",
+                ExplainabilityReport,
+            ),
+        }[type]
+
+        data = {
+            "type": name,
+            "value": value,
+            "slice": slice,
+            "decision_threshold": decision_threshold,
+            "description": description,
+            **extra,
+        }
+
+        # TODO: create graphics
+
+        if pass_fail_thresholds is not None and pass_fail_threshold_fns is not None:
+            if isinstance(pass_fail_thresholds, float):
+                pass_fail_thresholds = [pass_fail_thresholds]
+            if isinstance(pass_fail_threshold_fns, Callable):
+                pass_fail_threshold_fns = [pass_fail_threshold_fns]
+
+            # create Test objects
+            tests = []
+            for threshold, threshold_fn in zip(
+                pass_fail_thresholds, pass_fail_threshold_fns
+            ):
+                tests.append(Test(threshold=threshold, threshold_fn=threshold_fn))
+
+            data["tests"] = tests
+
+        self._log_field(
+            data=data,
+            section_name=section_name,
+            field_name=field_name,
+            field_type=field_type,
         )
 
     def log_performance_metrics(self, metrics: Dict[str, Any]) -> None:
