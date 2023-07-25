@@ -2,7 +2,6 @@
 
 
 {% macro render_if_exist_list(values) %}
-  {# <li> #}
   {% if values.__class__.__name__ == "User"%}
   <li>
     {% for name, value in values %}
@@ -23,6 +22,8 @@
     {{ render_graphic(values) }}
   {% elif values.__class__.__name__ == "GraphicsCollection" %}
     {{ render_graphics(values.collection) }}
+  {% elif values.__class__.__name__ == "Test"%}
+    {{ render_test(values) }}
   {% else %}
     {% if (values is string) or (values|int != 0) or (values|float != 0) %}
     <li>
@@ -51,14 +52,13 @@
     </li>
     {% endif %}
   {% endif %}
-  {# </li> #}
 {% endmacro %}
 
 {% macro render_table(metrics) %}
 <table>
-  <tr><th>Metric</th><th>Value</th><th>Slice</th></tr>
+  <tr><th>Metric</th><th>Value</th><th>Slice</th><th>Result</th></tr>
   {% for metric in metrics %}
-    <tr><td>{{ metric.type }}</td><td>{{ metric.value|round(2) }}</td><td>{{ metric.slice }}</td></tr>
+    <tr><td>{{ metric.type }}</td><td>{{ metric.value|round(2) }}</td><td>{{ metric.slice }}</td><td style="color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td></tr>
   {% endfor %}
 </table>
 {% endmacro %}
@@ -83,6 +83,40 @@
   {% for graph in graphics %}
     {{ render_graphic(graph) }}
   {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro render_test(test) %}
+<div class="col card">
+  {% if test.name %}
+    <h3> {{ test.name  }} </h3>
+  {% endif %}
+  {% if test.description %}
+  <div>
+    <b> Description: </b>
+    {{ test.description }} 
+  </div>
+  {% endif %}
+  {% if test.threshold %}
+  <div>
+    <b> Threshold: </b>
+    {{ test.threshold }} 
+  </div>
+  {% endif %}
+  {% if test.result %}
+  <div>
+    <b> Result: </b>
+    {{ test.result }} 
+  </div>
+  {% endif %}
+  {% if test.passed == true %} 
+    <div><b style="color:green;"> Passed</b></div> 
+    {% else %}
+    <div><b style="color:red;"> Failed</b></div>
+  {% endif %}
+  {% if test.graphics.collection %}
+    {{ render_metrics_graphics(test.graphics) }}
+  {% endif %}
 </div>
 {% endmacro %}
 

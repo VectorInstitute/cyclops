@@ -831,7 +831,7 @@ class ModelCardReport:
             for threshold, threshold_fn in zip(
                 pass_fail_thresholds, pass_fail_threshold_fns
             ):
-                tests.append(Test(threshold=threshold, threshold_fn=threshold_fn))
+                tests.append(Test(name=None, description=None, threshold=threshold, result=value, passed=threshold_fn(value, threshold), graphics=None))
 
             data["tests"] = tests
 
