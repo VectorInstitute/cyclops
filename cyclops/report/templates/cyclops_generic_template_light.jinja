@@ -23,6 +23,7 @@
   {% elif values.__class__.__name__ == "GraphicsCollection" %}
     {{ render_graphics(values.collection) }}
   {% elif values.__class__.__name__ == "Test"%}
+    WE GOT ONE
     {{ render_test(values) }}
   {% else %}
     {% if (values is string) or (values|int != 0) or (values|float != 0) %}
@@ -56,9 +57,9 @@
 
 {% macro render_table(metrics) %}
 <table>
-  <tr><th>Metric</th><th>Value</th><th>Slice</th><th>Result</th></tr>
+  <tr><th>Metric</th><th>Slice</th><th>Value</th><th>Threshold</th><th>Result</th></tr>
   {% for metric in metrics %}
-    <tr><td>{{ metric.type }}</td><td>{{ metric.value|round(2) }}</td><td>{{ metric.slice }}</td><td style="color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td></tr>
+    <tr><td>{{ metric.type }}</td><td>{{ metric.slice }}</td><td>{{ metric.value|round(2) }}</td><td>{{ metric.tests[0].threshold }}</td><td style="color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td></tr>
   {% endfor %}
 </table>
 {% endmacro %}
