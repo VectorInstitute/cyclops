@@ -1,4 +1,5 @@
 """Classification plotter."""
+from collections import defaultdict
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
@@ -488,27 +489,24 @@ class ClassificationPlotter(Plotter):
             fig.update_layout(layout)
         return fig
 
-    def metrics_history(
+    def metrics_trends(
         self,
-        metric_history: Dict[str, Union[List[float], npt.NDArray[Any]]],
-        time_steps: Optional[List[str]] = None,
-        title: Optional[str] = "Metrics History",
+        metrics_trends: Dict[str, Union[List[float], npt.NDArray[Any]]],
+        title: Optional[str] = "Metrics Trends",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot the history of non-curve metrics such as precision, recall, and f_beta \
+        """Plot the trend of non-curve metrics such as precision, recall, and f_beta \
         for a single group or subpopulation.
 
         Parameters
         ----------
-        metric_history : Dict[str, Union[list, np.ndarray]]
-            Dictionary of metric histories, where the key is the metric name \
-                and the value is the metric history as a list or np.ndarray
-        time_steps : Optional[List[str]], optional
-            List of time steps for the metric history used as the x-axis, \
-                by default None
+        metrics_trends : Dict[str, Union[list, np.ndarray]]
+            Dictionary of metric trends, where the key is the date/time step \
+                and the value is a list of dictionaries with keys metric type, \
+                metric value, and slice name
         title: str, optional
-            Plot title, by default "Metrics History"
+            Plot title, by default "Metrics Trends"
         layout : Optional[go.Layout], optional
             Customized figure layout, by default None
         **plot_kwargs : dict
@@ -520,56 +518,115 @@ class ClassificationPlotter(Plotter):
             Figure object
 
         """
-        trace = []
-        if time_steps is not None:
-            assert all(
-                len(time_steps) == len(value) for value in metric_history.values()
-            ), "Time steps must be of the same length as metric values"
         if self.task_type == "binary":
-            for metric_name, metric_values in metric_history.items():
-                x_values = (
-                    time_steps
-                    if time_steps is not None
-                    else list(range(len(metric_values)))  # type: ignore[arg-type]
+            # Reorganize data
+            values = defaultdict(
+                lambda: defaultdict(lambda: defaultdict(list))  # type: ignore
+            )
+            for date, slice_metrics in metrics_trends.items():
+                for metric in slice_metrics:
+                    metric_name = metric["type"]  # type: ignore[index]
+                    slice_name = metric["slice"]  # type: ignore[index]
+                    metric_value = metric["value"]  # type: ignore[index]
+                    values[slice_name][metric_name]["values"].append(metric_value)
+                    values[slice_name][metric_name]["dates"].append(date)
+
+            slice_names = list(values.keys())
+            metric_names = list(
+                {
+                    metric_name
+                    for slice in values.values()
+                    for metric_name in slice.keys()
+                }
+            )
+            subplot_num = len(slice_names)
+            fig = make_subplots(
+                rows=subplot_num,
+                cols=1,
+                subplot_titles=slice_names,
+            )
+
+            if len(self.template.layout.colorway) >= len(metric_names):
+                colors = self.template.layout.colorway[: len(metric_names)]
+            else:
+                difference = len(metric_names) - len(self.template.layout.colorway)
+                colors = (
+                    self.template.layout.colorway
+                    + self.template.layout.colorway[:difference]
                 )
-                plot = line_plot(
-                    x=x_values,  # type: ignore[arg-type]
-                    y=metric_values,
-                    name=metric_name,
-                    **plot_kwargs,
-                )
-                plot.update(mode="lines+markers")
-                trace.append(plot)
+
+            for i, slice_results in enumerate(values.values(), start=1):
+                for metric_name, metric_data in slice_results.items():
+                    fig.add_trace(
+                        line_plot(
+                            x=metric_data["dates"],
+                            y=metric_data["values"],
+                            name=metric_name,
+                            legendgroup=metric_name,
+                            showlegend=(i == 1),
+                            mode="lines+markers",
+                            marker_color=colors[metric_names.index(metric_name)],
+                            **plot_kwargs,
+                        ),
+                        row=i,
+                        col=1,
+                    )
+                fig.update_xaxes(tickvals=list(metrics_trends.keys()), row=i, col=1)
         else:
-            for metric_name, metric_values in metric_history.items():
-                assert all(
-                    len(value) == self.class_num for value in metric_values  # type: ignore[arg-type] # noqa: E501 # pylint: disable=line-too-long
-                ), "Metric values must be of length class_num for \
-                    multiclass/multilabel tasks"
-                for i in range(self.class_num):
-                    x_values = (
-                        time_steps
-                        if time_steps is not None
-                        else list(range(len(metric_values)))  # type: ignore[arg-type]
+            # Reorganize data
+            values = defaultdict(lambda: defaultdict(list))  # type: ignore
+            for date, slice_metrics in metrics_trends.items():
+                for metric in slice_metrics:
+                    metric_name = metric["type"]  # type: ignore[index]
+                    slice_name = metric["slice"]  # type: ignore[index]
+                    metric_value = metric["value"]  # type: ignore[index]
+                    values[f"{slice_name} - {metric_name}"]["values"].append(
+                        metric_value
                     )
-                    name = f"{metric_name}: {self.class_names[i]}"
-                    plot = line_plot(
-                        x=x_values,  # type: ignore[arg-type]
-                        y=metric_values[i],  # type: ignore[arg-type]
-                        trace_name=name,
-                        **plot_kwargs,
+                    values[f"{slice_name} - {metric_name}"]["dates"].append(date)
+
+            subplot_num = len(values.keys())
+            subplot_titles = list(values.keys())
+            fig = make_subplots(
+                rows=subplot_num,
+                cols=1,
+                subplot_titles=subplot_titles,
+            )
+
+            if len(self.template.layout.colorway) >= self.class_num:
+                colors = self.template.layout.colorway[: self.class_num]
+            else:
+                difference = self.class_num - len(self.template.layout.colorway)
+                colors = (
+                    self.template.layout.colorway
+                    + self.template.layout.colorway[:difference]
+                )
+
+            for i, metric_data in enumerate(values.values(), start=1):
+                for k, class_name in enumerate(self.class_names):
+                    x_values = metric_data["dates"]
+                    y_values = [value[k] for value in metric_data["values"]]
+                    fig.add_trace(
+                        line_plot(
+                            x=x_values,
+                            y=y_values,
+                            name=class_name,
+                            legendgroup=class_name,
+                            showlegend=(i == 1),
+                            mode="lines+markers",
+                            marker_color=colors[k],
+                            **plot_kwargs,
+                        ),
+                        row=i,
+                        col=1,
                     )
-                    plot.update(mode="lines+markers")
-                    trace.append(plot)
+                fig.update_xaxes(tickvals=list(metrics_trends.keys()), row=i, col=1)
 
-        xaxis_title = "Time Step"
-        yaxis_title = "Score"
-
-        fig = create_figure(
-            data=trace,
+        fig.update_layout(
             title=dict(text=title),
-            xaxis=dict(title=xaxis_title),
-            yaxis=dict(title=yaxis_title),
+            height=subplot_num * 450,
+            xaxis=dict(title="Time Step"),
+            yaxis=dict(title="Metric Value"),
         )
         if layout is not None:
             fig.update_layout(layout)
@@ -787,7 +844,7 @@ class ClassificationPlotter(Plotter):
             xaxis_title = "Metric"
             yaxis_title = "Score"
             fig.update_layout(
-                title=dict(text=title), barmode="group", height=rows * 300
+                title=dict(text=title), barmode="group", height=rows * 450
             )
 
         if layout is not None:
@@ -898,11 +955,7 @@ class ClassificationPlotter(Plotter):
                         col=1,
                     )
 
-            xaxis_title = "Metric"
-            yaxis_title = "Score"
-            fig.update_layout(
-                title=dict(text=title), barmode="group", height=rows * 300
-            )
+            fig.update_layout(title=dict(text=title), height=rows * 450)
 
         if layout is not None:
             fig.update_layout(layout)
