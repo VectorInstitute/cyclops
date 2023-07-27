@@ -5,9 +5,10 @@ from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 from io import BytesIO
 from re import sub as re_sub
-from typing import Any, Dict, List, Literal, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Type, Union
 
 import jinja2
+import plotly.graph_objects as go
 from PIL import Image
 from plotly.graph_objects import Figure
 from plotly.io import write_image
@@ -20,7 +21,9 @@ from cyclops.report.model_card.base import BaseModelCardField
 from cyclops.report.model_card.fields import (
     Citation,
     Dataset,
+    ExplainabilityReport,
     FairnessAssessment,
+    FairnessReport,
     Graphic,
     GraphicsCollection,
     License,
@@ -30,6 +33,7 @@ from cyclops.report.model_card.fields import (
     RegulatoryRequirement,
     Risk,
     SensitiveData,
+    Test,
     UseCase,
     User,
     Version,
@@ -772,6 +776,120 @@ class ModelCardReport:
             field_type=FairnessAssessment,
         )
 
+    def log_quantitative_analysis(
+        self,
+        analysis_type: Literal["performance", "fairness", "explainability"],
+        name: str,
+        value: Any,
+        metric_slice: Optional[str] = None,
+        decision_threshold: Optional[float] = None,
+        description: Optional[str] = None,
+        pass_fail_thresholds: Optional[Union[float, List[float]]] = None,
+        pass_fail_threshold_fns: Optional[
+            Union[Callable[[Any, float], bool], List[Callable[[Any, float], bool]]]
+        ] = None,
+        **extra: Any,
+    ) -> None:
+        """Add a quantitative analysis to the report.
+
+        Parameters
+        ----------
+        analysis_type : Literal["performance", "fairness", "explainability"]
+            The type of analysis to log.
+        name : str
+            The name of the metric.
+        value : Any
+            The value of the metric.
+        metric_slice : str, optional
+            The name of the slice. If not provided, the slice name will be "overall".
+        decision_threshold : float, optional
+            The decision threshold for the metric.
+        description : str, optional
+            A description of the metric.
+        pass_fail_thresholds : Union[float, List[float]], optional
+            The pass/fail threshold(s) for the metric. If a single threshold is
+            provided, a single test will be created. If multiple thresholds are
+            provided, multiple tests will be created.
+        pass_fail_threshold_fns : Union[Callable[[Any, float], bool],
+                                  List[Callable[[Any, float], bool]]], optional
+            The pass/fail threshold function(s) for the metric. If a single function
+            is provided, a single test will be created. If multiple functions are
+            provided, multiple tests will be created.
+        **extra
+            Any extra fields to add to the metric.
+
+        Raises
+        ------
+        ValueError
+            If the given metric type is not valid.
+
+        """
+        if analysis_type not in ["performance", "fairness", "explainability"]:
+            raise ValueError(
+                f"Invalid metric type {analysis_type}. Must be one of 'performance', "
+                "'fairness', or 'explainability'."
+            )
+
+        section_name: str
+        field_name: str
+        field_type: Any
+
+        section_name, field_name, field_type = {
+            "performance": (
+                "quantitative_analysis",
+                "performance_metrics",
+                PerformanceMetric,
+            ),
+            "fairness": ("fairness_analysis", "fairness_reports", FairnessReport),
+            "explainability": (
+                "explainability_analysis",
+                "explainability_reports",
+                ExplainabilityReport,
+            ),
+        }[analysis_type]
+
+        data = {
+            "type": name,
+            "value": value,
+            "slice": metric_slice,
+            "decision_threshold": decision_threshold,
+            "description": description,
+            **extra,
+        }
+
+        # TODO: create graphics
+
+        if pass_fail_thresholds is not None and pass_fail_threshold_fns is not None:
+            if isinstance(pass_fail_thresholds, float):
+                pass_fail_thresholds = [pass_fail_thresholds]
+            if callable(pass_fail_threshold_fns):
+                pass_fail_threshold_fns = [pass_fail_threshold_fns]
+
+            # create Test objects
+            tests = []
+            for threshold, threshold_fn in zip(
+                pass_fail_thresholds, pass_fail_threshold_fns
+            ):
+                tests.append(
+                    Test(
+                        name=f"{name}/{metric_slice}" if metric_slice else name,
+                        description=None,
+                        threshold=threshold,
+                        result=value,
+                        passed=threshold_fn(value, threshold),
+                        graphics=None,
+                    )
+                )
+
+            data["tests"] = tests
+
+        self._log_field(
+            data=data,
+            section_name=section_name,
+            field_name=field_name,
+            field_type=field_type,
+        )
+
     def log_performance_metrics(self, metrics: Dict[str, Any]) -> None:
         """Add a performance metric to the `Quantitative Analysis` section.
 
@@ -811,7 +929,7 @@ class ModelCardReport:
 
     # TODO: MERGE/COMPARE MODEL CARDS
 
-    def validate(self) -> None:
+    def _validate(self) -> None:
         """Validate the model card."""
         ModelCard.validate(self._model_card.dict())
 
@@ -865,6 +983,52 @@ class ModelCardReport:
                         empty = False
             return empty
 
+        def donut_chart_tests(tests: List[Test]) -> Graphic:
+            """Create a plotly donut chart for the given tests."""
+            colors = ["green", "red"]
+            passed = 0
+            failed = 0
+            for test in tests:
+                if test.passed:
+                    passed += 1
+                else:
+                    failed += 1
+
+            fig = go.Figure(
+                data=[
+                    go.Pie(
+                        labels=["Passed", "Failed"],
+                        values=[passed, failed],
+                        hole=0.3,
+                        pull=[0.005, 0.005],
+                        textinfo="percent",
+                        marker={"colors": colors},
+                        showlegend=False,
+                        title=f"<b>{passed}/{passed+failed}</b><br>Tests Passed",
+                    )
+                ]
+            )
+            # Increase font size and change font
+            fig.update_layout(
+                font={
+                    "family": "Courier New, monospace",
+                    "size": 18,
+                    "color": "#7f7f7f",
+                },
+                autosize=False,
+                margin={"l": 2, "r": 0, "b": 1, "t": 1, "pad": 2},
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+            )
+
+            data = {
+                "name": "Tests (Pass/Fail) Donut Chart",
+                "image": fig.to_html(full_html=False, include_plotlyjs=False),
+            }
+            graphic = Graphic.parse_obj(data)  # create Graphic object from data
+            return graphic
+
+        jinja_env.filters["donut_chart_tests"] = donut_chart_tests
         jinja_env.filters["regex_replace"] = regex_replace
         jinja_env.tests["list"] = lambda x: isinstance(x, list)
         jinja_env.tests["empty"] = empty
@@ -907,8 +1071,31 @@ class ModelCardReport:
             or isinstance(output_filename, str)
             and output_filename.endswith(".html")
         ), "`output_filename` must be a string ending with '.html'"
-        self.validate()
+        self._validate()
         template = self._get_jinja_template(template_path=template_path)
+
+        def sweep_tests(model_card: Any, tests: List[Any]) -> None:
+            """Sweep model card to find all instances of Test."""
+            for field in model_card:
+                if isinstance(field, tuple):
+                    field = field[1]
+                if isinstance(field, Test):
+                    tests.append(field)
+                if hasattr(field, "__fields__"):
+                    sweep_tests(field, tests)
+                if isinstance(field, list) and len(field) != 0:
+                    for item in field:
+                        if isinstance(item, Test):
+                            if len(field) == 1:
+                                tests.append(field[0])
+                            else:
+                                tests.append(field)
+                        else:
+                            sweep_tests(item, tests)
+
+        func_dict = {"sweep_tests": sweep_tests}
+        template.globals.update(func_dict)
+
         plotlyjs = get_plotlyjs() if interactive else None
         content = template.render(model_card=self._model_card, plotlyjs=plotlyjs)
 
