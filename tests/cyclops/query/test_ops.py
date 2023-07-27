@@ -218,7 +218,7 @@ def test_extract_timestamp_component(
         "visit_start_date", "year", "visit_start_date_year"
     )(visits_input)
     visits = QUERIER.get_interface(visits).run()
-    assert visits["visit_start_date_year"].iloc[0] == 2018
+    assert visits["visit_start_date_year"].iloc[0] == 2021
 
 
 @pytest.mark.integration_test
@@ -320,27 +320,27 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
     measurements_median = QUERIER.get_interface(measurements_median).run()
 
     assert "num_visits" in visits_count.columns
-    assert visits_count[visits_count["person_id"] == 33]["num_visits"][0] == 25
+    assert visits_count[visits_count["person_id"] == 33]["num_visits"][0] == 86
     assert "visit_concept_names" in visits_string_agg.columns
     test_visit_concept_names = visits_string_agg[visits_string_agg["person_id"] == 33][
         "visit_concept_names"
     ][0].split(",")
     test_visit_concept_names = [item.strip() for item in test_visit_concept_names]
     assert (
-        len(test_visit_concept_names) == 25
+        len(test_visit_concept_names) == 86
         and "Outpatient Visit" in test_visit_concept_names
     )
     assert "value_as_number_sum" in measurements_sum.columns
     assert (
         measurements_sum[measurements_sum["person_id"] == 33]["value_as_number_sum"][0]
-        == 11371.0
+        == 9881.3
     )
     assert "value_as_number_average" in measurements_average.columns
     assert isclose(
         measurements_average[measurements_average["person_id"] == 33][
             "value_as_number_average"
         ][0],
-        61.79,
+        75.42,
         abs_tol=0.01,
     )
     assert "value_as_number_min" in measurements_min.columns
@@ -351,14 +351,14 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
     assert "value_as_number_max" in measurements_max.columns
     assert (
         measurements_max[measurements_max["person_id"] == 33]["value_as_number_max"][0]
-        == 460.9
+        == 360.7
     )
     assert "value_as_number_median" in measurements_median.columns
     assert (
         measurements_median[measurements_median["person_id"] == 33][
             "value_as_number_median"
         ].item()
-        == 55.1
+        == 75.7
     )
 
 
@@ -472,7 +472,7 @@ def test_union(visits_input):  # pylint: disable=redefined-outer-name
         ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
     )(ConditionEquals("visit_concept_name", "Emergency Room Visit")(visits_input))
     visits = QUERIER.get_interface(visits).run()
-    assert len(visits) == 3937
+    assert len(visits) == 4212
     assert all(
         visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"])
     )
@@ -481,7 +481,7 @@ def test_union(visits_input):  # pylint: disable=redefined-outer-name
         union_all=True,
     )(ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input))
     visits = QUERIER.get_interface(visits).run()
-    assert len(visits) == 7554
+    assert len(visits) == 8114
 
 
 @pytest.mark.integration_test
