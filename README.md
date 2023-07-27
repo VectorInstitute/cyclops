@@ -10,7 +10,7 @@
 [![docker](https://github.com/VectorInstitute/cyclops/actions/workflows/docker.yml/badge.svg)](https://hub.docker.com/r/vectorinstitute/cyclops)
 [![license](https://img.shields.io/github/license/VectorInstitute/cyclops.svg)](https://github.com/VectorInstitute/cyclops/blob/main/LICENSE)
 
-``cyclops`` is a framework for facilitating research and deployment of ML models for healthcare. It provides a few high-level APIs namely:
+``cyclops`` is a toolkit for facilitating research and deployment of ML models for healthcare. It provides a few high-level APIs namely:
 
 * `query` - Query EHR databases (such as MIMIC-IV)
 * `data` - Create datasets for training, inference and evaluation. We use the popular 🤗 [datasets](https://github.com/huggingface/datasets) to efficiently load and slice different modalities of data.
