@@ -9,6 +9,7 @@ on:
       - .github/workflows/docs_build.yml
       - '**.py'
       - '**.ipynb'
+      - '**.jinja'
       - poetry.lock
       - pyproject.toml
       - '**.rst'
