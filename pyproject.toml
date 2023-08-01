@@ -18,7 +18,7 @@ numpy = "<=1.23.0"
 datasets = "^2.10.1"
 psutil = "^5.9.4"
 pyarrow = "^11.0.0"
-monai = { version = "^1.1.0", extras = ["itk"] }
+monai = { version = "1.1.0", extras = ["itk"] }
 dask = { version = "^2022.9.1", extras = ["dataframe"] }
 
 psycopg2 = { version = "2.9.6", optional = true }

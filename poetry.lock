@@ -3840,27 +3840,27 @@ sqlserver = ["mlflow-dbstore"]
 
 [[package]]
 name = "monai"
-version = "1.2.0"
+version = "1.1.0"
 description = "AI Toolkit for Healthcare Imaging"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 files = [
-    {file = "monai-1.2.0-202306081546-py3-none-any.whl", hash = "sha256:941e3d1cd0ad9af46d6acc77a95c3ea6dd93b0046b71bb15125e6501db3d70f1"},
+    {file = "monai-1.1.0-202212191849-py3-none-any.whl", hash = "sha256:28b47fc552309f1974a347fca6771969f25e98c228ef3a53a62eae250f3c0b8d"},
 ]
 
 [package.dependencies]
 itk = {version = ">=5.2", optional = true, markers = "extra == \"itk\""}
-numpy = ">=1.20"
-torch = ">=1.9"
+numpy = ">=1.17"
+torch = ">=1.8"
 
 [package.extras]
-all = ["clearml (>=1.10.0rc0)", "cucim (>=22.8.1)", "einops", "fire", "gdown (>=4.4.0)", "h5py", "imagecodecs", "itk (>=5.2)", "jsonschema", "lmdb", "matplotlib", "mlflow (>=1.28.0)", "nibabel", "ninja", "nni", "onnx (>=1.13.0)", "onnxruntime", "openslide-python (==1.1.2)", "optuna", "pandas", "pillow", "psutil", "pydicom", "pynrrd", "pytorch-ignite (==0.4.11)", "pyyaml", "scikit-image (>=0.14.2)", "tensorboard", "tensorboardX", "tifffile", "torchvision", "tqdm (>=4.47.0)", "transformers (<4.22)"]
+all = ["cucim (>=22.8.1)", "einops", "fire", "gdown (>=4.4.0)", "h5py", "imagecodecs", "itk (>=5.2)", "jsonschema", "lmdb", "matplotlib", "mlflow", "nibabel", "ninja", "nni", "openslide-python (==1.1.2)", "optuna", "pandas", "pillow", "psutil", "pydicom", "pynrrd", "pytorch-ignite (==0.4.10)", "pyyaml", "scikit-image (>=0.14.2)", "tensorboard", "tensorboardX", "tifffile", "torchvision", "tqdm (>=4.47.0)", "transformers (<4.22)"]
 cucim = ["cucim (>=22.8.1)"]
 einops = ["einops"]
 fire = ["fire"]
 gdown = ["gdown (>=4.4.0)"]
 h5py = ["h5py"]
-ignite = ["pytorch-ignite (==0.4.11)"]
+ignite = ["pytorch-ignite (==0.4.10)"]
 imagecodecs = ["imagecodecs"]
 itk = ["itk (>=5.2)"]
 jsonschema = ["jsonschema"]
@@ -3869,10 +3869,7 @@ matplotlib = ["matplotlib"]
 mlflow = ["mlflow"]
 nibabel = ["nibabel"]
 ninja = ["ninja"]
-nni = ["nni"]
-onnx = ["onnx (>=1.13.0)", "onnxruntime"]
 openslide = ["openslide-python (==1.1.2)"]
-optuna = ["optuna"]
 pandas = ["pandas"]
 pillow = ["pillow (!=8.3.0)"]
 psutil = ["psutil"]
@@ -8482,4 +8479,4 @@ report = ["category-encoders", "kaleido", "pillow", "plotly", "pybtex", "pydanti
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.11"
-content-hash = "3f2e5c84ec4ea457339e9f97bc3f1b4b0f51728c47a62e5d7f619fc020a571da"
+content-hash = "3d5a4c80ce0f3d9015187b6a5c7914118ccb171d0f68f8eb0355dd4b173d8510"
