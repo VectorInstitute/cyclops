@@ -1,4 +1,5 @@
 """Base class for plotter."""
+
 import abc
 from typing import Any, Dict, List, Union
 

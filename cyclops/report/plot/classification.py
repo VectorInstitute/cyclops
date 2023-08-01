@@ -1,4 +1,5 @@
 """Classification plotter."""
+
 from collections import defaultdict
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 

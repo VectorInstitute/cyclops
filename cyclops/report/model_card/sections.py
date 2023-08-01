@@ -1,4 +1,5 @@
 """Model Card sections."""
+
 import inspect
 from typing import List, Optional
 

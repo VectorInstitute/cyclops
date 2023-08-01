@@ -1,4 +1,5 @@
 """Cyclops report module."""  # pylint: disable=too-many-lines
+
 import base64
 import os
 from datetime import date as dt_date

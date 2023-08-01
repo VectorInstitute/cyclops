@@ -1,4 +1,5 @@
 """Base classes for model card fields and sections."""
+
 import keyword
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 

@@ -1,6 +1,5 @@
 """The ``query`` API provides classes to query EHR databases."""
 
-
 try:
     import sqlalchemy
 except ImportError:
@@ -9,6 +8,7 @@ except ImportError:
     ) from None
 
 
+from cyclops.query.base import DatasetQuerier
 from cyclops.query.eicu import EICUQuerier
 from cyclops.query.gemini import GEMINIQuerier
 from cyclops.query.mimiciii import MIMICIIIQuerier
