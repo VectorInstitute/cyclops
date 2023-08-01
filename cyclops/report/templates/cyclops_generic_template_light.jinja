@@ -57,29 +57,31 @@
 {% endmacro %}
 
 {% macro render_metric_table(metrics) %}
-<table class="styled-table">
-  <tr><th>Metric</th><th>Slice</th><th>Value</th><th>Threshold</th><th>Result</th></tr>
-  {% for metric in metrics %}
-    {# render table row #}
-    <tr>
-      <td style="padding: 5px; text-align: center;">{{ metric.type }}</td>
-      <td style="padding: 5px; text-align: center;">{{ metric.slice }}</td>
-      <td style="padding: 5px; text-align: center;" id="{{ metric.type }}/{{ metric.slice }}">{{ metric.value|round(2) }}</td>
-      {% if metric.tests|length != 0 %}
-        <td style="padding: 5px; text-align: center;">{{ metric.tests[0].threshold|round(2) }}</td>
-        <td style="padding: 5px; text-align: center; color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td>
-      {% else %}
-        <td style="padding: 5px; text-align: center;">-</td>
-        <td style="padding: 5px; text-align: center;">-</td>
-      {% endif %}
-    </tr>
-  {% endfor %}
-</table>
+<div class="subcard">
+  <table class="styled-table">
+    <tr><th>Metric</th><th>Slice</th><th>Value</th><th>Threshold</th><th>Result</th></tr>
+    {% for metric in metrics %}
+      {# render table row #}
+      <tr>
+        <td style="padding: 5px; text-align: center;">{{ metric.type }}</td>
+        <td style="padding: 5px; text-align: center;">{{ metric.slice }}</td>
+        <td style="padding: 5px; text-align: center;" id="{{ metric.type }}/{{ metric.slice }}">{{ metric.value|round(2) }}</td>
+        {% if metric.tests|length != 0 %}
+          <td style="padding: 5px; text-align: center;">{{ metric.tests[0].threshold|round(2) }}</td>
+          <td style="padding: 5px; text-align: center; color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td>
+        {% else %}
+          <td style="padding: 5px; text-align: center;">-</td>
+          <td style="padding: 5px; text-align: center;">-</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </table>
+</div>
 {% endmacro %}
 
 {% macro render_test_table(tests, passing) %}
 {% if passing %}
-<table class="styled-table" style="border: 3px solid green;">
+<table class="styled-table-pass" style="border: 3px solid green;">
   <tr><th style="background-color: green;">Tests Passing</th></tr>
   {% for test in tests %}
     {% if test.passed %}
@@ -89,7 +91,7 @@
     {% endif %}
   {% endfor %}
 {% else %}
-<table class="styled-table" style="border: 3px solid red;">
+<table class="styled-table-fail" style="border: 3px solid red;">
   <tr><th style="background-color: red;">Tests Failing</th></tr>
   {% for test in tests %}
     {% if not test.passed %}
@@ -102,8 +104,8 @@
 </table>
 {% endmacro %}
 
-{% macro render_graphic(graphic) %}
-<div class="img-item">
+{% macro render_graphic(graphic, class="img-item") %}
+<div class="{{ class }}">
   {% if graphic.image.startswith('<div') %}
     {{ graphic.image|safe }}
   {% else %}
@@ -129,20 +131,16 @@
 {% if tests|length != 0 %}
   <div class="card" id="overview">
     <h2>Overview</h2>
-    <div class="subcard">
-        <h3>Tests</h3>
-      <div class="row" style="">
-        <div class="column left">
-          {{ render_graphic(tests|donut_chart_tests) }}
+        <div class="subcard">
+          <h3>Test Summary</h3>
+          {{ render_graphic(tests|donut_chart_tests, "") }}
         </div>
-        <div class="column middle">
+        <div class="subcard">
           {{ render_test_table(tests, True) }}
         </div>
-        <div class="column right">
+        <div class="subcard">
           {{ render_test_table(tests, False) }}
         </div>
-      </div>
-    </div>
   </div>
 {% endif %}
 {% endmacro %}
@@ -244,17 +242,6 @@
 </div>
 {% endmacro %}
 
-{% macro render_banner() %}
-<div id="banner">
-  <img
-    src="https://raw.githubusercontent.com/VectorInstitute/cyclops/main/docs/source/theme/static/cyclops_logo-dark.png"
-    alt="CyclOps Logo" id="logo">
-  <h1>
-    Transparency Report
-  </h1>
-</div>
-{% endmacro %}
-
 <html lang="en">
   <head>
     <style>
@@ -266,16 +253,6 @@
         font-family: Arial, Helvetica, sans-serif;
       }
 
-      h1 {
-        color: #214d87;
-        position: relative;
-        top: 65px;
-        left: 30px;
-        font-size: 48px;
-        font-family: 'Courier New', Courier, monospace;
-        font-weight: lighter;
-      }
-
       h2 {
         color: #214d87;
         flex-basis: 100%;
@@ -284,17 +261,6 @@
       h3 {
         color: #0073e4;
         flex-basis: 100%;
-      }
-
-      .column {
-        float:left;
-      }
-      .left {
-        padding-right: 100px;
-        width: 33%;
-      }
-      .middle .right {
-        width: 66%;
       }
 
       .card {
@@ -488,27 +454,49 @@
         margin: 25px;
         font-size: 18px;
         font-family: Arial, Helvetica, sans-serif;
-        min-width: 400px;
+        min-width: 200px;
         box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
       }
 
-      .styled-table th {
+      .styled-table-pass {
+        border-spacing: 0;
+        border-collapse: separate;
+        border-radius: 10px;
+        border: 3px solid green;
+        font-size: 18px;
+        font-family: Arial, Helvetica, sans-serif;
+        min-width: 200px;
+        box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      .styled-table-fail {
+        border-spacing: 0;
+        border-collapse: separate;
+        border-radius: 10px;
+        border: 3px solid red;
+        font-size: 18px;
+        font-family: Arial, Helvetica, sans-serif;
+        min-width: 200px;
+        box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      th {
         padding: 12px 15px;
         color: white;
         background-color: #0073e4;
       }
 
-      .styled-table tbody tr {
+      tbody tr {
         border-bottom: 1px solid #dddddd;
       }
 
-      .styled-table tbody tr:nth-of-type(even) {
+      tbody tr:nth-of-type(even) {
         background-color: #f3f3f3;
       }
 
-      .styled-table tbody tr:last-of-type {
+      {# tbody tr:last-of-type {
         border-bottom: 2px solid #0073e4;
-      }
+      } #}
 
       caption {
         font-weight: bold;
@@ -528,15 +516,3 @@
     </main>
   </body>
 </html>
-
-{# <script>
-  const container = document.getElementById('container');
-  const card = document.createElement('div');
-  card.setAttribute('class', 'card');
-  card.innerHTML = "<h2>Overview</h2>"
-  const subcard = document.createElement('div');
-  subcard.setAttribute('class', 'subcard');
-  subcard.innerHTML = "<h3>Tests</h3>";
-  card.appendChild(subcard);
-  container.prepend(card);
-</script> #}
