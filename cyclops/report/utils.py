@@ -1,4 +1,5 @@
 """Utility functions for the `cyclops.report` module."""
+
 import glob
 import importlib
 import inspect

@@ -1,4 +1,5 @@
 """Model card field definitions."""
+
 import inspect
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime

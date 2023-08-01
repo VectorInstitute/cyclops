@@ -1,4 +1,5 @@
 """Model Card."""
+
 import inspect
 from typing import Optional
 

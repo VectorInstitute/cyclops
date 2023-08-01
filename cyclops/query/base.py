@@ -1,4 +1,5 @@
 """Base querier class."""
+
 import logging
 import os
 from functools import partial

@@ -1,4 +1,5 @@
 """Utility functions for plotting."""
+
 import base64
 from typing import Any, List, Optional, Union
 
