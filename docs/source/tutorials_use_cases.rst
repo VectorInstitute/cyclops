@@ -26,3 +26,4 @@ performance of a model on the task.
 .. toctree::
 
     tutorials/mimiciii/mortality_prediction.ipynb
+    tutorials/nihcxr/cxr_classification.ipynb
