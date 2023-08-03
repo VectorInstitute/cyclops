@@ -57,26 +57,28 @@
 {% endmacro %}
 
 {% macro render_metric_table(metrics) %}
-<div class="subcard">
-  <table class="styled-table">
-    <tr><th>Metric</th><th>Slice</th><th>Value</th><th>Threshold</th><th>Result</th></tr>
-    {% for metric in metrics %}
-      {# render table row #}
-      <tr>
-        <td style="padding: 5px; text-align: center;">{{ metric.type }}</td>
-        <td style="padding: 5px; text-align: center;">{{ metric.slice }}</td>
-        <td style="padding: 5px; text-align: center;" id="{{ metric.type }}/{{ metric.slice }}">{{ metric.value|round(2) }}</td>
-        {% if metric.tests|length != 0 %}
-          <td style="padding: 5px; text-align: center;">{{ metric.tests[0].threshold|round(2) }}</td>
-          <td style="padding: 5px; text-align: center; color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td>
-        {% else %}
-          <td style="padding: 5px; text-align: center;">-</td>
-          <td style="padding: 5px; text-align: center;">-</td>
-        {% endif %}
-      </tr>
-    {% endfor %}
-  </table>
-</div>
+{% if metrics|length != 0 %}
+  <div class="subcard">
+    <table class="styled-table">
+      <tr><th>Metric</th><th>Slice</th><th>Value</th><th>Threshold</th><th>Result</th></tr>
+      {% for metric in metrics %}
+        {# render table row #}
+        <tr>
+          <td style="padding: 5px; text-align: center;">{{ metric.type }}</td>
+          <td style="padding: 5px; text-align: center;">{{ metric.slice }}</td>
+          <td style="padding: 5px; text-align: center;" id="{{ metric.type }}/{{ metric.slice }}">{{ metric.value|round(2) }}</td>
+          {% if metric.tests|length != 0 %}
+            <td style="padding: 5px; text-align: center;">{{ metric.tests[0].threshold|round(2) }}</td>
+            <td style="padding: 5px; text-align: center; color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td>
+          {% else %}
+            <td style="padding: 5px; text-align: center;">-</td>
+            <td style="padding: 5px; text-align: center;">-</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endif %}
 {% endmacro %}
 
 {% macro render_test_table(tests, passing) %}
@@ -135,12 +137,28 @@
           <h3>Test Summary</h3>
           {{ render_graphic(tests|donut_chart_tests, "") }}
         </div>
-        <div class="subcard">
-          {{ render_test_table(tests, True) }}
-        </div>
-        <div class="subcard">
-          {{ render_test_table(tests, False) }}
-        </div>
+        {% set passed_tests = [0] %}
+        {% for test in tests %}
+          {% if test.passed %}
+            {% if passed_tests.append(passed_tests.pop() + 1) %}{% endif %}
+          {% endif %}
+        {% endfor %}
+        {% if passed_tests[0] != 0 %}
+          <div class="subcard">
+            {{ render_test_table(tests, True) }}
+          </div>
+        {% endif %}
+        {% set failed_tests = [0] %}
+        {% for test in tests %}
+          {% if not test.passed %}
+            {% if failed_tests.append(failed_tests.pop() + 1) %}{% endif %}
+          {% endif %}
+        {% endfor %}
+        {% if failed_tests[0] != 0 %}
+          <div class="subcard">
+            {{ render_test_table(tests, False) }}
+          </div>
+        {% endif %}
   </div>
 {% endif %}
 {% endmacro %}
