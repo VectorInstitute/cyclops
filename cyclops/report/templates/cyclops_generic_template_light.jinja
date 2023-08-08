@@ -4,7 +4,7 @@
 {{ sweep_tests(model_card, tests) or "" }}
 
 {% set trends = []%}
-{{ sweep_graphics(model_card, trends, "Performance over time")}}
+{{ sweep_graphics(model_card, trends, "Performance over time") or ""}}
 
 {% macro render_if_exist_list(values) %}
 <div>
@@ -342,7 +342,7 @@
       }
 
       #logo {
-        padding-top: 50px;
+        margin-top: 50px;
         padding-bottom: 10px;
         float: left;
         max-width: 200px;
