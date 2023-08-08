@@ -1000,7 +1000,7 @@ class ModelCardReport:
                     go.Pie(
                         labels=["Passed", "Failed"],
                         values=[passed, failed],
-                        hole=0.3,
+                        hole=0.4,
                         pull=[0.005, 0.005],
                         textinfo="percent",
                         marker={"colors": colors},
@@ -1013,11 +1013,13 @@ class ModelCardReport:
             fig.update_layout(
                 font={
                     "family": "Courier New, monospace",
-                    "size": 18,
+                    "size": 20,
                     "color": "#7f7f7f",
                 },
                 autosize=False,
-                margin={"l": 2, "r": 0, "b": 1, "t": 1, "pad": 2},
+                width=400,
+                height=400,
+                margin={"l": 0, "r": 0, "b": 0, "t": 0, "pad": 0},
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
             )
@@ -1094,7 +1096,25 @@ class ModelCardReport:
                         else:
                             sweep_tests(item, tests)
 
-        func_dict = {"sweep_tests": sweep_tests}
+        def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
+            """Sweep model card to find all instances of Test."""
+            for field in model_card:
+                if isinstance(field, tuple):
+                    field = field[1]
+                if isinstance(field, Graphic):
+                    if field.name == caption:
+                        graphics.append(field)
+                if hasattr(field, "__fields__"):
+                    sweep_graphics(field, graphics, caption)
+                if isinstance(field, list) and len(field) != 0:
+                    for item in field:
+                        if isinstance(item, Graphic):
+                            if item.name == caption:
+                                graphics.append(item)
+                        else:
+                            sweep_graphics(item, graphics, caption)
+
+        func_dict = {"sweep_tests": sweep_tests, "sweep_graphics": sweep_graphics}
         template.globals.update(func_dict)
 
         plotlyjs = get_plotlyjs() if interactive else None

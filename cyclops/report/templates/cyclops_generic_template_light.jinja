@@ -3,6 +3,9 @@
 {% set tests = [] %}  {# init variable to aggregate tests #}
 {{ sweep_tests(model_card, tests) or "" }}
 
+{% set trends = []%}
+{{ sweep_graphics(model_card, trends, "Performance over time")}}
+
 {% macro render_if_exist_list(values) %}
 <div>
   {% if values.__class__.__name__ == "User"%}
@@ -58,11 +61,10 @@
 
 {% macro render_metric_table(metrics) %}
 {% if metrics|length != 0 %}
-  <div class="subcard">
+  <div class="subcard" style="max-height: 600px; overflow: auto;">
     <table class="styled-table">
       <tr><th>Metric</th><th>Slice</th><th>Value</th><th>Threshold</th><th>Result</th></tr>
       {% for metric in metrics %}
-        {# render table row #}
         <tr>
           <td style="padding: 5px; text-align: center;">{{ metric.type }}</td>
           <td style="padding: 5px; text-align: center;">{{ metric.slice }}</td>
@@ -83,7 +85,7 @@
 
 {% macro render_test_table(tests, passing) %}
 {% if passing %}
-<table class="styled-table-pass" style="border: 3px solid green;">
+<table class="styled-table-pass" style="border: 3px solid green; ">
   <tr><th style="background-color: green;">Tests Passing</th></tr>
   {% for test in tests %}
     {% if test.passed %}
@@ -131,34 +133,42 @@
 
 {% macro test_overview(tests) %}
 {% if tests|length != 0 %}
-  <div class="card" id="overview">
-    <h2>Overview</h2>
-        <div class="subcard">
-          <h3>Test Summary</h3>
-          {{ render_graphic(tests|donut_chart_tests, "") }}
+  <div class="card" id="overview" style="justify-content: center;">
+  <h2>Overview</h2>
+      <div class="subcard">
+        <h3>Test Summary</h3>
+        {{ render_graphic(tests|donut_chart_tests, "") }}
+      </div>
+      {% set passed_tests = [0] %}
+      {% for test in tests %}
+        {% if test.passed %}
+          {% if passed_tests.append(passed_tests.pop() + 1) %}{% endif %}
+        {% endif %}
+      {% endfor %}
+      {% if passed_tests[0] != 0 %}
+        <div class="subcard" style="max-height: 460px; overflow: auto;">
+          {{ render_test_table(tests, True) }}
         </div>
-        {% set passed_tests = [0] %}
-        {% for test in tests %}
-          {% if test.passed %}
-            {% if passed_tests.append(passed_tests.pop() + 1) %}{% endif %}
-          {% endif %}
-        {% endfor %}
-        {% if passed_tests[0] != 0 %}
-          <div class="subcard">
-            {{ render_test_table(tests, True) }}
-          </div>
+      {% endif %}
+      {% set failed_tests = [0] %}
+      {% for test in tests %}
+        {% if not test.passed %}
+          {% if failed_tests.append(failed_tests.pop() + 1) %}{% endif %}
         {% endif %}
-        {% set failed_tests = [0] %}
-        {% for test in tests %}
-          {% if not test.passed %}
-            {% if failed_tests.append(failed_tests.pop() + 1) %}{% endif %}
-          {% endif %}
-        {% endfor %}
-        {% if failed_tests[0] != 0 %}
-          <div class="subcard">
-            {{ render_test_table(tests, False) }}
-          </div>
-        {% endif %}
+      {% endfor %}
+      {% if failed_tests[0] != 0 %}
+        <div class="subcard" style="max-height: 460px; overflow: auto;">
+          {{ render_test_table(tests, False) }}
+        </div>
+      {% endif %}
+      {% if trends|length != 0%}
+        <div class="subcard">
+          <h3>Performance Over Time</h3>
+          {% for trend in trends %}
+            {{ render_graphic(trend) }}
+          {% endfor %}
+        </div>
+      {% endif %}
   </div>
 {% endif %}
 {% endmacro %}
@@ -311,6 +321,8 @@
         width: 100%;
         height: auto;
         flex-basis: 100%;
+        margin-top: 10px;
+        margin-bottom: 10px;
       }
 
       #banner {
@@ -470,7 +482,7 @@
         border-radius: 10px;
         border: 3px solid #0073e4;
         margin: 25px;
-        font-size: 18px;
+        font-size: 16px;
         font-family: Arial, Helvetica, sans-serif;
         min-width: 200px;
         box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
@@ -481,7 +493,7 @@
         border-collapse: separate;
         border-radius: 10px;
         border: 3px solid green;
-        font-size: 18px;
+        font-size: 16px;
         font-family: Arial, Helvetica, sans-serif;
         min-width: 200px;
         box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
@@ -492,7 +504,7 @@
         border-collapse: separate;
         border-radius: 10px;
         border: 3px solid red;
-        font-size: 18px;
+        font-size: 16px;
         font-family: Arial, Helvetica, sans-serif;
         min-width: 200px;
         box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
@@ -511,10 +523,6 @@
       tbody tr:nth-of-type(even) {
         background-color: #f3f3f3;
       }
-
-      {# tbody tr:last-of-type {
-        border-bottom: 2px solid #0073e4;
-      } #}
 
       caption {
         font-weight: bold;
