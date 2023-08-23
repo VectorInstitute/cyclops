@@ -6,10 +6,15 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
 import torch.nn.modules
 import torch.optim
+import yaml
+from hydra import compose, initialize
+from omegaconf import OmegaConf
 from sklearn.base import BaseEstimator
 
+from cyclops.models.constants import CONFIG_ROOT
 from cyclops.models.utils import is_pytorch_model, is_sklearn_model
 from cyclops.models.wrappers import PTModel, SKModel, WrappedModel
+from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
 
 
@@ -29,7 +34,7 @@ _sk_model_keys: Set[str] = set()
 
 
 def register_model(
-    name: str, model_type: Literal["static", "temporal", "image"]
+    name: str, model_type: Literal["static", "temporal", "image"],
 ) -> Callable:
     """Register model in the catalog.
 
@@ -80,7 +85,7 @@ def register_model(
         else:
             raise NotImplementedError(
                 "Model library is not supported. Only PyTorch and scikit-learn "
-                " mmodels are supported."
+                " mmodels are supported.",
             )
 
         return model_obj
@@ -91,7 +96,7 @@ def register_model(
 def list_models(
     category: Optional[
         Literal["static", "temporal", "image", "pytorch", "sklearn"]
-    ] = None
+    ] = None,
 ) -> List[str]:
     """List models.
 
@@ -121,7 +126,7 @@ def list_models(
     else:
         raise ValueError(
             f"Category {category} not supported."
-            " Choose from: `static`, `temporal`, `pytorch` or `sklearn`."
+            " Choose from: `static`, `temporal`, `pytorch` or `sklearn`.",
         )
 
     return model_list
@@ -155,7 +160,9 @@ def wrap_model(model: Union[torch.nn.Module, BaseEstimator], **kwargs) -> Wrappe
     raise TypeError("``model`` must be a pyTorch or sklearn model")
 
 
-def create_model(model_name: str, wrap: bool = True, **kwargs) -> WrappedModel:
+def create_model(
+    model_name: str, wrap: bool = True, **config_overrides,
+) -> WrappedModel:
     """Create model and optionally wrap it.
 
     Parameters
@@ -164,8 +171,9 @@ def create_model(model_name: str, wrap: bool = True, **kwargs) -> WrappedModel:
         Model name.
     wrap : bool, optional
         Whether to wrap model.
-    **kwargs : dict, optional
-        Keyword arguments passed to the wrapper class or model class.
+    **config_overrides : dict, optional
+        Keyword arguments passed to the wrapper class or model class \
+            to override the predefined config.
 
     Returns
     -------
@@ -176,7 +184,7 @@ def create_model(model_name: str, wrap: bool = True, **kwargs) -> WrappedModel:
     model_class = _model_catalog.get(model_name, None)
     if model_class is None:
         similar_keys_list: List[str] = get_close_matches(
-            model_name, _model_catalog.keys(), n=5
+            model_name, _model_catalog.keys(), n=5,
         )
         similar_keys: str = ", ".join(similar_keys_list)
         similar_keys = (
@@ -186,9 +194,19 @@ def create_model(model_name: str, wrap: bool = True, **kwargs) -> WrappedModel:
         )
         raise ValueError(f"Model {model_name} not found.{similar_keys}")
 
-    if wrap:
-        model = wrap_model(model_class, **kwargs)
-    else:
-        model = model_class(**kwargs)
+    overrides = []
+    if config_overrides:
+        config_file = join(CONFIG_ROOT, f"{model_name}.yaml")
+        with open(config_file, "r", encoding="utf-8") as file:
+            config_keys = list(yaml.safe_load(file).keys())
+        for key, value in config_overrides.items():
+            if key in config_keys:
+                overrides.append(f"{key}={value}")
+            else:
+                overrides.append(f"+{key}={value}")
+    with initialize(version_base=None, config_path="configs", job_name="create_model"):
+        config = compose(config_name=f"{model_name}.yaml", overrides=overrides)
+        LOGGER.debug(OmegaConf.to_yaml(config))
 
-    return model
+    return wrap_model(model_class, **config) if wrap else model_class(**config)
+

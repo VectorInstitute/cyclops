@@ -36,7 +36,7 @@ class DataProcessor:
         """Validate the input arguments."""
         assert self.dataset_name in DATASETS, "[!] Invalid dataset name"
         assert (
-            self.use_case in USE_CASES.keys()  # pylint: disable=C0201
+            self.use_case in USE_CASES  # pylint: disable=C0201
         ), "[!] Invalid use case"
         assert (
             self.dataset_name in USE_CASES[self.use_case]

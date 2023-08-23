@@ -36,7 +36,7 @@ def _sk_binary_precision_recall(
 ):
     """Compute precision score for binary case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
-        if not ((0 < preds) & (preds < 1)).all():
+        if not ((preds > 0) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= threshold).astype(np.uint8)
 
@@ -53,7 +53,7 @@ class TestBinaryPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_binary_precision_recall_functional(
-        self, inputs, cyclops_func, sk_func
+        self, inputs, cyclops_func, sk_func,
     ) -> None:
         """Test function for binary precision and recall."""
         target, preds = inputs
@@ -77,7 +77,7 @@ class TestBinaryPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_binary_precision_recall_class(
-        self, inputs, cyclops_class, sk_func
+        self, inputs, cyclops_class, sk_func,
     ) -> None:
         """Test class for binary precision and recall."""
         target, preds = inputs
@@ -127,7 +127,7 @@ class TestMulticlassPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_multiclass_precision_recall_functional(
-        self, inputs, average, cyclops_func, sk_func
+        self, inputs, average, cyclops_func, sk_func,
     ) -> None:
         """Test functions for multiclass precision and recall."""
         target, preds = inputs
@@ -156,7 +156,7 @@ class TestMulticlassPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_multiclass_precision_recall_class(
-        self, inputs, average, cyclops_class, sk_func
+        self, inputs, average, cyclops_class, sk_func,
     ) -> None:
         """Test classes for multiclass precision and recall."""
         target, preds = inputs
@@ -190,7 +190,7 @@ def _sk_multilabel_precision_recall(  # pylint: disable=too-many-arguments
 ):
     """Compute precision score for multilabel case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
-        if not ((0 < preds) & (preds < 1)).all():
+        if not ((preds > 0) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= threshold).astype(np.uint8)
 
@@ -214,7 +214,7 @@ class TestMultilabelPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_multilabel_precision_recall_functional(
-        self, inputs, average, cyclops_func, sk_func
+        self, inputs, average, cyclops_func, sk_func,
     ) -> None:
         """Test multilabel precision."""
         target, preds = inputs

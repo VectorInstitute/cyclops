@@ -30,12 +30,12 @@ def _sk_binary_fbeta_score(
 ):
     """Compute fbeta score for binary case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
-        if not ((0 < preds) & (preds < 1)).all():
+        if not ((preds > 0) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= threshold).astype(np.uint8)
 
     return sk_fbeta_score(
-        y_true=target, y_pred=preds, beta=beta, zero_division=zero_division
+        y_true=target, y_pred=preds, beta=beta, zero_division=zero_division,
     )
 
 
@@ -174,7 +174,7 @@ def _sk_multilabel_fbeta_score(  # pylint: disable=too-many-arguments
 ):
     """Compute fbeta score for multilabel case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
-        if not ((0 < preds) & (preds < 1)).all():
+        if not ((preds > 0) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= threshold).astype(np.uint8)
 

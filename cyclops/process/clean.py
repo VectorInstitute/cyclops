@@ -130,7 +130,7 @@ def convert_to_events(
     if EVENT_VALUE not in events:
         events[EVENT_VALUE] = EMPTY_STRING
     events = events.rename(
-        columns={timestamp_col: EVENT_TIMESTAMP, value_col: EVENT_VALUE}
+        columns={timestamp_col: EVENT_TIMESTAMP, value_col: EVENT_VALUE},
     )
     events[EVENT_NAME] = event_name
     events[EVENT_CATEGORY] = event_category
@@ -199,8 +199,7 @@ def normalize_names(names: pd.Series) -> pd.Series:
     """
     names = names.apply(to_lower)
     names = names.apply(remove_text_in_parentheses)
-    names = names.str.strip()
-    return names
+    return names.str.strip()
 
 
 def normalize_categories(categories: pd.Series) -> pd.Series:
@@ -221,8 +220,7 @@ def normalize_categories(categories: pd.Series) -> pd.Series:
 
     """
     categories = categories.apply(to_lower)
-    categories = categories.str.strip()
-    return categories
+    return categories.str.strip()
 
 
 def normalize_values(values: pd.Series) -> pd.Series:
@@ -244,18 +242,17 @@ def normalize_values(values: pd.Series) -> pd.Series:
 
     """
     values = values.apply(
-        replace_if_string_match, args=("|".join(POSITIVE_RESULT_TERMS), "1")
+        replace_if_string_match, args=("|".join(POSITIVE_RESULT_TERMS), "1"),
     )
     values = values.apply(
-        replace_if_string_match, args=("|".join(NEGATIVE_RESULT_TERMS), "0")
+        replace_if_string_match, args=("|".join(NEGATIVE_RESULT_TERMS), "0"),
     )
 
     values = values.apply(remove_text_in_parentheses)
     values = values.apply(fix_inequalities)
     values = values.apply(fill_missing_with_nan)
-    values = values.astype("float")
+    return values.astype("float")
 
-    return values
 
 
 def normalize_units(units: pd.Series) -> pd.Series:
@@ -278,9 +275,8 @@ def normalize_units(units: pd.Series) -> pd.Series:
     LOGGER.info("Normalizing units...")
     units = units.apply(none_to_empty_string)
     units = units.apply(to_lower)
-    units = units.apply(strip_whitespace)
+    return units.apply(strip_whitespace)
 
-    return units
 
 
 @time_function
@@ -343,7 +339,7 @@ def dropna_rows(data: pd.DataFrame, cols: Union[str, List[str]]) -> pd.DataFrame
     if new_length != length:
         num = length - new_length
         LOGGER.info(
-            "Dropped nulls over columns: %s. Removed %d rows.", "".join(cols), num
+            "Dropped nulls over columns: %s. Removed %d rows.", "".join(cols), num,
         )
 
     return data

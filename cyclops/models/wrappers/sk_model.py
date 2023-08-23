@@ -18,7 +18,7 @@ from sklearn.model_selection import GridSearchCV, PredefinedSplit, RandomizedSea
 from cyclops.data.utils import is_out_of_core
 from cyclops.models.utils import get_split, is_sklearn_class, is_sklearn_instance
 from cyclops.models.wrappers.utils import DatasetColumn
-from cyclops.utils.file import join, load_pickle, save_pickle
+from cyclops.utils.file import join, load_pickle, process_dir_save_path, save_pickle
 from cyclops.utils.log import setup_logging
 
 
@@ -54,15 +54,12 @@ class SKModel:
     def __init__(  # pylint: disable=dangerous-default-value
         self,
         model: SKBaseEstimator,
-        model_params: dict,
-        batch_size: int = 64,
-        **kwargs,
+        **params: Dict[str, Any],
     ) -> None:
         """Initialize wrapper."""
         self.model = model  # possibly uninstantiated class
-        self.initialize_model(**model_params)
-        self.batch_size = batch_size
-        vars(self).update(kwargs)
+        self.batch_size = params.pop("batch_size", 64)
+        self.initialize_model(**params)
 
     def initialize_model(self, **kwargs):
         """Initialize model.
@@ -103,7 +100,7 @@ class SKModel:
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
-        splits_mapping: dict = {"train": "train", "validation": "validation"},
+        splits_mapping: dict = None,
         **kwargs,
     ):
         """Search on hyper parameters.
@@ -157,6 +154,8 @@ class SKModel:
         # TODO: check the `metric` argument; allow using cyclops.evaluate.metrics
         # TODO: allow passing group
 
+        if splits_mapping is None:
+            splits_mapping = {"train": "train", "validation": "validation"}
         if method == "grid":
             clf = GridSearchCV(
                 estimator=self.model_,
@@ -179,7 +178,7 @@ class SKModel:
                 raise ValueError(
                     "Missing target columns 'target_columns'. Please provide \
                     the name of feature columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(feature_columns, str):
                 feature_columns = [feature_columns]
@@ -188,7 +187,7 @@ class SKModel:
                 raise ValueError(
                     "Missing target columns 'target_columns'. Please provide \
                     the name of target columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(target_columns, str):
                 target_columns = [target_columns]
@@ -213,7 +212,7 @@ class SKModel:
                     )
 
                 if X[train_split].dataset_size is not None and is_out_of_core(
-                    X[train_split].dataset_size
+                    X[train_split].dataset_size,
                 ):
                     raise RuntimeError("Dataset size cannot fit into memory!")
 
@@ -228,7 +227,7 @@ class SKModel:
                     **format_kwargs,
                 ):
                     X_train = np.stack(
-                        [X[train_split][feature] for feature in feature_columns], axis=1
+                        [X[train_split][feature] for feature in feature_columns], axis=1,
                     ).squeeze()
 
                     if transforms is not None and not is_callable_transform:
@@ -238,7 +237,7 @@ class SKModel:
                             X_train = transforms.fit_transform(X_train)
 
                     y_train = np.stack(
-                        [X[train_split][target] for target in target_columns], axis=1
+                        [X[train_split][target] for target in target_columns], axis=1,
                     ).squeeze()
 
                     if issparse(X_train):
@@ -250,7 +249,7 @@ class SKModel:
                     **format_kwargs,
                 ):
                     X_val = np.stack(
-                        [X[val_split][feature] for feature in feature_columns], axis=1
+                        [X[val_split][feature] for feature in feature_columns], axis=1,
                     ).squeeze()
 
                     if transforms is not None and not is_callable_transform:
@@ -260,7 +259,7 @@ class SKModel:
                             X_val = transforms.fit_transform(X_val)
 
                     y_val = np.stack(
-                        [X[val_split][target] for target in target_columns], axis=1
+                        [X[val_split][target] for target in target_columns], axis=1,
                     ).squeeze()
 
                     if issparse(X_val):
@@ -288,7 +287,7 @@ class SKModel:
                     **format_kwargs,
                 ):
                     X_train = np.stack(
-                        [X[feature] for feature in feature_columns], axis=1
+                        [X[feature] for feature in feature_columns], axis=1,
                     ).squeeze()
 
                     if transforms is not None and not is_callable_transform:
@@ -298,7 +297,7 @@ class SKModel:
                             X_train = transforms.fit_transform(X_train)
 
                     y_train = np.stack(
-                        [X[target] for target in target_columns], axis=1
+                        [X[target] for target in target_columns], axis=1,
                     ).squeeze()
 
                     if issparse(X_train):
@@ -311,12 +310,12 @@ class SKModel:
                 LOGGER.warning(
                     "Missing data labels 'y'. Please provide the labels \
                     for supervised training when not using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             clf.fit(X, y)
 
         for key, value in clf.best_params_.items():
-            LOGGER.info("Best %s: %f", key, value)
+            LOGGER.info("Best %s: %s", key, value)
 
         self.model_ = (  # pylint: disable=attribute-defined-outside-init
             clf.best_estimator_
@@ -332,7 +331,7 @@ class SKModel:
         target_columns: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         classes: Optional[np.ndarray] = None,
-        splits_mapping: dict = {"train": "train"},
+        splits_mapping: dict = None,
         **kwargs,
     ):
         """Fit the model to the data incrementally.
@@ -376,6 +375,8 @@ class SKModel:
             If `X` is a Hugging Face Dataset and the target column(s) is not provided.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"train": "train"}
         if not hasattr(self.model_, "partial_fit"):
             raise AttributeError(
                 f"Model {self.model_.__class__.__name__}"
@@ -398,7 +399,7 @@ class SKModel:
                 raise ValueError(
                     "Missing feature columns 'feature_columns'. Please provide \
                     the name of feature columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(feature_columns, str):
                 feature_columns = [feature_columns]
@@ -407,7 +408,7 @@ class SKModel:
                 raise ValueError(
                     "Missing target columns 'target_columns'. Please provide \
                     the name of target columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(target_columns, str):
                 target_columns = [target_columns]
@@ -419,24 +420,23 @@ class SKModel:
 
             def fit_model(examples):
                 X_train = np.stack(
-                    [examples[feature] for feature in feature_columns], axis=1
+                    [examples[feature] for feature in feature_columns], axis=1,
                 ).squeeze()
 
-                if transforms is not None:
-                    if not is_callable_transform:
-                        try:
-                            X_train = transforms.transform(X_train)
-                        except NotFittedError:
-                            LOGGER.warning(
-                                "Fitting preprocessor on batch of size %d", len(X_train)
-                            )
-                            X_train = transforms.fit_transform(X_train)
+                if transforms is not None and not is_callable_transform:
+                    try:
+                        X_train = transforms.transform(X_train)
+                    except NotFittedError:
+                        LOGGER.warning(
+                            "Fitting preprocessor on batch of size %d", len(X_train),
+                        )
+                        X_train = transforms.fit_transform(X_train)
 
                 y_train = np.stack(
-                    [examples[target] for target in target_columns], axis=1
+                    [examples[target] for target in target_columns], axis=1,
                 ).squeeze()
                 self.model_.partial_fit(
-                    X_train, y_train, classes=np.unique(y_train), **kwargs
+                    X_train, y_train, classes=np.unique(y_train), **kwargs,
                 )
                 return examples
 
@@ -456,12 +456,12 @@ class SKModel:
                 LOGGER.warning(
                     "Missing data labels 'y'. Please provide the labels \
                     for supervised training when not using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if classes is None:
                 LOGGER.warning(
                     "Missing unique class labels. Please provide a list of classes \
-                    when using a numpy array or pandas dataframe as the input."
+                    when using a numpy array or pandas dataframe as the input.",
                 )
 
             self.model_.partial_fit(X, y, classes=classes, **kwargs)
@@ -475,7 +475,7 @@ class SKModel:
         feature_columns: Optional[Union[str, List[str]]] = None,
         target_columns: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
-        splits_mapping: dict = {"train": "train"},
+        splits_mapping: dict = None,
         **fit_params,
     ):
         """Fit the model.
@@ -514,6 +514,8 @@ class SKModel:
 
         """
         # Train data is a Hugging Face Dataset Dictionary.
+        if splits_mapping is None:
+            splits_mapping = {"train": "train"}
         if isinstance(X, DatasetDict):
             train_split = get_split(X, "train", splits_mapping=splits_mapping)
             return self.fit(
@@ -529,7 +531,7 @@ class SKModel:
                 raise ValueError(
                     "Missing feature columns 'feature_columns'. Please provide \
                     the name of feature columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(feature_columns, str):
                 feature_columns = [feature_columns]
@@ -538,14 +540,14 @@ class SKModel:
                 raise ValueError(
                     "Missing target columns 'target_columns'. Please provide \
                     the name of target columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(target_columns, str):
                 target_columns = [target_columns]
 
             if X.dataset_size is not None and is_out_of_core(X.dataset_size):
                 LOGGER.warning(
-                    "Dataset size cannot fit into memory. Will call partial fit."
+                    "Dataset size cannot fit into memory. Will call partial fit.",
                 )
                 return self.partial_fit(
                     X,
@@ -565,7 +567,7 @@ class SKModel:
                 **format_kwargs,
             ):
                 X_train = np.stack(
-                    [X[feature] for feature in feature_columns], axis=1
+                    [X[feature] for feature in feature_columns], axis=1,
                 ).squeeze()
 
                 if transforms is not None and not is_callable_transform:
@@ -575,7 +577,7 @@ class SKModel:
                         X_train = transforms.fit_transform(X_train)
 
                 y_train = np.stack(
-                    [X[target] for target in target_columns], axis=1
+                    [X[target] for target in target_columns], axis=1,
                 ).squeeze()
 
                 if issparse(X_train):
@@ -587,7 +589,7 @@ class SKModel:
                 LOGGER.warning(
                     "Missing data labels 'y'. Please provide the labels \
                     for supervised training when not using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
 
             self.model_ = (  # pylint: disable=attribute-defined-outside-init
@@ -603,7 +605,7 @@ class SKModel:
         model_name: Optional[str] = None,
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         only_predictions: bool = False,
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
     ) -> Union[Dataset, DatasetColumn, np.ndarray]:
         """Predict the probability output of the model.
 
@@ -645,6 +647,8 @@ class SKModel:
             If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         if not hasattr(self.model_, "predict_proba"):
             raise AttributeError(
                 f"Model {self.model_.__class__.__name__}"
@@ -667,7 +671,7 @@ class SKModel:
                 raise ValueError(
                     "Missing feature columns 'feature_columns'. Please provide \
                     the name of feature columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(feature_columns, str):
                 feature_columns = [feature_columns]
@@ -686,7 +690,7 @@ class SKModel:
 
             def get_predictions(examples: Dict[str, Union[List, np.ndarray]]) -> dict:
                 X_eval = np.stack(
-                    [examples[feature] for feature in feature_columns], axis=1
+                    [examples[feature] for feature in feature_columns], axis=1,
                 )
                 if transforms is not None and not is_callable_transform:
                     try:
@@ -714,9 +718,8 @@ class SKModel:
                 if only_predictions:
                     return DatasetColumn(pred_ds.with_format("numpy"), pred_column)
 
-                X = concatenate_datasets([X, pred_ds], axis=1)
+                return concatenate_datasets([X, pred_ds], axis=1)
 
-            return X
         # Data is not a Hugging Face Dataset.
         return self.model_.predict_proba(X)
 
@@ -728,7 +731,7 @@ class SKModel:
         model_name: Optional[str] = None,
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         only_predictions: bool = False,
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
     ) -> Union[Dataset, DatasetColumn, np.ndarray]:
         """Predict the output of the model.
 
@@ -769,6 +772,8 @@ class SKModel:
 
         """
         # Data is a Hugging Face Dataset Dictionary.
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         if isinstance(X, DatasetDict):
             test_split = get_split(X, "test", splits_mapping=splits_mapping)
             return self.predict(
@@ -785,7 +790,7 @@ class SKModel:
                 raise ValueError(
                     "Missing feature columns 'feature_columns'. Please provide \
                     the name of feature columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(feature_columns, str):
                 feature_columns = [feature_columns]
@@ -804,7 +809,7 @@ class SKModel:
 
             def get_predictions(examples: Dict[str, Union[List, np.ndarray]]) -> dict:
                 X_eval = np.stack(
-                    [examples[feature] for feature in feature_columns], axis=1
+                    [examples[feature] for feature in feature_columns], axis=1,
                 )
                 if transforms is not None and not is_callable_transform:
                     try:
@@ -831,20 +836,32 @@ class SKModel:
                 if only_predictions:
                     return DatasetColumn(pred_ds.with_format("numpy"), pred_column)
 
-                X = concatenate_datasets([X, pred_ds], axis=1)
+                return concatenate_datasets([X, pred_ds], axis=1)
 
-            return X
         # Data is not a Hugging Face Dataset.
         return self.model_.predict(X)
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save model to file."""
-        # filepath could be a directory or a file
+        # filepath could be a directory
+        if len(os.path.basename(filepath).split(".")) == 1:
+            process_dir_save_path(filepath)
+
         if os.path.isdir(filepath):
             filepath = join(filepath, self.model_.__class__.__name__, "model.pkl")
 
+        # filepath could be a file
+        dir_path = os.path.dirname(filepath)
+        if dir_path == "":
+            dir_path = f"./{self.model_.__class__.__name__}"
+            filepath = join(dir_path, filepath)
+        process_dir_save_path(dir_path)
+
+        # filepath could be an exisiting file
         if os.path.exists(filepath) and not overwrite:
-            LOGGER.warning("The file already exists and will not be overwritten.")
+            LOGGER.warning(
+                "The file %s already exists and will not be overwritten.", filepath,
+            )
             return
 
         save_pickle(self.model_, filepath, log=kwargs.get("log", True))
@@ -867,7 +884,7 @@ class SKModel:
         try:
             model = load_pickle(filepath, log=kwargs.get("log", True))
             assert is_sklearn_instance(
-                self.model_
+                self.model_,
             ), "The loaded model is not an instance of a scikit-learn estimator."
             self.model_ = model  # pylint: disable=attribute-defined-outside-init
         except FileNotFoundError:

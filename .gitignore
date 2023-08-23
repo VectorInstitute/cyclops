@@ -26,3 +26,5 @@ dist/
 outputs/
 multirun/
 _autosummary
+*cyclops_reports*
+*dummy_reports*

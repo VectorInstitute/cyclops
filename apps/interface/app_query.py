@@ -68,7 +68,7 @@ def query(  # pylint: disable=too-many-arguments
         else:
             diagnoses = patient_diagnoses(diagnosis_kwargs).run()
             datas[APP_ENC] = pd.merge(
-                encounters, diagnoses.drop(SUBJECT_ID, axis=1), on=ENCOUNTER_ID
+                encounters, diagnoses.drop(SUBJECT_ID, axis=1), on=ENCOUNTER_ID,
             )
 
     # datas[APP_EVENT] = ...

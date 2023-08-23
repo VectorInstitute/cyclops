@@ -34,21 +34,20 @@ def synthetic_gemini_dataset(size=100):
     df["total_indirect_cost"] = np.random.randint(0, 100000, size=size)
     df["total_cost"] = np.random.randint(0, 100000, size=size)
     df["hospital_id"] = np.random.choice(
-        ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW", "PMH", "SBK"], size=size
+        ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW", "PMH", "SBK"], size=size,
     )
     df["sex"] = np.random.choice(["M", "F"], size=size)
     df["age"] = np.random.randint(0, 100, size=size)
     df["admit_timestamp"] = pd.date_range(
-        start="1/1/2015", end="8/1/2020", periods=size
+        start="1/1/2015", end="8/1/2020", periods=size,
     )
     df["discharge_timestamp"] = pd.date_range(
-        start="1/1/2015", end="8/1/2020", periods=size
+        start="1/1/2015", end="8/1/2020", periods=size,
     )
     df["mortality"] = np.random.randint(0, 2, size=size)
     df["features"] = np.random.rand(size, 64, 7).tolist()
 
-    dataset = Dataset.from_pandas(df, preserve_index=False)
-    return dataset
+    return Dataset.from_pandas(df, preserve_index=False)
 
 
 def synthetic_nih_dataset(size=8):
@@ -80,18 +79,17 @@ def synthetic_nih_dataset(size=8):
     df["total_indirect_cost"] = np.random.randint(0, 100000, size=size)
     df["total_cost"] = np.random.randint(0, 100000, size=size)
     df["hospital_id"] = np.random.choice(
-        ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW", "PMH", "SBK"], size=size
+        ["SMH", "MSH", "THPC", "THPM", "UHNTG", "UHNTW", "PMH", "SBK"], size=size,
     )
     df["sex"] = np.random.choice(["M", "F"], size=size)
     df["age"] = np.random.randint(0, 100, size=size)
     df["admit_timestamp"] = pd.date_range(
-        start="1/1/2015", end="8/1/2020", periods=size
+        start="1/1/2015", end="8/1/2020", periods=size,
     )
 
     df["features"] = np.random.rand(size, 1, 224, 224).tolist()
-    dataset = Dataset.from_pandas(df, preserve_index=False)
+    return Dataset.from_pandas(df, preserve_index=False)
 
-    return dataset
 
 
 def synthetic_generic_dataset(size=100):
@@ -101,10 +99,9 @@ def synthetic_generic_dataset(size=100):
     df = pd.DataFrame(columns=columns)
     df["timestamp"] = pd.date_range(start="1/1/2020", end="12/25/2020", periods=size)
     df["discharge_timestamp"] = pd.date_range(
-        start="1/1/2015", end="8/1/2020", periods=size
+        start="1/1/2015", end="8/1/2020", periods=size,
     )
     df["mortality"] = np.random.randint(0, 2, size=size)
     df["features"] = np.random.rand(size, 10).tolist()
 
-    dataset = Dataset.from_pandas(df, preserve_index=False)
-    return dataset
+    return Dataset.from_pandas(df, preserve_index=False)

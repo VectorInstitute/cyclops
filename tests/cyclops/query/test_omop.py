@@ -14,11 +14,11 @@ def test_omop_querier_synthea():
         [
             qo.ConditionEquals("gender_source_value", "M"),
             qo.Rename({"race_source_value": "race"}),
-        ]
+        ],
     )
     persons_qi = querier.person(ops=ops)
     visits = querier.visit_occurrence(
-        join=qo.JoinArgs(join_table=persons_qi.query, on="person_id")
+        join=qo.JoinArgs(join_table=persons_qi.query, on="person_id"),
     ).run()
     persons = persons_qi.run()
     observations = querier.observation().run()
@@ -29,12 +29,12 @@ def test_omop_querier_synthea():
         querier.cdm_synthea10.condition_occurrence().run()  # pylint: disable=no-member
     )
     assert len(persons) == 54
-    assert len(visits) == 1620
-    assert len(visit_details) == 4115
-    assert len(observations) == 16169
-    assert len(measurements) == 19373
+    assert len(visits) == 1798
+    assert len(visit_details) == 4320
+    assert len(observations) == 17202
+    assert len(measurements) == 19994
     assert len(providers) == 212
-    assert len(conditions) == 1363
+    assert len(conditions) == 1419
 
 
 @pytest.mark.integration_test

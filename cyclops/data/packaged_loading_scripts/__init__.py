@@ -1,4 +1,5 @@
 """Packaged dataset loading scripts."""
+
 __all__ = ["medical_imagefolder"]
 
 import inspect
@@ -17,6 +18,6 @@ _PACKAGED_DATASETS_MODULES.update(
         "medicalimagefolder": (
             medical_imagefolder.__name__,
             _hash_python_lines(inspect.getsource(medical_imagefolder).splitlines()),
-        )
-    }
+        ),
+    },
 )

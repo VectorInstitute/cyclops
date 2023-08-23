@@ -1,7 +1,8 @@
 """Chest X-ray Classification Task."""
+
 import logging
 from functools import partial
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 from datasets import Dataset, DatasetDict
@@ -9,12 +10,14 @@ from monai.transforms import Compose
 
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
+from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import _img_model_keys, _model_names_mapping
-from cyclops.models.utils import get_device, get_split
+from cyclops.models.utils import get_split
 from cyclops.models.wrappers import WrappedModel
-from cyclops.tasks.utils import CXR_TARGET, apply_image_transforms, prepare_models
+from cyclops.tasks.base import BaseTask
+from cyclops.tasks.utils import CXR_TARGET, apply_image_transforms
 from cyclops.utils.log import setup_logging
 
 
@@ -24,7 +27,7 @@ setup_logging(print_level="INFO", logger=LOGGER)
 # pylint: disable=dangerous-default-value
 
 
-class CXRClassification:
+class CXRClassificationTask(BaseTask):
     """Chest X-ray classification task modeled as a multi-label classification task."""
 
     def __init__(
@@ -35,8 +38,7 @@ class CXRClassification:
             Sequence[Union[str, WrappedModel]],
             Dict[str, WrappedModel],
         ],
-        models_config_path: Optional[Union[str, Dict[str, str]]] = None,
-        task_features: List[str] = "image",
+        task_features: Union[str, List[str]] = "image",
         task_target: Union[str, List[str]] = CXR_TARGET,
     ):
         """Chest X-ray classification task.
@@ -45,19 +47,13 @@ class CXRClassification:
         ----------
         models
             The model(s) to be used for prediction, and evaluation.
-        models_config_path : Union[str, Dict[str, str]], optional
-            Path to the configuration file(s) for the model(s), by default None
         task_features : List[str]
             List of feature names.
         task_target : str
             List of target names.
 
         """
-        self.models = prepare_models(models, models_config_path)
-        self._validate_models()
-        self.task_features = task_features
-        self.task_target = task_target
-        self.device = get_device()
+        super().__init__(models, task_features, task_target)
 
     @property
     def task_type(self):
@@ -88,98 +84,17 @@ class CXRClassification:
         assert all(
             _model_names_mapping.get(model.model.__name__) in _img_model_keys
             for model in self.models.values()
-        ), "All models must be image classification model."
+        ), "All models must be image type model."
 
         for model in self.models.values():
             model.initialize()
-
-    @property
-    def models_count(self):
-        """Number of models in the task.
-
-        Returns
-        -------
-        int
-            Number of models.
-
-        """
-        return len(self.models)
-
-    def list_models(self):
-        """List the names of the models in the task.
-
-        Returns
-        -------
-        List[str]
-            List of model names.
-
-        """
-        return list(self.models.keys())
-
-    def add_model(
-        self,
-        model: Union[str, WrappedModel, Dict[str, WrappedModel]],
-        model_config_path: Optional[str] = None,
-    ):
-        """Add a model to the task.
-
-        Parameters
-        ----------
-        model : Union[str, WrappedModel, Dict[str, WrappedModel]]
-            Model to be added.
-        model_config_path : Optional[str], optional
-            Path to the configuration file for the model.
-
-        """
-        model_dict = prepare_models(model, model_config_path)
-        if set(model_dict.keys()).issubset(self.list_models()):
-            LOGGER.error(
-                "Failed to add the model. A model with same name already exists."
-            )
-        else:
-            self.models.update(model_dict)
-            LOGGER.info("%s is added to task models.", ", ".join(model_dict.keys()))
-
-    def get_model(self, model_name: str) -> Tuple[str, WrappedModel]:
-        """Get a model. If more than one model exists, the name should be specified.
-
-        Parameters
-        ----------
-        model_name : Optional[str], optional
-            Model name, required if more than one model exists, by default None
-
-        Returns
-        -------
-        Tuple[str, WrappedModel]
-            The model name and the model object.
-
-        Raises
-        ------
-        ValueError
-            If more than one model exists and no name is specified.
-        ValueError
-            If no model exists with the specified name.
-
-        """
-        if self.models_count > 1 and not model_name:
-            raise ValueError(f"Please specify a model from {self.list_models()}")
-        if model_name and model_name not in self.list_models():
-            raise ValueError(
-                f"The model {model_name} does not exist. "
-                "You can add the model using Task.add_model()"
-            )
-
-        model_name = model_name if model_name else self.list_models()[0]
-        model = self.models[model_name]
-
-        return model_name, model
 
     def predict(
         self,
         dataset: Union[np.ndarray, Dataset, DatasetDict],
         model_name: Optional[str] = None,
         transforms: Optional[Compose] = None,
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         **kwargs,
     ) -> Union[np.ndarray, Dataset]:
         """Predict the pathologies on the given dataset.
@@ -204,6 +119,8 @@ class CXRClassification:
             Predicted labels or the Hugging Face dataset with predicted labels.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         model_name, model = self.get_model(model_name)
 
         if transforms:
@@ -228,10 +145,12 @@ class CXRClassification:
         model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Compose] = None,
         prediction_column_prefix: str = "predictions",
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         slice_spec: Optional[SliceSpec] = None,
         batch_size: int = 64,
         remove_columns: Optional[Union[str, List[str]]] = None,
+        fairness_config: Optional[FairnessConfig] = None,
+        override_fairness_metrics: bool = False,
     ) -> Dict[str, Any]:
         """Evaluate model(s) on a HuggingFace dataset.
 
@@ -258,6 +177,12 @@ class CXRClassification:
             Batch size for batched evaluation, by default 64
         remove_columns : Optional[Union[str, List[str]]], optional
             Unnecessary columns to be removed from the dataset, by default None
+        fairness_config : Optional[FairnessConfig], optional
+            The configuration for computing fairness metrics. If None, no fairness \
+            metrics will be computed, by default None
+        override_fairness_metrics : bool, optional
+            If True, the `metrics` argument in fairness_config will be overridden by \
+            the `metrics`, by default False
 
         Returns
         -------
@@ -265,6 +190,8 @@ class CXRClassification:
             Dictionary with evaluation results.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         if isinstance(dataset, DatasetDict):
             split = get_split(dataset, "test", splits_mapping=splits_mapping)
             dataset = dataset[split]
@@ -304,13 +231,16 @@ class CXRClassification:
             )
 
         results = evaluate(
-            dataset,
-            metrics,
+            dataset=dataset,
+            metrics=metrics,
             slice_spec=slice_spec,
             target_columns=self.task_target,
             prediction_column_prefix=prediction_column_prefix,
-            batch_size=batch_size,
             remove_columns=remove_columns,
+            split=splits_mapping["test"],
+            batch_size=batch_size,
+            fairness_config=fairness_config,
+            override_fairness_metrics=override_fairness_metrics,
         )
 
         return results, dataset

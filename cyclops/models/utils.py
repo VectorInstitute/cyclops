@@ -1,4 +1,5 @@
 """Utility functions for building models."""
+
 import inspect
 from difflib import get_close_matches
 from typing import Dict, List, Literal, Optional
@@ -47,21 +48,21 @@ def _get_class_members(
 # Loss catalog     #
 ####################
 _criterion_catalog: Dict[str, torch.nn.modules.loss._Loss] = _get_class_members(
-    torch.nn.modules.loss, include_only=["BCELoss", "BCEWithLogitsLoss"]
+    torch.nn.modules.loss, include_only=["BCELoss", "BCEWithLogitsLoss"],
 )
 
 #####################
 # Optimizer catalog #
 #####################
 _optimizer_catalog: Dict[str, torch.optim.Optimizer] = _get_class_members(
-    torch.optim, exclude=["Optimizer"]
+    torch.optim, exclude=["Optimizer"],
 )
 
 #####################
 # Scheduler catalog #
 #####################
 _lr_scheduler_catalog: Dict[
-    str, torch.optim.lr_scheduler._LRScheduler
+    str, torch.optim.lr_scheduler._LRScheduler,
 ] = _get_class_members(
     torch.optim.lr_scheduler,
     exclude=["_LRScheduler", "Optimizer", "Counter", "ChainedScheduler"],
@@ -127,7 +128,7 @@ def get_module(module_type: str, module_name: str):
     module = catalog.get(module_name, None)
     if module is None:
         similar_keys_list: List[str] = get_close_matches(
-            module_name, catalog.keys(), n=5
+            module_name, catalog.keys(), n=5,
         )
         similar_keys: str = ", ".join(similar_keys_list)
         similar_keys = (
@@ -391,7 +392,7 @@ def metrics_binary(  # pylint: disable=too-many-locals, invalid-name
     auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
 
     (precisions, recalls, _) = metrics.precision_recall_curve(
-        y_test_labels, y_pred_values
+        y_test_labels, y_pred_values,
     )
     auprc = metrics.auc(recalls, precisions)
     minpse = np.max([min(x, y) for (x, y) in zip(precisions, recalls)])
@@ -483,5 +484,5 @@ def get_split(
 
     raise ValueError(
         "The dataset split is not found! Pass the correct value to \
-            the `splits_mapping` kwarg."
+            the `splits_mapping` kwarg.",
     )

@@ -5,6 +5,7 @@ difference in shap values for a chosen domain classifier to provide insight into
 most significant features in the drift detection.
 
 """
+
 from typing import Any, Optional
 
 import shap
@@ -47,8 +48,7 @@ class Explainer:
 
     def get_shap_values(self, X: Any) -> Any:
         """Get the shap values for the model."""
-        shap_values = self.explainer(X)
-        return shap_values
+        return self.explainer(X)
 
     def plot_dependence(self, feat: Any, shap_values: Any, X: Any) -> Any:
         """Plot the dependence of a feature on the model output."""

@@ -103,7 +103,7 @@ def process_mimic_care_unit_changepoints(data: pd.DataFrame) -> pd.DataFrame:
 
 @time_function
 def process_mimic_care_units(
-    transfers: pd.DataFrame, specific: bool = False
+    transfers: pd.DataFrame, specific: bool = False,
 ) -> pd.DataFrame:
     """Process care unit data.
 

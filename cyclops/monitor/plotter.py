@@ -1,4 +1,5 @@
 """Plotting functions for drift detection."""
+
 from typing import List, Optional
 
 import matplotlib as mpl
@@ -88,12 +89,12 @@ def errorfill(
     else:
         ax.plot(x, y, fmt, color=color, label=label)
     ax.fill_between(
-        x, np.clip(ymax, 0, 1), np.clip(ymin, 0, 1), color=color, alpha=alpha_fill
+        x, np.clip(ymax, 0, 1), np.clip(ymin, 0, 1), color=color, alpha=alpha_fill,
     )
 
 
 def plot_roc(
-    ax: mpl.axes.SubplotBase, fpr: List[float], tpr: List[float], roc_auc: str
+    ax: mpl.axes.SubplotBase, fpr: List[float], tpr: List[float], roc_auc: str,
 ) -> mpl.axes.SubplotBase:
     """Plot ROC curve.
 
@@ -113,7 +114,7 @@ def plot_roc(
 
 
 def plot_pr(
-    ax: mpl.axes.SubplotBase, recall: List[float], precision: List[float], roc_prc: str
+    ax: mpl.axes.SubplotBase, recall: List[float], precision: List[float], roc_prc: str,
 ) -> mpl.axes.SubplotBase:
     """Plot Precision-Recall curve.
 
@@ -177,7 +178,7 @@ def set_bars_color(bars: mpl.container.BarContainer, color: str) -> None:
 
 
 def plot_label_distribution(
-    X: pd.DataFrame, y: pd.DataFrame, label: str, features: List[str]
+    X: pd.DataFrame, y: pd.DataFrame, label: str, features: List[str],
 ) -> None:
     """Set color attribute for bars in bar plots.
 
@@ -207,7 +208,7 @@ def plot_label_distribution(
     ages_neg = data_neg[age]
     print(
         f"Mean Age: Outcome present: {np.array(ages_pos).mean()}, \
-        No outcome: {np.array(ages_neg).mean()}"
+        No outcome: {np.array(ages_neg).mean()}",
     )
 
     (_, bins, _) = axs[0][0].hist(ages, bins=50, alpha=0.5, color="g")
@@ -257,7 +258,7 @@ def plot_label_distribution(
         feature_bars = axs[1][0].bar(position, feature_counts, width=width, alpha=0.5)
         set_bars_color(feature_bars, "g")
         feature_bars_pos = axs[1][0].bar(
-            position, feature_counts_pos, width=width, alpha=0.5
+            position, feature_counts_pos, width=width, alpha=0.5,
         )
         set_bars_color(feature_bars_pos, "r")
 
@@ -276,7 +277,7 @@ def plot_label_distribution(
     label_bars = axs[1][1].bar(labels, label_counts, alpha=0.5)
     set_bars_color(label_bars, "g")
     setup_plot(
-        axs[1][1], "Outcome distribution", "Outcome", "Num. of encounters", ["All"]
+        axs[1][1], "Outcome distribution", "Outcome", "Num. of encounters", ["All"],
     )
 
     plt.show()

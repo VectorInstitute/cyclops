@@ -1,5 +1,6 @@
 """Reductor Module."""
 
+import contextlib
 import pickle
 from multiprocessing import set_start_method
 from typing import Any, Dict, List, Optional
@@ -70,7 +71,7 @@ class Reductor:
         if self.dr_method not in reductor_methods:
             raise ValueError(
                 "Invalid dr_method, dr_method must be one of the following: "
-                + str(self.get_available_dr_methods())
+                + str(self.get_available_dr_methods()),
             )
 
         # initialize model
@@ -174,10 +175,9 @@ class Reductor:
 
         """
         if num_workers > 1:
-            try:
+            with contextlib.suppress(RuntimeError):
                 set_start_method("spawn")
-            except RuntimeError:
-                pass
+
 
         if self.dr_method == "nored":
             dataset = dataset.map(
@@ -305,8 +305,7 @@ class TXRVAutoencoder(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model."""
-        x = self.model.encode(x).mean(dim=(2, 3))
-        return x
+        return self.model.encode(x).mean(dim=(2, 3))
 
 
 class BBSETAE(nn.Module):
@@ -322,5 +321,4 @@ class BBSETAE(nn.Module):
         x_bbse = self.model(x)
         x_tae = self.tae(x)
         x_tae = (x_tae - x_tae.min()) / (x_tae.max() - x_tae.min())
-        x = torch.cat((x_bbse, x_tae), dim=1)
-        return x
+        return torch.cat((x_bbse, x_tae), dim=1)

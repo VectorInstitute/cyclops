@@ -67,12 +67,12 @@ class BinaryROCCurve(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"
             state = self.confmat  # type: ignore[attr-defined]
 
         return _binary_roc_compute(
-            state, thresholds=self.thresholds, pos_label=self.pos_label
+            state, thresholds=self.thresholds, pos_label=self.pos_label,
         )
 
 
 class MulticlassROCCurve(
-    MulticlassPrecisionRecallCurve, registry_key="multiclass_roc_curve"
+    MulticlassPrecisionRecallCurve, registry_key="multiclass_roc_curve",
 ):
     """Compute the ROC curve for multiclass classification tasks.
 
@@ -147,12 +147,12 @@ class MulticlassROCCurve(
             state = self.confmat  # type: ignore[attr-defined]
 
         return _multiclass_roc_compute(
-            state=state, num_classes=self.num_classes, thresholds=self.thresholds
+            state=state, num_classes=self.num_classes, thresholds=self.thresholds,
         )
 
 
 class MultilabelROCCurve(
-    MultilabelPrecisionRecallCurve, registry_key="multilabel_roc_curve"
+    MultilabelPrecisionRecallCurve, registry_key="multilabel_roc_curve",
 ):
     """Compute the ROC curve for multilabel classification tasks.
 
@@ -218,7 +218,7 @@ class MultilabelROCCurve(
             state = self.confmat  # type: ignore[attr-defined]
 
         return _multilabel_roc_compute(
-            state=state, num_labels=self.num_labels, thresholds=self.thresholds
+            state=state, num_labels=self.num_labels, thresholds=self.thresholds,
         )
 
 
@@ -342,15 +342,15 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
             return BinaryROCCurve(thresholds=thresholds, pos_label=pos_label)
         if task == "multiclass":
             assert isinstance(
-                num_classes, int
+                num_classes, int,
             ), "Number of classes must be a positive integer."
             return MulticlassROCCurve(num_classes=num_classes, thresholds=thresholds)
         if task == "multilabel":
             assert isinstance(
-                num_labels, int
+                num_labels, int,
             ), "Number of labels must be a positive integer."
             return MultilabelROCCurve(num_labels=num_labels, thresholds=thresholds)
         raise ValueError(
             "Expected argument `task` to be either 'binary', 'multiclass' or "
-            f"'multilabel', but got {task}"
+            f"'multilabel', but got {task}",
         )

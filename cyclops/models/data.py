@@ -1,4 +1,5 @@
 """Data classes."""
+
 from typing import Optional, Union
 
 import numpy as np
@@ -60,7 +61,7 @@ class VectorizedLoader:
     """Vectorized data loader."""
 
     def __init__(
-        self, dataset_name: str, use_case: str, data_type: str, data_dir: str
+        self, dataset_name: str, use_case: str, data_type: str, data_dir: str,
     ) -> None:
         """Initialize loader.
 
@@ -303,8 +304,7 @@ class VectorizedLoader:
         """
         arr = np.squeeze(vec.data, 0)
         arr = np.moveaxis(arr, 2, 0)
-        arr = np.nan_to_num(arr)
-        return arr
+        return np.nan_to_num(arr)
 
     def _get_temporal_data(self) -> tuple:
         """Get temporal data.

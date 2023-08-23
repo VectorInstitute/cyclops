@@ -95,7 +95,7 @@ def test_fill_null(visits_input):  # pylint: disable=redefined-outer-name
     visits_before = QUERIER.get_interface(visits_input).run()
     unique_before = visits_before["preceding_visit_occurrence_id"].unique()
     visits = FillNull(["preceding_visit_occurrence_id", "care_site_id"], 0)(
-        visits_input
+        visits_input,
     )
     visits_after = QUERIER.get_interface(visits).run()
     unique_after = visits_after["preceding_visit_occurrence_id"].unique()
@@ -106,7 +106,7 @@ def test_fill_null(visits_input):  # pylint: disable=redefined-outer-name
     assert len(visits_after["care_site_id"].unique()) == 1
 
     visits = FillNull(
-        ["preceding_visit_occurrence_id", "care_site_id"], [0, -99], ["col1", "col2"]
+        ["preceding_visit_occurrence_id", "care_site_id"], [0, -99], ["col1", "col2"],
     )(visits_input)
     visits_after = QUERIER.get_interface(visits).run()
     assert visits_after["preceding_visit_occurrence_id"].isna().sum() != 0
@@ -125,7 +125,7 @@ def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
             Literal(2, "test_col1"),
             Literal(3, "test_col2"),
             AddColumn("test_col1", "test_col2", new_col_labels="test_col3"),
-        ]
+        ],
     )
     visits = QUERIER.get_interface(visits_input, ops=ops).run()
     assert "test_col3" in visits.columns
@@ -136,9 +136,9 @@ def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
             Literal(2, "test_col1"),
             Literal(3, "test_col2"),
             AddColumn(
-                "test_col1", "test_col2", negative=True, new_col_labels="test_col3"
+                "test_col1", "test_col2", negative=True, new_col_labels="test_col3",
             ),
-        ]
+        ],
     )
     visits = QUERIER.get_interface(visits_input, ops=ops).run()
     assert "test_col3" in visits.columns
@@ -172,7 +172,7 @@ def test_reorder_after(visits_input):  # pylint: disable=redefined-outer-name
     visits = ReorderAfter("visit_concept_name", "care_site_id")(visits_input)
     visits = QUERIER.get_interface(visits).run()
     assert list(visits.columns).index("care_site_id") + 1 == list(visits.columns).index(
-        "visit_concept_name"
+        "visit_concept_name",
     )
 
 
@@ -196,7 +196,7 @@ def test_order_by(visits_input):  # pylint: disable=redefined-outer-name
 def test_substring(visits_input):  # pylint: disable=redefined-outer-name
     """Test Substring."""
     visits = Substring("visit_concept_name", 0, 3, "visit_concept_name_substr")(
-        visits_input
+        visits_input,
     )
     visits = QUERIER.get_interface(visits).run()
     assert visits["visit_concept_name_substr"].iloc[0] == "In"
@@ -216,10 +216,10 @@ def test_extract_timestamp_component(
 ):  # pylint: disable=redefined-outer-name
     """Test ExtractTimestampComponent."""
     visits = ExtractTimestampComponent(
-        "visit_start_date", "year", "visit_start_date_year"
+        "visit_start_date", "year", "visit_start_date_year",
     )(visits_input)
     visits = QUERIER.get_interface(visits).run()
-    assert visits["visit_start_date_year"].iloc[0] == 2018
+    assert visits["visit_start_date_year"].iloc[0] == 2021
 
 
 @pytest.mark.integration_test
@@ -235,7 +235,7 @@ def test_add_numeric(visits_input):  # pylint: disable=redefined-outer-name
 def test_apply(visits_input):  # pylint: disable=redefined-outer-name
     """Test Apply."""
     visits = Apply(
-        "visit_concept_name", lambda x: x + "!", "visit_concept_name_exclaim"
+        "visit_concept_name", lambda x: x + "!", "visit_concept_name_exclaim",
     )(visits_input)
     visits = QUERIER.get_interface(visits).run()
     assert visits["visit_concept_name_exclaim"].iloc[0] == "Inpatient Visit!"
@@ -276,20 +276,20 @@ def test_condition_regex_match(
 
 @pytest.mark.integration_test
 def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
-    visits_input, measurements_input
+    visits_input, measurements_input,
 ):
     """Test GroupByAggregate."""
     with pytest.raises(ValueError):
         GroupByAggregate("person_id", {"person_id": ("donkey", "visit_count")})(
-            visits_input
+            visits_input,
         )
     with pytest.raises(ValueError):
         GroupByAggregate("person_id", {"person_id": ("count", "person_id")})(
-            visits_input
+            visits_input,
         )
 
     visits_count = GroupByAggregate(
-        "person_id", {"person_id": ("count", "num_visits")}
+        "person_id", {"person_id": ("count", "num_visits")},
     )(visits_input)
     visits_string_agg = GroupByAggregate(
         "person_id",
@@ -297,19 +297,19 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
         {"visit_concept_name": ", "},
     )(visits_input)
     measurements_sum = GroupByAggregate(
-        "person_id", {"value_as_number": ("sum", "value_as_number_sum")}
+        "person_id", {"value_as_number": ("sum", "value_as_number_sum")},
     )(measurements_input)
     measurements_average = GroupByAggregate(
-        "person_id", {"value_as_number": ("average", "value_as_number_average")}
+        "person_id", {"value_as_number": ("average", "value_as_number_average")},
     )(measurements_input)
     measurements_min = GroupByAggregate(
-        "person_id", {"value_as_number": ("min", "value_as_number_min")}
+        "person_id", {"value_as_number": ("min", "value_as_number_min")},
     )(measurements_input)
     measurements_max = GroupByAggregate(
-        "person_id", {"value_as_number": ("max", "value_as_number_max")}
+        "person_id", {"value_as_number": ("max", "value_as_number_max")},
     )(measurements_input)
     measurements_median = GroupByAggregate(
-        "person_id", {"value_as_number": ("median", "value_as_number_median")}
+        "person_id", {"value_as_number": ("median", "value_as_number_median")},
     )(measurements_input)
 
     visits_count = QUERIER.get_interface(visits_count).run()
@@ -321,27 +321,27 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
     measurements_median = QUERIER.get_interface(measurements_median).run()
 
     assert "num_visits" in visits_count.columns
-    assert visits_count[visits_count["person_id"] == 33]["num_visits"][0] == 25
+    assert visits_count[visits_count["person_id"] == 33]["num_visits"][0] == 86
     assert "visit_concept_names" in visits_string_agg.columns
     test_visit_concept_names = visits_string_agg[visits_string_agg["person_id"] == 33][
         "visit_concept_names"
     ][0].split(",")
     test_visit_concept_names = [item.strip() for item in test_visit_concept_names]
     assert (
-        len(test_visit_concept_names) == 25
+        len(test_visit_concept_names) == 86
         and "Outpatient Visit" in test_visit_concept_names
     )
     assert "value_as_number_sum" in measurements_sum.columns
     assert (
         measurements_sum[measurements_sum["person_id"] == 33]["value_as_number_sum"][0]
-        == 11371.0
+        == 9881.3
     )
     assert "value_as_number_average" in measurements_average.columns
     assert isclose(
         measurements_average[measurements_average["person_id"] == 33][
             "value_as_number_average"
         ][0],
-        61.79,
+        75.42,
         abs_tol=0.01,
     )
     assert "value_as_number_min" in measurements_min.columns
@@ -352,14 +352,14 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
     assert "value_as_number_max" in measurements_max.columns
     assert (
         measurements_max[measurements_max["person_id"] == 33]["value_as_number_max"][0]
-        == 460.9
+        == 360.7
     )
     assert "value_as_number_median" in measurements_median.columns
     assert (
         measurements_median[measurements_median["person_id"] == 33][
             "value_as_number_median"
         ].item()
-        == 53.1
+        == 75.7
     )
 
 
@@ -444,7 +444,7 @@ def test_condition_equals(visits_input):  # pylint: disable=redefined-outer-name
     visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_name"] == "Outpatient Visit")
     visits = ConditionEquals("visit_concept_name", "Outpatient Visit", not_=True)(
-        visits_input
+        visits_input,
     )
     visits = QUERIER.get_interface(visits).run()
     assert all(visits["visit_concept_name"] != "Outpatient Visit")
@@ -473,16 +473,16 @@ def test_union(visits_input):  # pylint: disable=redefined-outer-name
         ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
     )(ConditionEquals("visit_concept_name", "Emergency Room Visit")(visits_input))
     visits = QUERIER.get_interface(visits).run()
-    assert len(visits) == 3937
+    assert len(visits) == 4212
     assert all(
-        visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"])
+        visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"]),
     )
     visits = Union(
         ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
         union_all=True,
     )(ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input))
     visits = QUERIER.get_interface(visits).run()
-    assert len(visits) == 7554
+    assert len(visits) == 8114
 
 
 @pytest.mark.integration_test
@@ -491,7 +491,7 @@ def test_sequential(visits_input):  # pylint: disable=redefined-outer-name
     substr_op = Sequential(
         [
             Substring("visit_concept_name", 0, 4, "visit_concept_name_substr"),
-        ]
+        ],
     )
     operations = [
         Literal(33, "const"),

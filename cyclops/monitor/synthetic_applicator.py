@@ -1,4 +1,5 @@
 """SyntheticShiftApplicator class."""
+
 import math
 from typing import Any, Callable, Dict
 
@@ -7,7 +8,7 @@ import pandas as pd
 from datasets.arrow_dataset import Dataset
 from sklearn.feature_selection import SelectKBest
 
-from .utils import get_args
+from cyclops.monitor.utils import get_args
 
 
 class SyntheticShiftApplicator:
@@ -54,9 +55,8 @@ class SyntheticShiftApplicator:
             Data to have noise added
 
         """
-        ds_shift = self.shift_types[self.shift_type](dataset, **self.shift_args)
+        return self.shift_types[self.shift_type](dataset, **self.shift_args)
 
-        return ds_shift
 
 
 def gaussian_noise_shift(
@@ -97,16 +97,13 @@ def gaussian_noise_shift(
 
     if len(c_cols) == 1:
         noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(
-            X_mod.shape[0], 1
+            X_mod.shape[0], 1,
         )
     else:
         noise = np.random.normal(
-            0, noise_amt / normalization, (X_mod.shape[0], len(c_cols))
+            0, noise_amt / normalization, (X_mod.shape[0], len(c_cols)),
         )
-    if clip:
-        X_mod = np.clip(X_mod + noise, 0.0, 1.0)
-    else:
-        X_mod = X_mod + noise
+    X_mod = np.clip(X_mod + noise, 0.0, 1.0) if clip else X_mod + noise
 
     X[np.ix_(indices, c_cols)] = X_mod
 
@@ -192,7 +189,7 @@ def feature_swap_shift(
     selector = SelectKBest(k=n_feats)
     selection = selector.fit(X, y)
     ranked_x = sorted(
-        zip(selection.scores_, selection.get_support(indices=True)), reverse=True
+        zip(selection.scores_, selection.get_support(indices=True)), reverse=True,
     )
     shuffle_list = list(range(0, n_feats))
 

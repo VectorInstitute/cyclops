@@ -39,21 +39,15 @@ def event_time_between(
         the start and end timestamps.
 
     """
-    if admit_inclusive:
-        admit_cond = event >= admit
-    else:
-        admit_cond = event > admit
+    admit_cond = event >= admit if admit_inclusive else event > admit
 
-    if discharge_inclusive:
-        discharge_cond = event <= discharge
-    else:
-        discharge_cond = event < discharge
+    discharge_cond = event <= discharge if discharge_inclusive else event < discharge
 
     return admit_cond & discharge_cond
 
 
 def process_care_unit_changepoints(
-    data: pd.DataFrame, care_unit_hierarchy: List[str]
+    data: pd.DataFrame, care_unit_hierarchy: List[str],
 ) -> pd.DataFrame:
     """Process changepoint care unit information in a hierarchical fashion.
 
@@ -113,5 +107,4 @@ def process_care_unit_changepoints(
     # previous changepoint has the same care unit
     change_mask = checkpoint_df["care_unit"] != checkpoint_df["care_unit"].shift(-1)
 
-    checkpoint_df = checkpoint_df[change_mask]
-    return checkpoint_df
+    return checkpoint_df[change_mask]

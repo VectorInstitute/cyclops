@@ -9,11 +9,11 @@ import scipy as sp
 from numpy.typing import ArrayLike
 
 
-BATCH_SIZE = 32
-NUM_BATCHES = 10
+BATCH_SIZE = 16
+NUM_BATCHES = 8
 NUM_CLASSES = 10
 NUM_LABELS = 5
-THRESHOLD = 0.5
+THRESHOLD = random.random()
 
 Input = namedtuple("Input", ["target", "preds"])
 
@@ -43,6 +43,13 @@ _binary_cases = (
     ),
     pytest.param(
         Input(
+            target=np.random.randint(0, 2, (NUM_BATCHES, 1)),
+            preds=np.random.randint(0, 2, (NUM_BATCHES, 1)),
+        ),
+        id="input[single-sample-labels]",
+    ),
+    pytest.param(
+        Input(
             target=np.random.randint(0, 2, (NUM_BATCHES, BATCH_SIZE)),
             preds=np.random.rand(NUM_BATCHES, BATCH_SIZE),
         ),
@@ -68,9 +75,16 @@ _multiclass_cases = (
     ),
     pytest.param(
         Input(
+            target=np.random.randint(0, NUM_CLASSES, (NUM_BATCHES, 1)),
+            preds=np.random.randint(0, NUM_CLASSES, (NUM_BATCHES, 1)),
+        ),
+        id="input[single-sample-labels]",
+    ),
+    pytest.param(
+        Input(
             target=np.random.randint(0, NUM_CLASSES, (NUM_BATCHES, BATCH_SIZE)),
             preds=sp.special.softmax(
-                np.random.randn(NUM_BATCHES, BATCH_SIZE, NUM_CLASSES), axis=-1
+                np.random.randn(NUM_BATCHES, BATCH_SIZE, NUM_CLASSES), axis=-1,
             ),
         ),
         id="input[probs]",
@@ -79,7 +93,7 @@ _multiclass_cases = (
         Input(
             target=np.random.randint(0, NUM_CLASSES, (NUM_BATCHES, BATCH_SIZE)),
             preds=sp.special.log_softmax(
-                (np.random.rand(NUM_BATCHES, BATCH_SIZE, NUM_CLASSES)), axis=-1
+                (np.random.rand(NUM_BATCHES, BATCH_SIZE, NUM_CLASSES)), axis=-1,
             ),
         ),
         id="input[logits]",
@@ -94,6 +108,13 @@ _multilabel_cases = (
             preds=np.random.randint(0, 2, (NUM_BATCHES, BATCH_SIZE, NUM_LABELS)),
         ),
         id="input[labels]",
+    ),
+    pytest.param(
+        Input(
+            target=np.random.randint(0, 2, (NUM_BATCHES, 1, NUM_LABELS)),
+            preds=np.random.randint(0, 2, (NUM_BATCHES, 1, NUM_LABELS)),
+        ),
+        id="input[single-sample-labels]",
     ),
     pytest.param(
         Input(

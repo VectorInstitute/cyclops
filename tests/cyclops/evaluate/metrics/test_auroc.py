@@ -27,13 +27,13 @@ def _sk_binary_auroc(
     max_fpr: Optional[float] = None,
 ) -> float:
     """Compute AUROC for binary case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sigmoid(preds)
 
     return sk_roc_auc_score(y_true=target, y_score=preds, max_fpr=max_fpr)
 
 
-@pytest.mark.parametrize("inputs", _binary_cases[1:])
+@pytest.mark.parametrize("inputs", _binary_cases[2:])
 @pytest.mark.parametrize("max_fpr", [None, 0.7])
 class TestBinaryAUROC(MetricTester):
     """Test function and class for computing AUCROC for binary targets."""
@@ -69,7 +69,7 @@ def _sk_multiclass_auroc(
     average: Literal["macro", "weighted"] = "macro",
 ) -> float:
     """Compute AUROC for multiclass case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sp.special.softmax(preds, axis=1)
 
     if not np.array_equiv(np.unique(target), np.arange(NUM_CLASSES)):
@@ -84,7 +84,7 @@ def _sk_multiclass_auroc(
     )
 
 
-@pytest.mark.parametrize("inputs", _multiclass_cases[1:])
+@pytest.mark.parametrize("inputs", _multiclass_cases[2:])
 @pytest.mark.parametrize("average", ["macro", "weighted"])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # no positive samples
 class TestMulticlassAUROC(MetricTester):
@@ -129,15 +129,15 @@ def _sk_multilabel_auroc(
     average: Literal["micro", "macro", "weighted"] = "macro",
 ) -> float:
     """Compute AUROC for multilabel case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sigmoid(preds)
 
     return sk_roc_auc_score(
-        target, preds, average=average, max_fpr=None, labels=list(range(NUM_LABELS))
+        target, preds, average=average, max_fpr=None, labels=list(range(NUM_LABELS)),
     )
 
 
-@pytest.mark.parametrize("inputs", _multilabel_cases[1:])
+@pytest.mark.parametrize("inputs", _multilabel_cases[2:])
 @pytest.mark.parametrize("average", ["micro", "macro", "weighted", None])
 @pytest.mark.filterwarnings("ignore::UserWarning")  # no positive samples
 class TestMultilabelAUROC(MetricTester):

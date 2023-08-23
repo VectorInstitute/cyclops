@@ -28,7 +28,7 @@ events = pd.read_parquet(
         "cyclops/use_cases/mimiciv/mortality_decompensation",
         "data/1-cleaned",
         "batch_0017.parquet",
-    )
+    ),
 )
 encounters_events = list(events[ENCOUNTER_ID].unique())[0:80]
 
@@ -170,7 +170,7 @@ offcanvas_sidebar_components = html.Div(
             title="Options",
             is_open=False,
         ),
-    ]
+    ],
 )
 
 

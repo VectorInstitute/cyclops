@@ -110,7 +110,7 @@ def join_queries_flow(query_interface_left, query_interface_right, **pd_merge_kw
         query_task_left.result(raise_on_failure=True),
         query_task_right.result(raise_on_failure=True),
         wait_for=[query_task_left, query_task_right],
-        **pd_merge_kwargs
+        **pd_merge_kwargs,
     )
 
     return join_task.result(raise_on_failure=True)

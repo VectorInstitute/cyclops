@@ -1,6 +1,8 @@
 """Mortality Prediction Task."""
+
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+import os
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
@@ -10,12 +12,14 @@ from sklearn.exceptions import NotFittedError
 
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
+from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import _model_names_mapping, _static_model_keys
 from cyclops.models.wrappers import WrappedModel
 from cyclops.models.wrappers.sk_model import SKModel
-from cyclops.tasks.utils import prepare_models, to_numpy
+from cyclops.tasks.base import BaseTask
+from cyclops.tasks.utils import to_numpy
 from cyclops.utils.log import setup_logging
 
 
@@ -25,7 +29,7 @@ setup_logging(print_level="INFO", logger=LOGGER)
 # pylint: disable=function-redefined, dangerous-default-value
 
 
-class MortalityPrediction:
+class MortalityPredictionTask(BaseTask):
     """Mortality prediction task for tabular data as binary classification."""
 
     def __init__(
@@ -36,14 +40,8 @@ class MortalityPrediction:
             Sequence[Union[str, WrappedModel]],
             Dict[str, WrappedModel],
         ],
-        models_config_path: Optional[Union[str, Dict[str, str]]] = None,
-        task_features: List[str] = [
-            "age",
-            "sex",
-            "admission_type",
-            "admission_location",
-        ],
-        task_target: List[str] = ["outcome_death"],
+        task_features: Union[str, List[str]] = None,
+        task_target: Union[str, List[str]] = None,
     ):
         """Mortality prediction task for tabular data.
 
@@ -51,20 +49,17 @@ class MortalityPrediction:
         ----------
         models
             The model(s) to be used for training, prediction, and evaluation.
-        models_config_path : Union[str, Dict[str, str]], optional
-            Path to the configuration file(s) for the model(s), by default None
         task_features : List[str]
             List of feature names.
         task_target : str
             List of target names.
 
         """
-        self.models = prepare_models(models, models_config_path)
-        self._validate_models()
-        self.task_features = task_features
-        self.task_target = task_target
-        self.trained_models = []
-        self.pretrained_models = []
+        if task_target is None:
+            task_target = ["outcome_death"]
+        if task_features is None:
+            task_features = ["age", "sex", "admission_type", "admission_location"]
+        super().__init__(models, task_features, task_target)
 
     @property
     def task_type(self) -> str:
@@ -95,30 +90,7 @@ class MortalityPrediction:
         assert all(
             _model_names_mapping.get(model.model.__name__) in _static_model_keys
             for model in self.models.values()
-        ), "All models must be image classification model."
-
-    @property
-    def models_count(self) -> int:
-        """Number of models in the task.
-
-        Returns
-        -------
-        int
-            Number of models.
-
-        """
-        return len(self.models)
-
-    def list_models(self) -> List[str]:
-        """List the names of the models in the task.
-
-        Returns
-        -------
-        List[str]
-            List of model names.
-
-        """
-        return list(self.models.keys())
+        ), "All models must be static type model."
 
     def list_models_params(self) -> Dict[str, Any]:
         """List the parameters of the models in the task.
@@ -131,64 +103,6 @@ class MortalityPrediction:
         """
         return {n: m.get_params() for n, m in self.models.items()}
 
-    def add_model(
-        self,
-        model: Union[str, WrappedModel, Dict[str, WrappedModel]],
-        model_config_path: Optional[str] = None,
-    ):
-        """Add a model to the task.
-
-        Parameters
-        ----------
-        model : Union[str, WrappedModel, Dict[str, WrappedModel]]
-            Model to be added.
-        model_config_path : Optional[str], optional
-            Path to the configuration file for the model.
-
-        """
-        model_dict = prepare_models(model, model_config_path)
-        if set(model_dict.keys()).issubset(self.list_models()):
-            LOGGER.error(
-                "Failed to add the model. A model with same name already exists."
-            )
-        else:
-            self.models.update(model_dict)
-            LOGGER.info("%s is added to task models.", ", ".join(model_dict.keys()))
-
-    def get_model(self, model_name: Optional[str] = None) -> Tuple[str, WrappedModel]:
-        """Get a model. If more than one model exists, the name should be specified.
-
-        Parameters
-        ----------
-        model_name : Optional[str], optional
-            Model name, required if more than one model exists, by default None
-
-        Returns
-        -------
-        Tuple[str, WrappedModel]
-            The model name and the model object.
-
-        Raises
-        ------
-        ValueError
-            If more than one model exists and no name is specified.
-        ValueError
-            If no model exists with the specified name.
-
-        """
-        if self.models_count > 1 and not model_name:
-            raise ValueError(f"Please specify a model from {self.list_models()}")
-        if model_name and model_name not in self.list_models():
-            raise ValueError(
-                f"The model {model_name} does not exist. "
-                "You can add the model using Task.add_model()"
-            )
-
-        model_name = model_name if model_name else self.list_models()[0]
-        model = self.models[model_name]
-
-        return model_name, model
-
     def train(
         self,
         X: Union[np.ndarray, pd.DataFrame, Dataset, DatasetDict],
@@ -196,7 +110,7 @@ class MortalityPrediction:
         model_name: Optional[str] = None,
         transforms: Optional[ColumnTransformer] = None,
         best_model_params: Optional[dict] = None,
-        splits_mapping: dict = {"train": "train", "validation": "validation"},
+        splits_mapping: dict = None,
         **kwargs,
     ) -> WrappedModel:
         """Fit a model on tabular data.
@@ -225,6 +139,8 @@ class MortalityPrediction:
             The trained model.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"train": "train", "validation": "validation"}
         model_name, model = self.get_model(model_name)
         if isinstance(X, (Dataset, DatasetDict)):
             if best_model_params:
@@ -256,7 +172,7 @@ class MortalityPrediction:
                 raise ValueError(
                     "Missing data labels 'y'. Please provide the labels for \
                     the training data when not using a Hugging Face dataset \
-                    as the input."
+                    as the input.",
                 )
 
             X = to_numpy(X)
@@ -285,39 +201,13 @@ class MortalityPrediction:
         self.trained_models.append(model_name)
         return model
 
-    def load_pretrained_model(
-        self,
-        filepath: str,
-        model_name: Optional[str] = None,
-        **kwargs,
-    ) -> WrappedModel:
-        """Load a pretrained model.
-
-        Parameters
-        ----------
-        filepath : str
-            Path to the save model.
-        model_name : Optional[str], optional
-            Model name, required if more than one model exists, by default Nonee
-
-        Returns
-        -------
-        WrappedModel
-            The loaded model.
-
-        """
-        model_name, model = self.get_model(model_name)
-        model.load_model(filepath, **kwargs)
-        self.pretrained_models.append(model_name)
-        return model
-
     def predict(
         self,
         dataset: Union[np.ndarray, pd.DataFrame, Dataset, DatasetDict],
         model_name: Optional[str] = None,
         transforms: Optional[ColumnTransformer] = None,
         proba: bool = True,
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         **kwargs,
     ) -> Union[np.ndarray, Dataset]:
         """Predict mortality on the given dataset.
@@ -349,11 +239,13 @@ class MortalityPrediction:
             If the model is not fitted or not loaded with a pretrained estimator.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         model_name, model = self.get_model(model_name)
         if model_name not in self.pretrained_models + self.trained_models:
             raise NotFittedError(
-                "It seems you have neither trained the model nor \
-                loaded a pretrained model."
+                f"It seems you have neither trained the {model_name} model nor \
+                loaded a pretrained model.",
             )
 
         if isinstance(dataset, (Dataset, DatasetDict)):
@@ -399,10 +291,12 @@ class MortalityPrediction:
         model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[ColumnTransformer] = None,
         prediction_column_prefix: str = "predictions",
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         slice_spec: Optional[SliceSpec] = None,
         batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
         remove_columns: Optional[Union[str, List[str]]] = None,
+        fairness_config: Optional[FairnessConfig] = None,
+        override_fairness_metrics: bool = False,
     ) -> Dict[str, Any]:
         """Evaluate model(s) on a HuggingFace dataset.
 
@@ -431,6 +325,12 @@ class MortalityPrediction:
                 by default config.DEFAULT_MAX_BATCH_SIZE
         remove_columns : Optional[Union[str, List[str]]], optional
             Unnecessary columns to be removed from the dataset, by default None
+        fairness_config : Optional[FairnessConfig], optional
+            The configuration for computing fairness metrics. If None, no fairness \
+            metrics will be computed, by default None
+        override_fairness_metrics : bool, optional
+            If True, the `metrics` argument in fairness_config will be overridden by \
+            the `metrics`, by default False
 
         Returns
         -------
@@ -438,10 +338,12 @@ class MortalityPrediction:
             Dictionary with evaluation results.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         if isinstance(metrics, list) and len(metrics):
             metrics = [
                 create_metric(
-                    m, task=self.task_type, num_labels=len(self.task_features)
+                    m, task=self.task_type, num_labels=len(self.task_features),
                 )
                 for m in metrics
             ]
@@ -456,7 +358,7 @@ class MortalityPrediction:
             if model_name not in self.pretrained_models + self.trained_models:
                 LOGGER.warning(
                     "It seems you have neither trained the model nor \
-                    loaded a pretrained model."
+                    loaded a pretrained model.",
                 )
 
             dataset = self.predict(
@@ -469,12 +371,92 @@ class MortalityPrediction:
             )
 
         results = evaluate(
-            dataset,
-            metrics,
+            dataset=dataset,
+            metrics=metrics,
             target_columns=self.task_target,
             slice_spec=slice_spec,
             prediction_column_prefix=prediction_column_prefix,
-            batch_size=batch_size,
             remove_columns=remove_columns,
+            split=splits_mapping["test"],
+            batch_size=batch_size,
+            fairness_config=fairness_config,
+            override_fairness_metrics=override_fairness_metrics,
         )
         return results, dataset
+
+    def save_model(
+        self,
+        filepath: Union[str, Dict[str, str]],
+        model_names: Optional[Union[str, List[str]]] = None,
+        **kwargs,
+    ) -> None:
+        """Save the model to a specified filepath.
+
+        Parameters
+        ----------
+        filepath : Union[str, Dict[str, str]]
+            The destination path(s) where the model(s) will be saved.
+            Can be a dictionary of model names and their corresponding paths
+            or a single parent dirctory.
+        model_name : Optional[Union[str, List[str]]], optional
+            Model name, required if more than one model exists, by default None.
+        **kwargs : Any
+            Additional keyword arguments to be passed to the model's save method.
+
+        Returns
+        -------
+        None
+
+        """
+        if isinstance(model_names, str):
+            model_names = [model_names]
+        elif not model_names:
+            model_names = self.trained_models
+
+        if isinstance(filepath, Dict):
+            assert len(filepath) == len(model_names), (
+                "Number of filepaths must match number of models"
+                "if a dictionary is given."
+            )
+        if isinstance(filepath, str) and len(model_names) > 1:
+            assert len(os.path.basename(filepath).split(".")) == 1, (
+                "Filepath must be a directory if a single string is given"
+                "for multiple models."
+            )
+
+        for model_name in model_names:
+            if model_name not in self.trained_models:
+                LOGGER.warning(
+                    "It seems you have not trained the %s model.", model_name,
+                )
+            model_name, model = self.get_model(model_name)
+            model_path = (
+                filepath[model_name] if isinstance(filepath, Dict) else filepath
+            )
+            model.save_model(model_path, **kwargs)
+
+    def load_model(
+        self,
+        filepath: str,
+        model_name: Optional[str] = None,
+        **kwargs,
+    ) -> WrappedModel:
+        """Load a pretrained model.
+
+        Parameters
+        ----------
+        filepath : str
+            Path to the save model.
+        model_name : Optional[str], optional
+            Model name, required if more than one model exists, by default Nonee
+
+        Returns
+        -------
+        WrappedModel
+            The loaded model.
+
+        """
+        model_name, model = self.get_model(model_name)
+        model.load_model(filepath, **kwargs)
+        self.pretrained_models.append(model_name)
+        return model

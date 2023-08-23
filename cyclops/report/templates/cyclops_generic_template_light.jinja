@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+
+{% set tests = [] %}  {# init variable to aggregate tests #}
+{{ sweep_tests(model_card, tests) or "" }}
+
+{% set trends = []%}
+{{ sweep_graphics(model_card, trends, "Performance over time") or ""}}
+
+{% macro render_if_exist_list(values) %}
+<div>
+  {% if values.__class__.__name__ == "User"%}
+  <li>
+    {% for name, value in values %}
+      {% if value %}
+          {{ value }}
+      {% endif %}
+    {% endfor %}
+  </li>
+  {% elif values.__class__.__name__ == "Citation"%}
+  <li>
+    {# {% for name, value in values %} #}
+      {# {% if value %} #}
+        {{ values.content | safe }}
+      {# {% endif %} #}
+    {# {% endfor %} #}
+  </li>
+  {% elif values.__class__.__name__ == "Graphic"%}
+    {{ render_graphic(values) }}
+  {% elif values.__class__.__name__ == "GraphicsCollection" %}
+    {{ render_graphics(values.collection) }}
+  {% else %}
+    {% if (values is string) or (values|int != 0) or (values|float != 0) %}
+    <li>
+      {{ values }}
+    </li>
+    {% else %}
+    <li>
+      {% for name, value in values %}
+        {% if value %}
+          {% if value.__class__.__name__ == "GraphicsCollection" %}
+            {{ render_graphics(value.collection) }}
+          {% elif (name == "description")%}
+            {{ value }}
+          {% elif (name == "link")%}
+            <a href="{{ value }}">{{ value }}</a>
+          {% else %}
+            {% if "str" in name%}
+              {{ value }}
+            {% else %}
+              <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
+            {% endif %}
+          {% endif %}
+          <br>
+        {% endif %}
+      {% endfor %}
+    </li>
+    {% endif %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_metric_table(metrics) %}
+{% if metrics|length != 0 %}
+  <div class="subcard" style="max-height: 600px; overflow: auto;">
+    <table class="styled-table">
+      <tr><th>Metric</th><th>Slice</th><th>Value</th><th>Threshold</th><th>Result</th></tr>
+      {% for metric in metrics %}
+        <tr>
+          <td style="padding: 5px; text-align: center;">{{ metric.type }}</td>
+          <td style="padding: 5px; text-align: center;">{{ metric.slice }}</td>
+          <td style="padding: 5px; text-align: center;" id="{{ metric.type }}/{{ metric.slice }}">{{ metric.value|round(2) }}</td>
+          {% if metric.tests|length != 0 %}
+            <td style="padding: 5px; text-align: center;">{{ metric.tests[0].threshold|round(2) }}</td>
+            <td style="padding: 5px; text-align: center; color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td>
+          {% else %}
+            <td style="padding: 5px; text-align: center;">-</td>
+            <td style="padding: 5px; text-align: center;">-</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endif %}
+{% endmacro %}
+
+{% macro render_test_table(tests, passing) %}
+{% if passing %}
+<table class="styled-table-pass" style="border: 3px solid green; ">
+  <tr><th style="background-color: green;">Tests Passing</th></tr>
+  {% for test in tests %}
+    {% if test.passed %}
+      <tr>
+        <td style="padding: 5px; text-align: center;"><a href="#{{ test.name }}">{{ test.name }}</a></td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+{% else %}
+<table class="styled-table-fail" style="border: 3px solid red;">
+  <tr><th style="background-color: red;">Tests Failing</th></tr>
+  {% for test in tests %}
+    {% if not test.passed %}
+      <tr>
+        <td style="padding: 5px; text-align: center;"><a href="#{{ test.name }}">{{ test.name }}</a></td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+</table>
+{% endmacro %}
+
+{% macro render_graphic(graphic, class="img-item") %}
+<div class="{{ class }}">
+  {% if graphic.image.startswith('<div') %}
+    {{ graphic.image|safe }}
+  {% else %}
+    {% if 'data' in graphic.image %}
+      <img src='{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% else %}
+      <img src='data:image/png;base64,{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% endif %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_graphics(graphics) %}
+<div>
+  {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
+  {% for graph in graphics %}
+    {{ render_graphic(graph) }}
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro test_overview(tests) %}
+{% if tests|length != 0 %}
+  <div class="card" id="overview" style="justify-content: center;">
+  <h2>Overview</h2>
+      <div class="subcard">
+        <h3>Test Summary</h3>
+        {{ render_graphic(tests|donut_chart_tests, "") }}
+      </div>
+      {% set passed_tests = [0] %}
+      {% for test in tests %}
+        {% if test.passed %}
+          {% if passed_tests.append(passed_tests.pop() + 1) %}{% endif %}
+        {% endif %}
+      {% endfor %}
+      {% if passed_tests[0] != 0 %}
+        <div class="subcard" style="max-height: 460px; overflow: auto;">
+          {{ render_test_table(tests, True) }}
+        </div>
+      {% endif %}
+      {% set failed_tests = [0] %}
+      {% for test in tests %}
+        {% if not test.passed %}
+          {% if failed_tests.append(failed_tests.pop() + 1) %}{% endif %}
+        {% endif %}
+      {% endfor %}
+      {% if failed_tests[0] != 0 %}
+        <div class="subcard" style="max-height: 460px; overflow: auto;">
+          {{ render_test_table(tests, False) }}
+        </div>
+      {% endif %}
+      {% if trends|length != 0%}
+        <div class="subcard">
+          <h3>Performance Over Time</h3>
+          {% for trend in trends %}
+            {{ render_graphic(trend) }}
+          {% endfor %}
+        </div>
+      {% endif %}
+  </div>
+{% endif %}
+{% endmacro %}
+
+{% macro render_objects(section)%}
+{% for name, object in section %}
+  {% if name == "performance_metrics" %} {# do nothing #}
+  {% elif object.__class__.__name__ == "GraphicsCollection"%}
+    <div class="subcard" style="flex-basis:100%;">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      <ul>
+        {{render_if_exist_list(object)}}
+      </ul>
+    </div>
+  {% else %}
+    {% if (object is list) and object|length != 0 %}
+    <div class="subcard">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      {% for objects in object%}
+          <ul>
+          {{ render_if_exist_list(objects) }}
+          </ul>
+      {% endfor %}
+    </div>
+    {% elif ( (object is string) or (object is int) or (object is float) or (object is bool) ) %}
+    <div class="subcard">
+      <h3>{{ name|title|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h3>
+      {{ object }}
+    </div>
+    {% elif (object is None) or (object is empty) %}
+    {% else %}
+    <div class="subcard">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      <ul>
+      {{render_if_exist_list(object)}}
+      </ul>
+    </div>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% endmacro %}
+
+{% macro render_section(name, section)%}
+{% if section is not empty%}
+  {% set header = section.__class__.__name__ %}
+  <div class = "card" id={{name}}>
+    <h2>{{ header|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
+    {% if header == "Datasets" %}
+      {% for dataset in section.data %}
+          {{ render_objects(dataset) }}
+      {% endfor %}
+
+      {# Display global plots from GraphicsCollection in Datasets, temporary fix #}
+      {% if section is hasattr "graphics"%}
+        <div class="subcard" style="flex-basis:100%;">
+          <h3>{{ "Graphics" }}</h3>
+          {{ render_if_exist_list(section.graphics) }}
+        </div>
+      {% endif %}
+    {% elif header == "QuantitativeAnalysis"%}
+      {{render_metric_table(section.performance_metrics)}}
+      {{ render_objects(section) }}
+    {% else %}
+      {{ render_objects(section) }}
+    {% endif %}
+  </div>
+{% endif %}
+{% endmacro %}
+
+{% macro render_sidebar(model_card) %}
+<input class=minimizer type='checkbox' id='sidebar-toggle' />
+<label for="sidebar-toggle" id='sidebar-btn'>
+  <div id='sidebar_toggle_icon'>
+    <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H9V18H6C5.44772 18 5 17.5523 5 17V7ZM11 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H11V18Z" fill="#000000"/>
+    </svg>
+  </div>
+</label>
+<div id='sidebar'>
+  <a href="https://vectorinstitute.github.io/cyclops/" target="_blank"><img
+    src="https://raw.githubusercontent.com/VectorInstitute/cyclops/main/docs/source/theme/static/cyclops_logo-dark.png"
+    alt="CyclOps Logo" id="logo"></a>
+  <span class='title'>CARD SECTIONS</span>
+  <hr>
+  <ul id='contents'>
+    {% if tests|length != 0 %}
+      <a href="#{{ overview }}">
+        <li id="button">Overview</li>
+      </a>
+    {% endif %}
+    {% for name, section in model_card %}
+      {% if section is not empty%}
+        <a href="#{{ name }}">
+          <li id="button">{{ section.__class__.__name__|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</li>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+{% endmacro %}
+
+<html lang="en">
+  <head>
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      h2 {
+        color: #214d87;
+        flex-basis: 100%;
+      }
+
+      h3 {
+        color: #0073e4;
+        flex-basis: 100%;
+      }
+
+      .card {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: left;
+        padding: 1em;
+        border: 1px solid #DADCE0;
+        margin: 10px;
+        background-color: #ffffff;
+        border-radius: 10px;
+      }
+
+      .subcard {
+        padding: 30px;
+        border: 1px solid #DADCE0;
+        margin: 10px;
+        background-color: #f3f4f6;
+        border-radius: 10px;
+        box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
+      }
+
+      ul li {
+        width: 100%;
+        float:left;
+      }
+
+      .img-item {
+        min-width: 1024px;
+        width: 100%;
+        height: auto;
+        flex-basis: 100%;
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+
+      #banner {
+        width: 100%;
+        height: 170px;
+        position: relative;
+        z-index: 0;
+        top: 0;
+        left: 0;
+      }
+
+      #banner #logo {
+        float: left;
+        max-width: 500px;
+        width: auto;
+        height: auto;
+      }
+
+      #logo {
+        margin-top: 50px;
+        padding-bottom: 10px;
+        float: left;
+        max-width: 200px;
+        width: auto;
+        height: auto;
+      }
+
+      #sidebar {
+        background-color: #ffffff;
+        height: 100%;
+        width: 15rem;
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        display: block;
+        box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2);
+        transition: left 0.2s ease-in-out;
+      }
+
+      #sidebar-btn:hover {
+        background-color: rgba(247, 247, 248, 0.9);
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #sidebar-toggle {
+        display: none;
+      }
+
+      #sidebar-btn {
+        position: fixed;
+        top: 10px;
+        left: 190px;
+        z-index: 2;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        background-color: #ffffff;
+        transition: left 0.2s ease-in-out;
+        outline: 2px solid #0000001a;
+        border-radius: 5px;
+      }
+
+      #sidebar-toggle:checked+#sidebar-btn+#sidebar {
+        left: -16rem;
+      }
+
+      #sidebar-toggle:checked+#sidebar-btn+#sidebar>hr {
+        margin: 0.5em 0.5em 0.5em 12.5em;
+      }
+
+      hr {
+        border: 0.75px solid;
+        color: #e5e7eb;
+        opacity: 0.7;
+        margin: 0.5em 0.5em 0.5em 0.5em;
+        transition: margin 0.2s ease-in-out;
+      }
+
+      #sidebar-toggle:checked+#sidebar-btn {
+        left: 10px;
+      }
+
+      #sidebar-toggle:checked~#container {
+        margin-left: 50px;
+      }
+
+      #sidebar .title {
+        display: block;
+        font-size: .75rem;
+        line-height: 1rem;
+        font-weight: 900;
+        padding: 3.0rem 1rem 0rem 1rem
+      }
+
+      #sidebar #contents {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        margin-left: 10px;
+        margin-right: 40px;
+      }
+
+      #sidebar #button:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #sidebar #button {
+        display: block;
+        font-size: .75rem;
+        line-height: 0.5rem;
+        font-weight: 500;
+        font-size: 15px;
+        padding: 1rem 1rem 1rem 1rem;
+        text-decoration: none;
+        color: #000000;
+      }
+
+      #sidebar #button_min {
+        display: none;
+        float: right;
+        font-size: .75rem;
+        line-height: 0.5rem;
+        font-weight: 500;
+        font-size: 15px;
+        margin-top: -2.5rem;
+        padding: 1rem 1rem 1rem 1.3rem;
+        text-decoration: none;
+        color: #000000;
+      }
+
+      #sidebar #button_min:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #container {
+        max-width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        margin-left: 250px;
+        margin-right: 25px;
+        transition: margin-left 0.2s ease-in-out;
+      }
+
+      body {
+        background-color: #f3f4f6;
+      }
+
+      .styled-table {
+        border-spacing: 0;
+        border-collapse: separate;
+        border-radius: 10px;
+        border: 3px solid #0073e4;
+        margin: 25px;
+        font-size: 16px;
+        font-family: Arial, Helvetica, sans-serif;
+        min-width: 200px;
+        box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      .styled-table-pass {
+        border-spacing: 0;
+        border-collapse: separate;
+        border-radius: 10px;
+        border: 3px solid green;
+        font-size: 16px;
+        font-family: Arial, Helvetica, sans-serif;
+        min-width: 200px;
+        box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      .styled-table-fail {
+        border-spacing: 0;
+        border-collapse: separate;
+        border-radius: 10px;
+        border: 3px solid red;
+        font-size: 16px;
+        font-family: Arial, Helvetica, sans-serif;
+        min-width: 200px;
+        box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      th {
+        padding: 12px 15px;
+        color: white;
+        background-color: #0073e4;
+      }
+
+      tbody tr {
+        border-bottom: 1px solid #dddddd;
+      }
+
+      tbody tr:nth-of-type(even) {
+        background-color: #f3f3f3;
+      }
+
+      caption {
+        font-weight: bold;
+      }
+
+    </style>
+    <script>{{ plotlyjs|safe }}</script>
+  </head>
+  <body>
+    {{ render_sidebar(model_card) }}
+    <main id="container">
+      {{ test_overview(tests) }}
+      {# {{ render_banner() }} #}
+      {% for name, section in model_card %}
+        {{ render_section(name, section)}}
+      {% endfor %}
+    </main>
+  </body>
+</html>

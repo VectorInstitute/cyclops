@@ -1,4 +1,5 @@
 """Predictor class to train and test models per use-case."""
+
 import logging
 from os import path
 from typing import Optional
@@ -83,7 +84,7 @@ class Predictor:
         self._validate()
 
         self.dataset = VectorizedLoader(
-            self.dataset_name, self.use_case, self.data_type, self.data_dir
+            self.dataset_name, self.use_case, self.data_type, self.data_dir,
         )
 
         (
@@ -109,7 +110,7 @@ class Predictor:
         assert self.model_name in _model_catalog, "[!] Invalid model name"
         assert self.dataset_name in DATASETS, "[!] Invalid dataset name"
         assert (
-            self.use_case in USE_CASES.keys()  # pylint: disable=C0201
+            self.use_case in USE_CASES  # pylint: disable=C0201
         ), "[!] Invalid use case"
         assert (
             self.dataset_name in USE_CASES[self.use_case]

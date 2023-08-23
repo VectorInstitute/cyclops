@@ -1,17 +1,15 @@
 """Tasks utility functions."""
-from typing import Dict, List, Mapping, Optional, Sequence, Union, get_args
+
+from typing import Dict, List, Mapping, Sequence, Union, get_args
 
 import numpy as np
 import pandas as pd
 import PIL
 import torch
-import yaml
 from torchvision.transforms import PILToTensor
 
 from cyclops.models.catalog import _model_names_mapping, create_model, list_models
-from cyclops.models.constants import CONFIG_ROOT
 from cyclops.models.wrappers import WrappedModel
-from cyclops.utils.file import join
 
 
 CXR_TARGET = [
@@ -58,9 +56,8 @@ def apply_image_transforms(examples: Dict[str, List], transforms: callable) -> d
     examples = [transforms(example) for example in examples]
 
     # convert back to a dict of lists
-    examples = {k: [d[k] for d in examples] for k in examples[0]}
+    return {k: [d[k] for d in examples] for k in examples[0]}
 
-    return examples
 
 
 def to_numpy(X) -> np.ndarray:
@@ -106,15 +103,14 @@ def to_numpy(X) -> np.ndarray:
     raise ValueError(
         "Cannot convert to numpy array. `X` must be a numpy array, torch tensor,"
         f" dictionary, list, tuple, pandas dataframe or pandas series. \
-        Got {type(X)} instead."
+        Got {type(X)} instead.",
     )
 
 
 def prepare_models(
     models: Union[
-        str, WrappedModel, Sequence[Union[str, WrappedModel]], Dict[str, WrappedModel]
+        str, WrappedModel, Sequence[Union[str, WrappedModel]], Dict[str, WrappedModel],
     ],
-    config_path: Optional[Union[str, Dict[str, str]]] = None,
 ) -> Dict[str, WrappedModel]:
     """Prepare the models as a dictionary, and wrap those that are not wrapped.
 
@@ -128,9 +124,6 @@ def prepare_models(
     ]
         model name(s) or wrapped model(s) or a dictionary
         of model name(s) and wrapped model(s).
-    config_path : Union[str, Dict[str, str]], optional
-        Path to the configuration file(s) for the model(s),
-        by default None
 
     Returns
     -------
@@ -156,13 +149,7 @@ def prepare_models(
             models in list_models()
         ), f"Model name is not registered! \
                     Available models are: {list_models()}"
-        if not config_path:
-            config_path = join(CONFIG_ROOT, models + ".yaml")
-        elif isinstance(config_path, dict):
-            config_path = config_path.get(models)
-        with open(config_path, "r", encoding="utf8") as file:
-            config = yaml.safe_load(file)
-        models_dict = {models: create_model(models, **config)}
+        models_dict = {models: create_model(models)}
     # models contains a list or tuple of model names or wrapped models
     elif isinstance(models, (list, tuple)):
         for model in models:
@@ -174,18 +161,11 @@ def prepare_models(
                     model in list_models()
                 ), f"Model name is not registered! \
                     Available models are: {list_models()}"
-                config_path = (
-                    config_path[model]
-                    if config_path and model in config_path
-                    else join(CONFIG_ROOT, model + ".yaml")
-                )
-                with open(config_path, "r", encoding="utf8") as file:
-                    config = yaml.safe_load(file)
-                models_dict[model] = create_model(model, **config)
+                models_dict[model] = create_model(model)
             else:
                 raise TypeError(
                     "models must be lists/tuples of strings,\
-                    PTModel instances or SKModel instances."
+                    PTModel instances or SKModel instances.",
                 )
     # models contains a dictionary of model names and wrapped models
     elif isinstance(models, dict):

@@ -36,7 +36,7 @@ def test__feature_meta__get_type():
 def test__feature_meta__is_target():
     """Test FeatureMeta.is_target fn."""
     feature_meta_target = FeatureMeta(
-        **{FEATURE_TYPE_ATTR: NUMERIC, FEATURE_TARGET_ATTR: True}
+        **{FEATURE_TYPE_ATTR: NUMERIC, FEATURE_TARGET_ATTR: True},
     )
     feature_meta = FeatureMeta(**{FEATURE_TYPE_ATTR: NUMERIC})
 
@@ -50,7 +50,7 @@ def test__feature_meta__get_mapping():
     assert feature_meta.get_mapping() is None
 
     feature_meta = FeatureMeta(
-        **{FEATURE_TYPE_ATTR: NUMERIC, FEATURE_MAPPING_ATTR: {1: "hospital"}}
+        **{FEATURE_TYPE_ATTR: NUMERIC, FEATURE_MAPPING_ATTR: {1: "hospital"}},
     )
     assert feature_meta.get_mapping() == {1: "hospital"}
 
@@ -139,7 +139,7 @@ def test__feature__features_by_type():
             "f": [False, False],
             "fea": ["hi", "hey"],
             ENCOUNTER_ID: [1, 1],
-        }
+        },
     )
     feat = _create_feature(data, ["fe", "f", "fea"], ENCOUNTER_ID)
     returned_data = feat.features_by_type(BINARY)
@@ -149,7 +149,7 @@ def test__feature__features_by_type():
 def test__feature__compute_value_splits():
     """Test Feature.compute_value_splits fn."""
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     returned_data = feat.compute_value_splits([0.5, 0.5], seed=42)
@@ -160,7 +160,7 @@ def test__feature__compute_value_splits():
 def test__feature__split_by_values():
     """Test Feature.split_by_values fn."""
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     value_splits = feat.compute_value_splits([0.5, 0.5], seed=42)
@@ -175,7 +175,7 @@ def test__feature__split_by_values():
 def test__feature__split():
     """Test Feature.split fn."""
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     returned_data = feat.split([0.5, 0.5], seed=42)
@@ -190,7 +190,7 @@ def test__feature__add_normalizer():
     """Test Feature.add_normalizer fn."""
     normalizer = GroupbyNormalizer({"f": "standard"})
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     feat.add_normalizer("normalizer", normalizer)
@@ -202,7 +202,7 @@ def test__feature__remove_normalizer():
     """Test Feature.remove_normalizer fn."""
     normalizer = GroupbyNormalizer({"f": "standard"})
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     feat.add_normalizer("normalizer", normalizer)
@@ -215,13 +215,13 @@ def test__feature__normalize():
     """Test Feature.normalize fn."""
     normalizer = GroupbyNormalizer({"f": "standard"})
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     feat.add_normalizer("normalizer", normalizer)
     new_data = feat.normalize("normalizer")
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [0.0] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [0.0] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     assert new_data.equals(data)
 
@@ -230,14 +230,14 @@ def test__feature__inverse_normalize():
     """Test Feature.inverse_normalize fn."""
     normalizer = GroupbyNormalizer({"f": "standard"})
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     feat.add_normalizer("normalizer", normalizer)
     feat.normalize("normalizer")
     new_data = feat.inverse_normalize("normalizer")
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10.0] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10.0] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     assert new_data.equals(data)
 
@@ -245,7 +245,7 @@ def test__feature__inverse_normalize():
 def test__feature__save():
     """Test Feature.save fn."""
     data = pd.DataFrame(
-        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5}
+        {"fe": [10] * 10, "f": [10] * 10, ENCOUNTER_ID: [1] * 5 + [2] * 5},
     )
     feat = _create_feature(data, ["fe", "f"], ENCOUNTER_ID)
     filename = os.path.join(os.getcwd(), "feature.parquet")
@@ -265,10 +265,10 @@ class TestFeatures(unittest.TestCase):
                 "feat_A": [False, True, True],
                 "feat_B": [1.2, 3, 3.8],
                 ENCOUNTER_ID: [101, 201, 301],
-            }
+            },
         )
         self.features = Features(
-            data=self.test_data, features=["feat_A", "feat_B"], by=ENCOUNTER_ID
+            data=self.test_data, features=["feat_A", "feat_B"], by=ENCOUNTER_ID,
         )
 
     def test_slice(self):
@@ -277,19 +277,19 @@ class TestFeatures(unittest.TestCase):
         assert np.array_equal(sliced_by_indices, np.array([201]))
 
         sliced_by_indices = self.features.slice(
-            {"feat_A": True, "feat_B": [3.8, 3]}, replace=False
+            {"feat_A": True, "feat_B": [3.8, 3]}, replace=False,
         )
         assert np.array_equal(sliced_by_indices, np.array([201, 301]))
         sliced_by_indices = self.features.slice({}, replace=True)
         assert np.array_equal(sliced_by_indices, np.array([101, 201, 301]))
         assert len(self.features.data) == 3
         sliced_by_indices = self.features.slice(
-            slice_query="feat_A == True & feat_B > 3", replace=False
+            slice_query="feat_A == True & feat_B > 3", replace=False,
         )
         assert np.array_equal(sliced_by_indices, np.array([301]))
         filter_list = [3, 3.8]
         sliced_by_indices = self.features.slice(
-            slice_query=f"feat_B=={filter_list}", replace=True
+            slice_query=f"feat_B=={filter_list}", replace=True,
         )
         assert np.array_equal(sliced_by_indices, np.array([201, 301]))
         assert len(self.features.data) == 2

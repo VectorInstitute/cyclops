@@ -224,7 +224,7 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
     ) -> None:
         """Initialize the metric."""
         super().__init__(
-            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True
+            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True,
         )
 
         _check_beta(beta=beta)
@@ -379,7 +379,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
             )
         raise ValueError(
             f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
+            " or 'multilabel'",
         )
 
 
@@ -690,5 +690,5 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
             )
         raise ValueError(
             f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
+            " or 'multilabel'",
         )

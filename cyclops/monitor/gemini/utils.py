@@ -1,4 +1,5 @@
 """Utilities for loading and preprocessing gemini data."""
+
 import datetime
 import importlib
 import random
@@ -32,7 +33,7 @@ def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
 
     """
     return importlib.import_module(
-        ".".join(["drift_detection", dataset, use_case, "constants"])
+        ".".join(["drift_detection", dataset, use_case, "constants"]),
     )
 
 
@@ -40,7 +41,7 @@ def unison_shuffled_copies(
     array_a: np.ndarray[float, np.dtype[np.float64]],
     array_b: np.ndarray[float, np.dtype[np.float64]],
 ) -> tuple[
-    np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]]
+    np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]],
 ]:
     """Shuffle two arrays in unison."""
     assert len(array_a) == len(array_b)
@@ -56,10 +57,10 @@ def random_shuffle_and_split(
     split_index: int,
 ) -> tuple[
     tuple[
-        np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]]
+        np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]],
     ],
     tuple[
-        np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]]
+        np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]],
     ],
 ]:
     """Randomly shuffle and split data into train and test sets."""
@@ -100,8 +101,7 @@ def reshape_2d_to_3d(data: pd.DataFrame, num_timesteps: int) -> pd.DataFrame:
     """Reshape 2D data to 3D data."""
     data = data.unstack()
     num_encounters = data.shape[0]
-    data = data.values.reshape((num_encounters, num_timesteps, -1))
-    return data
+    return data.values.reshape((num_encounters, num_timesteps, -1))
 
 
 def flatten(X: pd.DataFrame) -> np.ndarray[float, np.dtype[np.float64]]:
@@ -114,12 +114,11 @@ def flatten(X: pd.DataFrame) -> np.ndarray[float, np.dtype[np.float64]]:
 
 def temporal_mean(X: pd.DataFrame) -> pd.DataFrame:
     """Get temporal mean of data."""
-    X_mean = X.groupby(level=[0]).mean()
-    return X_mean
+    return X.groupby(level=[0]).mean()
 
 
 def temporal_first(
-    X: pd.DataFrame, y: Optional[np.ndarray[float, np.dtype[np.float64]]] = None
+    X: pd.DataFrame, y: Optional[np.ndarray[float, np.dtype[np.float64]]] = None,
 ) -> tuple[pd.DataFrame, Optional[np.ndarray[float, np.dtype[np.float64]]]]:
     """Get temporal first of data."""
     y_first = None
@@ -130,7 +129,7 @@ def temporal_first(
 
 
 def temporal_last(
-    X: pd.DataFrame, y: np.ndarray[float, np.dtype[np.float64]]
+    X: pd.DataFrame, y: np.ndarray[float, np.dtype[np.float64]],
 ) -> tuple[pd.DataFrame, np.ndarray[float, np.dtype[np.float64]]]:
     """Get temporal last of data."""
     X_last = X.groupby(level=[0]).last()
@@ -141,10 +140,9 @@ def temporal_last(
 
 def get_numerical_cols(X: pd.DataFrame) -> List[str]:
     """Get numerical columns of temporal dataframe."""
-    numerical_cols = [
+    return [
         col for col in X if not np.isin(X[col].dropna().unique(), [0, 1]).all()
     ]
-    return numerical_cols
 
 
 def scale(X: pd.DataFrame) -> pd.DataFrame:
@@ -191,7 +189,7 @@ def normalize(X: pd.DataFrame, aggregation_type: str) -> pd.DataFrame:
 
 
 def process(
-    X: pd.DataFrame, aggregation_type: str, timesteps: int
+    X: pd.DataFrame, aggregation_type: str, timesteps: int,
 ) -> np.ndarray[float, np.dtype[np.float64]]:
     """Process data."""
     if aggregation_type == "time_flatten":
@@ -261,7 +259,7 @@ def get_dataset_hospital(
             (
                 (
                     admin_data["admit_timestamp"].dt.month.isin(
-                        [1, 2, 3, 4, 5, 10, 11, 12]
+                        [1, 2, 3, 4, 5, 10, 11, 12],
                     )
                 )
             ),
@@ -279,7 +277,7 @@ def get_dataset_hospital(
             (
                 (
                     admin_data["hospital_id"].isin(
-                        ["SMH", "MSH", "UHNTG", "UHNTW", "PMH", "SBK"]
+                        ["SMH", "MSH", "UHNTG", "UHNTW", "PMH", "SBK"],
                     )
                 )
             ),
@@ -349,7 +347,7 @@ def get_dataset_hospital(
             (
                 (
                     admin_data["admit_timestamp"].dt.month.isin(
-                        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+                        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                     )
                 )
             ),
@@ -367,7 +365,7 @@ def get_dataset_hospital(
             (
                 (
                     admin_data["admit_timestamp"].dt.month.isin(
-                        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+                        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                     )
                 )
             ),
@@ -385,7 +383,7 @@ def get_dataset_hospital(
             (
                 (
                     admin_data["hospital_id"].isin(
-                        ["SMH", "MSH", "UHNTG", "UHNTW", "PMH", "SBK"]
+                        ["SMH", "MSH", "UHNTG", "UHNTW", "PMH", "SBK"],
                     )
                 )
             ),
@@ -439,7 +437,7 @@ def import_dataset_hospital(
     """Import dataset for hospital-level analysis."""
     # get source and target data
     x_source, y_source, x_test, y_test, feats, admin_data = get_dataset_hospital(
-        admin_data, x, y, dataset, hospital, encounter_id
+        admin_data, x, y, dataset, hospital, encounter_id,
     )
 
     # get train, validation and test set

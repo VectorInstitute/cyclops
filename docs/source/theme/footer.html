@@ -20,33 +20,6 @@
 #}
 {% block extrafooter %}
 
-  <div class="citation">
-    CyclOps team <i>et al.,</i>
-    <a href="https://www.medrxiv.org/content/10.1101/2022.12.02.22283021v2">CyclOps: Cyclical development towards Operationalizing ML models for health</a>
-    <i>, medarxiv</i> (2022)
-  </def>
-
-
-  <p class="avatar">cyclops is built by</p>
-  <div class="avatar">
-    {% macro TeamMember(name, image, link) %}
-    <span>
-      {% if link %}<a href="{{ link |e }}">{% endif %}
-        <img src="{{ pathto('_static/team/' + image, 1) }}" width="32"/>
-        {{ name |e }}
-      {% if link %}</a>{% endif %}
-    </span>
-    {% endmacro %}
-    {{ TeamMember(name="Amrit Krishnan", image="amrit-krishnan.jpg", link="https://github.com/amrit110") }},
-    {{ TeamMember(name="Kaden McKeen", image="kaden-mckeen.jpg", link="https://github.com/KadenMc") }},
-    {{ TeamMember(name="Valli Subasri", image="valli-subasri.jpg", link="https://github.com/vsubasri") }},
-    {{ TeamMember(name="Ali Kore", image="ali-kore.jpg", link="https://github.com/a-kore") }},
-    {{ TeamMember(name="Franklin Ogidi", image="franklin-ogidi.jpg", link="https://github.com/fcogidi") }},
-    {{ TeamMember(name="Mahshid Alinoori", image="mahshid-alinoori.jpg", link="https://github.com/mahshidaln") }},
-    {{ TeamMember(name="Elham Dolatabadi", image="elham-dolatabadi.jpg", link="https://github.com/elhamdolatabadi") }},
-  </div>
-
-
   <div class="footer-small-text">
     All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
   </div>

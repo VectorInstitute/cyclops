@@ -38,7 +38,7 @@ SOCKET_CONNECTION_TIMEOUT = 5
 
 
 def _get_db_url(  # pylint: disable=too-many-arguments
-    dbms: str, user: str, pwd: str, host: str, port: str, database: str
+    dbms: str, user: str, pwd: str, host: str, port: str, database: str,
 ) -> str:
     """Combine to make Database URL string."""
     return f"{dbms}://{user}:{pwd}@{host}:{port}/{database}"
@@ -83,7 +83,7 @@ class Database:
             return
         if is_port_open:
             LOGGER.error(
-                """Valid server host but port seems open, check if server is up!"""
+                """Valid server host but port seems open, check if server is up!""",
             )
             return
 
@@ -104,7 +104,7 @@ class Database:
             self.config.port,
             self.config.database,
         )
-        engine = create_engine(
+        return create_engine(
             _get_db_url(
                 self.config.dbms,
                 self.config.user,
@@ -114,7 +114,6 @@ class Database:
                 self.config.database,
             ),
         )
-        return engine
 
     def _create_session(self) -> Session:
         """Create session."""
@@ -190,7 +189,7 @@ class Database:
         """
         if isinstance(query, str) and limit is not None:
             raise ValueError(
-                "Cannot use limit argument when running raw SQL string query!"
+                "Cannot use limit argument when running raw SQL string query!",
             )
         if backend == "pandas" and n_partitions is not None:
             raise ValueError("Partitions not applicable with Pandas backend, use Dask!")
@@ -204,7 +203,7 @@ class Database:
                 data = pd.read_sql_query(query, self.engine, index_col=index_col)
             elif backend == "dask":
                 data = dd.read_sql_query(  # type: ignore
-                    query, self.conn, index_col=index_col, npartitions=n_partitions
+                    query, self.conn, index_col=index_col, npartitions=n_partitions,
                 )
                 data = data.reset_index(drop=False)
             else:

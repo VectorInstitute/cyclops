@@ -329,9 +329,9 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be a positive integer."
             return MultilabelAUROC(
-                num_labels=num_labels, thresholds=thresholds, average=average
+                num_labels=num_labels, thresholds=thresholds, average=average,
             )
         raise ValueError(
             "Expected argument `task` to be either 'binary', 'multiclass' or "
-            f"'multilabel', but got {task}"
+            f"'multilabel', but got {task}",
         )

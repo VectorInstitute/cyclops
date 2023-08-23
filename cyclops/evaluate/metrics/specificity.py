@@ -74,7 +74,7 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
 
 
 class MulticlassSpecificity(
-    MulticlassStatScores, registry_key="multiclass_specificity"
+    MulticlassStatScores, registry_key="multiclass_specificity",
 ):
     """Compute specificity for multiclass classification tasks.
 
@@ -147,7 +147,7 @@ class MulticlassSpecificity(
 
 
 class MultilabelSpecificity(
-    MultilabelStatScores, registry_key="multilabel_specificity"
+    MultilabelStatScores, registry_key="multilabel_specificity",
 ):
     """Compute specificity for multilabel classification tasks.
 
@@ -207,7 +207,7 @@ class MultilabelSpecificity(
     ) -> None:
         """Initialize the metric."""
         super().__init__(
-            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True
+            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True,
         )
         _check_average_arg(average)
 
@@ -360,5 +360,5 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
             )
         raise ValueError(
             f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
+            " or 'multilabel'",
         )

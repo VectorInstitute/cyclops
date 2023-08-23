@@ -7,10 +7,10 @@ from torchvision.transforms import Compose
 
 
 def txrv_transforms(
-    keys: Tuple[str, ...] = ("features",), device: str = "cpu"
+    keys: Tuple[str, ...] = ("features",), device: str = "cpu",
 ) -> Compose:
     """Set of transforms for the models in the TXRV library."""
-    transforms = Compose(
+    return Compose(
         [
             Resized(
                 keys=keys,
@@ -25,4 +25,3 @@ def txrv_transforms(
             ToDeviced(keys=keys, device=device, allow_missing_keys=True),
         ],
     )
-    return transforms

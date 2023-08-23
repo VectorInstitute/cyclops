@@ -284,7 +284,7 @@ class MIMICIVProcessor:
         return tab_features.features_by_type(NUMERIC)
 
     def _vectorize_tabular(
-        self, tab_features: TabularFeatures, normalize: bool
+        self, tab_features: TabularFeatures, normalize: bool,
     ) -> Vectorized:
         """Vectorize the tabular data.
 
@@ -302,7 +302,7 @@ class MIMICIVProcessor:
 
         """
         tab_vectorized = tab_features.vectorize(
-            to_binary_indicators=self._get_tab_ordinal(tab_features)
+            to_binary_indicators=self._get_tab_ordinal(tab_features),
         )
 
         if normalize:
@@ -319,7 +319,7 @@ class MIMICIVProcessor:
         return tab_vectorized
 
     def _aggregate_tabular(
-        self, tab_features: TabularFeatures, temp_vectorized: Vectorized
+        self, tab_features: TabularFeatures, temp_vectorized: Vectorized,
     ) -> pd.DataFrame:
         """Aggregate the tabular data to pose as timeseries.
 
@@ -337,7 +337,7 @@ class MIMICIVProcessor:
 
         """
         tab = tab_features.get_data(
-            to_binary_indicators=self._get_tab_ordinal(tab_features)
+            to_binary_indicators=self._get_tab_ordinal(tab_features),
         ).reset_index()
 
         tab = tab[
@@ -414,7 +414,7 @@ class MIMICIVProcessor:
 
         """
         tab_train_X, tab_train_y = tab_train.split_out(
-            FEATURES, self.tab_feature_params[TARGETS]
+            FEATURES, self.tab_feature_params[TARGETS],
         )
         if normalize:
             tab_train_X = self._normalize(tab_train_X)
@@ -438,7 +438,7 @@ class MIMICIVProcessor:
 
         """
         tab_val_X, tab_val_y = tab_val.split_out(
-            FEATURES, self.tab_feature_params[TARGETS]
+            FEATURES, self.tab_feature_params[TARGETS],
         )
         if normalize:
             tab_val_X = self._normalize(tab_val_X)
@@ -461,7 +461,7 @@ class MIMICIVProcessor:
 
         """
         tab_test_X, tab_test_y = tab_test.split_out(
-            FEATURES, self.tab_feature_params[TARGETS]
+            FEATURES, self.tab_feature_params[TARGETS],
         )
         if normalize:
             tab_test_X = self._normalize(tab_test_X)
@@ -565,12 +565,11 @@ class MIMICIVProcessor:
 
         """
         timestamps = self._get_timestamps()
-        start_timestamps = (
+        return (
             timestamps[self.timestamp_params["start_columns"]]
             .set_index(self.timestamp_params["start_index"])
             .rename(self.timestamp_params["rename"], axis=1)
         )
-        return start_timestamps
 
     def _aggregate_temporal_batches(
         self,
@@ -617,7 +616,7 @@ class MIMICIVProcessor:
             )
 
     def _vectorize_temporal_features(
-        self, generator: Generator[pd.DataFrame, None, None]
+        self, generator: Generator[pd.DataFrame, None, None],
     ) -> Vectorized:
         """Vectorize temporal features (no targets included).
 
@@ -642,7 +641,7 @@ class MIMICIVProcessor:
         return temp_vectorized
 
     def _compute_timestep(
-        self, timestamps: pd.DataFrame, timestamp_col: str
+        self, timestamps: pd.DataFrame, timestamp_col: str,
     ) -> pd.DataFrame:
         """Compute timestep for a specific timestamp feature.
 
@@ -699,7 +698,7 @@ class MIMICIVProcessor:
         ref_timestep = f"{ref_timestamp}_timestep"
 
         timestamps["target"] = timestamps[target_timestamp] - pd.DateOffset(
-            hours=self.temp_params["predict_offset"]
+            hours=self.temp_params["predict_offset"],
         )
 
         timestamps = self._compute_timestep(timestamps, "target")
@@ -717,25 +716,24 @@ class MIMICIVProcessor:
         ]
 
         aligned_timestamps = pd.merge(
-            index_order, timesteps, on=self.common_feature, how="left"
+            index_order, timesteps, on=self.common_feature, how="left",
         )
 
         num_timesteps = int(
-            self.temp_params["window_duration"] / self.temp_params["timestep_size"]
+            self.temp_params["window_duration"] / self.temp_params["timestep_size"],
         )
 
         arr1 = timestamp_ffill_agg(
-            aligned_timestamps[target_timestep], num_timesteps, fill_nan=2
+            aligned_timestamps[target_timestep], num_timesteps, fill_nan=2,
         )
 
         arr2 = timestamp_ffill_agg(
-            aligned_timestamps[ref_timestep], num_timesteps, val=-1, fill_nan=2
+            aligned_timestamps[ref_timestep], num_timesteps, val=-1, fill_nan=2,
         )
 
         targets = np.minimum(arr1, arr2)
         targets[targets == 2] = 0
-        targets = np.expand_dims(np.expand_dims(targets, 0), 2)
-        return targets
+        return np.expand_dims(np.expand_dims(targets, 0), 2)
 
     def _vectorize_temporal(
         self,
@@ -1020,7 +1018,7 @@ class MIMICIVProcessor:
 
         """
         tab_vectorized, temp_vectorized, comb_vectorized = intersect_vectorized(
-            [tab_vectorized, temp_vectorized, comb_vectorized], axes=self.common_feature
+            [tab_vectorized, temp_vectorized, comb_vectorized], axes=self.common_feature,
         )
 
         return tab_vectorized, temp_vectorized, comb_vectorized
@@ -1230,7 +1228,7 @@ class MIMICIVProcessor:
 
         LOGGER.info("Vectorizing the tabular data.")
         tab_vectorized = self._vectorize_tabular(
-            tab_features, self.tab_norm_params["normalize"]
+            tab_features, self.tab_norm_params["normalize"],
         )
         return tab_vectorized, tab_features
 
@@ -1253,13 +1251,13 @@ class MIMICIVProcessor:
         tab_train, tab_val, tab_test = self._split_tabular(tab_vectorized)
 
         tab_train_X, tab_train_y = self._get_tab_train(
-            tab_train, self.tab_norm_params["normalize"]
+            tab_train, self.tab_norm_params["normalize"],
         )
         tab_val_X, tab_val_y = self._get_tab_val(
-            tab_val, self.tab_norm_params["normalize"]
+            tab_val, self.tab_norm_params["normalize"],
         )
         tab_test_X, tab_test_y = self._get_tab_test(
-            tab_test, self.tab_norm_params["normalize"]
+            tab_test, self.tab_norm_params["normalize"],
         )
 
         LOGGER.info("Saving the tabular features and targets for all data splits.")
@@ -1300,7 +1298,7 @@ class MIMICIVProcessor:
         ):
             LOGGER.info("Getting top %d events", self.temp_params["top_n_events"])
             top_events = get_top_events(
-                self.cleaned_dir, self.temp_params["top_n_events"]
+                self.cleaned_dir, self.temp_params["top_n_events"],
             )
             filter_fn = lambda events: valid_events(events, top_events)  # noqa: E731
 
@@ -1319,10 +1317,9 @@ class MIMICIVProcessor:
         targets = self._create_target(temp_vectorized, timestamps)
 
         LOGGER.info("Vectorizing the temporal data.")
-        temp_vectorized = self._vectorize_temporal(
-            temp_vectorized, targets, self.temp_norm_params["normalize"]
+        return self._vectorize_temporal(
+            temp_vectorized, targets, self.temp_norm_params["normalize"],
         )
-        return temp_vectorized
 
     def process_temporal_two(self, temp_vectorized: Vectorized, aligned: bool) -> None:
         """Second step of temporal processing.
@@ -1342,13 +1339,13 @@ class MIMICIVProcessor:
         LOGGER.info("Splitting the temporal data.")
         temp_train, temp_val, temp_test = self._split_temporal(temp_vectorized)
         temp_train_X, temp_train_y = self._get_temp_train(
-            temp_train, self.temp_norm_params["normalize"]
+            temp_train, self.temp_norm_params["normalize"],
         )
         temp_val_X, temp_val_y = self._get_temp_val(
-            temp_val, self.temp_norm_params["normalize"]
+            temp_val, self.temp_norm_params["normalize"],
         )
         temp_test_X, temp_test_y = self._get_temp_test(
-            temp_test, self.temp_norm_params["normalize"]
+            temp_test, self.temp_norm_params["normalize"],
         )
 
         LOGGER.info("Saving the temporal features and targets for data splits.")
@@ -1401,7 +1398,7 @@ class MIMICIVProcessor:
         tab_aggregated_vec = self._vectorize_agg_tabular(tab_aggregated)
         comb_vectorized = self._vectorize_combined(temp_vectorized, tab_aggregated_vec)
         tab_vectorized, temp_vectorized, comb_vectorized = self._get_intersect_vec(
-            tab_vectorized, temp_vectorized, comb_vectorized
+            tab_vectorized, temp_vectorized, comb_vectorized,
         )
         return tab_vectorized, temp_vectorized, comb_vectorized
 
@@ -1421,13 +1418,13 @@ class MIMICIVProcessor:
         LOGGER.info("Splitting the combined data.")
         comb_train, comb_val, comb_test = self._split_combined(comb_vectorized)
         comb_train_X, comb_train_y = self._get_comb_train(
-            comb_train, self.temp_norm_params["normalize"]
+            comb_train, self.temp_norm_params["normalize"],
         )
         comb_val_X, comb_val_y = self._get_comb_val(
-            comb_val, self.temp_norm_params["normalize"]
+            comb_val, self.temp_norm_params["normalize"],
         )
         comb_test_X, comb_test_y = self._get_comb_test(
-            comb_test, self.temp_norm_params["normalize"]
+            comb_test, self.temp_norm_params["normalize"],
         )
 
         LOGGER.info("Saving the combined features and targets for all data splits.")

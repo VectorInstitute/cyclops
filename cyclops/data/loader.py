@@ -18,5 +18,4 @@ def load_nihcxr(path: str) -> Dataset:
         "timestamp",
         pd.date_range(start="1/1/2019", end="12/25/2019", periods=nih_ds.num_rows),
     )
-    nih_ds = nih_ds.cast_column("features", Image(decode=True))
-    return nih_ds
+    return nih_ds.cast_column("features", Image(decode=True))

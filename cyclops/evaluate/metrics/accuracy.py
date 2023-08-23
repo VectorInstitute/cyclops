@@ -199,7 +199,7 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
     ) -> None:
         """Initialize the metric."""
         super().__init__(
-            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True
+            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True,
         )
         _check_average_arg(average)
 
@@ -321,7 +321,7 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
         """Create a task-specific instance of the metric."""
         if task == "binary":
             return BinaryAccuracy(
-                threshold=threshold, pos_label=pos_label, zero_division=zero_division
+                threshold=threshold, pos_label=pos_label, zero_division=zero_division,
             )
         if task == "multiclass":
             assert (
@@ -345,5 +345,5 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
             )
         raise ValueError(
             f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
+            " or 'multilabel'",
         )

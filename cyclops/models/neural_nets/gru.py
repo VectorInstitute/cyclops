@@ -1,4 +1,5 @@
 """GRU Models."""
+
 from typing import Optional
 
 import torch
@@ -42,7 +43,7 @@ class GRUModel(nn.Module):
         self.layer_dim = layer_dim
         self.hidden_dim = hidden_dim
         self.gru = nn.GRU(
-            input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob
+            input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob,
         )
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.last_timestep_only = last_timestep_only
@@ -69,5 +70,4 @@ class GRUModel(nn.Module):
         out, _ = self.gru(x, h0.detach())
         if self.last_timestep_only:
             out = out[:, -1, :]
-        out = self.fc(out)
-        return out
+        return self.fc(out)

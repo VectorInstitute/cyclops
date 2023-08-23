@@ -1,4 +1,5 @@
 """MLP models."""
+
 import math
 from typing import Tuple, Union
 
@@ -52,7 +53,7 @@ class MLPModel(nn.Module):
                     self.hidden_dims[i] if i > 0 else input_dim,
                     self.hidden_dims[i + 1],
                     activation,
-                )
+                ),
             )
         layers.extend(self._layer(self.hidden_dims[-1], output_dim, activation=None))
 

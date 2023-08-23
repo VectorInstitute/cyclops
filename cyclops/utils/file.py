@@ -59,7 +59,7 @@ def exchange_extension(file_path: str, new_ext: str) -> str:
 
 
 def process_file_save_path(
-    save_path: str, file_format: str, create_dir: bool = True
+    save_path: str, file_format: str, create_dir: bool = True,
 ) -> str:
     """Process file save path, perform checks, and possibly create a parent directory.
 
@@ -94,7 +94,7 @@ def process_file_save_path(
     elif ext != "." + file_format:
         raise ValueError(
             f"""The file extension on the save path must be {file_format}.
-            Alternatively, sesider changing the file format."""
+            Alternatively, sesider changing the file format.""",
         )
 
     return save_path
@@ -173,7 +173,7 @@ def save_dataframe(
         data.to_csv(save_path)
     else:
         raise ValueError(
-            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
+            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'.",
         )
 
     return save_path
@@ -214,7 +214,7 @@ def load_dataframe(
         data = pd.read_csv(load_path, index_col=[0])
     else:
         raise ValueError(
-            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
+            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'.",
         )
 
     return data

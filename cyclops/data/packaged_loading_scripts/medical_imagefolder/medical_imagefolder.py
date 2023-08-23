@@ -22,7 +22,7 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 
 class MedicalImageFolderConfig(
-    folder_based_builder.FolderBasedBuilderConfig  # type: ignore
+    folder_based_builder.FolderBasedBuilderConfig,  # type: ignore
 ):
     """BuilderConfig for MedicalImageFolder."""
 
@@ -39,7 +39,7 @@ class MedicalImageFolder(folder_based_builder.FolderBasedBuilder):  # type: igno
     EXTENSIONS: List[str]  # definition at the bottom of the script
     ImageClassification.input_schema = Features({"image": MedicalImage()})
     CLASSIFICATION_TASK = ImageClassification(
-        image_column="image", label_column="label"
+        image_column="image", label_column="label",
     )
 
 

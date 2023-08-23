@@ -92,7 +92,7 @@ class QueryInterface:
 
         """
         # Only re-run when new run arguments are given.
-        if self._data is None or not self._run_args == locals():
+        if self._data is None or self._run_args != locals():
             self._run_args = locals()
             self._data = self.database.run_query(
                 self.query,
@@ -105,7 +105,7 @@ class QueryInterface:
         return self._data
 
     def save(
-        self, path: str, file_format: Literal["parquet", "csv"] = "parquet"
+        self, path: str, file_format: Literal["parquet", "csv"] = "parquet",
     ) -> str:
         """Save the query.
 
@@ -124,8 +124,7 @@ class QueryInterface:
         """
         # If the query was already run.
         if self._data is not None:
-            path = save_dataframe(self._data, path, file_format=file_format)
-            return path
+            return save_dataframe(self._data, path, file_format=file_format)
 
         # Save without running.
         if file_format == "csv":
@@ -223,7 +222,7 @@ class QueryInterfaceProcessed:
 
         """
         # Only re-run when new run arguments are given.
-        if self._data is None or not self._run_args == locals():
+        if self._data is None or self._run_args != locals():
             self._run_args = locals()
             self._data = self.database.run_query(
                 self._query,
@@ -247,7 +246,7 @@ class QueryInterfaceProcessed:
         return self._data
 
     def save(
-        self, path: str, file_format: Literal["parquet", "csv"] = "parquet"
+        self, path: str, file_format: Literal["parquet", "csv"] = "parquet",
     ) -> str:
         """Save the processed query.
 
@@ -267,9 +266,8 @@ class QueryInterfaceProcessed:
         # The query must be run in order to be processed.
         if self._data is None:
             self.run()
-        path = save_dataframe(self._data, path, file_format=file_format)
+        return save_dataframe(self._data, path, file_format=file_format)
 
-        return path
 
     def clear_data(self) -> None:
         """Clear data container.

@@ -33,7 +33,7 @@ from cyclops.monitor.reductor import Reductor
 
 
 def print_metrics_binary(
-    y_test_labels: Any, y_pred_values: Any, y_pred_labels: Any, verbose: int = 1
+    y_test_labels: Any, y_pred_values: Any, y_pred_labels: Any, verbose: int = 1,
 ) -> Dict[str, Any]:
     """Print metrics for binary classification."""
     conf_matrix = metrics.confusion_matrix(y_test_labels, y_pred_labels)
@@ -51,7 +51,7 @@ def print_metrics_binary(
     auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
 
     (precisions, recalls, _) = metrics.precision_recall_curve(
-        y_test_labels, y_pred_values
+        y_test_labels, y_pred_values,
     )
     auprc = metrics.auc(recalls, precisions)
     minpse = np.max([min(x, y) for (x, y) in zip(precisions, recalls)])
@@ -79,7 +79,7 @@ def print_metrics_binary(
 
 
 def load_ckp(
-    checkpoint_fpath: str, model: nn.Module
+    checkpoint_fpath: str, model: nn.Module,
 ) -> Tuple[nn.Module, Optimizer, int]:
     """Load checkpoint."""
     checkpoint = torch.load(checkpoint_fpath)  # type: ignore
@@ -90,11 +90,7 @@ def load_ckp(
 
 def get_device() -> torch.device:
     """Get device."""
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-    return device
+    return torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 
 def get_temporal_model(model: str, model_params: Dict[str, Any]) -> nn.Module:
@@ -356,7 +352,7 @@ class ContextMMDWrapper:
         """Predict if there is drift in the data."""
         c_target = self.context_generator.transform(ds_target)
         return self.tester.predict(
-            X_t, c_target, **get_args(self.tester.predict, kwargs)
+            X_t, c_target, **get_args(self.tester.predict, kwargs),
         )
 
 
@@ -428,7 +424,7 @@ class LKWrapper:
         self.tester = LearnedKernelDrift(X_s, kernel, *args)
 
     def predict(
-        self, X_t: np.ndarray[float, np.dtype[np.float64]], **kwargs: Dict[str, Any]
+        self, X_t: np.ndarray[float, np.dtype[np.float64]], **kwargs: Dict[str, Any],
     ) -> Any:
         """Predict if there is drift in the data."""
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
@@ -458,7 +454,7 @@ def scale(x: pd.DataFrame) -> pd.DataFrame:
 
 
 def daterange(
-    start_date: datetime.date, end_date: datetime.date, stride: int, window: int
+    start_date: datetime.date, end_date: datetime.date, stride: int, window: int,
 ) -> Generator[datetime.date, None, None]:
     """Output a range of dates.
 
@@ -505,7 +501,7 @@ def get_serving_data(
     timestamps = []
 
     admit_df = admin_data[[encounter_id, admit_timestamp]].sort_values(
-        by=admit_timestamp
+        by=admit_timestamp,
     )
     for single_date in daterange(start_date, end_date, stride, window):
         if single_date.month == 1 and single_date.day == 1:
@@ -536,18 +532,16 @@ def get_serving_data(
             X_target_stream.append(X_inwindow)
             y_target_stream.append(y_inwindow)
             timestamps.append(
-                (single_date + timedelta(days=window)).strftime("%Y-%m-%d")
+                (single_date + timedelta(days=window)).strftime("%Y-%m-%d"),
             )
-    target_data = {"timestamps": timestamps, "X": X_target_stream, "y": y_target_stream}
-    return target_data
+    return {"timestamps": timestamps, "X": X_target_stream, "y": y_target_stream}
 
 
 def reshape_2d_to_3d(data: pd.DataFrame, num_timesteps: int) -> pd.DataFrame:
     """Reshape 2D data to 3D data."""
     data = data.unstack()
     num_encounters = data.shape[0]
-    data = data.values.reshape((num_encounters, num_timesteps, -1))
-    return data
+    return data.values.reshape((num_encounters, num_timesteps, -1))
 
 
 # from https://stackoverflow.com/a/66558182
@@ -555,7 +549,7 @@ class Loader:
     """Loaing animation."""
 
     def __init__(
-        self, desc: str = "Loading...", end: str = "Done!", timeout: float = 0.1
+        self, desc: str = "Loading...", end: str = "Done!", timeout: float = 0.1,
     ) -> None:
         """Loader-like context manager.
 
@@ -632,13 +626,12 @@ def nihcxr_preprocess(df: pd.DataFrame, nihcxr_dir: str) -> pd.DataFrame:
     """
     # Add path column
     df["features"] = df["Image Index"].apply(
-        lambda x: os.path.join(nihcxr_dir, "images", x)
+        lambda x: os.path.join(nihcxr_dir, "images", x),
     )
 
     # Create one-hot encoded pathologies
     pathologies = df["Finding Labels"].str.get_dummies(sep="|")
 
     # Add one-hot encoded pathologies to dataframe
-    df = pd.concat([df, pathologies], axis=1)
+    return pd.concat([df, pathologies], axis=1)
 
-    return df

@@ -82,8 +82,8 @@ def _fbeta_reduce(
         denominator = np.array(np.sum(denominator))
 
     score = _prf_divide(
-        np.array(numerator) if np.isscalar(tp) else numerator,
-        np.array(denominator) if np.isscalar(tp) else denominator,
+        np.expand_dims(numerator, axis=0) if numerator.ndim == 0 else numerator,
+        np.expand_dims(denominator, axis=0) if denominator.ndim == 0 else denominator,
         metric="f-score",
         modifier="true nor predicted",
         average=average,
@@ -164,11 +164,11 @@ def binary_fbeta_score(
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold, pos_label=pos_label
+        target=target, preds=preds, threshold=threshold, pos_label=pos_label,
     )
 
     tp, fp, _, fn = _binary_stat_scores_update(
-        target=target, preds=preds, pos_label=pos_label
+        target=target, preds=preds, pos_label=pos_label,
     )
 
     f_score = _fbeta_reduce(
@@ -248,11 +248,11 @@ def multiclass_fbeta_score(
     _check_average_arg(average=average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k
+        target, preds, num_classes=num_classes, top_k=top_k,
     )
 
     tp, fp, _, fn = _multiclass_stat_scores_update(
-        target=target, preds=preds, num_classes=num_classes
+        target=target, preds=preds, num_classes=num_classes,
     )
 
     return _fbeta_reduce(
@@ -334,11 +334,11 @@ def multilabel_fbeta_score(
     _check_average_arg(average=average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
+        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k,
     )
 
     tp, fp, _, fn = _multilabel_stat_scores_update(
-        target=target, preds=preds, num_labels=num_labels
+        target=target, preds=preds, num_labels=num_labels,
     )
 
     return _fbeta_reduce(
@@ -481,7 +481,7 @@ def fbeta_score(
 
     raise ValueError(
         f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-        " or 'multilabel'"
+        " or 'multilabel'",
     )
 
 

@@ -1,4 +1,5 @@
 """Utility functions for the `evaluate` package."""
+
 from typing import Any, List, Mapping, Union
 
 from datasets import DatasetDict, IterableDatasetDict, get_dataset_split_names
@@ -57,5 +58,5 @@ def choose_split(
             return split
 
     raise ValueError(
-        "No dataset split defined! Pass an explicit value to the `split` kwarg."
+        "No dataset split defined! Pass an explicit value to the `split` kwarg.",
     )

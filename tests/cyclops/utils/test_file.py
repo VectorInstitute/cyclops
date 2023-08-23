@@ -110,7 +110,7 @@ def test_listdir_nonhidden():
 def test_data_with_index():
     """Dummy dataframe for testing."""
     return pd.DataFrame(
-        [[1, "a", 1], [5.1, "b", 0]], columns=["col1", "col2", "col3"], index=[1, 3]
+        [[1, "a", 1], [5.1, "b", 0]], columns=["col1", "col2", "col3"], index=[1, 3],
     )
 
 
@@ -121,7 +121,7 @@ def test_data_without_index():
 
 
 def test_save_dataframe(
-    test_data_with_index, test_data_without_index
+    test_data_with_index, test_data_without_index,
 ):  # pylint: disable=redefined-outer-name
     """Test save fn."""
     path = os.path.join("test_save", "test_features")
@@ -170,7 +170,7 @@ def test_process_file_save_path():
 
 
 def test_load_dataframe(
-    test_data_with_index, test_data_without_index
+    test_data_with_index, test_data_without_index,
 ):  # pylint: disable=redefined-outer-name
     """Test load_dataframe fn."""
     path = os.path.join("test_save", "test_features")

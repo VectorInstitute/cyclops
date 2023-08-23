@@ -197,9 +197,9 @@ class ClinicalShiftApplicator:
                             "max_value": source[1],
                             "min_inclusive": True,
                             "max_inclusive": True,
-                        }
-                    }
-                ]
+                        },
+                    },
+                ],
             )
         else:
             source_slice = None
@@ -212,14 +212,14 @@ class ClinicalShiftApplicator:
                             "max_value": target[1],
                             "min_inclusive": True,
                             "max_inclusive": True,
-                        }
-                    }
-                ]
+                        },
+                    },
+                ],
             )
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc
+            dataset, source_slice, target_slice, batched, batch_size, num_proc,
         )
         return ds_source, ds_target
 
@@ -271,7 +271,7 @@ class ClinicalShiftApplicator:
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc
+            dataset, source_slice, target_slice, batched, batch_size, num_proc,
         )
         return ds_source, ds_target
 
@@ -323,9 +323,9 @@ class ClinicalShiftApplicator:
                             "max_value": source[1],
                             "min_inclusive": True,
                             "max_inclusive": True,
-                        }
-                    }
-                ]
+                        },
+                    },
+                ],
             )
         else:
             source_slice = None
@@ -338,14 +338,14 @@ class ClinicalShiftApplicator:
                             "max_value": target[1],
                             "min_inclusive": True,
                             "max_inclusive": True,
-                        }
-                    }
-                ]
+                        },
+                    },
+                ],
             )
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc
+            dataset, source_slice, target_slice, batched, batch_size, num_proc,
         )
         return ds_source, ds_target
 
@@ -397,7 +397,7 @@ class ClinicalShiftApplicator:
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc
+            dataset, source_slice, target_slice, batched, batch_size, num_proc,
         )
         return ds_source, ds_target
 
@@ -449,7 +449,7 @@ class ClinicalShiftApplicator:
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc
+            dataset, source_slice, target_slice, batched, batch_size, num_proc,
         )
         return ds_source, ds_target
 
@@ -495,9 +495,9 @@ class ClinicalShiftApplicator:
         if shift_id:
             raise ValueError(
                 "Shift id not required for custom shift. \
-                Please remove shift_id from method call."
+                Please remove shift_id from method call.",
             )
         ds_source, ds_target = self._get_source_target(
-            dataset, source, target, batched, batch_size, num_proc
+            dataset, source, target, batched, batch_size, num_proc,
         )
         return ds_source, ds_target

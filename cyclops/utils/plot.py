@@ -120,7 +120,7 @@ def plot_timeline(
         {
             "plot_bgcolor": "rgba(255, 0, 0, 0.1)",
             "paper_bgcolor": "rgba(192, 192, 192, 0.25)",
-        }
+        },
     )
 
     if return_fig:
@@ -158,17 +158,11 @@ def plot_histogram(
     """
     if features is None:
         return make_subplots(rows=1, cols=1)
-    if names is None:
-        feature_names = list(features.columns)
-    else:
-        feature_names = to_list(names)
+    feature_names = list(features.columns) if names is None else to_list(names)
     for name in feature_names:
         if name not in features:
             raise ValueError(f"Provided feature {name} not present in features data!")
-    if feature_names:
-        num_plot_rows = len(feature_names)
-    else:
-        num_plot_rows = 1
+    num_plot_rows = len(feature_names) if feature_names else 1
     fig = make_subplots(rows=num_plot_rows, cols=1)
 
     for idx, name in enumerate(feature_names):
@@ -216,18 +210,12 @@ def plot_temporal_features(
         error is raised.
 
     """
-    if names is None:
-        feature_names = list(features.columns)
-    else:
-        feature_names = to_list(names)
+    feature_names = list(features.columns) if names is None else to_list(names)
     for name in feature_names:
         if name not in features:
             raise ValueError(f"Provided feature {name} not present in features data!")
     num_timesteps = len(features.index)
-    if feature_names:
-        num_plot_rows = len(feature_names)
-    else:
-        num_plot_rows = 1
+    num_plot_rows = len(feature_names) if feature_names else 1
     fig = make_subplots(rows=num_plot_rows, cols=1, x_title="timestep", y_title="value")
 
     for idx, name in enumerate(feature_names):
@@ -244,7 +232,7 @@ def plot_temporal_features(
         )
     else:
         fig = fig.update_layout(
-            title="Temporal Feature Visualization", autosize=False, height=PLOT_HEIGHT
+            title="Temporal Feature Visualization", autosize=False, height=PLOT_HEIGHT,
         )
     fig.add_vrect(
         x0=0,

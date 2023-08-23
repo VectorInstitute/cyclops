@@ -1,5 +1,6 @@
 """Test aggregation functions."""
 
+import contextlib
 from datetime import datetime
 
 import numpy as np
@@ -57,7 +58,7 @@ def test_input():
         [2, DATE2],
     ]
     window_start = pd.DataFrame(
-        window_start_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+        window_start_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
     )
     window_start = window_start.set_index(ENCOUNTER_ID)
 
@@ -65,7 +66,7 @@ def test_input():
         [2, DATE3],
     ]
     window_stop = pd.DataFrame(
-        window_stop_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+        window_stop_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
     )
     window_stop = window_stop.set_index(ENCOUNTER_ID)
 
@@ -155,7 +156,7 @@ def test_aggregate_start_stop_windows(  # pylint: disable=redefined-outer-name
         res = aggregator(data, window_stop_time=window_stop_time)
         raise ValueError(
             """Should have raised an error that window_duration cannot be set when
-            window_stop_time is specified."""
+            window_stop_time is specified.""",
         )
     except ValueError:
         pass
@@ -188,7 +189,7 @@ def test_aggregate_strings(  # pylint: disable=redefined-outer-name
 
         assert aggregator_str(data).equals(aggregator_fn(data))
 
-    try:
+    with contextlib.suppress(ValueError):
         aggregator_str = Aggregator(
             aggfuncs={EVENT_VALUE: "shubaluba"},
             timestamp_col=EVENT_TIMESTAMP,
@@ -197,8 +198,7 @@ def test_aggregate_strings(  # pylint: disable=redefined-outer-name
             timestep_size=1,
             window_duration=20,
         )
-    except ValueError:
-        pass
+
 
 
 def test_aggregate_multiple(  # pylint: disable=redefined-outer-name
@@ -290,7 +290,7 @@ def test_aggregate_one_group_outlier():
     )
 
     _ = data.groupby(aggregator.agg_by, sort=False, group_keys=False).apply(
-        aggregator._compute_aggregation  # pylint: disable=protected-access
+        aggregator._compute_aggregation,  # pylint: disable=protected-access
     )
 
 

@@ -27,7 +27,7 @@ def fill_missing_with_nan(string: str) -> Union[float, str]:
 
 
 def replace_if_string_match(
-    search_string: str, search_terms: str, replace_value: str
+    search_string: str, search_terms: str, replace_value: str,
 ) -> str:
     """Replace string with value, if string has matched terms.
 
@@ -167,7 +167,7 @@ def is_non_empty_string(string: str) -> bool:
         True if non-empty string, else False.
 
     """
-    return not string == EMPTY_STRING
+    return string != EMPTY_STRING
 
 
 def normalize_special_characters(item: str) -> str:
@@ -201,8 +201,7 @@ def normalize_special_characters(item: str) -> str:
     item = item.strip()
     item = re.sub(r"\s+", "_", item)
     item = re.sub(r"[^0-9a-z_()]+", "_", item)
-    item = re.sub(r"(?s:(^[0-9_].+))", "a_\1", item)
-    return item
+    return re.sub(r"(?s:(^[0-9_].+))", "a_\1", item)
 
 
 def count_occurrences(items: Iterable) -> List:

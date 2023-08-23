@@ -20,7 +20,7 @@ def input_data():
         [
             [[1, 2, 3], [3, 4, 6]],
             [[3, 2, 1], [3, 2, 1]],
-        ]
+        ],
     ), [["0-0", "0-1"], ["1-0", "1-1"], ["2-0", "2-1", "2-2"]]
 
 
@@ -32,13 +32,13 @@ def test_vectorized(  # pylint: disable=redefined-outer-name
 
     with pytest.raises(ValueError):
         Vectorized(
-            data, [["0-0", "0-1"], ["1-0", "1-1"], ["0-0", "1-1"]], ["A", "B", "C"]
+            data, [["0-0", "0-1"], ["1-0", "1-1"], ["0-0", "1-1"]], ["A", "B", "C"],
         )
     with pytest.raises(ValueError):
         Vectorized(data, [["0-0", "0-1"], ["1-0", "1-1"]], ["A", "B", "C"])
     with pytest.raises(ValueError):
         Vectorized(
-            data, ["0-0", ["1-0", "1-1"], ["2-0", "2-1", "2-2"]], ["A", "B", "C"]
+            data, ["0-0", ["1-0", "1-1"], ["2-0", "2-1", "2-2"]], ["A", "B", "C"],
         )
     with pytest.raises(ValueError):
         Vectorized(data, indexes, ["A", "B", 1])
@@ -106,7 +106,7 @@ def test_split_by_indices(  # pylint: disable=redefined-outer-name
 
     # Try a 3-split
     vectorized0, vectorized1, vectorized2 = vectorized.split_by_indices(
-        2, [[2], [0], [1]]
+        2, [[2], [0], [1]],
     )
     assert (np.expand_dims(vectorized.data[:, :, 2], -1) == vectorized0.data).all()
     assert (np.expand_dims(vectorized.data[:, :, 0], -1) == vectorized1.data).all()
@@ -145,13 +145,13 @@ def test_split_by_index(  # pylint: disable=redefined-outer-name
     # Test allowing drops
     # Allow - should work to drop index 0
     vectorized0, vectorized1 = vectorized.split_by_index(
-        2, [["2-2"], ["2-1"]], allow_drops=True
+        2, [["2-2"], ["2-1"]], allow_drops=True,
     )
 
     # Don't allow - shouldn't work to drop index 0
     try:
         vectorized0, vectorized1 = vectorized.split_by_index(
-            2, [["2-2"], ["2-1"]], allow_drops=False
+            2, [["2-2"], ["2-1"]], allow_drops=False,
         )
     except ValueError as error:
         assert "drop" in str(error).lower()
@@ -228,12 +228,12 @@ def test_split_vectorized(  # pylint: disable=redefined-outer-name
     vectorized = Vectorized(data, indexes, ["A", "B", "C"])
 
     vec_split1, vec_split2 = split_vectorized(
-        [vectorized, vectorized], [0.8, 0.2], axes="C"
+        [vectorized, vectorized], [0.8, 0.2], axes="C",
     )
     vec_split = split_vectorized([vectorized], [0.8, 0.2], axes="C", seed=4)
     split1_data, split2_data = vec_split[0]
     assert np.array_equal(
-        split1_data.data, np.array([[[1, 2], [3, 4]], [[3, 2], [3, 2]]])
+        split1_data.data, np.array([[[1, 2], [3, 4]], [[3, 2], [3, 2]]]),
     )
     assert np.array_equal(split2_data.data, np.array([[[3], [6]], [[1], [1]]]))
     split1_data1, split1_data2 = vec_split1
@@ -252,7 +252,7 @@ def test_normalization(  # pylint: disable=redefined-outer-name
     with pytest.raises(ValueError):
         vectorized.add_normalizer("B")
         vectorized.add_normalizer(
-            "B", normalization_method=STANDARD, normalizer_map={"1-0": STANDARD}
+            "B", normalization_method=STANDARD, normalizer_map={"1-0": STANDARD},
         )
     vectorized.add_normalizer("B", normalization_method=STANDARD)
     vectorized.fit_normalizer()

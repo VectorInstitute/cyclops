@@ -23,7 +23,7 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 
 def process_axes(
-    vecs: List[Vectorized], axes: Union[str, int, List[str], List[int]]
+    vecs: List[Vectorized], axes: Union[str, int, List[str], List[int]],
 ) -> List[int]:
     """Process a common axis (int/str) or list of axes (list of int/str).
 
@@ -181,12 +181,12 @@ class Vectorized:  # pylint: disable=too-many-public-methods
 
         if len(indexes) != data.ndim:
             raise ValueError(
-                "Number of array axes and the number of indexes do not match."
+                "Number of array axes and the number of indexes do not match.",
             )
 
         if len(axis_names) != data.ndim:
             raise ValueError(
-                "Number of array axes and the number of axis names do not match."
+                "Number of array axes and the number of axis names do not match.",
             )
 
         if not all(isinstance(name, str) for name in axis_names):
@@ -203,11 +203,11 @@ class Vectorized:  # pylint: disable=too-many-public-methods
                     (
                         f"Axis {i} index has {len(index)} elements, "
                         f"but the axis itself has length {data.shape[i]}."
-                    )
+                    ),
                 )
             if len(np.unique(index)) != len(index):
                 raise ValueError(
-                    "Each index must have no duplicate values to uniquely identify."
+                    "Each index must have no duplicate values to uniquely identify.",
                 )
 
             indexes[i] = index
@@ -271,11 +271,11 @@ class Vectorized:  # pylint: disable=too-many-public-methods
                     "Must specify normalization_method to normalize all features "
                     "with the same method, or normalization_map to map specific "
                     "indices to separate normalization methods."
-                )
+                ),
             )
         if normalization_method is not None and normalizer_map is not None:
             raise ValueError(
-                "Cannot specify both normalization_method and normalization_map."
+                "Cannot specify both normalization_method and normalization_map.",
             )
 
         if self.normalizer is not None:
@@ -286,7 +286,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
 
         if normalizer_map is None:
             # Use the same normalization method for all features
-            normalizer_map = {feat: normalization_method for feat in index_map.keys()}
+            normalizer_map = {feat: normalization_method for feat in index_map}
         else:
             missing = set(normalizer_map.keys()) - set(index_map.keys())
             if len(missing) != 0:
@@ -374,7 +374,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         return save_array(self.data, save_path, file_format=file_format)
 
     def take_with_indices(
-        self, axis: Union[str, int], indices: Union[List[int], np.ndarray]
+        self, axis: Union[str, int], indices: Union[List[int], np.ndarray],
     ) -> Vectorized:
         """Get data by indexing an axis.
 
@@ -401,7 +401,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         new_indexes[axis_index] = [self.indexes[axis_index][ind] for ind in indices]
 
         vec = Vectorized(
-            data, new_indexes, self.axis_names, is_normalized=self.is_normalized
+            data, new_indexes, self.axis_names, is_normalized=self.is_normalized,
         )
 
         # Add normalizers (and possibly a subset of the existing normalizers if
@@ -417,7 +417,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         return vec
 
     def take_with_index(
-        self, axis: Union[str, int], index: Union[List[Any], np.ndarray]
+        self, axis: Union[str, int], index: Union[List[Any], np.ndarray],
     ) -> Vectorized:
         """Get data by indexing an axis using its index.
 
@@ -473,11 +473,11 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         if isinstance(axis, str):
             if self.axis_names is None:
                 raise ValueError(
-                    "Axis cannot be a string unless axis_names were specified."
+                    "Axis cannot be a string unless axis_names were specified.",
                 )
             if axis not in self.axis_names:
                 raise ValueError(
-                    f"Axis {axis} does not exist in: {', '.join(self.axis_names)}"
+                    f"Axis {axis} does not exist in: {', '.join(self.axis_names)}",
                 )
             return self.axis_names.index(axis)
 
@@ -546,7 +546,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         if len(all_vals) != len(np.unique(all_vals)):
             raise ValueError(
                 "Splits cannot contain duplicate values. "
-                "Ensure all values are unique across the splits."
+                "Ensure all values are unique across the splits.",
             )
 
         if not allow_drops:
@@ -755,7 +755,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
                 self.normalizer.axis = axis1_index
 
     def value_counts(
-        self, axis: Union[str, int], index: Any
+        self, axis: Union[str, int], index: Any,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Return the value counts for a given axis and index.
 
@@ -790,7 +790,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
                     (
                         "Index expression must consist only of slices. "
                         "Consider using the vec_index_exp."
-                    )
+                    ),
                 )
 
     def impute_over_axis(
@@ -819,7 +819,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
             self._check_index_exp(index_exp)
             sliced_data = self.data[index_exp]
             self.data[index_exp] = np.apply_along_axis(
-                impute_fn, axis_index, sliced_data
+                impute_fn, axis_index, sliced_data,
             )
 
         else:
@@ -893,7 +893,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
 
         if len(concat_index) != arr.shape[axis_index]:
             raise ValueError(
-                "Incorrect number of index names for the data to concatenate."
+                "Incorrect number of index names for the data to concatenate.",
             )
 
         if len(shape) != len(arr_shape):
@@ -905,7 +905,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         )
         if not all(equal_shape):
             raise ValueError(
-                "Array shape must be identical except along the concatenated axis."
+                "Array shape must be identical except along the concatenated axis.",
             )
 
         # Check that none of the new indexes already exist

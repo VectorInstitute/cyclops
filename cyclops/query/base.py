@@ -1,8 +1,11 @@
 """Base querier class."""
+
 import logging
+import os
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
 
+import yaml
 from hydra import compose, initialize
 from omegaconf import OmegaConf
 from sqlalchemy import MetaData
@@ -18,6 +21,7 @@ from cyclops.query.util import (
     get_attr_name,
     table_params_to_type,
 )
+from cyclops.utils.file import join as join_path
 from cyclops.utils.log import setup_logging
 
 
@@ -102,10 +106,16 @@ class DatasetQuerier:
         """
         overrides = []
         if config_overrides:
+            config_file = join_path(os.path.dirname(__file__), "configs", "config.yaml")
+            with open(config_file, "r", encoding="utf-8") as file:
+                config_keys = list(yaml.safe_load(file).keys())
             for key, value in config_overrides.items():
-                overrides.append(f"{key}={value}")
+                if key in config_keys:
+                    overrides.append(f"{key}={value}")
+                else:
+                    overrides.append(f"+{key}={value}")
         with initialize(
-            version_base=None, config_path="configs", job_name="DatasetQuerier"
+            version_base=None, config_path="configs", job_name="DatasetQuerier",
         ):
             config = compose(config_name="config", overrides=overrides)
             LOGGER.debug(OmegaConf.to_yaml(config))
@@ -155,7 +165,7 @@ class DatasetQuerier:
 
         """
         return list(
-            getattr(getattr(self.db, schema_name), table_name).data.columns.keys()
+            getattr(getattr(self.db, schema_name), table_name).data.columns.keys(),
         )
 
     def list_custom_tables(self) -> List[str]:
@@ -172,7 +182,7 @@ class DatasetQuerier:
         for method in method_list:
             if (
                 not method.startswith(  # pylint: disable=too-many-boolean-expressions
-                    "__"
+                    "__",
                 )
                 and not method.startswith("_")
                 and method not in self.list_schemas()
@@ -215,7 +225,7 @@ class DatasetQuerier:
         return QueryInterfaceProcessed(self.db, table, ops=ops, process_fn=process_fn)
 
     def get_table(
-        self, schema_name: str, table_name: str, cast_timestamp_cols: bool = True
+        self, schema_name: str, table_name: str, cast_timestamp_cols: bool = True,
     ) -> Subquery:
         """Get a table and possibly map columns to have standard names.
 

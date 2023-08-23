@@ -145,7 +145,7 @@ class Optimizer:
             torch.save(self.model.state_dict(), model_path)
             print(
                 f"[{epoch}/{n_epochs}] Training loss: {training_loss:.4f}\t \
-                Validation loss: {validation_loss:.4f}"
+                Validation loss: {validation_loss:.4f}",
             )
             self.lr_scheduler.step()
 
@@ -188,13 +188,13 @@ class Optimizer:
                 y_pred_labels.append(torch.round(y_hat).cpu().detach())
 
         y_test_labels_array: np.ndarray[float, np.dtype[np.float64]] = np.concatenate(
-            y_test_labels
+            y_test_labels,
         )
         y_pred_labels_array: np.ndarray[float, np.dtype[np.float64]] = np.concatenate(
-            y_pred_labels
+            y_pred_labels,
         )
         y_pred_values_array: np.ndarray[float, np.dtype[np.float64]] = np.concatenate(
-            y_pred_values
+            y_pred_values,
         )
 
         if flatten:

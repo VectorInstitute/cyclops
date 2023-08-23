@@ -45,7 +45,7 @@ class SklearnNormalizer:
         if method not in METHOD_MAP:
             options = ", ".join(["'" + k + "'" for k in METHOD_MAP])
             raise ValueError(
-                f"Method '{method}' is invalid, must be in: {', '.join(options)}."
+                f"Method '{method}' is invalid, must be in: {', '.join(options)}.",
             )
 
         self.scaler = METHOD_MAP[method]()
@@ -85,7 +85,7 @@ class SklearnNormalizer:
 
         else:
             raise ValueError(
-                "Data must be a pandas.Series or 1-dimensional numpy.ndarray"
+                "Data must be a pandas.Series or 1-dimensional numpy.ndarray",
             )
 
         # Reset to old settings
@@ -132,7 +132,7 @@ class SklearnNormalizer:
 
         else:
             raise ValueError(
-                "Data must be a pandas.Series or 1-dimensional numpy.ndarray"
+                "Data must be a pandas.Series or 1-dimensional numpy.ndarray",
             )
 
         # Reset to old settings
@@ -141,7 +141,7 @@ class SklearnNormalizer:
         return transformed
 
     def transform(
-        self, data: Union[np.ndarray, pd.Series]
+        self, data: Union[np.ndarray, pd.Series],
     ) -> Union[np.ndarray, pd.Series]:
         """Apply normalization.
 
@@ -162,7 +162,7 @@ class SklearnNormalizer:
         return self._transform_by_method(data, "transform")
 
     def inverse_transform(
-        self, data: Union[np.ndarray, pd.Series]
+        self, data: Union[np.ndarray, pd.Series],
     ) -> Union[np.ndarray, pd.Series]:
         """Apply inverse normalization.
 
@@ -250,7 +250,7 @@ class GroupbyNormalizer:
         """
         if not has_range_index(data):
             raise ValueError(
-                "DataFrame required to have a range index. Try resetting the index."
+                "DataFrame required to have a range index. Try resetting the index.",
             )
 
         def get_normalizer_for_group(group: pd.DataFrame):
@@ -262,7 +262,7 @@ class GroupbyNormalizer:
                 else:
                     raise ValueError(
                         """Must specify a string for the normalizer type.
-                        Passing normalizer objects not yet supported."""
+                        Passing normalizer objects not yet supported.""",
                     )
 
                 normalizer.fit(group[col])
@@ -277,7 +277,7 @@ class GroupbyNormalizer:
             has_columns(data, self.by, raise_error=True)
             grouped = data.groupby(self.by)
             self.normalizers = grouped.apply(get_normalizer_for_group).droplevel(
-                level=-1
+                level=-1,
             )
 
     def _transform_by_method(self, data: pd.DataFrame, method: str) -> pd.DataFrame:
@@ -301,11 +301,11 @@ class GroupbyNormalizer:
 
         if not has_range_index(data):
             raise ValueError(
-                "DataFrame required to have a range index. Try resetting the index."
+                "DataFrame required to have a range index. Try resetting the index.",
             )
 
         def transform_group(group):
-            for col in self.normalizer_map.keys():
+            for col in self.normalizer_map:
                 # Get normalizer object and transform
                 normalizer = self.normalizers.loc[group.index.values[0]][col]
                 group[col] = getattr(normalizer, method)(group[col])
@@ -313,7 +313,7 @@ class GroupbyNormalizer:
 
         # Over columns
         if self.by is None:
-            for col in self.normalizer_map.keys():
+            for col in self.normalizer_map:
                 normalizer = self.normalizers.iloc[0][col]
                 data[col] = getattr(normalizer, method)(data[col])
         # Over groups
@@ -439,7 +439,7 @@ class VectorizedNormalizer:
             else:
                 raise ValueError(
                     """Must specify a string for the normalizer type.
-                    Passing normalizer objects not yet supported."""
+                    Passing normalizer objects not yet supported.""",
                 )
 
             ind = index_map[feat]
@@ -451,7 +451,7 @@ class VectorizedNormalizer:
         self.is_fit = True
 
     def _transform_by_method(
-        self, data: np.ndarray, index_map: Dict[str, int], method: str
+        self, data: np.ndarray, index_map: Dict[str, int], method: str,
     ) -> np.ndarray:
         """Apply a method from the normalizer object to the data.
 

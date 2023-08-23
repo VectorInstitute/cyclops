@@ -53,10 +53,10 @@ def _roc_compute_from_confmat(
     tns = confmat[..., 0, 0]
 
     tpr = np.divide(
-        tps, tps + fns, out=np.zeros_like(tps, dtype=np.float64), where=(tps + fns) != 0
+        tps, tps + fns, out=np.zeros_like(tps, dtype=np.float64), where=(tps + fns) != 0,
     )
     fpr = np.divide(
-        fps, fps + tns, out=np.zeros_like(fps, dtype=np.float64), where=(fps + tns) != 0
+        fps, fps + tns, out=np.zeros_like(fps, dtype=np.float64), where=(fps + tns) != 0,
     )
 
     # reverse order of arrays
@@ -101,7 +101,7 @@ def _binary_roc_compute(
         fpr, tpr, thresholds = _roc_compute_from_confmat(state, thresholds)
     else:
         fps, tps, thresholds = _binary_clf_curve(
-            y_true=state[0], y_score=state[1], pos_label=pos_label, sample_weight=None
+            y_true=state[0], y_score=state[1], pos_label=pos_label, sample_weight=None,
         )
 
         # start the curve at (0, 0)
@@ -112,7 +112,7 @@ def _binary_roc_compute(
         if fps[-1] <= 0:
             LOGGER.warning(
                 "No negative samples in `target`, false positive value should be "
-                "meaningless. Returning zero array in false positive score"
+                "meaningless. Returning zero array in false positive score",
             )
             fpr = np.zeros_like(thresholds, dtype=np.float64)
         else:
@@ -121,7 +121,7 @@ def _binary_roc_compute(
         if tps[-1] <= 0:
             LOGGER.warning(
                 "No positive samples in `target`, true positive value should be"
-                " meaningless. Returning zero array in true positive score"
+                " meaningless. Returning zero array in true positive score",
             )
             tpr = np.zeros_like(thresholds, dtype=np.float64)
         else:
@@ -181,7 +181,7 @@ def binary_roc_curve(
     _check_thresholds(thresholds)
 
     target, preds = _binary_precision_recall_curve_format(
-        target, preds, pos_label=pos_label
+        target, preds, pos_label=pos_label,
     )
     thresholds = _format_thresholds(thresholds)
 
@@ -192,7 +192,7 @@ def binary_roc_curve(
 
 def _multiclass_roc_compute(
     state: Union[
-        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_],
     ],
     num_classes: int,
     thresholds: Optional[npt.NDArray[np.float_]] = None,
@@ -244,7 +244,7 @@ def _multiclass_roc_compute(
     fpr_list, tpr_list, thresholds_list = [], [], []
     for i in range(num_classes):
         res = _binary_roc_compute(
-            (state[0], state[1][:, i]), thresholds=None, pos_label=i
+            (state[0], state[1][:, i]), thresholds=None, pos_label=i,
         )
         fpr_list.append(res[0])
         tpr_list.append(res[1])
@@ -322,12 +322,12 @@ def multiclass_roc_curve(
     """
     _check_thresholds(thresholds)
     target, preds = _multiclass_precision_recall_curve_format(
-        target, preds, num_classes=num_classes
+        target, preds, num_classes=num_classes,
     )
     thresholds = _format_thresholds(thresholds)
 
     state = _multiclass_precision_recall_curve_update(
-        target, preds, num_classes=num_classes, thresholds=thresholds
+        target, preds, num_classes=num_classes, thresholds=thresholds,
     )
 
     return _multiclass_roc_compute(state, num_classes, thresholds)
@@ -335,7 +335,7 @@ def multiclass_roc_curve(
 
 def _multilabel_roc_compute(
     state: Union[
-        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_],
     ],
     num_labels: int,
     thresholds: Optional[npt.NDArray[np.float_]] = None,
@@ -387,7 +387,7 @@ def _multilabel_roc_compute(
     fpr_list, tpr_list, thresholds_list = [], [], []
     for i in range(num_labels):
         res = _binary_roc_compute(
-            (state[0][:, i], state[1][:, i]), thresholds=None, pos_label=i
+            (state[0][:, i], state[1][:, i]), thresholds=None, pos_label=i,
         )
         fpr_list.append(res[0])
         tpr_list.append(res[1])
@@ -464,12 +464,12 @@ def multilabel_roc_curve(
     """
     _check_thresholds(thresholds)
     target, preds = _multilabel_precision_recall_curve_format(
-        target, preds, num_labels=num_labels
+        target, preds, num_labels=num_labels,
     )
     thresholds = _format_thresholds(thresholds)
 
     state = _multilabel_precision_recall_curve_update(
-        target, preds, num_labels=num_labels, thresholds=thresholds
+        target, preds, num_labels=num_labels, thresholds=thresholds,
     )
 
     return _multilabel_roc_compute(state, num_labels, thresholds)
@@ -605,16 +605,16 @@ def roc_curve(  # pylint: disable=too-many-arguments
         return binary_roc_curve(target, preds, thresholds, pos_label=pos_label)
     if task == "multiclass":
         assert isinstance(
-            num_classes, int
+            num_classes, int,
         ), "Number of classes must be a positive integer."
         return multiclass_roc_curve(target, preds, num_classes, thresholds)
     if task == "multilabel":
         assert isinstance(
-            num_labels, int
+            num_labels, int,
         ), "Number of labels must be a positive integer."
         return multilabel_roc_curve(target, preds, num_labels, thresholds)
 
     raise ValueError(
         "Expected argument `task` to be either 'binary', 'multiclass' or "
-        f"'multilabel', but got {task}"
+        f"'multilabel', but got {task}",
     )

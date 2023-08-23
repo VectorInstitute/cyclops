@@ -14,7 +14,7 @@ from torch.nn.utils.rnn import PackedSequence
 
 
 def to_tensor(
-    X, device: Union[str, torch.device] = "cpu"
+    X, device: Union[str, torch.device] = "cpu",
 ) -> Union[torch.Tensor, Sequence, Mapping]:
     """Convert the input to a torch tensor.
 
@@ -48,7 +48,7 @@ def to_tensor(
         return {k: to_tensor(v) for k, v in X.items()}
     raise ValueError(
         "Cannot convert to tensor. `X` must be a numpy array, torch tensor,"
-        f" dictionary, list, or tuple. Got {type(X)} instead."
+        f" dictionary, list, or tuple. Got {type(X)} instead.",
     )
 
 
@@ -89,7 +89,7 @@ def to_numpy(X):
         return {k: to_numpy(v) for k, v in X.items()}
     raise ValueError(
         "Cannot convert to numpy array. `X` must be a numpy array, torch tensor,"
-        f" dictionary, list, or tuple. Got {type(X)} instead."
+        f" dictionary, list, or tuple. Got {type(X)} instead.",
     )
 
 
@@ -122,7 +122,7 @@ def check_is_fitted(estimator=None, attributes=None, msg=None, all_or_any=all) -
             " with appropriate arguments before using this method."
         )
     _check_is_fitted(
-        estimator=estimator, attributes=attributes, msg=msg, all_or_any=all_or_any
+        estimator=estimator, attributes=attributes, msg=msg, all_or_any=all_or_any,
     )
 
 
@@ -165,7 +165,7 @@ def _get_param_names(cls):
             raise RuntimeError(
                 "Model wrappers should always specify their parameters in the signature"
                 f" of their __init__ (no varargs). {cls} with constructor"
-                f" {init_signature} doesn't follow this convention."
+                f" {init_signature} doesn't follow this convention.",
             )
     # Extract and sort argument names excluding 'self'
     return sorted([param.name for param in parameters])
@@ -222,7 +222,7 @@ def set_params(cls, **params):
             local_valid_params = _get_param_names(cls)
             raise ValueError(
                 f"Invalid parameter {key!r} for wrapper {cls}. "
-                f"Valid parameters are: {local_valid_params!r}."
+                f"Valid parameters are: {local_valid_params!r}.",
             )
 
         if delim:

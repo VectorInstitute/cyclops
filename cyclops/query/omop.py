@@ -121,10 +121,7 @@ class OMOPQuerier(DatasetQuerier):
                 join_table_cols=[CONCEPT_NAME],
                 isouter=True,
             )(src_table)
-            if dst_cols:
-                dst_col_name = dst_cols[i]
-            else:
-                dst_col_name = col.replace(ID, NAME)
+            dst_col_name = dst_cols[i] if dst_cols else col.replace(ID, NAME)
             src_table = qo.Rename({CONCEPT_NAME: dst_col_name})(src_table)
 
         return src_table
@@ -144,14 +141,13 @@ class OMOPQuerier(DatasetQuerier):
 
         """
         care_site_table = self.get_table(self.schema_name, "care_site")
-        source_table = qo.Join(
+        return qo.Join(
             care_site_table,
             on=CARE_SITE_ID,
             join_table_cols=[CARE_SITE_NAME, CARE_SITE_SOURCE_VALUE],
             isouter=True,
         )(source_table)
 
-        return source_table
 
     def visit_occurrence(
         self,
@@ -207,7 +203,7 @@ class OMOPQuerier(DatasetQuerier):
         """
         table = self.get_table(self.schema_name, "visit_detail")
         table = self.map_concept_ids_to_name(
-            table, ["visit_detail_concept_id", "visit_detail_type_concept_id"]
+            table, ["visit_detail_concept_id", "visit_detail_type_concept_id"],
         )
 
         return QueryInterface(self.db, table, join=join, ops=ops)
@@ -234,7 +230,7 @@ class OMOPQuerier(DatasetQuerier):
         """
         table = self.get_table(self.schema_name, "person")
         table = self.map_concept_ids_to_name(
-            table, ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"]
+            table, ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"],
         )
 
         return QueryInterface(self.db, table, join=join, ops=ops)
@@ -261,7 +257,7 @@ class OMOPQuerier(DatasetQuerier):
         """
         table = self.get_table(self.schema_name, "observation")
         table = self.map_concept_ids_to_name(
-            table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID]
+            table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID],
         )
 
         return QueryInterface(self.db, table, join=join, ops=ops)
