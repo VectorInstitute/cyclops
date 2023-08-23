@@ -44,7 +44,9 @@ FEATURE_TYPES = Union[  # pylint: disable=invalid-name
 
 
 def set_decode(
-    dataset: Dataset, decode: bool = True, exclude: Optional[List[str]] = None,
+    dataset: Dataset,
+    decode: bool = True,
+    exclude: Optional[List[str]] = None,
 ) -> None:
     """Set decode attribute of dataset features that have it.
 
@@ -63,9 +65,10 @@ def set_decode(
 
     """
     assert isinstance(dataset, Dataset), "dataset must be a Hugging Face dataset"
-    if exclude is not None and (not isinstance(exclude, list) or not all(
-        feature in dataset.column_names for feature in exclude
-    )):
+    if exclude is not None and (
+        not isinstance(exclude, list)
+        or not all(feature in dataset.column_names for feature in exclude)
+    ):
         raise ValueError(
             "`exclude` must be a list of feature names that are present in "
             f"dataset. Got {exclude} of type `{type(exclude)}` and dataset "
@@ -78,7 +81,8 @@ def set_decode(
 
 
 def get_columns_as_numpy_array(
-    dataset: Union[Dataset, Dict[str, ArrayLike]], columns: Union[str, List[str]],
+    dataset: Union[Dataset, Dict[str, ArrayLike]],
+    columns: Union[str, List[str]],
 ) -> npt.NDArray[Any]:
     """Get columns of dataset as numpy array.
 
@@ -116,7 +120,8 @@ def get_columns_as_numpy_array(
 
 
 def check_required_columns(
-    dataset_column_names: List[str], *required_columns: Union[List[str], str, None],
+    dataset_column_names: List[str],
+    *required_columns: Union[List[str], str, None],
 ) -> None:
     """Check if required columns are present in dataset.
 
@@ -225,7 +230,8 @@ def is_out_of_core(dataset_size: int) -> Any:
 
 
 def apply_transforms(
-    examples: Dict[str, Any], transforms: Callable[..., Any],
+    examples: Dict[str, Any],
+    transforms: Callable[..., Any],
 ) -> Dict[str, Any]:
     """Apply transforms to examples."""
     # examples is a dict of lists; convert to list of dicts.
@@ -245,4 +251,3 @@ def apply_transforms(
 
     # convert back to a dict of lists
     return {k: [d[k] for d in examples_list] for k in examples_list[0]}
-

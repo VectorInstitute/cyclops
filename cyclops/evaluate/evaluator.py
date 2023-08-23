@@ -129,7 +129,10 @@ def evaluate(
 
     column_names: List[str] = dataset.column_names
     check_required_columns(
-        column_names, target_columns, feature_columns, remove_columns,
+        column_names,
+        target_columns,
+        feature_columns,
+        remove_columns,
     )
 
     metrics = _prepare_metrics(metrics)
@@ -236,7 +239,8 @@ def _load_data(
 
         dataset_ = load_dataset(dataset, split=split, **load_dataset_kwargs)
         assert isinstance(
-            dataset_, Dataset,
+            dataset_,
+            Dataset,
         ), f"Expected a `Dataset` but got {type(dataset_)}."
         return dataset_
     if isinstance(dataset, DatasetDict):
@@ -270,7 +274,8 @@ def _prepare_metrics(
     """Prepare metrics for evaluation."""
     # TODO: wrap in BootstrappedMetric if computing confidence intervals
     if isinstance(metrics, (Metric, Sequence, Dict)) and not isinstance(
-        metrics, MetricCollection,
+        metrics,
+        MetricCollection,
     ):
         return MetricCollection(metrics)
     if isinstance(metrics, MetricCollection):
@@ -328,7 +333,9 @@ def _compute_metrics(
     set_decode(dataset, False, exclude=target_columns + prediction_columns)
 
     with dataset.formatted_as(
-        "numpy", columns=target_columns + prediction_columns, output_all_columns=True,
+        "numpy",
+        columns=target_columns + prediction_columns,
+        output_all_columns=True,
     ):
         results: Dict[str, Dict[str, Any]] = {}
 
@@ -351,19 +358,23 @@ def _compute_metrics(
                     batch_size is None or batch_size < 0
                 ):  # dataset.iter does not support getting all batches at once
                     targets = get_columns_as_numpy_array(
-                        dataset=sliced_dataset, columns=target_columns,
+                        dataset=sliced_dataset,
+                        columns=target_columns,
                     )
                     predictions = get_columns_as_numpy_array(
-                        dataset=sliced_dataset, columns=prediction_column,
+                        dataset=sliced_dataset,
+                        columns=prediction_column,
                     )
                     metric_output = metrics(targets, predictions)
                 else:
                     for batch in sliced_dataset.iter(batch_size=batch_size):
                         targets = get_columns_as_numpy_array(
-                            dataset=batch, columns=target_columns,
+                            dataset=batch,
+                            columns=target_columns,
                         )
                         predictions = get_columns_as_numpy_array(
-                            dataset=batch, columns=prediction_column,
+                            dataset=batch,
+                            columns=prediction_column,
                         )
 
                         # update the metric state

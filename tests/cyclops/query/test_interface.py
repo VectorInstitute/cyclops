@@ -21,7 +21,9 @@ def test_data():
 @patch("cyclops.query.orm.Database")
 @patch("sqlalchemy.sql.selectable.Subquery")
 def test_query_interface(
-    database, query, test_data,  # pylint: disable=redefined-outer-name
+    database,
+    query,
+    test_data,  # pylint: disable=redefined-outer-name
 ):
     """Test QueryInterface."""
     query_interface = QueryInterface(database, query)
@@ -56,7 +58,9 @@ def test_query_interface_integration():
     )  # reset index and keep index column
     assert visits_dd_df.shape[0].compute() > 0
     visits_dd_df = visits.run(
-        backend="dask", index_col="visit_occurrence_id", n_partitions=2,
+        backend="dask",
+        index_col="visit_occurrence_id",
+        n_partitions=2,
     )
     assert isinstance(visits_dd_df, dd.DataFrame)
     assert visits_dd_df.npartitions == 2
@@ -75,7 +79,9 @@ def test_query_interface_integration():
 @patch("cyclops.query.orm.Database")
 @patch("sqlalchemy.sql.selectable.Subquery")
 def test_query_interface_processed(
-    database, query, test_data,  # pylint: disable=redefined-outer-name
+    database,
+    query,
+    test_data,  # pylint: disable=redefined-outer-name
 ):
     """Test QueryInterface."""
     # Identity fn for post-processing.

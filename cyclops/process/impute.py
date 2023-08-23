@@ -214,7 +214,9 @@ IMPUTEFUNCS = {
     DROP: lambda series, null: series[~null],
     MEAN: lambda series, null: fill_null_with(series, null, series.mean(skipna=True)),
     MEDIAN: lambda series, null: fill_null_with(
-        series, null, series.median(skipna=True),
+        series,
+        null,
+        series.median(skipna=True),
     ),
     MODE: lambda series, null: fill_null_with(series, null, series.mode().iloc[0]),
     FFILL: lambda series, _: series.ffill(),

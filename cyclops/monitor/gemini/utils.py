@@ -41,7 +41,8 @@ def unison_shuffled_copies(
     array_a: np.ndarray[float, np.dtype[np.float64]],
     array_b: np.ndarray[float, np.dtype[np.float64]],
 ) -> tuple[
-    np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]],
+    np.ndarray[float, np.dtype[np.float64]],
+    np.ndarray[float, np.dtype[np.float64]],
 ]:
     """Shuffle two arrays in unison."""
     assert len(array_a) == len(array_b)
@@ -57,10 +58,12 @@ def random_shuffle_and_split(
     split_index: int,
 ) -> tuple[
     tuple[
-        np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]],
+        np.ndarray[float, np.dtype[np.float64]],
+        np.ndarray[float, np.dtype[np.float64]],
     ],
     tuple[
-        np.ndarray[float, np.dtype[np.float64]], np.ndarray[float, np.dtype[np.float64]],
+        np.ndarray[float, np.dtype[np.float64]],
+        np.ndarray[float, np.dtype[np.float64]],
     ],
 ]:
     """Randomly shuffle and split data into train and test sets."""
@@ -118,7 +121,8 @@ def temporal_mean(X: pd.DataFrame) -> pd.DataFrame:
 
 
 def temporal_first(
-    X: pd.DataFrame, y: Optional[np.ndarray[float, np.dtype[np.float64]]] = None,
+    X: pd.DataFrame,
+    y: Optional[np.ndarray[float, np.dtype[np.float64]]] = None,
 ) -> tuple[pd.DataFrame, Optional[np.ndarray[float, np.dtype[np.float64]]]]:
     """Get temporal first of data."""
     y_first = None
@@ -129,7 +133,8 @@ def temporal_first(
 
 
 def temporal_last(
-    X: pd.DataFrame, y: np.ndarray[float, np.dtype[np.float64]],
+    X: pd.DataFrame,
+    y: np.ndarray[float, np.dtype[np.float64]],
 ) -> tuple[pd.DataFrame, np.ndarray[float, np.dtype[np.float64]]]:
     """Get temporal last of data."""
     X_last = X.groupby(level=[0]).last()
@@ -140,9 +145,7 @@ def temporal_last(
 
 def get_numerical_cols(X: pd.DataFrame) -> List[str]:
     """Get numerical columns of temporal dataframe."""
-    return [
-        col for col in X if not np.isin(X[col].dropna().unique(), [0, 1]).all()
-    ]
+    return [col for col in X if not np.isin(X[col].dropna().unique(), [0, 1]).all()]
 
 
 def scale(X: pd.DataFrame) -> pd.DataFrame:
@@ -189,7 +192,9 @@ def normalize(X: pd.DataFrame, aggregation_type: str) -> pd.DataFrame:
 
 
 def process(
-    X: pd.DataFrame, aggregation_type: str, timesteps: int,
+    X: pd.DataFrame,
+    aggregation_type: str,
+    timesteps: int,
 ) -> np.ndarray[float, np.dtype[np.float64]]:
     """Process data."""
     if aggregation_type == "time_flatten":
@@ -437,7 +442,12 @@ def import_dataset_hospital(
     """Import dataset for hospital-level analysis."""
     # get source and target data
     x_source, y_source, x_test, y_test, feats, admin_data = get_dataset_hospital(
-        admin_data, x, y, dataset, hospital, encounter_id,
+        admin_data,
+        x,
+        y,
+        dataset,
+        hospital,
+        encounter_id,
     )
 
     # get train, validation and test set

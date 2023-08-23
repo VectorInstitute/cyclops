@@ -23,7 +23,8 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 
 def process_axes(
-    vecs: List[Vectorized], axes: Union[str, int, List[str], List[int]],
+    vecs: List[Vectorized],
+    axes: Union[str, int, List[str], List[int]],
 ) -> List[int]:
     """Process a common axis (int/str) or list of axes (list of int/str).
 
@@ -374,7 +375,9 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         return save_array(self.data, save_path, file_format=file_format)
 
     def take_with_indices(
-        self, axis: Union[str, int], indices: Union[List[int], np.ndarray],
+        self,
+        axis: Union[str, int],
+        indices: Union[List[int], np.ndarray],
     ) -> Vectorized:
         """Get data by indexing an axis.
 
@@ -401,7 +404,10 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         new_indexes[axis_index] = [self.indexes[axis_index][ind] for ind in indices]
 
         vec = Vectorized(
-            data, new_indexes, self.axis_names, is_normalized=self.is_normalized,
+            data,
+            new_indexes,
+            self.axis_names,
+            is_normalized=self.is_normalized,
         )
 
         # Add normalizers (and possibly a subset of the existing normalizers if
@@ -417,7 +423,9 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         return vec
 
     def take_with_index(
-        self, axis: Union[str, int], index: Union[List[Any], np.ndarray],
+        self,
+        axis: Union[str, int],
+        index: Union[List[Any], np.ndarray],
     ) -> Vectorized:
         """Get data by indexing an axis using its index.
 
@@ -755,7 +763,9 @@ class Vectorized:  # pylint: disable=too-many-public-methods
                 self.normalizer.axis = axis1_index
 
     def value_counts(
-        self, axis: Union[str, int], index: Any,
+        self,
+        axis: Union[str, int],
+        index: Any,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Return the value counts for a given axis and index.
 
@@ -819,7 +829,9 @@ class Vectorized:  # pylint: disable=too-many-public-methods
             self._check_index_exp(index_exp)
             sliced_data = self.data[index_exp]
             self.data[index_exp] = np.apply_along_axis(
-                impute_fn, axis_index, sliced_data,
+                impute_fn,
+                axis_index,
+                sliced_data,
             )
 
         else:

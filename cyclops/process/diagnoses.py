@@ -120,7 +120,8 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
 
 
 def process_diagnoses(
-    series: pd.Series, trajectories: Optional[Dict] = None,
+    series: pd.Series,
+    trajectories: Optional[Dict] = None,
 ) -> pd.Series:
     """Process diagnoses data (codes) into trajectories.
 
@@ -142,4 +143,3 @@ def process_diagnoses(
 
     series = series.apply(get_icd_category, args=(trajectories,))
     return series.rename(DIAGNOSIS_TRAJECTORY)
-

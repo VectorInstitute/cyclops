@@ -242,17 +242,18 @@ def normalize_values(values: pd.Series) -> pd.Series:
 
     """
     values = values.apply(
-        replace_if_string_match, args=("|".join(POSITIVE_RESULT_TERMS), "1"),
+        replace_if_string_match,
+        args=("|".join(POSITIVE_RESULT_TERMS), "1"),
     )
     values = values.apply(
-        replace_if_string_match, args=("|".join(NEGATIVE_RESULT_TERMS), "0"),
+        replace_if_string_match,
+        args=("|".join(NEGATIVE_RESULT_TERMS), "0"),
     )
 
     values = values.apply(remove_text_in_parentheses)
     values = values.apply(fix_inequalities)
     values = values.apply(fill_missing_with_nan)
     return values.astype("float")
-
 
 
 def normalize_units(units: pd.Series) -> pd.Series:
@@ -276,7 +277,6 @@ def normalize_units(units: pd.Series) -> pd.Series:
     units = units.apply(none_to_empty_string)
     units = units.apply(to_lower)
     return units.apply(strip_whitespace)
-
 
 
 @time_function
@@ -339,7 +339,9 @@ def dropna_rows(data: pd.DataFrame, cols: Union[str, List[str]]) -> pd.DataFrame
     if new_length != length:
         num = length - new_length
         LOGGER.info(
-            "Dropped nulls over columns: %s. Removed %d rows.", "".join(cols), num,
+            "Dropped nulls over columns: %s. Removed %d rows.",
+            "".join(cols),
+            num,
         )
 
     return data

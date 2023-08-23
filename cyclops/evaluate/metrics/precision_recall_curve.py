@@ -69,7 +69,8 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
             self.add_state("target", default=[])
         else:
             self.add_state(
-                "confmat", default=np.zeros((len(thresholds), 2, 2), dtype=np.int_),
+                "confmat",
+                default=np.zeros((len(thresholds), 2, 2), dtype=np.int_),
             )
         self.thresholds = thresholds
         self.pos_label = pos_label
@@ -82,10 +83,14 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
         """
         target, preds = _binary_precision_recall_curve_format(
-            target=target, preds=preds, pos_label=self.pos_label,
+            target=target,
+            preds=preds,
+            pos_label=self.pos_label,
         )
         state = _binary_precision_recall_curve_update(
-            target=target, preds=preds, thresholds=self.thresholds,
+            target=target,
+            preds=preds,
+            thresholds=self.thresholds,
         )
 
         if isinstance(state, np.ndarray):
@@ -107,7 +112,9 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
             state = self.confmat  # type: ignore[attr-defined]
 
         return _binary_precision_recall_curve_compute(
-            state=state, thresholds=self.thresholds, pos_label=self.pos_label,
+            state=state,
+            thresholds=self.thresholds,
+            pos_label=self.pos_label,
         )
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -133,7 +140,8 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
             if self.thresholds is None and value is not None:
                 self.__dict__["thresholds"] = value
                 self.add_state(
-                    "confmat", default=np.zeros((len(value), 2, 2), dtype=np.int_),
+                    "confmat",
+                    default=np.zeros((len(value), 2, 2), dtype=np.int_),
                 )
                 del self.__dict__["preds"]
                 del self.__dict__["target"]
@@ -150,7 +158,8 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
 
 class MulticlassPrecisionRecallCurve(
-    Metric, registry_key="multiclass_precision_recall_curve",
+    Metric,
+    registry_key="multiclass_precision_recall_curve",
 ):
     """Compute the precision-recall curve for multiclass problems.
 
@@ -228,7 +237,9 @@ class MulticlassPrecisionRecallCurve(
 
         """
         target, preds = _multiclass_precision_recall_curve_format(
-            target=target, preds=preds, num_classes=self.num_classes,
+            target=target,
+            preds=preds,
+            num_classes=self.num_classes,
         )
         state = _multiclass_precision_recall_curve_update(
             target=target,
@@ -291,7 +302,8 @@ class MulticlassPrecisionRecallCurve(
             if self.thresholds is None and value is not None:
                 self.__dict__["thresholds"] = value
                 self.add_state(
-                    "confmat", default=np.zeros((len(value), 2, 2), dtype=np.int_),
+                    "confmat",
+                    default=np.zeros((len(value), 2, 2), dtype=np.int_),
                 )
                 del self.__dict__["preds"]
                 del self.__dict__["target"]
@@ -308,7 +320,8 @@ class MulticlassPrecisionRecallCurve(
 
 
 class MultilabelPrecisionRecallCurve(
-    Metric, registry_key="multilabel_precision_recall_curve",
+    Metric,
+    registry_key="multilabel_precision_recall_curve",
 ):
     """Check and format the multilabel precision-recall curve input/data.
 
@@ -378,10 +391,15 @@ class MultilabelPrecisionRecallCurve(
 
         """
         target, preds = _multilabel_precision_recall_curve_format(
-            target=target, preds=preds, num_labels=self.num_labels,
+            target=target,
+            preds=preds,
+            num_labels=self.num_labels,
         )
         state = _multilabel_precision_recall_curve_update(
-            target, preds, num_labels=self.num_labels, thresholds=self.thresholds,
+            target,
+            preds,
+            num_labels=self.num_labels,
+            thresholds=self.thresholds,
         )
 
         if isinstance(state, np.ndarray):
@@ -438,7 +456,8 @@ class MultilabelPrecisionRecallCurve(
             if self.thresholds is None and value is not None:
                 self.__dict__["thresholds"] = value
                 self.add_state(
-                    "confmat", default=np.zeros((len(value), 2, 2), dtype=np.int_),
+                    "confmat",
+                    default=np.zeros((len(value), 2, 2), dtype=np.int_),
                 )
                 del self.__dict__["preds"]
                 del self.__dict__["target"]
@@ -455,7 +474,9 @@ class MultilabelPrecisionRecallCurve(
 
 
 class PrecisionRecallCurve(
-    Metric, registry_key="precision_recall_curve", force_register=True,
+    Metric,
+    registry_key="precision_recall_curve",
+    force_register=True,
 ):
     """Compute the precision-recall curve for different classification tasks.
 
@@ -569,21 +590,24 @@ class PrecisionRecallCurve(
         """Create a task-specific instance of the precision-recall curve metric."""
         if task == "binary":
             return BinaryPrecisionRecallCurve(
-                thresholds=thresholds, pos_label=pos_label,
+                thresholds=thresholds,
+                pos_label=pos_label,
             )
         if task == "multiclass":
             assert (
                 isinstance(num_classes, int) and num_classes > 0
             ), "Number of classes must be a positive integer."
             return MulticlassPrecisionRecallCurve(
-                num_classes=num_classes, thresholds=thresholds,
+                num_classes=num_classes,
+                thresholds=thresholds,
             )
         if task == "multilabel":
             assert (
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be a positive integer."
             return MultilabelPrecisionRecallCurve(
-                num_labels=num_labels, thresholds=thresholds,
+                num_labels=num_labels,
+                thresholds=thresholds,
             )
         raise ValueError(
             "Expected argument `task` to be either 'binary', 'multiclass' or "

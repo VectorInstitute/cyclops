@@ -136,7 +136,10 @@ def binary_specificity(  # pylint: disable=too-many-arguments
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target, preds, threshold=threshold, pos_label=pos_label,
+        target,
+        preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, tn, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
@@ -209,7 +212,10 @@ def multiclass_specificity(  # pylint: disable=too-many-arguments
     _check_average_arg(average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k,
+        target,
+        preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, tn, fn = _multiclass_stat_scores_update(target, preds, num_classes)
@@ -286,7 +292,11 @@ def multilabel_specificity(  # pylint: disable=too-many-arguments
     _check_average_arg(average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k,
+        target,
+        preds,
+        num_labels=num_labels,
+        threshold=threshold,
+        top_k=top_k,
     )
 
     tp, fp, tn, fn = _multilabel_stat_scores_update(target, preds, num_labels)

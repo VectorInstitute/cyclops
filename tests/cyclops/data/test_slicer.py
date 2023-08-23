@@ -42,7 +42,6 @@ def visits_table() -> pd.DataFrame:
     ).run()
 
 
-
 def measurement_table() -> pd.DataFrame:
     """Get the measurements table."""
     return SYNTHEA.measurement().run()
@@ -171,7 +170,8 @@ def test_filter_range(
 
     # Convert min_value and max_value to datetime if necessary.
     min_value, max_value, value_is_datetime = _maybe_convert_to_datetime(
-        min_value, max_value,
+        min_value,
+        max_value,
     )
 
     # If the column is not numeric or datetime, we expect a ValueError.
@@ -200,7 +200,8 @@ def test_filter_range(
     # Otherwise, we expect the filter to work.
     filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
     examples = pd.Series(
-        filtered_ds[column_name], dtype="datetime64[ns]" if value_is_datetime else None,
+        filtered_ds[column_name],
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     mask = (
@@ -299,7 +300,10 @@ def test_filter_datetime(
     ],
 )
 def test_filter_string_contains(
-    column_name: str, contains: str, negate: bool, keep_nulls: bool,
+    column_name: str,
+    contains: str,
+    negate: bool,
+    keep_nulls: bool,
 ):
     """Test filter feature value string contains."""
     filter_func = partial(
@@ -408,10 +412,12 @@ def test_compound_filter(
     )
 
     range_min, range_max, value_is_datetime = _maybe_convert_to_datetime(
-        range_min, range_max,
+        range_min,
+        range_max,
     )
     range_examples = pd.Series(
-        filtered_ds[range_col], dtype="datetime64[ns]" if value_is_datetime else None,
+        filtered_ds[range_col],
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     # check that the filtered dataset has the correct values
@@ -479,7 +485,8 @@ def test_slice_spec():
         if "unit_source_value:['mmHg', 'kg', 'mL', 'mL/min']" in slice_name:
             assert np.all(
                 np.isin(
-                    filtered_ds["unit_source_value"], ["mmHg", "kg", "mL", "mL/min"],
+                    filtered_ds["unit_source_value"],
+                    ["mmHg", "kg", "mL", "mL/min"],
                 ),
             )
         if f"value_as_number:[{min_value} - {max_value}]" in slice_name:

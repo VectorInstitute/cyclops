@@ -133,7 +133,11 @@ def _sk_multilabel_auroc(
         preds = sigmoid(preds)
 
     return sk_roc_auc_score(
-        target, preds, average=average, max_fpr=None, labels=list(range(NUM_LABELS)),
+        target,
+        preds,
+        average=average,
+        max_fpr=None,
+        labels=list(range(NUM_LABELS)),
     )
 
 

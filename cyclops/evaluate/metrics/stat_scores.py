@@ -151,11 +151,16 @@ class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
     def update_state(self, target: npt.ArrayLike, preds: npt.ArrayLike) -> None:
         """Update the state variables."""
         target, preds = _binary_stat_scores_format(
-            target, preds, threshold=self.threshold, pos_label=self.pos_label,
+            target,
+            preds,
+            threshold=self.threshold,
+            pos_label=self.pos_label,
         )
 
         tp, fp, tn, fn = _binary_stat_scores_update(
-            target, preds, pos_label=self.pos_label,
+            target,
+            preds,
+            pos_label=self.pos_label,
         )
         self._update_state(tp, fp, tn, fn)
 
@@ -227,7 +232,10 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
     """
 
     def __init__(
-        self, num_classes: int, top_k: Optional[int] = None, classwise: bool = True,
+        self,
+        num_classes: int,
+        top_k: Optional[int] = None,
+        classwise: bool = True,
     ) -> None:
         """Initialize the class."""
         super(_AbstractScores, self).__init__()
@@ -243,10 +251,15 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
     def update_state(self, target: npt.ArrayLike, preds: npt.ArrayLike) -> None:
         """Update the state variables."""
         target, preds = _multiclass_stat_scores_format(
-            target, preds, num_classes=self.num_classes, top_k=self.top_k,
+            target,
+            preds,
+            num_classes=self.num_classes,
+            top_k=self.top_k,
         )
         tp, fp, tn, fn = _multiclass_stat_scores_update(
-            target, preds, num_classes=self.num_classes,
+            target,
+            preds,
+            num_classes=self.num_classes,
         )
         self._update_state(tp, fp, tn, fn)
 
@@ -264,7 +277,11 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
         """
         tp, fp, tn, fn = self._final_state()
         return _stat_scores_compute(
-            tp=tp, fp=fp, tn=tn, fn=fn, classwise=self.classwise,
+            tp=tp,
+            fp=fp,
+            tn=tn,
+            fn=fn,
+            classwise=self.classwise,
         )
 
 
@@ -335,7 +352,9 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
             top_k=self.top_k,
         )
         tp, fp, tn, fn = _multilabel_stat_scores_update(
-            target, preds, num_labels=self.num_labels,
+            target,
+            preds,
+            num_labels=self.num_labels,
         )
         self._update_state(tp, fp, tn, fn)
 
@@ -353,7 +372,11 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
         """
         tp, fp, tn, fn = self._final_state()
         return _stat_scores_compute(
-            tp=tp, fp=fp, tn=tn, fn=fn, classwise=self.labelwise,
+            tp=tp,
+            fp=fp,
+            tn=tn,
+            fn=fn,
+            classwise=self.labelwise,
         )
 
 
@@ -479,7 +502,9 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
                 isinstance(num_classes, int) and num_classes > 0
             ), "Number of classes must be a positive integer."
             return MulticlassStatScores(
-                num_classes=num_classes, top_k=top_k, classwise=classwise,
+                num_classes=num_classes,
+                top_k=top_k,
+                classwise=classwise,
             )
         if task == "multilabel":
             assert (

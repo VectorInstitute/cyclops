@@ -30,7 +30,9 @@ np.seterr(divide="ignore", invalid="ignore")  # ignore divide by zero or nan
 
 
 def _sk_binary_accuracy(
-    target: np.ndarray, preds: np.ndarray, threshold: float,
+    target: np.ndarray,
+    preds: np.ndarray,
+    threshold: float,
 ) -> np.ndarray:
     """Compute accuracy for binary case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
@@ -196,7 +198,10 @@ def _sk_multilabel_accuracy(
         weights = None
         if average == "weighted":
             confmat = _sk_stat_scores_multilabel(
-                target, preds, threshold=THRESHOLD, labelwise=True,
+                target,
+                preds,
+                threshold=THRESHOLD,
+                labelwise=True,
             )
             weights = confmat[:, 4]
 

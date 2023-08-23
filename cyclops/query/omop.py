@@ -148,7 +148,6 @@ class OMOPQuerier(DatasetQuerier):
             isouter=True,
         )(source_table)
 
-
     def visit_occurrence(
         self,
         join: Optional[qo.JoinArgs] = None,
@@ -203,7 +202,8 @@ class OMOPQuerier(DatasetQuerier):
         """
         table = self.get_table(self.schema_name, "visit_detail")
         table = self.map_concept_ids_to_name(
-            table, ["visit_detail_concept_id", "visit_detail_type_concept_id"],
+            table,
+            ["visit_detail_concept_id", "visit_detail_type_concept_id"],
         )
 
         return QueryInterface(self.db, table, join=join, ops=ops)
@@ -230,7 +230,8 @@ class OMOPQuerier(DatasetQuerier):
         """
         table = self.get_table(self.schema_name, "person")
         table = self.map_concept_ids_to_name(
-            table, ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"],
+            table,
+            ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"],
         )
 
         return QueryInterface(self.db, table, join=join, ops=ops)
@@ -257,7 +258,8 @@ class OMOPQuerier(DatasetQuerier):
         """
         table = self.get_table(self.schema_name, "observation")
         table = self.map_concept_ids_to_name(
-            table, [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID],
+            table,
+            [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID],
         )
 
         return QueryInterface(self.db, table, join=join, ops=ops)

@@ -142,7 +142,10 @@ def test_extract_performance_metrics():
     )
 
     metrics_dict = extract_performance_metrics(
-        tmpdir, keep_timestamps=True, slice_names="overall", metric_names="accuracy",
+        tmpdir,
+        keep_timestamps=True,
+        slice_names="overall",
+        metric_names="accuracy",
     )
     assert len(metrics_dict) == 2
     assert "2023-07-07: 10:00:00" in metrics_dict  # pylint: disable=C0201

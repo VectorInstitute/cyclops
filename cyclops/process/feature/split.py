@@ -302,7 +302,8 @@ def intersect_datasets(
     """
     # Concatenate the unique values in each dataset and count how many of each
     unique, counts = np.unique(
-        np.concatenate([data[on_col].unique() for data in datas]), return_counts=True,
+        np.concatenate([data[on_col].unique() for data in datas]),
+        return_counts=True,
     )
 
     # If a count is equal to the length of datasets, it must exist in every dataset

@@ -87,7 +87,8 @@ class Detector:
         self.reductor.fit(ds_source)
 
         source_features = self.transform(
-            ds_source, **get_args(self.reductor.transform, kwargs),
+            ds_source,
+            **get_args(self.reductor.transform, kwargs),
         )
 
         if self.tester.tester_method == "ctx_mmd":
@@ -95,7 +96,10 @@ class Detector:
         self.tester.fit(source_features, **get_args(self.tester.fit, kwargs))
 
     def transform(
-        self, dataset: Dataset, batch_size: int = 32, num_workers: int = 1,
+        self,
+        dataset: Dataset,
+        batch_size: int = 32,
+        num_workers: int = 1,
     ) -> np.ndarray[float, np.dtype[np.float64]]:
         """Transform data.
 
@@ -117,7 +121,9 @@ class Detector:
         return self.reductor.transform(dataset, batch_size, num_workers)
 
     def test_shift(
-        self, X_target: np.ndarray[float, np.dtype[np.float64]], **kwargs: Any,
+        self,
+        X_target: np.ndarray[float, np.dtype[np.float64]],
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """Test shift between source and target data.
 
@@ -155,7 +161,9 @@ class Detector:
 
         """
         return self.experiment_types[self.experiment_type](
-            ds_source, ds_target, **self.method_args,
+            ds_source,
+            ds_target,
+            **self.method_args,
         )
 
     def _detect_shift_sample(
@@ -246,7 +254,9 @@ class Detector:
                 )
 
                 drift_results = self._detect_shift_sample(
-                    ds_target_sample, batch_size, num_workers,
+                    ds_target_sample,
+                    batch_size,
+                    num_workers,
                 )
 
                 p_val[run, i] = drift_results["p_val"]
@@ -311,18 +321,23 @@ class Detector:
             for i, sample in enumerate(target_sample_size):
                 ds_target_sample1 = ds_source.select(
                     np.random.choice(
-                        ds_source.shape[0], source_sample_size - sample, replace=False,
+                        ds_source.shape[0],
+                        source_sample_size - sample,
+                        replace=False,
                     ),
                 )
                 ds_target_sample2 = ds_target.select(
                     np.random.choice(ds_target.shape[0], sample, replace=False),
                 )
                 ds_target_balanced = concatenate_datasets(
-                    ds_target_sample1, ds_target_sample2,
+                    ds_target_sample1,
+                    ds_target_sample2,
                 )
 
                 drift_results = self._detect_shift_sample(
-                    ds_target_balanced, batch_size, num_workers,
+                    ds_target_balanced,
+                    batch_size,
+                    num_workers,
                 )
 
                 p_val[run, i] = drift_results["p_val"]
@@ -398,11 +413,15 @@ class Detector:
                 ds_target_timestep = ds_target.select(sample)
                 ds_target_sample = ds_target_timestep.select(
                     np.random.choice(
-                        ds_target_timestep.shape[0], target_sample_size, replace=False,
+                        ds_target_timestep.shape[0],
+                        target_sample_size,
+                        replace=False,
                     ),
                 )
                 drift_results = self._detect_shift_sample(
-                    ds_target_sample, batch_size, num_workers,
+                    ds_target_sample,
+                    batch_size,
+                    num_workers,
                 )
 
                 p_val[run, i] = drift_results["p_val"]

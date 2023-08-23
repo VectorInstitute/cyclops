@@ -343,7 +343,9 @@ class MortalityPredictionTask(BaseTask):
         if isinstance(metrics, list) and len(metrics):
             metrics = [
                 create_metric(
-                    m, task=self.task_type, num_labels=len(self.task_features),
+                    m,
+                    task=self.task_type,
+                    num_labels=len(self.task_features),
                 )
                 for m in metrics
             ]
@@ -427,7 +429,8 @@ class MortalityPredictionTask(BaseTask):
         for model_name in model_names:
             if model_name not in self.trained_models:
                 LOGGER.warning(
-                    "It seems you have not trained the %s model.", model_name,
+                    "It seems you have not trained the %s model.",
+                    model_name,
                 )
             model_name, model = self.get_model(model_name)
             model_path = (

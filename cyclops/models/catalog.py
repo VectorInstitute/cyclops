@@ -34,7 +34,8 @@ _sk_model_keys: Set[str] = set()
 
 
 def register_model(
-    name: str, model_type: Literal["static", "temporal", "image"],
+    name: str,
+    model_type: Literal["static", "temporal", "image"],
 ) -> Callable:
     """Register model in the catalog.
 
@@ -161,7 +162,9 @@ def wrap_model(model: Union[torch.nn.Module, BaseEstimator], **kwargs) -> Wrappe
 
 
 def create_model(
-    model_name: str, wrap: bool = True, **config_overrides,
+    model_name: str,
+    wrap: bool = True,
+    **config_overrides,
 ) -> WrappedModel:
     """Create model and optionally wrap it.
 
@@ -184,7 +187,9 @@ def create_model(
     model_class = _model_catalog.get(model_name, None)
     if model_class is None:
         similar_keys_list: List[str] = get_close_matches(
-            model_name, _model_catalog.keys(), n=5,
+            model_name,
+            _model_catalog.keys(),
+            n=5,
         )
         similar_keys: str = ", ".join(similar_keys_list)
         similar_keys = (
@@ -209,4 +214,3 @@ def create_model(
         LOGGER.debug(OmegaConf.to_yaml(config))
 
     return wrap_model(model_class, **config) if wrap else model_class(**config)
-

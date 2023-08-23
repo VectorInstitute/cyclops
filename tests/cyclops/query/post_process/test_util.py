@@ -20,11 +20,15 @@ def test_event_time_between():
         ],
     )
     is_between = event_time_between(
-        pd.Timestamp(year=2017, month=1, day=2), admit_ts, discharge_ts,
+        pd.Timestamp(year=2017, month=1, day=2),
+        admit_ts,
+        discharge_ts,
     )
     assert is_between[0] and is_between[1]
     is_between = event_time_between(
-        pd.Timestamp(year=2017, month=1, day=7, hour=12), admit_ts, discharge_ts,
+        pd.Timestamp(year=2017, month=1, day=7, hour=12),
+        admit_ts,
+        discharge_ts,
     )
     assert not is_between[0] and is_between[1]
     is_between = event_time_between(

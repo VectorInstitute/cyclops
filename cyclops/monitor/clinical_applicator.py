@@ -219,7 +219,12 @@ class ClinicalShiftApplicator:
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc,
+            dataset,
+            source_slice,
+            target_slice,
+            batched,
+            batch_size,
+            num_proc,
         )
         return ds_source, ds_target
 
@@ -271,7 +276,12 @@ class ClinicalShiftApplicator:
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc,
+            dataset,
+            source_slice,
+            target_slice,
+            batched,
+            batch_size,
+            num_proc,
         )
         return ds_source, ds_target
 
@@ -345,7 +355,12 @@ class ClinicalShiftApplicator:
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc,
+            dataset,
+            source_slice,
+            target_slice,
+            batched,
+            batch_size,
+            num_proc,
         )
         return ds_source, ds_target
 
@@ -397,7 +412,12 @@ class ClinicalShiftApplicator:
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc,
+            dataset,
+            source_slice,
+            target_slice,
+            batched,
+            batch_size,
+            num_proc,
         )
         return ds_source, ds_target
 
@@ -449,7 +469,12 @@ class ClinicalShiftApplicator:
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
-            dataset, source_slice, target_slice, batched, batch_size, num_proc,
+            dataset,
+            source_slice,
+            target_slice,
+            batched,
+            batch_size,
+            num_proc,
         )
         return ds_source, ds_target
 
@@ -498,6 +523,11 @@ class ClinicalShiftApplicator:
                 Please remove shift_id from method call.",
             )
         ds_source, ds_target = self._get_source_target(
-            dataset, source, target, batched, batch_size, num_proc,
+            dataset,
+            source,
+            target,
+            batched,
+            batch_size,
+            num_proc,
         )
         return ds_source, ds_target

@@ -351,7 +351,9 @@ def get_column_names(table: TableTypes):
 
 @table_params_to_type(Subquery)
 def has_columns(
-    table: TableTypes, cols: Union[str, List[str]], raise_error: bool = False,
+    table: TableTypes,
+    cols: Union[str, List[str]],
+    raise_error: bool = False,
 ):
     """Check whether a table has all of the specified columns.
 
@@ -784,7 +786,10 @@ def equals(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs) == process_elem(
-        value, lower=lower, trim=trim, **kwargs,
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
@@ -826,10 +831,16 @@ def greater_than(
     """
     if equal:
         return process_column(col, lower=lower, trim=trim, **kwargs) >= process_elem(
-            value, lower=lower, trim=trim, **kwargs,
+            value,
+            lower=lower,
+            trim=trim,
+            **kwargs,
         )
     return process_column(col, lower=lower, trim=trim, **kwargs) > process_elem(
-        value, lower=lower, trim=trim, **kwargs,
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
@@ -871,15 +882,25 @@ def less_than(
     """
     if equal:
         return process_column(col, lower=lower, trim=trim, **kwargs) <= process_elem(
-            value, lower=lower, trim=trim, **kwargs,
+            value,
+            lower=lower,
+            trim=trim,
+            **kwargs,
         )
     return process_column(col, lower=lower, trim=trim, **kwargs) < process_elem(
-        value, lower=lower, trim=trim, **kwargs,
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
 def not_equals(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool,
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column is not equal to some value.
 
@@ -908,12 +929,19 @@ def not_equals(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs) != process_elem(
-        value, lower=lower, trim=trim, **kwargs,
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
 def has_string_format(
-    col: Column, value: Any, fmt: str, to_str: bool = True, **kwargs: bool,
+    col: Column,
+    value: Any,
+    fmt: str,
+    to_str: bool = True,
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column has some string formatting.
 
@@ -945,7 +973,10 @@ def has_string_format(
 
 
 def has_substring(
-    col: Column, substring: Any, lower: bool = True, **kwargs: Dict[str, bool],
+    col: Column,
+    substring: Any,
+    lower: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column has some substring.
 
@@ -1131,7 +1162,9 @@ def _check_column_type(
 
 
 def check_timestamp_columns(
-    table: TableTypes, cols: Union[str, List[str]], raise_error=False,
+    table: TableTypes,
+    cols: Union[str, List[str]],
+    raise_error=False,
 ):
     """Check whether some columns are Date or DateTime columns.
 

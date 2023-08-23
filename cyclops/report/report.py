@@ -72,7 +72,9 @@ class ModelCardReport:
 
     @classmethod
     def from_json_file(
-        cls, path: str, output_dir: Optional[str] = None,
+        cls,
+        path: str,
+        output_dir: Optional[str] = None,
     ) -> "ModelCardReport":
         """Load a model card from a file.
 
@@ -153,7 +155,11 @@ class ModelCardReport:
         setattr(self._model_card, section_name, populated_section)
 
     def log_descriptor(
-        self, name: str, description: str, section_name: str, **extra: Any,
+        self,
+        name: str,
+        description: str,
+        section_name: str,
+        **extra: Any,
     ) -> None:
         """Add a descriptor to a section of the report.
 
@@ -218,7 +224,10 @@ class ModelCardReport:
         )
 
     def _log_graphic_collection(
-        self, graphic: Graphic, description: str, section_name: str,
+        self,
+        graphic: Graphic,
+        description: str,
+        section_name: str,
     ) -> None:
         # get the section
         section_name = str_to_snake_case(section_name)
@@ -274,7 +283,11 @@ class ModelCardReport:
         self._log_graphic_collection(graphic, "Images", section_name)
 
     def log_plotly_figure(
-        self, fig: Figure, caption: str, section_name: str, interactive: bool = True,
+        self,
+        fig: Figure,
+        caption: str,
+        section_name: str,
+        interactive: bool = True,
     ) -> None:
         """Add a plotly figure to a section of the report.
 
@@ -448,7 +461,10 @@ class ModelCardReport:
         )
 
     def log_citation(
-        self, citation: str, section_name: str = "model_details", **extra: Any,
+        self,
+        citation: str,
+        section_name: str = "model_details",
+        **extra: Any,
     ) -> None:
         """Add a citation to a section of the report.
 
@@ -481,7 +497,10 @@ class ModelCardReport:
         )
 
     def log_reference(
-        self, link: str, section_name: str = "model_details", **extra: Any,
+        self,
+        link: str,
+        section_name: str = "model_details",
+        **extra: Any,
     ) -> None:
         """Add a reference to a section of the report.
 
@@ -870,7 +889,8 @@ class ModelCardReport:
             # create Test objects
             tests = []
             for threshold, threshold_fn in zip(
-                pass_fail_thresholds, pass_fail_threshold_fns,
+                pass_fail_thresholds,
+                pass_fail_threshold_fns,
             ):
                 tests.append(
                     Test(
@@ -950,11 +970,13 @@ class ModelCardReport:
         return jinja2.FileSystemLoader(template_dir)
 
     def _get_jinja_template(
-        self, template_path: Optional[str] = None,
+        self,
+        template_path: Optional[str] = None,
     ) -> jinja2.Template:
         """Get a jinja2 template."""
         _template_path = template_path or os.path.join(
-            _TEMPLATE_DIR, _DEFAULT_TEMPLATE_FILENAME,
+            _TEMPLATE_DIR,
+            _DEFAULT_TEMPLATE_FILENAME,
         )
         template_dir = os.path.dirname(_template_path)
         template_file = os.path.basename(_template_path)
@@ -1134,7 +1156,8 @@ class ModelCardReport:
         if save_json:
             json_path = report_path.replace(".html", ".json")
             self._write_file(
-                json_path, self._model_card.json(indent=2, exclude_unset=True),
+                json_path,
+                self._model_card.json(indent=2, exclude_unset=True),
             )
 
         return report_path

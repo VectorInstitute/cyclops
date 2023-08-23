@@ -16,7 +16,8 @@ def flatten_2d_tuple(tuple_of_tuples):
 
 
 def generate_table_contents(
-    data: pd.DataFrame, display_limit: Optional[int] = None,
+    data: pd.DataFrame,
+    display_limit: Optional[int] = None,
 ) -> List:
     """Generate the table content objects."""
     if display_limit is not None:

@@ -15,7 +15,8 @@ class Plotter(abc.ABC):
         self.set_template("plotly")
 
     def set_template(
-        self, template: Union[str, Dict[str, Any], go.layout.Template],
+        self,
+        template: Union[str, Dict[str, Any], go.layout.Template],
     ) -> None:
         """Set the template for the plotter.
 

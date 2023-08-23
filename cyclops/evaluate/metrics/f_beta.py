@@ -224,7 +224,10 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
     ) -> None:
         """Initialize the metric."""
         super().__init__(
-            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True,
+            num_labels=num_labels,
+            threshold=threshold,
+            top_k=top_k,
+            labelwise=True,
         )
 
         _check_beta(beta=beta)

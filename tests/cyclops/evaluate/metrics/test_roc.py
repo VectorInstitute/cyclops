@@ -30,7 +30,10 @@ def _sk_binary_roc_curve(
         preds = sigmoid(preds)
 
     fpr, tpr, thresholds = sk_roc_curve(
-        y_true=target, y_score=preds, pos_label=pos_label, drop_intermediate=False,
+        y_true=target,
+        y_score=preds,
+        pos_label=pos_label,
+        drop_intermediate=False,
     )
     thresholds[0] = 1.0
 

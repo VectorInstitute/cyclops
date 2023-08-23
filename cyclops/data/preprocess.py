@@ -6,7 +6,9 @@ import pandas as pd
 
 
 def nihcxr_preprocess(
-    df: pd.DataFrame, nihcxr_dir: str, image_key: str = "features",
+    df: pd.DataFrame,
+    nihcxr_dir: str,
+    image_key: str = "features",
 ) -> pd.DataFrame:
     """Preprocess NIHCXR dataframe.
 
@@ -32,4 +34,3 @@ def nihcxr_preprocess(
 
     # Add one-hot encoded pathologies to dataframe
     return pd.concat([df, pathologies], axis=1)
-

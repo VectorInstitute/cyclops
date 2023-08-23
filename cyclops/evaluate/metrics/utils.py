@@ -171,7 +171,8 @@ def check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) ->
 
 
 def select_topk(
-    prob_scores: npt.ArrayLike, top_k: Optional[int] = 1,
+    prob_scores: npt.ArrayLike,
+    top_k: Optional[int] = 1,
 ) -> npt.NDArray[np.int_]:
     """Convert a probability scores to binary by selecting top-k highest entries.
 
@@ -192,7 +193,8 @@ def select_topk(
         topk_indices = np.argmax(prob_scores, axis=-1, keepdims=True)
     else:
         topk_indices = np.argsort(prob_scores, axis=-1)[:, ::-1][
-            :, :top_k,
+            :,
+            :top_k,
         ]  # sort in descending order, then slice the top k
 
     topk_array = np.zeros_like(prob_scores)
@@ -271,7 +273,10 @@ def _check_average_arg(average: Literal["micro", "macro", "weighted", None]) -> 
 
 
 def _apply_function_recursively(
-    data: Any, func: Callable[..., Any], *args: Any, **kwargs: Any,
+    data: Any,
+    func: Callable[..., Any],
+    *args: Any,
+    **kwargs: Any,
 ) -> Any:
     """Apply a function recursively to a given data structure.
 

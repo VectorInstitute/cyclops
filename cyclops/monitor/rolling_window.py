@@ -147,7 +147,9 @@ class RollingWindow:
             if self.optimizer is not None:
                 test_dataset: Data = get_data(X_next, y_next)
                 test_loader: Any = torch.utils.data.DataLoader(
-                    test_dataset, batch_size=1, shuffle=False,
+                    test_dataset,
+                    batch_size=1,
+                    shuffle=False,
                 )
                 y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                     test_loader,
@@ -156,13 +158,19 @@ class RollingWindow:
                 y_pred_labels = y_pred_labels[y_test_labels != -1]
                 y_test_labels = y_test_labels[y_test_labels != -1]
                 pred_metrics = print_metrics_binary(
-                    y_test_labels, y_pred_values, y_pred_labels, verbose=0,
+                    y_test_labels,
+                    y_pred_values,
+                    y_pred_labels,
+                    verbose=0,
                 )
             else:
                 y_pred_values = self.model.predict_proba(X_next)[:, 1]
                 y_pred_labels = self.model.predict(X_next)
                 pred_metrics = print_metrics_binary(
-                    y_test_labels, y_pred_values, y_pred_labels, verbose=0,
+                    y_test_labels,
+                    y_pred_values,
+                    y_pred_labels,
+                    verbose=0,
                 )
 
             performance_metrics.append(pred_metrics)
@@ -175,7 +183,6 @@ class RollingWindow:
             k: [d.get(k) for d in performance_metrics]
             for k in set().union(*performance_metrics)
         }
-
 
     def drift(
         self,
@@ -254,4 +261,3 @@ class RollingWindow:
             k: [d.get(k) for d in rolling_drift_metrics]
             for k in set().union(*rolling_drift_metrics)
         }
-

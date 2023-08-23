@@ -38,7 +38,12 @@ SOCKET_CONNECTION_TIMEOUT = 5
 
 
 def _get_db_url(  # pylint: disable=too-many-arguments
-    dbms: str, user: str, pwd: str, host: str, port: str, database: str,
+    dbms: str,
+    user: str,
+    pwd: str,
+    host: str,
+    port: str,
+    database: str,
 ) -> str:
     """Combine to make Database URL string."""
     return f"{dbms}://{user}:{pwd}@{host}:{port}/{database}"
@@ -203,7 +208,10 @@ class Database:
                 data = pd.read_sql_query(query, self.engine, index_col=index_col)
             elif backend == "dask":
                 data = dd.read_sql_query(  # type: ignore
-                    query, self.conn, index_col=index_col, npartitions=n_partitions,
+                    query,
+                    self.conn,
+                    index_col=index_col,
+                    npartitions=n_partitions,
                 )
                 data = data.reset_index(drop=False)
             else:

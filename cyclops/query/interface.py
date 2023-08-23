@@ -105,7 +105,9 @@ class QueryInterface:
         return self._data
 
     def save(
-        self, path: str, file_format: Literal["parquet", "csv"] = "parquet",
+        self,
+        path: str,
+        file_format: Literal["parquet", "csv"] = "parquet",
     ) -> str:
         """Save the query.
 
@@ -246,7 +248,9 @@ class QueryInterfaceProcessed:
         return self._data
 
     def save(
-        self, path: str, file_format: Literal["parquet", "csv"] = "parquet",
+        self,
+        path: str,
+        file_format: Literal["parquet", "csv"] = "parquet",
     ) -> str:
         """Save the processed query.
 
@@ -267,7 +271,6 @@ class QueryInterfaceProcessed:
         if self._data is None:
             self.run()
         return save_dataframe(self._data, path, file_format=file_format)
-
 
     def clear_data(self) -> None:
         """Clear data container.

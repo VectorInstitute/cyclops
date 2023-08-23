@@ -144,7 +144,9 @@ class MIMICIVQuerier(DatasetQuerier):
         return QueryInterface(self.db, table, join=join, ops=ops)
 
     def care_units(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None,
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterfaceProcessed:
         """Get care unit table within a given set of encounters.
 
@@ -171,7 +173,9 @@ class MIMICIVQuerier(DatasetQuerier):
         )
 
     def labevents(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None,
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query lab events from the hospital module.
 
@@ -200,7 +204,9 @@ class MIMICIVQuerier(DatasetQuerier):
         return QueryInterface(self.db, table, join=join, ops=ops)
 
     def chartevents(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None,
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query ICU chart events from the ICU module.
 

@@ -71,10 +71,12 @@ class ModelParameters(BaseModelCardSection):
     """Parameters for the model."""
 
     model_architecture: Optional[StrictStr] = Field(
-        None, description="Specifies the architecture of your model.",
+        None,
+        description="Specifies the architecture of your model.",
     )
     input_format: Optional[StrictStr] = Field(
-        None, description="Describes the data format for inputs to your model.",
+        None,
+        description="Describes the data format for inputs to your model.",
     )
     input_format_map: Optional[List[KeyVal]] = Field(
         description=inspect.cleandoc(
@@ -85,7 +87,8 @@ class ModelParameters(BaseModelCardSection):
         default_factory=list,
     )
     output_format: Optional[StrictStr] = Field(
-        None, description="Describes the data format for outputs from your model.",
+        None,
+        description="Describes the data format for outputs from your model.",
     )
     output_format_map: Optional[List[KeyVal]] = Field(
         description=inspect.cleandoc(
@@ -105,7 +108,8 @@ class Datasets(BaseModelCardSection):
         default_factory=list,
     )
     graphics: Optional[GraphicsCollection] = Field(
-        None, description="A collection of graphics related to the datasets.",
+        None,
+        description="A collection of graphics related to the datasets.",
     )
 
 
@@ -145,7 +149,8 @@ class QuantitativeAnalysis(BaseModelCardSection):
         default_factory=list,
     )
     graphics: Optional[GraphicsCollection] = Field(
-        None, description="A collection of graphics related to the metrics.",
+        None,
+        description="A collection of graphics related to the metrics.",
     )
 
 
@@ -174,5 +179,6 @@ class FairnessAnalysis(BaseModelCardSection):
         default_factory=list,
     )
     graphics: Optional[GraphicsCollection] = Field(
-        None, description="A collection of graphics related to the fairness analysis.",
+        None,
+        description="A collection of graphics related to the fairness analysis.",
     )

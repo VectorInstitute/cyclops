@@ -59,7 +59,6 @@ def apply_image_transforms(examples: Dict[str, List], transforms: callable) -> d
     return {k: [d[k] for d in examples] for k in examples[0]}
 
 
-
 def to_numpy(X) -> np.ndarray:
     """Convert input to a numpy array.
 
@@ -109,7 +108,10 @@ def to_numpy(X) -> np.ndarray:
 
 def prepare_models(
     models: Union[
-        str, WrappedModel, Sequence[Union[str, WrappedModel]], Dict[str, WrappedModel],
+        str,
+        WrappedModel,
+        Sequence[Union[str, WrappedModel]],
+        Dict[str, WrappedModel],
     ],
 ) -> Dict[str, WrappedModel]:
     """Prepare the models as a dictionary, and wrap those that are not wrapped.

@@ -95,7 +95,9 @@ class ClassificationPlotter(Plotter):
     def roc_curve(
         self,
         roc_curve: Tuple[
-            npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
         ],
         auroc: Optional[Union[float, List[float], npt.NDArray[np.float_]]] = None,
         title: Optional[str] = "ROC Curve",
@@ -130,7 +132,8 @@ class ClassificationPlotter(Plotter):
         if self.task_type == "binary":
             if auroc is not None:
                 assert isinstance(
-                    auroc, float,
+                    auroc,
+                    float,
                 ), "aurocs must be a float for binary tasks"
                 name = f"Model (AUC = {auroc:.2f})"
             else:
@@ -168,7 +171,10 @@ class ClassificationPlotter(Plotter):
 
         trace.append(
             line_plot(
-                x=[0, 1], y=[0, 1], name="Random Classifier", line={"dash": "dash"},
+                x=[0, 1],
+                y=[0, 1],
+                name="Random Classifier",
+                line={"dash": "dash"},
             ),
         )
 
@@ -222,7 +228,8 @@ class ClassificationPlotter(Plotter):
             for slice_name, slice_curve in roc_curves.items():
                 if aurocs and slice_name in aurocs:
                     assert isinstance(
-                        aurocs[slice_name], float,
+                        aurocs[slice_name],
+                        float,
                     ), "Aurocs must be a float for binary tasks"
                     name = f"{slice_name} (AUC = {aurocs[slice_name]:.2f})"
                 else:
@@ -266,7 +273,10 @@ class ClassificationPlotter(Plotter):
 
         trace.append(
             line_plot(
-                x=[0, 1], y=[0, 1], name="Random Classifier", line={"dash": "dash"},
+                x=[0, 1],
+                y=[0, 1],
+                name="Random Classifier",
+                line={"dash": "dash"},
             ),
         )
 
@@ -289,7 +299,9 @@ class ClassificationPlotter(Plotter):
     def precision_recall_curve(
         self,
         precision_recall_curve: Tuple[
-            npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
         ],
         title: Optional[str] = "Precision-Recall Curve",
         layout: Optional[go.Layout] = None,
@@ -535,11 +547,7 @@ class ClassificationPlotter(Plotter):
 
             slice_names = list(values.keys())
             metric_names = list(
-                {
-                    metric_name
-                    for slice in values.values()
-                    for metric_name in slice
-                },
+                {metric_name for slice in values.values() for metric_name in slice},
             )
             subplot_num = len(slice_names)
             fig = make_subplots(
@@ -637,7 +645,8 @@ class ClassificationPlotter(Plotter):
     def metrics_comparison_radar(
         self,
         slice_metrics: Dict[
-            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
+            str,
+            Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
         ],
         title: Optional[str] = "Metrics Comparison",
         layout: Optional[go.Layout] = None,
@@ -736,7 +745,8 @@ class ClassificationPlotter(Plotter):
     def metrics_comparison_bar(
         self,
         slice_metrics: Dict[
-            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
+            str,
+            Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
         ],
         title: Optional[str] = "Metrics Comparison",
         layout: Optional[go.Layout] = None,
@@ -854,7 +864,8 @@ class ClassificationPlotter(Plotter):
     def metrics_comparison_scatter(
         self,
         slice_metrics: Dict[
-            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
+            str,
+            Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
         ],
         title: Optional[str] = "Metrics Comparison",
         layout: Optional[go.Layout] = None,

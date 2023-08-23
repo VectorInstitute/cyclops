@@ -93,7 +93,8 @@ class TSTester:
                     X_s,
                     ds_source=kwargs["ds_source"],
                     **get_args(
-                        self.tester_methods[self.tester_method], self.method_args,
+                        self.tester_methods[self.tester_method],
+                        self.method_args,
                     ),
                 )
             else:
@@ -108,7 +109,9 @@ class TSTester:
             )
 
     def test_shift(
-        self, X_t: np.ndarray[float, np.dtype[np.float64]], **kwargs: Any,
+        self,
+        X_t: np.ndarray[float, np.dtype[np.float64]],
+        **kwargs: Any,
     ) -> Tuple[float, float]:
         """Test for shift in data."""
         X_t = X_t.astype("float32")
@@ -129,7 +132,8 @@ class TSTester:
                 )
         else:
             preds = self.method.predict(
-                X_t, **get_args(self.method.predict, self.method_args),
+                X_t,
+                **get_args(self.method.predict, self.method_args),
             )
 
         p_val = preds["data"]["p_val"]
@@ -172,7 +176,10 @@ class DCTester:
     """
 
     def __init__(
-        self, tester_method: str, p_val_threshold: float = 0.05, **kwargs: Any,
+        self,
+        tester_method: str,
+        p_val_threshold: float = 0.05,
+        **kwargs: Any,
     ):
         self.tester_method = tester_method
         self.p_val_threshold = p_val_threshold
@@ -219,7 +226,8 @@ class DCTester:
             )
 
     def test_shift(
-        self, X_t: np.ndarray[float, np.dtype[np.float64]],
+        self,
+        X_t: np.ndarray[float, np.dtype[np.float64]],
     ) -> Tuple[float, float]:
         """Test for shift in data."""
         X_t = X_t.astype("float32")

@@ -35,7 +35,10 @@ def _sk_binary_fbeta_score(
         preds = (preds >= threshold).astype(np.uint8)
 
     return sk_fbeta_score(
-        y_true=target, y_pred=preds, beta=beta, zero_division=zero_division,
+        y_true=target,
+        y_pred=preds,
+        beta=beta,
+        zero_division=zero_division,
     )
 
 

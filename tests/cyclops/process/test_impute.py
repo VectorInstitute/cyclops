@@ -51,7 +51,8 @@ def test_tabular():
 def test_input_feature_temporal():
     """Create test input temporal features."""
     index = pd.MultiIndex.from_product(
-        [[0, 2], range(6)], names=[ENCOUNTER_ID, TIMESTEP],
+        [[0, 2], range(6)],
+        names=[ENCOUNTER_ID, TIMESTEP],
     )
     input_ = pd.DataFrame(index=index, columns=["A", "B", "C"])
     input_.loc[(0, 0)] = [np.nan, np.nan, 1]
@@ -70,7 +71,9 @@ def test_np_ffill():
     test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
     res = np_ffill(test_arr)
     assert np.array_equal(
-        res, np.array([np.nan, 1, 2, 2, 3, 4, 4, 5, 6]), equal_nan=True,
+        res,
+        np.array([np.nan, 1, 2, 2, 3, 4, 4, 5, 6]),
+        equal_nan=True,
     )
 
 

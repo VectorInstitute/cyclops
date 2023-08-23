@@ -47,7 +47,8 @@ def event_time_between(
 
 
 def process_care_unit_changepoints(
-    data: pd.DataFrame, care_unit_hierarchy: List[str],
+    data: pd.DataFrame,
+    care_unit_hierarchy: List[str],
 ) -> pd.DataFrame:
     """Process changepoint care unit information in a hierarchical fashion.
 

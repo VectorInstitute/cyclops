@@ -118,13 +118,21 @@ class SliceSpec:
     """
 
     spec_list: List[Dict[str, Dict[str, Any]]] = field(
-        default_factory=lambda: [{}], init=True, repr=True, hash=True, compare=True,
+        default_factory=lambda: [{}],
+        init=True,
+        repr=True,
+        hash=True,
+        compare=True,
     )
     validate: bool = True
     column_names: Optional[List[str]] = None
 
     _registry: Dict[str, Callable[[Dict[str, Any]], Union[bool, List[bool]]]] = field(
-        default_factory=dict, init=False, repr=False, hash=False, compare=False,
+        default_factory=dict,
+        init=False,
+        repr=False,
+        hash=False,
+        compare=False,
     )
 
     def __post_init__(self) -> None:
@@ -161,7 +169,8 @@ class SliceSpec:
             yield registration_key, slice_function
 
     def _parse_and_register_slice_specs(
-        self, slice_spec: Dict[str, Dict[str, Any]],
+        self,
+        slice_spec: Dict[str, Dict[str, Any]],
     ) -> None:
         """Construct and register a slice functions from slice specifications."""
         if not isinstance(slice_spec, dict):
@@ -190,7 +199,8 @@ class SliceSpec:
         self._registry[registration_key] = slice_function
 
     def _parse_single_spec_dict(
-        self, slice_spec: Dict[str, Dict[str, Any]],
+        self,
+        slice_spec: Dict[str, Dict[str, Any]],
     ) -> Tuple[str, Callable[..., Union[bool, List[bool]]]]:
         """Return the registration key and slice function for a single slice spec."""
         column_name, spec = next(iter(slice_spec.items()))
@@ -263,7 +273,8 @@ class SliceSpec:
                 [
                     f"{k}={v}"
                     for k, v in zip(
-                        ("year", "month", "day", "hour"), (year, month, day, hour),
+                        ("year", "month", "day", "hour"),
+                        (year, month, day, hour),
                     )
                     if v is not None
                 ],
@@ -304,7 +315,9 @@ class SliceSpec:
 
             registration_key = f"{column_name}:non_null"
             slice_function = partial(
-                filter_non_null, column_names=column_name, negate=negated,
+                filter_non_null,
+                column_names=column_name,
+                negate=negated,
             )
         else:
             raise ValueError(
@@ -357,7 +370,8 @@ def overall(examples: Dict[str, Any]) -> Union[bool, List[bool]]:
 
     """
     result: List[bool] = np.ones_like(
-        next(iter(examples.values())), dtype=bool,
+        next(iter(examples.values())),
+        dtype=bool,
     ).tolist()
     if len(result) == 1:
         return result[0]
@@ -365,7 +379,9 @@ def overall(examples: Dict[str, Any]) -> Union[bool, List[bool]]:
 
 
 def filter_non_null(
-    examples: Dict[str, Any], column_names: Union[str, List[str]], negate: bool = False,
+    examples: Dict[str, Any],
+    column_names: Union[str, List[str]],
+    negate: bool = False,
 ) -> Union[bool, List[bool]]:
     """Return True for all examples where the feature/column is not null.
 
@@ -444,11 +460,13 @@ def filter_value(
     value_is_datetime = is_datetime(value)  # only checks timestrings
 
     value = pd.Series(
-        value, dtype="datetime64[ns]" if value_is_datetime else None,
+        value,
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     example_values = pd.Series(
-        examples[column_name], dtype="datetime64[ns]" if value_is_datetime else None,
+        examples[column_name],
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     result = np.isin(example_values, value, invert=negate)
@@ -510,7 +528,8 @@ def filter_range(
     """
     # handle datetime values
     min_value, max_value, value_is_datetime = _maybe_convert_to_datetime(
-        min_value, max_value,
+        min_value,
+        max_value,
     )
 
     if min_value > max_value:
@@ -525,7 +544,8 @@ def filter_range(
         )
 
     example_values = pd.Series(
-        examples[column_name], dtype="datetime64[ns]" if value_is_datetime else None,
+        examples[column_name],
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     if not (  # column does not contain number or datetime values
@@ -693,7 +713,8 @@ def filter_string_contains(
     # make sure the column has string type
     example_values = pd.Series(examples[column_name])
     if example_values.dtype.name != "object" and not isinstance(
-        example_values.dtype, pd.StringDtype,
+        example_values.dtype,
+        pd.StringDtype,
     ):
         raise ValueError(
             "Expected string feature, but got feature of type "

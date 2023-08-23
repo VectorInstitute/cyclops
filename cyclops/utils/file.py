@@ -59,7 +59,9 @@ def exchange_extension(file_path: str, new_ext: str) -> str:
 
 
 def process_file_save_path(
-    save_path: str, file_format: str, create_dir: bool = True,
+    save_path: str,
+    file_format: str,
+    create_dir: bool = True,
 ) -> str:
     """Process file save path, perform checks, and possibly create a parent directory.
 

@@ -275,7 +275,10 @@ def run_query(  # pylint: disable=too-many-arguments, too-many-locals, too-many-
     ],
 )
 def upload_data(
-    local_contents, server_upload_click_timestamp, server_filepath, display_limit,
+    local_contents,
+    server_upload_click_timestamp,
+    server_filepath,
+    display_limit,
 ):
     """Upload data and display the relevant information."""
     global ANALYZE_DATA  # pylint: disable=global-statement
@@ -339,7 +342,8 @@ def analyze_column(col_name):
         ANALYZE_DATA[col_name].value_counts().iloc[:50].to_frame().reset_index()
     )
     value_counts_df = value_counts_df.rename(
-        {"index": "value", col_name: "count"}, axis=1,
+        {"index": "value", col_name: "count"},
+        axis=1,
     )
     value_count_components = generate_table_contents(value_counts_df)
     return (value_count_components,)

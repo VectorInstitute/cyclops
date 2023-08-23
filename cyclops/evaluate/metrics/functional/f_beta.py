@@ -164,11 +164,16 @@ def binary_fbeta_score(
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold, pos_label=pos_label,
+        target=target,
+        preds=preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, _, fn = _binary_stat_scores_update(
-        target=target, preds=preds, pos_label=pos_label,
+        target=target,
+        preds=preds,
+        pos_label=pos_label,
     )
 
     f_score = _fbeta_reduce(
@@ -248,11 +253,16 @@ def multiclass_fbeta_score(
     _check_average_arg(average=average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k,
+        target,
+        preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, _, fn = _multiclass_stat_scores_update(
-        target=target, preds=preds, num_classes=num_classes,
+        target=target,
+        preds=preds,
+        num_classes=num_classes,
     )
 
     return _fbeta_reduce(
@@ -334,11 +344,17 @@ def multilabel_fbeta_score(
     _check_average_arg(average=average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k,
+        target,
+        preds,
+        num_labels=num_labels,
+        threshold=threshold,
+        top_k=top_k,
     )
 
     tp, fp, _, fn = _multilabel_stat_scores_update(
-        target=target, preds=preds, num_labels=num_labels,
+        target=target,
+        preds=preds,
+        num_labels=num_labels,
     )
 
     return _fbeta_reduce(

@@ -43,7 +43,11 @@ class RNNModel(nn.Module):
         self.hidden_dim = hidden_dim
         self.layer_dim = layer_dim
         self.rnn = nn.RNN(
-            input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob,
+            input_dim,
+            hidden_dim,
+            layer_dim,
+            batch_first=True,
+            dropout=dropout_prob,
         )
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.last_timestep_only = last_timestep_only

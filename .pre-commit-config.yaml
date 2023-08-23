@@ -26,12 +26,12 @@ repos:
     - id: ruff
       entry: ruff check --fix .
 
-  - repo: https://github.com/myint/docformatter
-    rev: v1.5.1
-    hooks:
-    - id: docformatter
-      args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88, --blank]
-      files: ".*.py$"
+        # - repo: https://github.com/myint/docformatter
+        #   rev: v1.5.1
+        #   hooks:
+        #   - id: docformatter
+        #     args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88, --blank]
+        #     files: ".*.py$"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.2.0

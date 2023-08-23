@@ -141,7 +141,9 @@ class CumulativeRetrainer:
                 if self.model_name in ["rnn", "gru", "lstm"]:
                     update_dataset = get_data(X_update, y_update.to_numpy())
                     update_loader = torch.utils.data.DataLoader(
-                        update_dataset, batch_size=1, shuffle=False,
+                        update_dataset,
+                        batch_size=1,
+                        shuffle=False,
                     )
 
                     if correct_only:
@@ -172,7 +174,9 @@ class CumulativeRetrainer:
 
                         update_dataset = get_data(X_update, y_update.to_numpy())
                         update_loader = torch.utils.data.DataLoader(
-                            update_dataset, batch_size=1, shuffle=False,
+                            update_dataset,
+                            batch_size=1,
+                            shuffle=False,
                         )
 
                     self.retrain_model_path = "_".join(
@@ -240,7 +244,10 @@ class CumulativeRetrainer:
             y_pred_labels = y_pred_labels[y_test_labels != -1]
             y_test_labels = y_test_labels[y_test_labels != -1]
             performance_metrics = print_metrics_binary(
-                y_test_labels, y_pred_values, y_pred_labels, verbose=self.verbose,
+                y_test_labels,
+                y_pred_values,
+                y_pred_labels,
+                verbose=self.verbose,
             )
 
             # Run distribution shift test of next window
@@ -274,7 +281,6 @@ class CumulativeRetrainer:
             k: [d.get(k) for d in rolling_metrics]
             for k in set().union(*rolling_metrics)
         }
-
 
 
 class MostRecentRetrainer:
@@ -410,7 +416,9 @@ class MostRecentRetrainer:
                 if self.model_name in ["rnn", "gru", "lstm"]:
                     update_dataset = get_data(X_update, y_update.to_numpy())
                     update_loader = torch.utils.data.DataLoader(
-                        update_dataset, batch_size=1, shuffle=False,
+                        update_dataset,
+                        batch_size=1,
+                        shuffle=False,
                     )
 
                     # Remove all incorrectly predicted labels for retraining
@@ -443,7 +451,9 @@ class MostRecentRetrainer:
 
                         update_dataset = get_data(X_update, y_update.to_numpy())
                         update_loader = torch.utils.data.DataLoader(
-                            update_dataset, batch_size=1, shuffle=False,
+                            update_dataset,
+                            batch_size=1,
+                            shuffle=False,
                         )
 
                     if self.retrain_model_path is None:
@@ -512,7 +522,9 @@ class MostRecentRetrainer:
             # Check Performance
             test_dataset = get_data(X_next, y_next)
             test_loader = torch.utils.data.DataLoader(
-                test_dataset, batch_size=1, shuffle=False,
+                test_dataset,
+                batch_size=1,
+                shuffle=False,
             )
             y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                 test_loader,
@@ -522,7 +534,10 @@ class MostRecentRetrainer:
             y_pred_labels = y_pred_labels[y_test_labels != -1]
             y_test_labels = y_test_labels[y_test_labels != -1]
             performance_metrics = print_metrics_binary(
-                y_test_labels, y_pred_values, y_pred_labels, verbose=self.verbose,
+                y_test_labels,
+                y_pred_values,
+                y_pred_labels,
+                verbose=self.verbose,
             )
 
             # Detect Distribution Shift
@@ -549,4 +564,3 @@ class MostRecentRetrainer:
         pbar.close()
 
         return pd.concat(rolling_metrics).reset_index(drop=True)
-

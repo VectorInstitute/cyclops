@@ -58,7 +58,8 @@ def test_input():
         [2, DATE2],
     ]
     window_start = pd.DataFrame(
-        window_start_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+        window_start_data,
+        columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
     )
     window_start = window_start.set_index(ENCOUNTER_ID)
 
@@ -66,7 +67,8 @@ def test_input():
         [2, DATE3],
     ]
     window_stop = pd.DataFrame(
-        window_stop_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
+        window_stop_data,
+        columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
     )
     window_stop = window_stop.set_index(ENCOUNTER_ID)
 
@@ -198,7 +200,6 @@ def test_aggregate_strings(  # pylint: disable=redefined-outer-name
             timestep_size=1,
             window_duration=20,
         )
-
 
 
 def test_aggregate_multiple(  # pylint: disable=redefined-outer-name

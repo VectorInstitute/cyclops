@@ -148,7 +148,9 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
     )
 
     metrics_: Union[Callable[..., Any], MetricCollection] = _format_metrics(
-        metrics, metric_name, **(metric_kwargs or {}),
+        metrics,
+        metric_name,
+        **(metric_kwargs or {}),
     )
 
     fmt_groups: List[str] = _format_column_names(groups)
@@ -166,7 +168,9 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
     )
 
     set_decode(
-        dataset, decode=False, exclude=fmt_target_columns + fmt_prediction_columns,
+        dataset,
+        decode=False,
+        exclude=fmt_target_columns + fmt_prediction_columns,
     )  # don't decode columns that we don't need; pass dataset by reference
 
     with dataset.formatted_as(
@@ -175,7 +179,9 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
         output_all_columns=True,
     ):
         unique_values: Dict[str, List[Any]] = _get_unique_values(
-            dataset=dataset, groups=fmt_groups, group_values=group_values,
+            dataset=dataset,
+            groups=fmt_groups,
+            group_values=group_values,
         )
 
         if group_base_values is not None:
@@ -195,7 +201,9 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
             warn_too_many_unique_values(unique_values=unique_values)
         else:
             _validate_group_bins(
-                group_bins=group_bins, groups=fmt_groups, unique_values=unique_values,
+                group_bins=group_bins,
+                groups=fmt_groups,
+                unique_values=unique_values,
             )
 
             group_bins = {
@@ -278,11 +286,13 @@ def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
     if group_base_values is not None:
         base_slice_name = _construct_base_slice_name(base_values=group_base_values)
         parity_results = _compute_parity_metrics(
-            results=results, base_slice_name=base_slice_name,
+            results=results,
+            base_slice_name=base_slice_name,
         )
     else:
         parity_results = _compute_parity_metrics(
-            results=results, base_slice_name="overall",
+            results=results,
+            base_slice_name="overall",
         )
 
     # add parity metrics to the results
@@ -427,7 +437,9 @@ def _format_column_names(column_names: Union[str, List[str]]) -> List[str]:
 
 
 def _get_unique_values(
-    dataset: Dataset, groups: List[str], group_values: Optional[Dict[str, Any]],
+    dataset: Dataset,
+    groups: List[str],
+    group_values: Optional[Dict[str, Any]],
 ) -> Dict[str, List[Any]]:
     """Get the unique values for a group."""
     unique_values = {}
@@ -597,7 +609,8 @@ def _create_bins(
                 bins = pd.to_datetime(bins).values
 
         cut_data = pd.Series(
-            unique_values[group], dtype="datetime64[ns]" if column_is_datetime else None,
+            unique_values[group],
+            dtype="datetime64[ns]" if column_is_datetime else None,
         ).to_numpy()
         out = pd.cut(cut_data, bins, duplicates="drop")
 
@@ -630,7 +643,8 @@ def _create_bins(
 
 
 def _update_base_values_with_bins(
-    base_values: Dict[str, Any], bins: Dict[str, pd.IntervalIndex],
+    base_values: Dict[str, Any],
+    bins: Dict[str, pd.IntervalIndex],
 ) -> Dict[str, Any]:
     """Update the base values with the corresponding interval.
 
@@ -663,7 +677,9 @@ def _update_base_values_with_bins(
 
 
 def _get_slice_spec(
-    groups: List[str], unique_values: Dict[str, List[Any]], column_names: List[str],
+    groups: List[str],
+    unique_values: Dict[str, List[Any]],
+    column_names: List[str],
 ) -> SliceSpec:
     """Create the slice specifications for computing the metrics.
 
@@ -759,19 +775,23 @@ def _compute_metrics(  # noqa: C901
             batch_size is None or batch_size <= 0
         ):  # dataset.iter does not support getting all rows
             targets = get_columns_as_numpy_array(
-                dataset=dataset, columns=target_columns,
+                dataset=dataset,
+                columns=target_columns,
             )
             predictions = get_columns_as_numpy_array(
-                dataset=dataset, columns=prediction_column,
+                dataset=dataset,
+                columns=prediction_column,
             )
             results: Dict[str, Any] = metrics(targets, predictions)
         else:
             for batch in dataset.iter(batch_size=batch_size):
                 targets = get_columns_as_numpy_array(
-                    dataset=batch, columns=target_columns,
+                    dataset=batch,
+                    columns=target_columns,
                 )
                 predictions = get_columns_as_numpy_array(
-                    dataset=batch, columns=prediction_column,
+                    dataset=batch,
+                    columns=prediction_column,
                 )
 
                 metrics.update_state(targets, predictions)
@@ -784,7 +804,8 @@ def _compute_metrics(  # noqa: C901
     if callable(metrics):
         targets = get_columns_as_numpy_array(dataset=dataset, columns=target_columns)
         predictions = get_columns_as_numpy_array(
-            dataset=dataset, columns=prediction_column,
+            dataset=dataset,
+            columns=prediction_column,
         )
 
         # check if the callable can take thresholds as an argument
@@ -909,7 +930,6 @@ def _construct_base_slice_name(base_values: Dict[str, Any]) -> str:
         else:
             base_slice_name += f"{group}:{base_value}&"
     return base_slice_name[:-1]
-
 
 
 def _compute_parity_metrics(

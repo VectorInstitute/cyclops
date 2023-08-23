@@ -33,7 +33,10 @@ from cyclops.monitor.reductor import Reductor
 
 
 def print_metrics_binary(
-    y_test_labels: Any, y_pred_values: Any, y_pred_labels: Any, verbose: int = 1,
+    y_test_labels: Any,
+    y_pred_values: Any,
+    y_pred_labels: Any,
+    verbose: int = 1,
 ) -> Dict[str, Any]:
     """Print metrics for binary classification."""
     conf_matrix = metrics.confusion_matrix(y_test_labels, y_pred_labels)
@@ -51,7 +54,8 @@ def print_metrics_binary(
     auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
 
     (precisions, recalls, _) = metrics.precision_recall_curve(
-        y_test_labels, y_pred_values,
+        y_test_labels,
+        y_pred_values,
     )
     auprc = metrics.auc(recalls, precisions)
     minpse = np.max([min(x, y) for (x, y) in zip(precisions, recalls)])
@@ -79,7 +83,8 @@ def print_metrics_binary(
 
 
 def load_ckp(
-    checkpoint_fpath: str, model: nn.Module,
+    checkpoint_fpath: str,
+    model: nn.Module,
 ) -> Tuple[nn.Module, Optimizer, int]:
     """Load checkpoint."""
     checkpoint = torch.load(checkpoint_fpath)  # type: ignore
@@ -352,7 +357,9 @@ class ContextMMDWrapper:
         """Predict if there is drift in the data."""
         c_target = self.context_generator.transform(ds_target)
         return self.tester.predict(
-            X_t, c_target, **get_args(self.tester.predict, kwargs),
+            X_t,
+            c_target,
+            **get_args(self.tester.predict, kwargs),
         )
 
 
@@ -424,7 +431,9 @@ class LKWrapper:
         self.tester = LearnedKernelDrift(X_s, kernel, *args)
 
     def predict(
-        self, X_t: np.ndarray[float, np.dtype[np.float64]], **kwargs: Dict[str, Any],
+        self,
+        X_t: np.ndarray[float, np.dtype[np.float64]],
+        **kwargs: Dict[str, Any],
     ) -> Any:
         """Predict if there is drift in the data."""
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
@@ -454,7 +463,10 @@ def scale(x: pd.DataFrame) -> pd.DataFrame:
 
 
 def daterange(
-    start_date: datetime.date, end_date: datetime.date, stride: int, window: int,
+    start_date: datetime.date,
+    end_date: datetime.date,
+    stride: int,
+    window: int,
 ) -> Generator[datetime.date, None, None]:
     """Output a range of dates.
 
@@ -549,7 +561,10 @@ class Loader:
     """Loaing animation."""
 
     def __init__(
-        self, desc: str = "Loading...", end: str = "Done!", timeout: float = 0.1,
+        self,
+        desc: str = "Loading...",
+        end: str = "Done!",
+        timeout: float = 0.1,
     ) -> None:
         """Loader-like context manager.
 
@@ -634,4 +649,3 @@ def nihcxr_preprocess(df: pd.DataFrame, nihcxr_dir: str) -> pd.DataFrame:
 
     # Add one-hot encoded pathologies to dataframe
     return pd.concat([df, pathologies], axis=1)
-

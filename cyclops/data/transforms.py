@@ -7,7 +7,8 @@ from torchvision.transforms import Compose
 
 
 def txrv_transforms(
-    keys: Tuple[str, ...] = ("features",), device: str = "cpu",
+    keys: Tuple[str, ...] = ("features",),
+    device: str = "cpu",
 ) -> Compose:
     """Set of transforms for the models in the TXRV library."""
     return Compose(

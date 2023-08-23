@@ -100,7 +100,8 @@ def _accuracy_reduce(
             )
 
         avg_score: Union[float, npt.NDArray[np.float_]] = np.average(
-            score, weights=weights,
+            score,
+            weights=weights,
         )
         return avg_score
 
@@ -154,7 +155,10 @@ def binary_accuracy(
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target, preds, threshold=threshold, pos_label=pos_label,
+        target,
+        preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, tn, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
@@ -235,7 +239,10 @@ def multiclass_accuracy(
     _check_average_arg(average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k,
+        target,
+        preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, tn, fn = _multiclass_stat_scores_update(target, preds, num_classes)
@@ -320,7 +327,11 @@ def multilabel_accuracy(
     _check_average_arg(average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k,
+        target,
+        preds,
+        num_labels=num_labels,
+        threshold=threshold,
+        top_k=top_k,
     )
 
     tp, fp, tn, fn = _multilabel_stat_scores_update(target, preds, num_labels)

@@ -84,7 +84,10 @@ class Predictor:
         self._validate()
 
         self.dataset = VectorizedLoader(
-            self.dataset_name, self.use_case, self.data_type, self.data_dir,
+            self.dataset_name,
+            self.use_case,
+            self.data_type,
+            self.data_dir,
         )
 
         (

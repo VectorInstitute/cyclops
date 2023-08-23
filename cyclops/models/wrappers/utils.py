@@ -14,7 +14,8 @@ from torch.nn.utils.rnn import PackedSequence
 
 
 def to_tensor(
-    X, device: Union[str, torch.device] = "cpu",
+    X,
+    device: Union[str, torch.device] = "cpu",
 ) -> Union[torch.Tensor, Sequence, Mapping]:
     """Convert the input to a torch tensor.
 
@@ -122,7 +123,10 @@ def check_is_fitted(estimator=None, attributes=None, msg=None, all_or_any=all) -
             " with appropriate arguments before using this method."
         )
     _check_is_fitted(
-        estimator=estimator, attributes=attributes, msg=msg, all_or_any=all_or_any,
+        estimator=estimator,
+        attributes=attributes,
+        msg=msg,
+        all_or_any=all_or_any,
     )
 
 
@@ -261,7 +265,8 @@ def set_random_seed(seed: int, deterministic: bool = False) -> None:
 
 class DatasetColumn(list):
     """Helper class to avoid loading a dataset column into memory when accessing it.\
-    From Hugging Face Evaluator."""
+    From Hugging Face Evaluator.
+    """
 
     def __init__(self, dataset: Dataset, key: str):
         """Initialize a new dataset column.

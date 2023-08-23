@@ -227,7 +227,8 @@ class SKModel:
                     **format_kwargs,
                 ):
                     X_train = np.stack(
-                        [X[train_split][feature] for feature in feature_columns], axis=1,
+                        [X[train_split][feature] for feature in feature_columns],
+                        axis=1,
                     ).squeeze()
 
                     if transforms is not None and not is_callable_transform:
@@ -237,7 +238,8 @@ class SKModel:
                             X_train = transforms.fit_transform(X_train)
 
                     y_train = np.stack(
-                        [X[train_split][target] for target in target_columns], axis=1,
+                        [X[train_split][target] for target in target_columns],
+                        axis=1,
                     ).squeeze()
 
                     if issparse(X_train):
@@ -249,7 +251,8 @@ class SKModel:
                     **format_kwargs,
                 ):
                     X_val = np.stack(
-                        [X[val_split][feature] for feature in feature_columns], axis=1,
+                        [X[val_split][feature] for feature in feature_columns],
+                        axis=1,
                     ).squeeze()
 
                     if transforms is not None and not is_callable_transform:
@@ -259,7 +262,8 @@ class SKModel:
                             X_val = transforms.fit_transform(X_val)
 
                     y_val = np.stack(
-                        [X[val_split][target] for target in target_columns], axis=1,
+                        [X[val_split][target] for target in target_columns],
+                        axis=1,
                     ).squeeze()
 
                     if issparse(X_val):
@@ -287,7 +291,8 @@ class SKModel:
                     **format_kwargs,
                 ):
                     X_train = np.stack(
-                        [X[feature] for feature in feature_columns], axis=1,
+                        [X[feature] for feature in feature_columns],
+                        axis=1,
                     ).squeeze()
 
                     if transforms is not None and not is_callable_transform:
@@ -297,7 +302,8 @@ class SKModel:
                             X_train = transforms.fit_transform(X_train)
 
                     y_train = np.stack(
-                        [X[target] for target in target_columns], axis=1,
+                        [X[target] for target in target_columns],
+                        axis=1,
                     ).squeeze()
 
                     if issparse(X_train):
@@ -420,7 +426,8 @@ class SKModel:
 
             def fit_model(examples):
                 X_train = np.stack(
-                    [examples[feature] for feature in feature_columns], axis=1,
+                    [examples[feature] for feature in feature_columns],
+                    axis=1,
                 ).squeeze()
 
                 if transforms is not None and not is_callable_transform:
@@ -428,15 +435,20 @@ class SKModel:
                         X_train = transforms.transform(X_train)
                     except NotFittedError:
                         LOGGER.warning(
-                            "Fitting preprocessor on batch of size %d", len(X_train),
+                            "Fitting preprocessor on batch of size %d",
+                            len(X_train),
                         )
                         X_train = transforms.fit_transform(X_train)
 
                 y_train = np.stack(
-                    [examples[target] for target in target_columns], axis=1,
+                    [examples[target] for target in target_columns],
+                    axis=1,
                 ).squeeze()
                 self.model_.partial_fit(
-                    X_train, y_train, classes=np.unique(y_train), **kwargs,
+                    X_train,
+                    y_train,
+                    classes=np.unique(y_train),
+                    **kwargs,
                 )
                 return examples
 
@@ -567,7 +579,8 @@ class SKModel:
                 **format_kwargs,
             ):
                 X_train = np.stack(
-                    [X[feature] for feature in feature_columns], axis=1,
+                    [X[feature] for feature in feature_columns],
+                    axis=1,
                 ).squeeze()
 
                 if transforms is not None and not is_callable_transform:
@@ -577,7 +590,8 @@ class SKModel:
                         X_train = transforms.fit_transform(X_train)
 
                 y_train = np.stack(
-                    [X[target] for target in target_columns], axis=1,
+                    [X[target] for target in target_columns],
+                    axis=1,
                 ).squeeze()
 
                 if issparse(X_train):
@@ -690,7 +704,8 @@ class SKModel:
 
             def get_predictions(examples: Dict[str, Union[List, np.ndarray]]) -> dict:
                 X_eval = np.stack(
-                    [examples[feature] for feature in feature_columns], axis=1,
+                    [examples[feature] for feature in feature_columns],
+                    axis=1,
                 )
                 if transforms is not None and not is_callable_transform:
                     try:
@@ -809,7 +824,8 @@ class SKModel:
 
             def get_predictions(examples: Dict[str, Union[List, np.ndarray]]) -> dict:
                 X_eval = np.stack(
-                    [examples[feature] for feature in feature_columns], axis=1,
+                    [examples[feature] for feature in feature_columns],
+                    axis=1,
                 )
                 if transforms is not None and not is_callable_transform:
                     try:
@@ -860,7 +876,8 @@ class SKModel:
         # filepath could be an exisiting file
         if os.path.exists(filepath) and not overwrite:
             LOGGER.warning(
-                "The file %s already exists and will not be overwritten.", filepath,
+                "The file %s already exists and will not be overwritten.",
+                filepath,
             )
             return
 

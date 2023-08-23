@@ -59,7 +59,8 @@ class MedicalImage(Image):  # type: ignore
     _type: str = field(default="MedicalImage", init=False, repr=False)
 
     def encode_example(
-        self, value: Union[str, Dict[str, Any], npt.NDArray[Any]],
+        self,
+        value: Union[str, Dict[str, Any], npt.NDArray[Any]],
     ) -> Dict[str, Any]:
         """Encode example into a format for Arrow.
 
@@ -88,7 +89,9 @@ class MedicalImage(Image):  # type: ignore
             if filename is not None and filename != "":
                 output_ext_ = os.path.splitext(filename)[1]
             return _encode_ndarray(
-                value["array"], metadata=metadata_, image_format=output_ext_,
+                value["array"],
+                metadata=metadata_,
+                image_format=output_ext_,
             )
         if value.get("path") is not None and os.path.isfile(value["path"]):
             # we set "bytes": None to not duplicate the data
@@ -169,7 +172,8 @@ class MedicalImage(Image):  # type: ignore
         return {"array": image, "metadata": metadata}
 
     def _read_file_from_bytes(
-        self, buffer: BytesIO,
+        self,
+        buffer: BytesIO,
     ) -> Tuple[npt.NDArray[Any], Dict[str, Any]]:
         """Read an image from bytes.
 

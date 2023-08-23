@@ -574,9 +574,7 @@ class Features:
             )
 
         # Check for invalid non-numeric columns
-        is_numeric = [
-            self.meta[col].get_type() == NUMERIC for col in normalizer_map
-        ]
+        is_numeric = [self.meta[col].get_type() == NUMERIC for col in normalizer_map]
         if not all(is_numeric):
             raise ValueError(
                 "Only numeric features may be normalized. Confirm feature choice/type.",
@@ -695,7 +693,9 @@ class Features:
 
         # Convert to binary categorical indicators
         return self._to_feature_types(
-            data, {feat: CATEGORICAL_INDICATOR for feat in features}, inplace=False,
+            data,
+            {feat: CATEGORICAL_INDICATOR for feat in features},
+            inplace=False,
         )
 
     def save(self, save_path: str, file_format: str = "parquet") -> str:
@@ -820,7 +820,9 @@ class TabularFeatures(Features):
         data = data.drop(self.by, axis=1)
         feat_map = list(data.columns)
         return Vectorized(
-            data.values, indexes=[by_map, feat_map], axis_names=[self.by[0], FEATURES],
+            data.values,
+            indexes=[by_map, feat_map],
+            axis_names=[self.by[0], FEATURES],
         )
 
 
@@ -916,7 +918,9 @@ def split_features(
 
     """
     value_splits = features[0].compute_value_splits(
-        fractions, randomize=randomize, seed=seed,
+        fractions,
+        randomize=randomize,
+        seed=seed,
     )
     feature_splits = [feat.split_by_values(value_splits) for feat in features]
     return tuple(feature_splits)

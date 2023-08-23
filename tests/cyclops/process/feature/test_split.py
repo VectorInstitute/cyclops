@@ -21,7 +21,8 @@ def test_fractions_to_split_results():
     """Test that the resulting index arrays are correct."""
     assert fractions_to_split(0.8, 100) == [80]
     assert np.array_equal(
-        fractions_to_split([0.2] * 4, 100), np.array(range(20, 100, 20), dtype=int),
+        fractions_to_split([0.2] * 4, 100),
+        np.array(range(20, 100, 20), dtype=int),
     )
     assert np.array_equal(fractions_to_split([1.0, 2.0], 12), np.array((4,), dtype=int))
 
@@ -86,7 +87,8 @@ def test_split_kfold():
 def test_idxs_to_splits():
     """Test idxs_to_splits function."""
     splits = idxs_to_splits(
-        np.array([1, 2, 100, 10]), (np.array([0, 2]), np.array([1, 3])),
+        np.array([1, 2, 100, 10]),
+        (np.array([0, 2]), np.array([1, 3])),
     )
     assert np.array_equal(splits[0], np.array([1, 100]))
     assert np.array_equal(splits[1], np.array([2, 10]))
@@ -135,10 +137,12 @@ def test_split_datasets():
 def test_intersect_datasets():
     """Test intersect_datasets fn."""
     dataframe1 = pd.DataFrame(
-        [[1, 2, 3], [2, 3, 8], [3, 2, 0.2]], columns=["A", "B", "C"],
+        [[1, 2, 3], [2, 3, 8], [3, 2, 0.2]],
+        columns=["A", "B", "C"],
     )
     dataframe2 = pd.DataFrame(
-        [[1, 4, 3], [4, 6.3, 8], [3, 2, 0.2]], columns=["A", "D", "E"],
+        [[1, 4, 3], [4, 6.3, 8], [3, 2, 0.2]],
+        columns=["A", "D", "E"],
     )
     datas = intersect_datasets([dataframe1, dataframe2], on_col="A")
     assert datas[0]["A"][0] == 1 and datas[0]["A"][2] == 3
@@ -153,7 +157,9 @@ def test_split_datasets_by_idx():
     """Test split_datasets_by_idx fn."""
     data = np.array([6, 3, 3, 54, 6, 3, 8, 6, 2, 1, 1, 9])
     splits = split_datasets_by_idx(
-        data, (np.array([0, 2, 4, 6]), np.array([1, 3, 5, 7])), axes=0,
+        data,
+        (np.array([0, 2, 4, 6]), np.array([1, 3, 5, 7])),
+        axes=0,
     )
     assert (splits[0] == np.array([6, 3, 6, 8])).all()
     assert (splits[1] == np.array([3, 54, 3, 6])).all()

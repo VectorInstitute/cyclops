@@ -25,7 +25,9 @@ from metrics.inputs import (
 
 
 def _sk_stat_scores_binary(
-    target: np.ndarray, preds: np.ndarray, threshold: float,
+    target: np.ndarray,
+    preds: np.ndarray,
+    threshold: float,
 ) -> np.ndarray:
     """Compute stat scores for binary case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
@@ -39,7 +41,9 @@ def _sk_stat_scores_binary(
         preds = label_binarize(np.expand_dims(preds, axis=0), classes=[0, 1])
 
     tn, fp, fn, tp = sk_confusion_matrix(
-        y_true=target, y_pred=preds, labels=[0, 1],
+        y_true=target,
+        y_pred=preds,
+        labels=[0, 1],
     ).ravel()
     return np.array([tp, fp, tn, fn, tp + fn])
 
@@ -74,7 +78,9 @@ class TestBinaryStatScores(MetricTester):
 
 
 def _sk_stat_scores_multiclass(
-    target: np.ndarray, preds: np.ndarray, classwise: bool,
+    target: np.ndarray,
+    preds: np.ndarray,
+    classwise: bool,
 ) -> np.ndarray:
     """Compute stat scores for multiclass case using sklearn."""
     if preds.ndim == target.ndim + 1:
@@ -83,15 +89,19 @@ def _sk_stat_scores_multiclass(
     # convert 0D arrays to one-hot
     if target.ndim == 0:
         target = label_binarize(
-            np.expand_dims(target, axis=0), classes=list(range(NUM_CLASSES)),
+            np.expand_dims(target, axis=0),
+            classes=list(range(NUM_CLASSES)),
         )
     if preds.ndim == 0:
         preds = label_binarize(
-            np.expand_dims(preds, axis=0), classes=list(range(NUM_CLASSES)),
+            np.expand_dims(preds, axis=0),
+            classes=list(range(NUM_CLASSES)),
         )
 
     confmat = sk_multilabel_confusion_matrix(
-        y_true=target, y_pred=preds, labels=list(range(NUM_CLASSES)),
+        y_true=target,
+        y_pred=preds,
+        labels=list(range(NUM_CLASSES)),
     )
 
     tn = confmat[:, 0, 0]
@@ -192,7 +202,9 @@ class TestMultilabelStatScores(MetricTester):
             preds=preds,
             metric_functional=stat_scores,
             sk_metric=partial(
-                _sk_stat_scores_multilabel, threshold=THRESHOLD, labelwise=labelwise,
+                _sk_stat_scores_multilabel,
+                threshold=THRESHOLD,
+                labelwise=labelwise,
             ),
             metric_args={
                 "task": "multilabel",
@@ -211,7 +223,9 @@ class TestMultilabelStatScores(MetricTester):
             preds=preds,
             metric_class=StatScores,
             sk_metric=partial(
-                _sk_stat_scores_multilabel, threshold=THRESHOLD, labelwise=labelwise,
+                _sk_stat_scores_multilabel,
+                threshold=THRESHOLD,
+                labelwise=labelwise,
             ),
             metric_args={
                 "task": "multilabel",

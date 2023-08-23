@@ -108,7 +108,8 @@ class QueryOp(type):
 
 
 def _chain_ops(
-    query: Subquery, ops: typing.Union[typing.List[QueryOp], Sequential],
+    query: Subquery,
+    ops: typing.Union[typing.List[QueryOp], Sequential],
 ) -> Subquery:
     if isinstance(ops, typing.List):
         for op_ in ops:
@@ -416,10 +417,11 @@ class Substring(metaclass=QueryOp):
         return select(
             table,
             func.substr(
-                get_column(table, self.col), self.start_index, self.stop_index,
+                get_column(table, self.col),
+                self.start_index,
+                self.stop_index,
             ).label(self.new_col_label),
         ).subquery()
-
 
 
 @dataclass
@@ -627,7 +629,9 @@ class ExtractTimestampComponent(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, timestamp_cols=self.timestamp_col, cols_not_in=self.label,
+            table,
+            timestamp_cols=self.timestamp_col,
+            cols_not_in=self.label,
         )
 
         table = select(
@@ -675,7 +679,9 @@ class AddNumeric(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, cols=self.add_to, cols_not_in=self.new_col_labels,
+            table,
+            cols=self.add_to,
+            cols_not_in=self.new_col_labels,
         )
         return apply_to_columns(
             table,
@@ -720,7 +726,9 @@ class AddDeltaConstant(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels,
+            table,
+            timestamp_cols=self.add_to,
+            cols_not_in=self.new_col_labels,
         )
 
         return apply_to_columns(
@@ -776,11 +784,15 @@ class AddColumn(metaclass=QueryOp):
         # If the column being added is a timestamp column, ensure the others are too
         if check_timestamp_columns(table, self.col):
             table = _process_checks(
-                table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels,
+                table,
+                timestamp_cols=self.add_to,
+                cols_not_in=self.new_col_labels,
             )
         else:
             table = _process_checks(
-                table, cols=self.add_to, cols_not_in=self.new_col_labels,
+                table,
+                cols=self.add_to,
+                cols_not_in=self.new_col_labels,
             )
 
         col = get_column(table, self.col)
@@ -848,7 +860,9 @@ class AddDeltaColumn(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels,
+            table,
+            timestamp_cols=self.add_to,
+            cols_not_in=self.new_col_labels,
         )
 
         delta = get_delta_column(table, **self.delta_kwargs)
@@ -943,7 +957,9 @@ class Union(metaclass=QueryOp):
     """
 
     def __init__(
-        self, union_table: TableTypes, union_all: typing.Optional[bool] = False,
+        self,
+        union_table: TableTypes,
+        union_all: typing.Optional[bool] = False,
     ) -> None:
         """Initialize."""
         self.union_table = union_table
@@ -1061,7 +1077,8 @@ class Join(metaclass=QueryOp):
                 for col_obj in self.on_
             ]
             table = _process_checks(
-                table, cols=_none_add(self.table_cols, on_table_cols),
+                table,
+                cols=_none_add(self.table_cols, on_table_cols),
             )
             self.join_table = _process_checks(
                 self.join_table,
@@ -1070,7 +1087,9 @@ class Join(metaclass=QueryOp):
             # Filter columns, keeping those being joined on
             table = _append_if_missing(table, self.table_cols, on_table_cols)
             self.join_table = _append_if_missing(
-                self.join_table, self.join_table_cols, on_join_table_cols,
+                self.join_table,
+                self.join_table_cols,
+                on_join_table_cols,
             )
             # Perform type conversions if given
             if self.on_to_type is not None:
@@ -1099,7 +1118,9 @@ class Join(metaclass=QueryOp):
             if self.cond is not None:
                 table = select(
                     table.join(  # type: ignore
-                        self.join_table, self.cond, isouter=self.isouter,
+                        self.join_table,
+                        self.cond,
+                        isouter=self.isouter,
                     ),
                 )
 
@@ -1163,14 +1184,19 @@ class ConditionEquals(metaclass=QueryOp):
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = equals(
-            get_column(table, self.col), self.value, True, True, **self.cond_kwargs,
+            get_column(table, self.col),
+            self.value,
+            True,
+            True,
+            **self.cond_kwargs,
         )
         if self.not_:
             cond = cond._negate()
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1241,7 +1267,8 @@ class ConditionGreaterThan(metaclass=QueryOp):
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1312,7 +1339,8 @@ class ConditionLessThan(metaclass=QueryOp):
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1368,7 +1396,8 @@ class ConditionRegexMatch(metaclass=QueryOp):
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1434,7 +1463,8 @@ class ConditionIn(metaclass=QueryOp):
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1508,7 +1538,8 @@ class ConditionSubstring(metaclass=QueryOp):
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1563,14 +1594,19 @@ class ConditionStartsWith(metaclass=QueryOp):
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = starts_with(
-            get_column(table, self.col), self.string, True, True, **self.cond_kwargs,
+            get_column(table, self.col),
+            self.string,
+            True,
+            True,
+            **self.cond_kwargs,
         )
         if self.not_:
             cond = cond._negate()
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1625,14 +1661,19 @@ class ConditionEndsWith(metaclass=QueryOp):
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = ends_with(
-            get_column(table, self.col), self.string, True, True, **self.cond_kwargs,
+            get_column(table, self.col),
+            self.string,
+            True,
+            True,
+            **self.cond_kwargs,
         )
         if self.not_:
             cond = cond._negate()
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1682,7 +1723,9 @@ class ConditionInYears(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, cols=self.timestamp_col, cols_not_in=self.binarize_col,
+            table,
+            cols=self.timestamp_col,
+            cols_not_in=self.binarize_col,
         )
         cond = in_(
             extract("year", get_column(table, self.timestamp_col)),
@@ -1693,7 +1736,8 @@ class ConditionInYears(metaclass=QueryOp):
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -1743,7 +1787,9 @@ class ConditionInMonths(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, cols=self.timestamp_col, cols_not_in=self.binarize_col,
+            table,
+            cols=self.timestamp_col,
+            cols_not_in=self.binarize_col,
         )
         cond = in_(
             extract("month", get_column(table, self.timestamp_col)),
@@ -1754,7 +1800,8 @@ class ConditionInMonths(metaclass=QueryOp):
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col),
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -2080,7 +2127,8 @@ class GroupByAggregate(metaclass=QueryOp):
 
     groupby_cols: typing.Union[str, typing.List[str]]
     aggfuncs: typing.Union[
-        typing.Dict[str, typing.Sequence[str]], typing.Dict[str, str],
+        typing.Dict[str, typing.Sequence[str]],
+        typing.Dict[str, str],
     ]
     aggseps: typing.Dict[str, str] = field(default_factory=dict)
 
@@ -2152,7 +2200,8 @@ class GroupByAggregate(metaclass=QueryOp):
         for i, to_agg_col in enumerate(to_agg_cols):
             if aggfunc_strs[i] == "string_agg":
                 agg_col = str_to_aggfunc[aggfunc_strs[i]](
-                    to_agg_col, literal_column(f"'{self.aggseps[aggfunc_cols[i]]}'"),
+                    to_agg_col,
+                    literal_column(f"'{self.aggseps[aggfunc_cols[i]]}'"),
                 )
             else:
                 agg_col = str_to_aggfunc[aggfunc_strs[i]](to_agg_col)

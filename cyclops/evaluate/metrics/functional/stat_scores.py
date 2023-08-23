@@ -101,7 +101,9 @@ def _stat_scores_from_confmat(
 
     """
     confmat = multilabel_confusion_matrix(
-        target, preds, labels=labels,
+        target,
+        preds,
+        labels=labels,
     )  # shape: (n_classes, 2, 2)
 
     tn = confmat[:, 0, 0]  # shape: (n_classes,)
@@ -146,7 +148,10 @@ def _binary_stat_scores_args_check(threshold: float, pos_label: int) -> None:
 
 
 def _binary_stat_scores_format(
-    target: npt.ArrayLike, preds: npt.ArrayLike, threshold: float, pos_label: int,
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
+    threshold: float,
+    pos_label: int,
 ) -> Tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]:
     """Format the input for computing binary stat scores.
 
@@ -181,7 +186,8 @@ def _binary_stat_scores_format(
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
-        target, preds,
+        target,
+        preds,
     )
 
     if type_target != "binary":
@@ -193,7 +199,8 @@ def _binary_stat_scores_format(
             f"exactly 2 columns, got an array with shape: {preds.shape}."
         )
         preds = preds[
-            ..., pos_label,
+            ...,
+            pos_label,
         ]  # keep only the probabilities for the positive class
         type_preds = "continuous"
 
@@ -309,11 +316,16 @@ def binary_stat_scores(
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold, pos_label=pos_label,
+        target=target,
+        preds=preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, tn, fn = _binary_stat_scores_update(
-        target=target, preds=preds, pos_label=pos_label,
+        target=target,
+        preds=preds,
+        pos_label=pos_label,
     )
 
     return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=True)
@@ -412,7 +424,8 @@ def _multiclass_stat_scores_format(  # noqa: C901
     if type_preds in ["continuous-multioutput", "continuous"]:
         if not np.all(np.logical_and(preds >= 0.0, preds <= 1.0)):  # type: ignore
             preds = sp.special.softmax(
-                preds, axis=-1,
+                preds,
+                axis=-1,
             )  # convert logits to probabilities
 
         if not np.allclose(1, preds.sum(axis=-1)):  # type: ignore[union-attr]
@@ -512,11 +525,16 @@ def multiclass_stat_scores(
 
     """
     target, preds = _multiclass_stat_scores_format(
-        target=target, preds=preds, num_classes=num_classes, top_k=top_k,
+        target=target,
+        preds=preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, tn, fn = _multiclass_stat_scores_update(
-        target=target, preds=preds, num_classes=num_classes,
+        target=target,
+        preds=preds,
+        num_classes=num_classes,
     )
 
     return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=classwise)
@@ -562,7 +580,8 @@ def _multilabel_stat_scores_format(
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
-        target, preds,
+        target,
+        preds,
     )
 
     # allow single-sample inputs
@@ -708,7 +727,9 @@ def multilabel_stat_scores(
     )
 
     tp, fp, tn, fn = _multilabel_stat_scores_update(
-        target=target, preds=preds, num_labels=num_labels,
+        target=target,
+        preds=preds,
+        num_labels=num_labels,
     )
 
     return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=labelwise)

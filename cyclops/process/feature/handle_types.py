@@ -576,7 +576,8 @@ def _convertible_to_binary(
 
 
 def _to_binary(
-    series: pd.Series, unique: Optional[np.ndarray] = None,
+    series: pd.Series,
+    unique: Optional[np.ndarray] = None,
 ) -> Tuple[pd.Series, Dict[str, Any]]:
     """Convert type to binary.
 

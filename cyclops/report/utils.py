@@ -42,10 +42,11 @@ def str_to_snake_case(string: str) -> str:
     """
     return "_".join(
         sub(
-            "([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", string.replace("-", " ")),
+            "([A-Z][a-z]+)",
+            r" \1",
+            sub("([A-Z]+)", r" \1", string.replace("-", " ")),
         ).split(),
     ).lower()
-
 
 
 def _raise_if_not_dict_with_str_keys(data: Any) -> None:
@@ -62,9 +63,7 @@ def _raise_if_not_dict_with_str_keys(data: Any) -> None:
         If `data` is not a dictionary with string keys.
 
     """
-    if not (
-        isinstance(data, Mapping) and all(isinstance(key, str) for key in data)
-    ):
+    if not (isinstance(data, Mapping) and all(isinstance(key, str) for key in data)):
         raise TypeError(f"Expected a dictionary with string keys. Got {data} instead.")
 
 
@@ -133,9 +132,7 @@ def flatten_results_dict(
 
     results_flat = {}
     if model_name:
-        assert (
-            model_name in results
-        ), f"Model name {model_name} not found in results."
+        assert model_name in results, f"Model name {model_name} not found in results."
         model_results = results[model_name]
         for slice_name, slice_results in model_results.items():
             for metric_name, metric_value in slice_results.items():

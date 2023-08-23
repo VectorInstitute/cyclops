@@ -17,7 +17,8 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 
 def create_indicator_variables(
-    features: pd.DataFrame, columns: Optional[List] = None,
+    features: pd.DataFrame,
+    columns: Optional[List] = None,
 ) -> pd.DataFrame:
     """Create binary indicator variable for each column (or specified).
 

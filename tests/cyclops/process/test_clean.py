@@ -61,14 +61,18 @@ def test_convert_to_events():
     test_input.loc[1] = [11, datetime(2022, 11, 3, 19, 13)]
     test_input.loc[2] = [1, datetime(2022, 11, 2, 1, 1)]
     events = convert_to_events(
-        test_input, event_name="test", event_category="test", timestamp_col="test_ts",
+        test_input,
+        event_name="test",
+        event_category="test",
+        timestamp_col="test_ts",
     )
     assert len(events) == 3
     assert events.loc[2][ENCOUNTER_ID] == 1
     assert events.loc[1][EVENT_TIMESTAMP] == datetime(2022, 11, 3, 19, 13)
 
     test_input = pd.DataFrame(
-        columns=[ENCOUNTER_ID, "test_ts", "test_value"], index=[0, 1, 2],
+        columns=[ENCOUNTER_ID, "test_ts", "test_value"],
+        index=[0, 1, 2],
     )
     test_input.loc[0] = [12, datetime(2022, 11, 3, 12, 13), 1.2]
     test_input.loc[1] = [11, datetime(2022, 11, 3, 19, 13), 2.34]
@@ -123,7 +127,8 @@ def test_event_data_unnormalized():
 
 
 def test_normalize_events(  # pylint: disable=redefined-outer-name
-    test_event_data_unnormalized, test_event_data_normalized,
+    test_event_data_unnormalized,
+    test_event_data_normalized,
 ):
     """Test normalize_events fn."""
     normalized_events = normalize_events(test_event_data_normalized)

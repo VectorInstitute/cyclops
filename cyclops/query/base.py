@@ -115,7 +115,9 @@ class DatasetQuerier:
                 else:
                     overrides.append(f"+{key}={value}")
         with initialize(
-            version_base=None, config_path="configs", job_name="DatasetQuerier",
+            version_base=None,
+            config_path="configs",
+            job_name="DatasetQuerier",
         ):
             config = compose(config_name="config", overrides=overrides)
             LOGGER.debug(OmegaConf.to_yaml(config))
@@ -225,7 +227,10 @@ class DatasetQuerier:
         return QueryInterfaceProcessed(self.db, table, ops=ops, process_fn=process_fn)
 
     def get_table(
-        self, schema_name: str, table_name: str, cast_timestamp_cols: bool = True,
+        self,
+        schema_name: str,
+        table_name: str,
+        cast_timestamp_cols: bool = True,
     ) -> Subquery:
         """Get a table and possibly map columns to have standard names.
 

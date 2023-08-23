@@ -58,7 +58,6 @@ class SyntheticShiftApplicator:
         return self.shift_types[self.shift_type](dataset, **self.shift_args)
 
 
-
 def gaussian_noise_shift(
     X: np.ndarray[float, np.dtype[np.float64]],
     noise_amt: float = 0.5,
@@ -97,11 +96,14 @@ def gaussian_noise_shift(
 
     if len(c_cols) == 1:
         noise = np.random.normal(0, noise_amt / normalization, X_mod.shape[0]).reshape(
-            X_mod.shape[0], 1,
+            X_mod.shape[0],
+            1,
         )
     else:
         noise = np.random.normal(
-            0, noise_amt / normalization, (X_mod.shape[0], len(c_cols)),
+            0,
+            noise_amt / normalization,
+            (X_mod.shape[0], len(c_cols)),
         )
     X_mod = np.clip(X_mod + noise, 0.0, 1.0) if clip else X_mod + noise
 
@@ -189,7 +191,8 @@ def feature_swap_shift(
     selector = SelectKBest(k=n_feats)
     selection = selector.fit(X, y)
     ranked_x = sorted(
-        zip(selection.scores_, selection.get_support(indices=True)), reverse=True,
+        zip(selection.scores_, selection.get_support(indices=True)),
+        reverse=True,
     )
     shuffle_list = list(range(0, n_feats))
 

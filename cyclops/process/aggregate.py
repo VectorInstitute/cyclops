@@ -196,7 +196,10 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         return data[cond]
 
     def _use_provided_window(
-        self, window_time: pd.DataFrame, default_time: pd.DataFrame, warning_args: Tuple,
+        self,
+        window_time: pd.DataFrame,
+        default_time: pd.DataFrame,
+        warning_args: Tuple,
     ) -> pd.DataFrame:
         """Process a window start/stop time.
 
@@ -264,13 +267,16 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         if window_start_time is None:
             # Use earliest times
             earliest_time = earliest_time.rename(
-                {self.timestamp_col: RESTRICT_TIMESTAMP}, axis=1,
+                {self.timestamp_col: RESTRICT_TIMESTAMP},
+                axis=1,
             )
             window_start_time = earliest_time
         else:
             # Use provided start - with earliest times acting as default
             window_start_time = self._use_provided_window(
-                window_start_time, earliest_time, ("start", "earliest"),
+                window_start_time,
+                earliest_time,
+                ("start", "earliest"),
             )
 
         self._check_start_stop_window_ts(window_start_time)
@@ -324,13 +330,16 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
             if window_stop_time is None:
                 # Use latest times
                 latest_time = latest_time.rename(
-                    {self.timestamp_col: RESTRICT_TIMESTAMP}, axis=1,
+                    {self.timestamp_col: RESTRICT_TIMESTAMP},
+                    axis=1,
                 )
                 window_stop_time = latest_time
             else:
                 # Use provided stop - with latest times acting as default
                 window_stop_time = self._use_provided_window(
-                    window_stop_time, latest_time, ("stop", "latest"),
+                    window_stop_time,
+                    latest_time,
+                    ("stop", "latest"),
                 )
 
         self._check_start_stop_window_ts(window_stop_time)
@@ -361,23 +370,27 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         """
         # Compute window start time
         window_start_time = self._compute_window_start(
-            data, window_start_time=window_start_time,
+            data,
+            window_start_time=window_start_time,
         )
 
         # Compute window stop time
         window_stop_time = self._compute_window_stop(
-            data, window_start_time, window_stop_time=window_stop_time,
+            data,
+            window_start_time,
+            window_stop_time=window_stop_time,
         )
 
         # Combine and compute additional information
         window_start_time = window_start_time.rename(
-            {RESTRICT_TIMESTAMP: START_TIMESTAMP}, axis=1,
+            {RESTRICT_TIMESTAMP: START_TIMESTAMP},
+            axis=1,
         )
         window_stop_time = window_stop_time.rename(
-            {RESTRICT_TIMESTAMP: STOP_TIMESTAMP}, axis=1,
+            {RESTRICT_TIMESTAMP: STOP_TIMESTAMP},
+            axis=1,
         )
         return window_start_time.join(window_stop_time)
-
 
     def _compute_timestep(self, group: pd.DataFrame) -> pd.DataFrame:
         """Compute which timestep, or bin, each occurence falls into.
@@ -473,11 +486,15 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         return group
 
     def _aggregate(
-        self, data: pd.DataFrame, include_timestep_start: bool = True,
+        self,
+        data: pd.DataFrame,
+        include_timestep_start: bool = True,
     ) -> pd.DataFrame:
         # Get the timestep according to the timestep for each event
         data_with_timesteps = data.groupby(
-            self.time_by, sort=False, group_keys=False,
+            self.time_by,
+            sort=False,
+            group_keys=False,
         ).apply(self._compute_timestep)
 
         # Aggregate
@@ -504,12 +521,12 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
         aggregated = aggregated.join(self.window_times[START_TIMESTAMP])
         aggregated[START_TIMESTEP] = aggregated[START_TIMESTAMP] + pd.to_timedelta(
-            aggregated[TIMESTEP] * self.timestep_size, unit="h",
+            aggregated[TIMESTEP] * self.timestep_size,
+            unit="h",
         )
         aggregated = aggregated.drop(START_TIMESTAMP, axis=1)
         aggregated = aggregated.reset_index()
         return aggregated.set_index(self.agg_by + [TIMESTEP])
-
 
     @time_function
     def __call__(
@@ -567,7 +584,9 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
         # Compute start/stop timestamps
         self.window_times = self._compute_window_times(
-            data, window_start_time=window_start_time, window_stop_time=window_stop_time,
+            data,
+            window_start_time=window_start_time,
+            window_stop_time=window_stop_time,
         )
 
         # Restrict the data according to the start/stop
@@ -673,7 +692,9 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         is_timestamp_series(data[self.timestamp_col], raise_error=True)
         data = dropna_rows(data, self.timestamp_col)
         self.window_times = self._compute_window_times(
-            data, window_start_time=window_start_time, window_stop_time=window_stop_time,
+            data,
+            window_start_time=window_start_time,
+            window_stop_time=window_stop_time,
         )
 
         # Restrict the data according to the start/stop

@@ -137,7 +137,10 @@ def binary_precision(
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target, preds, threshold=threshold, pos_label=pos_label,
+        target,
+        preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, _, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
@@ -215,7 +218,10 @@ def multiclass_precision(
     _check_average_arg(average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k,
+        target,
+        preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, _, fn = _multiclass_stat_scores_update(target, preds, num_classes)
@@ -299,7 +305,11 @@ def multilabel_precision(
     _check_average_arg(average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k,
+        target,
+        preds,
+        num_labels=num_labels,
+        threshold=threshold,
+        top_k=top_k,
     )
 
     tp, fp, _, fn = _multilabel_stat_scores_update(target, preds, num_labels)
@@ -482,7 +492,10 @@ def binary_recall(
 
     """
     target, preds = _binary_stat_scores_format(
-        target, preds, threshold=threshold, pos_label=pos_label,
+        target,
+        preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, _, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
@@ -561,7 +574,10 @@ def multiclass_recall(
     _check_average_arg(average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k,
+        target,
+        preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, _, fn = _multiclass_stat_scores_update(target, preds, num_classes)
@@ -645,7 +661,11 @@ def multilabel_recall(
     _check_average_arg(average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k,
+        target,
+        preds,
+        num_labels=num_labels,
+        threshold=threshold,
+        top_k=top_k,
     )
 
     tp, fp, _, fn = _multilabel_stat_scores_update(target, preds, num_labels)

@@ -9,7 +9,8 @@ from pydantic.fields import FieldInfo, ModelField
 
 
 def _check_composable_fields(  # pylint: disable=no-self-argument
-    cls: BaseModel, values: Dict[str, Any],
+    cls: BaseModel,
+    values: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Check that the type of the field is allowed in the section."""
     # pylint: disable=no-member

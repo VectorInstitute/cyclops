@@ -43,7 +43,11 @@ class LSTMModel(nn.Module):
         self.hidden_dim = hidden_dim
         self.layer_dim = layer_dim
         self.lstm = nn.LSTM(
-            input_dim, hidden_dim, layer_dim, batch_first=True, dropout=dropout_prob,
+            input_dim,
+            hidden_dim,
+            layer_dim,
+            batch_first=True,
+            dropout=dropout_prob,
         )
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.sigmoid = nn.Sigmoid()

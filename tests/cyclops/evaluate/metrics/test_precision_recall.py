@@ -53,7 +53,10 @@ class TestBinaryPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_binary_precision_recall_functional(
-        self, inputs, cyclops_func, sk_func,
+        self,
+        inputs,
+        cyclops_func,
+        sk_func,
     ) -> None:
         """Test function for binary precision and recall."""
         target, preds = inputs
@@ -77,7 +80,10 @@ class TestBinaryPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_binary_precision_recall_class(
-        self, inputs, cyclops_class, sk_func,
+        self,
+        inputs,
+        cyclops_class,
+        sk_func,
     ) -> None:
         """Test class for binary precision and recall."""
         target, preds = inputs
@@ -127,7 +133,11 @@ class TestMulticlassPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_multiclass_precision_recall_functional(
-        self, inputs, average, cyclops_func, sk_func,
+        self,
+        inputs,
+        average,
+        cyclops_func,
+        sk_func,
     ) -> None:
         """Test functions for multiclass precision and recall."""
         target, preds = inputs
@@ -156,7 +166,11 @@ class TestMulticlassPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_multiclass_precision_recall_class(
-        self, inputs, average, cyclops_class, sk_func,
+        self,
+        inputs,
+        average,
+        cyclops_class,
+        sk_func,
     ) -> None:
         """Test classes for multiclass precision and recall."""
         target, preds = inputs
@@ -214,7 +228,11 @@ class TestMultilabelPrecisionRecall(MetricTester):
         ids=["precision", "recall"],
     )
     def test_multilabel_precision_recall_functional(
-        self, inputs, average, cyclops_func, sk_func,
+        self,
+        inputs,
+        average,
+        cyclops_func,
+        sk_func,
     ) -> None:
         """Test multilabel precision."""
         target, preds = inputs

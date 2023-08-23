@@ -61,7 +61,11 @@ class VectorizedLoader:
     """Vectorized data loader."""
 
     def __init__(
-        self, dataset_name: str, use_case: str, data_type: str, data_dir: str,
+        self,
+        dataset_name: str,
+        use_case: str,
+        data_type: str,
+        data_dir: str,
     ) -> None:
         """Initialize loader.
 

@@ -178,7 +178,6 @@ class Reductor:
             with contextlib.suppress(RuntimeError):
                 set_start_method("spawn")
 
-
         if self.dr_method == "nored":
             dataset = dataset.map(
                 self.nored_inference,

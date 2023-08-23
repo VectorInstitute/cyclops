@@ -146,17 +146,22 @@ def test_nongrouped_normalization(test_input):  # pylint: disable=redefined-oute
 
     denormalized = gbn.inverse_transform(normalized)
     assert np.allclose(
-        denormalized[SUBJECT_ID].values, test_input[SUBJECT_ID].values, atol=1e-07,
+        denormalized[SUBJECT_ID].values,
+        test_input[SUBJECT_ID].values,
+        atol=1e-07,
     )
     assert np.allclose(
-        denormalized[EVENT_VALUE].values, test_input[EVENT_VALUE].values, atol=1e-07,
+        denormalized[EVENT_VALUE].values,
+        test_input[EVENT_VALUE].values,
+        atol=1e-07,
     )
 
 
 def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-name
     """Test normalization using a groupby."""
     gbn = GroupbyNormalizer(
-        {SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD}, by=[EVENT_NAME],
+        {SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD},
+        by=[EVENT_NAME],
     )
     gbn.fit(test_input)
 
@@ -171,10 +176,14 @@ def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-n
     denormalized = gbn.inverse_transform(normalized)
 
     assert np.allclose(
-        denormalized[SUBJECT_ID].values, test_input[SUBJECT_ID].values, atol=1e-07,
+        denormalized[SUBJECT_ID].values,
+        test_input[SUBJECT_ID].values,
+        atol=1e-07,
     )
     assert np.allclose(
-        denormalized[EVENT_VALUE].values, test_input[EVENT_VALUE].values, atol=1e-07,
+        denormalized[EVENT_VALUE].values,
+        test_input[EVENT_VALUE].values,
+        atol=1e-07,
     )
 
 

@@ -106,7 +106,9 @@ def test_fill_null(visits_input):  # pylint: disable=redefined-outer-name
     assert len(visits_after["care_site_id"].unique()) == 1
 
     visits = FillNull(
-        ["preceding_visit_occurrence_id", "care_site_id"], [0, -99], ["col1", "col2"],
+        ["preceding_visit_occurrence_id", "care_site_id"],
+        [0, -99],
+        ["col1", "col2"],
     )(visits_input)
     visits_after = QUERIER.get_interface(visits).run()
     assert visits_after["preceding_visit_occurrence_id"].isna().sum() != 0
@@ -136,7 +138,10 @@ def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
             Literal(2, "test_col1"),
             Literal(3, "test_col2"),
             AddColumn(
-                "test_col1", "test_col2", negative=True, new_col_labels="test_col3",
+                "test_col1",
+                "test_col2",
+                negative=True,
+                new_col_labels="test_col3",
             ),
         ],
     )
@@ -216,7 +221,9 @@ def test_extract_timestamp_component(
 ):  # pylint: disable=redefined-outer-name
     """Test ExtractTimestampComponent."""
     visits = ExtractTimestampComponent(
-        "visit_start_date", "year", "visit_start_date_year",
+        "visit_start_date",
+        "year",
+        "visit_start_date_year",
     )(visits_input)
     visits = QUERIER.get_interface(visits).run()
     assert visits["visit_start_date_year"].iloc[0] == 2021
@@ -235,7 +242,9 @@ def test_add_numeric(visits_input):  # pylint: disable=redefined-outer-name
 def test_apply(visits_input):  # pylint: disable=redefined-outer-name
     """Test Apply."""
     visits = Apply(
-        "visit_concept_name", lambda x: x + "!", "visit_concept_name_exclaim",
+        "visit_concept_name",
+        lambda x: x + "!",
+        "visit_concept_name_exclaim",
     )(visits_input)
     visits = QUERIER.get_interface(visits).run()
     assert visits["visit_concept_name_exclaim"].iloc[0] == "Inpatient Visit!"
@@ -276,7 +285,8 @@ def test_condition_regex_match(
 
 @pytest.mark.integration_test
 def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
-    visits_input, measurements_input,
+    visits_input,
+    measurements_input,
 ):
     """Test GroupByAggregate."""
     with pytest.raises(ValueError):
@@ -289,7 +299,8 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
         )
 
     visits_count = GroupByAggregate(
-        "person_id", {"person_id": ("count", "num_visits")},
+        "person_id",
+        {"person_id": ("count", "num_visits")},
     )(visits_input)
     visits_string_agg = GroupByAggregate(
         "person_id",
@@ -297,19 +308,24 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
         {"visit_concept_name": ", "},
     )(visits_input)
     measurements_sum = GroupByAggregate(
-        "person_id", {"value_as_number": ("sum", "value_as_number_sum")},
+        "person_id",
+        {"value_as_number": ("sum", "value_as_number_sum")},
     )(measurements_input)
     measurements_average = GroupByAggregate(
-        "person_id", {"value_as_number": ("average", "value_as_number_average")},
+        "person_id",
+        {"value_as_number": ("average", "value_as_number_average")},
     )(measurements_input)
     measurements_min = GroupByAggregate(
-        "person_id", {"value_as_number": ("min", "value_as_number_min")},
+        "person_id",
+        {"value_as_number": ("min", "value_as_number_min")},
     )(measurements_input)
     measurements_max = GroupByAggregate(
-        "person_id", {"value_as_number": ("max", "value_as_number_max")},
+        "person_id",
+        {"value_as_number": ("max", "value_as_number_max")},
     )(measurements_input)
     measurements_median = GroupByAggregate(
-        "person_id", {"value_as_number": ("median", "value_as_number_median")},
+        "person_id",
+        {"value_as_number": ("median", "value_as_number_median")},
     )(measurements_input)
 
     visits_count = QUERIER.get_interface(visits_count).run()

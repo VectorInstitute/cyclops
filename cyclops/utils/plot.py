@@ -232,7 +232,9 @@ def plot_temporal_features(
         )
     else:
         fig = fig.update_layout(
-            title="Temporal Feature Visualization", autosize=False, height=PLOT_HEIGHT,
+            title="Temporal Feature Visualization",
+            autosize=False,
+            height=PLOT_HEIGHT,
         )
     fig.add_vrect(
         x0=0,

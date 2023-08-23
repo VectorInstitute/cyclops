@@ -66,7 +66,8 @@ def _reduce_specificity(
 
 
 def _calc_specificity(
-    tn: Union[int, np.ndarray], fp: Union[int, np.ndarray],
+    tn: Union[int, np.ndarray],
+    fp: Union[int, np.ndarray],
 ) -> Union[float, np.ndarray]:
     """Calculate specificity.
 
@@ -101,7 +102,9 @@ def _calc_specificity(
 
 
 def _sk_binary_specificity(
-    target: np.ndarray, preds: np.ndarray, threshold: float,
+    target: np.ndarray,
+    preds: np.ndarray,
+    threshold: float,
 ) -> np.ndarray:
     """Compute specificity for binary case using sklearn."""
     _, fp, tn, _, _ = _sk_stat_scores_binary(target, preds, threshold=threshold)

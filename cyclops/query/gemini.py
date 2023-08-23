@@ -81,7 +81,9 @@ class GEMINIQuerier(DatasetQuerier):
         return QueryInterface(self.db, table, join=join, ops=ops)
 
     def diagnoses(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None,
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query diagnosis data.
 
@@ -118,7 +120,9 @@ class GEMINIQuerier(DatasetQuerier):
         return QueryInterface(self.db, table, join=join, ops=ops)
 
     def room_transfer(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None,
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query room transfer data.
 
@@ -235,7 +239,9 @@ class GEMINIQuerier(DatasetQuerier):
         return QueryInterface(self.db, table, join=join, ops=ops)
 
     def imaging(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None,
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query imaging reports data.
 

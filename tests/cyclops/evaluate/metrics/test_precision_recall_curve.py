@@ -32,7 +32,9 @@ def _sk_binary_precision_recall_curve(
         preds = sigmoid(preds)
 
     return sk_precision_recall_curve(
-        y_true=target, probas_pred=preds, pos_label=pos_label,
+        y_true=target,
+        probas_pred=preds,
+        pos_label=pos_label,
     )
 
 
@@ -114,7 +116,8 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
 
 
 def _sk_multilabel_precision_recall_curve(
-    target: np.ndarray, preds: np.ndarray,
+    target: np.ndarray,
+    preds: np.ndarray,
 ) -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
     if preds.ndim == 1:
         preds = np.expand_dims(preds, axis=0)

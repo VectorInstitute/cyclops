@@ -213,7 +213,10 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         return instance_or_class(**kwargs)
 
     def _initialize_module(
-        self, module_name: str, default: Optional[str] = None, **extra_kwargs,
+        self,
+        module_name: str,
+        default: Optional[str] = None,
+        **extra_kwargs,
     ):
         """Initialize a module.
 
@@ -333,7 +336,10 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         params = self.get_all_learnable_params()
         return self._initialize_module(
-            module_name="optimizer", default="SGD", params=params, lr=self.lr,
+            module_name="optimizer",
+            default="SGD",
+            params=params,
+            lr=self.lr,
         )
 
     def initialize_activation(self):
@@ -567,11 +573,13 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             if target_columns is not None:
                 for batch in data_loader:
                     batch_features = torch.cat(
-                        [batch[feature] for feature in feature_columns], dim=1,
+                        [batch[feature] for feature in feature_columns],
+                        dim=1,
                     )
                     try:
                         batch_labels = torch.cat(
-                            [batch[target] for target in target_columns], dim=1,
+                            [batch[target] for target in target_columns],
+                            dim=1,
                         )
                     except IndexError:
                         batch_labels = torch.cat(
@@ -635,7 +643,9 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         )
 
     def _get_dataloader(
-        self, dataset: Union[Dataset, TorchDataset], test: bool = False,
+        self,
+        dataset: Union[Dataset, TorchDataset],
+        test: bool = False,
     ):
         """Get PyTorch DataLoader for the data.
 
@@ -818,7 +828,6 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                 splits_mapping=splits_mapping,
                 **fit_params,
             )
-
 
         return self
 
@@ -1069,7 +1078,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             preds = Dataset.from_dict({prediction_column: []})
             for batch in dataloader:
                 batch = torch.cat(
-                    [batch[feature] for feature in feature_columns], dim=1,
+                    [batch[feature] for feature in feature_columns],
+                    dim=1,
                 )
                 output = self._evaluation_step(batch, training=False, **predict_params)
                 output = self.activation_(output)

@@ -141,7 +141,8 @@ class SklearnNormalizer:
         return transformed
 
     def transform(
-        self, data: Union[np.ndarray, pd.Series],
+        self,
+        data: Union[np.ndarray, pd.Series],
     ) -> Union[np.ndarray, pd.Series]:
         """Apply normalization.
 
@@ -162,7 +163,8 @@ class SklearnNormalizer:
         return self._transform_by_method(data, "transform")
 
     def inverse_transform(
-        self, data: Union[np.ndarray, pd.Series],
+        self,
+        data: Union[np.ndarray, pd.Series],
     ) -> Union[np.ndarray, pd.Series]:
         """Apply inverse normalization.
 
@@ -451,7 +453,10 @@ class VectorizedNormalizer:
         self.is_fit = True
 
     def _transform_by_method(
-        self, data: np.ndarray, index_map: Dict[str, int], method: str,
+        self,
+        data: np.ndarray,
+        index_map: Dict[str, int],
+        method: str,
     ) -> np.ndarray:
         """Apply a method from the normalizer object to the data.
 
