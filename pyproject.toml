@@ -137,6 +137,7 @@ strict_equality = true
 strict_concatenate = true
 
 [tool.ruff]
+include = ["*.py", "pyproject.toml", "*.ipynb"]
 select = ["A", "B", "COM", "C4", "RET", "SIM", "D", "E", "F", "I", "W", "N"]
 # A - flake8-builtins
 # B - flake8-bugbear

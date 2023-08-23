@@ -51,18 +51,6 @@ repos:
       pass_filenames: false
       always_run: true
 
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.6.3
-    hooks:
-    - id: nbqa-black
-    - id: nbqa-isort
-    - id: nbqa-check-ast
-    - id: nbqa-flake8
-    # ignore E203/W503 to avoid conflict with black:
-    # https://github.com/psf/black/issues/354
-      args: ['--ignore=E203,W503']
-    # - id: nbqa-mypy
-
   - repo: local
     hooks:
     - id: nbstripout
