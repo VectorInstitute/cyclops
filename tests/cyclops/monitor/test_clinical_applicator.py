@@ -1,4 +1,4 @@
-"""unit tests for Clinical Applicator."""
+"""Unit tests for Clinical Applicator."""
 
 import pytest
 from synthetic_datasets import synthetic_gemini_dataset

@@ -1,11 +1,8 @@
 """Tasks utility functions."""
 
-from typing import Dict, List, Mapping, Sequence, Union, get_args
+from typing import Dict, List, Sequence, Union, get_args
 
-import numpy as np
-import pandas as pd
 import PIL
-import torch
 from torchvision.transforms import PILToTensor
 
 from cyclops.models.catalog import _model_names_mapping, create_model, list_models
@@ -58,53 +55,6 @@ def apply_image_transforms(examples: Dict[str, List], transforms: callable) -> d
     examples = {k: [d[k] for d in examples] for k in examples[0]}
 
     return examples
-
-
-def to_numpy(X) -> np.ndarray:
-    """Convert input to a numpy array.
-
-    Parameters
-    ----------
-    X : Union[torch.Tensor, np.ndarray, pd.DataFrame, pd.Series, Mapping, Sequence]
-        Input data.
-
-    Returns
-    -------
-    np.ndarray
-        Output numpy array.
-
-    Raises
-    ------
-    ValueError
-        Input type is not supported.
-
-    """
-    if isinstance(X, np.ndarray):
-        return X
-    if isinstance(X, (pd.DataFrame, pd.Series)):
-        return X.to_numpy()
-
-    if isinstance(X, torch.Tensor):
-        if X.requires_grad:
-            X = X.detach()
-
-        if X.is_cuda:
-            X = X.cpu()
-        return X.numpy()
-
-    if np.isscalar(X):
-        return np.array(X)
-
-    if isinstance(X, Sequence):
-        return type(X)(to_numpy(x) for x in X)
-    if isinstance(X, Mapping):
-        return {k: to_numpy(v) for k, v in X.items()}
-
-    raise ValueError(
-        "Cannot convert to numpy array. `X` must be a numpy array, torch tensor,"
-        f" dictionary, list, tuple, pandas dataframe or pandas series. \
-        Got {type(X)} instead."
-    )
 
 
 def prepare_models(

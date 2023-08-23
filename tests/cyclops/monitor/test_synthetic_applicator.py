@@ -1,4 +1,4 @@
-"""unit tests for Synthetic Applicator."""
+"""Unit tests for Synthetic Applicator."""
 
 import numpy as np
 import pytest

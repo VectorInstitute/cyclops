@@ -1,0 +1,15 @@
+{
+    "age": {
+        "min_value": 30,
+        "max_value": 50,
+        "min_inclusive": true,
+        "max_inclusive": false
+    },
+    "gendera": {
+        "value": 1
+    },
+    "Anion gap": {
+        "min_value": 14.73,
+        "min_inclusive": false
+    }
+}

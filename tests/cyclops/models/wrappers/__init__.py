@@ -1,1 +1,1 @@
-"""cyclops models wrappers test package."""
+"""Cyclops models wrappers test package."""

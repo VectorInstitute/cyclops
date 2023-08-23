@@ -229,8 +229,8 @@ def test_aggregate_multiple(  # pylint: disable=redefined-outer-name
 def test_aggregate_one_group_outlier():
     """Test very specific one group outlier case (currently still broken).
 
-    If only one group in the agg_by and the timesteps form a range, e.g., 0-N,
-    then the agg_by columns and TIMESTEP are dropped and an index range is returned.
+    If only one group in the agg_by and the timesteps form a range, e.g., 0-N, then the
+    agg_by columns and TIMESTEP are dropped and an index range is returned.
 
     An example of this setup can be seen below, and currently it is still broken.
 

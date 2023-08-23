@@ -1,1 +1,1 @@
-"""cyclops data tests package."""
+"""Cyclops data tests package."""

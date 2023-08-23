@@ -1,9 +1,9 @@
-Clinical use cases
-==================
+Example use cases
+=================
 
 
-In-hospital mortality prediction
---------------------------------
+
+------------------------
 
 The `in_hospital_mortality` task is a binary classification task that
 predicts whether a patient (subgroup) will die in the hospital given the EMR data
@@ -25,5 +25,22 @@ performance of a model on the task.
 
 .. toctree::
 
-    tutorials/mimiciii/mortality_prediction.ipynb
+    tutorials/kaggle/heart_failure_prediction.ipynb
     tutorials/nihcxr/cxr_classification.ipynb
+
+
+Chest X-ray classification
+--------------------------
+
+The `chest_xray` task is a multi-label classification task that predicts the
+presence of different thoracic diseases given a chest X-ray image.
+
+
+NIH Chest X-ray dataset
+^^^^^^^^^^^^^^^^^^^^^^^
+
+This tutorial showcases the use of the ``tasks`` API to implement a chest X-ray
+classification task. The dataset used is the `NIH Chest X-ray dataset <https://nihcc.app.box.com/v/ChestXray-NIHCC>`__, which contains 112,120 frontal-view X-ray images of 30,805 unique patients with 14 disease labels.
+
+The tutorial also demonstrates the use of the ``evaluate`` API to evaluate the
+performance of a model on the task.

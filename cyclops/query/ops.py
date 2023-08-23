@@ -1,5 +1,4 @@
 # pylint: disable=too-many-lines
-
 """Low-level query operations.
 
 This module contains query operation modules such which can be used in high-level query
@@ -24,6 +23,7 @@ from sqlalchemy.types import Boolean
 # Logging.
 from cyclops.query.util import (
     TableTypes,
+    _to_subquery,
     apply_to_columns,
     check_timestamp_columns,
     drop_columns,
@@ -111,6 +111,10 @@ class QueryOp(type):
         return "QueryOp"
 
 
+class ConditionQueryOp(QueryOp):
+    """Class type for Condition query operations."""
+
+
 def _chain_ops(
     query: Subquery, ops: typing.Union[typing.List[QueryOp], Sequential]
 ) -> Subquery:
@@ -156,6 +160,7 @@ class Sequential:
             Query result after chaining the query operations.
 
         """
+        table = _to_subquery(table)
         return _chain_ops(table, self.ops)
 
 
@@ -1851,6 +1856,48 @@ class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-m
 
 
 @dataclass
+class ConditionLike(metaclass=QueryOp):
+    """Filter rows by a LIKE condition.
+
+    Parameters
+    ----------
+    col: str
+        Column to filter on.
+    pattern: str
+        Pattern to filter on.
+
+    Examples
+    --------
+    >>> Like("lab_name", "HbA1c")(table)
+
+    """
+
+    col: str
+    pattern: str
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table, cols=self.col)
+        return (
+            select(table)
+            .where(get_column(table, self.col).like(self.pattern))
+            .subquery()
+        )
+
+
+@dataclass
 class Limit(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Limit the number of rows returned in a query.
 
@@ -2196,3 +2243,8 @@ class Distinct(metaclass=QueryOp):
         cols = to_list(self.cols)
         table = _process_checks(table, cols=cols)
         return select(table).distinct(*get_columns(table, cols)).subquery()
+
+
+@dataclass
+class Or(metaclass=QueryOp):
+    """Combine as OR of multiple conditions."""

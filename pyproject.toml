@@ -137,7 +137,8 @@ warn_unused_ignores = true
 warn_return_any = true
 implicit_reexport = false
 strict_equality = true
-strict_concatenate = true
+extra_checks = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
 
 [tool.pylint]
     [tool.pylint.master]
@@ -184,9 +185,6 @@ markers = [
 flake8 = [
     "--max-line-length=88"
 ]
-
-[tool.nbqa.exclude]
-flake8 = "tutorials/mimiciv/query_api_developer.ipynb"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

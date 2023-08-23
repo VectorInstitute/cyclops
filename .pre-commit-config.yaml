@@ -15,8 +15,8 @@ repos:
     - id: check-yaml
     - id: check-toml
 
-  - repo: https://github.com/ambv/black
-    rev: 23.1.0
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
     hooks:
     - id: black
 
@@ -26,7 +26,7 @@ repos:
     - id: isort
 
   - repo: https://github.com/myint/docformatter
-    rev: v1.5.1
+    rev: v1.7.5
     hooks:
     - id: docformatter
       args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88, --blank]
@@ -48,7 +48,7 @@ repos:
       additional_dependencies: [toml, tomli]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.2.0
+    rev: v1.5.1
     hooks:
     - id: mypy
       entry: python3 -m mypy --config-file pyproject.toml
@@ -75,7 +75,7 @@ repos:
       always_run: true
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.6.3
+    rev: 1.7.0
     hooks:
     - id: nbqa-black
     - id: nbqa-isort
