@@ -23,7 +23,6 @@ from sqlalchemy.types import Boolean
 # Logging.
 from cyclops.query.util import (
     TableTypes,
-    _to_subquery,
     apply_to_columns,
     check_timestamp_columns,
     drop_columns,
@@ -111,10 +110,6 @@ class QueryOp(type):
         return "QueryOp"
 
 
-class ConditionQueryOp(QueryOp):
-    """Class type for Condition query operations."""
-
-
 def _chain_ops(
     query: Subquery, ops: typing.Union[typing.List[QueryOp], Sequential]
 ) -> Subquery:
@@ -160,7 +155,6 @@ class Sequential:
             Query result after chaining the query operations.
 
         """
-        table = _to_subquery(table)
         return _chain_ops(table, self.ops)
 
 
@@ -2243,8 +2237,3 @@ class Distinct(metaclass=QueryOp):
         cols = to_list(self.cols)
         table = _process_checks(table, cols=cols)
         return select(table).distinct(*get_columns(table, cols)).subquery()
-
-
-@dataclass
-class Or(metaclass=QueryOp):
-    """Combine as OR of multiple conditions."""
