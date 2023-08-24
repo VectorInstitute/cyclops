@@ -1,1 +1,1 @@
-"""cyclops package."""
+"""Cyclops package."""

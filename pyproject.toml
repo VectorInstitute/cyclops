@@ -134,7 +134,8 @@ warn_unused_ignores = true
 warn_return_any = true
 implicit_reexport = false
 strict_equality = true
-strict_concatenate = true
+extra_checks = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
 
 [tool.ruff]
 include = ["*.py", "pyproject.toml", "*.ipynb"]
@@ -178,6 +179,9 @@ ignore-names = ["X*", "setUp"]
 
 [tool.ruff.isort]
 lines-after-imports = 2
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
 
 [tool.flake8]
 max-line-length = 88

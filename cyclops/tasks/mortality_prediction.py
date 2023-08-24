@@ -18,8 +18,8 @@ from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import _model_names_mapping, _static_model_keys
 from cyclops.models.wrappers import WrappedModel
 from cyclops.models.wrappers.sk_model import SKModel
+from cyclops.models.wrappers.utils import to_numpy
 from cyclops.tasks.base import BaseTask
-from cyclops.tasks.utils import to_numpy
 from cyclops.utils.log import setup_logging
 
 

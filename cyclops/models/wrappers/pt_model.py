@@ -1,5 +1,4 @@
 # pylint: disable=too-many-lines
-
 """PyTorch model wrapper."""
 
 import contextlib

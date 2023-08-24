@@ -1,4 +1,4 @@
-"""integration tests for Reductor module."""
+"""Integration tests for Reductor module."""
 
 import pytest
 from synthetic_datasets import (

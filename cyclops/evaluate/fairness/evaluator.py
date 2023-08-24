@@ -971,7 +971,7 @@ def _compute_parity_metrics(
                     numerator,
                     denominator,
                     out=np.zeros_like(numerator, dtype=np.float_),
-                    where=denominator != 0,  # type: ignore[comparison-overlap]
+                    where=denominator != 0,
                 )
 
                 # add the parity metric to the results

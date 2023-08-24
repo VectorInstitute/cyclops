@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """Low-level query operations.
 
 This module contains query operation modules such which can be used in high-level query
@@ -53,6 +54,9 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
+# pylint: disable=too-few-public-methods
+
+
 @dataclass
 class JoinArgs:
     """Arguments for joining tables.
@@ -77,7 +81,7 @@ class JoinArgs:
     """
 
     join_table: TableTypes
-    on: typing.Optional[
+    on: typing.Optional[  # pylint: disable=invalid-name
         typing.Union[
             str,
             typing.List[str],
@@ -191,14 +195,7 @@ def _none_add(obj1: typing.Any, obj2: typing.Any) -> typing.Any:
     Parameters
     ----------
     obj1: typing.Any
-        First object.
     obj2: typing.Any
-        Second object.
-
-    Returns
-    -------
-    typing.Any
-        Sum of the two objects or return one of them if other is None.
 
     """
     if obj1 is None:
@@ -218,12 +215,10 @@ def _process_checks(
 
     Parameters
     ----------
-    table: cyclops.query.util.TableTypes
+    table : cyclops.query.util.TableTypes
         Table on which to perform the operation.
     cols: str or list of str, optional
         Columns to check.
-    cols_not_in: str or list of str, optional
-        Columns to check if not in the table.
     timestamp_cols: str or list of str, optional
         Timestamp columns to check.
 
@@ -362,7 +357,8 @@ class Rename(metaclass=QueryOp):
 
         Parameters
         ----------
-        table
+        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
             Table on which to perform the operation.
 
         Returns
@@ -388,8 +384,6 @@ class Substring(metaclass=QueryOp):
     start_index: int
         Start index of substring.
     stop_index: str
-        Stop index of substring.
-    new_col_label: str
         Name of the new column with extracted substring.
 
     """
@@ -404,7 +398,8 @@ class Substring(metaclass=QueryOp):
 
         Parameters
         ----------
-        table
+        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
+        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
             Table on which to perform the operation.
 
         Returns
@@ -940,7 +935,7 @@ class Cast(metaclass=QueryOp):
         return apply_to_columns(
             table,
             self.cols,
-            lambda x: process_column(x, **kwargs),
+            lambda x: process_column(x, **kwargs),  # pylint: disable=unnecessary-lambda
         )
 
 
@@ -1024,7 +1019,7 @@ class Join(metaclass=QueryOp):
     def __init__(
         self,
         join_table: TableTypes,
-        on: typing.Optional[
+        on: typing.Optional[  # pylint: disable=invalid-name
             typing.Union[
                 str,
                 typing.List[str],
@@ -1135,7 +1130,7 @@ class Join(metaclass=QueryOp):
         ).subquery()
 
 
-class ConditionEquals(metaclass=QueryOp):
+class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on being equal, or not equal, to some value.
 
     Parameters
@@ -1202,7 +1197,7 @@ class ConditionEquals(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionGreaterThan(metaclass=QueryOp):
+class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on greater than (or equal), to some value.
 
     Parameters
@@ -1274,7 +1269,7 @@ class ConditionGreaterThan(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionLessThan(metaclass=QueryOp):
+class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on less than (or equal), to some value.
 
     Parameters
@@ -1346,7 +1341,7 @@ class ConditionLessThan(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionRegexMatch(metaclass=QueryOp):
+class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on matching a regular expression.
 
     Parameters
@@ -1403,7 +1398,7 @@ class ConditionRegexMatch(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionIn(metaclass=QueryOp):
+class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on having a value in list of values.
 
     Parameters
@@ -1470,7 +1465,7 @@ class ConditionIn(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionSubstring(metaclass=QueryOp):
+class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows on based on having substrings.
 
     Can be specified whether it must have any or all of the specified substrings.
@@ -1502,7 +1497,7 @@ class ConditionSubstring(metaclass=QueryOp):
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ):  # pylint: disable=too-many-arguments
         """Initialize."""
         self.col = col
         self.substrings = to_list(substrings)
@@ -1545,7 +1540,7 @@ class ConditionSubstring(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionStartsWith(metaclass=QueryOp):
+class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on starting with some string.
 
     Parameters
@@ -1612,7 +1607,7 @@ class ConditionStartsWith(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionEndsWith(metaclass=QueryOp):
+class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on ending with some string.
 
     Parameters
@@ -1679,7 +1674,7 @@ class ConditionEndsWith(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionInYears(metaclass=QueryOp):
+class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp column being in a list of years.
 
     Parameters
@@ -1743,7 +1738,7 @@ class ConditionInYears(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionInMonths(metaclass=QueryOp):
+class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being in a list of years.
 
     Parameters
@@ -1807,7 +1802,7 @@ class ConditionInMonths(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionBeforeDate(metaclass=QueryOp):
+class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being before some date.
 
     Parameters
@@ -1852,7 +1847,7 @@ class ConditionBeforeDate(metaclass=QueryOp):
         )
 
 
-class ConditionAfterDate(metaclass=QueryOp):
+class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Filter rows based on a timestamp being after some date.
 
     Parameters
@@ -1898,7 +1893,49 @@ class ConditionAfterDate(metaclass=QueryOp):
 
 
 @dataclass
-class Limit(metaclass=QueryOp):
+class ConditionLike(metaclass=QueryOp):
+    """Filter rows by a LIKE condition.
+
+    Parameters
+    ----------
+    col: str
+        Column to filter on.
+    pattern: str
+        Pattern to filter on.
+
+    Examples
+    --------
+    >>> Like("lab_name", "HbA1c")(table)
+
+    """
+
+    col: str
+    pattern: str
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table, cols=self.col)
+        return (
+            select(table)
+            .where(get_column(table, self.col).like(self.pattern))
+            .subquery()
+        )
+
+
+@dataclass
+class Limit(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
     """Limit the number of rows returned in a query.
 
     Parameters
@@ -1935,7 +1972,7 @@ class RandomizeOrder(metaclass=QueryOp):
     Useful when the data is ordered, so certain rows cannot
     be seen or analyzed when limited.
 
-    Warnings:
+    Warnings
     --------
     Becomes quite slow on large tables.
 
@@ -2120,8 +2157,8 @@ class GroupByAggregate(metaclass=QueryOp):
     --------
     >>> GroupByAggregate("person_id", {"person_id": "count"})(table)
     >>> GroupByAggregate("person_id", {"person_id": ("count", "visit_count")})(table)
-    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)
-    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)
+    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
+    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
 
     """
 
@@ -2183,7 +2220,7 @@ class GroupByAggregate(metaclass=QueryOp):
             if aggfunc_str == "string_agg":
                 if not bool(self.aggseps) or aggfunc_cols[i] not in self.aggseps:
                     raise ValueError(
-                        f"""Column {aggfunc_cols[i]} needs to be aggregated as string, must specify a separator!""",
+                        f"""Column {aggfunc_cols[i]} needs to be aggregated as string, must specify a separator!""",  # noqa: E501, pylint: disable=line-too-long
                     )
 
         all_names = groupby_names + aggfunc_names
