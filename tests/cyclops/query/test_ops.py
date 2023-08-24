@@ -21,6 +21,7 @@ from cyclops.query.ops import (
     ConditionInMonths,
     ConditionInYears,
     ConditionLessThan,
+    ConditionLike,
     ConditionRegexMatch,
     ConditionStartsWith,
     ConditionSubstring,
@@ -519,3 +520,12 @@ def test_distinct(visits_input):  # pylint: disable=redefined-outer-name
     visits = QUERIER.get_interface(visits_input, ops=distinct_op).run()
     assert len(visits) == 109
     visits = QUERIER.get_interface(visits_input).run()
+
+
+@pytest.mark.integration_test
+def test_condition_like(visits_input):  # pylint: disable=redefined-outer-name
+    """Test ConditionLike."""
+    like_op = ConditionLike("visit_concept_name", "Outpatient%")
+    visits = QUERIER.get_interface(visits_input, ops=like_op).run()
+    assert len(visits) == 4057
+    assert all(visits["visit_concept_name"].str.startswith("Outpatient"))

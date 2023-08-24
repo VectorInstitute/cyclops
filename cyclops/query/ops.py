@@ -1,5 +1,4 @@
 # pylint: disable=too-many-lines
-
 """Low-level query operations.
 
 This module contains query operation modules such which can be used in high-level query
@@ -1846,6 +1845,48 @@ class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-m
         return (
             select(table)
             .where(get_column(table, self.timestamp_col) >= timestamp)
+            .subquery()
+        )
+
+
+@dataclass
+class ConditionLike(metaclass=QueryOp):
+    """Filter rows by a LIKE condition.
+
+    Parameters
+    ----------
+    col: str
+        Column to filter on.
+    pattern: str
+        Pattern to filter on.
+
+    Examples
+    --------
+    >>> Like("lab_name", "HbA1c")(table)
+
+    """
+
+    col: str
+    pattern: str
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        table = _process_checks(table, cols=self.col)
+        return (
+            select(table)
+            .where(get_column(table, self.col).like(self.pattern))
             .subquery()
         )
 

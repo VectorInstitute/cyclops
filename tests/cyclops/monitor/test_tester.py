@@ -1,4 +1,4 @@
-"""unit tests for Tester module."""
+"""Unit tests for Tester module."""
 
 import numpy as np
 import pytest
