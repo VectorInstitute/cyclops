@@ -533,7 +533,10 @@ def reorder_columns(table: TableTypes, cols: List[str]) -> Subquery:
 def apply_to_columns(
     table: TableTypes,
     col_names: Union[str, List[str]],
-    func_: Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
+    funcs: Union[
+        Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
+        List[Callable],
+    ],
     new_col_labels: Optional[Union[str, List[str]]] = None,
 ) -> Subquery:
     """Apply a function to some columns.
@@ -547,8 +550,8 @@ def apply_to_columns(
         The table.
     col_names: str or list of str
         Columns to which to apply the function.
-    func_: Callable
-        Function to apply to the columns, where it takes an column
+    funcs: callable or list of callable
+        Function(s) to apply to the columns, where the function takes an column
         as its only parameter and returns another column object.
     new_col_labels: str or list of str, optional
         If specified, create new columns with these labels. Otherwise,
@@ -563,13 +566,19 @@ def apply_to_columns(
     col_names = to_list(col_names)
     new_col_labels = to_list_optional(new_col_labels)
     cols = get_columns(table, col_names)
-
+    if isinstance(funcs, list):
+        if len(funcs) != len(cols):
+            raise ValueError(
+                f"Must specify a function for each column, not {len(funcs)} functions."
+            )
+    else:
+        funcs = [funcs] * len(cols)
     if new_col_labels is None:
         # Apply to existing columns
         prev_order = get_column_names(table)
         table = select(table).add_columns(
             *[
-                func_(col).label("__" + col_names[i] + "__")
+                funcs[i](col).label("__" + col_names[i] + "__")
                 for i, col in enumerate(cols)
             ]
         )
@@ -579,7 +588,9 @@ def apply_to_columns(
         table = reorder_columns(table, prev_order)
     else:
         # Apply to new columns
-        new_cols = [func_(col).label(new_col_labels[i]) for i, col in enumerate(cols)]
+        new_cols = [
+            funcs[i](col).label(new_col_labels[i]) for i, col in enumerate(cols)
+        ]
         table = select(table).add_columns(*new_cols)
 
     return _to_subquery(table)
