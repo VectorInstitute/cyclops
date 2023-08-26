@@ -183,6 +183,9 @@ lines-after-imports = 2
 [tool.ruff.pydocstyle]
 convention = "numpy"
 
+[tool.ruff.pycodestyle]
+max-doc-length = 88
+
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203", "W503", "F401"]

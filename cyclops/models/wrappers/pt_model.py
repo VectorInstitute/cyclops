@@ -1,6 +1,7 @@
 # pylint: disable=too-many-lines
 """PyTorch model wrapper."""
 
+import contextlib
 import logging
 import os
 from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
@@ -36,6 +37,7 @@ from cyclops.models.wrappers.utils import (
 )
 from cyclops.utils.file import join, process_dir_save_path
 from cyclops.utils.log import setup_logging
+
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -134,7 +136,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         **kwargs,
     ):
         assert is_pytorch_model(
-            model
+            model,
         ), "`model` must be an instance or subclass of `torch.nn.Module`."
 
         self.model = model
@@ -209,7 +211,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         return instance_or_class(**kwargs)
 
     def _initialize_module(
-        self, module_name: str, default: Optional[str] = None, **extra_kwargs
+        self, module_name: str, default: Optional[str] = None, **extra_kwargs,
     ):
         """Initialize a module.
 
@@ -301,13 +303,13 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             all learnable parameters
 
         """
-        model = getattr(self, "model_")
-        criterion = getattr(self, "criterion_")
+        model = self.model_
+        criterion = self.criterion_
 
         if model is None or criterion is None:
             raise ValueError(
                 "Model and criterion must be initialized before getting"
-                " learnable parameters."
+                " learnable parameters.",
             )
         model_parameters = model.named_parameters()
         criterion_parameters = criterion.named_parameters()
@@ -329,7 +331,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         params = self.get_all_learnable_params()
         return self._initialize_module(
-            module_name="optimizer", default="SGD", params=params, lr=self.lr
+            module_name="optimizer", default="SGD", params=params, lr=self.lr,
         )
 
     def initialize_activation(self):
@@ -436,11 +438,10 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             Loss tensor.
 
         """
-        loss = self.criterion_(  # type: ignore[attr-defined]
+        return self.criterion_(  # type: ignore[attr-defined]
             preds.squeeze(),
             target.squeeze(),
         )
-        return loss
 
     def _train_step(self, batch, **fit_params) -> Dict[str, torch.Tensor]:
         """Train the model for one step.
@@ -564,11 +565,11 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             if target_columns is not None:
                 for batch in data_loader:
                     batch_features = torch.cat(
-                        [batch[feature] for feature in feature_columns], dim=1
+                        [batch[feature] for feature in feature_columns], dim=1,
                     )
                     try:
                         batch_labels = torch.cat(
-                            [batch[target] for target in target_columns], dim=1
+                            [batch[target] for target in target_columns], dim=1,
                         )
                     except IndexError:
                         batch_labels = torch.cat(
@@ -628,11 +629,11 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         raise ValueError(
             "`X` must be a numpy array or a `torch.utils.data.Dataset` instance."
-            f" Got {type(X)} instead."
+            f" Got {type(X)} instead.",
         )
 
     def _get_dataloader(
-        self, dataset: Union[Dataset, TorchDataset], test: bool = False
+        self, dataset: Union[Dataset, TorchDataset], test: bool = False,
     ):
         """Get PyTorch DataLoader for the data.
 
@@ -806,7 +807,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         if not self.initialized_:
             self.initialize()
 
-        try:
+        with contextlib.suppress(KeyboardInterrupt):
             self._train_loop(
                 X,
                 y=y,
@@ -815,8 +816,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                 splits_mapping=splits_mapping,
                 **fit_params,
             )
-        except KeyboardInterrupt:
-            pass
+
 
         return self
 
@@ -827,7 +827,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         feature_columns: Optional[Union[str, List[str]]] = None,
         target_columns: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Callable] = None,
-        splits_mapping: dict = {"train": "train", "validation": "validation"},
+        splits_mapping: dict = None,
         **fit_params,
     ):
         """Fit the model.
@@ -863,6 +863,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"train": "train", "validation": "validation"}
         if not self.warm_start or not self.initialized_:
             self.initialize()
 
@@ -871,7 +873,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                 raise ValueError(
                     "Missing feature columns 'feature_columns'. Please provide \
                     the name of feature columns when using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             if isinstance(feature_columns, str):
                 feature_columns = [feature_columns]
@@ -880,7 +882,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                 LOGGER.warning(
                     "Missing target columns 'target_columns'. Please provide \
                     the name of target columns when using a \
-                    Hugging Face dataset for supervised training."
+                    Hugging Face dataset for supervised training.",
                 )
             if isinstance(target_columns, str):
                 target_columns = [target_columns]
@@ -939,7 +941,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                 LOGGER.warning(
                     "Missing data labels 'y'. Please provide the labels \
                     for supervised training when not using a \
-                    Hugging Face dataset as the input."
+                    Hugging Face dataset as the input.",
                 )
             self.partial_fit(X, y, **fit_params)
 
@@ -955,7 +957,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         transforms: Optional[Callable] = None,
         metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
-        splits_mapping: dict = {"train": "train", "validation": "validation"},
+        splits_mapping: dict = None,
         **kwargs,
     ):
         """Find the best model from hyperparameter search.
@@ -995,6 +997,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         self : `PTModel`
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"train": "train", "validation": "validation"}
         raise NotImplementedError
 
     def _evaluation_step(self, batch, training: bool = False, **fit_params):
@@ -1063,7 +1067,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             preds = Dataset.from_dict({prediction_column: []})
             for batch in dataloader:
                 batch = torch.cat(
-                    [batch[feature] for feature in feature_columns], dim=1
+                    [batch[feature] for feature in feature_columns], dim=1,
                 )
                 output = self._evaluation_step(batch, training=False, **predict_params)
                 output = self.activation_(output)
@@ -1087,7 +1091,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         model_name: Optional[str] = None,
         transforms: Optional[Callable] = None,
         only_predictions: bool = False,
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         **predict_params,
     ) -> Union[Dataset, DatasetColumn, np.ndarray]:
         """Predict the output of the model.
@@ -1129,6 +1133,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
         """
         # Input is a Hugging Face Dataset Dictionary
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         if isinstance(X, DatasetDict):
             test_split = get_split(X, "test", splits_mapping=splits_mapping)
             return self.predict(
@@ -1145,7 +1151,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                 raise ValueError(
                     "Missing feature columns 'feature_columns'. Please provide \
                     the name of feature columns when using \
-                    a Hugging Face dataset as the input."
+                    a Hugging Face dataset as the input.",
                 )
             if isinstance(feature_columns, str):
                 feature_columns = [feature_columns]
@@ -1172,8 +1178,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
                 if only_predictions:
                     return DatasetColumn(preds_ds.with_format("numpy"), pred_column)
-                X = concatenate_datasets([X, preds_ds], axis=1)
-                return X
+                return concatenate_datasets([X, preds_ds], axis=1)
 
         # Input is not a Hugging Face Dataset
         return self.predict_proba(X, **predict_params)
@@ -1306,7 +1311,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             raise ValueError(
                 "Expected the file to be a checkpoint file."
                 " Probably, the file is a model file."
-                " Please call `save_model` instead of `torch.save`."
+                " Please call `save_model` instead of `torch.save`.",
             )
 
         if not self.initialized_:
