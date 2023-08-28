@@ -23,11 +23,10 @@ from monai.transforms.utility.array import ToNumpy
 
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
-
-# pylint: disable=fixme
 
 
 @dataclass
@@ -52,7 +51,7 @@ class MedicalImage(Image):  # type: ignore
         [
             LoadImage(reader=reader, simple_keys=True, dtype=None, image_only=True),
             ToNumpy(),
-        ]
+        ],
     )
     # Automatically constructed
     dtype: ClassVar[str] = "dict"
@@ -60,7 +59,8 @@ class MedicalImage(Image):  # type: ignore
     _type: str = field(default="MedicalImage", init=False, repr=False)
 
     def encode_example(
-        self, value: Union[str, Dict[str, Any], npt.NDArray[Any]]
+        self,
+        value: Union[str, Dict[str, Any], npt.NDArray[Any]],
     ) -> Dict[str, Any]:
         """Encode example into a format for Arrow.
 
@@ -89,7 +89,9 @@ class MedicalImage(Image):  # type: ignore
             if filename is not None and filename != "":
                 output_ext_ = os.path.splitext(filename)[1]
             return _encode_ndarray(
-                value["array"], metadata=metadata_, image_format=output_ext_
+                value["array"],
+                metadata=metadata_,
+                image_format=output_ext_,
             )
         if value.get("path") is not None and os.path.isfile(value["path"]):
             # we set "bytes": None to not duplicate the data
@@ -102,7 +104,7 @@ class MedicalImage(Image):  # type: ignore
 
         raise ValueError(
             "An image sample should have one of 'path' or 'bytes' "
-            f"but they are missing or None in {value}."
+            f"but they are missing or None in {value}.",
         )
 
     def decode_example(
@@ -130,7 +132,7 @@ class MedicalImage(Image):  # type: ignore
         if not self.decode:
             raise RuntimeError(
                 "Decoding is disabled for this feature. "
-                "Please use MedicalImage(decode=True) instead."
+                "Please use MedicalImage(decode=True) instead.",
             )
 
         if token_per_repo_id is None:
@@ -141,7 +143,7 @@ class MedicalImage(Image):  # type: ignore
             if path is None:
                 raise ValueError(
                     "An image should have one of 'path' or 'bytes' but both are "
-                    f"None in {value}."
+                    f"None in {value}.",
                 )
 
             if is_local_path(path):
@@ -170,7 +172,8 @@ class MedicalImage(Image):  # type: ignore
         return {"array": image, "metadata": metadata}
 
     def _read_file_from_bytes(
-        self, buffer: BytesIO
+        self,
+        buffer: BytesIO,
     ) -> Tuple[npt.NDArray[Any], Dict[str, Any]]:
         """Read an image from bytes.
 
@@ -203,8 +206,8 @@ def _encode_ndarray(
 
     Parameters
     ----------
-    array_or_tensor : NdarrayOrTensor
-        Numpy array or torch tensor.
+    array : numpy.ndarray
+        Numpy array to encode.
     metadata : dict, optional, default=None
         Metadata dictionary.
     image_format : str, optional, default=".png"

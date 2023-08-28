@@ -8,6 +8,7 @@ import pytest
 import scipy as sp
 from numpy.typing import ArrayLike
 
+
 BATCH_SIZE = 16
 NUM_BATCHES = 8
 NUM_CLASSES = 10
@@ -83,7 +84,8 @@ _multiclass_cases = (
         Input(
             target=np.random.randint(0, NUM_CLASSES, (NUM_BATCHES, BATCH_SIZE)),
             preds=sp.special.softmax(
-                np.random.randn(NUM_BATCHES, BATCH_SIZE, NUM_CLASSES), axis=-1
+                np.random.randn(NUM_BATCHES, BATCH_SIZE, NUM_CLASSES),
+                axis=-1,
             ),
         ),
         id="input[probs]",
@@ -92,7 +94,8 @@ _multiclass_cases = (
         Input(
             target=np.random.randint(0, NUM_CLASSES, (NUM_BATCHES, BATCH_SIZE)),
             preds=sp.special.log_softmax(
-                (np.random.rand(NUM_BATCHES, BATCH_SIZE, NUM_CLASSES)), axis=-1
+                (np.random.rand(NUM_BATCHES, BATCH_SIZE, NUM_CLASSES)),
+                axis=-1,
             ),
         ),
         id="input[logits]",

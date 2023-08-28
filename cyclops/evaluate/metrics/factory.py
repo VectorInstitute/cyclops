@@ -25,7 +25,9 @@ def create_metric(metric_name: str, **kwargs: Optional[Mapping[str, Any]]) -> Me
     metric_class = _METRIC_REGISTRY.get(metric_name, None)
     if metric_class is None:
         similar_keys_list: List[str] = get_close_matches(
-            metric_name, _METRIC_REGISTRY.keys(), n=5
+            metric_name,
+            _METRIC_REGISTRY.keys(),
+            n=5,
         )
         similar_keys: str = ", ".join(similar_keys_list)
         similar_keys = (

@@ -10,6 +10,7 @@ from cyclops.process.column_names import DIAGNOSIS_TRAJECTORY
 from cyclops.process.constants import EMPTY_STRING, TRAJECTORIES
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -119,7 +120,8 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
 
 
 def process_diagnoses(
-    series: pd.Series, trajectories: Optional[Dict] = None
+    series: pd.Series,
+    trajectories: Optional[Dict] = None,
 ) -> pd.Series:
     """Process diagnoses data (codes) into trajectories.
 
@@ -140,6 +142,4 @@ def process_diagnoses(
         trajectories = TRAJECTORIES
 
     series = series.apply(get_icd_category, args=(trajectories,))
-    series = series.rename(DIAGNOSIS_TRAJECTORY)
-
-    return series
+    return series.rename(DIAGNOSIS_TRAJECTORY)

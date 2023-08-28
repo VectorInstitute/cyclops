@@ -23,6 +23,7 @@ from cyclops.process.util import has_columns
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -213,7 +214,9 @@ IMPUTEFUNCS = {
     DROP: lambda series, null: series[~null],
     MEAN: lambda series, null: fill_null_with(series, null, series.mean(skipna=True)),
     MEDIAN: lambda series, null: fill_null_with(
-        series, null, series.median(skipna=True)
+        series,
+        null,
+        series.median(skipna=True),
     ),
     MODE: lambda series, null: fill_null_with(series, null, series.mode().iloc[0]),
     FFILL: lambda series, _: series.ffill(),
@@ -258,20 +261,19 @@ class SeriesImputer:
         self.using_drop = imputefunc == DROP
 
         if self.using_drop:
-            LOGGER.warning(  # pylint: disable=logging-not-lazy
+            LOGGER.warning(
                 "The imputer DROP strategy is rarely used. "
                 + "The IGNORE strategy may be more fitting, more robust, "
-                + "and less expensive."
+                + "and less expensive.",
             )
 
         self.imputefunc = self._process_imputefunc(imputefunc)
         self.allow_nulls_returned = allow_nulls_returned
 
-        if limit_area is not None:
-            if limit_area not in [INTER, EXTRA]:
-                raise ValueError(
-                    f"If specified, limit_area must be in: {', '.join([INTER, EXTRA])}."
-                )
+        if limit_area is not None and limit_area not in [INTER, EXTRA]:
+            raise ValueError(
+                f"If specified, limit_area must be in: {', '.join([INTER, EXTRA])}.",
+            )
 
         self.limit_area = limit_area
 
@@ -291,7 +293,7 @@ class SeriesImputer:
             if imputefunc not in IMPUTEFUNCS:
                 raise ValueError(
                     f"""Imputefunc string {imputefunc} not supported.
-                    Supporting: {','.join(IMPUTEFUNCS)}"""
+                    Supporting: {','.join(IMPUTEFUNCS)}""",
                 )
             func = IMPUTEFUNCS[imputefunc]
         elif callable(imputefunc):
@@ -395,20 +397,19 @@ class SeriesImputer:
                 (
                     "Different length returned from imputation function when"
                     "not using the 'DROP' function."
-                )
+                ),
             )
 
         # Check if nulls were returned when not allowed
-        if not self.allow_nulls_returned:
-            if series.isnull().values.any():
-                raise ValueError(
-                    "Nulls returned from imputation function when not allowed."
-                )
+        if not self.allow_nulls_returned and series.isnull().values.any():
+            raise ValueError(
+                "Nulls returned from imputation function when not allowed.",
+            )
 
         return series, null_percent
 
 
-class TabularImputer:  # pylint: disable=too-few-public-methods
+class TabularImputer:
     """Imputation of tabular data.
 
     Attributes
@@ -432,7 +433,7 @@ class TabularImputer:  # pylint: disable=too-few-public-methods
                         "TabularImputer does not accept series imputers using the ",
                         "DROP strategy. Explore other strategy like IGNORE, or ",
                         "consider using no imputation.",
-                    )
+                    ),
                 )
 
     @time_function
@@ -451,34 +452,6 @@ class TabularImputer:  # pylint: disable=too-few-public-methods
             data[col], null_percents[col] = imputer(data[col])
 
         return data, null_percents
-
-
-# class GroupbyImputer:
-#     """Imputation over groups.
-
-#     Attributes
-#     ----------
-#     imputers: dict
-#         Aggregation functions mapped from column to imputer.
-#     by: str
-#     """
-#     def __init__(
-#         self,
-#         imputers: Dict[str, SeriesImputer],
-#         by: Union[str, List[str]],  # pylint: disable=invalid-name
-#     ):
-#         self.imputers = imputers
-#         self.by = to_list(self.by)  # pylint: disable=invalid-name
-
-#     def __call__(data: pd.DataFrame) -> pd.DataFrame:
-
-
-# class TemporalImputer:
-#     """Imputation of temporal data.
-
-#     """
-#     def __init__(self):
-#         pass
 
 
 class AggregatedImputer:
@@ -510,14 +483,14 @@ class AggregatedImputer:
             for series_imputer in self.inter_imputer.imputers.values():
                 if not series_imputer.limit_area == INTER:
                     raise ValueError(
-                        f"inter_imputer SeriesImputer limit_area='{INTER}'."
+                        f"inter_imputer SeriesImputer limit_area='{INTER}'.",
                     )
 
         if self.extra_imputer is not None:
             for series_imputer in self.extra_imputer.imputers.values():
                 if not series_imputer.limit_area == EXTRA:
                     raise ValueError(
-                        f"extra_imputer SeriesImputer limit_area='{EXTRA}'."
+                        f"extra_imputer SeriesImputer limit_area='{EXTRA}'.",
                     )
 
     def intra(self, group: pd.DataFrame) -> pd.DataFrame:
@@ -615,5 +588,4 @@ def numpy_2d_ffill(arr: np.ndarray) -> np.ndarray:
     mask = np.isnan(arr)
     idx = np.where(~mask, np.arange(mask.shape[1]), 0)
     np.maximum.accumulate(idx, axis=1, out=idx)
-    out = arr[np.arange(idx.shape[0])[:, None], idx]
-    return out
+    return arr[np.arange(idx.shape[0])[:, None], idx]

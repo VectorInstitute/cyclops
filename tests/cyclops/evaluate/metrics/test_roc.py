@@ -5,6 +5,11 @@ from typing import Any, List, Tuple
 import numpy as np
 import pytest
 import scipy as sp
+from sklearn.metrics import roc_curve as sk_roc_curve
+
+from cyclops.evaluate.metrics.functional import roc_curve as cyclops_roc_curve
+from cyclops.evaluate.metrics.roc import ROCCurve
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -13,11 +18,6 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from sklearn.metrics import roc_curve as sk_roc_curve
-
-from cyclops.evaluate.metrics.functional import roc_curve as cyclops_roc_curve
-from cyclops.evaluate.metrics.roc import ROCCurve
-from cyclops.evaluate.metrics.utils import sigmoid
 
 
 def _sk_binary_roc_curve(
@@ -26,11 +26,14 @@ def _sk_binary_roc_curve(
     pos_label: int = 1,
 ) -> List[Any]:
     """Compute ROC curve for binary case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sigmoid(preds)
 
     fpr, tpr, thresholds = sk_roc_curve(
-        y_true=target, y_score=preds, pos_label=pos_label, drop_intermediate=False
+        y_true=target,
+        y_score=preds,
+        pos_label=pos_label,
+        drop_intermediate=False,
     )
     thresholds[0] = 1.0
 
@@ -72,7 +75,7 @@ def _sk_multiclass_roc_curve(
     preds: np.ndarray,
 ) -> List:
     """Compute ROC curve for multiclass case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sp.special.softmax(preds, 1)
 
     fpr, tpr, thresholds = [], [], []

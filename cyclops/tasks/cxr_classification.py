@@ -20,10 +20,9 @@ from cyclops.tasks.base import BaseTask
 from cyclops.tasks.utils import CXR_TARGET, apply_image_transforms
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
-
-# pylint: disable=dangerous-default-value
 
 
 class CXRClassificationTask(BaseTask):
@@ -39,7 +38,7 @@ class CXRClassificationTask(BaseTask):
         ],
         task_features: Union[str, List[str]] = "image",
         task_target: Union[str, List[str]] = CXR_TARGET,
-    ):
+    ) -> None:
         """Chest X-ray classification task.
 
         Parameters
@@ -93,7 +92,7 @@ class CXRClassificationTask(BaseTask):
         dataset: Union[np.ndarray, Dataset, DatasetDict],
         model_name: Optional[str] = None,
         transforms: Optional[Compose] = None,
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         **kwargs,
     ) -> Union[np.ndarray, Dataset]:
         """Predict the pathologies on the given dataset.
@@ -118,6 +117,8 @@ class CXRClassificationTask(BaseTask):
             Predicted labels or the Hugging Face dataset with predicted labels.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         model_name, model = self.get_model(model_name)
 
         if transforms:
@@ -142,7 +143,7 @@ class CXRClassificationTask(BaseTask):
         model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Compose] = None,
         prediction_column_prefix: str = "predictions",
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         slice_spec: Optional[SliceSpec] = None,
         batch_size: int = 64,
         remove_columns: Optional[Union[str, List[str]]] = None,
@@ -187,6 +188,8 @@ class CXRClassificationTask(BaseTask):
             Dictionary with evaluation results.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         if isinstance(dataset, DatasetDict):
             split = get_split(dataset, "test", splits_mapping=splits_mapping)
             dataset = dataset[split]

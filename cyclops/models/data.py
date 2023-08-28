@@ -26,19 +26,18 @@ class PTDataset(Dataset):
         self,
         X: Union[np.ndarray, torch.Tensor],
         y: Optional[Union[np.ndarray, torch.Tensor]] = None,
-    ):
+    ) -> None:
         self.X = X
         self.y = y
 
-        # pylint: disable=invalid-name
-        len_X = len(X)
+        len_X = len(X)  # noqa: N806
         if y is not None:
             len_y = len(y)
             if len_y != len_X:
                 raise ValueError("X and y have inconsistent lengths.")
         self._len = len_X
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the length of the dataset."""
         return self._len
 
@@ -61,7 +60,11 @@ class VectorizedLoader:
     """Vectorized data loader."""
 
     def __init__(
-        self, dataset_name: str, use_case: str, data_type: str, data_dir: str
+        self,
+        dataset_name: str,
+        use_case: str,
+        data_type: str,
+        data_dir: str,
     ) -> None:
         """Initialize loader.
 
@@ -190,8 +193,7 @@ class VectorizedLoader:
 
     @property
     def val_c_counts(self) -> dict:
-        """Get the number of instances for each label in the validation set, as an \
-        attribute.
+        """Get the number of instances for each label in the val set, as an attribute.
 
         Returns
         -------
@@ -305,8 +307,7 @@ class VectorizedLoader:
         """
         arr = np.squeeze(vec.data, 0)
         arr = np.moveaxis(arr, 2, 0)
-        arr = np.nan_to_num(arr)
-        return arr
+        return np.nan_to_num(arr)
 
     def _get_temporal_data(self) -> tuple:
         """Get temporal data.

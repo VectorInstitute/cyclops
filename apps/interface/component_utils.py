@@ -16,7 +16,8 @@ def flatten_2d_tuple(tuple_of_tuples):
 
 
 def generate_table_contents(
-    data: pd.DataFrame, display_limit: Optional[int] = None
+    data: pd.DataFrame,
+    display_limit: Optional[int] = None,
 ) -> List:
     """Generate the table content objects."""
     if display_limit is not None:
@@ -25,8 +26,7 @@ def generate_table_contents(
     columns, values = data.columns, data.astype(str).values
     header = [html.Tr([html.Th(col) for col in columns])]
     rows = [html.Tr([html.Td(cell) for cell in row]) for row in values]
-    table = [html.Thead(header), html.Tbody(rows)]
-    return table
+    return [html.Thead(header), html.Tbody(rows)]
 
 
 def table_result(title, id_):
@@ -70,7 +70,7 @@ def get_dataframe_info(data):
             "Column": data.columns,
             "Non-Null Count": len(data) - data.isnull().sum().values,
             "Dtype": data.dtypes.values,
-        }
+        },
     )
 
 

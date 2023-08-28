@@ -1,7 +1,5 @@
 """Querying functions used in the query page."""
 
-# pylint: disable=no-member
-
 from typing import Dict
 
 import pandas as pd
@@ -12,6 +10,7 @@ from cyclops.query.mimiciv import MIMICIVQuerier
 from cyclops.query.util import get_column
 
 from .consts import APP_DIAG, APP_ENC  # , APP_EVENT
+
 
 db = MIMICIVQuerier()
 
@@ -42,7 +41,7 @@ def patient_diagnoses(kwargs):
     return db.patient_diagnoses(**kwargs)
 
 
-def query(  # pylint: disable=too-many-arguments
+def query(
     encounter_checked,
     encounter_kwargs,
     age_min,
@@ -67,7 +66,9 @@ def query(  # pylint: disable=too-many-arguments
         else:
             diagnoses = patient_diagnoses(diagnosis_kwargs).run()
             datas[APP_ENC] = pd.merge(
-                encounters, diagnoses.drop(SUBJECT_ID, axis=1), on=ENCOUNTER_ID
+                encounters,
+                diagnoses.drop(SUBJECT_ID, axis=1),
+                on=ENCOUNTER_ID,
             )
 
     # datas[APP_EVENT] = ...

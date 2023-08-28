@@ -118,13 +118,21 @@ class SliceSpec:
     """
 
     spec_list: List[Dict[str, Dict[str, Any]]] = field(
-        default_factory=lambda: [{}], init=True, repr=True, hash=True, compare=True
+        default_factory=lambda: [{}],
+        init=True,
+        repr=True,
+        hash=True,
+        compare=True,
     )
     validate: bool = True
     column_names: Optional[List[str]] = None
 
     _registry: Dict[str, Callable[[Dict[str, Any]], Union[bool, List[bool]]]] = field(
-        default_factory=dict, init=False, repr=False, hash=False, compare=False
+        default_factory=dict,
+        init=False,
+        repr=False,
+        hash=False,
+        compare=False,
     )
 
     def __post_init__(self) -> None:
@@ -161,12 +169,13 @@ class SliceSpec:
             yield registration_key, slice_function
 
     def _parse_and_register_slice_specs(
-        self, slice_spec: Dict[str, Dict[str, Any]]
+        self,
+        slice_spec: Dict[str, Dict[str, Any]],
     ) -> None:
         """Construct and register a slice functions from slice specifications."""
         if not isinstance(slice_spec, dict):
             raise TypeError(
-                f"Expected `slice_spec` to be a dictionary. Got {type(slice_spec)}"
+                f"Expected `slice_spec` to be a dictionary. Got {type(slice_spec)}",
             )
 
         if len(slice_spec) == 0:  # empty dictionary. Interpret as `overall` slice
@@ -179,7 +188,7 @@ class SliceSpec:
             slice_functions = []
             for column_name, spec in slice_spec.items():
                 sub_registration_key, slice_function = self._parse_single_spec_dict(
-                    {column_name: spec}
+                    {column_name: spec},
                 )
                 slice_functions.append(slice_function)
                 registration_key += f"{sub_registration_key}&"
@@ -190,7 +199,8 @@ class SliceSpec:
         self._registry[registration_key] = slice_function
 
     def _parse_single_spec_dict(
-        self, slice_spec: Dict[str, Dict[str, Any]]
+        self,
+        slice_spec: Dict[str, Dict[str, Any]],
     ) -> Tuple[str, Callable[..., Union[bool, List[bool]]]]:
         """Return the registration key and slice function for a single slice spec."""
         column_name, spec = next(iter(slice_spec.items()))
@@ -199,7 +209,7 @@ class SliceSpec:
         self._check_column_names(column_names=column_name)
         if not isinstance(spec, dict):
             raise TypeError(
-                f"Expected feature value to be a dictionary. Got {type(spec)} "
+                f"Expected feature value to be a dictionary. Got {type(spec)} ",
             )
 
         if "value" in spec:  # filter on exact value
@@ -263,10 +273,11 @@ class SliceSpec:
                 [
                     f"{k}={v}"
                     for k, v in zip(
-                        ("year", "month", "day", "hour"), (year, month, day, hour)
+                        ("year", "month", "day", "hour"),
+                        (year, month, day, hour),
                     )
                     if v is not None
-                ]
+                ],
             )
 
             slice_function = partial(
@@ -304,13 +315,15 @@ class SliceSpec:
 
             registration_key = f"{column_name}:non_null"
             slice_function = partial(
-                filter_non_null, column_names=column_name, negate=negated
+                filter_non_null,
+                column_names=column_name,
+                negate=negated,
             )
         else:
             raise ValueError(
                 "Expected the slice specification to contain `value`, `min_value`, "
                 "`max_value`, `contains`, `year`, `month`, `day`, `hour` or "
-                f"`keep_nulls`. Got {spec} instead."
+                f"`keep_nulls`. Got {spec} instead.",
             )
 
         if negated:
@@ -332,12 +345,12 @@ class SliceSpec:
             ):
                 raise KeyError(
                     f"Column name '{column_names}' is not in the dataset. "
-                    f"Valid column names are: {self.column_names}"
+                    f"Valid column names are: {self.column_names}",
                 )
         else:
             raise TypeError(
                 "Expected `column_names` to be a string or list of strings."
-                f"Got {type(column_names)} instead."
+                f"Got {type(column_names)} instead.",
             )
 
 
@@ -357,7 +370,8 @@ def overall(examples: Dict[str, Any]) -> Union[bool, List[bool]]:
 
     """
     result: List[bool] = np.ones_like(
-        next(iter(examples.values())), dtype=bool
+        next(iter(examples.values())),
+        dtype=bool,
     ).tolist()
     if len(result) == 1:
         return result[0]
@@ -365,7 +379,9 @@ def overall(examples: Dict[str, Any]) -> Union[bool, List[bool]]:
 
 
 def filter_non_null(
-    examples: Dict[str, Any], column_names: Union[str, List[str]], negate: bool = False
+    examples: Dict[str, Any],
+    column_names: Union[str, List[str]],
+    negate: bool = False,
 ) -> Union[bool, List[bool]]:
     """Return True for all examples where the feature/column is not null.
 
@@ -395,7 +411,7 @@ def filter_non_null(
     ):
         raise ValueError(
             "Expected `column_names` to be a string or list of strings. "
-            f"Got {column_names} of type {type(column_names)}"
+            f"Got {column_names} of type {type(column_names)}",
         )
 
     if isinstance(column_names, str):
@@ -444,11 +460,13 @@ def filter_value(
     value_is_datetime = is_datetime(value)  # only checks timestrings
 
     value = pd.Series(
-        value, dtype="datetime64[ns]" if value_is_datetime else None
+        value,
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     example_values = pd.Series(
-        examples[column_name], dtype="datetime64[ns]" if value_is_datetime else None
+        examples[column_name],
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     result = np.isin(example_values, value, invert=negate)
@@ -510,22 +528,24 @@ def filter_range(
     """
     # handle datetime values
     min_value, max_value, value_is_datetime = _maybe_convert_to_datetime(
-        min_value, max_value
+        min_value,
+        max_value,
     )
 
     if min_value > max_value:
         raise ValueError(
             "Expected `min_value` to be less than or equal to `max_value`, but got "
-            f"min_value={min_value} and max_value={max_value}."
+            f"min_value={min_value} and max_value={max_value}.",
         )
     if min_value == max_value and not (min_inclusive and max_inclusive):
         raise ValueError(
             "`min_value` and `max_value` are equal and either `min_inclusive` or "
-            "`max_inclusive` is False. This would result in an empty range."
+            "`max_inclusive` is False. This would result in an empty range.",
         )
 
     example_values = pd.Series(
-        examples[column_name], dtype="datetime64[ns]" if value_is_datetime else None
+        examples[column_name],
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     if not (  # column does not contain number or datetime values
@@ -534,7 +554,7 @@ def filter_range(
     ):
         raise TypeError(
             "Expected feature to be numeric or datetime, but got "
-            f"{example_values.dtype}."
+            f"{example_values.dtype}.",
         )
 
     result = (
@@ -610,7 +630,7 @@ def filter_datetime(
     except ValueError as exc:
         raise TypeError(
             "Expected datetime feature, but got feature of type "
-            f"{example_values.dtype.name}."
+            f"{example_values.dtype.name}.",
         ) from exc
 
     # convert the datetime values to year, month, day, hour
@@ -693,19 +713,20 @@ def filter_string_contains(
     # make sure the column has string type
     example_values = pd.Series(examples[column_name])
     if example_values.dtype.name != "object" and not isinstance(
-        example_values.dtype, pd.StringDtype
+        example_values.dtype,
+        pd.StringDtype,
     ):
         raise ValueError(
             "Expected string feature, but got feature of type "
-            f"{example_values.dtype.name}."
+            f"{example_values.dtype.name}.",
         )
     if example_values.dtype.name == "object":  # object type could be string
         try:
-            example_values.str
+            _ = example_values.str
         except AttributeError as exc:
             raise TypeError(
                 "Expected string feature, but got feature of type "
-                f"{example_values.dtype.name}."
+                f"{example_values.dtype.name}.",
             ) from exc
 
     # get all the values that contain the given substring
@@ -717,10 +738,10 @@ def filter_string_contains(
         if not isinstance(substring, str):
             raise TypeError(
                 f"Expected string value for `contains`, but got value of type "
-                f"{type(substring)}."
+                f"{type(substring)}.",
             )
         result |= example_values.str.contains(substring, case=False).to_numpy(
-            dtype=bool
+            dtype=bool,
         )
 
     if negate:
@@ -757,7 +778,7 @@ def compound_filter(
 
     """
     result: Union[bool, List[bool]] = np.bitwise_and.reduce(
-        [slice_function(examples) for slice_function in slice_functions]
+        [slice_function(examples) for slice_function in slice_functions],
     )
 
     return result

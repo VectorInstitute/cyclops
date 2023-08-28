@@ -9,6 +9,7 @@ from xgboost import XGBClassifier
 from cyclops.models.catalog import create_model, list_models, register_model, wrap_model
 from cyclops.models.neural_nets import GRUModel, LSTMModel, MLPModel, RNNModel
 
+
 register_model(name="sgd_classifier", model_type="static")(SGDClassifier)
 register_model(name="sgd_regressor", model_type="static")(SGDRegressor)
 register_model("rf_classifier", model_type="static")(RandomForestClassifier)

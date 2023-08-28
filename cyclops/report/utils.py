@@ -40,13 +40,13 @@ def str_to_snake_case(string: str) -> str:
     'hello_world'
 
     """
-    string = "_".join(
+    return "_".join(
         sub(
-            "([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", string.replace("-", " "))
-        ).split()
+            "([A-Z][a-z]+)",
+            r" \1",
+            sub("([A-Z]+)", r" \1", string.replace("-", " ")),
+        ).split(),
     ).lower()
-
-    return string
 
 
 def _raise_if_not_dict_with_str_keys(data: Any) -> None:
@@ -63,9 +63,7 @@ def _raise_if_not_dict_with_str_keys(data: Any) -> None:
         If `data` is not a dictionary with string keys.
 
     """
-    if not (
-        isinstance(data, Mapping) and all(isinstance(key, str) for key in data.keys())
-    ):
+    if not (isinstance(data, Mapping) and all(isinstance(key, str) for key in data)):
         raise TypeError(f"Expected a dictionary with string keys. Got {data} instead.")
 
 
@@ -94,7 +92,7 @@ def _object_is_in_model_card_module(obj: object) -> bool:
     return False
 
 
-def flatten_results_dict(
+def flatten_results_dict(  # noqa: PLR0912
     results: Dict[str, Dict[str, Dict[str, Any]]],
     remove_metrics: Optional[Union[str, List[str]]] = None,
     remove_slices: Optional[Union[str, List[str]]] = None,
@@ -134,9 +132,7 @@ def flatten_results_dict(
 
     results_flat = {}
     if model_name:
-        assert (
-            model_name in results.keys()
-        ), f"Model name {model_name} not found in results."
+        assert model_name in results, f"Model name {model_name} not found in results."
         model_results = results[model_name]
         for slice_name, slice_results in model_results.items():
             for metric_name, metric_value in slice_results.items():
@@ -309,10 +305,10 @@ def get_metrics_trends(
         name_split = metric_name.split("/")
         if len(name_split) == 1:
             slice_name = "overall"
-            metric_name = name_split[0]
+            metric_name = name_split[0]  # noqa: PLW2901
         else:  # everything before the last slash is the slice name
             slice_name = "/".join(name_split[:-1])
-            metric_name = name_split[-1]
+            metric_name = name_split[-1]  # noqa: PLW2901
 
         data = {"type": metric_name, "value": metric_value, "slice": slice_name}
         performance_recent.append(data)

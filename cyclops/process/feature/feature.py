@@ -31,6 +31,7 @@ from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -62,7 +63,7 @@ class FeatureMeta:
         if kwargs[FEATURE_TYPE_ATTR] not in FEATURE_TYPES:
             raise ValueError(
                 f"""Feature type '{kwargs[FEATURE_TYPE_ATTR]}'
-                not in {', '.join(FEATURE_TYPES)}."""
+                not in {', '.join(FEATURE_TYPES)}.""",
             )
 
         # Set attributes
@@ -76,7 +77,7 @@ class FeatureMeta:
         invalid_params = [kwarg for kwarg in kwargs if kwarg not in FEATURE_META_ATTRS]
         if len(invalid_params) > 0:
             raise ValueError(
-                f"Invalid feature meta parameters {', '.join(invalid_params)}."
+                f"Invalid feature meta parameters {', '.join(invalid_params)}.",
             )
 
     def get_type(self) -> str:
@@ -161,11 +162,11 @@ class Features:
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         data: pd.DataFrame,
         features: Union[str, List[str]],
-        by: Optional[Union[str, List[str]]],  # pylint: disable=invalid-name
+        by: Optional[Union[str, List[str]]],
         targets: Union[str, List[str], None] = None,
         force_types: Optional[dict] = None,
         normalizers: Optional[Dict[str, GroupbyNormalizer]] = None,
@@ -177,7 +178,7 @@ class Features:
 
         if not has_range_index(data):
             raise ValueError(
-                "Data required to have a range index. Try resetting the index."
+                "Data required to have a range index. Try resetting the index.",
             )
 
         # Force a range index
@@ -192,7 +193,7 @@ class Features:
         has_columns(data, feature_list, raise_error=True)
         has_columns(data, target_list, raise_error=True)
 
-        self.by = to_list_optional(by)  # pylint: disable=invalid-name
+        self.by = to_list_optional(by)
 
         if self.by is not None:
             has_columns(data, self.by, raise_error=True)
@@ -434,10 +435,9 @@ class Features:
         unique = self.data[on_col].unique()
         unique.sort()
         idx_splits = list(
-            split_idx(fractions, len(unique), randomize=randomize, seed=seed)
+            split_idx(fractions, len(unique), randomize=randomize, seed=seed),
         )
-        value_splits = [np.take(unique, split) for split in idx_splits]
-        return value_splits
+        return [np.take(unique, split) for split in idx_splits]
 
     def _update_meta(self, meta_update: dict) -> None:
         """Update feature metadata.
@@ -487,7 +487,7 @@ class Features:
                 # Do not allow converting to categorical indicators inplace
                 if inplace and new_type == CATEGORICAL_INDICATOR:
                     raise ValueError(
-                        f"Cannot convert {col} to binary categorical indicators."
+                        f"Cannot convert {col} to binary categorical indicators.",
                     )
 
         data, meta = to_types(data, new_types)
@@ -518,7 +518,7 @@ class Features:
 
         """
         infer_features = to_list(
-            set(self.features) - set(to_list_optional(force_types, none_to_empty=True))
+            set(self.features) - set(to_list_optional(force_types, none_to_empty=True)),
         )
 
         new_types = infer_types(self.data, infer_features)
@@ -547,10 +547,10 @@ class Features:
         """
         if key in self.normalizers:
             raise ValueError(
-                "A normalizer with this key already exists. Consider first removing it."
+                "A normalizer with this key already exists. Consider first removing it.",
             )
 
-        by = normalizer.get_by()  # pylint: disable=invalid-name
+        by = normalizer.get_by()
         if by is not None:
             has_columns(self.data, by, raise_error=True)
 
@@ -563,23 +563,21 @@ class Features:
             intersect = norm_set.intersection(features)
             if len(intersect) != 0:
                 raise ValueError(
-                    f"Features {', '.join(intersect)} exist in normalizer {norm_key}."
+                    f"Features {', '.join(intersect)} exist in normalizer {norm_key}.",
                 )
 
         # Check for non-existent columns in the map
         nonexistent = set(normalizer_map.keys()) - set(self.features)
         if len(nonexistent) > 0:
             raise ValueError(
-                f"The following columns are not features: {', '.join(nonexistent)}."
+                f"The following columns are not features: {', '.join(nonexistent)}.",
             )
 
         # Check for invalid non-numeric columns
-        is_numeric = [
-            self.meta[col].get_type() == NUMERIC for col in normalizer_map.keys()
-        ]
+        is_numeric = [self.meta[col].get_type() == NUMERIC for col in normalizer_map]
         if not all(is_numeric):
             raise ValueError(
-                "Only numeric features may be normalized. Confirm feature choice/type."
+                "Only numeric features may be normalized. Confirm feature choice/type.",
             )
 
         gbn = GroupbyNormalizer(normalizer_map, by)
@@ -647,7 +645,7 @@ class Features:
         """
         if not self.normalized[key]:
             raise ValueError(
-                f"Cannot inverse normalize {key}. It has not been normalized."
+                f"Cannot inverse normalize {key}. It has not been normalized.",
             )
 
         gbn = self.normalizers[key]
@@ -685,7 +683,7 @@ class Features:
 
             if self.meta[feat].get_type() != ORDINAL:
                 raise ValueError(
-                    f"{feat} must be an ordinal feature to convert to indicators."
+                    f"{feat} must be an ordinal feature to convert to indicators.",
                 )
 
         # Map back to original values
@@ -695,7 +693,9 @@ class Features:
 
         # Convert to binary categorical indicators
         return self._to_feature_types(
-            data, {feat: CATEGORICAL_INDICATOR for feat in features}, inplace=False
+            data,
+            {feat: CATEGORICAL_INDICATOR for feat in features},
+            inplace=False,
         )
 
     def save(self, save_path: str, file_format: str = "parquet") -> str:
@@ -749,7 +749,7 @@ class Features:
             sliced_indices.append(
                 self.data[self.data[slice_col].isin(to_list(slice_vals))][
                     self.by[0]
-                ].values
+                ].values,
             )
         if sliced_indices:
             intersect_indices = set.intersection(*map(set, sliced_indices))
@@ -769,7 +769,7 @@ class Features:
 class TabularFeatures(Features):
     """Tabular features."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         data: pd.DataFrame,
         features: Union[str, List[str]],
@@ -780,7 +780,7 @@ class TabularFeatures(Features):
         """Init."""
         if not isinstance(by, str):
             raise ValueError(
-                "Tabular features index input as a string representing a column."
+                "Tabular features index input as a string representing a column.",
             )
 
         super().__init__(
@@ -809,7 +809,7 @@ class TabularFeatures(Features):
         """
         if "features_only" in get_data_kwargs:
             raise ValueError(
-                "Cannot specify 'features_only'. It will be set to True by default."
+                "Cannot specify 'features_only'. It will be set to True by default.",
             )
 
         get_data_kwargs["features_only"] = True
@@ -820,14 +820,16 @@ class TabularFeatures(Features):
         data = data.drop(self.by, axis=1)
         feat_map = list(data.columns)
         return Vectorized(
-            data.values, indexes=[by_map, feat_map], axis_names=[self.by[0], FEATURES]
+            data.values,
+            indexes=[by_map, feat_map],
+            axis_names=[self.by[0], FEATURES],
         )
 
 
 class TemporalFeatures(Features):
     """Temporal features."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         data: pd.DataFrame,
         features: Union[str, List[str]],
@@ -853,7 +855,7 @@ class TemporalFeatures(Features):
     def _check_aggregator(self):
         if self.aggregator.get_timestamp_col() != self.timestamp_col:
             raise ValueError(
-                "Features and aggregator timestamp columns must be the same."
+                "Features and aggregator timestamp columns must be the same.",
             )
 
     def aggregate(self, **aggregate_kwargs) -> pd.DataFrame:
@@ -872,7 +874,7 @@ class TemporalFeatures(Features):
         """
         if self.aggregator is None:
             raise ValueError(
-                "Must pass an aggregator when creating features to aggregate."
+                "Must pass an aggregator when creating features to aggregate.",
             )
 
         agg_features = self.aggregator.get_aggfuncs().keys()
@@ -881,7 +883,7 @@ class TemporalFeatures(Features):
         nonexistent = set(agg_features) - set(self.features)
         if len(nonexistent) > 0:
             raise ValueError(
-                f"The following columns are not features: {', '.join(nonexistent)}."
+                f"The following columns are not features: {', '.join(nonexistent)}.",
             )
 
         return self.aggregator(self.data, **aggregate_kwargs)
@@ -916,7 +918,9 @@ def split_features(
 
     """
     value_splits = features[0].compute_value_splits(
-        fractions, randomize=randomize, seed=seed
+        fractions,
+        randomize=randomize,
+        seed=seed,
     )
     feature_splits = [feat.split_by_values(value_splits) for feat in features]
     return tuple(feature_splits)

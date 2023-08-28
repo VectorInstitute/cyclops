@@ -44,6 +44,7 @@ from .tabs.visualizer_tab import (
     visualizer_page_components,
 )
 
+
 ANALYZE_DATA = None
 
 app = Dash(external_stylesheets=[dbc.themes.UNITED], suppress_callback_exceptions=True)
@@ -170,7 +171,7 @@ def toggle_advanced_options(n_clicks, is_open):
         State(f"{APP_DIAG}-substring", "value"),
     ],
 )
-def run_query(  # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+def run_query(
     n_clicks: int,
     display_limit: int,
     save_queries_checked: bool,
@@ -274,10 +275,13 @@ def run_query(  # pylint: disable=too-many-arguments, too-many-locals, too-many-
     ],
 )
 def upload_data(
-    local_contents, server_upload_click_timestamp, server_filepath, display_limit
+    local_contents,
+    server_upload_click_timestamp,
+    server_filepath,
+    display_limit,
 ):
     """Upload data and display the relevant information."""
-    global ANALYZE_DATA  # pylint: disable=global-statement
+    global ANALYZE_DATA
 
     if display_limit is None:
         return None, *tuple([None] * 2)
@@ -325,7 +329,7 @@ def upload_data(
 )
 def analyze_column(col_name):
     """Display relevant information given a column name of the data being analyzed."""
-    global ANALYZE_DATA  # pylint: disable=global-statement, W0602
+    global ANALYZE_DATA
 
     if ANALYZE_DATA is None:
         return (None,)
@@ -338,7 +342,8 @@ def analyze_column(col_name):
         ANALYZE_DATA[col_name].value_counts().iloc[:50].to_frame().reset_index()
     )
     value_counts_df = value_counts_df.rename(
-        {"index": "value", col_name: "count"}, axis=1
+        {"index": "value", col_name: "count"},
+        axis=1,
     )
     value_count_components = generate_table_contents(value_counts_df)
     return (value_count_components,)
@@ -354,7 +359,7 @@ def analyze_column(col_name):
 )
 def update_column_plot(col_name):
     """Update column analysis plot."""
-    global ANALYZE_DATA  # pylint: disable=global-statement, W0602
+    global ANALYZE_DATA
 
     return [plot_histogram(ANALYZE_DATA, names=col_name, return_fig=True)]
 

@@ -1,6 +1,6 @@
 """Functions for computing the area under the ROC curve (AUROC)."""
 
-import warnings
+import logging
 from typing import Any, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -22,6 +22,11 @@ from cyclops.evaluate.metrics.functional.roc import (
     _multilabel_roc_compute,
 )
 from cyclops.evaluate.metrics.utils import _check_thresholds
+from cyclops.utils.log import setup_logging
+
+
+LOGGER = logging.getLogger(__name__)
+setup_logging(print_level="WARN", logger=LOGGER)
 
 
 def _reduce_auroc(
@@ -64,10 +69,10 @@ def _reduce_auroc(
 
     if average is not None:
         if np.isnan(result).any():
-            warnings.warn(
-                "Average precision score for one or more classes was `nan`."
-                f" Ignoring these classes in {average}-average",
-                UserWarning,
+            LOGGER.warning(
+                "Average precision score for one or more classes was `nan`. "
+                "Ignoring these classes in %s-average",
+                average,
             )
         idx = ~np.isnan(result)
 
@@ -83,7 +88,7 @@ def _reduce_auroc(
             result = (result[idx] * weights).sum()
         else:
             raise ValueError(
-                "Received an incompatible combinations of inputs to make reduction."
+                "Received an incompatible combinations of inputs to make reduction.",
             )
 
     return cast(Union[float, npt.NDArray[np.float_]], result)
@@ -191,29 +196,35 @@ def binary_auroc(
         if not isinstance(max_fpr, (int, float)):
             raise ValueError(
                 "Expected argument ``max_fpr`` to be a float or integer, but got"
-                f" {max_fpr}"
+                f" {max_fpr}",
             )
         if max_fpr <= 0 or max_fpr > 1:
             raise ValueError(
                 "Expected argument ``max_fpr`` to be in the range (0, 1], but got"
-                f" {max_fpr}"
+                f" {max_fpr}",
             )
 
     target, preds = _binary_precision_recall_curve_format(
-        target, preds, pos_label=pos_label
+        target,
+        preds,
+        pos_label=pos_label,
     )
     thresholds = _format_thresholds(thresholds)
 
     state = _binary_precision_recall_curve_update(target, preds, thresholds)
 
     return _binary_auroc_compute(
-        state, thresholds=thresholds, max_fpr=max_fpr, pos_label=pos_label
+        state,
+        thresholds=thresholds,
+        max_fpr=max_fpr,
+        pos_label=pos_label,
     )
 
 
 def _multiclass_auroc_compute(
     state: Union[
-        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]],
+        npt.NDArray[np.int_],
     ],
     num_classes: int,
     thresholds: Optional[npt.NDArray[np.float_]] = None,
@@ -312,26 +323,35 @@ def multiclass_auroc(
     if average is not None and average not in ("macro", "weighted"):
         raise ValueError(
             "Expected argument `average` to be one of ('macro', 'weighted', None),"
-            f" but got {average}"
+            f" but got {average}",
         )
 
     target, preds = _multiclass_precision_recall_curve_format(
-        target, preds, num_classes=num_classes
+        target,
+        preds,
+        num_classes=num_classes,
     )
     thresholds = _format_thresholds(thresholds)
 
     state = _multiclass_precision_recall_curve_update(
-        target, preds, num_classes=num_classes, thresholds=thresholds
+        target,
+        preds,
+        num_classes=num_classes,
+        thresholds=thresholds,
     )
 
     return _multiclass_auroc_compute(
-        state, num_classes, thresholds=thresholds, average=average
+        state,
+        num_classes,
+        thresholds=thresholds,
+        average=average,
     )
 
 
 def _multilabel_auroc_compute(
     state: Union[
-        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]], npt.NDArray[np.int_]
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.float_]],
+        npt.NDArray[np.int_],
     ],
     num_labels: int,
     thresholds: Optional[npt.NDArray[np.float_]] = None,
@@ -443,24 +463,32 @@ def multilabel_auroc(
     if average is not None and average not in ("micro", "macro", "weighted"):
         raise ValueError(
             "Expected argument `average` to be one of ('micro', 'macro', 'weighted'"
-            f" , None), but got {average}"
+            f" , None), but got {average}",
         )
 
     target, preds = _multilabel_precision_recall_curve_format(
-        target, preds, num_labels=num_labels
+        target,
+        preds,
+        num_labels=num_labels,
     )
     thresholds = _format_thresholds(thresholds)
 
     state = _multilabel_precision_recall_curve_update(
-        target, preds, num_labels=num_labels, thresholds=thresholds
+        target,
+        preds,
+        num_labels=num_labels,
+        thresholds=thresholds,
     )
 
     return _multilabel_auroc_compute(
-        state, num_labels, thresholds=thresholds, average=average
+        state,
+        num_labels,
+        thresholds=thresholds,
+        average=average,
     )
 
 
-def auroc(  # pylint: disable=too-many-arguments
+def auroc(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
@@ -554,10 +582,14 @@ def auroc(  # pylint: disable=too-many-arguments
             isinstance(num_labels, int) and num_labels > 0
         ), "Number of labels must be a positive integer."
         return multilabel_auroc(
-            target, preds, num_labels, thresholds=thresholds, average=average
+            target,
+            preds,
+            num_labels,
+            thresholds=thresholds,
+            average=average,
         )
 
     raise ValueError(
         "Expected argument `task` to be either 'binary', 'multiclass' or "
-        f"'multilabel', but got {task}"
+        f"'multilabel', but got {task}",
     )

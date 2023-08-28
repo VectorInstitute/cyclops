@@ -1,7 +1,7 @@
 """MLP models."""
 
 import math
-from typing import List, Union
+from typing import Tuple, Union
 
 import torch
 from torch import nn
@@ -19,10 +19,10 @@ class MLPModel(nn.Module):
 
     """
 
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         input_dim: int,
-        hidden_dims: List = [64, 64],
+        hidden_dims: Tuple = (64, 64),
         output_dim: int = 1,
         activation: Union[str, nn.Module] = "ReLU",
     ) -> None:
@@ -53,7 +53,7 @@ class MLPModel(nn.Module):
                     self.hidden_dims[i] if i > 0 else input_dim,
                     self.hidden_dims[i + 1],
                     activation,
-                )
+                ),
             )
         layers.extend(self._layer(self.hidden_dims[-1], output_dim, activation=None))
 

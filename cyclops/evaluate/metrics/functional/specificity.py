@@ -21,7 +21,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 
 
-def _specificity_reduce(  # pylint: disable=too-many-arguments
+def _specificity_reduce(
     tp: Union[npt.NDArray[np.int_], np.int_],
     fp: Union[npt.NDArray[np.int_], np.int_],
     tn: Union[npt.NDArray[np.int_], np.int_],
@@ -78,10 +78,7 @@ def _specificity_reduce(  # pylint: disable=too-many-arguments
         zero_division=zero_division,
     )
 
-    if average == "weighted":
-        weights = tp + fn
-    else:
-        weights = None
+    weights = tp + fn if average == "weighted" else None
 
     if weights is not None and np.sum(weights) == 0:
         result = np.ones_like(score, dtype=np.float64)
@@ -97,7 +94,7 @@ def _specificity_reduce(  # pylint: disable=too-many-arguments
     return result
 
 
-def binary_specificity(  # pylint: disable=too-many-arguments
+def binary_specificity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     pos_label: int = 1,
@@ -118,6 +115,9 @@ def binary_specificity(  # pylint: disable=too-many-arguments
         The threshold to use for converting the predictions to binary
         values. Logits will be converted to probabilities using the sigmoid
         function.
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Sets the value to return when there is a zero division. If set to ``warn``,
+        this acts as 0, but warnings are also raised.
 
     Returns
     -------
@@ -136,7 +136,10 @@ def binary_specificity(  # pylint: disable=too-many-arguments
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target, preds, threshold=threshold, pos_label=pos_label
+        target,
+        preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, tn, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
@@ -153,7 +156,7 @@ def binary_specificity(  # pylint: disable=too-many-arguments
     return cast(float, score)
 
 
-def multiclass_specificity(  # pylint: disable=too-many-arguments
+def multiclass_specificity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -209,7 +212,10 @@ def multiclass_specificity(  # pylint: disable=too-many-arguments
     _check_average_arg(average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k
+        target,
+        preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, tn, fn = _multiclass_stat_scores_update(target, preds, num_classes)
@@ -224,7 +230,7 @@ def multiclass_specificity(  # pylint: disable=too-many-arguments
     )
 
 
-def multilabel_specificity(  # pylint: disable=too-many-arguments
+def multilabel_specificity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -286,7 +292,11 @@ def multilabel_specificity(  # pylint: disable=too-many-arguments
     _check_average_arg(average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
+        target,
+        preds,
+        num_labels=num_labels,
+        threshold=threshold,
+        top_k=top_k,
     )
 
     tp, fp, tn, fn = _multilabel_stat_scores_update(target, preds, num_labels)
@@ -301,7 +311,7 @@ def multilabel_specificity(  # pylint: disable=too-many-arguments
     )
 
 
-def specificity(  # pylint: disable=too-many-arguments
+def specificity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
@@ -430,5 +440,5 @@ def specificity(  # pylint: disable=too-many-arguments
 
     raise ValueError(
         f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-        " or 'multilabel'"
+        " or 'multilabel'",
     )

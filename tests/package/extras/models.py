@@ -9,19 +9,19 @@ def test_import_cyclops():
 
     assert cyclops.__name__ == "cyclops"
 
-    import cyclops.data as data
+    from cyclops import data
 
     assert data.__name__ == "cyclops.data"
 
-    import cyclops.evaluate as evaluate
+    from cyclops import evaluate
 
     assert evaluate.__name__ == "cyclops.evaluate"
 
-    import cyclops.models as models
+    from cyclops import models
 
     assert models.__name__ == "cyclops.models"
 
-    import cyclops.monitor as monitor
+    from cyclops import monitor
 
     assert monitor.__name__ == "cyclops.monitor"
 

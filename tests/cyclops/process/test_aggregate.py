@@ -1,5 +1,6 @@
 """Test aggregation functions."""
 
+import contextlib
 from datetime import datetime
 
 import numpy as np
@@ -21,13 +22,14 @@ from cyclops.process.column_names import (
 )
 from cyclops.process.constants import MEAN, MEDIAN
 
+
 DATE1 = datetime(2022, 11, 3, hour=13)
 DATE2 = datetime(2022, 11, 3, hour=14)
 DATE3 = datetime(2022, 11, 4, hour=3)
 DATE4 = datetime(2022, 11, 4, hour=13)
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_input():
     """Create a test events input."""
     data = [
@@ -56,7 +58,8 @@ def test_input():
         [2, DATE2],
     ]
     window_start = pd.DataFrame(
-        window_start_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+        window_start_data,
+        columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
     )
     window_start = window_start.set_index(ENCOUNTER_ID)
 
@@ -64,14 +67,15 @@ def test_input():
         [2, DATE3],
     ]
     window_stop = pd.DataFrame(
-        window_stop_data, columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP]
+        window_stop_data,
+        columns=[ENCOUNTER_ID, RESTRICT_TIMESTAMP],
     )
     window_stop = window_stop.set_index(ENCOUNTER_ID)
 
     return data, window_start, window_stop
 
 
-def test_aggregate_events(  # pylint: disable=redefined-outer-name
+def test_aggregate_events(
     test_input,
 ):
     """Test aggregation function."""
@@ -97,7 +101,7 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     assert res.loc[(2, "eventB", 0)][START_TIMESTEP] == DATE1
 
 
-def test_aggregate_window_duration(  # pylint: disable=redefined-outer-name
+def test_aggregate_window_duration(
     test_input,
 ):
     """Test aggregation window duration functionality."""
@@ -117,7 +121,7 @@ def test_aggregate_window_duration(  # pylint: disable=redefined-outer-name
     assert (res[TIMESTEP] < 2).all()
 
 
-def test_aggregate_start_stop_windows(  # pylint: disable=redefined-outer-name
+def test_aggregate_start_stop_windows(
     test_input,
 ):
     """Test manually providing start/stop time windows."""
@@ -154,13 +158,13 @@ def test_aggregate_start_stop_windows(  # pylint: disable=redefined-outer-name
         res = aggregator(data, window_stop_time=window_stop_time)
         raise ValueError(
             """Should have raised an error that window_duration cannot be set when
-            window_stop_time is specified."""
+            window_stop_time is specified.""",
         )
     except ValueError:
         pass
 
 
-def test_aggregate_strings(  # pylint: disable=redefined-outer-name
+def test_aggregate_strings(
     test_input,
 ):
     """Test that using aggregation strings is equivalent to inputting the functions."""
@@ -187,7 +191,7 @@ def test_aggregate_strings(  # pylint: disable=redefined-outer-name
 
         assert aggregator_str(data).equals(aggregator_fn(data))
 
-    try:
+    with contextlib.suppress(ValueError):
         aggregator_str = Aggregator(
             aggfuncs={EVENT_VALUE: "shubaluba"},
             timestamp_col=EVENT_TIMESTAMP,
@@ -196,11 +200,9 @@ def test_aggregate_strings(  # pylint: disable=redefined-outer-name
             timestep_size=1,
             window_duration=20,
         )
-    except ValueError:
-        pass
 
 
-def test_aggregate_multiple(  # pylint: disable=redefined-outer-name
+def test_aggregate_multiple(
     test_input,
 ):
     """Test with multiple columns over which to aggregate."""
@@ -289,11 +291,11 @@ def test_aggregate_one_group_outlier():
     )
 
     _ = data.groupby(aggregator.agg_by, sort=False, group_keys=False).apply(
-        aggregator._compute_aggregation  # pylint: disable=protected-access
+        aggregator._compute_aggregation,
     )
 
 
-def test_vectorization(  # pylint: disable=redefined-outer-name
+def test_vectorization(
     test_input,
 ):
     """Test vectorization of aggregated data."""
@@ -322,9 +324,9 @@ def test_vectorization(  # pylint: disable=redefined-outer-name
 
     agg_col_index, encounter_id_index, event_name_index, timestep_index = indexes
 
-    assert set(list(encounter_id_index)) == set([1, 2])
-    assert set(list(event_name_index)) == set(["eventA", "eventB"])
-    assert set(list(timestep_index)) == set(range(15))
+    assert set(encounter_id_index) == {1, 2}
+    assert set(event_name_index) == {"eventA", "eventB"}
+    assert set(timestep_index) == set(range(15))
 
     assert vectorized.shape == (3, 2, 2, 15)
     assert np.array_equal(

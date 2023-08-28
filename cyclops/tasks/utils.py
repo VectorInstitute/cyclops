@@ -8,6 +8,7 @@ from torchvision.transforms import PILToTensor
 from cyclops.models.catalog import _model_names_mapping, create_model, list_models
 from cyclops.models.wrappers import WrappedModel
 
+
 CXR_TARGET = [
     "Atelectasis",
     "Consolidation",
@@ -52,15 +53,16 @@ def apply_image_transforms(examples: Dict[str, List], transforms: callable) -> d
     examples = [transforms(example) for example in examples]
 
     # convert back to a dict of lists
-    examples = {k: [d[k] for d in examples] for k in examples[0]}
-
-    return examples
+    return {k: [d[k] for d in examples] for k in examples[0]}
 
 
 def prepare_models(
     models: Union[
-        str, WrappedModel, Sequence[Union[str, WrappedModel]], Dict[str, WrappedModel]
-    ]
+        str,
+        WrappedModel,
+        Sequence[Union[str, WrappedModel]],
+        Dict[str, WrappedModel],
+    ],
 ) -> Dict[str, WrappedModel]:
     """Prepare the models as a dictionary, and wrap those that are not wrapped.
 
@@ -115,7 +117,7 @@ def prepare_models(
             else:
                 raise TypeError(
                     "models must be lists/tuples of strings,\
-                    PTModel instances or SKModel instances."
+                    PTModel instances or SKModel instances.",
                 )
     # models contains a dictionary of model names and wrapped models
     elif isinstance(models, dict):

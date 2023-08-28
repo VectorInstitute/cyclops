@@ -5,6 +5,12 @@ from typing import Literal
 
 import numpy as np
 import pytest
+from sklearn.metrics import accuracy_score as sk_accuracy_score
+from sklearn.metrics import top_k_accuracy_score as sk_top_k_accuracy_score
+
+from cyclops.evaluate.metrics.accuracy import Accuracy
+from cyclops.evaluate.metrics.functional.accuracy import accuracy
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -18,22 +24,19 @@ from metrics.test_stat_scores import (
     _sk_stat_scores_multiclass,
     _sk_stat_scores_multilabel,
 )
-from sklearn.metrics import accuracy_score as sk_accuracy_score
-from sklearn.metrics import top_k_accuracy_score as sk_top_k_accuracy_score
 
-from cyclops.evaluate.metrics.accuracy import Accuracy
-from cyclops.evaluate.metrics.functional.accuracy import accuracy
-from cyclops.evaluate.metrics.utils import sigmoid
 
 np.seterr(divide="ignore", invalid="ignore")  # ignore divide by zero or nan
 
 
 def _sk_binary_accuracy(
-    target: np.ndarray, preds: np.ndarray, threshold: float
+    target: np.ndarray,
+    preds: np.ndarray,
+    threshold: float,
 ) -> np.ndarray:
     """Compute accuracy for binary case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
-        if not ((0 < preds) & (preds < 1)).all():
+        if not ((preds > 0) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= threshold).astype(np.uint8)
 
@@ -174,7 +177,7 @@ def _sk_multilabel_accuracy(
         target = np.expand_dims(target, axis=0)
 
     if np.issubdtype(preds.dtype, np.floating):
-        if not ((0 < preds) & (preds < 1)).all():
+        if not ((preds > 0) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= THRESHOLD).astype(np.uint8)
 
@@ -186,7 +189,7 @@ def _sk_multilabel_accuracy(
     accuracy_per_label = []
     for i in range(preds.shape[1]):
         accuracy_per_label.append(
-            sk_accuracy_score(target[:, i].flatten(), preds[:, i].flatten())
+            sk_accuracy_score(target[:, i].flatten(), preds[:, i].flatten()),
         )
 
     res = np.stack(accuracy_per_label, axis=0)
@@ -195,7 +198,10 @@ def _sk_multilabel_accuracy(
         weights = None
         if average == "weighted":
             confmat = _sk_stat_scores_multilabel(
-                target, preds, threshold=THRESHOLD, labelwise=True
+                target,
+                preds,
+                threshold=THRESHOLD,
+                labelwise=True,
             )
             weights = confmat[:, 4]
 

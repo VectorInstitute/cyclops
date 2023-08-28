@@ -5,6 +5,9 @@ from typing import Literal, Union
 
 import numpy as np
 import pytest
+
+from cyclops.evaluate.metrics.functional.specificity import specificity
+from cyclops.evaluate.metrics.specificity import Specificity
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -20,9 +23,6 @@ from metrics.test_stat_scores import (
     _sk_stat_scores_multilabel,
 )
 
-from cyclops.evaluate.metrics.functional.specificity import specificity
-from cyclops.evaluate.metrics.specificity import Specificity
-
 
 def _reduce_specificity(
     tn: np.ndarray,
@@ -34,18 +34,18 @@ def _reduce_specificity(
 
     Parameters
     ----------
-        tn : np.ndarray
-            True negatives.
-        fp : np.ndarray
-            False positives.
-        support : np.ndarray
-            Support. Number of true instances for each class.
-        average : Literal["micro", "macro", "weighted", None]
-            If not None, return the average specificity.
+    tn : np.ndarray
+        True negatives.
+    fp : np.ndarray
+        False positives.
+    support : np.ndarray
+        Support. Number of true instances for each class.
+    average : Literal["micro", "macro", "weighted", None]
+        If not None, return the average specificity.
 
     Returns
     -------
-        specificity : float or np.ndarray (if average is None).
+    specificity : float or np.ndarray (if average is None).
 
     """
     if average == "micro":
@@ -66,7 +66,8 @@ def _reduce_specificity(
 
 
 def _calc_specificity(
-    tn: Union[int, np.ndarray], fp: Union[int, np.ndarray]
+    tn: Union[int, np.ndarray],
+    fp: Union[int, np.ndarray],
 ) -> Union[float, np.ndarray]:
     """Calculate specificity.
 
@@ -74,14 +75,14 @@ def _calc_specificity(
 
     Parameters
     ----------
-        tn : np.ndarray or int
-            True negatives.
-        fp : np.ndarray or int
-            False positives.
+    tn : np.ndarray or int
+        True negatives.
+    fp : np.ndarray or int
+        False positives.
 
     Returns
     -------
-        specificity : np.ndarray
+    specificity : np.ndarray
 
     """
     denominator = tn + fp
@@ -101,7 +102,9 @@ def _calc_specificity(
 
 
 def _sk_binary_specificity(
-    target: np.ndarray, preds: np.ndarray, threshold: float
+    target: np.ndarray,
+    preds: np.ndarray,
+    threshold: float,
 ) -> np.ndarray:
     """Compute specificity for binary case using sklearn."""
     _, fp, tn, _, _ = _sk_stat_scores_binary(target, preds, threshold=threshold)

@@ -16,6 +16,7 @@ from plotly.subplots import make_subplots
 from cyclops.process.util import has_columns
 from cyclops.utils.common import to_list, to_timestamp
 
+
 PLOT_HEIGHT = 520
 
 
@@ -31,6 +32,10 @@ def plot_admit_discharge(
     data: pandas.DataFrame
         DataFrame with 'admit', 'discharge', and description columns.
         The admit and discharge columns must be convertable to Timestamps.
+    description: str, optional
+        Description column name.
+    figsize: tuple, optional
+        Figure size.
 
     """
     data = data.copy()
@@ -115,7 +120,7 @@ def plot_timeline(
         {
             "plot_bgcolor": "rgba(255, 0, 0, 0.1)",
             "paper_bgcolor": "rgba(192, 192, 192, 0.25)",
-        }
+        },
     )
 
     if return_fig:
@@ -145,21 +150,19 @@ def plot_histogram(
         Feature columns.
     names: list, optional
         Names of feature to plot over all encounters.
+    return_fig: bool, optional
+        Return fig.
+    title: str, optional
+        Title of plot.
 
     """
     if features is None:
         return make_subplots(rows=1, cols=1)
-    if names is None:
-        feature_names = list(features.columns)
-    else:
-        feature_names = to_list(names)
+    feature_names = list(features.columns) if names is None else to_list(names)
     for name in feature_names:
         if name not in features:
             raise ValueError(f"Provided feature {name} not present in features data!")
-    if feature_names:
-        num_plot_rows = len(feature_names)
-    else:
-        num_plot_rows = 1
+    num_plot_rows = len(feature_names) if feature_names else 1
     fig = make_subplots(rows=num_plot_rows, cols=1)
 
     for idx, name in enumerate(feature_names):
@@ -197,6 +200,8 @@ def plot_temporal_features(
         Temporal features for a single encounter.
     names: list, optional
         Names of features to plot for the given encounter.
+    return_fig: bool, optional
+        Return fig.
 
     Raises
     ------
@@ -205,18 +210,12 @@ def plot_temporal_features(
         error is raised.
 
     """
-    if names is None:
-        feature_names = list(features.columns)
-    else:
-        feature_names = to_list(names)
+    feature_names = list(features.columns) if names is None else to_list(names)
     for name in feature_names:
         if name not in features:
             raise ValueError(f"Provided feature {name} not present in features data!")
     num_timesteps = len(features.index)
-    if feature_names:
-        num_plot_rows = len(feature_names)
-    else:
-        num_plot_rows = 1
+    num_plot_rows = len(feature_names) if feature_names else 1
     fig = make_subplots(rows=num_plot_rows, cols=1, x_title="timestep", y_title="value")
 
     for idx, name in enumerate(feature_names):
@@ -233,7 +232,9 @@ def plot_temporal_features(
         )
     else:
         fig = fig.update_layout(
-            title="Temporal Feature Visualization", autosize=False, height=PLOT_HEIGHT
+            title="Temporal Feature Visualization",
+            autosize=False,
+            height=PLOT_HEIGHT,
         )
     fig.add_vrect(
         x0=0,

@@ -54,12 +54,17 @@ def fig_to_html(
 
     """
     return fig.to_html(  # type: ignore[no-any-return]
-        include_plotlyjs=include_plotlyjs, full_html=full_html, **kwargs
+        include_plotlyjs=include_plotlyjs,
+        full_html=full_html,
+        **kwargs,
     )
 
 
-def fig_to_image(  # pylint: disable=redefined-builtin
-    fig: go.Figure, format: str = "png", scale: int = 1, **kwargs: Any
+def fig_to_image(
+    fig: go.Figure,
+    format: str = "png",  # noqa: A002
+    scale: int = 1,
+    **kwargs: Any,
 ) -> bytes:
     """Get image bytes from figure.
 
@@ -79,7 +84,9 @@ def fig_to_image(  # pylint: disable=redefined-builtin
 
     """
     return fig.to_image(  # type: ignore[no-any-return]
-        format=format, scale=scale, **kwargs
+        format=format,
+        scale=scale,
+        **kwargs,
     )
 
 

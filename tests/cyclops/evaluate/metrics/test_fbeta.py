@@ -5,6 +5,11 @@ from typing import Literal
 
 import numpy as np
 import pytest
+from sklearn.metrics import fbeta_score as sk_fbeta_score
+
+from cyclops.evaluate.metrics.f_beta import F1Score, FbetaScore
+from cyclops.evaluate.metrics.functional.f_beta import f1_score, fbeta_score
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -14,11 +19,6 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from sklearn.metrics import fbeta_score as sk_fbeta_score
-
-from cyclops.evaluate.metrics.f_beta import F1Score, FbetaScore
-from cyclops.evaluate.metrics.functional.f_beta import f1_score, fbeta_score
-from cyclops.evaluate.metrics.utils import sigmoid
 
 
 def _sk_binary_fbeta_score(
@@ -30,12 +30,15 @@ def _sk_binary_fbeta_score(
 ):
     """Compute fbeta score for binary case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
-        if not ((0 < preds) & (preds < 1)).all():
+        if not ((preds > 0) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= threshold).astype(np.uint8)
 
     return sk_fbeta_score(
-        y_true=target, y_pred=preds, beta=beta, zero_division=zero_division
+        y_true=target,
+        y_pred=preds,
+        beta=beta,
+        zero_division=zero_division,
     )
 
 
@@ -164,7 +167,7 @@ class TestMulticlassFbetaScore(MetricTester):
         )
 
 
-def _sk_multilabel_fbeta_score(  # pylint: disable=too-many-arguments
+def _sk_multilabel_fbeta_score(
     target: np.ndarray,
     preds: np.ndarray,
     beta: float,
@@ -174,7 +177,7 @@ def _sk_multilabel_fbeta_score(  # pylint: disable=too-many-arguments
 ):
     """Compute fbeta score for multilabel case using sklearn."""
     if np.issubdtype(preds.dtype, np.floating):
-        if not ((0 < preds) & (preds < 1)).all():
+        if not ((preds > 0) & (preds < 1)).all():
             preds = sigmoid(preds)
         preds = (preds >= threshold).astype(np.uint8)
 

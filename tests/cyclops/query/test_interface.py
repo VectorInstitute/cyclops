@@ -12,7 +12,7 @@ from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
 from cyclops.query.omop import OMOPQuerier
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_data():
     """Dummy dataframe for testing."""
     return pd.DataFrame([[1, "a", 1], [5.1, "b", 0]], columns=["col1", "col2", "col3"])
@@ -21,13 +21,15 @@ def test_data():
 @patch("cyclops.query.orm.Database")
 @patch("sqlalchemy.sql.selectable.Subquery")
 def test_query_interface(
-    database, query, test_data  # pylint: disable=redefined-outer-name
+    database,
+    query,
+    test_data,
 ):
     """Test QueryInterface."""
     query_interface = QueryInterface(database, query)
     query_interface.run()
 
-    query_interface._data = test_data  # pylint: disable=protected-access
+    query_interface._data = test_data
     path = os.path.join("test_save", "test_features.parquet")
     query_interface.save(path)
     loaded_data = pd.read_parquet(path)
@@ -40,7 +42,7 @@ def test_query_interface(
         query_interface.save(path, file_format="donkey")
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_query_interface_integration():
     """Test QueryInterface with OMOPQuerier."""
     synthea = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
@@ -56,7 +58,9 @@ def test_query_interface_integration():
     )  # reset index and keep index column
     assert visits_dd_df.shape[0].compute() > 0
     visits_dd_df = visits.run(
-        backend="dask", index_col="visit_occurrence_id", n_partitions=2
+        backend="dask",
+        index_col="visit_occurrence_id",
+        n_partitions=2,
     )
     assert isinstance(visits_dd_df, dd.DataFrame)
     assert visits_dd_df.npartitions == 2
@@ -75,14 +79,16 @@ def test_query_interface_integration():
 @patch("cyclops.query.orm.Database")
 @patch("sqlalchemy.sql.selectable.Subquery")
 def test_query_interface_processed(
-    database, query, test_data  # pylint: disable=redefined-outer-name
+    database,
+    query,
+    test_data,
 ):
     """Test QueryInterface."""
     # Identity fn for post-processing.
     query_interface = QueryInterfaceProcessed(database, query, lambda x: x)
     query_interface.run()
 
-    query_interface._data = test_data  # pylint: disable=protected-access
+    query_interface._data = test_data
     path = os.path.join("test_save", "test_features.parquet")
     query_interface.save(path)
     loaded_data = pd.read_parquet(path)

@@ -55,12 +55,12 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
         threshold: float = 0.5,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
     def compute(self) -> float:  # type: ignore[override]
         """Compute the specificity score from the state."""
-        # pylint: disable=invalid-name # for tp, tn, fp, fn
         tp, fp, tn, fn = self._final_state()
         score = _specificity_reduce(
             tp=tp,
@@ -74,7 +74,8 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
 
 
 class MulticlassSpecificity(
-    MulticlassStatScores, registry_key="multiclass_specificity"
+    MulticlassStatScores,
+    registry_key="multiclass_specificity",
 ):
     """Compute specificity for multiclass classification tasks.
 
@@ -126,6 +127,7 @@ class MulticlassSpecificity(
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(num_classes=num_classes, top_k=top_k, classwise=True)
         _check_average_arg(average)
 
@@ -146,7 +148,8 @@ class MulticlassSpecificity(
 
 
 class MultilabelSpecificity(
-    MultilabelStatScores, registry_key="multilabel_specificity"
+    MultilabelStatScores,
+    registry_key="multilabel_specificity",
 ):
     """Compute specificity for multilabel classification tasks.
 
@@ -204,8 +207,12 @@ class MultilabelSpecificity(
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
-            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True
+            num_labels=num_labels,
+            threshold=threshold,
+            top_k=top_k,
+            labelwise=True,
         )
         _check_average_arg(average)
 
@@ -358,5 +365,5 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
             )
         raise ValueError(
             f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
+            " or 'multilabel'",
         )
