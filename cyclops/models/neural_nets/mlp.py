@@ -19,7 +19,7 @@ class MLPModel(nn.Module):
 
     """
 
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         input_dim: int,
         hidden_dims: Tuple = (64, 64),

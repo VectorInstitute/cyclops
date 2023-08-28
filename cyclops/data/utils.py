@@ -1,4 +1,5 @@
 """Utilities for datasets."""
+
 from typing import Any, Callable, Dict, List, Optional, Union, get_args
 
 import numpy as np
@@ -32,7 +33,7 @@ DATETIME_FEATURE_TYPES = (
     "time",
     "timestamp",
 )
-FEATURE_TYPES = Union[  # pylint: disable=invalid-name
+FEATURE_TYPES = Union[
     ClassLabel,
     Sequence,
     Value,

@@ -49,7 +49,7 @@ class SKModel:
 
     """
 
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         model: SKBaseEstimator,
         **params: Dict[str, Any],
@@ -321,9 +321,7 @@ class SKModel:
         for key, value in clf.best_params_.items():
             LOGGER.info("Best %s: %s", key, value)
 
-        self.model_ = (  # pylint: disable=attribute-defined-outside-init
-            clf.best_estimator_
-        )
+        self.model_ = clf.best_estimator_
 
         return self
 
@@ -604,9 +602,7 @@ class SKModel:
                     Hugging Face dataset as the input.",
                 )
 
-            self.model_ = (  # pylint: disable=attribute-defined-outside-init
-                self.model_.fit(X, y, **fit_params)
-            )
+            self.model_ = self.model_.fit(X, y, **fit_params)
         return self
 
     def predict_proba(
@@ -901,7 +897,7 @@ class SKModel:
             assert is_sklearn_instance(
                 self.model_,
             ), "The loaded model is not an instance of a scikit-learn estimator."
-            self.model_ = model  # pylint: disable=attribute-defined-outside-init
+            self.model_ = model
         except FileNotFoundError:
             LOGGER.error("No saved model was found to load!")
 

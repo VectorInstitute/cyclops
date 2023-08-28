@@ -1,7 +1,5 @@
 """Test string_ops module for processors."""
 
-# pylint: disable=expression-not-assigned
-
 import numpy as np
 import pytest
 

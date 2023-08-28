@@ -292,6 +292,6 @@ def compute_range_avg(item: str) -> Union[int, float]:
     """
     pattern_str = r"^(?P<first>-?\d+)\s*(?:to|-)\s*(?P<second>-?\d+)$"
     pattern = re.compile(pattern_str)
-    if not (matched := pattern.search(item)):  # pylint: disable=superfluous-parens
+    if not (matched := pattern.search(item)):
         raise ValueError(f"'item' does not match expected pattern {pattern_str}")
     return (int(matched.group("first")) + int(matched.group("second"))) / 2

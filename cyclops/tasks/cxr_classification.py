@@ -24,8 +24,6 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
-# pylint: disable=dangerous-default-value
-
 
 class CXRClassificationTask(BaseTask):
     """Chest X-ray classification task modeled as a multi-label classification task."""

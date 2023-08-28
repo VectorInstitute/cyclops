@@ -75,7 +75,7 @@ def test_input():
     return data, window_start, window_stop
 
 
-def test_aggregate_events(  # pylint: disable=redefined-outer-name
+def test_aggregate_events(
     test_input,
 ):
     """Test aggregation function."""
@@ -101,7 +101,7 @@ def test_aggregate_events(  # pylint: disable=redefined-outer-name
     assert res.loc[(2, "eventB", 0)][START_TIMESTEP] == DATE1
 
 
-def test_aggregate_window_duration(  # pylint: disable=redefined-outer-name
+def test_aggregate_window_duration(
     test_input,
 ):
     """Test aggregation window duration functionality."""
@@ -121,7 +121,7 @@ def test_aggregate_window_duration(  # pylint: disable=redefined-outer-name
     assert (res[TIMESTEP] < 2).all()
 
 
-def test_aggregate_start_stop_windows(  # pylint: disable=redefined-outer-name
+def test_aggregate_start_stop_windows(
     test_input,
 ):
     """Test manually providing start/stop time windows."""
@@ -164,7 +164,7 @@ def test_aggregate_start_stop_windows(  # pylint: disable=redefined-outer-name
         pass
 
 
-def test_aggregate_strings(  # pylint: disable=redefined-outer-name
+def test_aggregate_strings(
     test_input,
 ):
     """Test that using aggregation strings is equivalent to inputting the functions."""
@@ -202,7 +202,7 @@ def test_aggregate_strings(  # pylint: disable=redefined-outer-name
         )
 
 
-def test_aggregate_multiple(  # pylint: disable=redefined-outer-name
+def test_aggregate_multiple(
     test_input,
 ):
     """Test with multiple columns over which to aggregate."""
@@ -291,11 +291,11 @@ def test_aggregate_one_group_outlier():
     )
 
     _ = data.groupby(aggregator.agg_by, sort=False, group_keys=False).apply(
-        aggregator._compute_aggregation,  # pylint: disable=protected-access
+        aggregator._compute_aggregation,
     )
 
 
-def test_vectorization(  # pylint: disable=redefined-outer-name
+def test_vectorization(
     test_input,
 ):
     """Test vectorization of aggregated data."""

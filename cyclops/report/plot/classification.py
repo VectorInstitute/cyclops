@@ -18,7 +18,6 @@ from cyclops.report.plot.utils import (
 )
 
 
-# pylint: disable=use-dict-literal
 class ClassificationPlotter(Plotter):
     """Classification plotter."""
 
@@ -156,7 +155,7 @@ class ClassificationPlotter(Plotter):
                         len(auroc) == self.class_num  # type: ignore[arg-type]
                     ), "Aurocs must be of length class_num for \
                         multiclass/multilabel tasks"
-                    name = f"{self.class_names[i]} (AUC = {auroc[i]:.2f})"  # type: ignore[index] # noqa: E501 # pylint: disable=line-too-long
+                    name = f"{self.class_names[i]} (AUC = {auroc[i]:.2f})"  # type: ignore[index] # noqa: E501
                 else:
                     name = self.class_names[i]
                 trace.append(
@@ -252,7 +251,7 @@ class ClassificationPlotter(Plotter):
                 for i in range(self.class_num):
                     if aurocs and slice_name in aurocs:
                         assert (
-                            len(aurocs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501 # pylint: disable=line-too-long
+                            len(aurocs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501
                         ), "Aurocs must be of length class_num for \
                             multiclass/multilabel tasks"
                         name = f"{slice_name}, {self.class_names[i]} \

@@ -502,7 +502,7 @@ def multilabel_roc_curve(
     return _multilabel_roc_compute(state, num_labels, thresholds)
 
 
-def roc_curve(  # pylint: disable=too-many-arguments
+def roc_curve(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],

@@ -60,7 +60,7 @@ def fig_to_html(
     )
 
 
-def fig_to_image(  # pylint: disable=redefined-builtin
+def fig_to_image(
     fig: go.Figure,
     format: str = "png",  # noqa: A002
     scale: int = 1,

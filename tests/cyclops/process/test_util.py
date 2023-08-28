@@ -49,7 +49,7 @@ def test_assert_has_columns():
         ["Pizza"],
         df_kwarg=["sauce", "please"],
     )
-    def test(  # pylint: disable=too-many-arguments, unused-argument
+    def test(
         df1: pd.DataFrame,
         some_int: int,
         df2: pd.DataFrame,

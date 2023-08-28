@@ -206,7 +206,7 @@ class GroupbyNormalizer:
     def __init__(
         self,
         normalizer_map: dict,
-        by: Optional[Union[str, List[str]]] = None,  # pylint: disable=invalid-name
+        by: Optional[Union[str, List[str]]] = None,
     ) -> None:
         """Initialize."""
         features = set(normalizer_map.keys())
@@ -216,7 +216,7 @@ class GroupbyNormalizer:
             raise ValueError("Cannot specify the same feature more than once.")
 
         self.normalizer_map = normalizer_map
-        self.by = to_list_optional(by)  # pylint: disable=invalid-name
+        self.by = to_list_optional(by)
         self.normalizers = None
 
     def get_map(self) -> dict:

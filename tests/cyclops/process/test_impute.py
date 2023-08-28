@@ -196,7 +196,7 @@ def test_series_imputation():
     assert res.equals(series)
 
 
-def test_tabular_imputation(  # pylint: disable=redefined-outer-name
+def test_tabular_imputation(
     test_tabular,
 ):
     """Test the TabularImputer and SeriesImputer."""

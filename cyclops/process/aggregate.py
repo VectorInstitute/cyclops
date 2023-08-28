@@ -34,7 +34,7 @@ setup_logging(print_level="INFO", logger=LOGGER)
 AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
 
 
-class Aggregator:  # pylint: disable=too-many-instance-attributes
+class Aggregator:
     """Equal-spaced aggregation, or binning, of temporal data.
 
     Computing aggregation metadata is expensive and should be done sparingly.
@@ -64,7 +64,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         aggfuncs: Dict[str, Union[str, Callable]],
         timestamp_col: str,
@@ -709,7 +709,7 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         return grouped.agg(self.aggfuncs)
 
 
-def tabular_as_aggregated(  # pylint: disable=too-many-arguments
+def tabular_as_aggregated(
     tab: pd.DataFrame,
     index: str,
     var_name: str = EVENT_NAME,

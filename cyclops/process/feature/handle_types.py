@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """Handling feature types."""
 
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -148,7 +147,7 @@ def to_dtype(series: pd.Series, type_: str) -> pd.Series:
 
 def _valid_string(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    unique: Optional[np.ndarray] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid string type.
@@ -177,9 +176,9 @@ def _valid_string(
 
 
 def _convertible_to_string(
-    series: pd.Series,  # pylint: disable=unused-argument
-    unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
-    raise_error: bool = False,  # pylint: disable=unused-argument
+    series: pd.Series,
+    unique: Optional[np.ndarray] = None,
+    raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type string.
 
@@ -227,7 +226,7 @@ def _to_string(
 
 def _valid_numeric(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    unique: Optional[np.ndarray] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid numeric type.
@@ -258,7 +257,7 @@ def _valid_numeric(
 
 def _convertible_to_numeric(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    unique: Optional[np.ndarray] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type numeric.
@@ -316,7 +315,7 @@ def _to_numeric(
     return to_dtype(series, NUMERIC), {FEATURE_TYPE_ATTR: NUMERIC}
 
 
-def _convertible_to_categorical(  # pylint: disable=too-many-arguments
+def _convertible_to_categorical(
     series: pd.Series,
     category_min: Optional[int] = None,
     category_max: Optional[int] = None,

@@ -8,18 +8,17 @@ from pydantic import BaseConfig, BaseModel, Extra, root_validator
 from pydantic.fields import FieldInfo, ModelField
 
 
-def _check_composable_fields(  # pylint: disable=no-self-argument
+def _check_composable_fields(
     cls: BaseModel,
     values: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Check that the type of the field is allowed in the section."""
-    # pylint: disable=no-member
     for attr, value in values.items():
         if issubclass(type(value), BaseModelCardField) and (
             value.__config__.composable_with is None
             or (
                 value.__config__.composable_with != "Any"
-                and cls.__name__ not in value.__config__.composable_with  # type: ignore [attr-defined] # noqa: E501 pylint: disable=line-too-long
+                and cls.__name__ not in value.__config__.composable_with  # type: ignore [attr-defined] # noqa: E501
             )
         ):
             print(issubclass(type(value), BaseModelCardField))

@@ -354,7 +354,7 @@ class LossMeter:
         return sum(self.losses)
 
 
-def metrics_binary(  # pylint: disable=too-many-locals, invalid-name
+def metrics_binary(
     y_test_labels: np.ndarray,
     y_pred_values: np.ndarray,
     y_pred_labels: np.ndarray,

@@ -1,7 +1,5 @@
 """Querying functions used in the query page."""
 
-# pylint: disable=no-member
-
 from typing import Dict
 
 import pandas as pd
@@ -43,7 +41,7 @@ def patient_diagnoses(kwargs):
     return db.patient_diagnoses(**kwargs)
 
 
-def query(  # pylint: disable=too-many-arguments
+def query(
     encounter_checked,
     encounter_kwargs,
     age_min,

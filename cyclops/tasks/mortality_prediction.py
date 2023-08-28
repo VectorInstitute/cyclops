@@ -26,8 +26,6 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
-# pylint: disable=function-redefined, dangerous-default-value
-
 
 class MortalityPredictionTask(BaseTask):
     """Mortality prediction task for tabular data as binary classification."""

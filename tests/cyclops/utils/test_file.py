@@ -125,7 +125,7 @@ def test_data_without_index():
 def test_save_dataframe(
     test_data_with_index,
     test_data_without_index,
-):  # pylint: disable=redefined-outer-name
+):
     """Test save fn."""
     path = os.path.join("test_save", "test_features")
     save_dataframe(test_data_with_index, path)
@@ -175,7 +175,7 @@ def test_process_file_save_path():
 def test_load_dataframe(
     test_data_with_index,
     test_data_without_index,
-):  # pylint: disable=redefined-outer-name
+):
     """Test load_dataframe fn."""
     path = os.path.join("test_save", "test_features")
     save_dataframe(test_data_with_index, path)

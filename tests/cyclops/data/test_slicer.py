@@ -12,7 +12,7 @@ from datasets.splits import Split
 import cyclops.query.ops as qo
 from cyclops.data.slicer import (
     SliceSpec,
-    _maybe_convert_to_datetime,  # pylint: disable=protected-access
+    _maybe_convert_to_datetime,
     compound_filter,
     filter_datetime,
     filter_non_null,
@@ -519,7 +519,7 @@ def test_slice_spec():
                 ),
             )
         if (
-            f"unit_source_value:cm&!(value_as_number:-inf - {max_value})&measurement_datetime:month={month}"  # noqa: E501 # pylint: disable=line-too-long
+            f"unit_source_value:cm&!(value_as_number:-inf - {max_value})&measurement_datetime:month={month}"  # noqa: E501
             in slice_name
         ):
             assert np.all(

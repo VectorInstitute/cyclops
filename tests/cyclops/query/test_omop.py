@@ -24,10 +24,8 @@ def test_omop_querier_synthea():
     observations = querier.observation().run()
     measurements = querier.measurement().run()
     visit_details = querier.visit_detail().run()
-    providers = querier.cdm_synthea10.provider().run()  # pylint: disable=no-member
-    conditions = (
-        querier.cdm_synthea10.condition_occurrence().run()  # pylint: disable=no-member
-    )
+    providers = querier.cdm_synthea10.provider().run()
+    conditions = querier.cdm_synthea10.condition_occurrence().run()
     assert len(persons) == 54
     assert len(visits) == 1798
     assert len(visit_details) == 4320

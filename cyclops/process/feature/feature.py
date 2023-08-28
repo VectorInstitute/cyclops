@@ -162,11 +162,11 @@ class Features:
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         data: pd.DataFrame,
         features: Union[str, List[str]],
-        by: Optional[Union[str, List[str]]],  # pylint: disable=invalid-name
+        by: Optional[Union[str, List[str]]],
         targets: Union[str, List[str], None] = None,
         force_types: Optional[dict] = None,
         normalizers: Optional[Dict[str, GroupbyNormalizer]] = None,
@@ -193,7 +193,7 @@ class Features:
         has_columns(data, feature_list, raise_error=True)
         has_columns(data, target_list, raise_error=True)
 
-        self.by = to_list_optional(by)  # pylint: disable=invalid-name
+        self.by = to_list_optional(by)
 
         if self.by is not None:
             has_columns(data, self.by, raise_error=True)
@@ -550,7 +550,7 @@ class Features:
                 "A normalizer with this key already exists. Consider first removing it.",
             )
 
-        by = normalizer.get_by()  # pylint: disable=invalid-name
+        by = normalizer.get_by()
         if by is not None:
             has_columns(self.data, by, raise_error=True)
 
@@ -769,7 +769,7 @@ class Features:
 class TabularFeatures(Features):
     """Tabular features."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         data: pd.DataFrame,
         features: Union[str, List[str]],
@@ -829,7 +829,7 @@ class TabularFeatures(Features):
 class TemporalFeatures(Features):
     """Temporal features."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         data: pd.DataFrame,
         features: Union[str, List[str]],

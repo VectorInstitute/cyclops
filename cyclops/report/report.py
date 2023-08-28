@@ -1,4 +1,4 @@
-"""Cyclops report module."""  # pylint: disable=too-many-lines
+"""Cyclops report module."""
 
 import base64
 import os
@@ -45,8 +45,6 @@ from cyclops.report.utils import (
     str_to_snake_case,
 )
 
-
-# pylint: disable=fixme
 
 _TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
 _DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template_light.jinja"
@@ -95,7 +93,7 @@ class ModelCardReport:
         """
         model_card = ModelCard.parse_file(path)
         report = ModelCardReport(output_dir=output_dir)
-        report._model_card = model_card  # pylint: disable=protected-access
+        report._model_card = model_card
         return report
 
     def _log_field(

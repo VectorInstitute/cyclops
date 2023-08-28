@@ -194,7 +194,7 @@ class TestMulticlassPrecisionRecall(MetricTester):
         )
 
 
-def _sk_multilabel_precision_recall(  # pylint: disable=too-many-arguments
+def _sk_multilabel_precision_recall(
     target: np.ndarray,
     preds: np.ndarray,
     sk_fn: Callable,

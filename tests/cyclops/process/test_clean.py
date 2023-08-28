@@ -126,7 +126,7 @@ def test_event_data_unnormalized():
     return input_
 
 
-def test_normalize_events(  # pylint: disable=redefined-outer-name
+def test_normalize_events(
     test_event_data_unnormalized,
     test_event_data_normalized,
 ):

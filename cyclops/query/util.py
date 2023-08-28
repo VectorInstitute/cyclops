@@ -1,4 +1,4 @@
-"""Utility functions for querying."""  # pylint: disable=too-many-lines
+"""Utility functions for querying."""
 
 # mypy: ignore-errors
 

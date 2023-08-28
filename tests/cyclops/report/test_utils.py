@@ -1,4 +1,5 @@
 """Report utils tests."""
+
 import json
 import os
 import shutil
@@ -130,8 +131,8 @@ def test_extract_performance_metrics():
 
     metrics_dict = extract_performance_metrics(tmpdir, keep_timestamps=True)
     assert len(metrics_dict) == 2
-    assert "2023-07-07: 10:00:00" in metrics_dict  # pylint: disable=C0201
-    assert "2023-08-07: 11:00:00" in metrics_dict  # pylint: disable=C0201
+    assert "2023-07-07: 10:00:00" in metrics_dict
+    assert "2023-08-07: 11:00:00" in metrics_dict
     assert (
         metrics_dict["2023-07-07: 10:00:00"]
         == model_card1["quantitative_analysis"]["performance_metrics"]
@@ -148,8 +149,8 @@ def test_extract_performance_metrics():
         metric_names="accuracy",
     )
     assert len(metrics_dict) == 2
-    assert "2023-07-07: 10:00:00" in metrics_dict  # pylint: disable=C0201
-    assert "2023-08-07: 11:00:00" in metrics_dict  # pylint: disable=C0201
+    assert "2023-07-07: 10:00:00" in metrics_dict
+    assert "2023-08-07: 11:00:00" in metrics_dict
     assert metrics_dict["2023-07-07: 10:00:00"] == [
         model_card1["quantitative_analysis"]["performance_metrics"][0],
     ]

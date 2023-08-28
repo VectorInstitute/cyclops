@@ -150,7 +150,7 @@ def split_vectorized(
     return tuple(splits)
 
 
-class Vectorized:  # pylint: disable=too-many-public-methods
+class Vectorized:
     """Vectorized data.
 
     Attributes
@@ -169,7 +169,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         data: np.ndarray,
         indexes: List[Union[List, np.ndarray]],
@@ -864,7 +864,6 @@ class Vectorized:  # pylint: disable=too-many-public-methods
             index_exp = vec_index_exp[:, :, i]
             data_slice = self.data[index_exp]
             mean = np.nanmean(data_slice)
-            # pylint: disable=C3001, W0640
             func = lambda x: np_fill_null_num(x, mean)  # noqa: E731
             self.impute_over_axis(impute_axis, func, index_exp=index_exp)
 
@@ -932,7 +931,7 @@ class Vectorized:  # pylint: disable=too-many-public-methods
         return Vectorized(res, indexes, self.axis_names)
 
 
-class VectorizedIndexExpression:  # pylint: disable=too-few-public-methods
+class VectorizedIndexExpression:
     """Functions similar to the NumPy IndexExpression for simplified slicing.
 
     Different from the NumPy IndexExpression, it treats singular indices as ranges such

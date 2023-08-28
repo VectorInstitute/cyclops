@@ -261,7 +261,7 @@ class SeriesImputer:
         self.using_drop = imputefunc == DROP
 
         if self.using_drop:
-            LOGGER.warning(  # pylint: disable=logging-not-lazy
+            LOGGER.warning(
                 "The imputer DROP strategy is rarely used. "
                 + "The IGNORE strategy may be more fitting, more robust, "
                 + "and less expensive.",
@@ -409,7 +409,7 @@ class SeriesImputer:
         return series, null_percent
 
 
-class TabularImputer:  # pylint: disable=too-few-public-methods
+class TabularImputer:
     """Imputation of tabular data.
 
     Attributes
@@ -452,34 +452,6 @@ class TabularImputer:  # pylint: disable=too-few-public-methods
             data[col], null_percents[col] = imputer(data[col])
 
         return data, null_percents
-
-
-# class GroupbyImputer:
-#     """Imputation over groups.
-
-#     Attributes
-#     ----------
-#     imputers: dict
-#         Aggregation functions mapped from column to imputer.
-#     by: str
-#     """
-#     def __init__(
-#         self,
-#         imputers: Dict[str, SeriesImputer],
-#         by: Union[str, List[str]],  # pylint: disable=invalid-name
-#     ):
-#         self.imputers = imputers
-#         self.by = to_list(self.by)  # pylint: disable=invalid-name
-
-#     def __call__(data: pd.DataFrame) -> pd.DataFrame:
-
-
-# class TemporalImputer:
-#     """Imputation of temporal data.
-
-#     """
-#     def __init__(self):
-#         pass
 
 
 class AggregatedImputer:

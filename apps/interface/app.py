@@ -171,7 +171,7 @@ def toggle_advanced_options(n_clicks, is_open):
         State(f"{APP_DIAG}-substring", "value"),
     ],
 )
-def run_query(  # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+def run_query(
     n_clicks: int,
     display_limit: int,
     save_queries_checked: bool,
@@ -281,7 +281,7 @@ def upload_data(
     display_limit,
 ):
     """Upload data and display the relevant information."""
-    global ANALYZE_DATA  # pylint: disable=global-statement
+    global ANALYZE_DATA
 
     if display_limit is None:
         return None, *tuple([None] * 2)
@@ -329,7 +329,7 @@ def upload_data(
 )
 def analyze_column(col_name):
     """Display relevant information given a column name of the data being analyzed."""
-    global ANALYZE_DATA  # pylint: disable=global-statement, W0602
+    global ANALYZE_DATA
 
     if ANALYZE_DATA is None:
         return (None,)
@@ -359,7 +359,7 @@ def analyze_column(col_name):
 )
 def update_column_plot(col_name):
     """Update column analysis plot."""
-    global ANALYZE_DATA  # pylint: disable=global-statement, W0602
+    global ANALYZE_DATA
 
     return [plot_histogram(ANALYZE_DATA, names=col_name, return_fig=True)]
 

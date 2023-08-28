@@ -36,7 +36,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
 
-def evaluate_fairness(  # pylint: disable=too-many-arguments, too-many-branches
+def evaluate_fairness(
     metrics: Union[str, Callable[..., Any], Metric, MetricCollection],
     dataset: Dataset,
     groups: Union[str, List[str]],

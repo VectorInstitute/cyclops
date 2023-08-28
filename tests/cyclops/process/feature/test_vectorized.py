@@ -1,7 +1,5 @@
 """Test vectorize.py."""
 
-# pylint: disable=unbalanced-tuple-unpacking
-
 import numpy as np
 import pytest
 
@@ -24,7 +22,7 @@ def input_data():
     ), [["0-0", "0-1"], ["1-0", "1-1"], ["2-0", "2-1", "2-2"]]
 
 
-def test_vectorized(  # pylint: disable=redefined-outer-name
+def test_vectorized(
     input_data,
 ):
     """Test Vectorized."""
@@ -58,7 +56,7 @@ def test_vectorized(  # pylint: disable=redefined-outer-name
     assert np.array_equal(vectorized.get_data(), data)
 
 
-def test_take_with_indices(  # pylint: disable=redefined-outer-name
+def test_take_with_indices(
     input_data,
 ):
     """Test take_with_indices method."""
@@ -70,7 +68,7 @@ def test_take_with_indices(  # pylint: disable=redefined-outer-name
     assert np.array_equal(expanded, vectorized.take_with_indices(1, [1]).data)
 
 
-def test_take_with_index(  # pylint: disable=redefined-outer-name
+def test_take_with_index(
     input_data,
 ):
     """Test take_with_index method."""
@@ -88,7 +86,7 @@ def test_take_with_index(  # pylint: disable=redefined-outer-name
     )
 
 
-def test_split_by_indices(  # pylint: disable=redefined-outer-name
+def test_split_by_indices(
     input_data,
 ):
     """Test split_by_indices method."""
@@ -133,7 +131,7 @@ def test_split_by_indices(  # pylint: disable=redefined-outer-name
         assert "drop" in str(error).lower()
 
 
-def test_split_by_index(  # pylint: disable=redefined-outer-name
+def test_split_by_index(
     input_data,
 ):
     """Test split_by_index method."""
@@ -166,7 +164,7 @@ def test_split_by_index(  # pylint: disable=redefined-outer-name
         assert "drop" in str(error).lower()
 
 
-def test_split_by_fraction(  # pylint: disable=redefined-outer-name
+def test_split_by_fraction(
     input_data,
 ):
     """Test split_by_fraction method."""
@@ -178,7 +176,7 @@ def test_split_by_fraction(  # pylint: disable=redefined-outer-name
     assert (vectorized.data[1, :, :] == vectorized1.data).all()
 
 
-def test_rename_axis(  # pylint: disable=redefined-outer-name
+def test_rename_axis(
     input_data,
 ):
     """Test rename_axis method."""
@@ -189,7 +187,7 @@ def test_rename_axis(  # pylint: disable=redefined-outer-name
     assert vectorized.axis_names[1] == "hello"
 
 
-def test_swap_axes(  # pylint: disable=redefined-outer-name
+def test_swap_axes(
     input_data,
 ):
     """Test swap_axes method."""
@@ -217,7 +215,7 @@ def test_swap_axes(  # pylint: disable=redefined-outer-name
     assert axis_names[2] == axis_names_after[0]
 
 
-def test_intersect_vectorized(  # pylint: disable=redefined-outer-name
+def test_intersect_vectorized(
     input_data,
 ):
     """Test intersect_vectorized function."""
@@ -229,7 +227,7 @@ def test_intersect_vectorized(  # pylint: disable=redefined-outer-name
     assert (vec1.data == vec2.data).all()
 
 
-def test_split_vectorized(  # pylint: disable=redefined-outer-name
+def test_split_vectorized(
     input_data,
 ):
     """Test split_vectorized function."""
@@ -255,7 +253,7 @@ def test_split_vectorized(  # pylint: disable=redefined-outer-name
     assert (split1_data2.data == split2_data2.data).all()
 
 
-def test_normalization(  # pylint: disable=redefined-outer-name
+def test_normalization(
     input_data,
 ):
     """Test normalization."""
@@ -277,7 +275,7 @@ def test_normalization(  # pylint: disable=redefined-outer-name
         assert np.isclose(val_sum, 0)
 
 
-def test_vectorized_normalizer_subset(  # pylint: disable=redefined-outer-name
+def test_vectorized_normalizer_subset(
     input_data,
 ):
     """Test VectorizedNormalizer subset method and related Vectorized handling."""

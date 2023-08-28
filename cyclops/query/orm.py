@@ -37,7 +37,7 @@ setup_logging(print_level="INFO", logger=LOGGER)
 SOCKET_CONNECTION_TIMEOUT = 5
 
 
-def _get_db_url(  # pylint: disable=too-many-arguments
+def _get_db_url(
     dbms: str,
     user: str,
     pwd: str,

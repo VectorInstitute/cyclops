@@ -167,7 +167,7 @@ class TestMulticlassFbetaScore(MetricTester):
         )
 
 
-def _sk_multilabel_fbeta_score(  # pylint: disable=too-many-arguments
+def _sk_multilabel_fbeta_score(
     target: np.ndarray,
     preds: np.ndarray,
     beta: float,

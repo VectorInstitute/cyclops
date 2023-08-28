@@ -206,16 +206,16 @@ def run_model(
     """Choose and run a model on the data and return the best model."""
     if model_name == "mlp":
         model = SKModel("mlp", save_path="./mlp.pkl")
-        model.fit(X, y, X_val, y_val)  # pylint: disable=too-many-function-args
+        model.fit(X, y, X_val, y_val)
     elif model_name == "lr":
         model = SKModel("lr", save_path="./lr.pkl")
-        model.fit(X, y, X_val, y_val)  # pylint: disable=too-many-function-args
+        model.fit(X, y, X_val, y_val)
     elif model_name == "rf":
         model = SKModel("rf", save_path="./rf.pkl")
-        model.fit(X, y, X_val, y_val)  # pylint: disable=too-many-function-args
+        model.fit(X, y, X_val, y_val)
     elif model_name == "xgb":
         model = SKModel("xgb", save_path="./xgb.pkl")
-        model.fit(X, y, X_val, y_val)  # pylint: disable=too-many-function-args
+        model.fit(X, y, X_val, y_val)
     return model
 
 

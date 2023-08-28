@@ -400,7 +400,7 @@ def _multiclass_stat_scores_format(  # noqa: C901
     if type_preds == "continuous" and target.size != 1:  # type: ignore[union-attr]
         raise ValueError(
             "Expected a single element in `target` when `preds` is an array of "
-            f"continuous values, but found {target.size} elements in `target`.",  # type: ignore[union-attr] # noqa: E501 # pylint: disable=line-too-long
+            f"continuous values, but found {target.size} elements in `target`.",  # type: ignore[union-attr] # noqa: E501
         )
     if type_preds not in ["multiclass", "continuous-multioutput", "continuous"]:
         raise ValueError(

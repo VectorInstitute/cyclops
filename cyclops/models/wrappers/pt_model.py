@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """PyTorch model wrapper."""
 
 import contextlib
@@ -46,7 +45,7 @@ setup_logging(print_level="INFO", logger=LOGGER)
 # ruff: noqa: PLR0912
 
 
-class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
+class PTModel(ModelWrapper):
     """PyTorch model wrapper.
 
     Parameters
@@ -112,7 +111,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         model: nn.Module,
         criterion: Union[str, nn.Module],

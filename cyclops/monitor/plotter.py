@@ -78,7 +78,7 @@ def errorfill(
     """Create custom error fill."""
     ax = ax if ax is not None else plt.gca()
     if color is None:
-        color = next(ax._get_lines.prop_cycler)["color"]  # pylint: disable=W0212
+        color = next(ax._get_lines.prop_cycler)["color"]
     if np.isscalar(yerr) or len(yerr) == len(y):
         ymin = y - yerr
         ymax = y + yerr

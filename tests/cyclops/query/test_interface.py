@@ -23,13 +23,13 @@ def test_data():
 def test_query_interface(
     database,
     query,
-    test_data,  # pylint: disable=redefined-outer-name
+    test_data,
 ):
     """Test QueryInterface."""
     query_interface = QueryInterface(database, query)
     query_interface.run()
 
-    query_interface._data = test_data  # pylint: disable=protected-access
+    query_interface._data = test_data
     path = os.path.join("test_save", "test_features.parquet")
     query_interface.save(path)
     loaded_data = pd.read_parquet(path)
@@ -81,14 +81,14 @@ def test_query_interface_integration():
 def test_query_interface_processed(
     database,
     query,
-    test_data,  # pylint: disable=redefined-outer-name
+    test_data,
 ):
     """Test QueryInterface."""
     # Identity fn for post-processing.
     query_interface = QueryInterfaceProcessed(database, query, lambda x: x)
     query_interface.run()
 
-    query_interface._data = test_data  # pylint: disable=protected-access
+    query_interface._data = test_data
     path = os.path.join("test_save", "test_features.parquet")
     query_interface.save(path)
     loaded_data = pd.read_parquet(path)

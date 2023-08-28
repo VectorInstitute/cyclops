@@ -128,7 +128,7 @@ def test_input():
     return pd.DataFrame(data, columns=cols)
 
 
-def test_nongrouped_normalization(test_input):  # pylint: disable=redefined-outer-name
+def test_nongrouped_normalization(test_input):
     """Test normalization without using a groupby."""
     gbn = GroupbyNormalizer({SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD})
     gbn.fit(test_input)
@@ -157,7 +157,7 @@ def test_nongrouped_normalization(test_input):  # pylint: disable=redefined-oute
     )
 
 
-def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-name
+def test_grouped_normalization(test_input):
     """Test normalization using a groupby."""
     gbn = GroupbyNormalizer(
         {SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD},

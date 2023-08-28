@@ -62,7 +62,7 @@ def binary_sensitivity(
     )
 
 
-def multiclass_sensitivity(  # pylint: disable=too-many-arguments
+def multiclass_sensitivity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -131,7 +131,7 @@ def multiclass_sensitivity(  # pylint: disable=too-many-arguments
     )
 
 
-def multilabel_sensitivity(  # pylint: disable=too-many-arguments
+def multilabel_sensitivity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -208,7 +208,7 @@ def multilabel_sensitivity(  # pylint: disable=too-many-arguments
     )
 
 
-def sensitivity(  # pylint: disable=too-many-arguments
+def sensitivity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],

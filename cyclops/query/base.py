@@ -183,7 +183,7 @@ class DatasetQuerier:
         custom_tables = []
         for method in method_list:
             if (
-                not method.startswith(  # pylint: disable=too-many-boolean-expressions
+                not method.startswith(
                     "__",
                 )
                 and not method.startswith("_")

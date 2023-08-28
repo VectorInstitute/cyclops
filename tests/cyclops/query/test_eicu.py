@@ -5,9 +5,6 @@ import pytest
 from cyclops.query import EICUQuerier
 
 
-# pylint: disable=no-member
-
-
 @pytest.mark.integration_test()
 def test_eicu_querier():
     """Test EICUQuerier on eICU-CRD."""

@@ -21,7 +21,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 
 
-def _specificity_reduce(  # pylint: disable=too-many-arguments
+def _specificity_reduce(
     tp: Union[npt.NDArray[np.int_], np.int_],
     fp: Union[npt.NDArray[np.int_], np.int_],
     tn: Union[npt.NDArray[np.int_], np.int_],
@@ -94,7 +94,7 @@ def _specificity_reduce(  # pylint: disable=too-many-arguments
     return result
 
 
-def binary_specificity(  # pylint: disable=too-many-arguments
+def binary_specificity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     pos_label: int = 1,
@@ -156,7 +156,7 @@ def binary_specificity(  # pylint: disable=too-many-arguments
     return cast(float, score)
 
 
-def multiclass_specificity(  # pylint: disable=too-many-arguments
+def multiclass_specificity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -230,7 +230,7 @@ def multiclass_specificity(  # pylint: disable=too-many-arguments
     )
 
 
-def multilabel_specificity(  # pylint: disable=too-many-arguments
+def multilabel_specificity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -311,7 +311,7 @@ def multilabel_specificity(  # pylint: disable=too-many-arguments
     )
 
 
-def specificity(  # pylint: disable=too-many-arguments
+def specificity(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],

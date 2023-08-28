@@ -10,7 +10,7 @@ class MetricTester:
     """Helper class for testing metrics."""
 
     @staticmethod
-    def run_functional_test(  # pylint: disable=too-many-arguments
+    def run_functional_test(
         target: np.ndarray,
         preds: np.ndarray,
         metric_functional: Callable,
