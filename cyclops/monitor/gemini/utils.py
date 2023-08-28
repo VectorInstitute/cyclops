@@ -178,7 +178,7 @@ def normalize(X: pd.DataFrame, aggregation_type: str) -> pd.DataFrame:
         y_last: np.ndarray[float, np.dtype[np.float64]] = np.zeros((X.shape[0], 1))
         X_normalized, _ = temporal_last(X, y_last)
 
-    elif aggregation_type == "time_flatten" or aggregation_type == "time":
+    elif aggregation_type in {"time_flatten", "time"}:
         X_normalized = X.copy()
 
     else:
@@ -201,7 +201,7 @@ def process(
     return X_preprocessed
 
 
-def get_dataset_hospital(
+def get_dataset_hospital(  # noqa: PLR0915
     admin_data: pd.DataFrame,
     x: pd.DataFrame,
     y: np.ndarray[float, np.dtype[np.float64]],

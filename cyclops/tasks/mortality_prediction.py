@@ -432,7 +432,7 @@ class MortalityPredictionTask(BaseTask):
                     "It seems you have not trained the %s model.",
                     model_name,
                 )
-            model_name, model = self.get_model(model_name)
+            model_name, model = self.get_model(model_name)  # noqa: PLW2901
             model_path = (
                 filepath[model_name] if isinstance(filepath, Dict) else filepath
             )

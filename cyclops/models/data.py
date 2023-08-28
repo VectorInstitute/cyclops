@@ -30,8 +30,7 @@ class PTDataset(Dataset):
         self.X = X
         self.y = y
 
-        # pylint: disable=invalid-name
-        len_X = len(X)
+        len_X = len(X)  # noqa: N806
         if y is not None:
             len_y = len(y)
             if len_y != len_X:

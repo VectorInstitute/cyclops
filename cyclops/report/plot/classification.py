@@ -502,7 +502,7 @@ class ClassificationPlotter(Plotter):
             fig.update_layout(layout)
         return fig
 
-    def metrics_trends(
+    def metrics_trends(  # noqa: PLR0912
         self,
         metrics_trends: Dict[str, Union[List[float], npt.NDArray[Any]]],
         title: Optional[str] = "Metrics Trends",
@@ -653,8 +653,9 @@ class ClassificationPlotter(Plotter):
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot metrics such as precision, recall, and f_beta for multiple groups or \
-        subpopulations in a radar chart.
+        """Plot metrics such as precision, recall, and f_beta for multiple groups.
+
+        This compares the subpopulations using a radar chart.
 
         Parameters
         ----------
@@ -832,7 +833,7 @@ class ClassificationPlotter(Plotter):
                     + self.template.layout.colorway[:difference]
                 )
 
-            for i, (slice_name, metrics) in enumerate(slice_metrics.items()):
+            for i, (_, metrics) in enumerate(slice_metrics.items()):
                 metric_names = list(metrics.keys())
                 for num in range(self.class_num):
                     for metric_name in metric_names:

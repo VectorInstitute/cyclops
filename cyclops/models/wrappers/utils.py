@@ -221,7 +221,7 @@ def set_params(cls, **params):
 
     nested_params = defaultdict(dict)  # grouped by prefix
     for key, value in params.items():
-        key, delim, sub_key = key.partition("__")
+        key, delim, sub_key = key.partition("__")  # noqa: PLW2901
         if key not in valid_params:
             local_valid_params = _get_param_names(cls)
             raise ValueError(

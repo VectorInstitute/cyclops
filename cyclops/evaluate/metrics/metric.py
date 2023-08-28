@@ -658,7 +658,7 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
                 f"Expected `postfix` to be a string, but got {type(postfix).__name__}.",
             )
 
-    def add_metrics(  # noqa: C901
+    def add_metrics(  # noqa: C901, PLR0912
         self,
         metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], "MetricCollection"],
         *other_metrics: Union[Metric, "MetricCollection"],

@@ -24,6 +24,9 @@ from pydantic import (
 from cyclops.report.model_card.base import BaseModelCardField
 
 
+# ruff: noqa: A003
+
+
 class Owner(
     BaseModelCardField,
     composable_with=["ModelDetails", "Dataset"],

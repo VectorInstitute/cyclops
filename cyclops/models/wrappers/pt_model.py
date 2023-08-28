@@ -42,9 +42,8 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
-# ignore errors about attributes defined dynamically
-# pylint: disable=no-member, function-redefined, arguments-differ
-# pylint: disable=dangerous-default-value, too-many-branches, fixme
+
+# ruff: noqa: PLR0912
 
 
 class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
@@ -586,7 +585,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                             [batch[target].unsqueeze(1) for target in target_columns],
                             dim=1,
                         )
-                    batch = (batch_features, batch_labels)
+                    batch = (batch_features, batch_labels)  # noqa: PLW2901
                     output = step_fn(batch, **fit_params)
                     loss = output["loss"].item()
                     assert not np.isnan(loss).any(), "Loss is NaN. Aborting training."
@@ -1077,7 +1076,7 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         if isinstance(X, Dataset):
             preds = Dataset.from_dict({prediction_column: []})
             for batch in dataloader:
-                batch = torch.cat(
+                batch = torch.cat(  # noqa: PLW2901
                     [batch[feature] for feature in feature_columns],
                     dim=1,
                 )

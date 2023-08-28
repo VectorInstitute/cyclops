@@ -49,7 +49,7 @@ class CumulativeRetrainer:
         self.retrain_model_path = retrain_model_path
         self.verbose = verbose
 
-    def retrain(
+    def retrain(  # noqa: PLR0915
         self,
         # datastreams is dictionary of numpy arrays, static typing
         data_streams: Dict[str, np.ndarray[float, np.dtype[np.float64]]],
@@ -319,7 +319,7 @@ class MostRecentRetrainer:
         self.retrain_model_path = retrain_model_path
         self.verbose = verbose
 
-    def retrain(
+    def retrain(  # noqa: PLR0915
         self,
         data_streams: Dict[str, np.ndarray[float, np.dtype[np.float64]]],
         retrain_window: int = 30,

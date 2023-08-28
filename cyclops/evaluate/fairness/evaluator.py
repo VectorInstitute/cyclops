@@ -602,11 +602,11 @@ def _create_bins(
         if isinstance(bins, list):
             # make sure it is monotonic
             if not all(bins[i] <= bins[i + 1] for i in range(len(bins) - 1)):
-                bins = sorted(bins)
+                bins = sorted(bins)  # noqa: PLW2901
 
             # convert timestring values to datetime
             if column_is_datetime:
-                bins = pd.to_datetime(bins).values
+                bins = pd.to_datetime(bins).values  # noqa: PLW2901
 
         cut_data = pd.Series(
             unique_values[group],
@@ -724,7 +724,7 @@ def _get_slice_spec(
     return SliceSpec(slices, validate=True, column_names=column_names)
 
 
-def _compute_metrics(  # noqa: C901
+def _compute_metrics(  # noqa: C901, PLR0912
     metrics: Union[Callable[..., Any], MetricCollection],
     dataset: Dataset,
     target_columns: List[str],

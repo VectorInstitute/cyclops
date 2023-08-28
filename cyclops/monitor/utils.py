@@ -237,11 +237,10 @@ def get_args(obj: Any, kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """
     args = {}
     for key in kwargs:
-        if inspect.isclass(obj) and key in inspect.signature(obj).parameters:
-            args[key] = kwargs[key]
-        elif (
-            inspect.ismethod(obj) or inspect.isfunction(obj)
-        ) and key in inspect.getfullargspec(obj).args:
+        if (inspect.isclass(obj) and key in inspect.signature(obj).parameters) or (
+            (inspect.ismethod(obj) or inspect.isfunction(obj))
+            and key in inspect.getfullargspec(obj).args
+        ):
             args[key] = kwargs[key]
     return args
 
@@ -392,12 +391,16 @@ class LKWrapper:
         dataloader: Optional[Callable[..., Any]] = None,
         input_shape: Optional[Tuple[int, ...]] = None,
         data_type: Optional[str] = None,
-        kernel_a: nn.Module = GaussianRBF(trainable=True),
-        kernel_b: nn.Module = GaussianRBF(trainable=True),
+        kernel_a: Optional[nn.Module] = None,
+        kernel_b: Optional[nn.Module] = None,
         eps: str = "trainable",
     ) -> None:
+        """Initialize."""
         self.proj = projection
-
+        if kernel_a is None:
+            kernel_a = GaussianRBF(trainable=True)
+        if kernel_b is None:
+            kernel_b = GaussianRBF(trainable=True)
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
         args = [

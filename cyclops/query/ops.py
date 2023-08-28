@@ -53,6 +53,9 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
+# ruff: noqa: W505
+
+
 @dataclass
 class JoinArgs:
     """Arguments for joining tables.
@@ -2160,8 +2163,8 @@ class GroupByAggregate(metaclass=QueryOp):
     --------
     >>> GroupByAggregate("person_id", {"person_id": "count"})(table)
     >>> GroupByAggregate("person_id", {"person_id": ("count", "visit_count")})(table)
-    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)  # noqa: W505
-    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)  # noqa: W505
+    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)
+    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)
 
     """
 

@@ -25,8 +25,6 @@ from cyclops.utils.log import setup_logging
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
-# pylint: disable=fixme, function-redefined, dangerous-default-value
-
 
 class SKModel:
     """Scikit-learn model wrapper.
@@ -90,7 +88,7 @@ class SKModel:
 
         return self
 
-    def find_best(  # pylint: disable=too-many-branches
+    def find_best(  # noqa: PLR0912, PLR0915
         self,
         parameters: Union[Dict, List[Dict]],
         X: Union[ArrayLike, Dataset, DatasetDict],

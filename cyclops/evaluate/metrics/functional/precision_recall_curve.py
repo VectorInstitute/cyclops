@@ -655,7 +655,7 @@ def multiclass_precision_recall_curve(
 
     return _multiclass_precision_recall_curve_compute(
         state,
-        thresholds,
+        thresholds,  # type: ignore
         num_classes,
     )
 
@@ -951,7 +951,7 @@ def multilabel_precision_recall_curve(
 
     return _multilabel_precision_recall_curve_compute(
         state,
-        thresholds,
+        thresholds,  # type: ignore
         num_labels,
     )
 
