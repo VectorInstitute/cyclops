@@ -1,4 +1,4 @@
-"""Utility functions for querying."""  # pylint: disable=too-many-lines
+"""Utility functions for querying."""
 
 # mypy: ignore-errors
 
@@ -17,6 +17,7 @@ from sqlalchemy.types import Boolean, Date, DateTime, Float, Integer, Interval, 
 
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
+
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -139,7 +140,7 @@ def _to_subquery(table: TableTypes) -> Subquery:
 
     raise ValueError(
         f"""Table has type {type(table)}, but must have one of the
-        following types: {", ".join(TABLE_OBJECTS)}"""
+        following types: {", ".join(TABLE_OBJECTS)}""",
     )
 
 
@@ -171,7 +172,7 @@ def _to_select(table: TableTypes) -> Select:
 
     raise ValueError(
         f"""Table has type {type(table)}, but must have one of the
-        following types: {", ".join(TABLE_OBJECTS)}"""
+        following types: {", ".join(TABLE_OBJECTS)}""",
     )
 
 
@@ -350,7 +351,9 @@ def get_column_names(table: TableTypes):
 
 @table_params_to_type(Subquery)
 def has_columns(
-    table: TableTypes, cols: Union[str, List[str]], raise_error: bool = False
+    table: TableTypes,
+    cols: Union[str, List[str]],
+    raise_error: bool = False,
 ):
     """Check whether a table has all of the specified columns.
 
@@ -451,6 +454,8 @@ def drop_columns(
         The table.
     col : str or list of str
         Names of columns to drop.
+    drop_cols: str or list of str
+        Names of columns to drop.
 
     Returns
     -------
@@ -474,7 +479,7 @@ def rename_columns(table: TableTypes, rename_map: dict) -> Subquery:
     ----------
     table: cyclops.query.util.TableTypes
         The table.
-    d : dict
+    rename_map : dict
         Dictionary mapping current column names (key) to new ones (value).
 
     Returns
@@ -487,7 +492,7 @@ def rename_columns(table: TableTypes, rename_map: dict) -> Subquery:
         *[
             c.label(rename_map[c.name]) if c.name in rename_map else c
             for c in table.columns
-        ]
+        ],
     ).subquery()
 
 
@@ -513,12 +518,12 @@ def reorder_columns(table: TableTypes, cols: List[str]) -> Subquery:
     new_order = [c.name for c in get_columns(table, cols)]
 
     # Make sure we have exactly the same set of old/new column names.
-    if not set(old_order) == set(new_order):
+    if set(old_order) != set(new_order):
         old_order_print = ", ".join(old_order)
         new_order_print = ", ".join(new_order)
         raise ValueError(
             f"""Must specify all columns {old_order_print}
-            to re-order, not {new_order_print}."""
+            to re-order, not {new_order_print}.""",
         )
 
     # Reorder the columns.
@@ -571,7 +576,7 @@ def apply_to_columns(
             *[
                 func_(col).label("__" + col_names[i] + "__")
                 for i, col in enumerate(cols)
-            ]
+            ],
         )
         rename = {"__" + name + "__": name for name in col_names}
         table = drop_columns(table, col_names)
@@ -763,7 +768,7 @@ def equals(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -781,7 +786,10 @@ def equals(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs) == process_elem(
-        value, lower=lower, trim=trim, **kwargs
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
@@ -802,7 +810,7 @@ def greater_than(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -823,10 +831,16 @@ def greater_than(
     """
     if equal:
         return process_column(col, lower=lower, trim=trim, **kwargs) >= process_elem(
-            value, lower=lower, trim=trim, **kwargs
+            value,
+            lower=lower,
+            trim=trim,
+            **kwargs,
         )
     return process_column(col, lower=lower, trim=trim, **kwargs) > process_elem(
-        value, lower=lower, trim=trim, **kwargs
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
@@ -847,7 +861,7 @@ def less_than(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -868,15 +882,25 @@ def less_than(
     """
     if equal:
         return process_column(col, lower=lower, trim=trim, **kwargs) <= process_elem(
-            value, lower=lower, trim=trim, **kwargs
+            value,
+            lower=lower,
+            trim=trim,
+            **kwargs,
         )
     return process_column(col, lower=lower, trim=trim, **kwargs) < process_elem(
-        value, lower=lower, trim=trim, **kwargs
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
 def not_equals(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column is not equal to some value.
 
@@ -887,7 +911,7 @@ def not_equals(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -905,12 +929,19 @@ def not_equals(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs) != process_elem(
-        value, lower=lower, trim=trim, **kwargs
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
 def has_string_format(
-    col: Column, value: Any, fmt: str, to_str: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    fmt: str,
+    to_str: bool = True,
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column has some string formatting.
 
@@ -937,12 +968,15 @@ def has_string_format(
 
     """
     return process_column(col, to_str=to_str, **kwargs).like(
-        fmt.format(process_elem(value, to_str=to_str, **kwargs))
+        fmt.format(process_elem(value, to_str=to_str, **kwargs)),
     )
 
 
 def has_substring(
-    col: Column, substring: Any, lower: bool = True, **kwargs: Dict[str, bool]
+    col: Column,
+    substring: Any,
+    lower: bool = True,
+    **kwargs: Dict[str, bool],
 ) -> BinaryExpression:
     """Condition that a column has some substring.
 
@@ -1078,7 +1112,7 @@ def in_(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs).in_(
-        process_list(lst, lower=lower, trim=trim, **kwargs)
+        process_list(lst, lower=lower, trim=trim, **kwargs),
     )
 
 
@@ -1115,20 +1149,22 @@ def _check_column_type(
     ]
     if raise_error and not all(is_type):
         incorrect_type = list(
-            set(cols) - {col for i, col in enumerate(cols) if is_type[i]}
+            set(cols) - {col for i, col in enumerate(cols) if is_type[i]},
         )
         types_str = ", ".join([type_.__name__ for type_ in types])
         actual_types_str = [type(col).__name__ for col in incorrect_type]
         raise ValueError(
             f"""{incorrect_type} columns are not one of types {types_str}.
-            They have types {actual_types_str}."""
+            They have types {actual_types_str}.""",
         )
 
     return all(is_type)
 
 
 def check_timestamp_columns(
-    table: TableTypes, cols: Union[str, List[str]], raise_error=False
+    table: TableTypes,
+    cols: Union[str, List[str]],
+    raise_error=False,
 ):
     """Check whether some columns are Date or DateTime columns.
 
@@ -1208,7 +1244,7 @@ def get_delta_column(
     interval_cols = []
     for i, col in enumerate(time_cols):
         interval_cols.append(
-            func.cast(func.concat(func.coalesce(col, 0), " " + names[i]), Interval)
+            func.cast(func.concat(func.coalesce(col, 0), " " + names[i]), Interval),
         )
 
     # Create combined interval column.

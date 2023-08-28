@@ -24,6 +24,7 @@ from cyclops.query.util import (
 from cyclops.utils.file import join as join_path
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -114,7 +115,9 @@ class DatasetQuerier:
                 else:
                     overrides.append(f"+{key}={value}")
         with initialize(
-            version_base=None, config_path="configs", job_name="DatasetQuerier"
+            version_base=None,
+            config_path="configs",
+            job_name="DatasetQuerier",
         ):
             config = compose(config_name="config", overrides=overrides)
             LOGGER.debug(OmegaConf.to_yaml(config))
@@ -164,7 +167,7 @@ class DatasetQuerier:
 
         """
         return list(
-            getattr(getattr(self.db, schema_name), table_name).data.columns.keys()
+            getattr(getattr(self.db, schema_name), table_name).data.columns.keys(),
         )
 
     def list_custom_tables(self) -> List[str]:
@@ -180,8 +183,8 @@ class DatasetQuerier:
         custom_tables = []
         for method in method_list:
             if (
-                not method.startswith(  # pylint: disable=too-many-boolean-expressions
-                    "__"
+                not method.startswith(
+                    "__",
                 )
                 and not method.startswith("_")
                 and method not in self.list_schemas()
@@ -224,7 +227,10 @@ class DatasetQuerier:
         return QueryInterfaceProcessed(self.db, table, ops=ops, process_fn=process_fn)
 
     def get_table(
-        self, schema_name: str, table_name: str, cast_timestamp_cols: bool = True
+        self,
+        schema_name: str,
+        table_name: str,
+        cast_timestamp_cols: bool = True,
     ) -> Subquery:
         """Get a table and possibly map columns to have standard names.
 

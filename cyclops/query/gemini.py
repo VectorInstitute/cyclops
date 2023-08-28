@@ -11,6 +11,7 @@ from cyclops.query.base import DatasetQuerier
 from cyclops.query.interface import QueryInterface
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -65,7 +66,7 @@ class GEMINIQuerier(DatasetQuerier):
         # Get the discharge disposition code descriptions
         lookup_table = self.get_table("public", "lookup_ip_administrative")
         lookup_table = qo.ConditionEquals("variable", "discharge_disposition")(
-            lookup_table
+            lookup_table,
         )
         table = qo.Join(
             lookup_table,
@@ -80,7 +81,9 @@ class GEMINIQuerier(DatasetQuerier):
         return QueryInterface(self.db, table, join=join, ops=ops)
 
     def diagnoses(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query diagnosis data.
 
@@ -117,7 +120,9 @@ class GEMINIQuerier(DatasetQuerier):
         return QueryInterface(self.db, table, join=join, ops=ops)
 
     def room_transfer(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query room transfer data.
 
@@ -176,7 +181,7 @@ class GEMINIQuerier(DatasetQuerier):
                 "admit",
                 "discharge",
                 CARE_UNIT,
-            ]
+            ],
         )
 
         # In-patient table.
@@ -185,7 +190,7 @@ class GEMINIQuerier(DatasetQuerier):
             {
                 "admit_date_time": "admit",
                 "discharge_date_time": "discharge",
-            }
+            },
         )(ip_table)
         ip_table = qo.Literal("IP", CARE_UNIT)(ip_table)
         ip_table = filter_care_unit_cols(ip_table)
@@ -196,7 +201,7 @@ class GEMINIQuerier(DatasetQuerier):
             {
                 "scu_admit_date_time": "admit",
                 "scu_discharge_date_time": "discharge",
-            }
+            },
         )(scu_table)
         scu_table = qo.Literal("SCU", CARE_UNIT)(scu_table)
         scu_table = filter_care_unit_cols(scu_table)
@@ -207,7 +212,7 @@ class GEMINIQuerier(DatasetQuerier):
             {
                 "er_admit_timestamp": "admit",
                 "er_discharge_timestamp": "discharge",
-            }
+            },
         )(er_table)
         er_table = qo.Literal("ER", CARE_UNIT)(er_table)
         er_table = filter_care_unit_cols(er_table)
@@ -218,7 +223,7 @@ class GEMINIQuerier(DatasetQuerier):
             {
                 "checkin_date_time": "admit",
                 "checkout_date_time": "discharge",
-            }
+            },
         )(rt_table)
         rt_table = qo.Rename({"transfer_description": CARE_UNIT})(rt_table)
         rt_table = filter_care_unit_cols(rt_table)
@@ -234,7 +239,9 @@ class GEMINIQuerier(DatasetQuerier):
         return QueryInterface(self.db, table, join=join, ops=ops)
 
     def imaging(
-        self, join: Optional[qo.JoinArgs] = None, ops: Optional[qo.Sequential] = None
+        self,
+        join: Optional[qo.JoinArgs] = None,
+        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query imaging reports data.
 
@@ -256,7 +263,7 @@ class GEMINIQuerier(DatasetQuerier):
         # Get imaging test description
         lookup_table = self.get_table("public", "lookup_imaging")
         lookup_table = qo.ConditionEquals("variable", "imaging_test_name_mapped")(
-            lookup_table
+            lookup_table,
         )
 
         table = qo.Join(
@@ -268,7 +275,7 @@ class GEMINIQuerier(DatasetQuerier):
         table = qo.Drop("value")(table)
         table = qo.Rename({"description": "imaging_test_description"})(table)
         table = qo.ReorderAfter("imaging_test_description", "imaging_test_name_mapped")(
-            table
+            table,
         )
 
         return QueryInterface(self.db, table, join=join, ops=ops)

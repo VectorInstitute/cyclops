@@ -34,13 +34,13 @@ from cyclops.query.util import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_table():
     """Test table input."""
     return select(process_column(column("a"), to_int=True), column("b"), column("c"))
 
 
-def test__check_column_type(test_table):  # pylint: disable=redefined-outer-name
+def test__check_column_type(test_table):
     """Test _check_column_type fn."""
     assert _check_column_type(test_table, ["a"], Integer)
     with pytest.raises(ValueError):
@@ -99,14 +99,14 @@ def test__to_select():
         _to_select("a")
 
 
-def test_get_column(test_table):  # pylint: disable=redefined-outer-name
+def test_get_column(test_table):
     """Test get_column fn."""
     assert str(get_column(test_table, "a")) == "anon_1.a"
     with pytest.raises(ValueError):
         get_column(select(column("a")), "b")
 
 
-def test_get_columns(test_table):  # pylint: disable=redefined-outer-name
+def test_get_columns(test_table):
     """Test get_columns fn."""
     cols = get_columns(test_table, "c")
     cols = [str(col) for col in cols]
@@ -115,18 +115,18 @@ def test_get_columns(test_table):  # pylint: disable=redefined-outer-name
         get_column(select(column("a")), "b")
 
 
-def test_get_column_names(test_table):  # pylint: disable=redefined-outer-name
+def test_get_column_names(test_table):
     """Test get_column_names fn."""
     assert get_column_names(test_table) == ["a", "b", "c"]
 
 
-def test_filter_columns(test_table):  # pylint: disable=redefined-outer-name
+def test_filter_columns(test_table):
     """Test filter_columns fn."""
     filtered = filter_columns(test_table, ["a", "c", "d"])
     assert get_column_names(filtered) == ["a", "c"]
 
 
-def test_has_columns(test_table):  # pylint: disable=redefined-outer-name
+def test_has_columns(test_table):
     """Test has_columns fn."""
     assert not has_columns(test_table, ["a", "d"])
     assert has_columns(test_table, ["a", "b"])
@@ -134,19 +134,19 @@ def test_has_columns(test_table):  # pylint: disable=redefined-outer-name
         has_columns(test_table, ["a", "d"], raise_error=True)
 
 
-def test_drop_columns(test_table):  # pylint: disable=redefined-outer-name
+def test_drop_columns(test_table):
     """Test drop_columns fn."""
     after_drop = drop_columns(test_table, ["a"])
     assert get_column_names(after_drop) == ["b", "c"]
 
 
-def test_rename_columns(test_table):  # pylint: disable=redefined-outer-name
+def test_rename_columns(test_table):
     """Test rename_columns fn."""
     after_rename = rename_columns(test_table, {"a": "apple", "b": "ball"})
     assert get_column_names(after_rename) == ["apple", "ball", "c"]
 
 
-def test_reorder_columns(test_table):  # pylint: disable=redefined-outer-name
+def test_reorder_columns(test_table):
     """Test reorder_columns fn."""
     with pytest.raises(ValueError):
         reorder_columns(test_table, ["ball", "c", "a"])
@@ -156,7 +156,7 @@ def test_reorder_columns(test_table):  # pylint: disable=redefined-outer-name
     assert get_column_names(after_reorder) == ["b", "c", "a"]
 
 
-def test_trim_columns(test_table):  # pylint: disable=redefined-outer-name
+def test_trim_columns(test_table):
     """Test apply_to_columns fn."""
     after_trim = trim_columns(test_table, ["a"], ["apple"])
     assert get_column_names(after_trim) == ["a", "b", "c", "apple"]

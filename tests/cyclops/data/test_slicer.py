@@ -1,4 +1,5 @@
 """Tests for cyclops.data.slicer module."""
+
 from functools import partial
 from typing import Any, Callable, List, Union
 
@@ -9,7 +10,7 @@ from datasets import Dataset
 from datasets.splits import Split
 
 import cyclops.query.ops as qo
-from cyclops.data.slicer import (  # pylint: disable=protected-access
+from cyclops.data.slicer import (
     SliceSpec,
     _maybe_convert_to_datetime,
     compound_filter,
@@ -22,6 +23,7 @@ from cyclops.data.slicer import (  # pylint: disable=protected-access
 )
 from cyclops.query.omop import OMOPQuerier
 
+
 SYNTHEA = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
 
 
@@ -31,15 +33,13 @@ def visits_table() -> pd.DataFrame:
         [
             qo.ConditionEquals("gender_source_value", "M"),  # type: ignore
             qo.Rename({"race_source_value": "race"}),  # type: ignore
-        ]
+        ],
     )
 
     persons_qi = SYNTHEA.person(ops=ops)
-    visit_occurrence_table = SYNTHEA.visit_occurrence(
-        join=qo.JoinArgs(join_table=persons_qi.query, on="person_id")
+    return SYNTHEA.visit_occurrence(
+        join=qo.JoinArgs(join_table=persons_qi.query, on="person_id"),
     ).run()
-
-    return visit_occurrence_table
 
 
 def measurement_table() -> pd.DataFrame:
@@ -68,16 +68,15 @@ def get_filtered_dataset(table: pd.DataFrame, filter_func: Callable) -> Dataset:
         split=Split.ALL,
         preserve_index=False,
     )
-    filtered_ds = pd_ds.filter(
+    return pd_ds.filter(
         filter_func,
         batched=True,
         keep_in_memory=True,
         load_from_cache_file=False,
     )
-    return filtered_ds
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_overall():
     """Test overall filter."""
     table = visits_table()
@@ -85,7 +84,7 @@ def test_overall():
     assert len(table) == len(filtered_ds)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize("column_name", ["unit_source_value"])
 def test_filter_non_null(column_name: str):
     """Test filter non-null."""
@@ -97,9 +96,9 @@ def test_filter_non_null(column_name: str):
     assert None not in filtered_ds.unique(column_name)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "column_name,value,negate, keep_nulls",
+    ("column_name", "value", "negate", "keep_nulls"),
     [
         ("unit_source_value", ["cm", "mm"], False, False),
         ("unit_source_value", "n/a", True, False),
@@ -135,9 +134,17 @@ def test_filter_value(
         assert pd.isnull(filtered_ds[column_name]).any()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "column_name,min_value,max_value,min_inclusive,max_inclusive,negate,keep_nulls",
+    (
+        "column_name",
+        "min_value",
+        "max_value",
+        "min_inclusive",
+        "max_inclusive",
+        "negate",
+        "keep_nulls",
+    ),
     [
         ("unit_source_value", "cm", "mm", True, True, False, False),
         ("measurement_date", -np.inf, np.inf, True, True, False, False),
@@ -171,7 +178,8 @@ def test_filter_range(
 
     # Convert min_value and max_value to datetime if necessary.
     min_value, max_value, value_is_datetime = _maybe_convert_to_datetime(
-        min_value, max_value
+        min_value,
+        max_value,
     )
 
     # If the column is not numeric or datetime, we expect a ValueError.
@@ -200,7 +208,8 @@ def test_filter_range(
     # Otherwise, we expect the filter to work.
     filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
     examples = pd.Series(
-        filtered_ds[column_name], dtype="datetime64[ns]" if value_is_datetime else None
+        filtered_ds[column_name],
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     mask = (
@@ -218,9 +227,9 @@ def test_filter_range(
     assert mask.all()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "column_name,year,month,day,hour,negate,keep_nulls",
+    ("column_name", "year", "month", "day", "hour", "negate", "keep_nulls"),
     [
         ("visit_start_date", 2014, None, None, None, False, False),
         ("visit_start_date", None, [4, 6, 7], None, None, False, False),
@@ -288,9 +297,9 @@ def test_filter_datetime(
     assert result.all()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "column_name,contains,negate,keep_nulls",
+    ("column_name", "contains", "negate", "keep_nulls"),
     [
         ("unit_source_value", "kg", False, False),
         ("unit_source_value", ["kg", "mm"], False, False),
@@ -299,7 +308,10 @@ def test_filter_datetime(
     ],
 )
 def test_filter_string_contains(
-    column_name: str, contains: str, negate: bool, keep_nulls: bool
+    column_name: str,
+    contains: str,
+    negate: bool,
+    keep_nulls: bool,
 ):
     """Test filter feature value string contains."""
     filter_func = partial(
@@ -334,9 +346,18 @@ def test_filter_string_contains(
     assert np.array_equal(examples, expected)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "value_col,value,range_col,range_min,range_max, datetime_col,year,month",
+    (
+        "value_col",
+        "value",
+        "range_col",
+        "range_min",
+        "range_max",
+        "datetime_col",
+        "year",
+        "month",
+    ),
     [
         (
             "race",
@@ -347,7 +368,7 @@ def test_filter_string_contains(
             "visit_end_datetime",
             [2014, 2015, 2016, 2017, 2018],
             [1, 2, 3, 4, 5, 10, 11, 12],
-        )
+        ),
     ],
 )
 def test_compound_filter(
@@ -408,10 +429,12 @@ def test_compound_filter(
     )
 
     range_min, range_max, value_is_datetime = _maybe_convert_to_datetime(
-        range_min, range_max
+        range_min,
+        range_max,
     )
     range_examples = pd.Series(
-        filtered_ds[range_col], dtype="datetime64[ns]" if value_is_datetime else None
+        filtered_ds[range_col],
+        dtype="datetime64[ns]" if value_is_datetime else None,
     ).to_numpy()
 
     # check that the filtered dataset has the correct values
@@ -430,11 +453,11 @@ def test_compound_filter(
                 pd.to_datetime(filtered_ds[datetime_col]).month,
                 month,
             )
-        )
+        ),
     )
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_slice_spec():
     """Test SliceSpec class."""
     value1 = ["mmHg", "kg", "mL", "mL/min"]
@@ -479,23 +502,24 @@ def test_slice_spec():
         if "unit_source_value:['mmHg', 'kg', 'mL', 'mL/min']" in slice_name:
             assert np.all(
                 np.isin(
-                    filtered_ds["unit_source_value"], ["mmHg", "kg", "mL", "mL/min"]
-                )
+                    filtered_ds["unit_source_value"],
+                    ["mmHg", "kg", "mL", "mL/min"],
+                ),
             )
         if f"value_as_number:[{min_value} - {max_value}]" in slice_name:
             assert np.all(
                 np.greater_equal(filtered_ds["value_as_number"], min_value)
-                & np.less_equal(filtered_ds["value_as_number"], max_value)
+                & np.less_equal(filtered_ds["value_as_number"], max_value),
             )
         if f"measurement_datetime:year={year}" in slice_name:
             assert np.all(
                 np.isin(
                     pd.to_datetime(filtered_ds["measurement_datetime"]).year,
                     year,
-                )
+                ),
             )
         if (
-            f"unit_source_value:cm&!(value_as_number:-inf - {max_value})&measurement_datetime:month={month}"  # noqa: E501 # pylint: disable=line-too-long
+            f"unit_source_value:cm&!(value_as_number:-inf - {max_value})&measurement_datetime:month={month}"  # noqa: E501
             in slice_name
         ):
             assert np.all(
@@ -504,5 +528,5 @@ def test_slice_spec():
                 & np.isin(
                     pd.to_datetime(filtered_ds["measurement_datetime"]).month,
                     month,
-                )
+                ),
             )

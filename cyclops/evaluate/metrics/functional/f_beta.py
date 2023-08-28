@@ -21,7 +21,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 
 
-def _fbeta_reduce(  # pylint: disable=too-many-arguments
+def _fbeta_reduce(
     tp: Union[npt.NDArray[np.int_], np.int_],
     fp: Union[npt.NDArray[np.int_], np.int_],
     fn: Union[npt.NDArray[np.int_], np.int_],
@@ -115,7 +115,7 @@ def _check_beta(beta: float) -> None:
         raise ValueError("beta should be >=0 in the F-beta score")
 
 
-def binary_fbeta_score(  # pylint: disable=too-many-arguments
+def binary_fbeta_score(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     beta: float,
@@ -164,11 +164,16 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold, pos_label=pos_label
+        target=target,
+        preds=preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, _, fn = _binary_stat_scores_update(
-        target=target, preds=preds, pos_label=pos_label
+        target=target,
+        preds=preds,
+        pos_label=pos_label,
     )
 
     f_score = _fbeta_reduce(
@@ -183,7 +188,7 @@ def binary_fbeta_score(  # pylint: disable=too-many-arguments
     return cast(float, f_score)
 
 
-def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
+def multiclass_fbeta_score(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     beta: float,
@@ -248,11 +253,16 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
     _check_average_arg(average=average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k
+        target,
+        preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, _, fn = _multiclass_stat_scores_update(
-        target=target, preds=preds, num_classes=num_classes
+        target=target,
+        preds=preds,
+        num_classes=num_classes,
     )
 
     return _fbeta_reduce(
@@ -265,7 +275,7 @@ def multiclass_fbeta_score(  # pylint: disable=too-many-arguments
     )
 
 
-def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
+def multilabel_fbeta_score(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     beta: float,
@@ -334,11 +344,17 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
     _check_average_arg(average=average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
+        target,
+        preds,
+        num_labels=num_labels,
+        threshold=threshold,
+        top_k=top_k,
     )
 
     tp, fp, _, fn = _multilabel_stat_scores_update(
-        target=target, preds=preds, num_labels=num_labels
+        target=target,
+        preds=preds,
+        num_labels=num_labels,
     )
 
     return _fbeta_reduce(
@@ -351,7 +367,7 @@ def multilabel_fbeta_score(  # pylint: disable=too-many-arguments
     )
 
 
-def fbeta_score(  # pylint: disable=too-many-arguments
+def fbeta_score(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     beta: float,
@@ -481,11 +497,11 @@ def fbeta_score(  # pylint: disable=too-many-arguments
 
     raise ValueError(
         f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-        " or 'multilabel'"
+        " or 'multilabel'",
     )
 
 
-def binary_f1_score(  # pylint: disable=too-many-arguments
+def binary_f1_score(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     pos_label: int = 1,
@@ -533,7 +549,7 @@ def binary_f1_score(  # pylint: disable=too-many-arguments
     )
 
 
-def multiclass_f1_score(  # pylint: disable=too-many-arguments
+def multiclass_f1_score(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -598,7 +614,7 @@ def multiclass_f1_score(  # pylint: disable=too-many-arguments
     )
 
 
-def multilabel_f1_score(  # pylint: disable=too-many-arguments
+def multilabel_f1_score(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -665,7 +681,7 @@ def multilabel_f1_score(  # pylint: disable=too-many-arguments
     )
 
 
-def f1_score(  # pylint: disable=too-many-arguments
+def f1_score(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],

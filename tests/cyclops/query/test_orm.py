@@ -8,7 +8,7 @@ import pytest
 from cyclops.query import OMOPQuerier
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_omop_querier():
     """Test ORM using OMOPQuerier."""
     querier = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")

@@ -8,7 +8,7 @@ from datasets import Dataset
 from cyclops.models.wrappers.utils import DatasetColumn, to_numpy, to_tensor
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_to_tensor():
     """Test to_tensor function."""
     test_array = np.random.rand(10, 10)
@@ -46,7 +46,7 @@ def test_dataset_column():
         assert isinstance(item, int)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_to_numpy():
     """Test to_numpy function."""
     test_array = np.random.rand(10, 10)

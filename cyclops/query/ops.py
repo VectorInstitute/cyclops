@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """Low-level query operations.
 
 This module contains query operation modules such which can be used in high-level query
@@ -49,11 +48,12 @@ from cyclops.query.util import (
 from cyclops.utils.common import to_datetime_format, to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-# pylint: disable=too-few-public-methods
+# ruff: noqa: W505
 
 
 @dataclass
@@ -80,7 +80,7 @@ class JoinArgs:
     """
 
     join_table: TableTypes
-    on: typing.Optional[  # pylint: disable=invalid-name
+    on: typing.Optional[
         typing.Union[
             str,
             typing.List[str],
@@ -111,7 +111,8 @@ class QueryOp(type):
 
 
 def _chain_ops(
-    query: Subquery, ops: typing.Union[typing.List[QueryOp], Sequential]
+    query: Subquery,
+    ops: typing.Union[typing.List[QueryOp], Sequential],
 ) -> Subquery:
     if isinstance(ops, typing.List):
         for op_ in ops:
@@ -130,7 +131,7 @@ class Sequential:
 
     """
 
-    def __init__(self, ops: typing.Union[typing.List[QueryOp], Sequential]):
+    def __init__(self, ops: typing.Union[typing.List[QueryOp], Sequential]) -> None:
         """Initialize the Sequential class.
 
         Parameters
@@ -279,18 +280,17 @@ class FillNull(metaclass=QueryOp):
         cols = to_list(self.cols)
         fill_values = to_list(self.fill_values)
         new_col_names = to_list_optional(self.new_col_names)
-        if new_col_names:
-            if len(cols) != len(new_col_names):
-                raise ValueError(
-                    """Number of columns to fill and number of new column names
-                    must match."""
-                )
+        if new_col_names and len(cols) != len(new_col_names):
+            raise ValueError(
+                """Number of columns to fill and number of new column names
+                    must match.""",
+            )
         table = _process_checks(table, cols=self.cols)
         if len(fill_values) == 1:
             fill_values = fill_values * len(cols)
         for col, fill in zip(cols, fill_values):
             coalesced_col = func.coalesce(table.c[col], fill).label(
-                f"coalesced_col_{col}"
+                f"coalesced_col_{col}",
             )
             table = select([table, coalesced_col]).subquery()
         if new_col_names:
@@ -408,14 +408,14 @@ class Substring(metaclass=QueryOp):
 
         """
         table = _process_checks(table, cols=self.col)
-        table = select(
+        return select(
             table,
             func.substr(
-                get_column(table, self.col), self.start_index, self.stop_index
+                get_column(table, self.col),
+                self.start_index,
+                self.stop_index,
             ).label(self.new_col_label),
         ).subquery()
-
-        return table
 
 
 @dataclass
@@ -623,13 +623,15 @@ class ExtractTimestampComponent(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, timestamp_cols=self.timestamp_col, cols_not_in=self.label
+            table,
+            timestamp_cols=self.timestamp_col,
+            cols_not_in=self.label,
         )
 
         table = select(
             table,
             extract(self.extract_str, get_column(table, self.timestamp_col)).label(
-                self.label
+                self.label,
             ),
         )
 
@@ -671,7 +673,9 @@ class AddNumeric(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, cols=self.add_to, cols_not_in=self.new_col_labels
+            table,
+            cols=self.add_to,
+            cols_not_in=self.new_col_labels,
         )
         return apply_to_columns(
             table,
@@ -716,7 +720,9 @@ class AddDeltaConstant(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
+            table,
+            timestamp_cols=self.add_to,
+            cols_not_in=self.new_col_labels,
         )
 
         return apply_to_columns(
@@ -772,11 +778,15 @@ class AddColumn(metaclass=QueryOp):
         # If the column being added is a timestamp column, ensure the others are too
         if check_timestamp_columns(table, self.col):
             table = _process_checks(
-                table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
+                table,
+                timestamp_cols=self.add_to,
+                cols_not_in=self.new_col_labels,
             )
         else:
             table = _process_checks(
-                table, cols=self.add_to, cols_not_in=self.new_col_labels
+                table,
+                cols=self.add_to,
+                cols_not_in=self.new_col_labels,
             )
 
         col = get_column(table, self.col)
@@ -844,7 +854,9 @@ class AddDeltaColumn(metaclass=QueryOp):
 
         """
         table = _process_checks(
-            table, timestamp_cols=self.add_to, cols_not_in=self.new_col_labels
+            table,
+            timestamp_cols=self.add_to,
+            cols_not_in=self.new_col_labels,
         )
 
         delta = get_delta_column(table, **self.delta_kwargs)
@@ -913,7 +925,7 @@ class Cast(metaclass=QueryOp):
             supported_str = ", ".join(list(cast_type_map.keys()))
             raise ValueError(
                 f"""Conversion to type {self.type_} not supported. Supporting
-                conversion to types {supported_str}"""
+                conversion to types {supported_str}""",
             )
 
         # Cast
@@ -922,7 +934,7 @@ class Cast(metaclass=QueryOp):
         return apply_to_columns(
             table,
             self.cols,
-            lambda x: process_column(x, **kwargs),  # pylint: disable=unnecessary-lambda
+            lambda x: process_column(x, **kwargs),
         )
 
 
@@ -939,7 +951,9 @@ class Union(metaclass=QueryOp):
     """
 
     def __init__(
-        self, union_table: TableTypes, union_all: typing.Optional[bool] = False
+        self,
+        union_table: TableTypes,
+        union_all: typing.Optional[bool] = False,
     ) -> None:
         """Initialize."""
         self.union_table = union_table
@@ -1004,7 +1018,7 @@ class Join(metaclass=QueryOp):
     def __init__(
         self,
         join_table: TableTypes,
-        on: typing.Optional[  # pylint: disable=invalid-name
+        on: typing.Optional[
             typing.Union[
                 str,
                 typing.List[str],
@@ -1017,7 +1031,7 @@ class Join(metaclass=QueryOp):
         table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         join_table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         isouter: typing.Optional[bool] = False,
-    ):
+    ) -> None:
         """Initialize."""
         if on is not None and cond is not None:
             raise ValueError("Cannot specify both the 'on' and 'cond' arguments.")
@@ -1057,7 +1071,8 @@ class Join(metaclass=QueryOp):
                 for col_obj in self.on_
             ]
             table = _process_checks(
-                table, cols=_none_add(self.table_cols, on_table_cols)
+                table,
+                cols=_none_add(self.table_cols, on_table_cols),
             )
             self.join_table = _process_checks(
                 self.join_table,
@@ -1066,21 +1081,23 @@ class Join(metaclass=QueryOp):
             # Filter columns, keeping those being joined on
             table = _append_if_missing(table, self.table_cols, on_table_cols)
             self.join_table = _append_if_missing(
-                self.join_table, self.join_table_cols, on_join_table_cols
+                self.join_table,
+                self.join_table_cols,
+                on_join_table_cols,
             )
             # Perform type conversions if given
             if self.on_to_type is not None:
                 for i, type_ in enumerate(self.on_to_type):
                     table = Cast(on_table_cols[i], type_)(table)
                     self.join_table = Cast(on_join_table_cols[i], type_)(
-                        self.join_table
+                        self.join_table,
                     )
             cond = and_(
                 *[
                     get_column(table, on_table_cols[i])
                     == get_column(self.join_table, on_join_table_cols[i])
                     for i in range(len(on_table_cols))
-                ]
+                ],
             )
             table = select(table.join(self.join_table, cond, isouter=self.isouter))
 
@@ -1095,8 +1112,10 @@ class Join(metaclass=QueryOp):
             if self.cond is not None:
                 table = select(
                     table.join(  # type: ignore
-                        self.join_table, self.cond, isouter=self.isouter
-                    )
+                        self.join_table,
+                        self.cond,
+                        isouter=self.isouter,
+                    ),
                 )
 
             # Join on no condition, i.e., a Cartesian product
@@ -1106,11 +1125,11 @@ class Join(metaclass=QueryOp):
 
         # Filter to include no duplicate columns
         return select(
-            *[col for col in table.subquery().columns if "%(" not in col.name]
+            *[col for col in table.subquery().columns if "%(" not in col.name],
         ).subquery()
 
 
-class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionEquals(metaclass=QueryOp):
     """Filter rows based on being equal, or not equal, to some value.
 
     Parameters
@@ -1135,7 +1154,7 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.value = value
@@ -1159,20 +1178,25 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = equals(
-            get_column(table, self.col), self.value, True, True, **self.cond_kwargs
+            get_column(table, self.col),
+            self.value,
+            True,
+            True,
+            **self.cond_kwargs,
         )
         if self.not_:
             cond = cond._negate()
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionGreaterThan(metaclass=QueryOp):
     """Filter rows based on greater than (or equal), to some value.
 
     Parameters
@@ -1200,7 +1224,7 @@ class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.value = value
@@ -1237,13 +1261,14 @@ class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionLessThan(metaclass=QueryOp):
     """Filter rows based on less than (or equal), to some value.
 
     Parameters
@@ -1271,7 +1296,7 @@ class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.value = value
@@ -1308,13 +1333,14 @@ class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-me
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionRegexMatch(metaclass=QueryOp):
     """Filter rows based on matching a regular expression.
 
     Parameters
@@ -1336,7 +1362,7 @@ class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-
         regex: str,
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.regex = regex
@@ -1364,13 +1390,14 @@ class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionIn(metaclass=QueryOp):
     """Filter rows based on having a value in list of values.
 
     Parameters
@@ -1395,7 +1422,7 @@ class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.values = values
@@ -1430,13 +1457,14 @@ class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionSubstring(metaclass=QueryOp):
     """Filter rows on based on having substrings.
 
     Can be specified whether it must have any or all of the specified substrings.
@@ -1468,7 +1496,7 @@ class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-m
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):  # pylint: disable=too-many-arguments
+    ) -> None:
         """Initialize."""
         self.col = col
         self.substrings = to_list(substrings)
@@ -1497,23 +1525,21 @@ class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-m
             for sub in self.substrings
         ]
 
-        if self.any_:
-            cond = or_(*conds)
-        else:
-            cond = and_(*conds)
+        cond = or_(*conds) if self.any_ else and_(*conds)
 
         if self.not_:
             cond = cond._negate()
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionStartsWith(metaclass=QueryOp):
     """Filter rows based on starting with some string.
 
     Parameters
@@ -1538,7 +1564,7 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.string = string
@@ -1562,20 +1588,25 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = starts_with(
-            get_column(table, self.col), self.string, True, True, **self.cond_kwargs
+            get_column(table, self.col),
+            self.string,
+            True,
+            True,
+            **self.cond_kwargs,
         )
         if self.not_:
             cond = cond._negate()
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionEndsWith(metaclass=QueryOp):
     """Filter rows based on ending with some string.
 
     Parameters
@@ -1600,7 +1631,7 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.string = string
@@ -1624,20 +1655,25 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         """
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = ends_with(
-            get_column(table, self.col), self.string, True, True, **self.cond_kwargs
+            get_column(table, self.col),
+            self.string,
+            True,
+            True,
+            **self.cond_kwargs,
         )
         if self.not_:
             cond = cond._negate()
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionInYears(metaclass=QueryOp):
     """Filter rows based on a timestamp column being in a list of years.
 
     Parameters
@@ -1659,7 +1695,7 @@ class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-met
         years: typing.Union[int, typing.List[int]],
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.years = years
@@ -1681,7 +1717,9 @@ class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-met
 
         """
         table = _process_checks(
-            table, cols=self.timestamp_col, cols_not_in=self.binarize_col
+            table,
+            cols=self.timestamp_col,
+            cols_not_in=self.binarize_col,
         )
         cond = in_(
             extract("year", get_column(table, self.timestamp_col)),
@@ -1692,13 +1730,14 @@ class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-met
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionInMonths(metaclass=QueryOp):
     """Filter rows based on a timestamp being in a list of years.
 
     Parameters
@@ -1720,7 +1759,7 @@ class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         months: typing.Union[int, typing.List[int]],
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.months = months
@@ -1742,7 +1781,9 @@ class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-me
 
         """
         table = _process_checks(
-            table, cols=self.timestamp_col, cols_not_in=self.binarize_col
+            table,
+            cols=self.timestamp_col,
+            cols_not_in=self.binarize_col,
         )
         cond = in_(
             extract("month", get_column(table, self.timestamp_col)),
@@ -1753,13 +1794,14 @@ class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-me
 
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
 
 
-class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionBeforeDate(metaclass=QueryOp):
     """Filter rows based on a timestamp being before some date.
 
     Parameters
@@ -1771,7 +1813,11 @@ class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-
 
     """
 
-    def __init__(self, timestamp_col: str, timestamp: typing.Union[str, datetime]):
+    def __init__(
+        self,
+        timestamp_col: str,
+        timestamp: typing.Union[str, datetime],
+    ) -> None:
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.timestamp = timestamp
@@ -1804,7 +1850,7 @@ class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-
         )
 
 
-class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionAfterDate(metaclass=QueryOp):
     """Filter rows based on a timestamp being after some date.
 
     Parameters
@@ -1816,7 +1862,11 @@ class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-m
 
     """
 
-    def __init__(self, timestamp_col: str, timestamp: typing.Union[str, datetime]):
+    def __init__(
+        self,
+        timestamp_col: str,
+        timestamp: typing.Union[str, datetime],
+    ) -> None:
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.timestamp = timestamp
@@ -1892,7 +1942,7 @@ class ConditionLike(metaclass=QueryOp):
 
 
 @dataclass
-class Limit(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class Limit(metaclass=QueryOp):
     """Limit the number of rows returned in a query.
 
     Parameters
@@ -2030,7 +2080,7 @@ class Apply(metaclass=QueryOp):
             if len(self.new_cols) != 1:
                 raise ValueError(
                     """Only one result column possible, and needed when
-                computing function using multiple column args."""
+                computing function using multiple column args.""",
                 )
             cols = get_columns(table, self.cols)
             result_col = self.func(*cols).label(self.new_cols[0])
@@ -2076,11 +2126,10 @@ class OrderBy(metaclass=QueryOp):
 
         if ascending is None:
             ascending = [True] * len(self.cols)
-        else:
-            if len(ascending) != len(self.cols):
-                raise ValueError(
-                    "If ascending is specified. Must specify for all columns."
-                )
+        elif len(ascending) != len(self.cols):
+            raise ValueError(
+                "If ascending is specified. Must specify for all columns.",
+            )
 
         order_cols = [
             col if ascending[i] else col.desc()
@@ -2114,14 +2163,15 @@ class GroupByAggregate(metaclass=QueryOp):
     --------
     >>> GroupByAggregate("person_id", {"person_id": "count"})(table)
     >>> GroupByAggregate("person_id", {"person_id": ("count", "visit_count")})(table)
-    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
-    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
+    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)
+    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)
 
     """
 
     groupby_cols: typing.Union[str, typing.List[str]]
     aggfuncs: typing.Union[
-        typing.Dict[str, typing.Sequence[str]], typing.Dict[str, str]
+        typing.Dict[str, typing.Sequence[str]],
+        typing.Dict[str, str],
     ]
     aggseps: typing.Dict[str, str] = field(default_factory=dict)
 
@@ -2171,19 +2221,20 @@ class GroupByAggregate(metaclass=QueryOp):
             if aggfunc_str not in str_to_aggfunc:
                 allowed_strs = ", ".join(list(str_to_aggfunc.keys()))
                 raise ValueError(
-                    f"Invalid aggfuncs specified. Allowed values are {allowed_strs}."
+                    f"Invalid aggfuncs specified. Allowed values are {allowed_strs}.",
                 )
-            if aggfunc_str == "string_agg":
-                if not bool(self.aggseps) or aggfunc_cols[i] not in self.aggseps:
-                    raise ValueError(
-                        f"""Column {aggfunc_cols[i]} needs to be aggregated as string, must specify a separator!"""  # noqa: E501, pylint: disable=line-too-long
-                    )
+            if aggfunc_str == "string_agg" and (
+                not bool(self.aggseps) or aggfunc_cols[i] not in self.aggseps
+            ):
+                raise ValueError(
+                    f"""Column {aggfunc_cols[i]} needs to be aggregated as string, must specify a separator!""",  # noqa: E501
+                )
 
         all_names = groupby_names + aggfunc_names
         if len(all_names) != len(set(all_names)):
             raise ValueError(
                 """Duplicate column names were found. Try naming aggregated columns
-                to avoid this issue."""
+                to avoid this issue.""",
             )
 
         # Perform group by
@@ -2193,7 +2244,8 @@ class GroupByAggregate(metaclass=QueryOp):
         for i, to_agg_col in enumerate(to_agg_cols):
             if aggfunc_strs[i] == "string_agg":
                 agg_col = str_to_aggfunc[aggfunc_strs[i]](
-                    to_agg_col, literal_column(f"'{self.aggseps[aggfunc_cols[i]]}'")
+                    to_agg_col,
+                    literal_column(f"'{self.aggseps[aggfunc_cols[i]]}'"),
                 )
             else:
                 agg_col = str_to_aggfunc[aggfunc_strs[i]](to_agg_col)

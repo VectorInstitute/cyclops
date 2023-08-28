@@ -19,7 +19,7 @@ from cyclops.process.feature.normalize import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_input():
     """Create a test input."""
     cols = [EVENT_NAME, SUBJECT_ID, ENCOUNTER_ID, EVENT_VALUE, EVENT_VALUE_UNIT]
@@ -125,11 +125,10 @@ def test_input():
         ["Access Pressure", 10449408, 22698294, -77.0, "mmHg"],
         ["Phosphorous", 10449408, 22698294, 3.4, "mg/dL"],
     ]
-    data = pd.DataFrame(data, columns=cols)
-    return data
+    return pd.DataFrame(data, columns=cols)
 
 
-def test_nongrouped_normalization(test_input):  # pylint: disable=redefined-outer-name
+def test_nongrouped_normalization(test_input):
     """Test normalization without using a groupby."""
     gbn = GroupbyNormalizer({SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD})
     gbn.fit(test_input)
@@ -147,17 +146,22 @@ def test_nongrouped_normalization(test_input):  # pylint: disable=redefined-oute
 
     denormalized = gbn.inverse_transform(normalized)
     assert np.allclose(
-        denormalized[SUBJECT_ID].values, test_input[SUBJECT_ID].values, atol=1e-07
+        denormalized[SUBJECT_ID].values,
+        test_input[SUBJECT_ID].values,
+        atol=1e-07,
     )
     assert np.allclose(
-        denormalized[EVENT_VALUE].values, test_input[EVENT_VALUE].values, atol=1e-07
+        denormalized[EVENT_VALUE].values,
+        test_input[EVENT_VALUE].values,
+        atol=1e-07,
     )
 
 
-def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-name
+def test_grouped_normalization(test_input):
     """Test normalization using a groupby."""
     gbn = GroupbyNormalizer(
-        {SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD}, by=[EVENT_NAME]
+        {SUBJECT_ID: MIN_MAX, EVENT_VALUE: STANDARD},
+        by=[EVENT_NAME],
     )
     gbn.fit(test_input)
 
@@ -172,10 +176,14 @@ def test_grouped_normalization(test_input):  # pylint: disable=redefined-outer-n
     denormalized = gbn.inverse_transform(normalized)
 
     assert np.allclose(
-        denormalized[SUBJECT_ID].values, test_input[SUBJECT_ID].values, atol=1e-07
+        denormalized[SUBJECT_ID].values,
+        test_input[SUBJECT_ID].values,
+        atol=1e-07,
     )
     assert np.allclose(
-        denormalized[EVENT_VALUE].values, test_input[EVENT_VALUE].values, atol=1e-07
+        denormalized[EVENT_VALUE].values,
+        test_input[EVENT_VALUE].values,
+        atol=1e-07,
     )
 
 
@@ -187,7 +195,7 @@ def test_vectorized_normalizer():
         [
             [[1, 2, 3], [3, 2, 100]],
             [[4, 5, 2], [9, 20, 10]],
-        ]
+        ],
     ).astype(float)
 
     feat_map = {"A": 0, "B": 1}

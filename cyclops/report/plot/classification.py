@@ -18,7 +18,6 @@ from cyclops.report.plot.utils import (
 )
 
 
-# pylint: disable=use-dict-literal
 class ClassificationPlotter(Plotter):
     """Classification plotter."""
 
@@ -28,7 +27,7 @@ class ClassificationPlotter(Plotter):
         task_name: Optional[str] = None,
         class_num: Optional[int] = None,
         class_names: Optional[List[str]] = None,
-    ):
+    ) -> None:
         """Initialize the plotter.
 
         Parameters
@@ -66,7 +65,7 @@ class ClassificationPlotter(Plotter):
         """
         if self.task_type in ["multiclass", "multilabel"] and class_num is None:
             raise ValueError(
-                "class_num must be specified for multiclass and multilabel tasks"
+                "class_num must be specified for multiclass and multilabel tasks",
             )
         if self.task_type == "binary" and class_num is not None:
             assert class_num == 2, "class_num must be 2 for binary tasks"
@@ -85,17 +84,18 @@ class ClassificationPlotter(Plotter):
             assert (
                 len(class_names) == self.class_num
             ), "class_names must be equal to class_num"
+        elif self.task_type == "multilabel":
+            class_names = [f"Label_{i+1}" for i in range(self.class_num)]
         else:
-            if self.task_type == "multilabel":
-                class_names = [f"Label_{i+1}" for i in range(self.class_num)]
-            else:
-                class_names = [f"Class_{i+1}" for i in range(self.class_num)]
+            class_names = [f"Class_{i+1}" for i in range(self.class_num)]
         self.class_names = class_names
 
     def roc_curve(
         self,
         roc_curve: Tuple[
-            npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
         ],
         auroc: Optional[Union[float, List[float], npt.NDArray[np.float_]]] = None,
         title: Optional[str] = "ROC Curve",
@@ -130,7 +130,8 @@ class ClassificationPlotter(Plotter):
         if self.task_type == "binary":
             if auroc is not None:
                 assert isinstance(
-                    auroc, float
+                    auroc,
+                    float,
                 ), "aurocs must be a float for binary tasks"
                 name = f"Model (AUC = {auroc:.2f})"
             else:
@@ -141,7 +142,7 @@ class ClassificationPlotter(Plotter):
                     y=tprs,
                     trace_name=name,
                     **plot_kwargs,
-                )
+                ),
             )
         else:
             assert (
@@ -154,7 +155,7 @@ class ClassificationPlotter(Plotter):
                         len(auroc) == self.class_num  # type: ignore[arg-type]
                     ), "Aurocs must be of length class_num for \
                         multiclass/multilabel tasks"
-                    name = f"{self.class_names[i]} (AUC = {auroc[i]:.2f})"  # type: ignore[index] # noqa: E501 # pylint: disable=line-too-long
+                    name = f"{self.class_names[i]} (AUC = {auroc[i]:.2f})"  # type: ignore[index] # noqa: E501
                 else:
                     name = self.class_names[i]
                 trace.append(
@@ -163,13 +164,16 @@ class ClassificationPlotter(Plotter):
                         y=tprs[i],
                         trace_name=name,
                         **plot_kwargs,
-                    )
+                    ),
                 )
 
         trace.append(
             line_plot(
-                x=[0, 1], y=[0, 1], name="Random Classifier", line=dict(dash="dash")
-            )
+                x=[0, 1],
+                y=[0, 1],
+                name="Random Classifier",
+                line={"dash": "dash"},
+            ),
         )
 
         xaxis_title = "False Positive Rate"
@@ -177,9 +181,9 @@ class ClassificationPlotter(Plotter):
 
         fig = create_figure(
             data=trace,
-            title=dict(text=title),
-            xaxis=dict(title=xaxis_title),
-            yaxis=dict(title=yaxis_title),
+            title={"text": title},
+            xaxis={"title": xaxis_title},
+            yaxis={"title": yaxis_title},
         )
         if layout is not None:
             fig.update_layout(layout)
@@ -222,7 +226,8 @@ class ClassificationPlotter(Plotter):
             for slice_name, slice_curve in roc_curves.items():
                 if aurocs and slice_name in aurocs:
                     assert isinstance(
-                        aurocs[slice_name], float
+                        aurocs[slice_name],
+                        float,
                     ), "Aurocs must be a float for binary tasks"
                     name = f"{slice_name} (AUC = {aurocs[slice_name]:.2f})"
                 else:
@@ -235,7 +240,7 @@ class ClassificationPlotter(Plotter):
                         y=tprs,
                         trace_name=name,
                         **plot_kwargs,
-                    )
+                    ),
                 )
         else:
             for slice_name, slice_curve in roc_curves.items():
@@ -246,7 +251,7 @@ class ClassificationPlotter(Plotter):
                 for i in range(self.class_num):
                     if aurocs and slice_name in aurocs:
                         assert (
-                            len(aurocs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501 # pylint: disable=line-too-long
+                            len(aurocs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501
                         ), "Aurocs must be of length class_num for \
                             multiclass/multilabel tasks"
                         name = f"{slice_name}, {self.class_names[i]} \
@@ -261,22 +266,25 @@ class ClassificationPlotter(Plotter):
                             y=tprs,
                             trace_name=name,
                             **plot_kwargs,
-                        )
+                        ),
                     )
 
         trace.append(
             line_plot(
-                x=[0, 1], y=[0, 1], name="Random Classifier", line=dict(dash="dash")
-            )
+                x=[0, 1],
+                y=[0, 1],
+                name="Random Classifier",
+                line={"dash": "dash"},
+            ),
         )
 
         xaxis_title = "False Positive Rate"
         yaxis_title = "True Positive Rate"
 
         layout_kwargs = {}
-        layout_kwargs["title"] = dict(text=title)
-        layout_kwargs["xaxis"] = dict(title=xaxis_title)
-        layout_kwargs["yaxis"] = dict(title=yaxis_title)
+        layout_kwargs["title"] = {"text": title}
+        layout_kwargs["xaxis"] = {"title": xaxis_title}
+        layout_kwargs["yaxis"] = {"title": yaxis_title}
 
         fig = create_figure(
             data=trace,
@@ -289,7 +297,9 @@ class ClassificationPlotter(Plotter):
     def precision_recall_curve(
         self,
         precision_recall_curve: Tuple[
-            npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
+            npt.NDArray[np.float_],
         ],
         title: Optional[str] = "Precision-Recall Curve",
         layout: Optional[go.Layout] = None,
@@ -336,7 +346,7 @@ class ClassificationPlotter(Plotter):
                         y=precisions[i],
                         name=self.class_names[i],
                         **plot_kwargs,
-                    )
+                    ),
                 )
 
         xaxis_title = "Recall"
@@ -344,9 +354,9 @@ class ClassificationPlotter(Plotter):
 
         fig = create_figure(
             data=trace,
-            title=dict(text=title),
-            xaxis=dict(title=xaxis_title),
-            yaxis=dict(title=yaxis_title),
+            title={"text": title},
+            xaxis={"title": xaxis_title},
+            yaxis={"title": yaxis_title},
         )
         if layout is not None:
             fig.update_layout(layout)
@@ -390,7 +400,7 @@ class ClassificationPlotter(Plotter):
                         y=slice_curve[1],
                         trace_name=name,
                         **plot_kwargs,
-                    )
+                    ),
                 )
         else:
             for slice_name, slice_curve in precision_recall_curves.items():
@@ -406,7 +416,7 @@ class ClassificationPlotter(Plotter):
                             y=slice_curve[1][i],
                             trace_name=name,
                             **plot_kwargs,
-                        )
+                        ),
                     )
 
         xaxis_title = "Recall"
@@ -414,9 +424,9 @@ class ClassificationPlotter(Plotter):
 
         fig = create_figure(
             data=trace,
-            title=dict(text=title),
-            xaxis=dict(title=xaxis_title),
-            yaxis=dict(title=yaxis_title),
+            title={"text": title},
+            xaxis={"title": xaxis_title},
+            yaxis={"title": yaxis_title},
         )
         if layout is not None:
             fig.update_layout(layout)
@@ -444,6 +454,7 @@ class ClassificationPlotter(Plotter):
             Customized figure layout, by default None
         **plot_kwargs : dict
             Additional keyword arguments for plotly.graph_objects.Bar
+
         Returns
         -------
         go.Figure
@@ -473,7 +484,7 @@ class ClassificationPlotter(Plotter):
                         y=[value[i] for value in metrics.values()],  # type: ignore
                         name=self.class_names[i],
                         **plot_kwargs,
-                    )
+                    ),
                 )
 
         xaxis_title = "Metric"
@@ -481,24 +492,26 @@ class ClassificationPlotter(Plotter):
 
         fig = create_figure(
             data=trace,
-            title=dict(text=title),
-            xaxis=dict(title=xaxis_title),
-            yaxis=dict(title=yaxis_title),
+            title={"text": title},
+            xaxis={"title": xaxis_title},
+            yaxis={"title": yaxis_title},
             barmode="group" if self.task_type in ["multiclass", "multilabel"] else None,
         )
         if layout is not None:
             fig.update_layout(layout)
         return fig
 
-    def metrics_trends(
+    def metrics_trends(  # noqa: PLR0912
         self,
         metrics_trends: Dict[str, Union[List[float], npt.NDArray[Any]]],
         title: Optional[str] = "Metrics Trends",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot the trend of non-curve metrics such as precision, recall, and f_beta \
-        for a single group or subpopulation.
+        """Plot the trend of non-curve metrics.
+
+        Metrics such as precision, recall, and f_beta for a single group or
+        sub-population can be plotted using this method.
 
         Parameters
         ----------
@@ -522,7 +535,7 @@ class ClassificationPlotter(Plotter):
         if self.task_type == "binary":
             # Reorganize data
             values = defaultdict(
-                lambda: defaultdict(lambda: defaultdict(list))  # type: ignore
+                lambda: defaultdict(lambda: defaultdict(list)),  # type: ignore
             )
             for date, slice_metrics in metrics_trends.items():
                 for metric in slice_metrics:
@@ -534,11 +547,7 @@ class ClassificationPlotter(Plotter):
 
             slice_names = list(values.keys())
             metric_names = list(
-                {
-                    metric_name
-                    for slice in values.values()
-                    for metric_name in slice.keys()
-                }
+                {metric_name for slice_ in values.values() for metric_name in slice_},
             )
             subplot_num = len(slice_names)
             fig = make_subplots(
@@ -582,7 +591,7 @@ class ClassificationPlotter(Plotter):
                     slice_name = metric["slice"]  # type: ignore[index]
                     metric_value = metric["value"]  # type: ignore[index]
                     values[f"{slice_name} - {metric_name}"]["values"].append(
-                        metric_value
+                        metric_value,
                     )
                     values[f"{slice_name} - {metric_name}"]["dates"].append(date)
 
@@ -624,10 +633,10 @@ class ClassificationPlotter(Plotter):
                 fig.update_xaxes(tickvals=list(metrics_trends.keys()), row=i, col=1)
 
         fig.update_layout(
-            title=dict(text=title),
+            title={"text": title},
             height=subplot_num * 450,
-            xaxis=dict(title="Time Step"),
-            yaxis=dict(title="Metric Value"),
+            xaxis={"title": "Time Step"},
+            yaxis={"title": "Metric Value"},
         )
         if layout is not None:
             fig.update_layout(layout)
@@ -636,14 +645,16 @@ class ClassificationPlotter(Plotter):
     def metrics_comparison_radar(
         self,
         slice_metrics: Dict[
-            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
+            str,
+            Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
         ],
         title: Optional[str] = "Metrics Comparison",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot metrics such as precision, recall, and f_beta for multiple groups or \
-        subpopulations in a radar chart.
+        """Plot metrics such as precision, recall, and f_beta for multiple groups.
+
+        This compares the subpopulations using a radar chart.
 
         Parameters
         ----------
@@ -686,7 +697,7 @@ class ClassificationPlotter(Plotter):
                         theta=metric_names,  # type: ignore[arg-type]
                         name=slice_name,
                         **plot_kwargs,
-                    )
+                    ),
                 )
         else:
             for slice_name, metrics in slice_metrics.items():
@@ -711,7 +722,7 @@ class ClassificationPlotter(Plotter):
                     else:
                         raise ValueError(
                             "Metric values must be either a number or \
-                            of length class_num for multiclass/multilabel tasks"
+                            of length class_num for multiclass/multilabel tasks",
                         )
                 trace.append(
                     radar_plot(
@@ -719,13 +730,13 @@ class ClassificationPlotter(Plotter):
                         theta=theta_data,
                         name=slice_name,
                         **plot_kwargs,
-                    )
+                    ),
                 )
 
         fig = create_figure(
             data=trace,
-            title=dict(text=title),
-            polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
+            title={"text": title},
+            polar={"radialaxis": {"visible": True, "range": [0, 1]}},
             showlegend=True,
         )
         if layout is not None:
@@ -735,7 +746,8 @@ class ClassificationPlotter(Plotter):
     def metrics_comparison_bar(
         self,
         slice_metrics: Dict[
-            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
+            str,
+            Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
         ],
         title: Optional[str] = "Metrics Comparison",
         layout: Optional[go.Layout] = None,
@@ -787,7 +799,7 @@ class ClassificationPlotter(Plotter):
                         y=metric_values,  # type: ignore[arg-type]
                         name=slice_name,
                         **plot_kwargs,
-                    )
+                    ),
                 )
 
             xaxis_title = "Metric"
@@ -795,9 +807,9 @@ class ClassificationPlotter(Plotter):
 
             fig = create_figure(
                 data=trace,
-                title=dict(text=title),
-                xaxis=dict(title=xaxis_title),
-                yaxis=dict(title=yaxis_title),
+                title={"text": title},
+                xaxis={"title": xaxis_title},
+                yaxis={"title": yaxis_title},
                 barmode="group",
             )
 
@@ -820,7 +832,7 @@ class ClassificationPlotter(Plotter):
                     + self.template.layout.colorway[:difference]
                 )
 
-            for i, (slice_name, metrics) in enumerate(slice_metrics.items()):
+            for i, (_, metrics) in enumerate(slice_metrics.items()):
                 metric_names = list(metrics.keys())
                 for num in range(self.class_num):
                     for metric_name in metric_names:
@@ -844,9 +856,7 @@ class ClassificationPlotter(Plotter):
 
             xaxis_title = "Metric"
             yaxis_title = "Score"
-            fig.update_layout(
-                title=dict(text=title), barmode="group", height=rows * 450
-            )
+            fig.update_layout(title={"text": title}, barmode="group", height=rows * 450)
 
         if layout is not None:
             fig.update_layout(layout)
@@ -855,7 +865,8 @@ class ClassificationPlotter(Plotter):
     def metrics_comparison_scatter(
         self,
         slice_metrics: Dict[
-            str, Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
+            str,
+            Dict[str, Union[float, List[float], npt.NDArray[np.float_]]],
         ],
         title: Optional[str] = "Metrics Comparison",
         layout: Optional[go.Layout] = None,
@@ -907,7 +918,7 @@ class ClassificationPlotter(Plotter):
                         y=metric_values,  # type: ignore[arg-type]
                         name=slice_name,
                         **plot_kwargs,
-                    )
+                    ),
                 )
 
             xaxis_title = "Metric"
@@ -915,9 +926,9 @@ class ClassificationPlotter(Plotter):
 
             fig = create_figure(
                 data=trace,
-                title=dict(text=title),
-                xaxis=dict(title=xaxis_title),
-                yaxis=dict(title=yaxis_title),
+                title={"text": title},
+                xaxis={"title": xaxis_title},
+                yaxis={"title": yaxis_title},
             )
         else:
             metric_names = list(slice_metrics[list(slice_metrics.keys())[0]].keys())
@@ -956,7 +967,7 @@ class ClassificationPlotter(Plotter):
                         col=1,
                     )
 
-            fig.update_layout(title=dict(text=title), height=rows * 450)
+            fig.update_layout(title={"text": title}, height=rows * 450)
 
         if layout is not None:
             fig.update_layout(layout)

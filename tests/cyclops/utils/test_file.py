@@ -106,23 +106,26 @@ def test_listdir_nonhidden():
     shutil.rmtree("./test_dir")
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_data_with_index():
     """Dummy dataframe for testing."""
     return pd.DataFrame(
-        [[1, "a", 1], [5.1, "b", 0]], columns=["col1", "col2", "col3"], index=[1, 3]
+        [[1, "a", 1], [5.1, "b", 0]],
+        columns=["col1", "col2", "col3"],
+        index=[1, 3],
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_data_without_index():
     """Dummy dataframe for testing."""
     return pd.DataFrame([[1, "a", 1], [5.1, "b", 0]], columns=["col1", "col2", "col3"])
 
 
 def test_save_dataframe(
-    test_data_with_index, test_data_without_index
-):  # pylint: disable=redefined-outer-name
+    test_data_with_index,
+    test_data_without_index,
+):
     """Test save fn."""
     path = os.path.join("test_save", "test_features")
     save_dataframe(test_data_with_index, path)
@@ -170,8 +173,9 @@ def test_process_file_save_path():
 
 
 def test_load_dataframe(
-    test_data_with_index, test_data_without_index
-):  # pylint: disable=redefined-outer-name
+    test_data_with_index,
+    test_data_without_index,
+):
     """Test load_dataframe fn."""
     path = os.path.join("test_save", "test_features")
     save_dataframe(test_data_with_index, path)

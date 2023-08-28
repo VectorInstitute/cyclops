@@ -34,7 +34,8 @@ def to_timestamp(data: Union[pd.Series, npt.NDArray[Any]]) -> pd.Series:
 
 
 def add_years_approximate(
-    timestamp_series: pd.Series, years_series: pd.Series
+    timestamp_series: pd.Series,
+    years_series: pd.Series,
 ) -> pd.Series:
     """Approximately add together a timestamp series with a years series row-by-row.
 
@@ -64,7 +65,7 @@ def add_years_approximate(
 
     # Create new timestamp column
     data = pd.DataFrame(
-        {"year": year, "month": month, "day": day, "hour": hour, "minute": minute}
+        {"year": year, "month": month, "day": day, "hour": hour, "minute": minute},
     )
 
     # Subtract 1 from potentially invalid leap days to avoid issues
@@ -99,6 +100,7 @@ def add_years_exact(timestamp_series: pd.Series, years_series: pd.Series) -> pd.
             "Consider using the quick, approximate calculation."
         ),
         PerformanceWarning,
+        stacklevel=1,
     )
     return timestamp_series + years_series.apply(lambda x: pd.DateOffset(years=x))
 
@@ -127,7 +129,8 @@ def to_list(obj: Any) -> List[Any]:
 
 
 def to_list_optional(
-    obj: Optional[Any], none_to_empty: bool = False
+    obj: Optional[Any],
+    none_to_empty: bool = False,
 ) -> Union[List[Any], None]:
     """Convert some object to a list of object(s) unless already None or a list.
 

@@ -11,6 +11,7 @@ import pandas as pd
 
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
@@ -58,7 +59,9 @@ def exchange_extension(file_path: str, new_ext: str) -> str:
 
 
 def process_file_save_path(
-    save_path: str, file_format: str, create_dir: bool = True
+    save_path: str,
+    file_format: str,
+    create_dir: bool = True,
 ) -> str:
     """Process file save path, perform checks, and possibly create a parent directory.
 
@@ -80,10 +83,8 @@ def process_file_save_path(
     # Create the directory if it doesn't already exist.
     directory, _ = os.path.split(save_path)
 
-    if create_dir:
-        # Ignore checking local paths
-        if directory != "":
-            os.makedirs(directory, exist_ok=True)
+    if create_dir and directory != "":
+        os.makedirs(directory, exist_ok=True)
 
     # Add the .parquet extension if it isn't there.
     _, ext = os.path.splitext(save_path)
@@ -93,7 +94,7 @@ def process_file_save_path(
     elif ext != "." + file_format:
         raise ValueError(
             f"""The file extension on the save path must be {file_format}.
-            Alternatively, sesider changing the file format."""
+            Alternatively, sesider changing the file format.""",
         )
 
     return save_path
@@ -172,7 +173,7 @@ def save_dataframe(
         data.to_csv(save_path)
     else:
         raise ValueError(
-            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
+            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'.",
         )
 
     return save_path
@@ -213,7 +214,7 @@ def load_dataframe(
         data = pd.read_csv(load_path, index_col=[0])
     else:
         raise ValueError(
-            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'."
+            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'.",
         )
 
     return data

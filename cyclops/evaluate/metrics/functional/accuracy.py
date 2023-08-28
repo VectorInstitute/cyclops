@@ -21,7 +21,7 @@ from cyclops.evaluate.metrics.utils import (
 )
 
 
-def _accuracy_reduce(  # pylint: disable=too-many-arguments
+def _accuracy_reduce(
     tp: Union[npt.NDArray[np.int_], np.int_],
     fp: Union[npt.NDArray[np.int_], np.int_],
     tn: Union[npt.NDArray[np.int_], np.int_],
@@ -69,13 +69,12 @@ def _accuracy_reduce(  # pylint: disable=too-many-arguments
             tn = np.array(np.sum(tn))
             numerator = tp + tn
             denominator = tp + fp + fn + tn
+    elif task_type in ["binary", "multilabel"]:
+        numerator = tp + tn
+        denominator = tp + fp + fn + tn
     else:
-        if task_type in ["binary", "multilabel"]:
-            numerator = tp + tn
-            denominator = tp + fp + fn + tn
-        else:
-            numerator = tp
-            denominator = tp + fn
+        numerator = tp
+        denominator = tp + fn
 
     score = _prf_divide(
         np.expand_dims(numerator, axis=0) if numerator.ndim == 0 else numerator,
@@ -100,7 +99,8 @@ def _accuracy_reduce(  # pylint: disable=too-many-arguments
             )
 
         avg_score: Union[float, npt.NDArray[np.float_]] = np.average(
-            score, weights=weights
+            score,
+            weights=weights,
         )
         return avg_score
 
@@ -108,7 +108,7 @@ def _accuracy_reduce(  # pylint: disable=too-many-arguments
     return cast(Union[float, npt.NDArray[np.float_]], ret_value)
 
 
-def binary_accuracy(  # pylint: disable=too-many-arguments
+def binary_accuracy(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     pos_label: int = 1,
@@ -154,7 +154,10 @@ def binary_accuracy(  # pylint: disable=too-many-arguments
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target, preds, threshold=threshold, pos_label=pos_label
+        target,
+        preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, tn, fn = _binary_stat_scores_update(target, preds, pos_label=pos_label)
@@ -170,7 +173,7 @@ def binary_accuracy(  # pylint: disable=too-many-arguments
     return cast(float, acc_score)
 
 
-def multiclass_accuracy(  # pylint: disable=too-many-arguments
+def multiclass_accuracy(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -235,10 +238,12 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
     _check_average_arg(average)
 
     target, preds = _multiclass_stat_scores_format(
-        target, preds, num_classes=num_classes, top_k=top_k
+        target,
+        preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
-    # pylint: disable=invalid-name
     tp, fp, tn, fn = _multiclass_stat_scores_update(target, preds, num_classes)
 
     return cast(
@@ -255,7 +260,7 @@ def multiclass_accuracy(  # pylint: disable=too-many-arguments
     )
 
 
-def multilabel_accuracy(  # pylint: disable=too-many-arguments
+def multilabel_accuracy(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -321,10 +326,13 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
     _check_average_arg(average)
 
     target, preds = _multilabel_stat_scores_format(
-        target, preds, num_labels=num_labels, threshold=threshold, top_k=top_k
+        target,
+        preds,
+        num_labels=num_labels,
+        threshold=threshold,
+        top_k=top_k,
     )
 
-    # pylint: disable=invalid-name
     tp, fp, tn, fn = _multilabel_stat_scores_update(target, preds, num_labels)
 
     return _accuracy_reduce(
@@ -338,7 +346,7 @@ def multilabel_accuracy(  # pylint: disable=too-many-arguments
     )
 
 
-def accuracy(  # pylint: disable=too-many-arguments
+def accuracy(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
@@ -465,6 +473,6 @@ def accuracy(  # pylint: disable=too-many-arguments
     else:
         raise ValueError(
             f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
+            " or 'multilabel'",
         )
     return accuracy_score

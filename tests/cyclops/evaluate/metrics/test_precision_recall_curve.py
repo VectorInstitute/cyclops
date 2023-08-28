@@ -5,6 +5,13 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 import scipy as sp
+from sklearn.metrics import precision_recall_curve as sk_precision_recall_curve
+
+from cyclops.evaluate.metrics.functional import (
+    precision_recall_curve as cyclops_precision_recall_curve,
+)
+from cyclops.evaluate.metrics.precision_recall_curve import PrecisionRecallCurve
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -13,13 +20,6 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from sklearn.metrics import precision_recall_curve as sk_precision_recall_curve
-
-from cyclops.evaluate.metrics.functional import (
-    precision_recall_curve as cyclops_precision_recall_curve,
-)
-from cyclops.evaluate.metrics.precision_recall_curve import PrecisionRecallCurve
-from cyclops.evaluate.metrics.utils import sigmoid
 
 
 def _sk_binary_precision_recall_curve(
@@ -28,11 +28,13 @@ def _sk_binary_precision_recall_curve(
     pos_label: int = 1,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute precision-recall curve for binary case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sigmoid(preds)
 
     return sk_precision_recall_curve(
-        y_true=target, probas_pred=preds, pos_label=pos_label
+        y_true=target,
+        probas_pred=preds,
+        pos_label=pos_label,
     )
 
 
@@ -70,7 +72,7 @@ def _sk_multiclass_precision_recall_curve(
     preds: np.ndarray,
 ) -> List:
     """Compute precision-recall curve for multiclass case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sp.special.softmax(preds, axis=1)
 
     precision, recall, thresholds = [], [], []
@@ -114,7 +116,8 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
 
 
 def _sk_multilabel_precision_recall_curve(
-    target: np.ndarray, preds: np.ndarray
+    target: np.ndarray,
+    preds: np.ndarray,
 ) -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
     if preds.ndim == 1:
         preds = np.expand_dims(preds, axis=0)

@@ -8,7 +8,7 @@ from typing import List, Optional
 class DataFrameMapping:
     """Standard dataclass for metadata mapping."""
 
-    id: Optional[str]
+    id: Optional[str]  # noqa: A003
     timestamp: Optional[str] = None
     targets: Optional[List[str]] = None
     predictions: Optional[List[str]] = None

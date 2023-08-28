@@ -20,32 +20,12 @@ repos:
     hooks:
     - id: black
 
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.286'
     hooks:
-    - id: isort
-
-  - repo: https://github.com/myint/docformatter
-    rev: v1.7.5
-    hooks:
-    - id: docformatter
-      args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88, --blank]
-      files: ".*.py$"
-
-  - repo: local
-    hooks:
-    - id: flake8
-      name: flake8
-      language: python
-      entry: pflake8
-      files: ".*.py$"
-
-  - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.3.0
-    hooks:
-    - id: pydocstyle
-      args: [--convention=numpy]
-      additional_dependencies: [toml, tomli]
+    - id: ruff
+      args: [--fix, --exit-non-zero-on-fix]
+      types_or: [python, jupyter]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.5.1
@@ -58,33 +38,12 @@ repos:
 
   - repo: local
     hooks:
-    - id: pylint
-      name: pylint
-      language: python
-      entry: pylint
-      files: ".*.py$"
-      exclude: fsd
-
-  - repo: local
-    hooks:
     - id: pytest
       name: pytest
       entry: pytest -m "not integration_test"
       language: system
       pass_filenames: false
       always_run: true
-
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.0
-    hooks:
-    - id: nbqa-black
-    - id: nbqa-isort
-    - id: nbqa-check-ast
-    - id: nbqa-flake8
-    # ignore E203/W503 to avoid conflict with black:
-    # https://github.com/psf/black/issues/354
-      args: ['--ignore=E203,W503']
-    # - id: nbqa-mypy
 
   - repo: local
     hooks:

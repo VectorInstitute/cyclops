@@ -41,7 +41,7 @@ class RollingWindow:
         optimizer: Optional[Optimizer] = None,
         model: Optional[ClassifierMixin] = None,
         verbose: bool = False,
-    ):
+    ) -> None:
         self.admin_data = admin_data
         self.shift_detector = shift_detector
         self.optimizer = optimizer
@@ -119,14 +119,13 @@ class RollingWindow:
         performance_metrics = []
         i = 0
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        # n_features = data_streams["X"][0].shape[1]
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
         while i + stat_window + lookup_window < len(data_streams["X"]):
             pbar.update(1)
 
             X_next = pd.concat(
-                data_streams["X"][i + lookup_window : i + lookup_window + stat_window]
+                data_streams["X"][i + lookup_window : i + lookup_window + stat_window],
             )
             X_next = X_next[~X_next.index.duplicated(keep="first")]
             y_test_labels = get_label(self.admin_data, X_next, outcome)
@@ -135,7 +134,7 @@ class RollingWindow:
             X_next = process(X_next, aggregation_type, num_timesteps)
 
             y_next = pd.concat(
-                data_streams["y"][i + lookup_window : i + lookup_window + stat_window]
+                data_streams["y"][i + lookup_window : i + lookup_window + stat_window],
             )
             y_next.index = ind
             y_next = y_next[~y_next.index.duplicated(keep="first")].to_numpy()
@@ -147,7 +146,9 @@ class RollingWindow:
             if self.optimizer is not None:
                 test_dataset: Data = get_data(X_next, y_next)
                 test_loader: Any = torch.utils.data.DataLoader(
-                    test_dataset, batch_size=1, shuffle=False
+                    test_dataset,
+                    batch_size=1,
+                    shuffle=False,
                 )
                 y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                     test_loader,
@@ -156,13 +157,19 @@ class RollingWindow:
                 y_pred_labels = y_pred_labels[y_test_labels != -1]
                 y_test_labels = y_test_labels[y_test_labels != -1]
                 pred_metrics = print_metrics_binary(
-                    y_test_labels, y_pred_values, y_pred_labels, verbose=0
+                    y_test_labels,
+                    y_pred_values,
+                    y_pred_labels,
+                    verbose=0,
                 )
             else:
                 y_pred_values = self.model.predict_proba(X_next)[:, 1]
                 y_pred_labels = self.model.predict(X_next)
                 pred_metrics = print_metrics_binary(
-                    y_test_labels, y_pred_values, y_pred_labels, verbose=0
+                    y_test_labels,
+                    y_pred_values,
+                    y_pred_labels,
+                    verbose=0,
                 )
 
             performance_metrics.append(pred_metrics)
@@ -171,12 +178,10 @@ class RollingWindow:
 
         pbar.close()
 
-        performance_metrics_dict = {
+        return {
             k: [d.get(k) for d in performance_metrics]
             for k in set().union(*performance_metrics)
         }
-
-        return performance_metrics_dict
 
     def drift(
         self,
@@ -187,7 +192,7 @@ class RollingWindow:
         stride: int = 1,
         threshold: float = 0.05,
         aggregation_type: str = "time",
-        **kwargs: Dict[str, Any]
+        **kwargs: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Perform rolling window to measure drift over time series.
 
@@ -225,7 +230,7 @@ class RollingWindow:
             pbar.update(1)
 
             X_next = pd.concat(
-                data_streams["X"][i + lookup_window : i + lookup_window + stat_window]
+                data_streams["X"][i + lookup_window : i + lookup_window + stat_window],
             )
             X_next = X_next[~X_next.index.duplicated(keep="first")]
             X_next = scale(X_next)
@@ -251,9 +256,7 @@ class RollingWindow:
 
         pbar.close()
 
-        rolling_drift_metrics_dict = {
+        return {
             k: [d.get(k) for d in rolling_drift_metrics]
             for k in set().union(*rolling_drift_metrics)
         }
-
-        return rolling_drift_metrics_dict

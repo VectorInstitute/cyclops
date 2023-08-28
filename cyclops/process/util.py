@@ -10,13 +10,15 @@ from cyclops.process.column_names import ENCOUNTER_ID
 from cyclops.utils.common import to_list
 from cyclops.utils.log import setup_logging
 
+
 # Logging.
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
 def create_indicator_variables(
-    features: pd.DataFrame, columns: Optional[List] = None
+    features: pd.DataFrame,
+    columns: Optional[List] = None,
 ) -> pd.DataFrame:
     """Create binary indicator variable for each column (or specified).
 
@@ -35,10 +37,7 @@ def create_indicator_variables(
         Dataframe with indicator variables as columns.
 
     """
-    if columns:
-        indicator_features = features[columns]
-    else:
-        indicator_features = features
+    indicator_features = features[columns] if columns else features
 
     return indicator_features.notnull().astype(int).add_suffix("_indicator")
 

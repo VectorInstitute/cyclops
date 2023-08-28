@@ -15,13 +15,14 @@
 import os
 import sys
 
+
 sys.path.insert(0, os.path.abspath("../../cyclops"))
 
 
 # -- Project information -----------------------------------------------------
 
 project = "cyclops"
-copyright = "2022, Vector AI Engineering"
+copyright = "2022, Vector AI Engineering"  # noqa: A001
 author = "Vector AI Engineering"
 
 

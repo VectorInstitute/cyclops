@@ -8,24 +8,24 @@ from pydantic import BaseConfig, BaseModel, Extra, root_validator
 from pydantic.fields import FieldInfo, ModelField
 
 
-def _check_composable_fields(  # pylint: disable=no-self-argument
-    cls: BaseModel, values: Dict[str, Any]
+def _check_composable_fields(
+    cls: BaseModel,
+    values: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Check that the type of the field is allowed in the section."""
-    # pylint: disable=no-member
     for attr, value in values.items():
         if issubclass(type(value), BaseModelCardField) and (
             value.__config__.composable_with is None
             or (
                 value.__config__.composable_with != "Any"
-                and cls.__name__ not in value.__config__.composable_with  # type: ignore [attr-defined] # noqa: E501 pylint: disable=line-too-long
+                and cls.__name__ not in value.__config__.composable_with  # type: ignore [attr-defined] # noqa: E501
             )
         ):
             print(issubclass(type(value), BaseModelCardField))
             print(value.__config__.composable_with)
             raise ValueError(
                 f"Field `{attr}`(type={type(value)}) is not allowed in "
-                f"`{cls.__name__}` section."  # type: ignore[attr-defined]
+                f"`{cls.__name__}` section.",  # type: ignore[attr-defined]
             )
 
     return values
@@ -83,7 +83,7 @@ class BaseModelCardField(BaseModel):
         list_factory: bool = False
 
     _validate_composition = root_validator(pre=True, allow_reuse=True)(
-        _check_composable_fields
+        _check_composable_fields,
     )
 
 
@@ -93,7 +93,7 @@ class BaseModelCardSection(BaseModel):
     Config = BaseModelCardConfig
 
     _validate_composition = root_validator(pre=True, allow_reuse=True)(
-        _check_composable_fields
+        _check_composable_fields,
     )
 
     def update_field(self, name: str, value: Any) -> None:
@@ -147,7 +147,7 @@ class BaseModelCardSection(BaseModel):
         if not name.isidentifier() or keyword.iskeyword(name):
             raise ValueError(
                 f"Expected `field_name` to be a valid python identifier."
-                f" Got {name} instead."
+                f" Got {name} instead.",
             )
 
         type_ = type(value)
@@ -156,7 +156,7 @@ class BaseModelCardSection(BaseModel):
             default_factory = list
         if (
             isinstance(value, BaseModelCardField)
-            and getattr(value.__config__, "list_factory") is True
+            and value.__config__.list_factory is True  # type: ignore[attr-defined]
         ):
             default_factory = list
             value = [value]  # add field as a list

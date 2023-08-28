@@ -24,6 +24,9 @@ from pydantic import (
 from cyclops.report.model_card.base import BaseModelCardField
 
 
+# ruff: noqa: A003
+
+
 class Owner(
     BaseModelCardField,
     composable_with=["ModelDetails", "Dataset"],
@@ -32,13 +35,16 @@ class Owner(
     """Information about the model/data owner(s)."""
 
     name: Optional[StrictStr] = Field(
-        None, description="The name/organization of the model owner."
+        None,
+        description="The name/organization of the model owner.",
     )
     contact: Optional[StrictStr] = Field(
-        None, description="The contact information for the model owner(s)."
+        None,
+        description="The contact information for the model owner(s).",
     )
     role: Optional[StrictStr] = Field(
-        None, description="The role of the person e.g. developer, owner, auditor."
+        None,
+        description="The role of the person e.g. developer, owner, auditor.",
     )
 
 
@@ -50,13 +56,16 @@ class Version(
     """Model or dataset version information."""
 
     version_str: Optional[StrictStr] = Field(
-        None, description="The version string of the model."
+        None,
+        description="The version string of the model.",
     )
     date: Optional[Union[dt_date, dt_datetime]] = Field(
-        None, description="The date this version was released."
+        None,
+        description="The date this version was released.",
     )
     description: Optional[StrictStr] = Field(
-        None, description="A description of the version, e.g. what changed?"
+        None,
+        description="A description of the version, e.g. what changed?",
     )
 
 
@@ -82,8 +91,9 @@ class License(
     text_url: Optional[AnyUrl] = Field(None, description="A URL to the license text.")
 
     @root_validator(skip_on_failure=True)
-    def validate_spdx_identifier(  # pylint: disable=no-self-argument
-        cls: "License", values: Dict[str, StrictStr]
+    def validate_spdx_identifier(
+        cls: "License",  # noqa: N805
+        values: Dict[str, StrictStr],
     ) -> Dict[str, Union[StrictStr, AnyUrl]]:
         """Validate the SPDX license identifier."""
         spdx_id = values["identifier"]
@@ -95,7 +105,7 @@ class License(
             if spdx_id.lower() not in ["proprietary", "unlicensed", "unknown"]:
                 raise ValueError(
                     "Expected a valid SPDX license identifier "
-                    f"(https://spdx.org/licenses/). Got {spdx_id} instead."
+                    f"(https://spdx.org/licenses/). Got {spdx_id} instead.",
                 ) from exc
         return values
 
@@ -140,30 +150,36 @@ class Citation(
     """Citation information for the model or dataset."""
 
     content: Optional[StrictStr] = Field(
-        None, description="The citation content in BibTeX format."
+        None,
+        description="The citation content in BibTeX format.",
     )
 
     @validator("content")
-    def parse_content(  # pylint: disable=no-self-argument
-        cls: "Citation", value: StrictStr
+    def parse_content(
+        cls: "Citation",  # noqa: N805
+        value: StrictStr,
     ) -> StrictStr:
         """Parse the citation content."""
         try:
             formatted_citation = PybtexEngine().format_from_string(
-                value, style="unsrt", output_backend="text"
+                value,
+                style="unsrt",
+                output_backend="text",
             )
             if formatted_citation == "":
                 raise ValueError(f"Expected a valid BibTeX entry. Got {value}.")
         except PybtexError as exc:
             raise ValueError(
                 f"Encountered an error while parsing the citation content: {value}"
-                f"\n\n{exc}"
+                f"\n\n{exc}",
             ) from exc
         return value
 
 
 class RegulatoryRequirement(
-    BaseModelCardField, composable_with=["ModelDetails"], list_factory=True
+    BaseModelCardField,
+    composable_with=["ModelDetails"],
+    list_factory=True,
 ):
     """Regulatory requirements for the model or dataset."""
 
@@ -171,13 +187,16 @@ class RegulatoryRequirement(
 
 
 class Graphic(
-    BaseModelCardField, list_factory=True, composable_with=["GraphicsCollection"]
+    BaseModelCardField,
+    list_factory=True,
+    composable_with=["GraphicsCollection"],
 ):
     """A graphic to be displayed in the model card."""
 
     name: Optional[StrictStr] = Field(None, description="The name of the graphic.")
     image: Optional[StrictStr] = Field(
-        None, description="The image, encoded as a base64 string or an html string."
+        None,
+        description="The image, encoded as a base64 string or an html string.",
     )
 
 
@@ -185,7 +204,8 @@ class GraphicsCollection(BaseModelCardField, composable_with="Any"):
     """A collection of graphics to be displayed in the model card."""
 
     description: Optional[StrictStr] = Field(
-        None, description="A description of the Graphics collection."
+        None,
+        description="A description of the Graphics collection.",
     )
     collection: Optional[List[Graphic]] = Field(
         description="A collection of graphics.",
@@ -218,7 +238,7 @@ class SensitiveData(BaseModelCardField, composable_with=["Dataset"], list_factor
         description=inspect.cleandoc(
             """
             Please include a justification of the need to use the fields in deployment.
-            """
+            """,
         ),
     )
 
@@ -227,7 +247,8 @@ class Dataset(BaseModelCardField, composable_with=["Datasets"], list_factory=Tru
     """Details about the dataset."""
 
     description: Optional[StrictStr] = Field(
-        None, description="A high-level description of the dataset."
+        None,
+        description="A high-level description of the dataset.",
     )
     citations: Optional[List[Citation]] = Field(
         description="How should the dataset be cited?",
@@ -251,21 +272,27 @@ class Dataset(BaseModelCardField, composable_with=["Datasets"], list_factory=Tru
         unique_items=True,
     )
     graphics: Optional[GraphicsCollection] = Field(
-        None, description="Visualizations of the dataset."
+        None,
+        description="Visualizations of the dataset.",
     )
     split: Optional[StrictStr] = Field(
-        None, description="The split of the dataset e.g. train, test, validation."
+        None,
+        description="The split of the dataset e.g. train, test, validation.",
     )
     size: Optional[StrictInt] = Field(
-        None, description="The number of samples in the dataset."
+        None,
+        description="The number of samples in the dataset.",
     )
     sensitive_data: Optional[SensitiveData] = Field(
-        None, description="Does this dataset contain any human, PII, or sensitive data?"
+        None,
+        description="Does this dataset contain any human, PII, or sensitive data?",
     )
 
 
 class KeyVal(
-    BaseModelCardField, list_factory=True, composable_with=["ModelParameters"]
+    BaseModelCardField,
+    list_factory=True,
+    composable_with=["ModelParameters"],
 ):
     """A key-value pair."""
 
@@ -282,19 +309,24 @@ class Test(
 
     name: Optional[StrictStr] = Field(None, description="The name of the test.")
     description: Optional[StrictStr] = Field(
-        None, description="User-friendly description of the test."
+        None,
+        description="User-friendly description of the test.",
     )
     threshold: Optional[StrictFloat] = Field(
-        None, description="Threshold required to pass the test."
+        None,
+        description="Threshold required to pass the test.",
     )
     result: Optional[Union[StrictFloat, StrictInt]] = Field(
-        None, description="Result returned by the test."
+        None,
+        description="Result returned by the test.",
     )
     passed: Optional[StrictBool] = Field(
-        None, description="Whether the model result satisfies the given threshold."
+        None,
+        description="Whether the model result satisfies the given threshold.",
     )
     graphics: Optional[GraphicsCollection] = Field(
-        None, description="A collection of visualizations related to the test."
+        None,
+        description="A collection of visualizations related to the test.",
     )
 
 
@@ -307,7 +339,8 @@ class PerformanceMetric(
     """Performance metrics for model evaluation."""
 
     type: Optional[StrictStr] = Field(
-        None, description="The type of performance metric."
+        None,
+        description="The type of performance metric.",
     )
     value: Optional[
         Union[
@@ -335,7 +368,8 @@ class PerformanceMetric(
         ),
     )
     description: Optional[StrictStr] = Field(
-        None, description="User-friendly description of the performance metric."
+        None,
+        description="User-friendly description of the performance metric.",
     )
     graphics: Optional[GraphicsCollection] = Field(
         None,
@@ -355,7 +389,8 @@ class User(
     """Details about the user."""
 
     description: Optional[StrictStr] = Field(
-        None, description="A description of a user."
+        None,
+        description="A description of a user.",
     )
 
 
@@ -367,20 +402,22 @@ class UseCase(
     """Details about the use case."""
 
     description: Optional[StrictStr] = Field(
-        None, description="A description of a use case."
+        None,
+        description="A description of a use case.",
     )
     kind: Optional[Literal["primary", "out-of-scope"]] = Field(
         None,
         description=inspect.cleandoc(
             """
             The scope of the use case. Must be one of 'primary', 'downstream', or
-            'out-of-scope'."""
+            'out-of-scope'.""",
         ),
     )
 
     @validator("kind")
-    def kind_must_be_valid(  # pylint: disable=no-self-argument
-        cls: "UseCase", value: str
+    def kind_must_be_valid(
+        cls: "UseCase",  # noqa: N805
+        value: str,
     ) -> str:
         """Validate the use case kind."""
         if isinstance(value, str):
@@ -388,7 +425,7 @@ class UseCase(
 
         if value not in ["primary", "out-of-scope"]:
             raise ValueError(
-                "Use case kind must be one of 'primary', or 'out-of-scope'."
+                "Use case kind must be one of 'primary', or 'out-of-scope'.",
             )
         return value
 
@@ -425,10 +462,12 @@ class FairnessAssessment(
         ),
     )
     benefits: Optional[StrictStr] = Field(
-        None, description="Expected benefits to the identified groups."
+        None,
+        description="Expected benefits to the identified groups.",
     )
     harms: Optional[StrictStr] = Field(
-        None, description="Expected harms to the identified groups."
+        None,
+        description="Expected harms to the identified groups.",
     )
     mitigation_strategy: Optional[StrictStr] = Field(
         None,
@@ -440,12 +479,14 @@ class FairnessAssessment(
 
 
 class ExplainabilityReport(
-    BaseModelCardField, composable_with=["ExplainabilityAnalysis"]
+    BaseModelCardField,
+    composable_with=["ExplainabilityAnalysis"],
 ):
     """Explainability reports for the model."""
 
     type: Optional[StrictStr] = Field(
-        None, description="The type of explainability method."
+        None,
+        description="The type of explainability method.",
     )
     slice: Optional[StrictStr] = Field(
         None,
@@ -455,7 +496,8 @@ class ExplainabilityReport(
         """,
     )
     description: Optional[StrictStr] = Field(
-        None, description="User-friendly description of the explainability method."
+        None,
+        description="User-friendly description of the explainability method.",
     )
     graphics: Optional[GraphicsCollection] = Field(
         None,
@@ -473,7 +515,8 @@ class FairnessReport(BaseModelCardField, composable_with=["FairnessAnalysis"]):
     """Fairness reports for the model."""
 
     type: Optional[StrictStr] = Field(
-        None, description="The type of fairness study conducted."
+        None,
+        description="The type of fairness study conducted.",
     )
     slice: Optional[StrictStr] = Field(
         None,
@@ -491,12 +534,14 @@ class FairnessReport(BaseModelCardField, composable_with=["FairnessAnalysis"]):
         ),
     )
     description: Optional[StrictStr] = Field(
-        None, description="User-friendly description of the fairness method."
+        None,
+        description="User-friendly description of the fairness method.",
     )
     graphics: Optional[GraphicsCollection] = Field(
         None,
         description="A collection of visualizations related to the fairness method.",
     )
     tests: Optional[List[Test]] = Field(
-        description="Tests related to fairness considerations.", default_factory=list
+        description="Tests related to fairness considerations.",
+        default_factory=list,
     )

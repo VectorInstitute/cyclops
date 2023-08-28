@@ -54,6 +54,7 @@ class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
         threshold: float = 0.5,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
@@ -131,6 +132,7 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(num_classes=num_classes, top_k=top_k, classwise=True)
         _check_average_arg(average)
 
@@ -207,6 +209,7 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
             num_labels=num_labels,
             threshold=threshold,
@@ -347,7 +350,9 @@ class Precision(Metric, registry_key="precision", force_register=True):
         """Create a task-specific precision metric."""
         if task == "binary":
             return BinaryPrecision(
-                threshold=threshold, pos_label=pos_label, zero_division=zero_division
+                threshold=threshold,
+                pos_label=pos_label,
+                zero_division=zero_division,
             )
         if task == "multiclass":
             assert (
@@ -372,7 +377,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
             )
         raise ValueError(
             f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
-            f"'multilabel'."
+            f"'multilabel'.",
         )
 
 
@@ -413,6 +418,7 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
         threshold: float = 0.5,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(threshold=threshold, pos_label=pos_label)
         self.zero_division = zero_division
 
@@ -491,6 +497,7 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(num_classes=num_classes, top_k=top_k, classwise=True)
         self.average = average
         self.zero_division = zero_division
@@ -560,6 +567,7 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
             num_labels=num_labels,
             threshold=threshold,
@@ -696,7 +704,9 @@ class Recall(Metric, registry_key="recall", force_register=True):
         """Create a task-specific metric for computing the recall score."""
         if task == "binary":
             return BinaryRecall(
-                threshold=threshold, pos_label=pos_label, zero_division=zero_division
+                threshold=threshold,
+                pos_label=pos_label,
+                zero_division=zero_division,
             )
         if task == "multiclass":
             assert (
@@ -721,5 +731,5 @@ class Recall(Metric, registry_key="recall", force_register=True):
             )
         raise ValueError(
             f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
-            f"'multilabel'."
+            f"'multilabel'.",
         )
