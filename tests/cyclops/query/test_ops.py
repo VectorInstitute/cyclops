@@ -8,6 +8,8 @@ from sqlalchemy import column, select
 
 from cyclops.query.omop import OMOPQuerier
 from cyclops.query.ops import (
+    AND,
+    OR,
     AddColumn,
     AddNumeric,
     Apply,
@@ -263,6 +265,16 @@ def test_apply(visits_input):
     assert (
         visits["sum_id"].isna().sum()
         == visits["preceding_visit_occurrence_id"].isna().sum()
+    )
+    visits = Apply(
+        ["visit_occurrence_id", "preceding_visit_occurrence_id"],
+        [lambda x: x + 1, lambda x: x + 2],
+        ["sum_id", "sum_id2"],
+    )(visits_input)
+    visits = QUERIER.get_interface(visits).run()
+    assert visits["sum_id"].iloc[0] == visits["visit_occurrence_id"].iloc[0] + 1
+    assert (
+        visits["sum_id2"].iloc[0] == visits["preceding_visit_occurrence_id"].iloc[0] + 2
     )
 
 
@@ -526,6 +538,35 @@ def test_sequential(visits_input):
     assert list(visits[visits["person_id"] == 33]["visit_concept_name_substr"])[0] == (
         "Out"
     )
+
+
+@pytest.mark.integration_test()
+def test_or(visits_input):
+    """Test OR."""
+    visits = OR(
+        [
+            ConditionEquals("visit_concept_name", "Outpatient Visit"),
+            ConditionLike("visit_concept_name", "%Emergency%"),
+        ],
+    )(visits_input)
+    visits = QUERIER.get_interface(visits).run()
+    assert len(visits) == 4212
+    assert all(
+        visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"]),
+    )
+
+
+@pytest.mark.integration_test()
+def test_and(visits_input):
+    """Test AND."""
+    visits = AND(
+        [
+            ConditionEquals("visit_concept_name", "Outpatient Visit"),
+            ConditionLike("visit_concept_name", "%Emergency%", not_=True),
+        ],
+    )(visits_input)
+    visits = QUERIER.get_interface(visits).run()
+    assert len(visits) == 4057
 
 
 @pytest.mark.integration_test()

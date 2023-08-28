@@ -743,9 +743,12 @@ class AddNumeric(metaclass=QueryOp):
             cols=self.add_to,
             cols_not_in=self.new_col_labels,
         )
-        if isinstance(self.add, (int, float)):
-            self.add = [self.add] * len(self.add_to)
-        elif len(self.add) != len(self.add_to):
+        self.add_to = to_list(self.add_to)
+        if isinstance(self.add, (int, float)) and len(self.add_to) > 1:
+            add = [self.add] * len(self.add_to)
+        elif isinstance(self.add, (int, float)) and len(self.add_to) == 1:
+            add = [self.add]
+        elif isinstance(self.add, list) and len(self.add_to) != len(self.add):
             raise ValueError(
                 "Length of add_to and add must be the same if add is a list.",
             )
@@ -753,7 +756,7 @@ class AddNumeric(metaclass=QueryOp):
         return apply_to_columns(
             table,
             self.add_to,
-            [self._gen_lambda(add) for add in self.add],
+            [self._gen_lambda(add_num) for add_num in add],
             new_col_labels=self.new_col_labels,
         )
 
@@ -2196,6 +2199,90 @@ class ConditionLike(metaclass=QueryOp):
 
 
 @dataclass
+class OR(metaclass=QueryOp):
+    """Combine multiple condition query ops using an OR.
+
+    Parameters
+    ----------
+    ops: QueryOp or List[QueryOp]
+        Query ops to combine.
+
+    Examples
+    --------
+    >>> OR([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
+
+    """
+
+    ops: typing.Union[QueryOp, typing.List[QueryOp]]
+
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        if isinstance(self.ops, QueryOp):
+            return self.ops(table, return_cond=return_cond)
+        cond = or_(*[op(table, return_cond=True) for op in self.ops])
+        if return_cond:
+            return cond
+
+        return select(table).where(cond).subquery()
+
+
+@dataclass
+class AND(metaclass=QueryOp):
+    """Combine multiple condition query ops using an AND.
+
+    Parameters
+    ----------
+    ops: QueryOp or List[QueryOp]
+        Query ops to combine.
+
+    Examples
+    --------
+    >>> AND([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
+
+    """
+
+    ops: typing.Union[QueryOp, typing.List[QueryOp]]
+
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        if isinstance(self.ops, QueryOp):
+            return self.ops(table, return_cond=return_cond)
+        cond = and_(*[op(table, return_cond=True) for op in self.ops])
+        if return_cond:
+            return cond
+
+        return select(table).where(cond).subquery()
+
+
+@dataclass
 class Limit(metaclass=QueryOp):
     """Limit the number of rows returned in a query.
 
@@ -2376,7 +2463,7 @@ class Apply(metaclass=QueryOp):
                 self.funcs(*cols).label(new_col) for new_col in self.new_cols
             ]  # noqa: E501
 
-            return select(table).add_columns(result_cols).subquery()
+            return select(table).add_columns(*result_cols).subquery()
 
         return apply_to_columns(table, self.cols, self.funcs, self.new_cols)
 
