@@ -130,11 +130,11 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         save_every: int = -1,
         save_best_only: bool = True,
         save_dir: Optional[str] = None,
-        device: Union[str, torch.device] = get_device(),
+        device: Optional[Union[str, torch.device]] = None,
         seed: Optional[int] = None,
         deterministic: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         assert is_pytorch_model(
             model,
         ), "`model` must be an instance or subclass of `torch.nn.Module`."
@@ -154,6 +154,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         self.save_every = save_every
         self.save_best_only = save_best_only
         self.save_dir = save_dir
+        if device is None:
+            device = get_device()
         self.device = device
         self.seed = seed
         self.deterministic = deterministic
@@ -211,7 +213,10 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         return instance_or_class(**kwargs)
 
     def _initialize_module(
-        self, module_name: str, default: Optional[str] = None, **extra_kwargs,
+        self,
+        module_name: str,
+        default: Optional[str] = None,
+        **extra_kwargs,
     ):
         """Initialize a module.
 
@@ -331,7 +336,10 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         """
         params = self.get_all_learnable_params()
         return self._initialize_module(
-            module_name="optimizer", default="SGD", params=params, lr=self.lr,
+            module_name="optimizer",
+            default="SGD",
+            params=params,
+            lr=self.lr,
         )
 
     def initialize_activation(self):
@@ -565,11 +573,13 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             if target_columns is not None:
                 for batch in data_loader:
                     batch_features = torch.cat(
-                        [batch[feature] for feature in feature_columns], dim=1,
+                        [batch[feature] for feature in feature_columns],
+                        dim=1,
                     )
                     try:
                         batch_labels = torch.cat(
-                            [batch[target] for target in target_columns], dim=1,
+                            [batch[target] for target in target_columns],
+                            dim=1,
                         )
                     except IndexError:
                         batch_labels = torch.cat(
@@ -633,7 +643,9 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
         )
 
     def _get_dataloader(
-        self, dataset: Union[Dataset, TorchDataset], test: bool = False,
+        self,
+        dataset: Union[Dataset, TorchDataset],
+        test: bool = False,
     ):
         """Get PyTorch DataLoader for the data.
 
@@ -816,7 +828,6 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
                 splits_mapping=splits_mapping,
                 **fit_params,
             )
-
 
         return self
 
@@ -1067,7 +1078,8 @@ class PTModel(ModelWrapper):  # pylint: disable=too-many-instance-attributes
             preds = Dataset.from_dict({prediction_column: []})
             for batch in dataloader:
                 batch = torch.cat(
-                    [batch[feature] for feature in feature_columns], dim=1,
+                    [batch[feature] for feature in feature_columns],
+                    dim=1,
                 )
                 output = self._evaluation_step(batch, training=False, **predict_params)
                 output = self.activation_(output)

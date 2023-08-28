@@ -26,7 +26,7 @@ class PTDataset(Dataset):
         self,
         X: Union[np.ndarray, torch.Tensor],
         y: Optional[Union[np.ndarray, torch.Tensor]] = None,
-    ):
+    ) -> None:
         self.X = X
         self.y = y
 
@@ -38,7 +38,7 @@ class PTDataset(Dataset):
                 raise ValueError("X and y have inconsistent lengths.")
         self._len = len_X
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the length of the dataset."""
         return self._len
 

@@ -114,7 +114,7 @@ def get_temporal_model(model: str, model_params: Dict[str, Any]) -> nn.Module:
 class Data(TorchDataset[Tuple[torch.Tensor, torch.Tensor]]):
     """Data class."""
 
-    def __init__(self, inputs: pd.DataFrame, target: pd.DataFrame):
+    def __init__(self, inputs: pd.DataFrame, target: pd.DataFrame) -> None:
         """Initialize Data class."""
         self.inputs = inputs
         self.target = target
@@ -237,14 +237,12 @@ def get_args(obj: Any, kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """
     args = {}
     for key in kwargs:
-        if inspect.isclass(obj):
-            # if key in obj.__init__.__code__.co_varnames:
-            if key in inspect.signature(obj).parameters:
-                args[key] = kwargs[key]
-        elif inspect.ismethod(obj) or inspect.isfunction(obj):
-            # if key in obj.__code__.co_varnames:
-            if key in inspect.getfullargspec(obj).args:
-                args[key] = kwargs[key]
+        if inspect.isclass(obj) and key in inspect.signature(obj).parameters:
+            args[key] = kwargs[key]
+        elif (
+            inspect.ismethod(obj) or inspect.isfunction(obj)
+        ) and key in inspect.getfullargspec(obj).args:
+            args[key] = kwargs[key]
     return args
 
 
@@ -323,7 +321,7 @@ class ContextMMDWrapper:
         input_shape: Optional[Tuple[int, ...]] = None,
         data_type: Optional[str] = None,
         verbose: bool = False,
-    ):
+    ) -> None:
         self.context_generator = context_generator
 
         c_source = context_generator.transform(ds_source)
@@ -397,7 +395,7 @@ class LKWrapper:
         kernel_a: nn.Module = GaussianRBF(trainable=True),
         kernel_b: nn.Module = GaussianRBF(trainable=True),
         eps: str = "trainable",
-    ):
+    ) -> None:
         self.proj = projection
 
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)

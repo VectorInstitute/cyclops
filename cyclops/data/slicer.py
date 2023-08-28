@@ -722,7 +722,7 @@ def filter_string_contains(
         )
     if example_values.dtype.name == "object":  # object type could be string
         try:
-            example_values.str
+            _ = example_values.str
         except AttributeError as exc:
             raise TypeError(
                 "Expected string feature, but got feature of type "

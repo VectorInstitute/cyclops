@@ -9,7 +9,7 @@ def test_import_cyclops():
 
     assert cyclops.__name__ == "cyclops"
 
-    import cyclops.data as data
+    from cyclops import data
 
     assert data.__name__ == "cyclops.data"
 

@@ -49,7 +49,7 @@ class Reductor:
 
     """
 
-    def __init__(self, dr_method: str, device: str = "cpu", **kwargs: Any):
+    def __init__(self, dr_method: str, device: str = "cpu", **kwargs: Any) -> None:
         self.dr_method = dr_method.lower()
         self.device = device
 
@@ -269,7 +269,7 @@ class NoReduction:
 class BlackBoxShiftEstimatorSoft(nn.Module):
     """Wrapper for Black Box Shift Estimator Soft model."""
 
-    def __init__(self, model: nn.Module, softmax: bool = False):
+    def __init__(self, model: nn.Module, softmax: bool = False) -> None:
         super().__init__()
         self.model = model
         self.softmax = softmax
@@ -285,7 +285,7 @@ class BlackBoxShiftEstimatorSoft(nn.Module):
 class BlackBoxShiftEstimatorHard(nn.Module):
     """Wrapper for Black Box Shift Estimator Hard model."""
 
-    def __init__(self, model: nn.Module):
+    def __init__(self, model: nn.Module) -> None:
         super().__init__()
         self.model = model
 
@@ -310,7 +310,7 @@ class TXRVAutoencoder(nn.Module):
 class BBSETAE(nn.Module):
     """Wrapper for Black Box Shift Estimator Soft + TXRV Autoencoder model."""
 
-    def __init__(self, model: nn.Module):
+    def __init__(self, model: nn.Module) -> None:
         super().__init__()
         self.model = model
         self.tae = TXRVAutoencoder()

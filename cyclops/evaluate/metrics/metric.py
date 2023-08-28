@@ -477,7 +477,7 @@ class OperatorMetric(Metric):
         operator: Callable[..., Any],
         metric_a: Union[bool, int, float, Metric, npt.ArrayLike],
         metric_b: Union[bool, int, float, Metric, npt.ArrayLike, None],
-    ):
+    ) -> None:
         """Initialize the metric."""
         super().__init__()
 

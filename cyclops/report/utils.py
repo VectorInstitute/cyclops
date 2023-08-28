@@ -92,7 +92,7 @@ def _object_is_in_model_card_module(obj: object) -> bool:
     return False
 
 
-def flatten_results_dict(
+def flatten_results_dict(  # noqa: PLR0912
     results: Dict[str, Dict[str, Dict[str, Any]]],
     remove_metrics: Optional[Union[str, List[str]]] = None,
     remove_slices: Optional[Union[str, List[str]]] = None,
@@ -305,10 +305,10 @@ def get_metrics_trends(
         name_split = metric_name.split("/")
         if len(name_split) == 1:
             slice_name = "overall"
-            metric_name = name_split[0]
+            metric_name = name_split[0]  # noqa: PLW2901
         else:  # everything before the last slash is the slice name
             slice_name = "/".join(name_split[:-1])
-            metric_name = name_split[-1]
+            metric_name = name_split[-1]  # noqa: PLW2901
 
         data = {"type": metric_name, "value": metric_value, "slice": slice_name}
         performance_recent.append(data)

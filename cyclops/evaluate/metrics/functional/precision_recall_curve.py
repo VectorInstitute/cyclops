@@ -1,4 +1,4 @@
-"""Functions for computing the precision-recall curve for different input types."""  # noqa: E501
+"""Functions for computing the precision-recall curve for different input types."""
 
 from typing import Any, List, Literal, Optional, Tuple, Union
 

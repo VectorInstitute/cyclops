@@ -69,13 +69,12 @@ def _accuracy_reduce(
             tn = np.array(np.sum(tn))
             numerator = tp + tn
             denominator = tp + fp + fn + tn
+    elif task_type in ["binary", "multilabel"]:
+        numerator = tp + tn
+        denominator = tp + fp + fn + tn
     else:
-        if task_type in ["binary", "multilabel"]:
-            numerator = tp + tn
-            denominator = tp + fp + fn + tn
-        else:
-            numerator = tp
-            denominator = tp + fn
+        numerator = tp
+        denominator = tp + fn
 
     score = _prf_divide(
         np.expand_dims(numerator, axis=0) if numerator.ndim == 0 else numerator,

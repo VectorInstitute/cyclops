@@ -342,7 +342,7 @@ class LossMeter:
         """
         return self.losses[-1]
 
-    def sum(self) -> float:
+    def sum(self) -> float:  # noqa: A003
         """Get the summation of all loss values.
 
         Returns

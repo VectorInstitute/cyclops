@@ -62,7 +62,7 @@ def fig_to_html(
 
 def fig_to_image(  # pylint: disable=redefined-builtin
     fig: go.Figure,
-    format: str = "png",
+    format: str = "png",  # noqa: A002
     scale: int = 1,
     **kwargs: Any,
 ) -> bytes:

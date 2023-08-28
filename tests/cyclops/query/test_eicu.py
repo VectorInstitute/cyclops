@@ -8,7 +8,7 @@ from cyclops.query import EICUQuerier
 # pylint: disable=no-member
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_eicu_querier():
     """Test EICUQuerier on eICU-CRD."""
     querier = EICUQuerier(database="eicu")

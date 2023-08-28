@@ -29,7 +29,7 @@ DATE3 = datetime(2022, 11, 4, hour=3)
 DATE4 = datetime(2022, 11, 4, hour=13)
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_input():
     """Create a test events input."""
     data = [

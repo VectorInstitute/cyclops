@@ -34,7 +34,7 @@ from cyclops.query.util import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_table():
     """Test table input."""
     return select(process_column(column("a"), to_int=True), column("b"), column("c"))

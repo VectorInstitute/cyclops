@@ -16,7 +16,7 @@ from cyclops.process.column_names import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_event_data_normalized():
     """Create event data test input with normalized event values."""
     input_ = pd.DataFrame(
@@ -92,7 +92,7 @@ def test_convert_to_events():
     assert events.loc[2][EVENT_CATEGORY] == "test"
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_event_data_unnormalized():
     """Create event data test input with unnormalized event values."""
     input_ = pd.DataFrame(

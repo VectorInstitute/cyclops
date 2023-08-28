@@ -41,7 +41,7 @@ class RollingWindow:
         optimizer: Optional[Optimizer] = None,
         model: Optional[ClassifierMixin] = None,
         verbose: bool = False,
-    ):
+    ) -> None:
         self.admin_data = admin_data
         self.shift_detector = shift_detector
         self.optimizer = optimizer
@@ -119,7 +119,6 @@ class RollingWindow:
         performance_metrics = []
         i = 0
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        # n_features = data_streams["X"][0].shape[1]
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
         while i + stat_window + lookup_window < len(data_streams["X"]):

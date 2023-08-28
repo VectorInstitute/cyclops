@@ -6,7 +6,7 @@ import cyclops.query.ops as qo
 from cyclops.query import OMOPQuerier
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_omop_querier_synthea():
     """Test OMOPQuerier on synthea data."""
     querier = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
@@ -37,7 +37,7 @@ def test_omop_querier_synthea():
     assert len(conditions) == 1419
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_omop_querier_mimiciii():
     """Test OMOPQuerier on MIMICIII data."""
     querier = OMOPQuerier("omop", database="mimiciii")

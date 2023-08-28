@@ -40,7 +40,7 @@ class CXRClassificationTask(BaseTask):
         ],
         task_features: Union[str, List[str]] = "image",
         task_target: Union[str, List[str]] = CXR_TARGET,
-    ):
+    ) -> None:
         """Chest X-ray classification task.
 
         Parameters

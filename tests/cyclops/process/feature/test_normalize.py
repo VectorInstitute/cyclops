@@ -19,7 +19,7 @@ from cyclops.process.feature.normalize import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_input():
     """Create a test input."""
     cols = [EVENT_NAME, SUBJECT_ID, ENCOUNTER_ID, EVENT_VALUE, EVENT_VALUE_UNIT]

@@ -264,11 +264,13 @@ def set_random_seed(seed: int, deterministic: bool = False) -> None:
 
 
 class DatasetColumn(list):
-    """Helper class to avoid loading a dataset column into memory when accessing it.\
-    From Hugging Face Evaluator.
+    """Helper class to avoid loading a dataset column into memory when accessing it.
+
+    Code taken from Hugging Face Evaluator (https://huggingface.co/docs/evaluate/index).
+
     """
 
-    def __init__(self, dataset: Dataset, key: str):
+    def __init__(self, dataset: Dataset, key: str) -> None:
         """Initialize a new dataset column.
 
         Parameters
@@ -283,7 +285,7 @@ class DatasetColumn(list):
         self.dataset = dataset
         self.key = key
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Get length of the dataset."""
         return len(self.dataset)
 

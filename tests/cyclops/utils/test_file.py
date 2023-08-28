@@ -106,7 +106,7 @@ def test_listdir_nonhidden():
     shutil.rmtree("./test_dir")
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_data_with_index():
     """Dummy dataframe for testing."""
     return pd.DataFrame(
@@ -116,7 +116,7 @@ def test_data_with_index():
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_data_without_index():
     """Dummy dataframe for testing."""
     return pd.DataFrame([[1, "a", 1], [5.1, "b", 0]], columns=["col1", "col2", "col3"])

@@ -157,7 +157,7 @@ class BaseModelCardSection(BaseModel):
             default_factory = list
         if (
             isinstance(value, BaseModelCardField)
-            and value.__config__.list_factory is True
+            and value.__config__.list_factory is True  # type: ignore[attr-defined]
         ):
             default_factory = list
             value = [value]  # add field as a list

@@ -49,7 +49,7 @@ class ClinicalShiftApplicator:
         source: Union[str, SliceSpec],
         target: Union[str, SliceSpec],
         shift_id: Optional[str] = None,
-    ):
+    ) -> None:
         self.shift_type = shift_type
         self.shift_id = shift_id
         self.source = source

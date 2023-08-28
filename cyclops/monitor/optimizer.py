@@ -31,7 +31,7 @@ class Optimizer:
         activation: Callable[..., torch.Tensor],
         lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
         reweight_positive: Union[None, float, np.dtype[np.float64], str] = None,
-    ):
+    ) -> None:
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
@@ -73,7 +73,6 @@ class Optimizer:
         # Computes gradients
         loss.backward()  # type: ignore
 
-        # self.model.float()
         # Updates parameters and zeroes gradients
         self.optimizer.step()
         self.optimizer.zero_grad()
@@ -108,8 +107,8 @@ class Optimizer:
         for epoch in range(1, n_epochs + 1):
             batch_losses = []
             for x_batch, y_batch in train_loader:
-                x_batch = x_batch.to(self.device)
-                y_batch = y_batch.to(self.device)
+                x_batch = x_batch.to(self.device)  # noqa: PLW2901
+                y_batch = y_batch.to(self.device)  # noqa: PLW2901
                 loss = self.train_step(x_batch, y_batch)
 
                 assert not np.isnan(loss).any()
@@ -121,8 +120,8 @@ class Optimizer:
             with torch.no_grad():
                 batch_val_losses = []
                 for x_val, y_val in val_loader:
-                    x_val = x_val.to(self.device)
-                    y_val = y_val.to(self.device)
+                    x_val = x_val.to(self.device)  # noqa: PLW2901
+                    y_val = y_val.to(self.device)  # noqa: PLW2901
                     self.model.eval()
                     yhat = self.model(x_val)
                     val_loss = self.loss_fn(yhat.squeeze(), y_val.squeeze())
@@ -176,11 +175,8 @@ class Optimizer:
             y_test_labels: List[torch.Tensor] = []
             y_pred_labels: List[torch.Tensor] = []
             for x_test, y_test in test_loader:
-                # x_test = x_test.view([batch_size, timesteps, n_features]).to(
-                #    self.device
-                # )
-                x_test = x_test.to(self.device)
-                y_test = y_test.to(self.device)
+                x_test = x_test.to(self.device)  # noqa: PLW2901
+                y_test = y_test.to(self.device)  # noqa: PLW2901
                 self.model.eval()
                 y_hat = self.activation(self.model(x_test))
                 y_pred_values.append(y_hat.cpu().detach())

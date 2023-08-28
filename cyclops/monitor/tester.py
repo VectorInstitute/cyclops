@@ -45,7 +45,7 @@ class TSTester:
         tester_method: str,
         p_val_threshold: float = 0.05,
         **kwargs: Any,
-    ):
+    ) -> None:
         self.tester_method = tester_method
         self.method: Any = None
         self.p_val_threshold = p_val_threshold
@@ -180,7 +180,7 @@ class DCTester:
         tester_method: str,
         p_val_threshold: float = 0.05,
         **kwargs: Any,
-    ):
+    ) -> None:
         self.tester_method = tester_method
         self.p_val_threshold = p_val_threshold
         self.method_args = kwargs

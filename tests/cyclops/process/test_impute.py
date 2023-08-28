@@ -32,7 +32,7 @@ from cyclops.process.impute import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_tabular():
     """Create test input tabular features."""
     return pd.DataFrame(
@@ -47,7 +47,7 @@ def test_tabular():
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_input_feature_temporal():
     """Create test input temporal features."""
     index = pd.MultiIndex.from_product(

@@ -28,7 +28,7 @@ class Explainer:
         model: Any,
         data: Optional[Any] = None,
         explainer_type: Optional[str] = None,
-    ):
+    ) -> None:
         self.model = model
         self.data = data
         self.explainer_type = explainer_type

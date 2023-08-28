@@ -88,8 +88,8 @@ class License(
     text_url: Optional[AnyUrl] = Field(None, description="A URL to the license text.")
 
     @root_validator(skip_on_failure=True)
-    def validate_spdx_identifier(  # pylint: disable=no-self-argument
-        cls: "License",
+    def validate_spdx_identifier(
+        cls: "License",  # noqa: N805
         values: Dict[str, StrictStr],
     ) -> Dict[str, Union[StrictStr, AnyUrl]]:
         """Validate the SPDX license identifier."""
@@ -152,8 +152,8 @@ class Citation(
     )
 
     @validator("content")
-    def parse_content(  # pylint: disable=no-self-argument
-        cls: "Citation",
+    def parse_content(
+        cls: "Citation",  # noqa: N805
         value: StrictStr,
     ) -> StrictStr:
         """Parse the citation content."""
@@ -412,8 +412,8 @@ class UseCase(
     )
 
     @validator("kind")
-    def kind_must_be_valid(  # pylint: disable=no-self-argument
-        cls: "UseCase",
+    def kind_must_be_valid(
+        cls: "UseCase",  # noqa: N805
         value: str,
     ) -> str:
         """Validate the use case kind."""

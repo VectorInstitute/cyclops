@@ -27,7 +27,7 @@ class BaseTask(ABC):
         ],
         task_features: List[str],
         task_target: Union[str, List[str]],
-    ):
+    ) -> None:
         """Initialize base task class.
 
         Parameters

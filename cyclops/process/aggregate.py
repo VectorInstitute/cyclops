@@ -90,11 +90,12 @@ class Aggregator:  # pylint: disable=too-many-instance-attributes
         self.imputer = imputer
 
         # Parameter checking
-        if self.agg_meta_for is not None:
-            if not set(self.agg_meta_for).issubset(set(self.aggfuncs)):
-                raise ValueError(
-                    "Cannot compute meta for a column not being aggregated.",
-                )
+        if self.agg_meta_for is not None and not set(self.agg_meta_for).issubset(
+            set(self.aggfuncs),
+        ):
+            raise ValueError(
+                "Cannot compute meta for a column not being aggregated.",
+            )
 
         if self.window_duration is not None:
             divided = self.window_duration / self.timestep_size

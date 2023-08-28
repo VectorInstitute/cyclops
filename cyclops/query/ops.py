@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """Low-level query operations.
 
 This module contains query operation modules such which can be used in high-level query
@@ -54,9 +53,6 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-# pylint: disable=too-few-public-methods
-
-
 @dataclass
 class JoinArgs:
     """Arguments for joining tables.
@@ -81,7 +77,7 @@ class JoinArgs:
     """
 
     join_table: TableTypes
-    on: typing.Optional[  # pylint: disable=invalid-name
+    on: typing.Optional[
         typing.Union[
             str,
             typing.List[str],
@@ -132,7 +128,7 @@ class Sequential:
 
     """
 
-    def __init__(self, ops: typing.Union[typing.List[QueryOp], Sequential]):
+    def __init__(self, ops: typing.Union[typing.List[QueryOp], Sequential]) -> None:
         """Initialize the Sequential class.
 
         Parameters
@@ -935,7 +931,7 @@ class Cast(metaclass=QueryOp):
         return apply_to_columns(
             table,
             self.cols,
-            lambda x: process_column(x, **kwargs),  # pylint: disable=unnecessary-lambda
+            lambda x: process_column(x, **kwargs),
         )
 
 
@@ -1019,7 +1015,7 @@ class Join(metaclass=QueryOp):
     def __init__(
         self,
         join_table: TableTypes,
-        on: typing.Optional[  # pylint: disable=invalid-name
+        on: typing.Optional[
             typing.Union[
                 str,
                 typing.List[str],
@@ -1032,7 +1028,7 @@ class Join(metaclass=QueryOp):
         table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         join_table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         isouter: typing.Optional[bool] = False,
-    ):
+    ) -> None:
         """Initialize."""
         if on is not None and cond is not None:
             raise ValueError("Cannot specify both the 'on' and 'cond' arguments.")
@@ -1130,7 +1126,7 @@ class Join(metaclass=QueryOp):
         ).subquery()
 
 
-class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionEquals(metaclass=QueryOp):
     """Filter rows based on being equal, or not equal, to some value.
 
     Parameters
@@ -1155,7 +1151,7 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.value = value
@@ -1197,7 +1193,7 @@ class ConditionEquals(metaclass=QueryOp):  # pylint: disable=too-few-public-meth
         return select(table).where(cond).subquery()
 
 
-class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionGreaterThan(metaclass=QueryOp):
     """Filter rows based on greater than (or equal), to some value.
 
     Parameters
@@ -1225,7 +1221,7 @@ class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.value = value
@@ -1269,7 +1265,7 @@ class ConditionGreaterThan(metaclass=QueryOp):  # pylint: disable=too-few-public
         return select(table).where(cond).subquery()
 
 
-class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionLessThan(metaclass=QueryOp):
     """Filter rows based on less than (or equal), to some value.
 
     Parameters
@@ -1297,7 +1293,7 @@ class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.value = value
@@ -1341,7 +1337,7 @@ class ConditionLessThan(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         return select(table).where(cond).subquery()
 
 
-class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionRegexMatch(metaclass=QueryOp):
     """Filter rows based on matching a regular expression.
 
     Parameters
@@ -1363,7 +1359,7 @@ class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-
         regex: str,
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.regex = regex
@@ -1398,7 +1394,7 @@ class ConditionRegexMatch(metaclass=QueryOp):  # pylint: disable=too-few-public-
         return select(table).where(cond).subquery()
 
 
-class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionIn(metaclass=QueryOp):
     """Filter rows based on having a value in list of values.
 
     Parameters
@@ -1423,7 +1419,7 @@ class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.values = values
@@ -1465,7 +1461,7 @@ class ConditionIn(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
         return select(table).where(cond).subquery()
 
 
-class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionSubstring(metaclass=QueryOp):
     """Filter rows on based on having substrings.
 
     Can be specified whether it must have any or all of the specified substrings.
@@ -1497,7 +1493,7 @@ class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-m
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):  # pylint: disable=too-many-arguments
+    ) -> None:
         """Initialize."""
         self.col = col
         self.substrings = to_list(substrings)
@@ -1540,7 +1536,7 @@ class ConditionSubstring(metaclass=QueryOp):  # pylint: disable=too-few-public-m
         return select(table).where(cond).subquery()
 
 
-class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionStartsWith(metaclass=QueryOp):
     """Filter rows based on starting with some string.
 
     Parameters
@@ -1565,7 +1561,7 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.string = string
@@ -1607,7 +1603,7 @@ class ConditionStartsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-
         return select(table).where(cond).subquery()
 
 
-class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionEndsWith(metaclass=QueryOp):
     """Filter rows based on ending with some string.
 
     Parameters
@@ -1632,7 +1628,7 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
-    ):
+    ) -> None:
         """Initialize."""
         self.col = col
         self.string = string
@@ -1674,7 +1670,7 @@ class ConditionEndsWith(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         return select(table).where(cond).subquery()
 
 
-class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionInYears(metaclass=QueryOp):
     """Filter rows based on a timestamp column being in a list of years.
 
     Parameters
@@ -1696,7 +1692,7 @@ class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-met
         years: typing.Union[int, typing.List[int]],
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.years = years
@@ -1738,7 +1734,7 @@ class ConditionInYears(metaclass=QueryOp):  # pylint: disable=too-few-public-met
         return select(table).where(cond).subquery()
 
 
-class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionInMonths(metaclass=QueryOp):
     """Filter rows based on a timestamp being in a list of years.
 
     Parameters
@@ -1760,7 +1756,7 @@ class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         months: typing.Union[int, typing.List[int]],
         not_: bool = False,
         binarize_col: typing.Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.months = months
@@ -1802,7 +1798,7 @@ class ConditionInMonths(metaclass=QueryOp):  # pylint: disable=too-few-public-me
         return select(table).where(cond).subquery()
 
 
-class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionBeforeDate(metaclass=QueryOp):
     """Filter rows based on a timestamp being before some date.
 
     Parameters
@@ -1814,7 +1810,11 @@ class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-
 
     """
 
-    def __init__(self, timestamp_col: str, timestamp: typing.Union[str, datetime]):
+    def __init__(
+        self,
+        timestamp_col: str,
+        timestamp: typing.Union[str, datetime],
+    ) -> None:
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.timestamp = timestamp
@@ -1847,7 +1847,7 @@ class ConditionBeforeDate(metaclass=QueryOp):  # pylint: disable=too-few-public-
         )
 
 
-class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class ConditionAfterDate(metaclass=QueryOp):
     """Filter rows based on a timestamp being after some date.
 
     Parameters
@@ -1859,7 +1859,11 @@ class ConditionAfterDate(metaclass=QueryOp):  # pylint: disable=too-few-public-m
 
     """
 
-    def __init__(self, timestamp_col: str, timestamp: typing.Union[str, datetime]):
+    def __init__(
+        self,
+        timestamp_col: str,
+        timestamp: typing.Union[str, datetime],
+    ) -> None:
         """Initialize."""
         self.timestamp_col = timestamp_col
         self.timestamp = timestamp
@@ -1935,7 +1939,7 @@ class ConditionLike(metaclass=QueryOp):
 
 
 @dataclass
-class Limit(metaclass=QueryOp):  # pylint: disable=too-few-public-methods
+class Limit(metaclass=QueryOp):
     """Limit the number of rows returned in a query.
 
     Parameters
@@ -2119,11 +2123,10 @@ class OrderBy(metaclass=QueryOp):
 
         if ascending is None:
             ascending = [True] * len(self.cols)
-        else:
-            if len(ascending) != len(self.cols):
-                raise ValueError(
-                    "If ascending is specified. Must specify for all columns.",
-                )
+        elif len(ascending) != len(self.cols):
+            raise ValueError(
+                "If ascending is specified. Must specify for all columns.",
+            )
 
         order_cols = [
             col if ascending[i] else col.desc()
@@ -2157,8 +2160,8 @@ class GroupByAggregate(metaclass=QueryOp):
     --------
     >>> GroupByAggregate("person_id", {"person_id": "count"})(table)
     >>> GroupByAggregate("person_id", {"person_id": ("count", "visit_count")})(table)
-    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
-    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)  # noqa: E501, pylint: disable=line-too-long
+    >>> GroupByAggregate("person_id", {"lab_name": "string_agg"}, {"lab_name": ", "})(table)  # noqa: W505
+    >>> GroupByAggregate("person_id", {"lab_name": ("string_agg", "lab_name_agg"}, {"lab_name": ", "})(table)  # noqa: W505
 
     """
 
@@ -2217,11 +2220,12 @@ class GroupByAggregate(metaclass=QueryOp):
                 raise ValueError(
                     f"Invalid aggfuncs specified. Allowed values are {allowed_strs}.",
                 )
-            if aggfunc_str == "string_agg":
-                if not bool(self.aggseps) or aggfunc_cols[i] not in self.aggseps:
-                    raise ValueError(
-                        f"""Column {aggfunc_cols[i]} needs to be aggregated as string, must specify a separator!""",  # noqa: E501, pylint: disable=line-too-long
-                    )
+            if aggfunc_str == "string_agg" and (
+                not bool(self.aggseps) or aggfunc_cols[i] not in self.aggseps
+            ):
+                raise ValueError(
+                    f"""Column {aggfunc_cols[i]} needs to be aggregated as string, must specify a separator!""",  # noqa: E501
+                )
 
         all_names = groupby_names + aggfunc_names
         if len(all_names) != len(set(all_names)):

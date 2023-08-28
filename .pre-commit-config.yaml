@@ -21,10 +21,11 @@ repos:
     - id: black
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.285'
+    rev: 'v0.0.286'
     hooks:
     - id: ruff
-      entry: ruff check --fix .
+      args: [--fix, --exit-non-zero-on-fix]
+      types_or: [python, jupyter]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.5.1

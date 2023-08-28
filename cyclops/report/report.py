@@ -935,10 +935,10 @@ class ModelCardReport:
             name_split = metric_name.split("/")
             if len(name_split) == 1:
                 slice_name = "overall"
-                metric_name = name_split[0]
+                metric_name = name_split[0]  # noqa: PLW2901
             else:  # everything before the last slash is the slice name
                 slice_name = "/".join(name_split[:-1])
-                metric_name = name_split[-1]
+                metric_name = name_split[-1]  # noqa: PLW2901
 
             # TODO: create plot
 
@@ -1103,7 +1103,7 @@ class ModelCardReport:
             """Sweep model card to find all instances of Test."""
             for field in model_card:
                 if isinstance(field, tuple):
-                    field = field[1]
+                    field = field[1]  # noqa: PLW2901
                 if isinstance(field, Test):
                     tests.append(field)
                 if hasattr(field, "__fields__"):
@@ -1122,7 +1122,7 @@ class ModelCardReport:
             """Sweep model card to find all instances of Test."""
             for field in model_card:
                 if isinstance(field, tuple):
-                    field = field[1]
+                    field = field[1]  # noqa: PLW2901
                 if isinstance(field, Graphic) and field.name == caption:
                     graphics.append(field)
                 if hasattr(field, "__fields__"):

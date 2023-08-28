@@ -12,8 +12,6 @@ from sklearn.preprocessing import StandardScaler
 
 
 # unable to detect unidentified names, star import
-# from .constants import *
-# from .query import ENCOUNTER_ID
 
 
 def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
@@ -180,10 +178,7 @@ def normalize(X: pd.DataFrame, aggregation_type: str) -> pd.DataFrame:
         y_last: np.ndarray[float, np.dtype[np.float64]] = np.zeros((X.shape[0], 1))
         X_normalized, _ = temporal_last(X, y_last)
 
-    elif aggregation_type == "time_flatten":
-        X_normalized = X.copy()
-
-    elif aggregation_type == "time":
+    elif aggregation_type == "time_flatten" or aggregation_type == "time":
         X_normalized = X.copy()
 
     else:

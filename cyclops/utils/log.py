@@ -76,7 +76,7 @@ class Formatter(logging.Formatter):
         logging.Formatter.__init__(self, msg)
         self.use_color = use_color
 
-    def format(self, record: logging.LogRecord) -> str:
+    def format(self, record: logging.LogRecord) -> str:  # noqa: A003
         """Apply formatting.
 
         Parameters

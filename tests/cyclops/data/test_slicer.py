@@ -76,7 +76,7 @@ def get_filtered_dataset(table: pd.DataFrame, filter_func: Callable) -> Dataset:
     )
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_overall():
     """Test overall filter."""
     table = visits_table()
@@ -84,7 +84,7 @@ def test_overall():
     assert len(table) == len(filtered_ds)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize("column_name", ["unit_source_value"])
 def test_filter_non_null(column_name: str):
     """Test filter non-null."""
@@ -96,9 +96,9 @@ def test_filter_non_null(column_name: str):
     assert None not in filtered_ds.unique(column_name)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "column_name,value,negate, keep_nulls",
+    ("column_name", "value", "negate", "keep_nulls"),
     [
         ("unit_source_value", ["cm", "mm"], False, False),
         ("unit_source_value", "n/a", True, False),
@@ -134,9 +134,17 @@ def test_filter_value(
         assert pd.isnull(filtered_ds[column_name]).any()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "column_name,min_value,max_value,min_inclusive,max_inclusive,negate,keep_nulls",
+    (
+        "column_name",
+        "min_value",
+        "max_value",
+        "min_inclusive",
+        "max_inclusive",
+        "negate",
+        "keep_nulls",
+    ),
     [
         ("unit_source_value", "cm", "mm", True, True, False, False),
         ("measurement_date", -np.inf, np.inf, True, True, False, False),
@@ -219,9 +227,9 @@ def test_filter_range(
     assert mask.all()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "column_name,year,month,day,hour,negate,keep_nulls",
+    ("column_name", "year", "month", "day", "hour", "negate", "keep_nulls"),
     [
         ("visit_start_date", 2014, None, None, None, False, False),
         ("visit_start_date", None, [4, 6, 7], None, None, False, False),
@@ -289,9 +297,9 @@ def test_filter_datetime(
     assert result.all()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "column_name,contains,negate,keep_nulls",
+    ("column_name", "contains", "negate", "keep_nulls"),
     [
         ("unit_source_value", "kg", False, False),
         ("unit_source_value", ["kg", "mm"], False, False),
@@ -338,9 +346,18 @@ def test_filter_string_contains(
     assert np.array_equal(examples, expected)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
-    "value_col,value,range_col,range_min,range_max, datetime_col,year,month",
+    (
+        "value_col",
+        "value",
+        "range_col",
+        "range_min",
+        "range_max",
+        "datetime_col",
+        "year",
+        "month",
+    ),
     [
         (
             "race",
@@ -440,7 +457,7 @@ def test_compound_filter(
     )
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_slice_spec():
     """Test SliceSpec class."""
     value1 = ["mmHg", "kg", "mL", "mL/min"]

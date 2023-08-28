@@ -42,7 +42,7 @@ def test_fractions_to_split_expect_no_permutation():
 
 
 @pytest.mark.parametrize(
-    "fractions,n_samples,expected_exception",
+    ("fractions", "n_samples", "expected_exception"),
     [
         (0.5, -10, ValueError),
         ("donkey", 12, TypeError),
@@ -145,12 +145,18 @@ def test_intersect_datasets():
         columns=["A", "D", "E"],
     )
     datas = intersect_datasets([dataframe1, dataframe2], on_col="A")
-    assert datas[0]["A"][0] == 1 and datas[0]["A"][2] == 3
-    assert datas[1]["A"][0] == 1 and datas[1]["A"][2] == 3
-    assert datas[0]["B"][0] == 2 and datas[0]["B"][2] == 2
-    assert datas[0]["C"][0] == 3 and datas[0]["C"][2] == 0.2
-    assert datas[1]["D"][0] == 4 and datas[1]["D"][2] == 2
-    assert datas[1]["E"][0] == 3 and datas[1]["E"][2] == 0.2
+    assert datas[0]["A"][0] == 1
+    assert datas[0]["A"][2] == 3
+    assert datas[1]["A"][0] == 1
+    assert datas[1]["A"][2] == 3
+    assert datas[0]["B"][0] == 2
+    assert datas[0]["B"][2] == 2
+    assert datas[0]["C"][0] == 3
+    assert datas[0]["C"][2] == 0.2
+    assert datas[1]["D"][0] == 4
+    assert datas[1]["D"][2] == 2
+    assert datas[1]["E"][0] == 3
+    assert datas[1]["E"][2] == 0.2
 
 
 def test_split_datasets_by_idx():

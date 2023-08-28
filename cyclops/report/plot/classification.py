@@ -28,7 +28,7 @@ class ClassificationPlotter(Plotter):
         task_name: Optional[str] = None,
         class_num: Optional[int] = None,
         class_names: Optional[List[str]] = None,
-    ):
+    ) -> None:
         """Initialize the plotter.
 
         Parameters
@@ -85,11 +85,10 @@ class ClassificationPlotter(Plotter):
             assert (
                 len(class_names) == self.class_num
             ), "class_names must be equal to class_num"
+        elif self.task_type == "multilabel":
+            class_names = [f"Label_{i+1}" for i in range(self.class_num)]
         else:
-            if self.task_type == "multilabel":
-                class_names = [f"Label_{i+1}" for i in range(self.class_num)]
-            else:
-                class_names = [f"Class_{i+1}" for i in range(self.class_num)]
+            class_names = [f"Class_{i+1}" for i in range(self.class_num)]
         self.class_names = class_names
 
     def roc_curve(
@@ -510,8 +509,10 @@ class ClassificationPlotter(Plotter):
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot the trend of non-curve metrics such as precision, recall, and f_beta \
-        for a single group or subpopulation.
+        """Plot the trend of non-curve metrics.
+
+        Metrics such as precision, recall, and f_beta for a single group or
+        sub-population can be plotted using this method.
 
         Parameters
         ----------
@@ -547,7 +548,7 @@ class ClassificationPlotter(Plotter):
 
             slice_names = list(values.keys())
             metric_names = list(
-                {metric_name for slice in values.values() for metric_name in slice},
+                {metric_name for slice_ in values.values() for metric_name in slice_},
             )
             subplot_num = len(slice_names)
             fig = make_subplots(

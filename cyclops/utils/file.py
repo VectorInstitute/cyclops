@@ -83,10 +83,8 @@ def process_file_save_path(
     # Create the directory if it doesn't already exist.
     directory, _ = os.path.split(save_path)
 
-    if create_dir:
-        # Ignore checking local paths
-        if directory != "":
-            os.makedirs(directory, exist_ok=True)
+    if create_dir and directory != "":
+        os.makedirs(directory, exist_ok=True)
 
     # Add the .parquet extension if it isn't there.
     _, ext = os.path.splitext(save_path)

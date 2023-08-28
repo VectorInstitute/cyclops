@@ -102,8 +102,6 @@ class Predictor:
         with open(self.config_file, "r", encoding="utf8") as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
 
-        # save_path = join(SAVE_DIR, self.model_name, self.dataset_name, self.data_type)
-        # process_dir_save_path(save_path)
         model_params = params.get("model_params", None) or params
 
         self.model = create_model(self.model_name, **model_params)

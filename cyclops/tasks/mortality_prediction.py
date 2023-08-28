@@ -42,7 +42,7 @@ class MortalityPredictionTask(BaseTask):
         ],
         task_features: Union[str, List[str]] = None,
         task_target: Union[str, List[str]] = None,
-    ):
+    ) -> None:
         """Mortality prediction task for tabular data.
 
         Parameters

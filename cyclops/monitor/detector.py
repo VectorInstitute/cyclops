@@ -53,7 +53,7 @@ class Detector:
         reductor: Reductor,
         tester: Union[TSTester, DCTester],
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize Detector object."""
         self.experiment_type = experiment_type
 

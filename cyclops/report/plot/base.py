@@ -1,13 +1,12 @@
 """Base class for plotter."""
 
-import abc
 from typing import Any, Dict, List, Union
 
 import plotly.graph_objects as go
 import plotly.io as pio
 
 
-class Plotter(abc.ABC):
+class Plotter:
     """Plotter base class."""
 
     def __init__(self) -> None:

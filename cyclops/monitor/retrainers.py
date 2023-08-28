@@ -41,7 +41,7 @@ class CumulativeRetrainer:
         model_name: Optional[str] = None,
         retrain_model_path: Optional[str] = None,
         verbose: bool = False,
-    ):
+    ) -> None:
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
@@ -102,7 +102,6 @@ class CumulativeRetrainer:
         i = stat_window
         p_val = 1
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        # n_features = data_streams["X"][0].shape[1]
 
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
@@ -196,11 +195,7 @@ class CumulativeRetrainer:
 
                 elif self.model_name == "gbt":
                     pass
-                    # X_retrain = None
-                    # y_retrain = None
                     # self.model = self.model.fit(
-                    #     X_retrain, y_retrain, xgb_model=self.model.get_booster()
-                    # )
 
                 else:
                     print("Invalid Model Name")
@@ -316,7 +311,7 @@ class MostRecentRetrainer:
         model_name: Optional[str] = None,
         retrain_model_path: Optional[str] = None,
         verbose: bool = False,
-    ):
+    ) -> None:
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
@@ -377,7 +372,6 @@ class MostRecentRetrainer:
         i = stat_window
         p_val = 1
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        # n_features = data_streams["X"][0].shape[1]
 
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
@@ -482,11 +476,8 @@ class MostRecentRetrainer:
 
                 elif self.model_name == "gbt":
                     pass
-                    # X_retrain, y_retrain = None, None
 
                     # self.model = self.model.fit(
-                    #     X_retrain, y_retrain, xgb_model=self.model.get_booster()
-                    # )
 
                 else:
                     print("Invalid Model Name")

@@ -256,8 +256,6 @@ def plot_label_distribution(
     len_features = len(features)
     width = 0.04
     x = np.arange(0, len([0, 1]))
-    # NUM_COLORS = 20
-    # cm = plt.get_cmap('gist_rainbow')
 
     for i, feature in enumerate(features):
         feature_counts = list(data[feature].value_counts())
@@ -427,7 +425,6 @@ def plot_drift_timeseries(
         )
         ax2.set_ylabel("Distance", fontsize=16)
         ax2.set_xlabel("timestamp", fontsize=16)
-        # ax2.axhline(y=np.mean(results["distance"]), color="dimgrey", linestyle="--")
         ax2.set_xticklabels([])
         ax2.pcolorfast(
             ax2.get_xlim(),
@@ -496,7 +493,6 @@ def plot_performance(results: pd.DataFrame, metric: str) -> None:
         ax1.get_xlim(),
         ax1.get_ylim(),
         results["detection"][np.newaxis],
-        # cmap=cmap,
         alpha=0.4,
     )
 

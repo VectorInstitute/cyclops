@@ -13,7 +13,7 @@ from cyclops.process.feature.vectorized import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def input_data():
     """Input data."""
     return np.array(

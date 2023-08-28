@@ -49,20 +49,20 @@ from cyclops.query.util import process_column
 QUERIER = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
 
 
-@pytest.fixture
+@pytest.fixture()
 def table_input():
     """Test table input."""
     column_a = process_column(column("a"), to_timestamp=True)
     return select(column_a, column("b"), column("c"))
 
 
-@pytest.fixture
+@pytest.fixture()
 def visits_input():
     """Test visits table input."""
     return QUERIER.visit_occurrence().query
 
 
-@pytest.fixture
+@pytest.fixture()
 def measurements_input():
     """Test measurement table input."""
     return QUERIER.measurement().query
@@ -82,7 +82,7 @@ def test__process_checks(table_input):  # pylint: disable=redefined-outer-name
         _process_checks(table_input, cols_not_in=["a"])
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_drop(visits_input):  # pylint: disable=redefined-outer-name
     """Test Drop."""
     visits = Drop("care_site_source_value")(visits_input)
@@ -90,7 +90,7 @@ def test_drop(visits_input):  # pylint: disable=redefined-outer-name
     assert "care_site_source_value" not in visits.columns
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_fill_null(visits_input):  # pylint: disable=redefined-outer-name
     """Test FillNull."""
     visits_before = QUERIER.get_interface(visits_input).run()
@@ -120,7 +120,7 @@ def test_fill_null(visits_input):  # pylint: disable=redefined-outer-name
     assert -99 in visits_after["col2"].unique()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
     """Test AddColumn."""
     ops = Sequential(
@@ -151,7 +151,7 @@ def test_add_column(visits_input):  # pylint: disable=redefined-outer-name
     assert (visits["test_col3"] == -1).all()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_rename(visits_input):  # pylint: disable=redefined-outer-name
     """Test Rename."""
     visits = Rename({"care_site_name": "hospital_name"})(visits_input)
@@ -160,7 +160,7 @@ def test_rename(visits_input):  # pylint: disable=redefined-outer-name
     assert "care_site_name" not in visits.columns
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_literal(visits_input):  # pylint: disable=redefined-outer-name
     """Test Literal."""
     visits = Literal(1, "new_col")(visits_input)
@@ -172,7 +172,7 @@ def test_literal(visits_input):  # pylint: disable=redefined-outer-name
     assert visits["new_col2"].iloc[0] == "a"
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_reorder_after(visits_input):  # pylint: disable=redefined-outer-name
     """Test ReorderAfter."""
     visits = ReorderAfter("visit_concept_name", "care_site_id")(visits_input)
@@ -182,7 +182,7 @@ def test_reorder_after(visits_input):  # pylint: disable=redefined-outer-name
     )
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_limit(visits_input):  # pylint: disable=redefined-outer-name
     """Test Limit."""
     visits = Limit(10)(visits_input)
@@ -190,7 +190,7 @@ def test_limit(visits_input):  # pylint: disable=redefined-outer-name
     assert len(visits) == 10
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_order_by(visits_input):  # pylint: disable=redefined-outer-name
     """Test OrderBy."""
     visits = OrderBy("visit_concept_name")(visits_input)
@@ -198,7 +198,7 @@ def test_order_by(visits_input):  # pylint: disable=redefined-outer-name
     assert visits["visit_concept_name"].is_monotonic_increasing
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_substring(visits_input):  # pylint: disable=redefined-outer-name
     """Test Substring."""
     visits = Substring("visit_concept_name", 0, 3, "visit_concept_name_substr")(
@@ -208,7 +208,7 @@ def test_substring(visits_input):  # pylint: disable=redefined-outer-name
     assert visits["visit_concept_name_substr"].iloc[0] == "In"
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_trim(visits_input):  # pylint: disable=redefined-outer-name
     """Test Trim."""
     visits = Trim("visit_concept_name", "visit_concept_name_trim")(visits_input)
@@ -216,7 +216,7 @@ def test_trim(visits_input):  # pylint: disable=redefined-outer-name
     assert visits["visit_concept_name_trim"].iloc[0] == "Inpatient Visit"
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_extract_timestamp_component(
     visits_input,
 ):  # pylint: disable=redefined-outer-name
@@ -230,7 +230,7 @@ def test_extract_timestamp_component(
     assert visits["visit_start_date_year"].iloc[0] == 2021
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_add_numeric(visits_input):  # pylint: disable=redefined-outer-name
     """Test AddNumeric."""
     visits = Literal(1, "new_col")(visits_input)
@@ -239,7 +239,7 @@ def test_add_numeric(visits_input):  # pylint: disable=redefined-outer-name
     assert visits["new_col_plus_1"].iloc[0] == 2
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_apply(visits_input):  # pylint: disable=redefined-outer-name
     """Test Apply."""
     visits = Apply(
@@ -266,7 +266,7 @@ def test_apply(visits_input):  # pylint: disable=redefined-outer-name
     )
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_regex_match(
     measurements_input,
 ):  # pylint: disable=redefined-outer-name
@@ -284,7 +284,7 @@ def test_condition_regex_match(
     )
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
     visits_input,
     measurements_input,
@@ -344,10 +344,8 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
         "visit_concept_names"
     ][0].split(",")
     test_visit_concept_names = [item.strip() for item in test_visit_concept_names]
-    assert (
-        len(test_visit_concept_names) == 86
-        and "Outpatient Visit" in test_visit_concept_names
-    )
+    assert len(test_visit_concept_names) == 86
+    assert "Outpatient Visit" in test_visit_concept_names
     assert "value_as_number_sum" in measurements_sum.columns
     assert (
         measurements_sum[measurements_sum["person_id"] == 33]["value_as_number_sum"][0]
@@ -380,7 +378,7 @@ def test_group_by_aggregate(  # pylint: disable=redefined-outer-name
     )
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_drop_nulls(visits_input):  # pylint: disable=redefined-outer-name
     """Test DropNulls."""
     visits = DropNulls("preceding_visit_occurrence_id")(visits_input)
@@ -388,7 +386,7 @@ def test_drop_nulls(visits_input):  # pylint: disable=redefined-outer-name
     assert visits["preceding_visit_occurrence_id"].isnull().sum() == 0
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_before_date(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionBeforeDate."""
     visits = ConditionBeforeDate("visit_start_date", "2018-01-01")(visits_input)
@@ -396,7 +394,7 @@ def test_condition_before_date(visits_input):  # pylint: disable=redefined-outer
     assert pd.Timestamp(visits["visit_start_date"].max()) < pd.Timestamp("2018-01-01")
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_after_date(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionAfterDate."""
     visits = ConditionAfterDate("visit_start_date", "2018-01-01")(visits_input)
@@ -404,7 +402,7 @@ def test_condition_after_date(visits_input):  # pylint: disable=redefined-outer-
     assert pd.Timestamp(visits["visit_start_date"].min()) > pd.Timestamp("2018-01-01")
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_in(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionIn."""
     visits = ConditionIn("visit_concept_name", ["Outpatient Visit"])(visits_input)
@@ -412,7 +410,7 @@ def test_condition_in(visits_input):  # pylint: disable=redefined-outer-name
     assert all(visits["visit_concept_name"] == "Outpatient Visit")
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_in_months(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionInMonths."""
     visits_input = Cast("visit_start_date", "timestamp")(visits_input)
@@ -421,7 +419,7 @@ def test_condition_in_months(visits_input):  # pylint: disable=redefined-outer-n
     assert (visits["visit_start_date"].dt.month == 6).all()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_in_years(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionInYears."""
     visits_input = Cast("visit_start_date", "timestamp")(visits_input)
@@ -430,7 +428,7 @@ def test_condition_in_years(visits_input):  # pylint: disable=redefined-outer-na
     assert (visits["visit_start_date"].dt.year == 2018).all()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_substring(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionSubstring."""
     visits = ConditionSubstring("visit_concept_name", "Outpatient")(visits_input)
@@ -438,7 +436,7 @@ def test_condition_substring(visits_input):  # pylint: disable=redefined-outer-n
     assert all(visits["visit_concept_name"].str.contains("Outpatient"))
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_starts_with(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionStartsWith."""
     visits = ConditionStartsWith("visit_concept_name", "Outpatient")(visits_input)
@@ -446,7 +444,7 @@ def test_condition_starts_with(visits_input):  # pylint: disable=redefined-outer
     assert all(visits["visit_concept_name"].str.startswith("Outpatient"))
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_ends_with(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionEndsWith."""
     visits = ConditionEndsWith("visit_concept_name", "Visit")(visits_input)
@@ -454,7 +452,7 @@ def test_condition_ends_with(visits_input):  # pylint: disable=redefined-outer-n
     assert all(visits["visit_concept_name"].str.endswith("Visit"))
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_equals(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionEquals."""
     visits = ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input)
@@ -467,7 +465,7 @@ def test_condition_equals(visits_input):  # pylint: disable=redefined-outer-name
     assert all(visits["visit_concept_name"] != "Outpatient Visit")
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_greater_than(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionGreaterThan."""
     visits = ConditionGreaterThan("visit_concept_id", 9300)(visits_input)
@@ -475,7 +473,7 @@ def test_condition_greater_than(visits_input):  # pylint: disable=redefined-oute
     assert all(visits["visit_concept_id"] > 9300)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_less_than(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionLessThan."""
     visits = ConditionLessThan("visit_concept_id", 9300)(visits_input)
@@ -483,7 +481,7 @@ def test_condition_less_than(visits_input):  # pylint: disable=redefined-outer-n
     assert all(visits["visit_concept_id"] < 9300)
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_union(visits_input):  # pylint: disable=redefined-outer-name
     """Test Union."""
     visits = Union(
@@ -502,7 +500,7 @@ def test_union(visits_input):  # pylint: disable=redefined-outer-name
     assert len(visits) == 8114
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_sequential(visits_input):  # pylint: disable=redefined-outer-name
     """Test Sequential."""
     substr_op = Sequential(
@@ -530,7 +528,7 @@ def test_sequential(visits_input):  # pylint: disable=redefined-outer-name
     )
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_distinct(visits_input):  # pylint: disable=redefined-outer-name
     """Test Distinct."""
     distinct_op = Distinct(["person_id"])
@@ -539,7 +537,7 @@ def test_distinct(visits_input):  # pylint: disable=redefined-outer-name
     visits = QUERIER.get_interface(visits_input).run()
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_condition_like(visits_input):  # pylint: disable=redefined-outer-name
     """Test ConditionLike."""
     like_op = ConditionLike("visit_concept_name", "Outpatient%")

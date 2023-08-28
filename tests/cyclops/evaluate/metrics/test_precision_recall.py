@@ -48,7 +48,7 @@ class TestBinaryPrecisionRecall(MetricTester):
     """Test function and class for binary precision and recall."""
 
     @pytest.mark.parametrize(
-        "cyclops_func, sk_func",
+        ("cyclops_func", "sk_func"),
         [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
         ids=["precision", "recall"],
     )
@@ -75,7 +75,7 @@ class TestBinaryPrecisionRecall(MetricTester):
         )
 
     @pytest.mark.parametrize(
-        "cyclops_class, sk_func",
+        ("cyclops_class", "sk_func"),
         [(Precision, sk_precision_score), (Recall, sk_recall_score)],
         ids=["precision", "recall"],
     )
@@ -128,7 +128,7 @@ class TestMulticlassPrecisionRecall(MetricTester):
     """Test function and class for multiclass precision and recall."""
 
     @pytest.mark.parametrize(
-        "cyclops_func, sk_func",
+        ("cyclops_func", "sk_func"),
         [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
         ids=["precision", "recall"],
     )
@@ -161,7 +161,7 @@ class TestMulticlassPrecisionRecall(MetricTester):
         )
 
     @pytest.mark.parametrize(
-        "cyclops_class, sk_func",
+        ("cyclops_class", "sk_func"),
         [(Precision, sk_precision_score), (Recall, sk_recall_score)],
         ids=["precision", "recall"],
     )
@@ -223,7 +223,7 @@ class TestMultilabelPrecisionRecall(MetricTester):
     """Test classes and functions for multilabel precision and recall."""
 
     @pytest.mark.parametrize(
-        "cyclops_func, sk_func",
+        ("cyclops_func", "sk_func"),
         [(cyclops_precision, sk_precision_score), (cyclops_recall, sk_recall_score)],
         ids=["precision", "recall"],
     )
@@ -258,7 +258,7 @@ class TestMultilabelPrecisionRecall(MetricTester):
         )
 
     @pytest.mark.parametrize(
-        "cyclops_class, sk_func",
+        ("cyclops_class", "sk_func"),
         [(Precision, sk_precision_score), (Recall, sk_recall_score)],
         ids=["precision", "recall"],
     )
