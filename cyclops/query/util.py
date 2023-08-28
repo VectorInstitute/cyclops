@@ -574,7 +574,7 @@ def apply_to_columns(
     if isinstance(funcs, list):
         if len(funcs) != len(cols):
             raise ValueError(
-                f"Must specify a function for each column, not {len(funcs)} functions."
+                f"Must specify a function for each column, not {len(funcs)} functions.",
             )
     else:
         funcs = [funcs] * len(cols)

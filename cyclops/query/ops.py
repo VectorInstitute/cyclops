@@ -718,7 +718,8 @@ class AddNumeric(metaclass=QueryOp):
     new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
 
     def _gen_lambda(
-        self, add: typing.Union[int, float]
+        self,
+        add: typing.Union[int, float],
     ) -> typing.Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column]:
         """Generate the lambda function."""
         return lambda x: x + add
@@ -744,11 +745,10 @@ class AddNumeric(metaclass=QueryOp):
         )
         if isinstance(self.add, (int, float)):
             self.add = [self.add] * len(self.add_to)
-        else:
-            if len(self.add) != len(self.add_to):
-                raise ValueError(
-                    "Length of add_to and add must be the same if add is a list."
-                )
+        elif len(self.add) != len(self.add_to):
+            raise ValueError(
+                "Length of add_to and add must be the same if add is a list.",
+            )
 
         return apply_to_columns(
             table,
@@ -1284,7 +1284,7 @@ class ConditionEquals(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = equals(
@@ -1367,7 +1367,7 @@ class ConditionGreaterThan(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = greater_than(
@@ -1451,7 +1451,7 @@ class ConditionLessThan(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = less_than(
@@ -1520,7 +1520,7 @@ class ConditionRegexMatch(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = get_column(table, self.col).regexp_match(self.regex)
@@ -1593,7 +1593,7 @@ class ConditionIn(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = in_(
@@ -1679,7 +1679,7 @@ class ConditionSubstring(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         conds = [
@@ -1756,7 +1756,7 @@ class ConditionStartsWith(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = starts_with(
@@ -1835,7 +1835,7 @@ class ConditionEndsWith(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = ends_with(
@@ -1904,7 +1904,7 @@ class ConditionInYears(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(
             table,
@@ -1974,7 +1974,7 @@ class ConditionInMonths(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(
             table,
@@ -2044,7 +2044,7 @@ class ConditionBeforeDate(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, timestamp_cols=self.timestamp_col)
         if isinstance(self.timestamp, str):
@@ -2058,7 +2058,8 @@ class ConditionBeforeDate(metaclass=QueryOp):
             return cond
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -2110,7 +2111,7 @@ class ConditionAfterDate(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, timestamp_cols=self.timestamp_col)
         if isinstance(self.timestamp, str):
@@ -2124,7 +2125,8 @@ class ConditionAfterDate(metaclass=QueryOp):
             return cond
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -2176,7 +2178,7 @@ class ConditionLike(metaclass=QueryOp):
         """
         if return_cond and self.binarize_col:
             raise ValueError(
-                "Cannot return condition and binarize column simultaneously."
+                "Cannot return condition and binarize column simultaneously.",
             )
         table = _process_checks(table, cols=self.col)
         cond = get_column(table, self.col).like(self.pattern)
@@ -2186,7 +2188,8 @@ class ConditionLike(metaclass=QueryOp):
             return cond
         if self.binarize_col is not None:
             return select(
-                table, cast(cond, Boolean).label(self.binarize_col)
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
             ).subquery()
 
         return select(table).where(cond).subquery()
@@ -2336,7 +2339,8 @@ class Apply(metaclass=QueryOp):
         typing.Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
         typing.List[
             typing.Callable[
-                [sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column
+                [sqlalchemy.sql.schema.Column],
+                sqlalchemy.sql.schema.Column,
             ]
         ],
     ]
@@ -2360,11 +2364,11 @@ class Apply(metaclass=QueryOp):
         if isinstance(self.funcs, list):
             if len(self.funcs) != len(self.cols):
                 raise ValueError(
-                    "Number of functions must be equal to number of columns."
+                    "Number of functions must be equal to number of columns.",
                 )
             if len(self.new_cols) != len(self.cols):
                 raise ValueError(
-                    "Number of new columns must be equal to number of columns."
+                    "Number of new columns must be equal to number of columns.",
                 )
         if callable(self.funcs):
             cols = get_columns(table, self.cols)
