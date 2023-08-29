@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import typing
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
@@ -102,25 +103,13 @@ class JoinArgs:
         self.join_table_cols = to_list_optional(self.join_table_cols)
 
 
-class QueryOp(type):
-    """Metaclass type for query operations."""
+class QueryOp(ABC):
+    """Base type for query operations."""
 
-    def __repr__(cls) -> str:
-        """Return the name of the class."""
-        return "QueryOp"
-
-
-def _chain_ops(
-    query: Subquery,
-    ops: typing.Union[typing.List[QueryOp], Sequential],
-) -> Subquery:
-    if isinstance(ops, typing.List):
-        for op_ in ops:
-            query = op_(query)
-    if isinstance(ops, Sequential):
-        query = _chain_ops(query, ops.ops)
-
-    return query
+    @abstractmethod
+    def __call__(self, *args: typing.Any, **kwargs: typing.Any) -> Subquery:
+        """Implement a calling function."""
+        pass
 
 
 class Sequential:
@@ -131,17 +120,33 @@ class Sequential:
 
     """
 
-    def __init__(self, ops: typing.Union[typing.List[QueryOp], Sequential]) -> None:
+    def __init__(self, *ops: typing.Sequence[typing.Any]) -> None:
         """Initialize the Sequential class.
 
         Parameters
         ----------
-        ops: typing.Union[typing.List[QueryOp], Sequential]
-            typing.List of query operations to be chained.
+        ops: tuple of QueryOp or Sequential or list of QueryOp
+            Query operations to be chained.
 
         """
         self.ops = ops
 
+    def _chain_ops(
+        self,
+        query: Subquery,
+        ops: typing.Sequence[typing.Any],
+    ) -> Subquery:
+        for op_ in ops:
+            if isinstance(op_, Sequential):
+                query = self._chain_ops(query, op_.ops)
+            if isinstance(op_, list):
+                query = self._chain_ops(query, op_)
+            if isinstance(op_, QueryOp):
+                query = op_(query)
+
+        return query
+
+    @table_params_to_type(Subquery)
     def __call__(self, table: TableTypes) -> Subquery:
         """Execute the query operations on the table.
 
@@ -156,7 +161,7 @@ class Sequential:
             Query result after chaining the query operations.
 
         """
-        return _chain_ops(table, self.ops)
+        return self._chain_ops(table, self.ops)
 
 
 def _append_if_missing(
@@ -243,7 +248,7 @@ def _process_checks(
 
 
 @dataclass
-class FillNull(metaclass=QueryOp):
+class FillNull(QueryOp):
     """Fill NULL values with a given value.
 
     Parameters
@@ -309,7 +314,7 @@ class FillNull(metaclass=QueryOp):
 
 
 @dataclass
-class Drop(metaclass=QueryOp):
+class Drop(QueryOp):
     """Drop some columns.
 
     Parameters
@@ -346,7 +351,7 @@ class Drop(metaclass=QueryOp):
 
 
 @dataclass
-class Rename(metaclass=QueryOp):
+class Rename(QueryOp):
     """Rename some columns.
 
     Parameters
@@ -387,7 +392,7 @@ class Rename(metaclass=QueryOp):
 
 
 @dataclass
-class Substring(metaclass=QueryOp):
+class Substring(QueryOp):
     """Get substring of a string column.
 
     Parameters
@@ -438,7 +443,7 @@ class Substring(metaclass=QueryOp):
 
 
 @dataclass
-class Reorder(metaclass=QueryOp):
+class Reorder(QueryOp):
     """Reorder the columns in a table.
 
     Parameters
@@ -474,7 +479,7 @@ class Reorder(metaclass=QueryOp):
 
 
 @dataclass
-class ReorderAfter(metaclass=QueryOp):
+class ReorderAfter(QueryOp):
     """Reorder a number of columns to come after a specified column.
 
     Parameters
@@ -518,7 +523,7 @@ class ReorderAfter(metaclass=QueryOp):
 
 
 @dataclass
-class Keep(metaclass=QueryOp):
+class Keep(QueryOp):
     """Keep only the specified columns in a table.
 
     Parameters
@@ -555,7 +560,7 @@ class Keep(metaclass=QueryOp):
 
 
 @dataclass
-class Trim(metaclass=QueryOp):
+class Trim(QueryOp):
     """Trim the whitespace from some string columns.
 
     Parameters
@@ -598,7 +603,7 @@ class Trim(metaclass=QueryOp):
 
 
 @dataclass
-class Literal(metaclass=QueryOp):
+class Literal(QueryOp):
     """Add a literal column to a table.
 
     Parameters
@@ -637,7 +642,7 @@ class Literal(metaclass=QueryOp):
 
 
 @dataclass
-class ExtractTimestampComponent(metaclass=QueryOp):
+class ExtractTimestampComponent(QueryOp):
     """Extract a component such as year or month from a timestamp column.
 
     Parameters
@@ -690,7 +695,7 @@ class ExtractTimestampComponent(metaclass=QueryOp):
 
 
 @dataclass
-class AddNumeric(metaclass=QueryOp):
+class AddNumeric(QueryOp):
     """Add a numeric value to some columns.
 
     Parameters
@@ -762,7 +767,7 @@ class AddNumeric(metaclass=QueryOp):
 
 
 @dataclass
-class AddDeltaConstant(metaclass=QueryOp):
+class AddDeltaConstant(QueryOp):
     """Construct and add a datetime.timedelta object to some columns.
 
     Parameters
@@ -816,7 +821,7 @@ class AddDeltaConstant(metaclass=QueryOp):
 
 
 @dataclass
-class AddColumn(metaclass=QueryOp):
+class AddColumn(QueryOp):
     """Add a column to some columns.
 
     Parameters
@@ -895,7 +900,7 @@ class AddColumn(metaclass=QueryOp):
         )
 
 
-class AddDeltaColumn(metaclass=QueryOp):
+class AddDeltaColumn(QueryOp):
     """Construct and add an interval column to some columns.
 
     Parameters
@@ -971,7 +976,7 @@ class AddDeltaColumn(metaclass=QueryOp):
 
 
 @dataclass
-class Cast(metaclass=QueryOp):
+class Cast(QueryOp):
     """Cast columns to a specified type.
 
     Currently supporting conversions to str, int, float, date, bool and timestamp.
@@ -1038,7 +1043,7 @@ class Cast(metaclass=QueryOp):
 
 
 @dataclass
-class Union(metaclass=QueryOp):
+class Union(QueryOp):
     """Union two tables.
 
     Parameters
@@ -1080,7 +1085,7 @@ class Union(metaclass=QueryOp):
         return select(table).union(select(union_table)).subquery()
 
 
-class Join(metaclass=QueryOp):
+class Join(QueryOp):
     """Join a table with another table.
 
     Parameters
@@ -1231,7 +1236,7 @@ class Join(metaclass=QueryOp):
         ).subquery()
 
 
-class ConditionEquals(metaclass=QueryOp):
+class ConditionEquals(QueryOp):
     """Filter rows based on being equal, or not equal, to some value.
 
     Parameters
@@ -1310,7 +1315,7 @@ class ConditionEquals(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionGreaterThan(metaclass=QueryOp):
+class ConditionGreaterThan(QueryOp):
     """Filter rows based on greater than (or equal), to some value.
 
     Parameters
@@ -1394,7 +1399,7 @@ class ConditionGreaterThan(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionLessThan(metaclass=QueryOp):
+class ConditionLessThan(QueryOp):
     """Filter rows based on less than (or equal), to some value.
 
     Parameters
@@ -1479,7 +1484,7 @@ class ConditionLessThan(metaclass=QueryOp):
 
 
 @dataclass
-class ConditionRegexMatch(metaclass=QueryOp):
+class ConditionRegexMatch(QueryOp):
     """Filter rows based on matching a regular expression.
 
     Parameters
@@ -1540,7 +1545,7 @@ class ConditionRegexMatch(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionIn(metaclass=QueryOp):
+class ConditionIn(QueryOp):
     """Filter rows based on having a value in list of values.
 
     Parameters
@@ -1619,7 +1624,7 @@ class ConditionIn(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionSubstring(metaclass=QueryOp):
+class ConditionSubstring(QueryOp):
     """Filter rows on based on having substrings.
 
     Can be specified whether it must have any or all of the specified substrings.
@@ -1703,7 +1708,7 @@ class ConditionSubstring(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionStartsWith(metaclass=QueryOp):
+class ConditionStartsWith(QueryOp):
     """Filter rows based on starting with some string.
 
     Parameters
@@ -1782,7 +1787,7 @@ class ConditionStartsWith(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
-class ConditionEndsWith(metaclass=QueryOp):
+class ConditionEndsWith(QueryOp):
     """Filter rows based on ending with some string.
 
     Parameters
@@ -1862,7 +1867,7 @@ class ConditionEndsWith(metaclass=QueryOp):
 
 
 @dataclass
-class ConditionInYears(metaclass=QueryOp):
+class ConditionInYears(QueryOp):
     """Filter rows based on a timestamp column being in a list of years.
 
     Parameters
@@ -1932,7 +1937,7 @@ class ConditionInYears(metaclass=QueryOp):
 
 
 @dataclass
-class ConditionInMonths(metaclass=QueryOp):
+class ConditionInMonths(QueryOp):
     """Filter rows based on a timestamp being in a list of years.
 
     Parameters
@@ -2002,7 +2007,7 @@ class ConditionInMonths(metaclass=QueryOp):
 
 
 @dataclass
-class ConditionBeforeDate(metaclass=QueryOp):
+class ConditionBeforeDate(QueryOp):
     """Filter rows based on a timestamp being before some date.
 
     Parameters
@@ -2069,7 +2074,7 @@ class ConditionBeforeDate(metaclass=QueryOp):
 
 
 @dataclass
-class ConditionAfterDate(metaclass=QueryOp):
+class ConditionAfterDate(QueryOp):
     """Filter rows based on a timestamp being after some date.
 
     Parameters
@@ -2136,7 +2141,7 @@ class ConditionAfterDate(metaclass=QueryOp):
 
 
 @dataclass
-class ConditionLike(metaclass=QueryOp):
+class ConditionLike(QueryOp):
     """Filter rows by a LIKE condition.
 
     Parameters
@@ -2199,7 +2204,7 @@ class ConditionLike(metaclass=QueryOp):
 
 
 @dataclass
-class OR(metaclass=QueryOp):
+class Or(QueryOp):
     """Combine multiple condition query ops using an OR.
 
     Parameters
@@ -2209,7 +2214,7 @@ class OR(metaclass=QueryOp):
 
     Examples
     --------
-    >>> OR([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
+    >>> Or([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
 
     """
 
@@ -2241,8 +2246,8 @@ class OR(metaclass=QueryOp):
 
 
 @dataclass
-class AND(metaclass=QueryOp):
-    """Combine multiple condition query ops using an AND.
+class And(QueryOp):
+    """Combine multiple condition query ops using an And.
 
     Parameters
     ----------
@@ -2251,7 +2256,7 @@ class AND(metaclass=QueryOp):
 
     Examples
     --------
-    >>> AND([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
+    >>> And([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
 
     """
 
@@ -2283,7 +2288,7 @@ class AND(metaclass=QueryOp):
 
 
 @dataclass
-class Limit(metaclass=QueryOp):
+class Limit(QueryOp):
     """Limit the number of rows returned in a query.
 
     Parameters
@@ -2318,7 +2323,7 @@ class Limit(metaclass=QueryOp):
 
 
 @dataclass
-class RandomizeOrder(metaclass=QueryOp):
+class RandomizeOrder(QueryOp):
     """Randomize order of table rows.
 
     Useful when the data is ordered, so certain rows cannot
@@ -2353,7 +2358,7 @@ class RandomizeOrder(metaclass=QueryOp):
 
 
 @dataclass
-class DropNulls(metaclass=QueryOp):
+class DropNulls(QueryOp):
     """Remove rows with null values in some specified columns.
 
     Parameters
@@ -2393,7 +2398,7 @@ class DropNulls(metaclass=QueryOp):
 
 
 @dataclass
-class Apply(metaclass=QueryOp):
+class Apply(QueryOp):
     """Apply function(s) to column(s).
 
     The function can take a sqlalchemy column object and also return a column object.
@@ -2469,7 +2474,7 @@ class Apply(metaclass=QueryOp):
 
 
 @dataclass
-class OrderBy(metaclass=QueryOp):
+class OrderBy(QueryOp):
     """Order, or sort, the rows of a table by some columns.
 
     Parameters
@@ -2524,7 +2529,7 @@ class OrderBy(metaclass=QueryOp):
 
 
 @dataclass
-class GroupByAggregate(metaclass=QueryOp):
+class GroupByAggregate(QueryOp):
     """Aggregate over a group by object.
 
     Parameters
@@ -2639,7 +2644,7 @@ class GroupByAggregate(metaclass=QueryOp):
 
 
 @dataclass
-class Distinct(metaclass=QueryOp):
+class Distinct(QueryOp):
     """Get distinct rows.
 
     Parameters

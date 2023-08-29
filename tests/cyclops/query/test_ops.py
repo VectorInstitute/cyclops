@@ -8,10 +8,9 @@ from sqlalchemy import column, select
 
 from cyclops.query.omop import OMOPQuerier
 from cyclops.query.ops import (
-    AND,
-    OR,
     AddColumn,
     AddNumeric,
+    And,
     Apply,
     Cast,
     ConditionAfterDate,
@@ -35,6 +34,7 @@ from cyclops.query.ops import (
     GroupByAggregate,
     Limit,
     Literal,
+    Or,
     OrderBy,
     Rename,
     ReorderAfter,
@@ -542,8 +542,8 @@ def test_sequential(visits_input):
 
 @pytest.mark.integration_test()
 def test_or(visits_input):
-    """Test OR."""
-    visits = OR(
+    """Test Or."""
+    visits = Or(
         [
             ConditionEquals("visit_concept_name", "Outpatient Visit"),
             ConditionLike("visit_concept_name", "%Emergency%"),
@@ -558,8 +558,8 @@ def test_or(visits_input):
 
 @pytest.mark.integration_test()
 def test_and(visits_input):
-    """Test AND."""
-    visits = AND(
+    """Test And."""
+    visits = And(
         [
             ConditionEquals("visit_concept_name", "Outpatient Visit"),
             ConditionLike("visit_concept_name", "%Emergency%", not_=True),
