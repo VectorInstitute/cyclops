@@ -230,12 +230,10 @@ def _process_checks(
     if cols is not None:
         cols = to_list(cols)
         has_columns(table, cols, raise_error=True)
-
     if cols_not_in is not None:
         cols_not_in = to_list(cols_not_in)
         if has_columns(table, cols_not_in, raise_error=False):
             raise ValueError(f"Cannot specify columns {cols_not_in}.")
-
     if timestamp_cols is not None:
         timestamp_cols = to_list(timestamp_cols)
         has_columns(table, timestamp_cols, raise_error=True)
@@ -256,6 +254,12 @@ class FillNull(metaclass=QueryOp):
         Value(s) to fill with.
     new_col_names: str or list of str, optional
         New column name(s) for the filled columns. If not provided,
+
+    Examples
+    --------
+    >>> FillNull("col1", 0)(table)
+    >>> FillNull(["col1", "col2"], [0, 1])(table)
+    >>> FillNull(["col1", "col2"], [0, 1], ["col1_new", "col2_new"])(table)
 
     """
 
@@ -313,6 +317,11 @@ class Drop(metaclass=QueryOp):
     cols: str or list of str
         Columns to drop.
 
+    Examples
+    --------
+    >>> Drop("col1")(table)
+    >>> Drop(["col1", "col2"])(table)
+
     """
 
     cols: typing.Union[str, typing.List[str]]
@@ -332,6 +341,7 @@ class Drop(metaclass=QueryOp):
 
         """
         table = _process_checks(table, cols=self.cols)
+
         return drop_columns(table, self.cols)
 
 
@@ -343,8 +353,12 @@ class Rename(metaclass=QueryOp):
     ----------
     rename_map: dict
         Map from an existing column name to another name.
-    check_exists: bool
+    check_exists: bool, optional
         Whether to check if all of the keys in the map exist as columns.
+
+    Examples
+    --------
+    >>> Rename({"col1": "col1_new"})(table)
 
     """
 
@@ -368,6 +382,7 @@ class Rename(metaclass=QueryOp):
         """
         if self.check_exists:
             table = _process_checks(table, cols=list(self.rename_map.keys()))
+
         return rename_columns(table, self.rename_map)
 
 
@@ -384,6 +399,10 @@ class Substring(metaclass=QueryOp):
         Start index of substring.
     stop_index: str
         Name of the new column with extracted substring.
+
+    Examples
+    --------
+    >>> Substring("col1", 0, 2, "col1_substring")(table)
 
     """
 
@@ -427,6 +446,10 @@ class Reorder(metaclass=QueryOp):
     cols: list of str
         Complete list of table column names in the new order.
 
+    Examples
+    --------
+    >>> Reorder(["col2", "col1"])(table)
+
     """
 
     cols: typing.List[str]
@@ -446,6 +469,7 @@ class Reorder(metaclass=QueryOp):
 
         """
         table = _process_checks(table, cols=self.cols)
+
         return reorder_columns(table, self.cols)
 
 
@@ -459,6 +483,10 @@ class ReorderAfter(metaclass=QueryOp):
         Ordered list of column names which will come after a specified column.
     after: str
         Column name for the column after which the other columns will follow.
+
+    Examples
+    --------
+    >>> ReorderAfter(["col2", "col1"], "col3")(table)
 
     """
 
@@ -498,6 +526,11 @@ class Keep(metaclass=QueryOp):
     cols: str or list of str
         The columns to keep.
 
+    Examples
+    --------
+    >>> Keep("col1")(table)
+    >>> Keep(["col1", "col2"])(table)
+
     """
 
     cols: typing.Union[str, typing.List[str]]
@@ -517,6 +550,7 @@ class Keep(metaclass=QueryOp):
 
         """
         table = _process_checks(table, cols=self.cols)
+
         return filter_columns(table, self.cols)
 
 
@@ -531,6 +565,13 @@ class Trim(metaclass=QueryOp):
     new_col_labels: str or list of str, optional
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
+
+    Examples
+    --------
+    >>> Trim("col1")(table)
+    >>> Trim(["col1", "col2"])(table)
+    >>> Trim("col1", "col1_trimmed")(table)
+    >>> Trim(["col1", "col2"], ["col1_trimmed", "col2_trimmed"])(table)
 
     """
 
@@ -552,6 +593,7 @@ class Trim(metaclass=QueryOp):
 
         """
         table = _process_checks(table, cols=self.cols)
+
         return trim_columns(table, self.cols, new_col_labels=self.new_col_labels)
 
 
@@ -565,6 +607,10 @@ class Literal(metaclass=QueryOp):
         Value of the literal, e.g., a string or integer.
     col: str
         Label of the new literal column.
+
+    Examples
+    --------
+    >>> Literal(1, "col1")(table)
 
     """
 
@@ -586,6 +632,7 @@ class Literal(metaclass=QueryOp):
 
         """
         table = _process_checks(table, cols_not_in=self.col)
+
         return select(table, literal(self.value).label(self.col)).subquery()
 
 
@@ -601,6 +648,11 @@ class ExtractTimestampComponent(metaclass=QueryOp):
         Information to extract, e.g., "year", "month"
     label: str
         Column label for the extracted column.
+
+    Examples
+    --------
+    >>> ExtractTimestampComponent("col1", "year", "year")(table)
+    >>> ExtractTimestampComponent("col1", "month", "month")(table)
 
     """
 
@@ -627,7 +679,6 @@ class ExtractTimestampComponent(metaclass=QueryOp):
             timestamp_cols=self.timestamp_col,
             cols_not_in=self.label,
         )
-
         table = select(
             table,
             extract(self.extract_str, get_column(table, self.timestamp_col)).label(
@@ -646,17 +697,32 @@ class AddNumeric(metaclass=QueryOp):
     ----------
     add_to: str or list of str
         Column names specifying to which columns is being added.
-    num: int or float
+    add: int or float or list of int or float
         Adds this value to the add_to columns.
     new_col_labels: str or list of str, optional
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
 
+    Examples
+    --------
+    >>> AddNumeric("col1", 1)(table)
+    >>> AddNumeric(["col1", "col2"], 1)(table)
+    >>> AddNumeric("col1", 1, "col1_plus_1")(table)
+    >>> AddNumeric(["col1", "col2"], 1, ["col1_plus_1", "col2_plus_1"])(table)
+    >>> AddNumeric(["col1", "col2"], [1, 2.2])(table)
+
     """
 
     add_to: typing.Union[str, typing.List[str]]
-    num: typing.Union[int, float]
+    add: typing.Union[int, float, typing.List[int], typing.List[float]]
     new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
+
+    def _gen_lambda(
+        self,
+        add: typing.Union[int, float],
+    ) -> typing.Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column]:
+        """Generate the lambda function."""
+        return lambda x: x + add
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -677,10 +743,20 @@ class AddNumeric(metaclass=QueryOp):
             cols=self.add_to,
             cols_not_in=self.new_col_labels,
         )
+        self.add_to = to_list(self.add_to)
+        if isinstance(self.add, (int, float)) and len(self.add_to) > 1:
+            add = [self.add] * len(self.add_to)
+        elif isinstance(self.add, (int, float)) and len(self.add_to) == 1:
+            add = [self.add]
+        elif isinstance(self.add, list) and len(self.add_to) != len(self.add):
+            raise ValueError(
+                "Length of add_to and add must be the same if add is a list.",
+            )
+
         return apply_to_columns(
             table,
             self.add_to,
-            lambda x: x + self.num,
+            [self._gen_lambda(add_num) for add_num in add],
             new_col_labels=self.new_col_labels,
         )
 
@@ -698,6 +774,12 @@ class AddDeltaConstant(metaclass=QueryOp):
     new_col_labels: str or list of str, optional
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
+
+    Examples
+    --------
+    >>> AddDeltaConstant("col1", datetime.timedelta(days=1))(table)
+    >>> AddDeltaConstant(["col1", "col2"], datetime.timedelta(days=1))(table)
+    >>> AddDeltaConstant("col1", datetime.timedelta(days=1), "col1_plus_1")(table)
 
     """
 
@@ -749,6 +831,14 @@ class AddColumn(metaclass=QueryOp):
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
 
+    Examples
+    --------
+    >>> AddColumn("col1", "col2")(table)
+    >>> AddColumn(["col1", "col2"], "col3")(table)
+    >>> AddColumn("col1", "col2", negative=True)(table)
+    >>> AddColumn("col1", "col2", "col1_plus_col2")(table)
+    >>> AddColumn(["col1", "col2"], "col3", ["col1_plus_col3", "col2_plus_col3"])(table)
+
     Warning
     -------
     Pay attention to column types. Some combinations will work,
@@ -788,9 +878,7 @@ class AddColumn(metaclass=QueryOp):
                 cols=self.add_to,
                 cols_not_in=self.new_col_labels,
             )
-
         col = get_column(table, self.col)
-
         if self.negative:
             return apply_to_columns(
                 table,
@@ -823,6 +911,13 @@ class AddDeltaColumn(metaclass=QueryOp):
         apply the function to the existing columns.
     **delta_kwargs
         The arguments used to create the Interval column.
+
+    Examples
+    --------
+    >>> AddDeltaColumn("col1", "col2")(table)
+    >>> AddDeltaColumn(["col1", "col2"], "col3")(table)
+    >>> AddDeltaColumn("col1", "col2", negative=True)(table)
+    >>> AddDeltaColumn("col1", "col2", "col1_plus_col2")(table)
 
     """
 
@@ -858,9 +953,7 @@ class AddDeltaColumn(metaclass=QueryOp):
             timestamp_cols=self.add_to,
             cols_not_in=self.new_col_labels,
         )
-
         delta = get_delta_column(table, **self.delta_kwargs)
-
         if self.negative:
             return apply_to_columns(
                 table,
@@ -881,7 +974,7 @@ class AddDeltaColumn(metaclass=QueryOp):
 class Cast(metaclass=QueryOp):
     """Cast columns to a specified type.
 
-    Currently supporting conversions to str, int, float, date and timestamp.
+    Currently supporting conversions to str, int, float, date, bool and timestamp.
 
     Parameters
     ----------
@@ -889,6 +982,15 @@ class Cast(metaclass=QueryOp):
         Columns to = cast.
     type_ : str
         Name of type to which to convert. Must be supported.
+
+    Examples
+    --------
+    >>> Cast("col1", "str")(table)
+    >>> Cast(["col1", "col2"], "int")(table)
+    >>> Cast("col1", "float")(table)
+    >>> Cast("col1", "date")(table)
+    >>> Cast("col1", "bool")(table)
+    >>> Cast("col1", "timestamp")(table)
 
     """
 
@@ -910,7 +1012,6 @@ class Cast(metaclass=QueryOp):
 
         """
         table = _process_checks(table, cols=self.cols)
-
         cast_type_map = {
             "str": "to_str",
             "int": "to_int",
@@ -919,7 +1020,6 @@ class Cast(metaclass=QueryOp):
             "bool": "to_bool",
             "timestamp": "to_timestamp",
         }
-
         # Assert that the type inputted is supported
         if self.type_ not in cast_type_map:
             supported_str = ", ".join(list(cast_type_map.keys()))
@@ -927,7 +1027,6 @@ class Cast(metaclass=QueryOp):
                 f"""Conversion to type {self.type_} not supported. Supporting
                 conversion to types {supported_str}""",
             )
-
         # Cast
         kwargs = {cast_type_map[self.type_]: True}
 
@@ -938,6 +1037,7 @@ class Cast(metaclass=QueryOp):
         )
 
 
+@dataclass
 class Union(metaclass=QueryOp):
     """Union two tables.
 
@@ -948,16 +1048,15 @@ class Union(metaclass=QueryOp):
     union_all : bool, optional
         Whether to use the all keyword in the union.
 
+    Examples
+    --------
+    >>> Union(table2)(table1)
+    >>> Union(table2, union_all=True)(table1)
+
     """
 
-    def __init__(
-        self,
-        union_table: TableTypes,
-        union_all: typing.Optional[bool] = False,
-    ) -> None:
-        """Initialize."""
-        self.union_table = union_table
-        self.union_all = union_all
+    union_table: TableTypes
+    union_all: typing.Optional[bool] = False
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -975,7 +1074,6 @@ class Union(metaclass=QueryOp):
         """
         table = _process_checks(table)
         union_table = _process_checks(self.union_table)
-
         if self.union_all:
             return select(table).union_all(select(union_table)).subquery()
 
@@ -1006,6 +1104,12 @@ class Join(metaclass=QueryOp):
         Filters to keep only these columns from the join_table.
     isouter:
         Flag to say if the join is a left outer join.
+
+    Examples
+    --------
+    >>> Join(table2, on=["col1", ("col2", "col3")], on_to_type=[int, str])(table1)
+    >>> Join(table2, table_cols=["col1", "col2"])(table1)
+    >>> Join(table2, join_table_cols=["col1", "col2"])(table1)
 
     Warnings
     --------
@@ -1100,7 +1204,6 @@ class Join(metaclass=QueryOp):
                 ],
             )
             table = select(table.join(self.join_table, cond, isouter=self.isouter))
-
         else:
             # Filter columns
             if self.table_cols is not None:
@@ -1117,7 +1220,6 @@ class Join(metaclass=QueryOp):
                         isouter=self.isouter,
                     ),
                 )
-
             # Join on no condition, i.e., a Cartesian product
             else:
                 LOGGER.warning("A Cartesian product has been queried.")
@@ -1145,6 +1247,11 @@ class ConditionEquals(metaclass=QueryOp):
     **cond_kwargs
         typing.Optional keyword arguments for processing the condition.
 
+    Examples
+    --------
+    >>> ConditionEquals("col1", 1)(table)
+    >>> ConditionEquals("col1", 1, binarize_col="col1_bool")(table)
+
     """
 
     def __init__(
@@ -1162,13 +1269,15 @@ class ConditionEquals(metaclass=QueryOp):
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1176,6 +1285,10 @@ class ConditionEquals(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = equals(
             get_column(table, self.col),
@@ -1186,7 +1299,8 @@ class ConditionEquals(metaclass=QueryOp):
         )
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1214,6 +1328,11 @@ class ConditionGreaterThan(metaclass=QueryOp):
     **cond_kwargs
         typing.Optional keyword arguments for processing the condition.
 
+    Examples
+    --------
+    >>> ConditionGreaterThan("col1", 1)(table)
+    >>> ConditionGreaterThan("col1", 1, binarize_col="col1_bool")(table)
+
     """
 
     def __init__(
@@ -1233,13 +1352,15 @@ class ConditionGreaterThan(metaclass=QueryOp):
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1247,6 +1368,10 @@ class ConditionGreaterThan(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = greater_than(
             get_column(table, self.col),
@@ -1258,7 +1383,8 @@ class ConditionGreaterThan(metaclass=QueryOp):
         )
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1286,6 +1412,11 @@ class ConditionLessThan(metaclass=QueryOp):
     **cond_kwargs
         typing.Optional keyword arguments for processing the condition.
 
+    Examples
+    --------
+    >>> ConditionLessThan("col1", 1)(table)
+    >>> ConditionLessThan("col1", 1, binarize_col="col1_bool")(table)
+
     """
 
     def __init__(
@@ -1305,13 +1436,15 @@ class ConditionLessThan(metaclass=QueryOp):
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1319,6 +1452,10 @@ class ConditionLessThan(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = less_than(
             get_column(table, self.col),
@@ -1330,7 +1467,8 @@ class ConditionLessThan(metaclass=QueryOp):
         )
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1340,6 +1478,7 @@ class ConditionLessThan(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
+@dataclass
 class ConditionRegexMatch(metaclass=QueryOp):
     """Filter rows based on matching a regular expression.
 
@@ -1354,28 +1493,27 @@ class ConditionRegexMatch(metaclass=QueryOp):
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
+    Examples
+    --------
+    >>> ConditionRegexMatch("col1", ".*")(table)
+    >>> ConditionRegexMatch("col1", ".*", binarize_col="col1_bool")(table)
+
     """
 
-    def __init__(
-        self,
-        col: str,
-        regex: str,
-        not_: bool = False,
-        binarize_col: typing.Optional[str] = None,
-    ) -> None:
-        """Initialize."""
-        self.col = col
-        self.regex = regex
-        self.not_ = not_
-        self.binarize_col = binarize_col
+    col: str
+    regex: str
+    not_: bool = False
+    binarize_col: typing.Optional[str] = None
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1383,11 +1521,16 @@ class ConditionRegexMatch(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = get_column(table, self.col).regexp_match(self.regex)
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1413,6 +1556,11 @@ class ConditionIn(metaclass=QueryOp):
     **cond_kwargs
         typing.Optional keyword arguments for processing the condition.
 
+    Examples
+    --------
+    >>> ConditionIn("col1", [1, 2])(table)
+    >>> ConditionIn("col1", [1, 2], binarize_col="col1_bool")(table)
+
     """
 
     def __init__(
@@ -1430,13 +1578,15 @@ class ConditionIn(metaclass=QueryOp):
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1444,6 +1594,10 @@ class ConditionIn(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = in_(
             get_column(table, self.col),
@@ -1454,7 +1608,8 @@ class ConditionIn(metaclass=QueryOp):
         )
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1486,6 +1641,12 @@ class ConditionSubstring(metaclass=QueryOp):
     **cond_kwargs
         typing.Optional keyword arguments for processing the condition.
 
+    Examples
+    --------
+    >>> ConditionSubstring("col1", ["a", "b"])(table)
+    >>> ConditionSubstring("col1", ["a", "b"], any_=False)(table)
+    >>> ConditionSubstring("col1", ["a", "b"], binarize_col="col1_bool")(table)
+
     """
 
     def __init__(
@@ -1505,7 +1666,7 @@ class ConditionSubstring(metaclass=QueryOp):
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
@@ -1519,17 +1680,20 @@ class ConditionSubstring(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         conds = [
             has_substring(get_column(table, self.col), sub, True, **self.cond_kwargs)
             for sub in self.substrings
         ]
-
         cond = or_(*conds) if self.any_ else and_(*conds)
-
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1555,6 +1719,11 @@ class ConditionStartsWith(metaclass=QueryOp):
     **cond_kwargs
         typing.Optional keyword arguments for processing the condition.
 
+    Examples
+    --------
+    >>> ConditionStartsWith("col1", "a")(table)
+    >>> ConditionStartsWith("col1", "a", binarize_col="col1_bool")(table)
+
     """
 
     def __init__(
@@ -1572,13 +1741,15 @@ class ConditionStartsWith(metaclass=QueryOp):
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1586,6 +1757,10 @@ class ConditionStartsWith(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = starts_with(
             get_column(table, self.col),
@@ -1596,7 +1771,8 @@ class ConditionStartsWith(metaclass=QueryOp):
         )
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1622,6 +1798,11 @@ class ConditionEndsWith(metaclass=QueryOp):
     **cond_kwargs
         typing.Optional keyword arguments for processing the condition.
 
+    Examples
+    --------
+    >>> ConditionEndsWith("col1", "a")(table)
+    >>> ConditionEndsWith("col1", "a", binarize_col="col1_bool")(table)
+
     """
 
     def __init__(
@@ -1639,13 +1820,15 @@ class ConditionEndsWith(metaclass=QueryOp):
         self.binarize_col = binarize_col
         self.cond_kwargs = cond_kwargs
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1653,6 +1836,10 @@ class ConditionEndsWith(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col, cols_not_in=self.binarize_col)
         cond = ends_with(
             get_column(table, self.col),
@@ -1663,7 +1850,8 @@ class ConditionEndsWith(metaclass=QueryOp):
         )
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1673,6 +1861,7 @@ class ConditionEndsWith(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
+@dataclass
 class ConditionInYears(metaclass=QueryOp):
     """Filter rows based on a timestamp column being in a list of years.
 
@@ -1687,28 +1876,28 @@ class ConditionInYears(metaclass=QueryOp):
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
+    Examples
+    --------
+    >>> ConditionInYears("col1", [2019, 2020])(table)
+    >>> ConditionInYears("col1", 2019)(table)
+    >>> ConditionInYears("col1", 2019, binarize_col="col1_bool")(table)
+
     """
 
-    def __init__(
-        self,
-        timestamp_col: str,
-        years: typing.Union[int, typing.List[int]],
-        not_: bool = False,
-        binarize_col: typing.Optional[str] = None,
-    ) -> None:
-        """Initialize."""
-        self.timestamp_col = timestamp_col
-        self.years = years
-        self.not_ = not_
-        self.binarize_col = binarize_col
+    timestamp_col: str
+    years: typing.Union[int, typing.List[int]]
+    not_: bool = False
+    binarize_col: typing.Optional[str] = None
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1716,6 +1905,10 @@ class ConditionInYears(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(
             table,
             cols=self.timestamp_col,
@@ -1727,7 +1920,8 @@ class ConditionInYears(metaclass=QueryOp):
         )
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1737,6 +1931,7 @@ class ConditionInYears(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
+@dataclass
 class ConditionInMonths(metaclass=QueryOp):
     """Filter rows based on a timestamp being in a list of years.
 
@@ -1751,28 +1946,28 @@ class ConditionInMonths(metaclass=QueryOp):
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
+    Examples
+    --------
+    >>> ConditionInMonths("col1", [1, 2])(table)
+    >>> ConditionInMonths("col1", 1)(table)
+    >>> ConditionInMonths("col1", 1, binarize_col="col1_bool")(table)
+
     """
 
-    def __init__(
-        self,
-        timestamp_col: str,
-        months: typing.Union[int, typing.List[int]],
-        not_: bool = False,
-        binarize_col: typing.Optional[str] = None,
-    ) -> None:
-        """Initialize."""
-        self.timestamp_col = timestamp_col
-        self.months = months
-        self.not_ = not_
-        self.binarize_col = binarize_col
+    timestamp_col: str
+    months: typing.Union[int, typing.List[int]]
+    not_: bool = False
+    binarize_col: typing.Optional[str] = None
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1780,6 +1975,10 @@ class ConditionInMonths(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(
             table,
             cols=self.timestamp_col,
@@ -1791,7 +1990,8 @@ class ConditionInMonths(metaclass=QueryOp):
         )
         if self.not_:
             cond = cond._negate()
-
+        if return_cond:
+            return cond
         if self.binarize_col is not None:
             return select(
                 table,
@@ -1801,6 +2001,7 @@ class ConditionInMonths(metaclass=QueryOp):
         return select(table).where(cond).subquery()
 
 
+@dataclass
 class ConditionBeforeDate(metaclass=QueryOp):
     """Filter rows based on a timestamp being before some date.
 
@@ -1810,25 +2011,33 @@ class ConditionBeforeDate(metaclass=QueryOp):
         Timestamp column name.
     timestamp: str or datetime.datetime
         A datetime object or str in YYYY-MM-DD format.
+    not_: bool, default=False
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+
+    Examples
+    --------
+    >>> ConditionBeforeDate("col1", "2020-01-01")(table)
+    >>> ConditionBeforeDate("col1", datetime.datetime(2020, 1, 1))(table)
+    >>> ConditionBeforeDate("col1", "2020-01-01", binarize_col="col1_bool")(table)
 
     """
 
-    def __init__(
-        self,
-        timestamp_col: str,
-        timestamp: typing.Union[str, datetime],
-    ) -> None:
-        """Initialize."""
-        self.timestamp_col = timestamp_col
-        self.timestamp = timestamp
+    timestamp_col: str
+    timestamp: typing.Union[str, datetime]
+    not_: bool = False
+    binarize_col: typing.Optional[str] = None
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1836,20 +2045,30 @@ class ConditionBeforeDate(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, timestamp_cols=self.timestamp_col)
-
         if isinstance(self.timestamp, str):
             timestamp = to_datetime_format(self.timestamp)
         else:
             timestamp = self.timestamp
+        cond = get_column(table, self.timestamp_col) <= timestamp
+        if self.not_:
+            cond = cond._negate()
+        if return_cond:
+            return cond
+        if self.binarize_col is not None:
+            return select(
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
+            ).subquery()
 
-        return (
-            select(table)
-            .where(get_column(table, self.timestamp_col) <= timestamp)
-            .subquery()
-        )
+        return select(table).where(cond).subquery()
 
 
+@dataclass
 class ConditionAfterDate(metaclass=QueryOp):
     """Filter rows based on a timestamp being after some date.
 
@@ -1859,25 +2078,33 @@ class ConditionAfterDate(metaclass=QueryOp):
         Timestamp column name.
     timestamp: str or datetime.datetime
         A datetime object or str in YYYY-MM-DD format.
+    not_: bool, default=False
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
+
+    Examples
+    --------
+    >>> ConditionAfterDate("col1", "2020-01-01")(table)
+    >>> ConditionAfterDate("col1", datetime.datetime(2020, 1, 1))(table)
+    >>> ConditionAfterDate("col1", "2020-01-01", binarize_col="col1_bool")(table)
 
     """
 
-    def __init__(
-        self,
-        timestamp_col: str,
-        timestamp: typing.Union[str, datetime],
-    ) -> None:
-        """Initialize."""
-        self.timestamp_col = timestamp_col
-        self.timestamp = timestamp
+    timestamp_col: str
+    timestamp: typing.Union[str, datetime]
+    not_: bool = False
+    binarize_col: typing.Optional[str] = None
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1885,18 +2112,27 @@ class ConditionAfterDate(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, timestamp_cols=self.timestamp_col)
-
         if isinstance(self.timestamp, str):
             timestamp = to_datetime_format(self.timestamp)
         else:
             timestamp = self.timestamp
+        cond = get_column(table, self.timestamp_col) >= timestamp
+        if self.not_:
+            cond = cond._negate()
+        if return_cond:
+            return cond
+        if self.binarize_col is not None:
+            return select(
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
+            ).subquery()
 
-        return (
-            select(table)
-            .where(get_column(table, self.timestamp_col) >= timestamp)
-            .subquery()
-        )
+        return select(table).where(cond).subquery()
 
 
 @dataclass
@@ -1909,23 +2145,33 @@ class ConditionLike(metaclass=QueryOp):
         Column to filter on.
     pattern: str
         Pattern to filter on.
+    not_: bool, default=False
+        Take negation of condition.
+    binarize_col: str, optional
+        If specified, create a Boolean column of name binarize_col instead of filtering.
 
     Examples
     --------
-    >>> Like("lab_name", "HbA1c")(table)
+    >>> ConditionLike("lab_name", "HbA1c")(table)
+    >>> ConditionLike("lab_name", "HbA1c", not_=True)(table)
+    >>> ConditionLike("lab_name", "HbA1c", binarize_col="lab_name_bool")(table)
 
     """
 
     col: str
     pattern: str
+    not_: bool = False
+    binarize_col: typing.Optional[str] = None
 
-    def __call__(self, table: TableTypes) -> Subquery:
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
         table : cyclops.query.util.TableTypes
             Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -1933,12 +2179,107 @@ class ConditionLike(metaclass=QueryOp):
             Processed table.
 
         """
+        if return_cond and self.binarize_col:
+            raise ValueError(
+                "Cannot return condition and binarize column simultaneously.",
+            )
         table = _process_checks(table, cols=self.col)
-        return (
-            select(table)
-            .where(get_column(table, self.col).like(self.pattern))
-            .subquery()
-        )
+        cond = get_column(table, self.col).like(self.pattern)
+        if self.not_:
+            cond = cond._negate()
+        if return_cond:
+            return cond
+        if self.binarize_col is not None:
+            return select(
+                table,
+                cast(cond, Boolean).label(self.binarize_col),
+            ).subquery()
+
+        return select(table).where(cond).subquery()
+
+
+@dataclass
+class OR(metaclass=QueryOp):
+    """Combine multiple condition query ops using an OR.
+
+    Parameters
+    ----------
+    ops: QueryOp or List[QueryOp]
+        Query ops to combine.
+
+    Examples
+    --------
+    >>> OR([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
+
+    """
+
+    ops: typing.Union[QueryOp, typing.List[QueryOp]]
+
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        if isinstance(self.ops, QueryOp):
+            return self.ops(table, return_cond=return_cond)
+        cond = or_(*[op(table, return_cond=True) for op in self.ops])
+        if return_cond:
+            return cond
+
+        return select(table).where(cond).subquery()
+
+
+@dataclass
+class AND(metaclass=QueryOp):
+    """Combine multiple condition query ops using an AND.
+
+    Parameters
+    ----------
+    ops: QueryOp or List[QueryOp]
+        Query ops to combine.
+
+    Examples
+    --------
+    >>> AND([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
+
+    """
+
+    ops: typing.Union[QueryOp, typing.List[QueryOp]]
+
+    def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table : cyclops.query.util.TableTypes
+            Table on which to perform the operation.
+        return_cond : bool, default=False
+            Return the condition instead of filtering.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        if isinstance(self.ops, QueryOp):
+            return self.ops(table, return_cond=return_cond)
+        cond = and_(*[op(table, return_cond=True) for op in self.ops])
+        if return_cond:
+            return cond
+
+        return select(table).where(cond).subquery()
 
 
 @dataclass
@@ -1949,6 +2290,10 @@ class Limit(metaclass=QueryOp):
     ----------
     number: int
         Number of rows to return in the limit.
+
+    Examples
+    --------
+    >>> Limit(10)(table)
 
     """
 
@@ -1978,6 +2323,10 @@ class RandomizeOrder(metaclass=QueryOp):
 
     Useful when the data is ordered, so certain rows cannot
     be seen or analyzed when limited.
+
+    Examples
+    --------
+    >>> RandomizeOrder()(table)
 
     Warnings
     --------
@@ -2013,6 +2362,11 @@ class DropNulls(metaclass=QueryOp):
         Columns in which, if a value is null, the corresponding row
         is removed.
 
+    Examples
+    --------
+    >>> DropNulls("col1")(table)
+    >>> DropNulls(["col1", "col2"])(table)
+
     """
 
     cols: typing.Union[str, typing.List[str]]
@@ -2040,24 +2394,43 @@ class DropNulls(metaclass=QueryOp):
 
 @dataclass
 class Apply(metaclass=QueryOp):
-    """Apply a function to column(s).
+    """Apply function(s) to column(s).
 
-    The function must take a sqlalchemy column object and also return a column object.
+    The function can take a sqlalchemy column object and also return a column object.
+    It can also take multiple columns and return a single column or multiple columns.
+    If multiple functions are provided, it is assumed that each function is applied to
+    each input column.
 
     Parameters
     ----------
     cols: str or list of str
         Column(s) to apply the function to.
-    func: typing.Callable
-        Function that takes in single sqlalchemy column object and returns a column
-        after applying the function.
+    funcs: typing.Callable or list of typing.Callable
+        Function(s) that takes in sqlalchemy column(s) object and returns column(s)
+        after applying the function or list of functions to apply to each column.
     new_cols: str or list of str, optional
         New column name(s) after function is applied to the specified column(s).
+
+    Examples
+    --------
+    >>> Apply("col1", lambda x: x + 1)(table)
+    >>> Apply(["col1", "col2"], [lambda x: x + 1, lambda x: x + 2])(table)
+    >>> Apply("col1", lambda x: x + 1, new_cols="col1_new")(table)
+    >>> Apply(["col1", "col2"], lambda x, y: x + y, new_cols="col1_new")(table)
+    >>> Apply(["col1", "col2"], lambda x, y: (x + y, x - y), new_cols=["col1_new", "col2_new"])(table)  # noqa: E501, pylint: disable=line-too-long
 
     """
 
     cols: typing.Union[str, typing.List[str]]
-    func: typing.Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column]
+    funcs: typing.Union[
+        typing.Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
+        typing.List[
+            typing.Callable[
+                [sqlalchemy.sql.schema.Column],
+                sqlalchemy.sql.schema.Column,
+            ]
+        ],
+    ]
     new_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
@@ -2074,19 +2447,25 @@ class Apply(metaclass=QueryOp):
             Processed table.
 
         """
-        arg_count = self.func.__code__.co_argcount
         self.new_cols = to_list(self.new_cols)
-        if arg_count != 1:
-            if len(self.new_cols) != 1:
+        if isinstance(self.funcs, list):
+            if len(self.funcs) != len(self.cols):
                 raise ValueError(
-                    """Only one result column possible, and needed when
-                computing function using multiple column args.""",
+                    "Number of functions must be equal to number of columns.",
                 )
+            if len(self.new_cols) != len(self.cols):
+                raise ValueError(
+                    "Number of new columns must be equal to number of columns.",
+                )
+        if callable(self.funcs):
             cols = get_columns(table, self.cols)
-            result_col = self.func(*cols).label(self.new_cols[0])
-            return select(table).add_columns(result_col).subquery()
+            result_cols = [
+                self.funcs(*cols).label(new_col) for new_col in self.new_cols
+            ]  # noqa: E501
 
-        return apply_to_columns(table, self.cols, self.func, self.new_cols)
+            return select(table).add_columns(*result_cols).subquery()
+
+        return apply_to_columns(table, self.cols, self.funcs, self.new_cols)
 
 
 @dataclass
@@ -2100,6 +2479,13 @@ class OrderBy(metaclass=QueryOp):
     ascending: bool or list of bool
         Whether to order each columns by ascending (True) or descending (False).
         If not provided, orders all by ascending.
+
+    Examples
+    --------
+    >>> OrderBy("col1")(table)
+    >>> OrderBy(["col1", "col2"])(table)
+    >>> OrderBy(["col1", "col2"], [True, False])(table)
+    >>> OrderBy(["col1", "col2"], True)(table)
 
     """
 
@@ -2123,14 +2509,12 @@ class OrderBy(metaclass=QueryOp):
         self.cols = to_list(self.cols)
         ascending = to_list_optional(self.ascending)
         table = _process_checks(table, cols=self.cols)
-
         if ascending is None:
             ascending = [True] * len(self.cols)
         elif len(ascending) != len(self.cols):
             raise ValueError(
                 "If ascending is specified. Must specify for all columns.",
             )
-
         order_cols = [
             col if ascending[i] else col.desc()
             for i, col in enumerate(get_columns(table, self.cols))
@@ -2288,4 +2672,5 @@ class Distinct(metaclass=QueryOp):
         """
         cols = to_list(self.cols)
         table = _process_checks(table, cols=cols)
+
         return select(table).distinct(*get_columns(table, cols)).subquery()
