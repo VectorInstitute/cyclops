@@ -70,15 +70,27 @@ python3 -m pip install 'pycyclops[query,models]'
 
 ## 🧑🏿‍💻 Developing
 
-The development environment has been tested on ``python = 3.9``.
+### Using poetry
 
-The python virtual environment can be set up using
+The development environment can be set up using
 [poetry](https://python-poetry.org/docs/#installation). Hence, make sure it is
 installed and then run:
 
 ```bash
 python3 -m poetry install
 source $(poetry env info --path)/bin/activate
+```
+
+### Using Conda
+
+The development environment can also be set up using
+[conda](https://docs.conda.io/en/latest/). Hence, make sure it is
+installed and then run:
+
+```bash
+conda env create
+conda install conda-build
+conda develop .
 ```
 
 API documentation is built using [Sphinx](https://www.sphinx-doc.org/en/master/) and
@@ -90,12 +102,14 @@ make html SPHINXOPTS="-D nbsphinx_allow_errors=True"
 ```
 
 ### Contributing
+
 Contributing to cyclops is welcomed.
 See [Contributing](https://vectorinstitute.github.io/cyclops/api/intro.html) for
 guidelines.
 
 
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
+
 
 ## 📓 Notebooks
 
@@ -109,8 +123,11 @@ python3 -m ipykernel install --user --name <name_of_kernel>
 Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 ``<name_of_kernel>``.
 
+
 ## 🎓 Citation
+
 Reference to cite when you use CyclOps in a project or a research paper:
+
 ```
 @article {Krishnan2022.12.02.22283021,
 	author = {Krishnan, Amrit and Subasri, Vallijah and McKeen, Kaden and Kore, Ali and Ogidi, Franklin and Alinoori, Mahshid and Lalani, Nadim and Dhalla, Azra and Verma, Amol and Razak, Fahad and Pandya, Deval and Dolatabadi, Elham},
