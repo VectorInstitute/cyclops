@@ -210,3 +210,24 @@ markers = [
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry2conda]
+name = "cyclops"
+
+[tool.poetry2conda.dependencies]
+monai = { channel = "pip" }
+torchxrayvision = { channel = "pip" }
+kaleido = { channel = "pip" }
+psycopg2 = { channel = "pip" }
+hydra-core = { channel = "pip" }
+dask = { channel = "pip" }
+pydantic = { channel = "pip" }
+category-encoders = { channel = "pip" }
+alibi = { channel = "pip" }
+alibi-detect = { channel = "pip" }
+psutil = { channel = "pip" }
+spdx-tools = { channel = "pip" }
+pillow = { channel = "pip" }
+pybtex = { channel = "pip" }
+scour = { channel = "pip" }
+torch = { channel = "pip" }
