@@ -1,17 +1,20 @@
-"""Low-level query operations.
+"""Query operations.
 
-This module contains query operation modules such which can be used in high-level query
-API functions specific to datasets.
+This module contains query operations. You can use query operations instead of SQL
+code to filter rows using conditions, join tables, etc.
 
 """
 
 from __future__ import annotations
 
 import logging
+import operator
 import typing
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from itertools import islice
 
 import sqlalchemy
 from sqlalchemy import and_, cast, extract, func, literal_column, or_, select
@@ -63,19 +66,20 @@ class JoinArgs:
 
     Parameters
     ----------
-    join_table: cyclops.query.util.TableTypes
+    join_table
         Table to join.
-    on: list of str or tuple, optional
-    on_to_type: list of type, optional
+    on
+        Column(s) to join on.
+    on_to_type
         A list of types to which to convert the on columns before joining. Useful when
         two columns have the same values but in different format, e.g., strings of int.
-    cond: BinaryExpression, optional
+    cond
         Condition on which to join to tables.
-    table_cols: str or list of str, optional
+    table_cols
         Filters to keep only these columns from the table.
-    join_table_cols:
+    join_table_cols
         Filters to keep only these columns from the join_table.
-    isouter:
+    isouter
         Flag to say if the join is a left outer join.
 
     """
@@ -103,48 +107,402 @@ class JoinArgs:
         self.join_table_cols = to_list_optional(self.join_table_cols)
 
 
-class QueryOp(ABC):
-    """Base type for query operations."""
+def _addindent(s_: str, num_spaces: int = 4) -> str:
+    """Add spaces to a string.
+
+    Parameters
+    ----------
+    s_
+        String to add spaces to.
+    num_spaces
+        Number of spaces to add.
+
+    Returns
+    -------
+    str
+        String with spaces added.
+
+    """
+    s = s_.split("\n")
+    if len(s) == 1:
+        return s_
+    first = s.pop(0)
+    s = [(num_spaces * " ") + line for line in s]
+    s = "\n".join(s)  # type: ignore
+
+    return first + "\n" + s  # type: ignore
+
+
+class QueryOp:
+    """Base class for query operations."""
+
+    _ops: typing.Dict[str, "QueryOp"]
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+        """Initialize the object."""
+        super().__setattr__("_ops", OrderedDict())
 
     @abstractmethod
     def __call__(self, *args: typing.Any, **kwargs: typing.Any) -> Subquery:
         """Implement a calling function."""
         pass
 
+    def add_op(self, name: str, op_: "QueryOp") -> None:
+        """Add a child operation to the current query operation.
 
-class Sequential:
-    """Sequential query operations class.
-
-    Chains a list of sequential query operations and executes the final query on a
-    table.
-
-    """
-
-    def __init__(self, *ops: typing.Sequence[typing.Any]) -> None:
-        """Initialize the Sequential class.
+        The query op can be accessed as an attribute using the given name.
 
         Parameters
         ----------
-        ops: tuple of QueryOp or Sequential or list of QueryOp
-            Query operations to be chained.
+        name
+            Name of the child op. The child op can be accessed from this op using
+            the given name
+        op_
+            Child op to be added to the parent query op.
 
         """
-        self.ops = ops
+        if not isinstance(op_, QueryOp) and op_ is not None:
+            raise TypeError("{} is not a QueryOp subclass".format(str(op_)))
+        if not isinstance(name, str):
+            raise TypeError("Query op name should be a string")
+        if hasattr(self, name) and name not in self._ops:
+            raise KeyError("Attribute '{}' already exists".format(name))
+        if "." in name:
+            raise KeyError('Query op name can\'t contain ".", got: {}'.format(name))
+        if name == "":
+            raise KeyError('Query op name can\'t be empty string ""')
+        self._ops[name] = op_
 
-    def _chain_ops(
+    def ops(self) -> typing.Iterator["QueryOp"]:
+        """Return an iterator over the child operations.
+
+        Returns
+        -------
+        typing.Iterator[QueryOp]
+            Iterator over the child operations.
+
+        """
+        for _, op_ in self._ops.items():
+            yield op_
+
+    def _get_name(self) -> str:
+        """Get the name of the query op.
+
+        Returns
+        -------
+        str
+            Name of the query op.
+
+        """
+        return self.__class__.__name__
+
+    def __setattr__(self, name: str, value: "QueryOp") -> None:
+        """Set an attribute.
+
+        Parameters
+        ----------
+        name
+            Name of the attribute.
+        value
+            Value of the attribute.
+
+        """
+        ops = self.__dict__.get("_ops")
+        if isinstance(value, QueryOp):
+            if ops is None:
+                raise AttributeError("Can't assign op before QueryOp.__init__() call")
+            ops[name] = value
+        elif ops is not None and name in ops:
+            if value is not None:
+                raise TypeError(
+                    "Cannot assign '{}' as child op '{}' " "(QueryOp or None expected)",
+                )
+            ops[name] = value
+        else:
+            super().__setattr__(name, value)
+
+    def extra_repr(self) -> str:
+        """Set the extra representation of the query op.
+
+        To print customized extra information, you should re-implement
+        this method in your own query ops. Both single-line and multi-line
+        strings are acceptable.
+
+        Returns
+        -------
+        str
+            Extra representation of the query op.
+
+        """
+        return ""
+
+    def __repr__(self) -> str:
+        """Return the string representation of the query op.
+
+        Returns
+        -------
+        str
+            String representation of the query op.
+
+        """
+        extra_lines = []
+        extra_repr = self.extra_repr()
+        if extra_repr:
+            extra_lines = extra_repr.split("\n")
+        child_lines = []
+        for key, op_ in self._ops.items():
+            mod_str = repr(op_)
+            mod_str = _addindent(mod_str, 2)
+            child_lines.append("(" + key + "): " + mod_str)
+        lines = extra_lines + child_lines
+        main_str = self._get_name() + "("
+        if lines:
+            if len(extra_lines) == 1 and not child_lines:
+                main_str += extra_lines[0]
+            else:
+                main_str += "\n  " + "\n  ".join(lines) + "\n"
+        main_str += ")"
+
+        return main_str
+
+
+def _chain_ops(
+    query: Subquery,
+    ops: typing.Iterator[QueryOp],
+) -> Subquery:
+    """Chain query ops.
+
+    Parameters
+    ----------
+    query
+        Query to chain the ops to.
+    ops
+        Query ops to chain.
+
+    Returns
+    -------
+    Subquery
+        Query with the ops chained.
+
+    """
+    for op_ in ops:
+        if isinstance(op_, Sequential):
+            query = _chain_ops(query, op_.ops())
+        elif isinstance(op_, QueryOp):
+            query = op_(query)
+
+    return query
+
+
+class Sequential(QueryOp):
+    """Sequential query operations class.
+
+    Chains a sequence of query operations and executes the final query on a table.
+
+    """
+
+    @typing.overload
+    def __init__(self, *ops: QueryOp) -> None:
+        ...
+
+    @typing.overload
+    def __init__(self, ops: typing.List[QueryOp]) -> None:
+        ...
+
+    @typing.overload
+    def __init__(self, op: OrderedDict[str, QueryOp]) -> None:
+        ...
+
+    def __init__(self, *args: QueryOp) -> None:  # type: ignore
+        """Initialize the class.
+
+        Parameters
+        ----------
+        args
+            Query operations to be chained sequentially.
+
+        """
+        super().__init__()
+        if len(args) == 1 and isinstance(args[0], OrderedDict):
+            for key, op_ in args[0].items():
+                self.add_op(key, op_)
+        elif len(args) == 1 and isinstance(args[0], list):
+            for idx, op_ in enumerate(args[0]):
+                self.add_op(str(idx), op_)
+        else:
+            for idx, op_ in enumerate(args):
+                self.add_op(str(idx), op_)
+
+    def __len__(self) -> int:
+        """Return the number of query ops in the Sequential.
+
+        Returns
+        -------
+        int
+            Number of query ops in the Sequential.
+
+        """
+        return len(self._ops)
+
+    def __iter__(self) -> typing.Iterator[QueryOp]:
+        """Return an iterator over the query ops.
+
+        Returns
+        -------
+        typing.Iterator[QueryOp]
+            Iterator over the query ops.
+
+        """
+        return iter(self._ops.values())
+
+    def __add__(self, other: "Sequential") -> "Sequential":
+        """Add two Sequential objects.
+
+        Parameters
+        ----------
+        other
+            Sequential object to be added.
+
+        Returns
+        -------
+        Sequential
+            Sequential object with the two Sequential objects chained.
+
+        """
+        if isinstance(other, Sequential):
+            ret = Sequential()
+            for op_ in self:
+                ret.append(op_)
+            for op_ in other:
+                ret.append(op_)
+            return ret
+        raise ValueError(
+            "Add operator supports only objects "
+            "of Sequential class, but {} is given.".format(str(type(other))),
+        )
+
+    def __iadd__(self, other: "Sequential") -> "Sequential":
+        """Add two Sequential objects inplace.
+
+        Parameters
+        ----------
+        other
+            Sequential object to be added.
+
+        Returns
+        -------
+        Sequential
+            Sequential object with the two Sequential objects chained.
+
+        """
+        if isinstance(other, Sequential):
+            offset = len(self)
+            for i, op_ in enumerate(other):
+                self.add_op(str(i + offset), op_)
+            return self
+        raise ValueError(
+            "Add operator supports only objects "
+            "of Sequential class, but {} is given.".format(str(type(other))),
+        )
+
+    def _get_item_by_idx(
         self,
-        query: Subquery,
-        ops: typing.Sequence[typing.Any],
-    ) -> Subquery:
-        for op_ in ops:
-            if isinstance(op_, Sequential):
-                query = self._chain_ops(query, op_.ops)
-            if isinstance(op_, list):
-                query = self._chain_ops(query, op_)
-            if isinstance(op_, QueryOp):
-                query = op_(query)
+        iterator: typing.Iterator[typing.Any],
+        idx: int,
+    ) -> typing.Any:
+        """Get the idx-th item of the iterator.
 
-        return query
+        Parameters
+        ----------
+        iterator
+            Iterator to get the item from.
+        idx
+            Index of the item to get.
+
+        Returns
+        -------
+        QueryOp
+            The idx-th item of the iterator.
+
+        """
+        size = len(self)
+        idx = operator.index(idx)
+        if not -size <= idx < size:
+            raise IndexError("index {} is out of range".format(idx))
+        idx %= size
+
+        return next(islice(iterator, idx, None))
+
+    def __getitem__(
+        self,
+        idx: typing.Union[slice, int],
+    ) -> typing.Any:
+        """Get the idx-th item of the sequential query op.
+
+        Parameters
+        ----------
+        idx
+            Index of the item to get.
+
+        Returns
+        -------
+        Sequential or QueryOp
+            The idx-th item of the sequential query op.
+
+        """
+        if isinstance(idx, slice):
+            return self.__class__(OrderedDict(list(self._ops.items())[idx]))
+
+        return self._get_item_by_idx(self._ops.values(), idx)  # type: ignore
+
+    def __setitem__(self, idx: int, op_: QueryOp) -> None:
+        """Set the idx-th item of the sequential query op.
+
+        Parameters
+        ----------
+        idx
+            Index of the item to set.
+        op_
+            Query op to set.
+
+        """
+        key: str = self._get_item_by_idx(self._ops.keys(), idx)  # type: ignore
+        return setattr(self, key, op_)
+
+    def __delitem__(self, idx: typing.Union[slice, int]) -> None:
+        """Delete the idx-th item of the sequential query op.
+
+        Parameters
+        ----------
+        idx
+            Index of the item to delete.
+
+        """
+        if isinstance(idx, slice):
+            for key in list(self._ops.keys())[idx]:
+                delattr(self, key)
+        else:
+            key = self._get_item_by_idx(self._ops.keys(), idx)  # type: ignore
+            delattr(self, key)
+        str_indices = [str(i) for i in range(len(self._ops))]
+        self._ops = OrderedDict(list(zip(str_indices, self._ops.values())))
+
+    def append(self, op_: QueryOp) -> "Sequential":
+        """Append a given query op to the end.
+
+        Parameters
+        ----------
+        op_
+            Query op to append.
+
+        Returns
+        -------
+        Sequential
+            Sequential object with the query op appended.
+
+        """
+        self.add_op(str(len(self)), op_)
+        return self
 
     @table_params_to_type(Subquery)
     def __call__(self, table: TableTypes) -> Subquery:
@@ -152,7 +510,7 @@ class Sequential:
 
         Parameters
         ----------
-        table: TableTypes
+        table
             Table to be queried.
 
         Returns
@@ -161,7 +519,7 @@ class Sequential:
             Query result after chaining the query operations.
 
         """
-        return self._chain_ops(table, self.ops)
+        return _chain_ops(table, self.ops())
 
 
 def _append_if_missing(
@@ -173,11 +531,11 @@ def _append_if_missing(
 
     Parameters
     ----------
-    table : cyclops.query.util.TableTypes
+    table
         Table on which to perform the operation.
-    keep_cols: str or list of str, optional
+    keep_cols
         Columns to keep.
-    force_include_cols: str or list of str, optional
+    force_include_cols
         Columns to include (forcefully).
 
     """
@@ -198,8 +556,15 @@ def _none_add(obj1: typing.Any, obj2: typing.Any) -> typing.Any:
 
     Parameters
     ----------
-    obj1: typing.Any
-    obj2: typing.Any
+    obj1
+        First object to add.
+    obj2
+        Second object to add.
+
+    Returns
+    -------
+    typing.Any
+        Result of adding the two objects.
 
     """
     if obj1 is None:
@@ -219,11 +584,11 @@ def _process_checks(
 
     Parameters
     ----------
-    table : cyclops.query.util.TableTypes
+    table
         Table on which to perform the operation.
-    cols: str or list of str, optional
+    cols
         Columns to check.
-    timestamp_cols: str or list of str, optional
+    timestamp_cols
         Timestamp columns to check.
 
     Returns
@@ -247,17 +612,16 @@ def _process_checks(
     return table
 
 
-@dataclass
 class FillNull(QueryOp):
     """Fill NULL values with a given value.
 
     Parameters
     ----------
-    cols: str or list of str
+    cols
         Columns to fill.
-    fill_values: typing.Any or list of typing.Any
+    fill_values
         Value(s) to fill with.
-    new_col_names: str or list of str, optional
+    new_col_names
         New column name(s) for the filled columns. If not provided,
 
     Examples
@@ -268,9 +632,16 @@ class FillNull(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
-    fill_values: typing.Union[typing.Any, typing.List[typing.Any]]
-    new_col_names: typing.Optional[typing.Union[str, typing.List[str]]] = None
+    def __init__(
+        self,
+        cols: typing.Union[str, typing.List[str]],
+        fill_values: typing.Union[typing.Any, typing.List[typing.Any]],
+        new_col_names: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    ) -> None:
+        super().__init__()
+        self.cols = cols
+        self.fill_values = fill_values
+        self.new_col_names = new_col_names
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Fill NULL values with a given value.
@@ -313,7 +684,6 @@ class FillNull(QueryOp):
         return table
 
 
-@dataclass
 class Drop(QueryOp):
     """Drop some columns.
 
@@ -329,7 +699,9 @@ class Drop(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
+    def __init__(self, cols: typing.Union[str, typing.List[str]]) -> None:
+        super().__init__()
+        self.cols = cols
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -402,7 +774,9 @@ class Substring(QueryOp):
         to be extracted.
     start_index: int
         Start index of substring.
-    stop_index: str
+    stop_index: int
+        Stop index of substring.
+    new_col_name: str, optional
         Name of the new column with extracted substring.
 
     Examples
@@ -414,7 +788,7 @@ class Substring(QueryOp):
     col: str
     start_index: int
     stop_index: int
-    new_col_label: str
+    new_col_label: typing.Optional[str] = None
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
@@ -431,15 +805,18 @@ class Substring(QueryOp):
             Processed table.
 
         """
-        table = _process_checks(table, cols=self.col)
-        return select(
+        table = _process_checks(table, cols=self.col, cols_not_in=self.new_col_label)
+
+        return apply_to_columns(
             table,
-            func.substr(
-                get_column(table, self.col),
+            self.col,
+            lambda x: func.substr(
+                process_column(x, to_str=True),
                 self.start_index,
                 self.stop_index,
-            ).label(self.new_col_label),
-        ).subquery()
+            ),
+            new_col_labels=self.new_col_label,
+        )
 
 
 @dataclass
@@ -907,8 +1284,6 @@ class AddDeltaColumn(QueryOp):
     ----------
     add_to: str or list of str
         Column names specifying to which columns is being added.
-    add: Column
-        Column object of type interval.
     negative: bool, optional
         Subtract the object rather than adding.
     new_col_labels: str or list of str, optional
@@ -934,6 +1309,7 @@ class AddDeltaColumn(QueryOp):
         **delta_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
+        super().__init__()
         self.add_to = add_to
         self.negative = negative
         self.new_col_labels = new_col_labels
@@ -1142,6 +1518,7 @@ class Join(QueryOp):
         isouter: typing.Optional[bool] = False,
     ) -> None:
         """Initialize."""
+        super().__init__()
         if on is not None and cond is not None:
             raise ValueError("Cannot specify both the 'on' and 'cond' arguments.")
 
@@ -1268,6 +1645,7 @@ class ConditionEquals(QueryOp):
         **cond_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
+        super().__init__()
         self.col = col
         self.value = value
         self.not_ = not_
@@ -1350,6 +1728,7 @@ class ConditionGreaterThan(QueryOp):
         **cond_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
+        super().__init__()
         self.col = col
         self.value = value
         self.equal = equal
@@ -1434,6 +1813,7 @@ class ConditionLessThan(QueryOp):
         **cond_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
+        super().__init__()
         self.col = col
         self.value = value
         self.equal = equal
@@ -1577,6 +1957,7 @@ class ConditionIn(QueryOp):
         **cond_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
+        super().__init__()
         self.col = col
         self.values = values
         self.not_ = not_
@@ -1664,6 +2045,7 @@ class ConditionSubstring(QueryOp):
         **cond_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
+        super().__init__()
         self.col = col
         self.substrings = to_list(substrings)
         self.any_ = any_
@@ -1740,6 +2122,7 @@ class ConditionStartsWith(QueryOp):
         **cond_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
+        super().__init__()
         self.col = col
         self.string = string
         self.not_ = not_
@@ -1819,6 +2202,7 @@ class ConditionEndsWith(QueryOp):
         **cond_kwargs: typing.Any,
     ) -> None:
         """Initialize."""
+        super().__init__()
         self.col = col
         self.string = string
         self.not_ = not_
@@ -2209,8 +2593,8 @@ class Or(QueryOp):
 
     Parameters
     ----------
-    ops: QueryOp or List[QueryOp]
-        Query ops to combine.
+    cond_ops: QueryOp or List[QueryOp]
+        Condition Query ops to combine.
 
     Examples
     --------
@@ -2218,7 +2602,7 @@ class Or(QueryOp):
 
     """
 
-    ops: typing.Union[QueryOp, typing.List[QueryOp]]
+    cond_ops: typing.Union[QueryOp, typing.List[QueryOp]]
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
@@ -2236,9 +2620,9 @@ class Or(QueryOp):
             Processed table.
 
         """
-        if isinstance(self.ops, QueryOp):
-            return self.ops(table, return_cond=return_cond)
-        cond = or_(*[op(table, return_cond=True) for op in self.ops])
+        if isinstance(self.cond_ops, QueryOp):
+            return self.cond_ops(table, return_cond=return_cond)
+        cond = or_(*[op(table, return_cond=True) for op in self.cond_ops])
         if return_cond:
             return cond
 
@@ -2260,7 +2644,7 @@ class And(QueryOp):
 
     """
 
-    ops: typing.Union[QueryOp, typing.List[QueryOp]]
+    cond_ops: typing.Union[QueryOp, typing.List[QueryOp]]
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
@@ -2278,9 +2662,9 @@ class And(QueryOp):
             Processed table.
 
         """
-        if isinstance(self.ops, QueryOp):
-            return self.ops(table, return_cond=return_cond)
-        cond = and_(*[op(table, return_cond=True) for op in self.ops])
+        if isinstance(self.cond_ops, QueryOp):
+            return self.cond_ops(table, return_cond=return_cond)
+        cond = and_(*[op(table, return_cond=True) for op in self.cond_ops])
         if return_cond:
             return cond
 

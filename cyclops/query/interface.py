@@ -25,7 +25,7 @@ class QueryInterface:
 
     Parameters
     ----------
-    database: cyclops.orm.Database
+    database
         Database object to create ORM, and query data.
     query: cyclops.query.util.TableTypes
         The query.

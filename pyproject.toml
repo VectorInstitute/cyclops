@@ -12,29 +12,29 @@ packages = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.11"
+python = ">=3.9, <3.12"
 pandas = "^1.4.1"
-numpy = "<=1.23.0"
+numpy = "^1.23.0"
 datasets = "^2.10.1"
 psutil = "^5.9.4"
 pyarrow = "^11.0.0"
-monai = { version = "1.1.0", extras = ["itk"] }
+monai = { version = "^1.1.0", extras = ["itk"] }
 dask = { version = "^2022.9.1", extras = ["dataframe"] }
 
-psycopg2 = { version = "2.9.6", optional = true }
+psycopg2 = { version = "^2.9.6", optional = true }
 hydra-core = { version = "^1.2.0", optional = true }
 SQLAlchemy = { version = "^1.4.32, <2.0", optional = true }
 scikit-learn = { version = "^1.2.2", optional = true }
 torch = { version = "^1.11.0", optional = true }
-torchxrayvision = { version = "^0.0.37", optional = true }
+torchxrayvision = { version = "^1.2.0", optional = true }
 xgboost = { version = "^1.5.2", optional = true }
-alibi = { version = "^0.8.0", optional = true, extras = ["shap"] }
-alibi-detect = { version = "^0.10.4", optional = true, extras = ["torch"] }
-llvmlite = { version = "0.38.0", optional = true }
+alibi = { version = "^0.9.4", optional = true, extras = ["shap"] }
+alibi-detect = { version = "^0.11.4", optional = true, extras = ["torch"] }
+llvmlite = { version = "^0.40.0", optional = true }
 pydantic = { version = "^1.10.11", optional = true }
-spdx-tools = { version = "0.8.0a2", optional = true }
+spdx-tools = { version = "^0.8.1", optional = true }
 pybtex = { version = "^0.24.0", optional = true }
-kaleido = { version = "^0.2.1", optional = true }
+kaleido = { version = "0.2.1", optional = true }
 scour = { version = "^0.38.2", optional = true }
 category-encoders = { version = "^2.6.1", optional = true }
 plotly = { version = "^5.7.0", optional = true }
@@ -49,15 +49,15 @@ SQLAlchemy = "^1.4.32, <2.0"
 hydra-core = "^1.2.0"
 scikit-learn = "^1.2.2"
 torch = "^1.11.0"
-torchxrayvision = "^0.0.37"
+torchxrayvision = "^1.2.0"
 xgboost = "^1.5.2"
-alibi = { version = "^0.8.0", extras = ["shap"] }
-alibi-detect = { version = "^0.10.4", extras = ["torch"] }
-llvmlite = "0.38.0"
+alibi = { version = "^0.9.4", extras = ["shap"] }
+alibi-detect = { version = "^0.11.4", extras = ["torch"] }
+llvmlite = "^0.40.0"
 
 [tool.poetry.group.report.dependencies]
 pydantic = "^1.10.11"
-spdx-tools = "0.8.0a2"
+spdx-tools = "^0.8.1"
 pybtex = "^0.24.0"
 kaleido = "0.2.1"
 scour = "^0.38.2"
@@ -78,11 +78,11 @@ ruff = "^0.0.286"
 
 [tool.poetry.group.docs.dependencies]
 numpydoc = "^1.2"
-Sphinx = "^4.4.0"
-sphinx-rtd-theme = "1.1.1"
-sphinxcontrib-apidoc = "^0.3.0"
-sphinx-autodoc-typehints = "^1.18.1"
-myst-parser = "^0.18.0"
+sphinx = "^7.2.5"
+sphinx-rtd-theme = "^2.0.0rc2"
+sphinxcontrib-apidoc = "^0.4.0"
+sphinx-autodoc-typehints = "^1.24.0"
+myst-parser = "^2.0.0"
 sphinx-copybutton = "^0.5.0"
 sphinx-autoapi = "^2.0.0"
 nbsphinx = "^0.8.11"

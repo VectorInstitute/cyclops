@@ -516,9 +516,7 @@ def test_union(visits_input):
 def test_sequential(visits_input):
     """Test Sequential."""
     substr_op = Sequential(
-        [
-            Substring("visit_concept_name", 0, 4, "visit_concept_name_substr"),
-        ],
+        Substring("visit_concept_name", 0, 4, "visit_concept_name_substr"),
     )
     operations = [
         Literal(33, "const"),
