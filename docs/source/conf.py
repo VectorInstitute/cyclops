@@ -58,7 +58,6 @@ set_type_checking_flag = True
 autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
-nbsphinx_execute = "never"
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.9/", None),

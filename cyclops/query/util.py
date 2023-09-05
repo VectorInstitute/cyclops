@@ -65,7 +65,6 @@ class DBTable:
 
 TABLE_OBJECTS = [Table, Select, Subquery, DBTable]
 TableTypes = Union[Select, Subquery, Table, DBTable]
-CastableTypes = Union[Date, DateTime, Float, Integer, Interval, String]
 
 
 def _to_subquery(table: TableTypes) -> Subquery:
