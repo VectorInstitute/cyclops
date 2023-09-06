@@ -82,9 +82,10 @@ Multiple extras could also be combined, for example to install with both
 🧑🏿‍💻 Developing
 =======================
 
-The development environment has been tested on ``python = 3.9``.
+Using poetry
+------------
 
-The python virtual environment can be set up using
+The development environment can be set up using
 `poetry <https://python-poetry.org/docs/#installation>`__. Hence, make
 sure it is installed and then run:
 
@@ -92,6 +93,19 @@ sure it is installed and then run:
 
    python3 -m poetry install
    source $(poetry env info --path)/bin/activate
+
+Using Conda
+-----------
+
+The development environment can also be set up using
+`conda <https://docs.conda.io/en/latest/>`__. Hence, make sure it is
+installed and then run:
+
+.. code:: bash
+
+   conda env create
+   conda install conda-build
+   conda develop .
 
 API documentation is built using
 `Sphinx <https://www.sphinx-doc.org/en/master/>`__ and can be locally
