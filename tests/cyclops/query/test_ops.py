@@ -565,6 +565,12 @@ def test_and(visits_input):
     )(visits_input)
     visits = QUERIER.get_interface(visits).run()
     assert len(visits) == 4057
+    visits = And(
+        ConditionEquals("visit_concept_name", "Outpatient Visit"),
+        ConditionLike("visit_concept_name", "%Emergency%", not_=True),
+    )(visits_input)
+    visits = QUERIER.get_interface(visits).run()
+    assert len(visits) == 4057
 
 
 @pytest.mark.integration_test()

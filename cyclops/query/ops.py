@@ -2764,12 +2764,17 @@ class Or(QueryOp):
             Processed table.
 
         """
+        ops = []
         for cond_op in self.cond_ops:
             if isinstance(cond_op, list):
-                cond = or_(*[op(table, return_cond=True) for op in cond_op])
+                if len(self.cond_ops) != 1:
+                    raise ValueError("Cannot combine multiple lists of conditions.")
+                ops = [op(table, return_cond=True) for op in cond_op]
             if isinstance(cond_op, QueryOp):
-                return cond_op(table, return_cond=return_cond)
-        cond = or_(*[op(table, return_cond=True) for op in self.cond_ops])  # type: ignore
+                if len(self.cond_ops) == 1:
+                    return cond_op(table, return_cond=return_cond)
+                ops.append(cond_op(table, return_cond=True))
+        cond = or_(*ops)
         if return_cond:
             return cond
 
@@ -2787,10 +2792,11 @@ class And(QueryOp):
     Examples
     --------
     >>> And([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
+    >>> And(ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"]))
 
     """
 
-    def __init__(self, cond_ops: typing.Union[QueryOp, typing.List[QueryOp]]):
+    def __init__(self, *cond_ops: typing.Union[QueryOp, typing.List[QueryOp]]):
         super().__init__()
         self.cond_ops = cond_ops
 
@@ -2810,9 +2816,17 @@ class And(QueryOp):
             Processed table.
 
         """
-        if isinstance(self.cond_ops, QueryOp):
-            return self.cond_ops(table, return_cond=return_cond)
-        cond = and_(*[op(table, return_cond=True) for op in self.cond_ops])
+        ops = []
+        for cond_op in self.cond_ops:
+            if isinstance(cond_op, list):
+                if len(self.cond_ops) != 1:
+                    raise ValueError("Cannot combine multiple lists of conditions.")
+                ops = [op(table, return_cond=True) for op in cond_op]
+            if isinstance(cond_op, QueryOp):
+                if len(self.cond_ops) == 1:
+                    return cond_op(table, return_cond=return_cond)
+                ops.append(cond_op(table, return_cond=True))
+        cond = and_(*ops)
         if return_cond:
             return cond
 
