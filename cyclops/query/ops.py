@@ -1,9 +1,4 @@
-"""Query operations.
-
-This module contains query operations. You can use query operations instead of SQL
-code to filter rows using conditions, join tables, etc.
-
-"""
+"""Query operations."""
 
 from __future__ import annotations
 
@@ -12,7 +7,7 @@ import operator
 import typing
 from abc import abstractmethod
 from collections import OrderedDict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import islice
 
@@ -139,7 +134,6 @@ class QueryOp:
     _ops: typing.Dict[str, "QueryOp"]
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
-        """Initialize the object."""
         super().__setattr__("_ops", OrderedDict())
 
     @abstractmethod
@@ -147,7 +141,7 @@ class QueryOp:
         """Implement a calling function."""
         pass
 
-    def add_op(self, name: str, op_: "QueryOp") -> None:
+    def _add_op(self, name: str, op_: "QueryOp") -> None:
         """Add a child operation to the current query operation.
 
         The query op can be accessed as an attribute using the given name.
@@ -173,7 +167,7 @@ class QueryOp:
             raise KeyError('Query op name can\'t be empty string ""')
         self._ops[name] = op_
 
-    def ops(self) -> typing.Iterator["QueryOp"]:
+    def _get_ops(self) -> typing.Iterator["QueryOp"]:
         """Return an iterator over the child operations.
 
         Returns
@@ -221,7 +215,7 @@ class QueryOp:
         else:
             super().__setattr__(name, value)
 
-    def extra_repr(self) -> str:
+    def _extra_repr(self) -> str:
         """Set the extra representation of the query op.
 
         To print customized extra information, you should re-implement
@@ -246,7 +240,7 @@ class QueryOp:
 
         """
         extra_lines = []
-        extra_repr = self.extra_repr()
+        extra_repr = self._extra_repr()
         if extra_repr:
             extra_lines = extra_repr.split("\n")
         child_lines = []
@@ -287,7 +281,7 @@ def _chain_ops(
     """
     for op_ in ops:
         if isinstance(op_, Sequential):
-            query = _chain_ops(query, op_.ops())
+            query = _chain_ops(query, op_._get_ops())
         elif isinstance(op_, QueryOp):
             query = op_(query)
 
@@ -298,6 +292,11 @@ class Sequential(QueryOp):
     """Sequential query operations class.
 
     Chains a sequence of query operations and executes the final query on a table.
+
+    Examples
+    --------
+    >>> Sequential(Drop(["col1", "col2"]), ...)
+    >>> Sequential([Drop(["col1", "col2"]), ...])
 
     """
 
@@ -325,13 +324,13 @@ class Sequential(QueryOp):
         super().__init__()
         if len(args) == 1 and isinstance(args[0], OrderedDict):
             for key, op_ in args[0].items():
-                self.add_op(key, op_)
+                self._add_op(key, op_)
         elif len(args) == 1 and isinstance(args[0], list):
             for idx, op_ in enumerate(args[0]):
-                self.add_op(str(idx), op_)
+                self._add_op(str(idx), op_)
         else:
             for idx, op_ in enumerate(args):
-                self.add_op(str(idx), op_)
+                self._add_op(str(idx), op_)
 
     def __len__(self) -> int:
         """Return the number of query ops in the Sequential.
@@ -398,7 +397,7 @@ class Sequential(QueryOp):
         if isinstance(other, Sequential):
             offset = len(self)
             for i, op_ in enumerate(other):
-                self.add_op(str(i + offset), op_)
+                self._add_op(str(i + offset), op_)
             return self
         raise ValueError(
             "Add operator supports only objects "
@@ -501,7 +500,74 @@ class Sequential(QueryOp):
             Sequential object with the query op appended.
 
         """
-        self.add_op(str(len(self)), op_)
+        self._add_op(str(len(self)), op_)
+        return self
+
+    def pop(self, key: typing.Union[int, slice]) -> QueryOp:
+        """Pop the query op at the given index.
+
+        Parameters
+        ----------
+        key
+            Index of the query op to pop.
+
+        Returns
+        -------
+        QueryOp
+            Popped query op.
+
+        """
+        v = self[key]
+        del self[key]
+
+        return v  # type: ignore
+
+    def insert(self, index: int, op_: QueryOp) -> "Sequential":
+        """Insert a given query op at the given index.
+
+        Parameters
+        ----------
+        index
+            Index to insert the query op at.
+        op_
+            Query op to insert.
+
+        Returns
+        -------
+        Sequential
+            Sequential object with the query op inserted.
+
+        """
+        if not isinstance(op_, QueryOp):
+            raise AssertionError("Module should be of type: {}".format(QueryOp))
+        n = len(self._ops)
+        if not (-n <= index <= n):
+            raise IndexError("Index out of range: {}".format(index))
+        if index < 0:
+            index += n
+        for i in range(n, index, -1):
+            self._ops[str(i)] = self._ops[str(i - 1)]
+        self._ops[str(index)] = op_
+
+        return self
+
+    def extend(self, sequential: "Sequential") -> "Sequential":
+        """Extend the sequential query op with another sequential query op.
+
+        Parameters
+        ----------
+        sequential
+            Sequential object to extend with.
+
+        Returns
+        -------
+        Sequential
+            Sequential object with the other sequential query op extended.
+
+        """
+        for op_ in sequential:
+            self.append(op_)
+
         return self
 
     @table_params_to_type(Subquery)
@@ -519,7 +585,7 @@ class Sequential(QueryOp):
             Query result after chaining the query operations.
 
         """
-        return _chain_ops(table, self.ops())
+        return _chain_ops(table, self._get_ops())
 
 
 def _append_if_missing(
@@ -648,7 +714,7 @@ class FillNull(QueryOp):
 
         Parameters
         ----------
-        table: TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -689,7 +755,7 @@ class Drop(QueryOp):
 
     Parameters
     ----------
-    cols: str or list of str
+    cols
         Columns to drop.
 
     Examples
@@ -708,7 +774,7 @@ class Drop(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -722,15 +788,14 @@ class Drop(QueryOp):
         return drop_columns(table, self.cols)
 
 
-@dataclass
 class Rename(QueryOp):
     """Rename some columns.
 
     Parameters
     ----------
-    rename_map: dict
+    rename_map
         Map from an existing column name to another name.
-    check_exists: bool, optional
+    check_exists
         Whether to check if all of the keys in the map exist as columns.
 
     Examples
@@ -739,16 +804,17 @@ class Rename(QueryOp):
 
     """
 
-    rename_map: typing.Dict[str, str]
-    check_exists: bool = True
+    def __init__(self, rename_map: typing.Dict[str, str], check_exists: bool = True):
+        super().__init__()
+        self.rename_map = rename_map
+        self.check_exists = check_exists
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table
             Table on which to perform the operation.
 
         Returns
@@ -763,20 +829,19 @@ class Rename(QueryOp):
         return rename_columns(table, self.rename_map)
 
 
-@dataclass
 class Substring(QueryOp):
     """Get substring of a string column.
 
     Parameters
     ----------
-    col: str
+    col
         Name of column which has string, where substring needs
         to be extracted.
-    start_index: int
+    start_index
         Start index of substring.
-    stop_index: int
+    stop_index
         Stop index of substring.
-    new_col_name: str, optional
+    new_col_name
         Name of the new column with extracted substring.
 
     Examples
@@ -785,18 +850,25 @@ class Substring(QueryOp):
 
     """
 
-    col: str
-    start_index: int
-    stop_index: int
-    new_col_label: typing.Optional[str] = None
+    def __init__(
+        self,
+        col: str,
+        start_index: int,
+        stop_index: int,
+        new_col_label: typing.Optional[str] = None,
+    ):
+        super().__init__()
+        self.col = col
+        self.start_index = start_index
+        self.stop_index = stop_index
+        self.new_col_label = new_col_label
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : sqlalchemy.sql.selectable.Select or sqlalchemy.sql.selectable.Subquery
-        or sqlalchemy.sql.schema.Table or cyclops.query.utils.DBTable
+        table
             Table on which to perform the operation.
 
         Returns
@@ -819,13 +891,12 @@ class Substring(QueryOp):
         )
 
 
-@dataclass
 class Reorder(QueryOp):
     """Reorder the columns in a table.
 
     Parameters
     ----------
-    cols: list of str
+    cols
         Complete list of table column names in the new order.
 
     Examples
@@ -834,14 +905,16 @@ class Reorder(QueryOp):
 
     """
 
-    cols: typing.List[str]
+    def __init__(self, cols: typing.List[str]):
+        super().__init__()
+        self.cols = cols
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -855,15 +928,14 @@ class Reorder(QueryOp):
         return reorder_columns(table, self.cols)
 
 
-@dataclass
 class ReorderAfter(QueryOp):
     """Reorder a number of columns to come after a specified column.
 
     Parameters
     ----------
-    cols: list of str
+    cols
         Ordered list of column names which will come after a specified column.
-    after: str
+    after
         Column name for the column after which the other columns will follow.
 
     Examples
@@ -872,15 +944,17 @@ class ReorderAfter(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
-    after: str
+    def __init__(self, cols: typing.Union[str, typing.List[str]], after: str):
+        super().__init__()
+        self.cols = cols
+        self.after = after
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -899,13 +973,12 @@ class ReorderAfter(QueryOp):
         return Reorder(new_order)(table)
 
 
-@dataclass
 class Keep(QueryOp):
     """Keep only the specified columns in a table.
 
     Parameters
     ----------
-    cols: str or list of str
+    cols
         The columns to keep.
 
     Examples
@@ -915,14 +988,16 @@ class Keep(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
+    def __init__(self, cols: typing.Union[str, typing.List[str]]):
+        super().__init__()
+        self.cols = cols
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -936,15 +1011,14 @@ class Keep(QueryOp):
         return filter_columns(table, self.cols)
 
 
-@dataclass
 class Trim(QueryOp):
     """Trim the whitespace from some string columns.
 
     Parameters
     ----------
-    cols: str or list of str
+    cols
         Columns to trim.
-    new_col_labels: str or list of str, optional
+    new_col_labels
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
 
@@ -957,15 +1031,21 @@ class Trim(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
-    new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
+    def __init__(
+        self,
+        cols: typing.Union[str, typing.List[str]],
+        new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    ):
+        super().__init__()
+        self.cols = cols
+        self.new_col_labels = new_col_labels
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -979,15 +1059,14 @@ class Trim(QueryOp):
         return trim_columns(table, self.cols, new_col_labels=self.new_col_labels)
 
 
-@dataclass
 class Literal(QueryOp):
     """Add a literal column to a table.
 
     Parameters
     ----------
-    value: any
+    value
         Value of the literal, e.g., a string or integer.
-    col: str
+    col
         Label of the new literal column.
 
     Examples
@@ -996,15 +1075,17 @@ class Literal(QueryOp):
 
     """
 
-    value: typing.Any
-    col: str
+    def __init__(self, value: typing.Any, col: str):
+        super().__init__()
+        self.value = value
+        self.col = col
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1018,17 +1099,16 @@ class Literal(QueryOp):
         return select(table, literal(self.value).label(self.col)).subquery()
 
 
-@dataclass
 class ExtractTimestampComponent(QueryOp):
     """Extract a component such as year or month from a timestamp column.
 
     Parameters
     ----------
-    timestamp_col: str
+    timestamp_col
         Timestamp column from which to extract the time component.
-    extract_str: str
+    extract_str
         Information to extract, e.g., "year", "month"
-    label: str
+    label
         Column label for the extracted column.
 
     Examples
@@ -1038,16 +1118,18 @@ class ExtractTimestampComponent(QueryOp):
 
     """
 
-    timestamp_col: str
-    extract_str: str
-    label: str
+    def __init__(self, timestamp_col: str, extract_str: str, label: str):
+        super().__init__()
+        self.timestamp_col = timestamp_col
+        self.extract_str = extract_str
+        self.label = label
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1071,17 +1153,16 @@ class ExtractTimestampComponent(QueryOp):
         return Cast(self.label, "int")(table)
 
 
-@dataclass
 class AddNumeric(QueryOp):
     """Add a numeric value to some columns.
 
     Parameters
     ----------
-    add_to: str or list of str
+    add_to
         Column names specifying to which columns is being added.
-    add: int or float or list of int or float
+    add
         Adds this value to the add_to columns.
-    new_col_labels: str or list of str, optional
+    new_col_labels
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
 
@@ -1095,9 +1176,16 @@ class AddNumeric(QueryOp):
 
     """
 
-    add_to: typing.Union[str, typing.List[str]]
-    add: typing.Union[int, float, typing.List[int], typing.List[float]]
-    new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
+    def __init__(
+        self,
+        add_to: typing.Union[str, typing.List[str]],
+        add: typing.Union[int, float, typing.List[int], typing.List[float]],
+        new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    ):
+        super().__init__()
+        self.add_to = add_to
+        self.add = add
+        self.new_col_labels = new_col_labels
 
     def _gen_lambda(
         self,
@@ -1111,7 +1199,7 @@ class AddNumeric(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1143,17 +1231,16 @@ class AddNumeric(QueryOp):
         )
 
 
-@dataclass
 class AddDeltaConstant(QueryOp):
     """Construct and add a datetime.timedelta object to some columns.
 
     Parameters
     ----------
-    add_to: str or list of str
+    add_to
         Column names specifying to which columns is being added.
-    delta: datetime.timedelta
+    delta
         A timedelta object.
-    new_col_labels: str or list of str, optional
+    new_col_labels
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
 
@@ -1165,16 +1252,23 @@ class AddDeltaConstant(QueryOp):
 
     """
 
-    add_to: typing.Union[str, typing.List[str]]
-    delta: timedelta
-    new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
+    def __init__(
+        self,
+        add_to: typing.Union[str, typing.List[str]],
+        delta: timedelta,
+        new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    ):
+        super().__init__()
+        self.add_to = add_to
+        self.delta = delta
+        self.new_col_labels = new_col_labels
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1197,19 +1291,18 @@ class AddDeltaConstant(QueryOp):
         )
 
 
-@dataclass
 class AddColumn(QueryOp):
     """Add a column to some columns.
 
     Parameters
     ----------
-    add_to: str or list of str
+    add_to
         Column names specifying to which columns is being added.
-    col: str
+    col
         Column name of column to add to the add_to columns.
-    negative: bool, optional
+    negative
         Subtract the column rather than adding.
-    new_col_labels: str or list of str, optional
+    new_col_labels
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
 
@@ -1228,17 +1321,25 @@ class AddColumn(QueryOp):
 
     """
 
-    add_to: typing.Union[str, typing.List[str]]
-    col: str
-    negative: typing.Optional[bool] = False
-    new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None
+    def __init__(
+        self,
+        add_to: typing.Union[str, typing.List[str]],
+        col: str,
+        negative: typing.Optional[bool] = False,
+        new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    ):
+        super().__init__()
+        self.add_to = add_to
+        self.col = col
+        self.negative = negative
+        self.new_col_labels = new_col_labels
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1282,11 +1383,11 @@ class AddDeltaColumn(QueryOp):
 
     Parameters
     ----------
-    add_to: str or list of str
+    add_to
         Column names specifying to which columns is being added.
-    negative: bool, optional
+    negative
         Subtract the object rather than adding.
-    new_col_labels: str or list of str, optional
+    new_col_labels
         If specified, create new columns with these labels. Otherwise,
         apply the function to the existing columns.
     **delta_kwargs
@@ -1308,7 +1409,6 @@ class AddDeltaColumn(QueryOp):
         new_col_labels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         **delta_kwargs: typing.Any,
     ) -> None:
-        """Initialize."""
         super().__init__()
         self.add_to = add_to
         self.negative = negative
@@ -1320,7 +1420,7 @@ class AddDeltaColumn(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1351,7 +1451,6 @@ class AddDeltaColumn(QueryOp):
         )
 
 
-@dataclass
 class Cast(QueryOp):
     """Cast columns to a specified type.
 
@@ -1359,9 +1458,9 @@ class Cast(QueryOp):
 
     Parameters
     ----------
-    cols : str or list of str
-        Columns to = cast.
-    type_ : str
+    cols
+        Columns to cast.
+    type_
         Name of type to which to convert. Must be supported.
 
     Examples
@@ -1375,15 +1474,17 @@ class Cast(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
-    type_: str
+    def __init__(self, cols: typing.Union[str, typing.List[str]], type_: str):
+        super().__init__()
+        self.cols = cols
+        self.type_ = type_
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1418,15 +1519,14 @@ class Cast(QueryOp):
         )
 
 
-@dataclass
 class Union(QueryOp):
     """Union two tables.
 
     Parameters
     ----------
-    union_table : cyclops.query.util.TableTypes
+    union_table
         Table to union with the first table.
-    union_all : bool, optional
+    union_all
         Whether to use the all keyword in the union.
 
     Examples
@@ -1436,15 +1536,21 @@ class Union(QueryOp):
 
     """
 
-    union_table: TableTypes
-    union_all: typing.Optional[bool] = False
+    def __init__(
+        self,
+        union_table: TableTypes,
+        union_all: typing.Optional[bool] = False,
+    ):
+        super().__init__()
+        self.union_table = union_table
+        self.union_all = union_all
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1466,24 +1572,24 @@ class Join(QueryOp):
 
     Parameters
     ----------
-    join_table: cyclops.query.util.TableTypes
+    join_table
         Table on which to join.
-    on: list of str or tuple, optional
+    on
         A list of strings or tuples representing columns on which to join.
         Strings represent columns of same name in both tables. A tuple of
         style (table_col, join_table_col) is used to join on columns of
         different names. Suggested to specify this parameter as opposed to
         cond.
-    on_to_type: list of type, optional
+    on_to_type
         A list of types to which to convert the on columns before joining. Useful when
         two columns have the same values but in different format, e.g., strings of int.
-    cond: BinaryExpression, optional
+    cond
         Condition on which to join to tables.
-    table_cols: str or list of str, optional
+    table_cols
         Filters to keep only these columns from the table.
-    join_table_cols:
+    join_table_cols
         Filters to keep only these columns from the join_table.
-    isouter:
+    isouter
         Flag to say if the join is a left outer join.
 
     Examples
@@ -1517,7 +1623,6 @@ class Join(QueryOp):
         join_table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         isouter: typing.Optional[bool] = False,
     ) -> None:
-        """Initialize."""
         super().__init__()
         if on is not None and cond is not None:
             raise ValueError("Cannot specify both the 'on' and 'cond' arguments.")
@@ -1536,7 +1641,7 @@ class Join(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -1618,16 +1723,16 @@ class ConditionEquals(QueryOp):
 
     Parameters
     ----------
-    col: str
+    col
         Column name on which to condition.
-    value: any
+    value
         Value to equal.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        typing.Optional keyword arguments for processing the condition.
+        Optional keyword arguments for processing the condition.
 
     Examples
     --------
@@ -1644,7 +1749,6 @@ class ConditionEquals(QueryOp):
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
     ) -> None:
-        """Initialize."""
         super().__init__()
         self.col = col
         self.value = value
@@ -1657,9 +1761,9 @@ class ConditionEquals(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -1698,18 +1802,18 @@ class ConditionGreaterThan(QueryOp):
 
     Parameters
     ----------
-    col: str
+    col
         Column name on which to condition.
-    value: any
+    value
         Value greater than.
-    equal: bool, default=False
+    equal
         Include equality to the value.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        typing.Optional keyword arguments for processing the condition.
+        Optional keyword arguments for processing the condition.
 
     Examples
     --------
@@ -1727,7 +1831,6 @@ class ConditionGreaterThan(QueryOp):
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
     ) -> None:
-        """Initialize."""
         super().__init__()
         self.col = col
         self.value = value
@@ -1741,9 +1844,9 @@ class ConditionGreaterThan(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -1783,18 +1886,18 @@ class ConditionLessThan(QueryOp):
 
     Parameters
     ----------
-    col: str
+    col
         Column name on which to condition.
-    value: any
+    value
         Value greater than.
-    equal: bool, default=False
+    equal
         Include equality to the value.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        typing.Optional keyword arguments for processing the condition.
+        Optional keyword arguments for processing the condition.
 
     Examples
     --------
@@ -1812,7 +1915,6 @@ class ConditionLessThan(QueryOp):
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
     ) -> None:
-        """Initialize."""
         super().__init__()
         self.col = col
         self.value = value
@@ -1826,9 +1928,9 @@ class ConditionLessThan(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -1863,19 +1965,18 @@ class ConditionLessThan(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class ConditionRegexMatch(QueryOp):
     """Filter rows based on matching a regular expression.
 
     Parameters
     ----------
-    col: str
+    col
         Column name on which to condition.
-    regex: str
+    regex
         Regular expression to match.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
     Examples
@@ -1885,19 +1986,27 @@ class ConditionRegexMatch(QueryOp):
 
     """
 
-    col: str
-    regex: str
-    not_: bool = False
-    binarize_col: typing.Optional[str] = None
+    def __init__(
+        self,
+        col: str,
+        regex: str,
+        not_: bool = False,
+        binarize_col: typing.Optional[str] = None,
+    ):
+        super().__init__()
+        self.col = col
+        self.regex = regex
+        self.not_ = not_
+        self.binarize_col = binarize_col
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -1930,16 +2039,16 @@ class ConditionIn(QueryOp):
 
     Parameters
     ----------
-    col: str
+    col
         Column name on which to condition.
-    values: any or list of any
+    values
         Values in which the column value must be.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        typing.Optional keyword arguments for processing the condition.
+        Optional keyword arguments for processing the condition.
 
     Examples
     --------
@@ -1956,7 +2065,6 @@ class ConditionIn(QueryOp):
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
     ) -> None:
-        """Initialize."""
         super().__init__()
         self.col = col
         self.values = values
@@ -1969,9 +2077,9 @@ class ConditionIn(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2013,19 +2121,19 @@ class ConditionSubstring(QueryOp):
 
     Parameters
     ----------
-    col: str
+    col
         Column name on which to condition.
-    substrings: any
+    substrings
         Substrings.
-    any_: bool, default=True
+    any_
         If true, the row must have just one of the substrings. If false, it must
         have all of the substrings.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        typing.Optional keyword arguments for processing the condition.
+        Optional keyword arguments for processing the condition.
 
     Examples
     --------
@@ -2044,7 +2152,6 @@ class ConditionSubstring(QueryOp):
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
     ) -> None:
-        """Initialize."""
         super().__init__()
         self.col = col
         self.substrings = to_list(substrings)
@@ -2058,8 +2165,10 @@ class ConditionSubstring(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
+        return_cond
+            Return the condition instead of filtering.
 
         Returns
         -------
@@ -2104,7 +2213,7 @@ class ConditionStartsWith(QueryOp):
     binarize_col: str, optional
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        typing.Optional keyword arguments for processing the condition.
+        Optional keyword arguments for processing the condition.
 
     Examples
     --------
@@ -2121,7 +2230,6 @@ class ConditionStartsWith(QueryOp):
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
     ) -> None:
-        """Initialize."""
         super().__init__()
         self.col = col
         self.string = string
@@ -2134,9 +2242,9 @@ class ConditionStartsWith(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2175,16 +2283,16 @@ class ConditionEndsWith(QueryOp):
 
     Parameters
     ----------
-    col: str
+    col
         Column name on which to condition.
-    string: any
-        String.
-    not_: bool, default=False
+    string
+        String to end with.
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
     **cond_kwargs
-        typing.Optional keyword arguments for processing the condition.
+        Optional keyword arguments for processing the condition.
 
     Examples
     --------
@@ -2201,7 +2309,6 @@ class ConditionEndsWith(QueryOp):
         binarize_col: typing.Optional[str] = None,
         **cond_kwargs: typing.Any,
     ) -> None:
-        """Initialize."""
         super().__init__()
         self.col = col
         self.string = string
@@ -2214,9 +2321,9 @@ class ConditionEndsWith(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2250,19 +2357,18 @@ class ConditionEndsWith(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class ConditionInYears(QueryOp):
     """Filter rows based on a timestamp column being in a list of years.
 
     Parameters
     ----------
-    timestamp_col: str
+    timestamp_col
         Timestamp column name.
-    years: int or list of int
+    years
         Years in which the timestamps must be.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
     Examples
@@ -2273,19 +2379,27 @@ class ConditionInYears(QueryOp):
 
     """
 
-    timestamp_col: str
-    years: typing.Union[int, typing.List[int]]
-    not_: bool = False
-    binarize_col: typing.Optional[str] = None
+    def __init__(
+        self,
+        timestamp_col: str,
+        years: typing.Union[int, typing.List[int]],
+        not_: bool = False,
+        binarize_col: typing.Optional[str] = None,
+    ):
+        super().__init__()
+        self.timestamp_col = timestamp_col
+        self.years = years
+        self.not_ = not_
+        self.binarize_col = binarize_col
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2320,19 +2434,18 @@ class ConditionInYears(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class ConditionInMonths(QueryOp):
     """Filter rows based on a timestamp being in a list of years.
 
     Parameters
     ----------
-    timestamp_col: str
+    timestamp_col
         Timestamp column name.
-    months: int or list of int
+    months
         Months in which the timestamps must be.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
     Examples
@@ -2343,19 +2456,27 @@ class ConditionInMonths(QueryOp):
 
     """
 
-    timestamp_col: str
-    months: typing.Union[int, typing.List[int]]
-    not_: bool = False
-    binarize_col: typing.Optional[str] = None
+    def __init__(
+        self,
+        timestamp_col: str,
+        months: typing.Union[int, typing.List[int]],
+        not_: bool = False,
+        binarize_col: typing.Optional[str] = None,
+    ):
+        super().__init__()
+        self.timestamp_col = timestamp_col
+        self.months = months
+        self.not_ = not_
+        self.binarize_col = binarize_col
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2390,19 +2511,18 @@ class ConditionInMonths(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class ConditionBeforeDate(QueryOp):
     """Filter rows based on a timestamp being before some date.
 
     Parameters
     ----------
-    timestamp_col: str
+    timestamp_col
         Timestamp column name.
-    timestamp: str or datetime.datetime
+    timestamp
         A datetime object or str in YYYY-MM-DD format.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
     Examples
@@ -2413,19 +2533,27 @@ class ConditionBeforeDate(QueryOp):
 
     """
 
-    timestamp_col: str
-    timestamp: typing.Union[str, datetime]
-    not_: bool = False
-    binarize_col: typing.Optional[str] = None
+    def __init__(
+        self,
+        timestamp_col: str,
+        timestamp: typing.Union[str, datetime],
+        not_: bool = False,
+        binarize_col: typing.Optional[str] = None,
+    ):
+        super().__init__()
+        self.timestamp_col = timestamp_col
+        self.timestamp = timestamp
+        self.not_ = not_
+        self.binarize_col = binarize_col
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2457,19 +2585,18 @@ class ConditionBeforeDate(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class ConditionAfterDate(QueryOp):
     """Filter rows based on a timestamp being after some date.
 
     Parameters
     ----------
-    timestamp_col: str
+    timestamp_col
         Timestamp column name.
-    timestamp: str or datetime.datetime
+    timestamp
         A datetime object or str in YYYY-MM-DD format.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
     Examples
@@ -2480,19 +2607,27 @@ class ConditionAfterDate(QueryOp):
 
     """
 
-    timestamp_col: str
-    timestamp: typing.Union[str, datetime]
-    not_: bool = False
-    binarize_col: typing.Optional[str] = None
+    def __init__(
+        self,
+        timestamp_col: str,
+        timestamp: typing.Union[str, datetime],
+        not_: bool = False,
+        binarize_col: typing.Optional[str] = None,
+    ):
+        super().__init__()
+        self.timestamp_col = timestamp_col
+        self.timestamp = timestamp
+        self.not_ = not_
+        self.binarize_col = binarize_col
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2524,19 +2659,18 @@ class ConditionAfterDate(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class ConditionLike(QueryOp):
     """Filter rows by a LIKE condition.
 
     Parameters
     ----------
-    col: str
+    col
         Column to filter on.
-    pattern: str
+    pattern
         Pattern to filter on.
-    not_: bool, default=False
+    not_
         Take negation of condition.
-    binarize_col: str, optional
+    binarize_col
         If specified, create a Boolean column of name binarize_col instead of filtering.
 
     Examples
@@ -2547,19 +2681,27 @@ class ConditionLike(QueryOp):
 
     """
 
-    col: str
-    pattern: str
-    not_: bool = False
-    binarize_col: typing.Optional[str] = None
+    def __init__(
+        self,
+        col: str,
+        pattern: str,
+        not_: bool = False,
+        binarize_col: typing.Optional[str] = None,
+    ):
+        super().__init__()
+        self.col = col
+        self.pattern = pattern
+        self.not_ = not_
+        self.binarize_col = binarize_col
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2587,31 +2729,33 @@ class ConditionLike(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class Or(QueryOp):
     """Combine multiple condition query ops using an OR.
 
     Parameters
     ----------
-    cond_ops: QueryOp or List[QueryOp]
+    cond_ops
         Condition Query ops to combine.
 
     Examples
     --------
+    >>> Or(ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"]))
     >>> Or([ConditionLike("lab_name", "HbA1c"), ConditionIn("name", ["John", "Jane"])])
 
     """
 
-    cond_ops: typing.Union[QueryOp, typing.List[QueryOp]]
+    def __init__(self, *cond_ops: typing.Union[QueryOp, typing.List[QueryOp]]):
+        super().__init__()
+        self.cond_ops = cond_ops
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2620,22 +2764,24 @@ class Or(QueryOp):
             Processed table.
 
         """
-        if isinstance(self.cond_ops, QueryOp):
-            return self.cond_ops(table, return_cond=return_cond)
-        cond = or_(*[op(table, return_cond=True) for op in self.cond_ops])
+        for cond_op in self.cond_ops:
+            if isinstance(cond_op, list):
+                cond = or_(*[op(table, return_cond=True) for op in cond_op])
+            if isinstance(cond_op, QueryOp):
+                return cond_op(table, return_cond=return_cond)
+        cond = or_(*[op(table, return_cond=True) for op in self.cond_ops])  # type: ignore
         if return_cond:
             return cond
 
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class And(QueryOp):
     """Combine multiple condition query ops using an And.
 
     Parameters
     ----------
-    ops: QueryOp or List[QueryOp]
+    ops
         Query ops to combine.
 
     Examples
@@ -2644,16 +2790,18 @@ class And(QueryOp):
 
     """
 
-    cond_ops: typing.Union[QueryOp, typing.List[QueryOp]]
+    def __init__(self, cond_ops: typing.Union[QueryOp, typing.List[QueryOp]]):
+        super().__init__()
+        self.cond_ops = cond_ops
 
     def __call__(self, table: TableTypes, return_cond: bool = False) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
-        return_cond : bool, default=False
+        return_cond
             Return the condition instead of filtering.
 
         Returns
@@ -2671,13 +2819,12 @@ class And(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class Limit(QueryOp):
     """Limit the number of rows returned in a query.
 
     Parameters
     ----------
-    number: int
+    number
         Number of rows to return in the limit.
 
     Examples
@@ -2686,7 +2833,9 @@ class Limit(QueryOp):
 
     """
 
-    number: int
+    def __init__(self, number: int):
+        super().__init__()
+        self.number = number
 
     @table_params_to_type(Select)
     def __call__(self, table: TableTypes) -> Subquery:
@@ -2694,7 +2843,7 @@ class Limit(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -2706,7 +2855,6 @@ class Limit(QueryOp):
         return table.limit(self.number).subquery()  # type: ignore
 
 
-@dataclass
 class RandomizeOrder(QueryOp):
     """Randomize order of table rows.
 
@@ -2729,7 +2877,7 @@ class RandomizeOrder(QueryOp):
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -2741,15 +2889,13 @@ class RandomizeOrder(QueryOp):
         return select(table).order_by(func.random()).subquery()
 
 
-@dataclass
 class DropNulls(QueryOp):
     """Remove rows with null values in some specified columns.
 
     Parameters
     ----------
-    cols: str or list of str
-        Columns in which, if a value is null, the corresponding row
-        is removed.
+    cols
+        Columns in which, if a value is null, the corresponding row is removed.
 
     Examples
     --------
@@ -2758,14 +2904,16 @@ class DropNulls(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
+    def __init__(self, cols: typing.Union[str, typing.List[str]]):
+        super().__init__()
+        self.cols = cols
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -2781,7 +2929,6 @@ class DropNulls(QueryOp):
         return select(table).where(cond).subquery()
 
 
-@dataclass
 class Apply(QueryOp):
     """Apply function(s) to column(s).
 
@@ -2792,12 +2939,12 @@ class Apply(QueryOp):
 
     Parameters
     ----------
-    cols: str or list of str
+    cols
         Column(s) to apply the function to.
-    funcs: typing.Callable or list of typing.Callable
+    funcs
         Function(s) that takes in sqlalchemy column(s) object and returns column(s)
         after applying the function or list of functions to apply to each column.
-    new_cols: str or list of str, optional
+    new_cols
         New column name(s) after function is applied to the specified column(s).
 
     Examples
@@ -2810,24 +2957,34 @@ class Apply(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
-    funcs: typing.Union[
-        typing.Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
-        typing.List[
+    def __init__(
+        self,
+        cols: typing.Union[str, typing.List[str]],
+        funcs: typing.Union[
             typing.Callable[
                 [sqlalchemy.sql.schema.Column],
                 sqlalchemy.sql.schema.Column,
-            ]
+            ],
+            typing.List[
+                typing.Callable[
+                    [sqlalchemy.sql.schema.Column],
+                    sqlalchemy.sql.schema.Column,
+                ]
+            ],
         ],
-    ]
-    new_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None
+        new_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    ):
+        super().__init__()
+        self.cols = cols
+        self.funcs = funcs
+        self.new_cols = new_cols
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -2857,15 +3014,14 @@ class Apply(QueryOp):
         return apply_to_columns(table, self.cols, self.funcs, self.new_cols)
 
 
-@dataclass
 class OrderBy(QueryOp):
     """Order, or sort, the rows of a table by some columns.
 
     Parameters
     ----------
-    cols: str or list of str
+    cols
         Columns by which to order.
-    ascending: bool or list of bool
+    ascending
         Whether to order each columns by ascending (True) or descending (False).
         If not provided, orders all by ascending.
 
@@ -2878,15 +3034,21 @@ class OrderBy(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
-    ascending: typing.Optional[typing.Union[bool, typing.List[bool]]] = None
+    def __init__(
+        self,
+        cols: typing.Union[str, typing.List[str]],
+        ascending: typing.Optional[typing.Union[bool, typing.List[bool]]] = None,
+    ):
+        super().__init__()
+        self.cols = cols
+        self.ascending = ascending
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -2912,21 +3074,20 @@ class OrderBy(QueryOp):
         return select(table).order_by(*order_cols).subquery()
 
 
-@dataclass
 class GroupByAggregate(QueryOp):
     """Aggregate over a group by object.
 
     Parameters
     ----------
-    groupby_cols: str or list of str
+    groupby_cols
         Columns by which to group.
-    aggfuncs: dict
+    aggfuncs
         Specify a dictionary of key-value pairs:
         column name: aggfunc string or
         column name: (aggfunc string, new column label)
         This labelling prevents the aggregation of the same column using multiple
         aggregation functions.
-    aggseps: dict, optional
+    aggseps
         Specify a dictionary of key-value pairs:
         column name: string_aggfunc separator
         If string_agg used as aggfunc for a column, then a separator must be provided
@@ -2941,19 +3102,28 @@ class GroupByAggregate(QueryOp):
 
     """
 
-    groupby_cols: typing.Union[str, typing.List[str]]
-    aggfuncs: typing.Union[
-        typing.Dict[str, typing.Sequence[str]],
-        typing.Dict[str, str],
-    ]
-    aggseps: typing.Dict[str, str] = field(default_factory=dict)
+    def __init__(
+        self,
+        groupby_cols: typing.Union[str, typing.List[str]],
+        aggfuncs: typing.Union[
+            typing.Dict[str, typing.Sequence[str]],
+            typing.Dict[str, str],
+        ],
+        aggseps: typing.Optional[typing.Dict[str, str]] = None,
+    ):
+        super().__init__()
+        self.groupby_cols = groupby_cols
+        self.aggfuncs = aggfuncs
+        if aggseps is None:
+            aggseps = {}
+        self.aggseps = aggseps
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
@@ -3027,13 +3197,12 @@ class GroupByAggregate(QueryOp):
         return select(*groupby_cols, *agg_cols).group_by(*groupby_cols).subquery()
 
 
-@dataclass
 class Distinct(QueryOp):
     """Get distinct rows.
 
     Parameters
     ----------
-    cols: str or list of str
+    cols
         Columns to use for distinct.
 
     Examples
@@ -3043,14 +3212,16 @@ class Distinct(QueryOp):
 
     """
 
-    cols: typing.Union[str, typing.List[str]]
+    def __init__(self, cols: typing.Union[str, typing.List[str]]):
+        super().__init__()
+        self.cols = cols
 
     def __call__(self, table: TableTypes) -> Subquery:
         """Process the table.
 
         Parameters
         ----------
-        table : cyclops.query.util.TableTypes
+        table
             Table on which to perform the operation.
 
         Returns
