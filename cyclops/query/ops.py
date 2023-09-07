@@ -103,7 +103,7 @@ class JoinArgs:
 
 
 def _addindent(s_: str, num_spaces: int = 4) -> str:
-    """Add spaces to a string.
+    """Add spaces to a string except the first line.
 
     Parameters
     ----------
@@ -258,6 +258,26 @@ class QueryOp:
         main_str += ")"
 
         return main_str
+
+    def __getattr__(self, name: str) -> "QueryOp":
+        """Get an attribute.
+
+        Parameters
+        ----------
+        name
+            Name of the attribute.
+
+        Returns
+        -------
+        QueryOp
+            The child operation with the given name.
+
+        """
+        if name in self._ops:
+            return self._ops[name]
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'",
+        )
 
 
 def _chain_ops(

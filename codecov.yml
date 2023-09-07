@@ -7,11 +7,6 @@ comment:
   show_carryforward_flags: false
   require_changes: true
 coverage:
-  precision: 2
-  range:
-  - 55.0
-  - 100.0
-  round: down
   status:
     changes: true
     default_rules:

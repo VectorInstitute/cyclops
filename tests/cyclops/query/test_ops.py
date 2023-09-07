@@ -36,12 +36,14 @@ from cyclops.query.ops import (
     Literal,
     Or,
     OrderBy,
+    QueryOp,
     Rename,
     ReorderAfter,
     Sequential,
     Substring,
     Trim,
     Union,
+    _addindent,
     _none_add,
     _process_checks,
 )
@@ -82,6 +84,65 @@ def test__process_checks(table_input):
     _process_checks(table_input, cols=["a"], cols_not_in=["d"], timestamp_cols=["a"])
     with pytest.raises(ValueError):
         _process_checks(table_input, cols_not_in=["a"])
+
+
+class TestAddndent:
+    """Test _addindent fn."""
+
+    def test_addindent_multiple_lines(self):
+        """Test _addindent fn with multiple lines."""
+        input_string = "This is a\nmultiline\nstring"
+        expected_output = "This is a\n    multiline\n    string"
+        assert _addindent(input_string, 4) == expected_output
+
+    def test_addindent_single_line(self):
+        """Test _addindent fn with single line."""
+        input_string = "This is a single line string"
+        assert _addindent(input_string, 4) == input_string
+
+
+class TestQueryOp:
+    """Test QueryOp class."""
+
+    def test_add_child_operation(self):
+        """Test adding a child operation."""
+        query_op = QueryOp()
+        child_op = QueryOp()
+        query_op._add_op("child", child_op)
+        assert query_op.child == child_op
+
+    def test_get_query_op_name(self):
+        """Test getting the name of the query op."""
+        query_op = QueryOp()
+        assert query_op._get_name() == "QueryOp"
+
+    def test_set_attribute(self):
+        """Test setting an attribute of the query op."""
+        query_op = QueryOp()
+        child_op = QueryOp()
+        query_op.child = child_op
+        assert query_op.child == child_op
+
+    def test_string_representation(self):
+        """Test string representation of the query op."""
+        query_op = QueryOp()
+        child_op = QueryOp()
+        query_op._add_op("child", child_op)
+        assert repr(query_op) == "QueryOp(\n  (child): QueryOp()\n)"
+
+    def test_add_child_operation_empty_name(self):
+        """Test adding a child operation with an empty name."""
+        query_op = QueryOp()
+        child_op = QueryOp()
+        with pytest.raises(KeyError):
+            query_op._add_op("", child_op)
+
+    def test_add_child_operation_dot_name(self):
+        """Test adding a child operation with a dot in the name."""
+        query_op = QueryOp()
+        child_op = QueryOp()
+        with pytest.raises(KeyError):
+            query_op._add_op("child.name", child_op)
 
 
 @pytest.mark.integration_test()
