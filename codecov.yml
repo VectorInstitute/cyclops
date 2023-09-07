@@ -15,7 +15,7 @@ coverage:
   status:
     changes: true
     default_rules:
-      flag_coverage_not_uploaded_behavior: exclude
+      flag_coverage_not_uploaded_behavior: include
     patch: true
     project: true
 github_checks:
