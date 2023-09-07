@@ -1,6 +1,8 @@
 codecov:
-  after_n_builds: 2
   require_ci_to_pass: true
+  notify:
+    after_n_builds: 2
+    wait_for_ci: yes
 comment:
   behavior: default
   layout: reach,diff,flags,tree,reach
