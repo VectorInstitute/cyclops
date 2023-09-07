@@ -38,6 +38,17 @@ jobs:
           # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
+      - name: Upload coverage to Codecov
+        uses: Wandalen/wretry.action@v1.0.36
+        with:
+          action: codecov/codecov-action@v3.1.3
+          with: |
+            token: ${{ secrets.CODECOV_TOKEN }}
+            file: ./coverage.xml
+            name: codecov-umbrella
+            fail_ci_if_error: true
+          attempt_limit: 5
+          attempt_delay: 30000
       - uses: actions/setup-node@v3
         with:
           node-version: 18

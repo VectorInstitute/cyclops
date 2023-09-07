@@ -182,8 +182,7 @@ class ModelCardReport:
         KeyError
             If the given section name is not valid.
         ValueError
-            If the given name conflicts with a defined class in the `model_card`
-            module.
+            If the given name conflicts with a defined class in the `model_card` module.
 
         Examples
         --------

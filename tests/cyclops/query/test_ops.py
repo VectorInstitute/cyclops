@@ -8,10 +8,9 @@ from sqlalchemy import column, select
 
 from cyclops.query.omop import OMOPQuerier
 from cyclops.query.ops import (
-    AND,
-    OR,
     AddColumn,
     AddNumeric,
+    And,
     Apply,
     Cast,
     ConditionAfterDate,
@@ -35,6 +34,7 @@ from cyclops.query.ops import (
     GroupByAggregate,
     Limit,
     Literal,
+    Or,
     OrderBy,
     Rename,
     ReorderAfter,
@@ -516,9 +516,7 @@ def test_union(visits_input):
 def test_sequential(visits_input):
     """Test Sequential."""
     substr_op = Sequential(
-        [
-            Substring("visit_concept_name", 0, 4, "visit_concept_name_substr"),
-        ],
+        Substring("visit_concept_name", 0, 4, "visit_concept_name_substr"),
     )
     operations = [
         Literal(33, "const"),
@@ -542,8 +540,8 @@ def test_sequential(visits_input):
 
 @pytest.mark.integration_test()
 def test_or(visits_input):
-    """Test OR."""
-    visits = OR(
+    """Test Or."""
+    visits = Or(
         [
             ConditionEquals("visit_concept_name", "Outpatient Visit"),
             ConditionLike("visit_concept_name", "%Emergency%"),
@@ -558,12 +556,18 @@ def test_or(visits_input):
 
 @pytest.mark.integration_test()
 def test_and(visits_input):
-    """Test AND."""
-    visits = AND(
+    """Test And."""
+    visits = And(
         [
             ConditionEquals("visit_concept_name", "Outpatient Visit"),
             ConditionLike("visit_concept_name", "%Emergency%", not_=True),
         ],
+    )(visits_input)
+    visits = QUERIER.get_interface(visits).run()
+    assert len(visits) == 4057
+    visits = And(
+        ConditionEquals("visit_concept_name", "Outpatient Visit"),
+        ConditionLike("visit_concept_name", "%Emergency%", not_=True),
     )(visits_input)
     visits = QUERIER.get_interface(visits).run()
     assert len(visits) == 4057

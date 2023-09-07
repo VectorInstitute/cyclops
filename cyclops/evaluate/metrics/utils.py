@@ -135,7 +135,7 @@ def common_input_checks_and_format(
 def sigmoid(arr: npt.ArrayLike) -> npt.NDArray[np.float_]:
     """Sigmoid function."""
     arr = np.asanyarray(arr)
-    return 1 / (1 + np.exp(-arr))
+    return 1 / (1 + np.exp(-arr))  # type: ignore
 
 
 def check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -> None:

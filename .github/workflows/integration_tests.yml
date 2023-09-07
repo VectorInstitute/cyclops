@@ -51,7 +51,6 @@ jobs:
           poetry install --without dev,docs,interface
           coverage run -m pytest -m integration_test && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: Wandalen/wretry.action@v1.0.36
         with:
           action: codecov/codecov-action@v3.1.3
