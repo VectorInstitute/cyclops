@@ -4,6 +4,7 @@ comment:
   behavior: default
   layout: reach,diff,flags,tree,reach
   show_carryforward_flags: false
+  require_changes: true
 coverage:
   precision: 2
   range:
@@ -11,9 +12,9 @@ coverage:
   - 100.0
   round: down
   status:
-    changes: false
+    changes: true
     default_rules:
-      flag_coverage_not_uploaded_behavior: include
+      flag_coverage_not_uploaded_behavior: exclude
     patch: true
     project: true
 github_checks:
