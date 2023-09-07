@@ -1,17 +1,14 @@
 codecov:
-  after_n_builds: 2
   require_ci_to_pass: true
+  notify:
+    after_n_builds: 2
+    wait_for_ci: yes
 comment:
   behavior: default
   layout: reach,diff,flags,tree,reach
   show_carryforward_flags: false
   require_changes: true
 coverage:
-  precision: 2
-  range:
-  - 55.0
-  - 100.0
-  round: down
   status:
     changes: true
     default_rules:
