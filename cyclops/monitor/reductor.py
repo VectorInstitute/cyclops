@@ -45,7 +45,6 @@ class Reductor:
             "bbsd-soft"
             "bbsd-hard"
             "bbsd-soft+txrv-tae"
-
     """
 
     def __init__(self, dr_method: str, device: str = "cpu", **kwargs: Any):

@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 import PIL
 import psutil
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from datasets.features import (
     Array2D,
     Array3D,
@@ -61,7 +61,7 @@ def set_decode(
         to be decoded, whereas the original image may not need to be decoded.
 
     """
-    assert isinstance(dataset, Dataset), "dataset must be a Hugging Face dataset"
+    assert isinstance(dataset, (Dataset, DatasetDict)), "dataset must be a Hugging Face dataset"
     if exclude is not None:
         if not isinstance(exclude, list) or not all(
             feature in dataset.column_names for feature in exclude
@@ -71,10 +71,16 @@ def set_decode(
                 f"dataset. Got {exclude} of type `{type(exclude)}` and dataset "
                 f"with columns {dataset.column_names}."
             )
-
-    for feature_name, feature in dataset.features.items():
-        if feature_name not in (exclude or []) and hasattr(feature, "decode"):
-            dataset.features[feature_name].decode = decode
+    if isinstance(dataset, DatasetDict):
+        # set_decode for all keys in dataset
+        for key in dataset.keys():
+            for feature_name, feature in dataset[key].features.items(): 
+                if feature_name not in (exclude or []) and hasattr(feature, "decode"):
+                    dataset[key].features[feature_name].decode = decode
+    else:
+        for feature_name, feature in dataset.features.items():
+            if feature_name not in (exclude or []) and hasattr(feature, "decode"):
+                dataset.features[feature_name].decode = decode
 
 
 def get_columns_as_numpy_array(

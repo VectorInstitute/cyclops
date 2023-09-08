@@ -10,14 +10,11 @@ from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import torch
-from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
-from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
-from datasets.arrow_dataset import Dataset
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from torch import nn
@@ -30,7 +27,10 @@ from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
 from cyclops.models.neural_nets.rnn import RNNModel
 from cyclops.models.wrappers import SKModel  # type: ignore
-from cyclops.monitor.reductor import Reductor
+
+from torch.nn import functional as F
+from typing import Optional
+from torch.utils.data import DataLoader
 
 
 def print_metrics_binary(
@@ -299,142 +299,6 @@ def save_model(model: Any, output_path: str) -> None:
         torch.save(model.state_dict(), output_path)
 
 
-class ContextMMDWrapper:
-    """Wrapper for ContextMMDDrift."""
-
-    def __init__(
-        self,
-        X_s: np.ndarray[float, np.dtype[np.float64]],
-        ds_source: Dataset,
-        context_generator: Reductor,
-        *,
-        backend: str = "tensorflow",
-        p_val: float = 0.05,
-        preprocess_x_ref: bool = False,
-        update_ref: Optional[Dict[str, int]] = None,
-        preprocess_fn: Optional[Callable[..., Any]] = None,
-        x_kernel: Optional[Callable[..., Any]] = None,
-        c_kernel: Optional[Callable[..., Any]] = None,
-        n_permutations: int = 1000,
-        prop_c_held: float = 0.25,
-        n_folds: int = 5,
-        batch_size: Optional[int] = 256,
-        device: Optional[Union[str, torch.device]] = None,
-        input_shape: Optional[Tuple[int, ...]] = None,
-        data_type: Optional[str] = None,
-        verbose: bool = False,
-    ):
-        self.context_generator = context_generator
-
-        c_source = context_generator.transform(ds_source)
-
-        args = [
-            backend,
-            p_val,
-            preprocess_x_ref,
-            update_ref,
-            preprocess_fn,
-            x_kernel,
-            c_kernel,
-            n_permutations,
-            prop_c_held,
-            n_folds,
-            batch_size,
-            device,
-            input_shape,
-            data_type,
-            verbose,
-        ]
-
-        self.tester = ContextMMDDrift(X_s, c_source, *args)
-
-    def predict(
-        self,
-        X_t: np.ndarray[float, np.dtype[np.float64]],
-        ds_target: Dataset,
-        **kwargs: Dict[str, Any],
-    ) -> Any:
-        """Predict if there is drift in the data."""
-        c_target = self.context_generator.transform(ds_target)
-        return self.tester.predict(
-            X_t, c_target, **get_args(self.tester.predict, kwargs)
-        )
-
-
-class LKWrapper:
-    """Wrapper for LKWrapper."""
-
-    def __init__(
-        self,
-        X_s: np.ndarray[float, np.dtype[np.float64]],
-        projection: torch.nn.Module,
-        *,
-        backend: str = "tensorflow",
-        p_val: float = 0.05,
-        x_ref_preprocessed: bool = False,
-        preprocess_at_init: bool = True,
-        update_x_ref: Optional[Dict[str, int]] = None,
-        preprocess_fn: Optional[Callable[..., Any]] = None,
-        n_permutations: int = 100,
-        var_reg: float = 1e-5,
-        reg_loss_fn: Callable[..., Any] = (lambda kernel: 0),
-        train_size: Optional[float] = 0.75,
-        retrain_from_scratch: bool = True,
-        optimizer: Optional[Callable[..., Any]] = None,
-        learning_rate: float = 1e-3,
-        batch_size: int = 32,
-        preprocess_batch_fn: Optional[Callable[..., Any]] = None,
-        epochs: int = 3,
-        verbose: int = 0,
-        train_kwargs: Optional[Dict[str, Any]] = None,
-        device: Optional[str] = None,
-        dataset: Optional[Callable[..., Any]] = None,
-        dataloader: Optional[Callable[..., Any]] = None,
-        input_shape: Optional[Tuple[int, ...]] = None,
-        data_type: Optional[str] = None,
-        kernel_a: nn.Module = GaussianRBF(trainable=True),
-        kernel_b: nn.Module = GaussianRBF(trainable=True),
-        eps: str = "trainable",
-    ):
-        self.proj = projection
-
-        kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
-
-        args = [
-            backend,
-            p_val,
-            x_ref_preprocessed,
-            preprocess_at_init,
-            update_x_ref,
-            preprocess_fn,
-            n_permutations,
-            var_reg,
-            reg_loss_fn,
-            train_size,
-            retrain_from_scratch,
-            optimizer,
-            learning_rate,
-            batch_size,
-            preprocess_batch_fn,
-            epochs,
-            verbose,
-            train_kwargs,
-            device,
-            dataset,
-            dataloader,
-            input_shape,
-            data_type,
-        ]
-
-        self.tester = LearnedKernelDrift(X_s, kernel, *args)
-
-    def predict(
-        self, X_t: np.ndarray[float, np.dtype[np.float64]], **kwargs: Dict[str, Any]
-    ) -> Any:
-        """Predict if there is drift in the data."""
-        return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
-
-
 def scale(x: pd.DataFrame) -> pd.DataFrame:
     """Scale columns of temporal dataframe.
 
@@ -615,31 +479,93 @@ if __name__ == "__main__":
         sleep(0.25)
     loader.stop()
 
+class DCELoss(torch.nn.Module):
+    def __init__(self, weight=None, use_random_vectors=False, alpha=None):
+        super(DCELoss, self).__init__()
+        self.weight = weight
+        self.use_random_vectors = use_random_vectors
+        self.alpha = alpha
 
-def nihcxr_preprocess(df: pd.DataFrame, nihcxr_dir: str) -> pd.DataFrame:
-    """Preprocess NIHCXR dataframe.
+    def forward(self, logits, labels, mask):
+        return dce_loss(logits, labels,
+                        mask,
+                        alpha=self.alpha,
+                        use_random_vectors=self.use_random_vectors,
+                        weight=self.weight,
+                        )
 
-    Add a column with the path to the image and create
-    one-hot encoded pathogies from Finding Labels column.
 
-    Parameters
-    ----------
-        df (pd.DataFrame): NIHCXR dataframe.
-
-    Returns
-    -------
-        pd.DataFrame: pre-processed NIHCXR dataframe.
-
+def dce_loss(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor, alpha: Optional[float] = None,
+             use_random_vectors=False, weight=None) -> torch.Tensor:
     """
-    # Add path column
-    df["features"] = df["Image Index"].apply(
-        lambda x: os.path.join(nihcxr_dir, "images", x)
-    )
 
-    # Create one-hot encoded pathologies
-    pathologies = df["Finding Labels"].str.get_dummies(sep="|")
+    :param logits: (batch_size, num_classes) tensor of logits
+    :param labels: (batch_size,) tensor of labels
+    :param mask: (batch_size,) mask
+    :param alpha: (float) weight of q samples
+    :param use_random_vectors: (bool) whether to use random vectors for negative labels, default=False
+    :param weight:  (torch.Tensor) weight for each sample_data, default=None do not apply weighting
+    :return: (tensor, float) the disagreement cross entropy loss
+    """
+    if mask.all():
+        # if all labels are positive, then use the standard cross entropy loss
+        # infer multi-label classification from the dtype of labels
+        if labels.dtype == torch.float32:
+            return F.binary_cross_entropy_with_logits(logits, labels)
+        else:
+            return F.cross_entropy(logits, labels)
 
-    # Add one-hot encoded pathologies to dataframe
-    df = pd.concat([df, pathologies], axis=1)
+    if alpha is None:
+        alpha = 1 / (1 + (~mask).float().sum())
 
-    return df
+    num_classes = logits.shape[1]
+
+    q_logits, q_labels = logits[~mask], labels[~mask]
+    if use_random_vectors:
+        # noinspection PyTypeChecker,PyUnresolvedReferences
+        p = - torch.log(torch.rand(device=q_labels.device, size=(len(q_labels), num_classes)))
+        p *= (1. - F.one_hot(q_labels, num_classes=num_classes))
+        p /= torch.sum(p)
+        ce_n = -(p * q_logits).sum(1) + torch.logsumexp(q_logits, dim=1)
+
+    else:
+        if labels.dtype == torch.long:
+            zero_hot = 1. - F.one_hot(q_labels, num_classes=num_classes)
+        else:
+            zero_hot = 1. - q_labels
+        ce_n = -(q_logits * zero_hot).sum(dim=1) / (num_classes - 1) + torch.logsumexp(q_logits, dim=1)
+
+    if torch.isinf(ce_n).any() or torch.isnan(ce_n).any():
+        raise RuntimeError('NaN or Infinite loss encountered for ce-q')
+
+    if (~mask).all():
+        return (ce_n * alpha).mean()
+
+    p_logits, p_labels = logits[mask], labels[mask]
+    if labels.dtype == torch.float32:
+        ce_p = F.binary_cross_entropy_with_logits(p_logits, p_labels, reduction='none', weight=weight)
+    else:
+        ce_p = F.cross_entropy(p_logits, p_labels, reduction='none', weight=weight)
+    return torch.cat([ce_n * alpha, ce_p]).mean()
+
+
+class DetectronModule(nn.Module):
+    def __init__(self, model: nn.Module, alpha=None):
+        super().__init__()
+        self.model = model
+        self.alpha = alpha
+        self.criterion = DCELoss(alpha=self.alpha)
+
+    def forward(self, image, labels=None, mask=None):
+        logits = self.model(image)
+        if labels is None:
+            return logits
+        else:
+            loss = self.criterion(logits, labels, mask)
+            return loss
+    
+class DummyCriterion(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, loss, labels):
+        return loss

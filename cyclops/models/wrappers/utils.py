@@ -11,10 +11,12 @@ import torch
 from datasets import Dataset
 from sklearn.utils.validation import check_is_fitted as _check_is_fitted
 from torch.nn.utils.rnn import PackedSequence
+import torch.nn as nn
 
 
 def to_tensor(
-    X, device: Union[str, torch.device] = "cpu"
+    X, device: Union[str, torch.device] = "cpu",
+    concatenate_features: bool = True
 ) -> Union[torch.Tensor, Sequence, Mapping]:
     """Convert the input to a torch tensor.
 
@@ -43,9 +45,12 @@ def to_tensor(
     if isinstance(X, np.ndarray):
         return torch.from_numpy(X).to(device)
     if isinstance(X, Sequence):
-        return [to_tensor(x) for x in X]
+        if concatenate_features:
+            return [to_tensor(x, device=device, concatenate_features=concatenate_features) for x in X]
+        else:
+            return torch.as_tensor(X, device=device)
     if isinstance(X, Mapping):
-        return {k: to_tensor(v) for k, v in X.items()}
+        return {k: to_tensor(v, device=device, concatenate_features=concatenate_features) for k, v in X.items()}
     raise ValueError(
         "Cannot convert to tensor. `X` must be a numpy array, torch tensor,"
         f" dictionary, list, or tuple. Got {type(X)} instead."
@@ -291,3 +296,9 @@ class DatasetColumn(list):
     def __all__(self):
         """Get the whole column."""
         return self.dataset[self.key]
+
+class DefaultCriterion(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, preds, labels):
+        return preds.mean()
