@@ -61,6 +61,8 @@ class SliceSpec:
           the value is not null. Can be used on its own. Defaults to False.
     validate : bool, default=True
         Whether to validate the column names in the slice specifications.
+    include_overall : bool, default=True
+        Whether to include an `overall` slice that selects all examples.
     column_names : List[str], optional, default=None
         List of column names in the dataset. If provided and `validate` is True, it is
         used to validate the column names in the slice specifications.
@@ -70,6 +72,8 @@ class SliceSpec:
     ----------
     spec_list : List[Union[Dict[str, Any], List[Dict[str, Any]]]]
         List of slice specifications.
+    include_overall : bool
+        Whether to include an `overall` slice that selects all examples.
     validate : bool
         Whether to validate the column names in the slice specifications.
     column_names : List[str]
@@ -125,6 +129,7 @@ class SliceSpec:
         compare=True,
     )
     validate: bool = True
+    include_overall: bool = True
     column_names: Optional[List[str]] = None
 
     _registry: Dict[str, Callable[[Dict[str, Any]], Union[bool, List[bool]]]] = field(
@@ -140,7 +145,8 @@ class SliceSpec:
         for slice_spec in self.spec_list:
             self._parse_and_register_slice_specs(slice_spec)
 
-        self._registry["overall"] = overall  # always add overall slice function
+        if self.include_overall:
+            self._registry["overall"] = overall
 
     def add_slice_spec(self, slice_spec: Dict[str, Dict[str, Any]]) -> None:
         """Add slice specification to the list of slice specifications.
