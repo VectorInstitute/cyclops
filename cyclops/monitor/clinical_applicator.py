@@ -125,7 +125,8 @@ class ClinicalShiftApplicator:
         """
         set_decode(dataset, False)
         if source_slice:
-            for _, shift_func in source_slice.get_slices().items():
+            for _shift_name, shift_func in source_slice.get_slices().items():
+                # if shift_name == "overall":
                 ds_source = dataset.filter(
                     shift_func,
                     batched=batched,
@@ -135,7 +136,8 @@ class ClinicalShiftApplicator:
         else:
             ds_source = dataset
         if target_slice:
-            for _, shift_func in target_slice.get_slices().items():
+            for _shift_name, shift_func in target_slice.get_slices().items():
+                # if shift_name == "overall":
                 ds_target = dataset.filter(
                     shift_func,
                     batched=batched,

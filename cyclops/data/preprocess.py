@@ -6,7 +6,9 @@ import pandas as pd
 
 
 def nihcxr_preprocess(
-    df: pd.DataFrame, nihcxr_dir: str, image_key: str = "image"
+    df: pd.DataFrame,
+    nihcxr_dir: str,
+    image_key: str = "image",
 ) -> pd.DataFrame:
     """Preprocess NIHCXR dataframe.
 

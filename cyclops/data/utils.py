@@ -65,20 +65,23 @@ def set_decode(
         to be decoded, whereas the original image may not need to be decoded.
 
     """
-    assert isinstance(dataset, (Dataset, DatasetDict)), "dataset must be a Hugging Face dataset"
-    if exclude is not None:
-        if not isinstance(exclude, list) or not all(
-            feature in dataset.column_names for feature in exclude
-        ):
-            raise ValueError(
-                "`exclude` must be a list of feature names that are present in "
-                f"dataset. Got {exclude} of type `{type(exclude)}` and dataset "
-                f"with columns {dataset.column_names}."
-            )
+    assert isinstance(
+        dataset,
+        (Dataset, DatasetDict),
+    ), "dataset must be a Hugging Face dataset"
+    if exclude is not None and (
+        not isinstance(exclude, list)
+        or not all(feature in dataset.column_names for feature in exclude)
+    ):
+        raise ValueError(
+            "`exclude` must be a list of feature names that are present in "
+            f"dataset. Got {exclude} of type `{type(exclude)}` and dataset "
+            f"with columns {dataset.column_names}.",
+        )
     if isinstance(dataset, DatasetDict):
         # set_decode for all keys in dataset
-        for key in dataset.keys():
-            for feature_name, feature in dataset[key].features.items(): 
+        for key in dataset:
+            for feature_name, feature in dataset[key].features.items():
                 if feature_name not in (exclude or []) and hasattr(feature, "decode"):
                     dataset[key].features[feature_name].decode = decode
     else:

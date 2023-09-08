@@ -29,11 +29,11 @@ from cyclops.models.utils import (
 from cyclops.models.wrappers.base import ModelWrapper
 from cyclops.models.wrappers.utils import (
     DatasetColumn,
+    DefaultCriterion,
     check_is_fitted,
     set_random_seed,
     to_numpy,
     to_tensor,
-    DefaultCriterion
 )
 from cyclops.utils.file import join, process_dir_save_path
 from cyclops.utils.log import setup_logging
@@ -127,7 +127,7 @@ class PTModel(ModelWrapper):
         activation: Optional[Union[str, nn.Module]] = nn.Identity,
         train_loader=DataLoader,
         test_loader=DataLoader,
-        num_workers=os.cpu_count(),
+        num_workers=1,
         warm_start: bool = False,
         save_every: int = -1,
         save_best_only: bool = True,
@@ -436,7 +436,7 @@ class PTModel(ModelWrapper):
         if self.concatenate_features:
             out = self.model_(X, **fit_params)  # type: ignore[attr-defined]
         else:
-            out = self.model_(**X, **fit_params) # type: ignore[attr-defined]
+            out = self.model_(**X, **fit_params)  # type: ignore[attr-defined]
         return out
 
     def _get_loss(self, target: torch.Tensor, preds: torch.Tensor) -> torch.Tensor:
@@ -583,7 +583,8 @@ class PTModel(ModelWrapper):
                 for batch in data_loader:
                     if self.concatenate_features:
                         batch_features = torch.cat(
-                            [batch[feature] for feature in feature_columns], dim=1
+                            [batch[feature] for feature in feature_columns],
+                            dim=1,
                         )
                     else:
                         batch_features = {k: batch[k] for k in feature_columns}
@@ -1089,11 +1090,12 @@ class PTModel(ModelWrapper):
             preds = Dataset.from_dict({prediction_column: []})
             for batch in dataloader:
                 if self.concatenate_features:
-                    batch = torch.cat(
-                        [batch[feature] for feature in feature_columns], dim=1
+                    batch = torch.cat(  # noqa: PLW2901
+                        [batch[feature] for feature in feature_columns],
+                        dim=1,
                     )
                 else:
-                    batch = {k: batch[k] for k in feature_columns}
+                    batch = {k: batch[k] for k in feature_columns}  # noqa: PLW2901
                 output = self._evaluation_step(batch, training=False, **predict_params)
                 output = self.activation_(output)
                 batch_ds = Dataset.from_dict({prediction_column: output})
@@ -1315,8 +1317,6 @@ class PTModel(ModelWrapper):
             if os.path.exists(best_model_path):
                 os.remove(best_model_path)
             torch.save(state_dict, best_model_path)
-        
-            # os.symlink(filepath, best_model_path)
 
     def load_model(self, filepath: str, **kwargs):
         """Load a model from a checkpoint.

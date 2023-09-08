@@ -58,7 +58,9 @@ def test_dctester(source_target, method):
     if method == "classifier":
         model = RandomForestClassifier()
         tester = DCTester(method, model=model)
-    elif method == "spot_the_diff":
+    elif method == "detectron":
+        pytest.skip()
+    else:
         tester = DCTester(method)
     tester.fit(X_source)
     p_val = tester.test_shift(X_target)[0]

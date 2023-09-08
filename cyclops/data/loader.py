@@ -3,16 +3,20 @@
 import os
 
 import pandas as pd
-from datasets.arrow_dataset import Dataset
 from datasets import DatasetDict
-from datasets.features import Image
-from datasets.features import Features, Value
+from datasets.arrow_dataset import Dataset
+from datasets.features import Image, Value
+from datasets.utils.logging import disable_progress_bar
 
 from cyclops.data.preprocess import nihcxr_preprocess
-from sklearn.model_selection import GroupShuffleSplit
-from datasets.utils.logging import disable_progress_bar, enable_progress_bar
 
-def load_nihcxr(path: str, image_column: str = "image", add_timestamps: bool = True, progress = False) -> Dataset:
+
+def load_nihcxr(
+    path: str,
+    image_column: str = "image",
+    add_timestamps: bool = True,
+    progress: bool = False,
+) -> Dataset:
     """Load NIH Chest X-Ray dataset as a Huggingface dataset."""
     if not progress:
         disable_progress_bar()
@@ -36,24 +40,26 @@ def load_nihcxr(path: str, image_column: str = "image", add_timestamps: bool = T
         {
             "train": Dataset.from_pandas(train_df),
             "test": Dataset.from_pandas(test_df),
-        }
+        },
     )
 
     # cast pathologies columns as float
-    pathologies = ['Atelectasis',
-                   'Cardiomegaly',
-                   'Consolidation',
-                   'Edema',
-                   'Effusion',
-                   'Emphysema',
-                   'Fibrosis',
-                   'Hernia',
-                   'Infiltration',
-                   'Mass',
-                   'Nodule',
-                   'Pleural_Thickening',
-                   'Pneumonia',
-                   'Pneumothorax']
+    pathologies = [
+        "Atelectasis",
+        "Cardiomegaly",
+        "Consolidation",
+        "Edema",
+        "Effusion",
+        "Emphysema",
+        "Fibrosis",
+        "Hernia",
+        "Infiltration",
+        "Mass",
+        "Nodule",
+        "Pleural_Thickening",
+        "Pneumonia",
+        "Pneumothorax",
+    ]
     for pathology in pathologies:
         nih_ds["train"] = nih_ds["train"].cast_column(pathology, Value("float32"))
         nih_ds["test"] = nih_ds["test"].cast_column(pathology, Value("float32"))
@@ -62,11 +68,18 @@ def load_nihcxr(path: str, image_column: str = "image", add_timestamps: bool = T
     if add_timestamps:
         nih_ds["train"] = nih_ds["train"].add_column(
             "timestamp",
-            pd.date_range(start="1/1/2019", end="10/19/2019", periods=nih_ds['train'].num_rows),
+            pd.date_range(
+                start="1/1/2019",
+                end="10/19/2019",
+                periods=nih_ds["train"].num_rows,
+            ),
         )
         nih_ds["test"] = nih_ds["test"].add_column(
             "timestamp",
-            pd.date_range(start="10/20/2019", end="12/25/2019", periods=nih_ds['test'].num_rows),
+            pd.date_range(
+                start="10/20/2019",
+                end="12/25/2019",
+                periods=nih_ds["test"].num_rows,
+            ),
         )
-    nih_ds = nih_ds.cast_column(image_column, Image(decode=True))
-    return nih_ds
+    return nih_ds.cast_column(image_column, Image(decode=True))

@@ -1,41 +1,38 @@
 """Tester Module for drift detection with TSTester and DCTester submodules."""
 
-from typing import Any, List, Tuple, Union, Any, Callable, Dict, Optional
+import os
+from functools import partial
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+import pandas as pd
 import sklearn
 import torch
-import torch.nn as nn
 from alibi_detect.cd import (
     ChiSquareDrift,
     ClassifierDrift,
+    ContextMMDDrift,
     FETDrift,
     KSDrift,
+    LearnedKernelDrift,
     LSDDDrift,
     MMDDrift,
     SpotTheDiffDrift,
     TabularDrift,
 )
-
-from cyclops.monitor.utils import get_args
-from torch.utils.data import Dataset as TorchDataset
-from datasets import Dataset, DatasetDict
-from alibi_detect.cd import ContextMMDDrift, LearnedKernelDrift
-from cyclops.monitor.utils import DetectronModule, DummyCriterion
-
-from cyclops.models.catalog import wrap_model
-from torch.utils.data import Dataset as TorchDataset
-from datasets import Dataset, DatasetDict, concatenate_datasets
-from sklearn.base import BaseEstimator
-from cyclops.data.utils import apply_transforms
-from functools import partial
-import os
-from scipy.special import softmax
-from scipy.special import expit as sigmoid
-import pandas as pd
-from monai.transforms import Lambdad
-from sklearn.base import BaseEstimator
 from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
+from datasets import Dataset, DatasetDict, concatenate_datasets
+from monai.transforms import Lambdad
+from scipy.special import expit as sigmoid
+from scipy.special import softmax
+from sklearn.base import BaseEstimator
+from torch import nn
+from torch.utils.data import Dataset as TorchDataset
+
+from cyclops.data.utils import apply_transforms
+from cyclops.models.catalog import wrap_model
+from cyclops.monitor.utils import DetectronModule, DummyCriterion, get_args
+
 
 class TSTester:
     """Two Sample Statistical Tester.
@@ -101,7 +98,7 @@ class TSTester:
             "lsdd": LSDDDrift,
             "lk": LKWrapper,
             "fet": FETDrift,
-            "tabular": TabularDrift
+            "tabular": TabularDrift,
         }
 
         self.method_args = kwargs
@@ -118,10 +115,11 @@ class TSTester:
         """Return list of available test methods."""
         return list(self.tester_methods.keys())
 
-    def fit(self, 
-            X_s: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor], 
-            **kwargs: Any
-            ) -> None:
+    def fit(
+        self,
+        X_s: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor],
+        **kwargs: Any,
+    ) -> None:
         """Initialize test method to source data.
 
         Parameters
@@ -162,10 +160,10 @@ class TSTester:
             )
 
     def test_shift(
-        self, 
-        X_t: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor], 
-        **kwargs: Any
-        ) -> Tuple[float, float]:
+        self,
+        X_t: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor],
+        **kwargs: Any,
+    ) -> Tuple[float, float]:
         """Test for shift in data.
 
         Parameters
@@ -213,7 +211,6 @@ class TSTester:
 
         if self.tester_method in ["ks", "chi2", "fet", "tabular"]:
             self.p_val_threshold = self.p_val_threshold / num_features
-            # self.p_val_threshold = self.method.p_val_threshold
 
         return p_val, dist
 
@@ -223,14 +220,14 @@ class DCTester:
 
     This class provides a set of methods to test for a shift in data distribution
     between a reference dataset and a target dataset. It supports several
-    domain classifier tests, including SpotTheDiff (spot_the_diff), ClassifierDrift (classifier),
-    and Detectron (detectron).
+    domain classifier tests, including SpotTheDiff (spot_the_diff),
+    ClassifierDrift (classifier), and Detectron (detectron).
 
     SpotTheDiff
     -----------
-    The spot-the-diff drift detector is an extension of the Classifier drift detector where the 
-    classifier is specified in a manner that makes detections interpretable at the feature level 
-    when they occur.
+    The spot-the-diff drift detector is an extension of the Classifier
+    drift detector where the classifier is specified in a manner that makes
+    detections interpretable at the feature level when they occur.
     Documentation for SpotTheDiff can be found here:
     https://docs.seldon.io/projects/alibi-detect/en/stable/cd/methods/spotthediffdrift.html
 
@@ -247,12 +244,14 @@ class DCTester:
 
     ClassifierDrift
     ---------------
-    The classifier-based drift detector Lopez-Paz and Oquab, 2017 simply tries to correctly distinguish
-    instances from the reference set vs. the test set. The classifier is trained to output the probability
-    that a given instance belongs to the test set. If the probabilities it assigns to unseen test instances
-    are significantly higher (as determined by a Kolmogorov-Smirnov test) to those it assigns to unseen 
-    reference instances then the test set must differ from the reference set and drift is flagged.
-    Documentation for ClassifierDrift can be found here:
+    The classifier-based drift detector Lopez-Paz and Oquab, 2017 simply tries
+    to correctly distinguish instances from the reference set vs. the test set.
+    The classifier is trained to output the probability that a given instance
+    belongs to the test set. If the probabilities it assigns to unseen test instances
+    are significantly higher (as determined by a Kolmogorov-Smirnov test) to
+    those it assigns to unseen reference instances then the test set must differ
+    from the reference set and drift is flagged. Documentation for ClassifierDrift
+    can be found here:
     https://docs.seldon.io/projects/alibi-detect/en/stable/cd/methods/classifierdrift.html
 
     Examples
@@ -267,7 +266,36 @@ class DCTester:
     >>> tester = DCTester("classifier", model=model)
     >>> tester.fit(X_s)
     >>> p_val, dist = tester.test_shift(X_t)
-    
+
+    Detectron
+    ---------
+    "A Learning Based Hypothesis Test for Harmful Covariate Shift".
+    The Detectron method utilizes the discordance between an ensemble of
+    classifiers trained to agree on training data and disagree on test data.
+    A loss function is derived for training this ensemble, and the disagreement
+    rate and entropy are shown to be powerful discriminative statistics
+    for harmful covariate shift (HCS).
+
+    Examples
+    --------
+    >>> from cyclops.monitor.tester import DCTester
+
+    >>> nih_ds = load_nihcxr(DATA_DIR)
+    >>> base_model = DenseNet(weights="densenet121-res224-nih")
+    >>> detectron = DCTester("detectron", model=base_model)
+    >>> detectron = DCTester("detectron",
+                        base_model=base_model,
+                        model=base_model,
+                        feature_columns="image",
+                        transforms=transforms,
+                        task="multilabel",
+                        max_epochs_per_model=5,
+                        ensemble_size=5,
+                        lr=0.01,
+                        num_runs=5)
+
+    >>> detectron.fit(source_ds)
+    >>> p_val, distance = detectron.predict(target_ds)
 
     Parameters
     ----------
@@ -305,7 +333,7 @@ class DCTester:
         self.tester_methods = {
             "spot_the_diff": SpotTheDiffDrift,
             "classifier": ClassifierDrift,
-            "detectron": Detectron
+            "detectron": Detectron,
         }
         if self.tester_method not in self.tester_methods:
             raise ValueError(
@@ -317,16 +345,17 @@ class DCTester:
         """Return list of available test methods."""
         return list(self.tester_methods.keys())
 
-    def fit(self, X_s: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor]) -> None:
+    def fit(
+        self,
+        X_s: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor],
+    ) -> None:
         """Initialize test method to source data."""
         if isinstance(X_s, np.ndarray):
             X_s = X_s.astype("float32")
 
         if self.tester_method == "spot_the_diff":
             if not isinstance(X_s, np.ndarray):
-                raise ValueError(
-                    "spot_the_diff only supports numpy arrays as input."
-                )
+                raise ValueError("spot_the_diff only supports numpy arrays as input.")
             self.tester = self.tester_methods[self.tester_method](
                 X_s,
                 backend="pytorch",
@@ -334,9 +363,7 @@ class DCTester:
             )
         elif self.tester_method == "classifier":
             if not isinstance(X_s, np.ndarray):
-                raise ValueError(
-                    "classifier only supports numpy arrays as input."
-                )
+                raise ValueError("classifier only supports numpy arrays as input.")
             if isinstance(self.method_args["model"], torch.nn.Module):
                 self.method_args["backend"] = "pytorch"
             elif isinstance(self.method_args["model"], sklearn.base.ClassifierMixin):
@@ -352,11 +379,12 @@ class DCTester:
             )
 
     def test_shift(
-        self, X_t: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor]
+        self,
+        X_t: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor],
     ) -> Tuple[float, float]:
         """Test for shift in data."""
-        if isinstance(X_s, np.ndarray):
-            X_s = X_s.astype("float32")
+        if isinstance(X_t, np.ndarray):
+            X_t = X_t.astype("float32")
         preds = self.tester.predict(X_t)
 
         p_val = preds["data"]["p_val"]
@@ -422,7 +450,9 @@ class ContextMMDWrapper:
         """Predict if there is drift in the data."""
         c_target = self.context_generator.transform(ds_target)
         return self.tester.predict(
-            X_t, c_target, **get_args(self.tester.predict, kwargs)
+            X_t,
+            c_target,
+            **get_args(self.tester.predict, kwargs),
         )
 
 
@@ -439,30 +469,35 @@ class LKWrapper:
         x_ref_preprocessed: bool = False,
         preprocess_at_init: bool = True,
         update_x_ref: Optional[Dict[str, int]] = None,
-        preprocess_fn: Optional[Callable[..., Any]] = None,
+        preprocess_fn: Optional[Callable] = None,
         n_permutations: int = 100,
+        batch_size_permutations: int = 1000000,
         var_reg: float = 1e-5,
-        reg_loss_fn: Callable[..., Any] = (lambda kernel: 0),
+        reg_loss_fn: Callable = (lambda kernel: 0),
         train_size: Optional[float] = 0.75,
         retrain_from_scratch: bool = True,
-        optimizer: Optional[Callable[..., Any]] = None,
+        optimizer: Optional[Callable] = None,
         learning_rate: float = 1e-3,
         batch_size: int = 32,
-        preprocess_batch_fn: Optional[Callable[..., Any]] = None,
+        batch_size_predict: int = 32,
+        preprocess_batch_fn: Optional[Callable] = None,
         epochs: int = 3,
+        num_workers: int = 0,
         verbose: int = 0,
-        train_kwargs: Optional[Dict[str, Any]] = None,
+        train_kwargs: Optional[dict] = None,
         device: Optional[str] = None,
-        dataset: Optional[Callable[..., Any]] = None,
-        dataloader: Optional[Callable[..., Any]] = None,
-        input_shape: Optional[Tuple[int, ...]] = None,
+        dataset: Optional[Callable] = None,
+        dataloader: Optional[Callable] = None,
+        input_shape: Optional[tuple] = None,
         data_type: Optional[str] = None,
-        kernel_a: nn.Module = GaussianRBF(trainable=True),
-        kernel_b: nn.Module = GaussianRBF(trainable=True),
+        kernel_a: nn.Module = None,
+        kernel_b: nn.Module = None,
         eps: str = "trainable",
     ):
         self.proj = projection
 
+        kernel_a = GaussianRBF(trainable=True) if kernel_a is None else kernel_a
+        kernel_b = GaussianRBF(trainable=True) if kernel_b is None else kernel_b
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
         args = [
@@ -473,6 +508,7 @@ class LKWrapper:
             update_x_ref,
             preprocess_fn,
             n_permutations,
+            batch_size_permutations,
             var_reg,
             reg_loss_fn,
             train_size,
@@ -480,8 +516,10 @@ class LKWrapper:
             optimizer,
             learning_rate,
             batch_size,
+            batch_size_predict,
             preprocess_batch_fn,
             epochs,
+            num_workers,
             verbose,
             train_kwargs,
             device,
@@ -490,22 +528,26 @@ class LKWrapper:
             input_shape,
             data_type,
         ]
-
         self.tester = LearnedKernelDrift(X_s, kernel, *args)
 
     def predict(
-        self, X_t: np.ndarray[float, np.dtype[np.float64]], **kwargs: Dict[str, Any]
+        self,
+        X_t: np.ndarray[float, np.dtype[np.float64]],
+        **kwargs: Dict[str, Any],
     ) -> Any:
         """Predict if there is drift in the data."""
         return self.tester.predict(X_t, **get_args(self.tester.predict, kwargs))
 
 
 class Detectron:
-    """Implementation of the ICLR 2023 paper "A Learning Based Hypothesis Test for Harmful Covariate Shift"
+    """Implementation of the ICLR 2023 paper.
 
-    The Detectron method utilizes the discordance between an ensemble of classifiers trained to agree
-    on training data and disagree on test data. A loss function is derived for training this ensemble, 
-    and the disagreement rate and entropy are shown to be powerful discriminative statistics 
+    "A Learning Based Hypothesis Test for Harmful Covariate Shift".
+
+    The Detectron method utilizes the discordance between an ensemble of
+    classifiers trained to agree on training data and disagree on test data.
+    A loss function is derived for training this ensemble, and the disagreement
+    rate and entropy are shown to be powerful discriminative statistics
     for harmful covariate shift (HCS).
 
     @inproceedings{
@@ -517,29 +559,40 @@ class Detectron:
     url = {https://openreview.net/forum?id=rdfgqiwz7lZ}
     }
     """
-    def __init__(self,
-                base_model: Union[nn.Module, BaseEstimator],
-                model: nn.Module, 
-                feature_columns: List[str] = None,
-                transforms: Callable = None,
-                criterion=nn.BCEWithLogitsLoss,
-                splits_mapping={"train": "train", "test": "test"},
-                num_runs: int = 100,
-                sample_size: int = 50, 
-                batch_size: int = 32,
-                ensemble_size: int = 5,
-                max_epochs_per_model: int = 10,
-                lr: float = 1e-3,
-                num_workers: int = os.cpu_count(),
-                save_dir: str = None,
-                task = "multiclass"
-                 ):
+
+    def __init__(
+        self,
+        base_model: Union[nn.Module, BaseEstimator],
+        model: nn.Module,
+        feature_columns: List[str] = None,
+        transforms: Callable = None,
+        criterion=nn.BCEWithLogitsLoss,
+        splits_mapping=None,
+        num_runs: int = 100,
+        sample_size: int = 50,
+        batch_size: int = 32,
+        ensemble_size: int = 5,
+        max_epochs_per_model: int = 10,
+        lr: float = 1e-3,
+        num_workers: int = os.cpu_count(),
+        save_dir: str = None,
+        task="multiclass",
+    ):
+        if splits_mapping is None:
+            splits_mapping = {"train": "train", "test": "test"}
         if isinstance(model, nn.Module):
-            if criterion is None:
-                raise ValueError("Criterion must be specified for PyTorch models.")
-            else:
-                self.base_model = wrap_model(base_model, batch_size=batch_size, criterion=criterion, max_epochs_per_model=max_epochs_per_model, lr=lr)
+            if criterion is not None:
+                self.base_model = wrap_model(
+                    base_model,
+                    batch_size=batch_size,
+                    criterion=criterion,
+                    max_epochs_per_model=max_epochs_per_model,
+                    lr=lr,
+                )
                 self.base_model.initialize()
+            else:
+                raise ValueError("Criterion must be specified for PyTorch models.")
+
         else:
             self.base_model = wrap_model(base_model)
             self.base_model.initialize()
@@ -548,10 +601,17 @@ class Detectron:
         if transforms:
             self.transforms = partial(apply_transforms, transforms=transforms)
             model_transforms = transforms
-            model_transforms.transforms = model_transforms.transforms + (Lambdad(keys=("mask", "labels"), 
-                                                                                                     func=lambda x: np.array(x), 
-                                                                                                     allow_missing_keys=True),)
-            self.model_transforms = partial(apply_transforms, transforms=model_transforms)
+            model_transforms.transforms = model_transforms.transforms + (
+                Lambdad(
+                    keys=("mask", "labels"),
+                    func=lambda x: np.array(x),
+                    allow_missing_keys=True,
+                ),
+            )
+            self.model_transforms = partial(
+                apply_transforms,
+                transforms=model_transforms,
+            )
         self.splits_mapping = splits_mapping
         self.num_runs = num_runs
         self.sample_size = sample_size
@@ -565,45 +625,61 @@ class Detectron:
             self.save_dir = "detectron"
 
     def fit(self, X_s: Union[Dataset, DatasetDict, np.ndarray, TorchDataset]):
+        """Fit the Detectron model."""
         self.p = X_s
-        self.cal_record = {"seed": [], "ensemble": [], "count": [], "rejection_rate": []}
+        self.cal_record = {
+            "seed": [],
+            "ensemble": [],
+            "count": [],
+            "rejection_rate": [],
+        }
         for seed in range(self.num_runs):
             # train ensemble of for split 'p*'
-            for e in range (1, self.ensemble_size + 1):
+            for e in range(1, self.ensemble_size + 1):
                 alpha = 1 / (len(X_s) * self.sample_size + 1)
-                # save_dir=os.path.join(self.save_dir, f"seed_{seed}", f"ensemble_{e}")
-                model = wrap_model(DetectronModule(self.model, alpha=alpha),
-                                        batch_size=self.batch_size,
-                                        criterion=DummyCriterion,
-                                        max_epochs=self.max_epochs_per_model,
-                                        lr=self.lr,
-                                        num_workers=self.num_workers,
-                                        save_dir=self.save_dir,
-                                        concatenate_features=False
-                                        )
+                model = wrap_model(
+                    DetectronModule(self.model, alpha=alpha),
+                    batch_size=self.batch_size,
+                    criterion=DummyCriterion,
+                    max_epochs=self.max_epochs_per_model,
+                    lr=self.lr,
+                    num_workers=self.num_workers,
+                    save_dir=self.save_dir,
+                    concatenate_features=False,
+                )
                 if isinstance(X_s, (Dataset, DatasetDict)):
                     # create p/p* splits
 
-                    p = X_s[self.splits_mapping["train"]].shuffle().select(range(self.sample_size))
+                    p = (
+                        X_s[self.splits_mapping["train"]]
+                        .shuffle()
+                        .select(range(self.sample_size))
+                    )
                     p = p.add_column("mask", [1] * len(p))
                     p_pseudolabels = self.base_model.predict(
                         X=p,
                         feature_columns=self.feature_columns,
                         transforms=self.transforms,
-                        only_predictions=True
+                        only_predictions=True,
                     )
                     p_pseudolabels = self.format_pseudolabels(np.array(p_pseudolabels))
                     p = p.add_column("labels", p_pseudolabels.tolist())
 
-                    pstar = X_s[self.splits_mapping["test"]].shuffle().select(range(self.sample_size))
+                    pstar = (
+                        X_s[self.splits_mapping["test"]]
+                        .shuffle()
+                        .select(range(self.sample_size))
+                    )
                     pstar = pstar.add_column("mask", [0] * len(pstar))
                     pstar_pseudolabels = self.base_model.predict(
                         X=pstar,
                         feature_columns=self.feature_columns,
                         transforms=self.transforms,
-                        only_predictions=True
+                        only_predictions=True,
                     )
-                    pstar_pseudolabels = self.format_pseudolabels(np.array(pstar_pseudolabels))
+                    pstar_pseudolabels = self.format_pseudolabels(
+                        np.array(pstar_pseudolabels),
+                    )
                     pstar = pstar.add_column("labels", pstar_pseudolabels.tolist())
 
                     p_pstar = concatenate_datasets([p, pstar], axis=0)
@@ -615,23 +691,33 @@ class Detectron:
                     model.fit(
                         X=p_pstar,
                         feature_columns=train_features,
-                        target_columns="mask", # placeholder, not used in dummycriterion
+                        target_columns="mask",  # placeholder, not used in dummycriterion
                         transforms=self.model_transforms,
                         splits_mapping={"train": "train", "validation": "test"},
                     )
 
-                    model.load_model(os.path.join(self.save_dir, "saved_models/DetectronModule/best_model.pt"))
+                    model.load_model(
+                        os.path.join(
+                            self.save_dir,
+                            "saved_models/DetectronModule/best_model.pt",
+                        ),
+                    )
                     pstar_logits = model.predict(
                         X=pstar,
                         feature_columns=self.feature_columns,
                         transforms=self.model_transforms,
-                        only_predictions=True
+                        only_predictions=True,
                     )
-                    count = (self.format_pseudolabels(np.array(pstar_logits)) != pstar_pseudolabels).sum()
+                    count = (
+                        self.format_pseudolabels(np.array(pstar_logits))
+                        != pstar_pseudolabels
+                    ).sum()
                     self.cal_record["seed"].append(seed)
                     self.cal_record["ensemble"].append(e)
                     self.cal_record["count"].append(count)
-                    self.cal_record["rejection_rate"].append(count/pstar_pseudolabels.size)
+                    self.cal_record["rejection_rate"].append(
+                        count / pstar_pseudolabels.size,
+                    )
 
                 elif isinstance(X_s, np.ndarray):
                     raise NotImplementedError("Numpy arrays are not supported yet.")
@@ -639,42 +725,55 @@ class Detectron:
                     raise NotImplementedError("PyTorch datasets are not supported yet.")
 
     def predict(self, X_t: Union[Dataset, DatasetDict, np.ndarray, TorchDataset]):
-
-        self.test_record = {"seed": [], "ensemble": [], "count": [], "rejection_rate": []}
+        """Detect shift in target dataset."""
+        self.test_record = {
+            "seed": [],
+            "ensemble": [],
+            "count": [],
+            "rejection_rate": [],
+        }
         for seed in range(self.num_runs):
             # train ensemble of for split 'p*'
-            for e in range (1, self.ensemble_size + 1):
+            for e in range(1, self.ensemble_size + 1):
                 alpha = 1 / (len(X_t) * self.sample_size + 1)
-                # save_dir=os.path.join(self.save_dir, f"seed_{seed}", f"ensemble_{e}")
-                model = wrap_model(DetectronModule(self.model, alpha=alpha),
-                                        batch_size=self.batch_size,
-                                        criterion=DummyCriterion,
-                                        max_epochs=self.max_epochs_per_model,
-                                        lr=self.lr,
-                                        num_workers=self.num_workers,
-                                        save_dir=self.save_dir,
-                                        concatenate_features=False
-                                        )
-                model.initialize();
+                model = wrap_model(
+                    DetectronModule(self.model, alpha=alpha),
+                    batch_size=self.batch_size,
+                    criterion=DummyCriterion,
+                    max_epochs=self.max_epochs_per_model,
+                    lr=self.lr,
+                    num_workers=self.num_workers,
+                    save_dir=self.save_dir,
+                    concatenate_features=False,
+                )
+                model.initialize()
                 if isinstance(X_t, (Dataset, DatasetDict)):
                     # create p/q splits
-                    p = self.p[self.splits_mapping["train"]].shuffle().select(range(self.sample_size))
+                    p = (
+                        self.p[self.splits_mapping["train"]]
+                        .shuffle()
+                        .select(range(self.sample_size))
+                    )
                     p = p.add_column("mask", [1] * len(p))
                     p_pseudolabels = self.base_model.predict(
                         X=p,
                         feature_columns=self.feature_columns,
                         transforms=self.transforms,
-                        only_predictions=True
+                        only_predictions=True,
                     )
                     p_pseudolabels = self.format_pseudolabels(np.array(p_pseudolabels))
                     p = p.add_column("labels", p_pseudolabels.tolist())
-                    q = X_t[self.splits_mapping["test"]].shuffle().select(range(self.sample_size))
+                    q = (
+                        X_t[self.splits_mapping["test"]]
+                        .shuffle()
+                        .select(range(self.sample_size))
+                    )
                     q = q.add_column("mask", [0] * len(q))
                     q_pseudolabels = self.base_model.predict(
                         X=q,
                         feature_columns=self.feature_columns,
                         transforms=self.transforms,
-                        only_predictions=True
+                        only_predictions=True,
                     )
                     q_pseudolabels = self.format_pseudolabels(np.array(q_pseudolabels))
                     q = q.add_column("labels", q_pseudolabels.tolist())
@@ -686,75 +785,103 @@ class Detectron:
                     model.fit(
                         X=p_q,
                         feature_columns=train_features,
-                        target_columns="mask", # placeholder, not used in dummycriterion
+                        target_columns="mask",  # placeholder, not used in dummycriterion
                         transforms=self.model_transforms,
-                        splits_mapping={"train": "train", "validation": "test"}
+                        splits_mapping={"train": "train", "validation": "test"},
                     )
 
-                    model.load_model(os.path.join(self.save_dir, "saved_models/DetectronModule/best_model.pt"))
+                    model.load_model(
+                        os.path.join(
+                            self.save_dir,
+                            "saved_models/DetectronModule/best_model.pt",
+                        ),
+                    )
                     q_logits = model.predict(
                         X=q,
                         feature_columns=self.feature_columns,
                         transforms=self.model_transforms,
-                        only_predictions=True
+                        only_predictions=True,
                     )
-                    count = (self.format_pseudolabels(np.array(q_logits)) != q_pseudolabels).sum()
+                    count = (
+                        self.format_pseudolabels(np.array(q_logits)) != q_pseudolabels
+                    ).sum()
                     self.test_record["seed"].append(seed)
                     self.test_record["ensemble"].append(e)
                     self.test_record["count"].append(count)
-                    self.test_record["rejection_rate"].append(count/q_pseudolabels.size)
+                    self.test_record["rejection_rate"].append(
+                        count / q_pseudolabels.size,
+                    )
 
                 elif isinstance(X_t, np.ndarray):
                     raise NotImplementedError("Numpy arrays are not supported yet.")
                 elif isinstance(X_t, TorchDataset):
                     raise NotImplementedError("PyTorch datasets are not supported yet.")
         p_val, distance = self.get_pvalue_distance()
-        return p_val, distance/q_pseudolabels.size
-    
+        return p_val, distance / q_pseudolabels.size
+
     def format_pseudolabels(self, labels):
-        if self.task == "binary" or self.task == "multilabel":
-            return (labels > 0.5).astype("float32") if ((labels<=1).all() and (labels>=0).all()) else (sigmoid(labels) > 0.5).astype("float32")
+        """Format pseudolabels."""
+        if self.task in ("binary", "multilabel"):
+            labels = (
+                (labels > 0.5).astype("float32")
+                if ((labels <= 1).all() and (labels >= 0).all())
+                else (sigmoid(labels) > 0.5).astype("float32")
+            )
         if self.task == "multiclass":
-            return labels.argmax(dim=-1) if np.isclose(labels.sum(axis=-1), 1).all() else softmax(labels, axis=-1).argmax(axis=-1)
+            labels = (
+                labels.argmax(dim=-1)
+                if np.isclose(labels.sum(axis=-1), 1).all()
+                else softmax(labels, axis=-1).argmax(axis=-1)
+            )
         else:
-            raise ValueError(f"Task must be either 'binary', 'multiclass' or 'multilabel', got {self.task} instead.")
-        
+            raise ValueError(
+                f"Task must be either 'binary', 'multiclass' or 'multilabel', got {self.task} instead.",
+            )
+        return labels
+
     def get_record(self, record_type):
+        """Get record."""
         if record_type == "calibration":
             record = self.cal_record
         elif record_type == "test":
             record = self.test_record
-        if isinstance(record, pd.DataFrame):
-            return record
-        else:
-            return pd.DataFrame(record)
-        
+        if not isinstance(record, pd.DataFrame):
+            record = pd.DataFrame(record)
+        return record
+
     def counts(self, record_type, max_ensemble_size=None) -> np.ndarray:
-        assert max_ensemble_size is None or max_ensemble_size > 0, 'max_ensemble_size must be positive or None'
+        """Get counts."""
+        assert (
+            max_ensemble_size is None or max_ensemble_size > 0
+        ), "max_ensemble_size must be positive or None"
         rec = self.get_record(record_type)
         counts = []
         for i in rec.seed.unique():
-            run = rec.query(f'seed=={i}')
+            run = rec.query(f"seed=={i}")
             if max_ensemble_size is not None:
-                run = run.iloc[:max_ensemble_size + 1]
-            counts.append(run.iloc[-1]['count'])
+                run = run.iloc[: max_ensemble_size + 1]
+            counts.append(run.iloc[-1]["count"])
         return np.array(counts)
-    
+
     @staticmethod
     def ecdf(x):
         """
-        Compute the empirical cumulative distribution function
+        Compute the empirical cumulative distribution function.
+
         :param x: array of 1-D numerical data
         :return: a function that takes a value and returns the probability that
-            a random sample from x is less than or equal to that value
+            a random sample from x is less than or equal to that value.
         """
         x = np.sort(x)
 
         def result(v):
-            return np.searchsorted(x, v, side='right') / x.size
+            """Get the probability that a random sample from x is <= v."""
+            return np.searchsorted(x, v, side="right") / x.size
+
         return result
-    
+
     def get_pvalue_distance(self, max_ensemble_size=None) -> float:
+        """Get p-value and distance."""
         cal_counts = self.counts("calibration", max_ensemble_size)
         test_count = self.counts("test", max_ensemble_size)[0]
         cdf = self.ecdf(cal_counts)

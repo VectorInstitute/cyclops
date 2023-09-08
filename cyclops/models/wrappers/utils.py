@@ -10,13 +10,14 @@ import numpy as np
 import torch
 from datasets import Dataset
 from sklearn.utils.validation import check_is_fitted as _check_is_fitted
+from torch import nn
 from torch.nn.utils.rnn import PackedSequence
-import torch.nn as nn
 
 
 def to_tensor(
-    X, device: Union[str, torch.device] = "cpu",
-    concatenate_features: bool = True
+    X,
+    device: Union[str, torch.device] = "cpu",
+    concatenate_features: bool = True,
 ) -> Union[torch.Tensor, Sequence, Mapping]:
     """Convert the input to a torch tensor.
 
@@ -46,11 +47,18 @@ def to_tensor(
         return torch.from_numpy(X).to(device)
     if isinstance(X, Sequence):
         if concatenate_features:
-            return [to_tensor(x, device=device, concatenate_features=concatenate_features) for x in X]
+            X = [
+                to_tensor(x, device=device, concatenate_features=concatenate_features)
+                for x in X
+            ]
         else:
-            return torch.as_tensor(X, device=device)
+            X = torch.as_tensor(X, device=device)
+        return X
     if isinstance(X, Mapping):
-        return {k: to_tensor(v, device=device, concatenate_features=concatenate_features) for k, v in X.items()}
+        return {
+            k: to_tensor(v, device=device, concatenate_features=concatenate_features)
+            for k, v in X.items()
+        }
     raise ValueError(
         "Cannot convert to tensor. `X` must be a numpy array, torch tensor,"
         f" dictionary, list, or tuple. Got {type(X)} instead.",
@@ -305,8 +313,16 @@ class DatasetColumn(list):
         """Get the whole column."""
         return self.dataset[self.key]
 
+
 class DefaultCriterion(nn.Module):
+    """Default criterion for the wrapper.
+
+    Returns the mean value of the model logits.
+    """
+
     def __init__(self):
         super().__init__()
+
     def forward(self, preds, labels):
+        """Forward pass of the criterion."""
         return preds.mean()
