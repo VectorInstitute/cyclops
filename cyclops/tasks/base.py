@@ -9,6 +9,7 @@ from cyclops.models.wrappers import WrappedModel
 from cyclops.tasks.utils import prepare_models
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
@@ -26,7 +27,7 @@ class BaseTask(ABC):
         ],
         task_features: List[str],
         task_target: Union[str, List[str]],
-    ):
+    ) -> None:
         """Initialize base task class.
 
         Parameters
@@ -121,7 +122,7 @@ class BaseTask(ABC):
         model_dict = prepare_models(model)
         if set(model_dict.keys()).issubset(self.list_models()):
             LOGGER.error(
-                "Failed to add the model. A model with same name already exists."
+                "Failed to add the model. A model with same name already exists.",
             )
         else:
             self.models.update(model_dict)
@@ -153,7 +154,7 @@ class BaseTask(ABC):
         if model_name and model_name not in self.list_models():
             raise ValueError(
                 f"The model {model_name} does not exist. "
-                "You can add the model using Task.add_model()"
+                "You can add the model using Task.add_model()",
             )
 
         model_name = model_name if model_name else self.list_models()[0]

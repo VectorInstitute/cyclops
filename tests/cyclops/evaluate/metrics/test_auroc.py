@@ -6,6 +6,11 @@ from typing import Literal, Optional
 import numpy as np
 import pytest
 import scipy as sp
+from sklearn.metrics import roc_auc_score as sk_roc_auc_score
+
+from cyclops.evaluate.metrics.auroc import AUROC
+from cyclops.evaluate.metrics.functional import auroc as cyclops_auroc
+from cyclops.evaluate.metrics.utils import sigmoid
 from metrics.helpers import MetricTester
 from metrics.inputs import (
     NUM_CLASSES,
@@ -14,11 +19,6 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from sklearn.metrics import roc_auc_score as sk_roc_auc_score
-
-from cyclops.evaluate.metrics.auroc import AUROC
-from cyclops.evaluate.metrics.functional import auroc as cyclops_auroc
-from cyclops.evaluate.metrics.utils import sigmoid
 
 
 def _sk_binary_auroc(
@@ -27,7 +27,7 @@ def _sk_binary_auroc(
     max_fpr: Optional[float] = None,
 ) -> float:
     """Compute AUROC for binary case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sigmoid(preds)
 
     return sk_roc_auc_score(y_true=target, y_score=preds, max_fpr=max_fpr)
@@ -69,7 +69,7 @@ def _sk_multiclass_auroc(
     average: Literal["macro", "weighted"] = "macro",
 ) -> float:
     """Compute AUROC for multiclass case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sp.special.softmax(preds, axis=1)
 
     if not np.array_equiv(np.unique(target), np.arange(NUM_CLASSES)):
@@ -129,11 +129,15 @@ def _sk_multilabel_auroc(
     average: Literal["micro", "macro", "weighted"] = "macro",
 ) -> float:
     """Compute AUROC for multilabel case using sklearn."""
-    if not ((0 < preds) & (preds < 1)).all():
+    if not ((preds > 0) & (preds < 1)).all():
         preds = sigmoid(preds)
 
     return sk_roc_auc_score(
-        target, preds, average=average, max_fpr=None, labels=list(range(NUM_LABELS))
+        target,
+        preds,
+        average=average,
+        max_fpr=None,
+        labels=list(range(NUM_LABELS)),
     )
 
 

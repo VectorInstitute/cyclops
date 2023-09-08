@@ -21,13 +21,12 @@ from cyclops.evaluate.utils import choose_split
 from cyclops.models.wrappers import WrappedModel
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
-# pylint: disable=fixme # TODOs
 
-
-def evaluate(  # pylint: disable=too-many-function-args
+def evaluate(
     dataset: Union[str, Dataset, DatasetDict],
     metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
     target_columns: Union[str, List[str]],
@@ -130,7 +129,10 @@ def evaluate(  # pylint: disable=too-many-function-args
 
     column_names: List[str] = dataset.column_names
     check_required_columns(
-        column_names, target_columns, feature_columns, remove_columns
+        column_names,
+        target_columns,
+        feature_columns,
+        remove_columns,
     )
 
     metrics = _prepare_metrics(metrics)
@@ -142,14 +144,14 @@ def evaluate(  # pylint: disable=too-many-function-args
             "Got `model=None` but `dataset` does not have a column that "
             f"starts with `{prediction_column_prefix}`. Please specify a "
             f"model or add a column that starts with `{prediction_column_prefix}` "
-            "to the dataset."
+            "to the dataset.",
         )
 
     if models is not None:
         if feature_columns is None:
             raise ValueError(
                 "Got `models` but `feature_columns` is None. Please specify "
-                "`feature_columns` argument."
+                "`feature_columns` argument.",
             )
         models = _prepare_models(models)
         for model_name, model in models.items():
@@ -185,7 +187,7 @@ def evaluate(  # pylint: disable=too-many-function-args
                 f"starts with `{prediction_column_prefix}` followed by "
                 "the model name. For example, if the model name is "
                 "`my_model`, the predictions should be in a column "
-                f"called `{prediction_column_prefix}.my_model`."
+                f"called `{prediction_column_prefix}.my_model`.",
             )
         if models is not None:  # only one model; replace "default" with model name
             model_name = list(models.keys())[0]
@@ -237,7 +239,8 @@ def _load_data(
 
         dataset_ = load_dataset(dataset, split=split, **load_dataset_kwargs)
         assert isinstance(
-            dataset_, Dataset
+            dataset_,
+            Dataset,
         ), f"Expected a `Dataset` but got {type(dataset_)}."
         return dataset_
     if isinstance(dataset, DatasetDict):
@@ -252,7 +255,7 @@ def _load_data(
         if split == Split.ALL:
             raise ValueError(
                 "Got `split=Split.ALL` but `dataset` is a DatasetDict. "
-                "Please specify a split name."
+                "Please specify a split name.",
             )
 
         return dataset[split]
@@ -261,7 +264,7 @@ def _load_data(
 
     raise TypeError(
         f"Invalid type for `dataset`: {type(dataset)}. Expected one of: "
-        "string, Dataset, DatasetDict."
+        "string, Dataset, DatasetDict.",
     )
 
 
@@ -271,7 +274,8 @@ def _prepare_metrics(
     """Prepare metrics for evaluation."""
     # TODO: wrap in BootstrappedMetric if computing confidence intervals
     if isinstance(metrics, (Metric, Sequence, Dict)) and not isinstance(
-        metrics, MetricCollection
+        metrics,
+        MetricCollection,
     ):
         return MetricCollection(metrics)
     if isinstance(metrics, MetricCollection):
@@ -280,7 +284,7 @@ def _prepare_metrics(
     raise TypeError(
         f"Invalid type for `metrics`: {type(metrics)}. "
         "Expected one of: Metric, Sequence[Metric], Dict[str, Metric], "
-        "MetricCollection."
+        "MetricCollection.",
     )
 
 
@@ -301,7 +305,7 @@ def _prepare_models(
     raise TypeError(
         f"Invalid type for `model`: {type(model)}. "
         "Expected one of: WrappedModel, Sequence[WrappedModel], "
-        "Dict[str, WrappedModel]."
+        "Dict[str, WrappedModel].",
     )
 
 
@@ -329,7 +333,9 @@ def _compute_metrics(
     set_decode(dataset, False, exclude=target_columns + prediction_columns)
 
     with dataset.formatted_as(
-        "numpy", columns=target_columns + prediction_columns, output_all_columns=True
+        "numpy",
+        columns=target_columns + prediction_columns,
+        output_all_columns=True,
     ):
         results: Dict[str, Dict[str, Any]] = {}
 
@@ -344,7 +350,7 @@ def _compute_metrics(
             if len(sliced_dataset) == 0:
                 raise RuntimeError(
                     f"Slice {slice_name} is empty. Please check your slice "
-                    f"configuration or the data."
+                    f"configuration or the data.",
                 )
 
             for prediction_column in prediction_columns:
@@ -352,19 +358,23 @@ def _compute_metrics(
                     batch_size is None or batch_size < 0
                 ):  # dataset.iter does not support getting all batches at once
                     targets = get_columns_as_numpy_array(
-                        dataset=sliced_dataset, columns=target_columns
+                        dataset=sliced_dataset,
+                        columns=target_columns,
                     )
                     predictions = get_columns_as_numpy_array(
-                        dataset=sliced_dataset, columns=prediction_column
+                        dataset=sliced_dataset,
+                        columns=prediction_column,
                     )
                     metric_output = metrics(targets, predictions)
                 else:
                     for batch in sliced_dataset.iter(batch_size=batch_size):
                         targets = get_columns_as_numpy_array(
-                            dataset=batch, columns=target_columns
+                            dataset=batch,
+                            columns=target_columns,
                         )
                         predictions = get_columns_as_numpy_array(
-                            dataset=batch, columns=prediction_column
+                            dataset=batch,
+                            columns=prediction_column,
                         )
 
                         # update the metric state

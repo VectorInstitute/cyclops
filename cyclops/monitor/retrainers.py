@@ -41,7 +41,7 @@ class CumulativeRetrainer:
         model_name: Optional[str] = None,
         retrain_model_path: Optional[str] = None,
         verbose: bool = False,
-    ):
+    ) -> None:
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
@@ -49,7 +49,7 @@ class CumulativeRetrainer:
         self.retrain_model_path = retrain_model_path
         self.verbose = verbose
 
-    def retrain(
+    def retrain(  # noqa: PLR0915
         self,
         # datastreams is dictionary of numpy arrays, static typing
         data_streams: Dict[str, np.ndarray[float, np.dtype[np.float64]]],
@@ -102,7 +102,6 @@ class CumulativeRetrainer:
         i = stat_window
         p_val = 1
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        # n_features = data_streams["X"][0].shape[1]
 
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
@@ -112,7 +111,7 @@ class CumulativeRetrainer:
 
             if p_val < p_val_threshold:
                 X_update_streams = pd.concat(
-                    data_streams["X"][max(int(i) - run_length, 0) : int(i)]
+                    data_streams["X"][max(int(i) - run_length, 0) : int(i)],
                 )
                 X_update_streams = X_update_streams[
                     ~X_update_streams.index.duplicated(keep="first")
@@ -123,7 +122,7 @@ class CumulativeRetrainer:
                 X_update = process(X_update, aggregation_type, num_timesteps)
 
                 y_update = pd.concat(
-                    data_streams["y"][max(int(i) - run_length, 0) : int(i)]
+                    data_streams["y"][max(int(i) - run_length, 0) : int(i)],
                 )
                 y_update.index = ind
                 y_update = y_update[~y_update.index.duplicated(keep="first")]
@@ -141,7 +140,9 @@ class CumulativeRetrainer:
                 if self.model_name in ["rnn", "gru", "lstm"]:
                     update_dataset = get_data(X_update, y_update.to_numpy())
                     update_loader = torch.utils.data.DataLoader(
-                        update_dataset, batch_size=1, shuffle=False
+                        update_dataset,
+                        batch_size=1,
+                        shuffle=False,
                     )
 
                     if correct_only:
@@ -163,7 +164,7 @@ class CumulativeRetrainer:
 
                         X_update = X_update_streams.loc[
                             X_update_streams.index.get_level_values(0).isin(
-                                encounter_ids
+                                encounter_ids,
                             )
                         ]
                         X_update = scale(X_update_streams)
@@ -172,11 +173,13 @@ class CumulativeRetrainer:
 
                         update_dataset = get_data(X_update, y_update.to_numpy())
                         update_loader = torch.utils.data.DataLoader(
-                            update_dataset, batch_size=1, shuffle=False
+                            update_dataset,
+                            batch_size=1,
+                            shuffle=False,
                         )
 
                     self.retrain_model_path = "_".join(
-                        ["cumulative", str(n_epochs), str(sample), "retrain.model"]
+                        ["cumulative", str(n_epochs), str(sample), "retrain.model"],
                     )
 
                     # train
@@ -188,15 +191,11 @@ class CumulativeRetrainer:
                     model_weight = torch.load(self.retrain_model_path)  # type: ignore
                     self.model.load_state_dict(model_weight)
                     self.optimizer.model = self.model
-                    setattr(self.shift_detector, "model_path", self.retrain_model_path)
+                    self.shift_detector.model_path = self.retrain_model_path
 
                 elif self.model_name == "gbt":
                     pass
-                    # X_retrain = None
-                    # y_retrain = None
                     # self.model = self.model.fit(
-                    #     X_retrain, y_retrain, xgb_model=self.model.get_booster()
-                    # )
 
                 else:
                     print("Invalid Model Name")
@@ -209,7 +208,7 @@ class CumulativeRetrainer:
                     max(int(i) + lookup_window, 0) : int(i)
                     + stat_window
                     + lookup_window
-                ]
+                ],
             )
             X_next = X_next[~X_next.index.duplicated(keep="first")]
             next_ind = X_next.index.get_level_values(0).unique()
@@ -221,7 +220,7 @@ class CumulativeRetrainer:
                     max(int(i) + lookup_window, 0) : int(i)
                     + stat_window
                     + lookup_window
-                ]
+                ],
             )
             y_next.index = next_ind
             y_next = y_next[~y_next.index.duplicated(keep="first")].to_numpy()
@@ -233,14 +232,17 @@ class CumulativeRetrainer:
             test_dataset = get_data(X_next, y_next)
             test_loader = torch.utils.data.DataLoader(test_dataset, shuffle=False)
             y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
-                test_loader
+                test_loader,
             )
             assert y_test_labels.shape == y_pred_labels.shape == y_pred_values.shape
             y_pred_values = y_pred_values[y_test_labels != -1]
             y_pred_labels = y_pred_labels[y_test_labels != -1]
             y_test_labels = y_test_labels[y_test_labels != -1]
             performance_metrics = print_metrics_binary(
-                y_test_labels, y_pred_values, y_pred_labels, verbose=self.verbose
+                y_test_labels,
+                y_pred_values,
+                y_pred_labels,
+                verbose=self.verbose,
             )
 
             # Run distribution shift test of next window
@@ -270,12 +272,10 @@ class CumulativeRetrainer:
 
         pbar.close()
 
-        rolling_metrics_final = {
+        return {
             k: [d.get(k) for d in rolling_metrics]
             for k in set().union(*rolling_metrics)
         }
-
-        return rolling_metrics_final
 
 
 class MostRecentRetrainer:
@@ -311,7 +311,7 @@ class MostRecentRetrainer:
         model_name: Optional[str] = None,
         retrain_model_path: Optional[str] = None,
         verbose: bool = False,
-    ):
+    ) -> None:
         self.shift_detector = shift_detector
         self.optimizer = optimizer
         self.model = model
@@ -319,7 +319,7 @@ class MostRecentRetrainer:
         self.retrain_model_path = retrain_model_path
         self.verbose = verbose
 
-    def retrain(
+    def retrain(  # noqa: PLR0915
         self,
         data_streams: Dict[str, np.ndarray[float, np.dtype[np.float64]]],
         retrain_window: int = 30,
@@ -372,7 +372,6 @@ class MostRecentRetrainer:
         i = stat_window
         p_val = 1
         num_timesteps = data_streams["X"][0].index.get_level_values(1).nunique()
-        # n_features = data_streams["X"][0].shape[1]
 
         pbar_total = len(data_streams["X"]) - stat_window - lookup_window + 1
         pbar = tqdm(total=pbar_total, miniters=int(pbar_total / 100))
@@ -382,7 +381,7 @@ class MostRecentRetrainer:
 
             if p_val < p_val_threshold:
                 X_update_streams = pd.concat(
-                    data_streams["X"][max(int(i) - run_length, 0) : int(i)]
+                    data_streams["X"][max(int(i) - run_length, 0) : int(i)],
                 )
                 X_update_streams = X_update_streams[
                     ~X_update_streams.index.duplicated(keep="first")
@@ -393,7 +392,7 @@ class MostRecentRetrainer:
                 X_update = process(X_update, aggregation_type, num_timesteps)
 
                 y_update = pd.concat(
-                    data_streams["y"][max(int(i) - run_length, 0) : int(i)]
+                    data_streams["y"][max(int(i) - run_length, 0) : int(i)],
                 )
                 y_update.index = ind
                 y_update = y_update[~y_update.index.duplicated(keep="first")]
@@ -411,7 +410,9 @@ class MostRecentRetrainer:
                 if self.model_name in ["rnn", "gru", "lstm"]:
                     update_dataset = get_data(X_update, y_update.to_numpy())
                     update_loader = torch.utils.data.DataLoader(
-                        update_dataset, batch_size=1, shuffle=False
+                        update_dataset,
+                        batch_size=1,
+                        shuffle=False,
                     )
 
                     # Remove all incorrectly predicted labels for retraining
@@ -435,7 +436,7 @@ class MostRecentRetrainer:
 
                         X_update = X_update_streams.loc[
                             X_update_streams.index.get_level_values(0).isin(
-                                encounter_ids
+                                encounter_ids,
                             )
                         ]
                         X_update = scale(X_update_streams)
@@ -444,7 +445,9 @@ class MostRecentRetrainer:
 
                         update_dataset = get_data(X_update, y_update.to_numpy())
                         update_loader = torch.utils.data.DataLoader(
-                            update_dataset, batch_size=1, shuffle=False
+                            update_dataset,
+                            batch_size=1,
+                            shuffle=False,
                         )
 
                     if self.retrain_model_path is None:
@@ -455,7 +458,7 @@ class MostRecentRetrainer:
                                 str(n_epochs),
                                 str(sample),
                                 "retrain.model",
-                            ]
+                            ],
                         )
 
                     # train
@@ -469,15 +472,12 @@ class MostRecentRetrainer:
                     model_weights = torch.load(self.retrain_model_path)  # type: ignore
                     self.model.load_state_dict(model_weights)
                     self.optimizer.model = self.model
-                    setattr(self.shift_detector, "model_path", self.retrain_model_path)
+                    self.shift_detector.model_path = self.retrain_model_path
 
                 elif self.model_name == "gbt":
                     pass
-                    # X_retrain, y_retrain = None, None
 
                     # self.model = self.model.fit(
-                    #     X_retrain, y_retrain, xgb_model=self.model.get_booster()
-                    # )
 
                 else:
                     print("Invalid Model Name")
@@ -489,7 +489,7 @@ class MostRecentRetrainer:
                     max(int(i) + lookup_window, 0) : int(i)
                     + stat_window
                     + lookup_window
-                ]
+                ],
             )
             X_next = X_next[~X_next.index.duplicated(keep="first")]
             next_ind = X_next.index.get_level_values(0).unique()
@@ -501,7 +501,7 @@ class MostRecentRetrainer:
                     max(int(i) + lookup_window, 0) : int(i)
                     + stat_window
                     + lookup_window
-                ]
+                ],
             )
             y_next.index = next_ind
             y_next = y_next[~y_next.index.duplicated(keep="first")].to_numpy()
@@ -513,7 +513,9 @@ class MostRecentRetrainer:
             # Check Performance
             test_dataset = get_data(X_next, y_next)
             test_loader = torch.utils.data.DataLoader(
-                test_dataset, batch_size=1, shuffle=False
+                test_dataset,
+                batch_size=1,
+                shuffle=False,
             )
             y_test_labels, y_pred_values, y_pred_labels = self.optimizer.evaluate(
                 test_loader,
@@ -523,7 +525,10 @@ class MostRecentRetrainer:
             y_pred_labels = y_pred_labels[y_test_labels != -1]
             y_test_labels = y_test_labels[y_test_labels != -1]
             performance_metrics = print_metrics_binary(
-                y_test_labels, y_pred_values, y_pred_labels, verbose=self.verbose
+                y_test_labels,
+                y_pred_values,
+                y_pred_labels,
+                verbose=self.verbose,
             )
 
             # Detect Distribution Shift
@@ -549,6 +554,4 @@ class MostRecentRetrainer:
 
         pbar.close()
 
-        rolling_metrics = pd.concat(rolling_metrics).reset_index(drop=True)
-
-        return rolling_metrics
+        return pd.concat(rolling_metrics).reset_index(drop=True)

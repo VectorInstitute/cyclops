@@ -5,7 +5,7 @@ import pytest
 from cyclops.query import MIMICIVQuerier
 
 
-@pytest.mark.integration_test
+@pytest.mark.integration_test()
 def test_mimiciv_querier():
     """Test MIMICQuerier on MIMICIV-2.0."""
     querier = MIMICIVQuerier()

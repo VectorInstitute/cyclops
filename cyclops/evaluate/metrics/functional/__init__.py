@@ -6,8 +6,8 @@ from cyclops.evaluate.metrics.functional.accuracy import (  # noqa: F401
     multiclass_accuracy,
     multilabel_accuracy,
 )
-from cyclops.evaluate.metrics.functional.auroc import auroc  # noqa: F401
 from cyclops.evaluate.metrics.functional.auroc import (
+    auroc,  # noqa: F401
     binary_auroc,
     multiclass_auroc,
     multilabel_auroc,

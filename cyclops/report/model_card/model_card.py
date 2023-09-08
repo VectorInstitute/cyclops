@@ -31,10 +31,12 @@ class ModelCard(BaseModel):
         extra: Extra = Extra.forbid
 
     model_details: Optional[ModelDetails] = Field(
-        None, description="Descriptive metadata for the model."
+        None,
+        description="Descriptive metadata for the model.",
     )
     model_parameters: Optional[ModelParameters] = Field(
-        None, description="Technical metadata for the model."
+        None,
+        description="Technical metadata for the model.",
     )
     datasets: Optional[Datasets] = Field(
         None,
@@ -50,13 +52,16 @@ class ModelCard(BaseModel):
         ),
     )
     quantitative_analysis: Optional[QuantitativeAnalysis] = Field(
-        None, description="Quantitative analysis of model performance."
+        None,
+        description="Quantitative analysis of model performance.",
     )
     explainability_analysis: Optional[ExplainabilityAnalysis] = Field(
-        None, description="Explainability analysis being reported."
+        None,
+        description="Explainability analysis being reported.",
     )
     fairness_analysis: Optional[FairnessAnalysis] = Field(
-        None, description="Fairness analysis being reported."
+        None,
+        description="Fairness analysis being reported.",
     )
 
     def get_section(self, section_name: str) -> BaseModelCardSection:
@@ -74,7 +79,7 @@ class ModelCard(BaseModel):
         if section_name not in sections:
             raise ValueError(
                 f"Section `{section_name}` not found in model card. "
-                f"Available sections are: {list(sections.keys())}"
+                f"Available sections are: {list(sections.keys())}",
             )
 
         section: Optional[BaseModelCardSection] = getattr(self, section_name)
@@ -85,7 +90,7 @@ class ModelCard(BaseModel):
         if not issubclass(section.__class__, BaseModel):
             raise TypeError(
                 f"Expected section `{section_name}` to be a subclass of `BaseModel`."
-                f" Got {section.__class__} instead."
+                f" Got {section.__class__} instead.",
             )
 
         return section

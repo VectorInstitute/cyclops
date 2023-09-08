@@ -28,7 +28,7 @@ class Explainer:
         model: Any,
         data: Optional[Any] = None,
         explainer_type: Optional[str] = None,
-    ):
+    ) -> None:
         self.model = model
         self.data = data
         self.explainer_type = explainer_type
@@ -48,8 +48,7 @@ class Explainer:
 
     def get_shap_values(self, X: Any) -> Any:
         """Get the shap values for the model."""
-        shap_values = self.explainer(X)
-        return shap_values
+        return self.explainer(X)
 
     def plot_dependence(self, feat: Any, shap_values: Any, X: Any) -> Any:
         """Plot the dependence of a feature on the model output."""

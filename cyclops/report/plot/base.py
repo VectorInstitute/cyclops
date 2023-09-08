@@ -1,13 +1,12 @@
 """Base class for plotter."""
 
-import abc
 from typing import Any, Dict, List, Union
 
 import plotly.graph_objects as go
 import plotly.io as pio
 
 
-class Plotter(abc.ABC):
+class Plotter:
     """Plotter base class."""
 
     def __init__(self) -> None:
@@ -15,7 +14,8 @@ class Plotter(abc.ABC):
         self.set_template("plotly")
 
     def set_template(
-        self, template: Union[str, Dict[str, Any], go.layout.Template]
+        self,
+        template: Union[str, Dict[str, Any], go.layout.Template],
     ) -> None:
         """Set the template for the plotter.
 

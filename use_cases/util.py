@@ -31,7 +31,7 @@ def get_use_case_params(dataset: str, use_case: str) -> types.ModuleType:
 
     """
     return importlib.import_module(
-        ".".join(["use_cases", "params", dataset, use_case, "constants"])
+        ".".join(["use_cases", "params", dataset, use_case, "constants"]),
     )
 
 
@@ -129,11 +129,11 @@ def get_pandas_df(
     if isinstance(dataset, Dataset) and not is_out_of_core(dataset.dataset_size):
         # validate feature_cols and label_col
         if feature_cols is not None and not set(feature_cols).issubset(
-            dataset.column_names
+            dataset.column_names,
         ):
             raise ValueError("feature_cols must be a subset of dataset column names.")
         if label_cols is not None and not set(label_cols).issubset(
-            dataset.column_names
+            dataset.column_names,
         ):
             raise ValueError("label_col must be a column name of dataset.")
 
@@ -150,5 +150,5 @@ def get_pandas_df(
         return pd_dataset
 
     raise TypeError(
-        f"Expected dataset to be a Dataset or DatasetDict. Got: {type(dataset)}"
+        f"Expected dataset to be a Dataset or DatasetDict. Got: {type(dataset)}",
     )

@@ -1,5 +1,3 @@
-# pylint: disable=too-many-lines
-
 """Handling feature types."""
 
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -149,7 +147,7 @@ def to_dtype(series: pd.Series, type_: str) -> pd.Series:
 
 def _valid_string(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    unique: Optional[np.ndarray] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid string type.
@@ -178,9 +176,9 @@ def _valid_string(
 
 
 def _convertible_to_string(
-    series: pd.Series,  # pylint: disable=unused-argument
-    unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
-    raise_error: bool = False,  # pylint: disable=unused-argument
+    series: pd.Series,
+    unique: Optional[np.ndarray] = None,
+    raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type string.
 
@@ -228,7 +226,7 @@ def _to_string(
 
 def _valid_numeric(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    unique: Optional[np.ndarray] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid numeric type.
@@ -259,7 +257,7 @@ def _valid_numeric(
 
 def _convertible_to_numeric(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    unique: Optional[np.ndarray] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type numeric.
@@ -317,7 +315,7 @@ def _to_numeric(
     return to_dtype(series, NUMERIC), {FEATURE_TYPE_ATTR: NUMERIC}
 
 
-def _convertible_to_categorical(  # pylint: disable=too-many-arguments
+def _convertible_to_categorical(
     series: pd.Series,
     category_min: Optional[int] = None,
     category_max: Optional[int] = None,
@@ -356,15 +354,9 @@ def _convertible_to_categorical(  # pylint: disable=too-many-arguments
     nonnull_unique = unique[~pd.isnull(unique)]
     nunique = len(nonnull_unique)
 
-    if category_min is None:
-        min_cond = True
-    else:
-        min_cond = nunique >= category_min
+    min_cond = True if category_min is None else nunique >= category_min
 
-    if category_max is None:
-        max_cond = True
-    else:
-        max_cond = nunique <= category_max
+    max_cond = True if category_max is None else nunique <= category_max
 
     # Convertible
     if min_cond and max_cond:
@@ -373,12 +365,12 @@ def _convertible_to_categorical(  # pylint: disable=too-many-arguments
     # Not convertible
     if max_cond and raise_error_over_max:
         raise ValueError(
-            f"Should have at most {category_max} categories, but has {nunique}."
+            f"Should have at most {category_max} categories, but has {nunique}.",
         )
 
     if min_cond and raise_error_under_min:
         raise ValueError(
-            f"Should have at least {category_min} categories, but has {nunique}."
+            f"Should have at least {category_min} categories, but has {nunique}.",
         )
 
     return False
@@ -540,7 +532,7 @@ def _valid_binary(
     """
     unique = get_unique(series, unique=unique)
     nonnull_unique = unique[~pd.isnull(unique)]
-    valid = set(nonnull_unique) == set([0, 1])
+    valid = set(nonnull_unique) == {0, 1}
 
     if valid:
         return True
@@ -582,7 +574,8 @@ def _convertible_to_binary(
 
 
 def _to_binary(
-    series: pd.Series, unique: Optional[np.ndarray] = None
+    series: pd.Series,
+    unique: Optional[np.ndarray] = None,
 ) -> Tuple[pd.Series, Dict[str, Any]]:
     """Convert type to binary.
 
@@ -878,7 +871,7 @@ def _to_type(
     if new_type == CATEGORICAL_INDICATOR:
         if data is None:
             raise ValueError(
-                "The features data must be passed to keyword argument 'data'."
+                "The features data must be passed to keyword argument 'data'.",
             )
         return _to_categorical_indicators(data, col, unique=unique)
 

@@ -1,4 +1,4 @@
-"""Cyclops report module."""  # pylint: disable=too-many-lines
+"""Cyclops report module."""
 
 import base64
 import os
@@ -45,7 +45,6 @@ from cyclops.report.utils import (
     str_to_snake_case,
 )
 
-# pylint: disable=fixme
 
 _TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
 _DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template_light.jinja"
@@ -71,7 +70,9 @@ class ModelCardReport:
 
     @classmethod
     def from_json_file(
-        cls, path: str, output_dir: Optional[str] = None
+        cls,
+        path: str,
+        output_dir: Optional[str] = None,
     ) -> "ModelCardReport":
         """Load a model card from a file.
 
@@ -92,7 +93,7 @@ class ModelCardReport:
         """
         model_card = ModelCard.parse_file(path)
         report = ModelCardReport(output_dir=output_dir)
-        report._model_card = model_card  # pylint: disable=protected-access
+        report._model_card = model_card
         return report
 
     def _log_field(
@@ -152,7 +153,11 @@ class ModelCardReport:
         setattr(self._model_card, section_name, populated_section)
 
     def log_descriptor(
-        self, name: str, description: str, section_name: str, **extra: Any
+        self,
+        name: str,
+        description: str,
+        section_name: str,
+        **extra: Any,
     ) -> None:
         """Add a descriptor to a section of the report.
 
@@ -177,8 +182,7 @@ class ModelCardReport:
         KeyError
             If the given section name is not valid.
         ValueError
-            If the given name conflicts with a defined class in the `model_card`
-            module.
+            If the given name conflicts with a defined class in the `model_card` module.
 
         Examples
         --------
@@ -206,7 +210,7 @@ class ModelCardReport:
         if _object_is_in_model_card_module(field_obj):
             raise ValueError(
                 "Encountered name conflict when trying to create a descriptor for "
-                f"{name}. Please use a different name."
+                f"{name}. Please use a different name.",
             )
 
         self._log_field(
@@ -217,7 +221,10 @@ class ModelCardReport:
         )
 
     def _log_graphic_collection(
-        self, graphic: Graphic, description: str, section_name: str
+        self,
+        graphic: Graphic,
+        description: str,
+        section_name: str,
     ) -> None:
         # get the section
         section_name = str_to_snake_case(section_name)
@@ -267,13 +274,17 @@ class ModelCardReport:
             img_base64 = base64.b64encode(buffered.getvalue()).decode()
 
         graphic = Graphic.parse_obj(
-            {"name": caption, "image": f"data:image/{img.format};base64,{img_base64}"}
+            {"name": caption, "image": f"data:image/{img.format};base64,{img_base64}"},
         )
 
         self._log_graphic_collection(graphic, "Images", section_name)
 
     def log_plotly_figure(
-        self, fig: Figure, caption: str, section_name: str, interactive: bool = True
+        self,
+        fig: Figure,
+        caption: str,
+        section_name: str,
+        interactive: bool = True,
     ) -> None:
         """Add a plotly figure to a section of the report.
 
@@ -447,7 +458,10 @@ class ModelCardReport:
         )
 
     def log_citation(
-        self, citation: str, section_name: str = "model_details", **extra: Any
+        self,
+        citation: str,
+        section_name: str = "model_details",
+        **extra: Any,
     ) -> None:
         """Add a citation to a section of the report.
 
@@ -480,7 +494,10 @@ class ModelCardReport:
         )
 
     def log_reference(
-        self, link: str, section_name: str = "model_details", **extra: Any
+        self,
+        link: str,
+        section_name: str = "model_details",
+        **extra: Any,
     ) -> None:
         """Add a reference to a section of the report.
 
@@ -828,7 +845,7 @@ class ModelCardReport:
         if analysis_type not in ["performance", "fairness", "explainability"]:
             raise ValueError(
                 f"Invalid metric type {analysis_type}. Must be one of 'performance', "
-                "'fairness', or 'explainability'."
+                "'fairness', or 'explainability'.",
             )
 
         section_name: str
@@ -869,7 +886,8 @@ class ModelCardReport:
             # create Test objects
             tests = []
             for threshold, threshold_fn in zip(
-                pass_fail_thresholds, pass_fail_threshold_fns
+                pass_fail_thresholds,
+                pass_fail_threshold_fns,
             ):
                 tests.append(
                     Test(
@@ -879,7 +897,7 @@ class ModelCardReport:
                         result=value,
                         passed=threshold_fn(value, threshold),
                         graphics=None,
-                    )
+                    ),
                 )
 
             data["tests"] = tests
@@ -914,10 +932,10 @@ class ModelCardReport:
             name_split = metric_name.split("/")
             if len(name_split) == 1:
                 slice_name = "overall"
-                metric_name = name_split[0]
+                metric_name = name_split[0]  # noqa: PLW2901
             else:  # everything before the last slash is the slice name
                 slice_name = "/".join(name_split[:-1])
-                metric_name = name_split[-1]
+                metric_name = name_split[-1]  # noqa: PLW2901
 
             # TODO: create plot
 
@@ -949,11 +967,13 @@ class ModelCardReport:
         return jinja2.FileSystemLoader(template_dir)
 
     def _get_jinja_template(
-        self, template_path: Optional[str] = None
+        self,
+        template_path: Optional[str] = None,
     ) -> jinja2.Template:
         """Get a jinja2 template."""
         _template_path = template_path or os.path.join(
-            _TEMPLATE_DIR, _DEFAULT_TEMPLATE_FILENAME
+            _TEMPLATE_DIR,
+            _DEFAULT_TEMPLATE_FILENAME,
         )
         template_dir = os.path.dirname(_template_path)
         template_file = os.path.basename(_template_path)
@@ -1006,8 +1026,8 @@ class ModelCardReport:
                         marker={"colors": colors},
                         showlegend=False,
                         title=f"<b>{passed}/{passed+failed}</b><br>Tests Passed",
-                    )
-                ]
+                    ),
+                ],
             )
             # Increase font size and change font
             fig.update_layout(
@@ -1028,8 +1048,7 @@ class ModelCardReport:
                 "name": "Tests (Pass/Fail) Donut Chart",
                 "image": fig.to_html(full_html=False, include_plotlyjs=False),
             }
-            graphic = Graphic.parse_obj(data)  # create Graphic object from data
-            return graphic
+            return Graphic.parse_obj(data)  # create Graphic object from data
 
         jinja_env.filters["donut_chart_tests"] = donut_chart_tests
         jinja_env.filters["regex_replace"] = regex_replace
@@ -1081,7 +1100,7 @@ class ModelCardReport:
             """Sweep model card to find all instances of Test."""
             for field in model_card:
                 if isinstance(field, tuple):
-                    field = field[1]
+                    field = field[1]  # noqa: PLW2901
                 if isinstance(field, Test):
                     tests.append(field)
                 if hasattr(field, "__fields__"):
@@ -1100,10 +1119,9 @@ class ModelCardReport:
             """Sweep model card to find all instances of Test."""
             for field in model_card:
                 if isinstance(field, tuple):
-                    field = field[1]
-                if isinstance(field, Graphic):
-                    if field.name == caption:
-                        graphics.append(field)
+                    field = field[1]  # noqa: PLW2901
+                if isinstance(field, Graphic) and field.name == caption:
+                    graphics.append(field)
                 if hasattr(field, "__fields__"):
                     sweep_graphics(field, graphics, caption)
                 if isinstance(field, list) and len(field) != 0:
@@ -1135,7 +1153,8 @@ class ModelCardReport:
         if save_json:
             json_path = report_path.replace(".html", ".json")
             self._write_file(
-                json_path, self._model_card.json(indent=2, exclude_unset=True)
+                json_path,
+                self._model_card.json(indent=2, exclude_unset=True),
             )
 
         return report_path

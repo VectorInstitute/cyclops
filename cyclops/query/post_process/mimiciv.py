@@ -7,6 +7,7 @@ from cyclops.process.constants import ER, ICU, IP, SCU
 from cyclops.query.post_process.util import process_care_unit_changepoints
 from cyclops.utils.profile import time_function
 
+
 CARE_UNIT_MAP = {
     IP: {
         "observation": ["Observation", "Psychiatry"],
@@ -102,7 +103,8 @@ def process_mimic_care_unit_changepoints(data: pd.DataFrame) -> pd.DataFrame:
 
 @time_function
 def process_mimic_care_units(
-    transfers: pd.DataFrame, specific: bool = False
+    transfers: pd.DataFrame,
+    specific: bool = False,
 ) -> pd.DataFrame:
     """Process care unit data.
 

@@ -10,7 +10,7 @@ class MetricTester:
     """Helper class for testing metrics."""
 
     @staticmethod
-    def run_functional_test(  # pylint: disable=too-many-arguments
+    def run_functional_test(
         target: np.ndarray,
         preds: np.ndarray,
         metric_functional: Callable,
@@ -142,9 +142,9 @@ def _assert_allclose(data_a: Any, data_b: Any, atol: float = 1e-8):
             _assert_allclose(element_a, element_b, atol=atol)
     elif isinstance(data_a, Mapping):
         assert data_a.keys() == data_b.keys()
-        for key in data_a.keys():
+        for key in data_a:
             _assert_allclose(data_a[key], data_b[key], atol=atol)
     else:
         raise ValueError(
-            f"Unknown format for comparison: {type(data_a)} and" f" {type(data_b)}"
+            f"Unknown format for comparison: {type(data_a)} and" f" {type(data_b)}",
         )

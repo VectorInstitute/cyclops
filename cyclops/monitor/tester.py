@@ -86,7 +86,7 @@ class TSTester:
         tester_method: str,
         p_val_threshold: float = 0.05,
         **kwargs: Any,
-    ):
+    ) -> None:
         self.tester_method = tester_method
         self.method: Any = None
         self.p_val_threshold = p_val_threshold
@@ -111,7 +111,7 @@ class TSTester:
         if self.tester_method not in self.tester_methods:
             raise ValueError(
                 f"Tester method {self.tester_method} not supported. \
-                    Must be one of {self.tester_methods.keys()}"
+                    Must be one of {self.tester_methods.keys()}",
             )
 
     def get_available_test_methods(self) -> List[str]:
@@ -137,9 +137,8 @@ class TSTester:
         # if not already present
         # this is required for the FET test
         # to work properly
-        if self.tester_method == "fet":
-            if "alternative" not in self.method_args:
-                self.method_args["alternative"] = "two-sided"
+        if self.tester_method == "fet" and "alternative" not in self.method_args:
+            self.method_args["alternative"] = "two-sided"
 
         if self.tester_method == "ctx_mmd":
             if "ds_source" in kwargs:
@@ -147,13 +146,14 @@ class TSTester:
                     X_s,
                     ds_source=kwargs["ds_source"],
                     **get_args(
-                        self.tester_methods[self.tester_method], self.method_args
+                        self.tester_methods[self.tester_method],
+                        self.method_args,
                     ),
                 )
             else:
                 raise ValueError(
                     "ds_source must be provided to fit method \
-                    for ctx_mmd."
+                    for ctx_mmd.",
                 )
         else:
             self.method = self.tester_methods[self.tester_method](
@@ -195,11 +195,12 @@ class TSTester:
             else:
                 raise ValueError(
                     "ds_target must be provided to test_shift method \
-                    for ctx_mmd."
+                    for ctx_mmd.",
                 )
         else:
             preds = self.method.predict(
-                X_t, **get_args(self.method.predict, self.method_args)
+                X_t,
+                **get_args(self.method.predict, self.method_args),
             )
 
         p_val = preds["data"]["p_val"]
@@ -291,8 +292,11 @@ class DCTester:
     """
 
     def __init__(
-        self, tester_method: str, p_val_threshold: float = 0.05, **kwargs: Any
-    ):
+        self,
+        tester_method: str,
+        p_val_threshold: float = 0.05,
+        **kwargs: Any,
+    ) -> None:
         self.tester_method = tester_method
         self.p_val_threshold = p_val_threshold
         self.method_args = kwargs
@@ -306,7 +310,7 @@ class DCTester:
         if self.tester_method not in self.tester_methods:
             raise ValueError(
                 f"Tester method {self.tester_method} not supported. \
-                Must be one of {self.tester_methods.keys()}"
+                Must be one of {self.tester_methods.keys()}",
             )
 
     def get_available_test_methods(self) -> List[str]:
@@ -340,7 +344,7 @@ class DCTester:
             else:
                 raise ValueError(
                     "Model must be one of: torch.nn.Module or \
-                    sklearn.base.BaseEstimator"
+                    sklearn.base.BaseEstimator",
                 )
             self.tester = self.tester_methods[self.tester_method](
                 X_s,

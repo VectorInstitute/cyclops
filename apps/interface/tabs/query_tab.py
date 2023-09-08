@@ -8,6 +8,7 @@ from dash import dcc, html
 from ..component_utils import flatten_2d_tuple, table_result
 from ..consts import APP_DIAG, APP_ENC, APP_EVENT, APP_PAGE_QUERY, TABLE_IDS, TABLES
 
+
 encounter_components = (
     dmc.Checkbox(
         id=f"{APP_ENC}-checkbox",
@@ -30,8 +31,8 @@ encounter_components = (
                         dcool.TagInput(
                             id=f"{APP_ENC}-sex",
                             placeholder="Specify sexes (Blank = All)",
-                        )
-                    ]
+                        ),
+                    ],
                 ),
                 dmc.Space(h=50),
                 html.Label("Age"),
@@ -49,10 +50,10 @@ encounter_components = (
                             placeholder="Max (Blank = No max)",
                             min=0,
                         ),
-                    ]
+                    ],
                 ),
                 dmc.Space(h=50),
-            ]
+            ],
         ),
         id=f"{APP_ENC}-collapse",
     ),
@@ -76,8 +77,8 @@ diagnosis_components = (
                         dcool.TagInput(
                             id=f"{APP_DIAG}-code",
                             placeholder="Specify codes (Blank = All)",
-                        )
-                    ]
+                        ),
+                    ],
                 ),
                 dmc.Space(h=50),
                 html.Label("Diagnosis substring"),
@@ -87,12 +88,12 @@ diagnosis_components = (
                         dcool.TagInput(
                             id=f"{APP_DIAG}-substring",
                             placeholder="Specify substrings (Blank = All)",
-                        )
-                    ]
+                        ),
+                    ],
                 ),
                 dmc.Space(h=50),
                 dmc.Space(h=20),
-            ]
+            ],
         ),
         id=f"{APP_DIAG}-collapse",
     ),

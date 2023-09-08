@@ -56,6 +56,7 @@ class BinaryFbetaScore(BinaryStatScores, registry_key="binary_fbeta_score"):
         threshold: float = 0.5,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(threshold=threshold, pos_label=pos_label)
 
         _check_beta(beta=beta)
@@ -140,6 +141,7 @@ class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(num_classes=num_classes, top_k=top_k, classwise=True)
 
         _check_beta(beta=beta)
@@ -220,8 +222,12 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
-            num_labels=num_labels, threshold=threshold, top_k=top_k, labelwise=True
+            num_labels=num_labels,
+            threshold=threshold,
+            top_k=top_k,
+            labelwise=True,
         )
 
         _check_beta(beta=beta)
@@ -376,7 +382,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
             )
         raise ValueError(
             f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
+            " or 'multilabel'",
         )
 
 
@@ -418,6 +424,7 @@ class BinaryF1Score(BinaryFbetaScore, registry_key="binary_f1_score"):
         threshold: float = 0.5,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
             beta=1.0,
             threshold=threshold,
@@ -479,6 +486,7 @@ class MulticlassF1Score(MulticlassFbetaScore, registry_key="multiclass_f1_score"
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the Metric."""
         super().__init__(
             beta=1.0,
             num_classes=num_classes,
@@ -545,6 +553,7 @@ class MultilabelF1Score(MultilabelFbetaScore, registry_key="multilabel_f1_score"
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the Metric."""
         super().__init__(
             beta=1.0,
             num_labels=num_labels,
@@ -684,5 +693,5 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
             )
         raise ValueError(
             f"Task {task} is not supported, expected one of 'binary', 'multiclass'"
-            " or 'multilabel'"
+            " or 'multilabel'",
         )

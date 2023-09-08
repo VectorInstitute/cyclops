@@ -58,12 +58,12 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
         thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         pos_label: int = 1,
     ) -> None:
+        """Initialize the metric."""
         super().__init__(thresholds=thresholds, pos_label=pos_label)
         self.max_fpr = max_fpr
 
     def compute(self) -> float:  # type: ignore # super().compute() returns Tuple
         """Compute the area under the ROC curve from the state variables."""
-        # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
             state = (
                 np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
@@ -128,13 +128,13 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
         thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         average: Optional[Literal["macro", "weighted"]] = None,
     ) -> None:
+        """Initialize the metric."""
         super().__init__(num_classes=num_classes, thresholds=thresholds)
         _check_average_arg(average)
         self.average = average
 
     def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type:ignore[override]
         """Compute the area under the ROC curve from the state variables."""
-        # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
             state = (
                 np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
@@ -198,13 +198,13 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_a
         thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
         average: Optional[Literal["micro", "macro", "weighted"]] = None,
     ) -> None:
+        """Initialize the metric."""
         super().__init__(num_labels=num_labels, thresholds=thresholds)
         _check_average_arg(average)
         self.average = average
 
     def compute(self) -> Union[float, npt.NDArray[np.float_]]:  # type: ignore[override]
         """Compute the area under the ROC curve from the state variables."""
-        # pylint: disable=no-member # attributes are set with setattr
         if self.thresholds is None:
             state = (
                 np.concatenate(self.target, axis=0),  # type: ignore[attr-defined]
@@ -329,9 +329,11 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
                 isinstance(num_labels, int) and num_labels > 0
             ), "Number of labels must be a positive integer."
             return MultilabelAUROC(
-                num_labels=num_labels, thresholds=thresholds, average=average
+                num_labels=num_labels,
+                thresholds=thresholds,
+                average=average,
             )
         raise ValueError(
             "Expected argument `task` to be either 'binary', 'multiclass' or "
-            f"'multilabel', but got {task}"
+            f"'multilabel', but got {task}",
         )

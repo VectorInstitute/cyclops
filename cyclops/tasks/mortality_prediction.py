@@ -18,14 +18,13 @@ from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import _model_names_mapping, _static_model_keys
 from cyclops.models.wrappers import WrappedModel
 from cyclops.models.wrappers.sk_model import SKModel
+from cyclops.models.wrappers.utils import to_numpy
 from cyclops.tasks.base import BaseTask
-from cyclops.tasks.utils import to_numpy
 from cyclops.utils.log import setup_logging
+
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
-
-# pylint: disable=function-redefined, dangerous-default-value
 
 
 class MortalityPredictionTask(BaseTask):
@@ -39,14 +38,9 @@ class MortalityPredictionTask(BaseTask):
             Sequence[Union[str, WrappedModel]],
             Dict[str, WrappedModel],
         ],
-        task_features: Union[str, List[str]] = [
-            "age",
-            "sex",
-            "admission_type",
-            "admission_location",
-        ],
-        task_target: Union[str, List[str]] = ["outcome_death"],
-    ):
+        task_features: Union[str, List[str]] = None,
+        task_target: Union[str, List[str]] = None,
+    ) -> None:
         """Mortality prediction task for tabular data.
 
         Parameters
@@ -59,6 +53,10 @@ class MortalityPredictionTask(BaseTask):
             List of target names.
 
         """
+        if task_target is None:
+            task_target = ["outcome_death"]
+        if task_features is None:
+            task_features = ["age", "sex", "admission_type", "admission_location"]
         super().__init__(models, task_features, task_target)
 
     @property
@@ -110,7 +108,7 @@ class MortalityPredictionTask(BaseTask):
         model_name: Optional[str] = None,
         transforms: Optional[ColumnTransformer] = None,
         best_model_params: Optional[dict] = None,
-        splits_mapping: dict = {"train": "train", "validation": "validation"},
+        splits_mapping: dict = None,
         **kwargs,
     ) -> WrappedModel:
         """Fit a model on tabular data.
@@ -139,6 +137,8 @@ class MortalityPredictionTask(BaseTask):
             The trained model.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"train": "train", "validation": "validation"}
         model_name, model = self.get_model(model_name)
         if isinstance(X, (Dataset, DatasetDict)):
             if best_model_params:
@@ -170,7 +170,7 @@ class MortalityPredictionTask(BaseTask):
                 raise ValueError(
                     "Missing data labels 'y'. Please provide the labels for \
                     the training data when not using a Hugging Face dataset \
-                    as the input."
+                    as the input.",
                 )
 
             X = to_numpy(X)
@@ -205,7 +205,7 @@ class MortalityPredictionTask(BaseTask):
         model_name: Optional[str] = None,
         transforms: Optional[ColumnTransformer] = None,
         proba: bool = True,
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         **kwargs,
     ) -> Union[np.ndarray, Dataset]:
         """Predict mortality on the given dataset.
@@ -237,11 +237,13 @@ class MortalityPredictionTask(BaseTask):
             If the model is not fitted or not loaded with a pretrained estimator.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         model_name, model = self.get_model(model_name)
         if model_name not in self.pretrained_models + self.trained_models:
             raise NotFittedError(
                 f"It seems you have neither trained the {model_name} model nor \
-                loaded a pretrained model."
+                loaded a pretrained model.",
             )
 
         if isinstance(dataset, (Dataset, DatasetDict)):
@@ -287,7 +289,7 @@ class MortalityPredictionTask(BaseTask):
         model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[ColumnTransformer] = None,
         prediction_column_prefix: str = "predictions",
-        splits_mapping: dict = {"test": "test"},
+        splits_mapping: dict = None,
         slice_spec: Optional[SliceSpec] = None,
         batch_size: int = config.DEFAULT_MAX_BATCH_SIZE,
         remove_columns: Optional[Union[str, List[str]]] = None,
@@ -334,10 +336,14 @@ class MortalityPredictionTask(BaseTask):
             Dictionary with evaluation results.
 
         """
+        if splits_mapping is None:
+            splits_mapping = {"test": "test"}
         if isinstance(metrics, list) and len(metrics):
             metrics = [
                 create_metric(
-                    m, task=self.task_type, num_labels=len(self.task_features)
+                    m,
+                    task=self.task_type,
+                    num_labels=len(self.task_features),
                 )
                 for m in metrics
             ]
@@ -352,7 +358,7 @@ class MortalityPredictionTask(BaseTask):
             if model_name not in self.pretrained_models + self.trained_models:
                 LOGGER.warning(
                     "It seems you have neither trained the model nor \
-                    loaded a pretrained model."
+                    loaded a pretrained model.",
                 )
 
             dataset = self.predict(
@@ -421,9 +427,10 @@ class MortalityPredictionTask(BaseTask):
         for model_name in model_names:
             if model_name not in self.trained_models:
                 LOGGER.warning(
-                    "It seems you have not trained the %s model.", model_name
+                    "It seems you have not trained the %s model.",
+                    model_name,
                 )
-            model_name, model = self.get_model(model_name)
+            model_name, model = self.get_model(model_name)  # noqa: PLW2901
             model_path = (
                 filepath[model_name] if isinstance(filepath, Dict) else filepath
             )

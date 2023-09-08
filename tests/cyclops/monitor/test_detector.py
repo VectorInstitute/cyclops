@@ -1,4 +1,4 @@
-"""integration tests for Reductor module."""
+"""Integration tests for Reductor module."""
 
 import pytest
 from synthetic_datasets import (
@@ -15,15 +15,13 @@ from cyclops.monitor.tester import TSTester
 @pytest.fixture(name="gemini_dataset")
 def fixture_gemini_dataset():
     """Create a test input for GEMINI use-case."""
-    dataset = synthetic_gemini_dataset()
-    return dataset
+    return synthetic_gemini_dataset()
 
 
 @pytest.fixture(name="nih_dataset")
 def fixture_nih_dataset():
     """Create a test input for NIH use-case."""
-    dataset = synthetic_nih_dataset()
-    return dataset
+    return synthetic_nih_dataset()
 
 
 @pytest.fixture(name="source_target")

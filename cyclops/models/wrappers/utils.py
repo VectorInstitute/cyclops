@@ -53,7 +53,7 @@ def to_tensor(
         return {k: to_tensor(v, device=device, concatenate_features=concatenate_features) for k, v in X.items()}
     raise ValueError(
         "Cannot convert to tensor. `X` must be a numpy array, torch tensor,"
-        f" dictionary, list, or tuple. Got {type(X)} instead."
+        f" dictionary, list, or tuple. Got {type(X)} instead.",
     )
 
 
@@ -94,7 +94,7 @@ def to_numpy(X):
         return {k: to_numpy(v) for k, v in X.items()}
     raise ValueError(
         "Cannot convert to numpy array. `X` must be a numpy array, torch tensor,"
-        f" dictionary, list, or tuple. Got {type(X)} instead."
+        f" dictionary, list, or tuple. Got {type(X)} instead.",
     )
 
 
@@ -127,7 +127,10 @@ def check_is_fitted(estimator=None, attributes=None, msg=None, all_or_any=all) -
             " with appropriate arguments before using this method."
         )
     _check_is_fitted(
-        estimator=estimator, attributes=attributes, msg=msg, all_or_any=all_or_any
+        estimator=estimator,
+        attributes=attributes,
+        msg=msg,
+        all_or_any=all_or_any,
     )
 
 
@@ -170,7 +173,7 @@ def _get_param_names(cls):
             raise RuntimeError(
                 "Model wrappers should always specify their parameters in the signature"
                 f" of their __init__ (no varargs). {cls} with constructor"
-                f" {init_signature} doesn't follow this convention."
+                f" {init_signature} doesn't follow this convention.",
             )
     # Extract and sort argument names excluding 'self'
     return sorted([param.name for param in parameters])
@@ -205,6 +208,8 @@ def set_params(cls, **params):
 
     Parameters
     ----------
+    cls : class
+        The class to set the parameters for.
     **params : dict, optional
         Parameters to set.
 
@@ -220,12 +225,12 @@ def set_params(cls, **params):
 
     nested_params = defaultdict(dict)  # grouped by prefix
     for key, value in params.items():
-        key, delim, sub_key = key.partition("__")
+        key, delim, sub_key = key.partition("__")  # noqa: PLW2901
         if key not in valid_params:
             local_valid_params = _get_param_names(cls)
             raise ValueError(
                 f"Invalid parameter {key!r} for wrapper {cls}. "
-                f"Valid parameters are: {local_valid_params!r}."
+                f"Valid parameters are: {local_valid_params!r}.",
             )
 
         if delim:
@@ -263,10 +268,13 @@ def set_random_seed(seed: int, deterministic: bool = False) -> None:
 
 
 class DatasetColumn(list):
-    """Helper class to avoid loading a dataset column into memory when accessing it.\
-    From Hugging Face Evaluator."""
+    """Helper class to avoid loading a dataset column into memory when accessing it.
 
-    def __init__(self, dataset: Dataset, key: str):
+    Code taken from Hugging Face Evaluator (https://huggingface.co/docs/evaluate/index).
+
+    """
+
+    def __init__(self, dataset: Dataset, key: str) -> None:
         """Initialize a new dataset column.
 
         Parameters
@@ -281,7 +289,7 @@ class DatasetColumn(list):
         self.dataset = dataset
         self.key = key
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Get length of the dataset."""
         return len(self.dataset)
 

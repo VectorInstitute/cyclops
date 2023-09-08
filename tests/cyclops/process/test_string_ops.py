@@ -1,7 +1,5 @@
 """Test string_ops module for processors."""
 
-# pylint: disable=expression-not-assigned
-
 import numpy as np
 import pytest
 
@@ -114,5 +112,5 @@ def test_convert_to_numeric():
 
 def test_compute_range_avg():
     """Test compute_range_avg fn."""
-    compute_range_avg("5 - 10") == 7.5
-    compute_range_avg("2 - 4") == 3
+    assert compute_range_avg("5 - 10") == 7.5
+    assert compute_range_avg("2 - 4") == 3

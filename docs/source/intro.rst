@@ -1,4 +1,5 @@
-.. figure:: https://github.com/VectorInstitute/cyclops/blob/main/docs/source/theme/static/cyclops_logo-dark.png?raw=true
+.. figure::
+   https://github.com/VectorInstitute/cyclops/blob/main/docs/source/theme/static/cyclops_logo-dark.png?raw=true
    :alt: cyclops Logo
 
 --------------
@@ -6,8 +7,8 @@
 |PyPI| |code checks| |integration tests| |docs| |codecov| |docker|
 |license|
 
-``cyclops`` is a framework for facilitating research and deployment of
-ML models for healthcare. It provides a few high-level APIs namely:
+``cyclops`` is a toolkit for facilitating research and deployment of ML
+models for healthcare. It provides a few high-level APIs namely:
 
 -  ``query`` - Query EHR databases (such as MIMIC-IV)
 -  ``data`` - Create datasets for training, inference and evaluation. We
@@ -24,8 +25,8 @@ ML models for healthcare. It provides a few high-level APIs namely:
 
 -  ``evaluate`` - Evaluate models on clinical prediction tasks
 -  ``monitor`` - Detect dataset shift relevant for clinical use cases
--  ``report`` - Create `model
-   cards <https://vectorinstitute.github.io/cyclops/api/tutorials/mimiciii/model_card.html>`__
+-  ``report`` - Create `model report
+   cards <https://vectorinstitute.github.io/cyclops/api/tutorials/kaggle/model_card.html>`__
    for clinical ML models
 
 ``cyclops`` also provides a library of end-to-end use cases on clinical
@@ -81,9 +82,10 @@ Multiple extras could also be combined, for example to install with both
 🧑🏿‍💻 Developing
 =======================
 
-The development environment has been tested on ``python = 3.9``.
+Using poetry
+------------
 
-The python virtual environment can be set up using
+The development environment can be set up using
 `poetry <https://python-poetry.org/docs/#installation>`__. Hence, make
 sure it is installed and then run:
 
@@ -91,6 +93,19 @@ sure it is installed and then run:
 
    python3 -m poetry install
    source $(poetry env info --path)/bin/activate
+
+Using Conda
+-----------
+
+The development environment can also be set up using
+`conda <https://docs.conda.io/en/latest/>`__. Hence, make sure it is
+installed and then run:
+
+.. code:: bash
+
+   conda env create
+   conda install conda-build
+   conda develop .
 
 API documentation is built using
 `Sphinx <https://www.sphinx-doc.org/en/master/>`__ and can be locally

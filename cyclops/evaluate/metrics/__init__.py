@@ -1,15 +1,19 @@
 """Evaluation metrics package."""
 
-from cyclops.evaluate.metrics.accuracy import Accuracy  # noqa: F401
 from cyclops.evaluate.metrics.accuracy import (
+    Accuracy,  # noqa: F401
     BinaryAccuracy,
     MulticlassAccuracy,
     MultilabelAccuracy,
 )
-from cyclops.evaluate.metrics.auroc import BinaryAUROC  # noqa: F401
-from cyclops.evaluate.metrics.auroc import AUROC, MulticlassAUROC, MultilabelAUROC
-from cyclops.evaluate.metrics.f_beta import BinaryF1Score  # noqa: F401
+from cyclops.evaluate.metrics.auroc import (
+    AUROC,
+    BinaryAUROC,  # noqa: F401
+    MulticlassAUROC,
+    MultilabelAUROC,
+)
 from cyclops.evaluate.metrics.f_beta import (
+    BinaryF1Score,  # noqa: F401
     BinaryFbetaScore,
     F1Score,
     FbetaScore,
@@ -36,8 +40,8 @@ from cyclops.evaluate.metrics.precision_recall_curve import (  # noqa: F401
     MultilabelPrecisionRecallCurve,
     PrecisionRecallCurve,
 )
-from cyclops.evaluate.metrics.roc import BinaryROCCurve  # noqa: F401
 from cyclops.evaluate.metrics.roc import (
+    BinaryROCCurve,  # noqa: F401
     MulticlassROCCurve,
     MultilabelROCCurve,
     ROCCurve,

@@ -51,7 +51,7 @@ def plot_pretty_confusion_matrix(confusion_matrix: np.ndarray) -> None:
             color=text_elt.get_color(),
             ha="center",
             va="top",
-            size=24
+            size=24,
         )
     plt.tight_layout()
     plt.show()
@@ -135,7 +135,7 @@ def plot_auroc_across_timesteps(
 
     prediction_hours = list(range(24, 168, 24))
     fig = go.Figure(
-        data=[go.Bar(x=prediction_hours, y=auroc_timesteps, name="model confidence")]
+        data=[go.Bar(x=prediction_hours, y=auroc_timesteps, name="model confidence")],
     )
 
     fig.update_xaxes(tickvals=prediction_hours)
@@ -213,7 +213,7 @@ def plot_risk_mortality(predictions: np.ndarray, labels: np.ndarray) -> go.Figur
                 marker_color="Red",
                 name="model confidence",
             ),
-        ]
+        ],
     )
     fig.update_yaxes(range=[label_h, 1])
     fig.update_xaxes(tickvals=prediction_hours)

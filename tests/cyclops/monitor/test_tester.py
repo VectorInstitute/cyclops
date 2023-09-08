@@ -1,4 +1,4 @@
-"""unit tests for Tester module."""
+"""Unit tests for Tester module."""
 
 import numpy as np
 import pytest
@@ -44,7 +44,6 @@ def test_tstester(source_target, method):
     if isinstance(p_val, np.ndarray):
         p_val = p_val.min()
     # if method == "ctx_mmd":
-    #     os.remove(model_path)
     assert 0 <= p_val <= 1
 
 

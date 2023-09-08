@@ -23,6 +23,7 @@ from cyclops.models.wrappers import PTModel, WrappedModel
 from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
 
+
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
@@ -83,7 +84,10 @@ class Predictor:
         self._validate()
 
         self.dataset = VectorizedLoader(
-            self.dataset_name, self.use_case, self.data_type, self.data_dir
+            self.dataset_name,
+            self.use_case,
+            self.data_type,
+            self.data_dir,
         )
 
         (
@@ -98,8 +102,6 @@ class Predictor:
         with open(self.config_file, "r", encoding="utf8") as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
 
-        # save_path = join(SAVE_DIR, self.model_name, self.dataset_name, self.data_type)
-        # process_dir_save_path(save_path)
         model_params = params.get("model_params", None) or params
 
         self.model = create_model(self.model_name, **model_params)
@@ -109,7 +111,7 @@ class Predictor:
         assert self.model_name in _model_catalog, "[!] Invalid model name"
         assert self.dataset_name in DATASETS, "[!] Invalid dataset name"
         assert (
-            self.use_case in USE_CASES.keys()  # pylint: disable=C0201
+            self.use_case in USE_CASES  # pylint: disable=C0201
         ), "[!] Invalid use case"
         assert (
             self.dataset_name in USE_CASES[self.use_case]

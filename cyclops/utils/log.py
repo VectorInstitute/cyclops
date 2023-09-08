@@ -3,6 +3,7 @@
 import logging
 from typing import Optional, Union
 
+
 LOG_FORMAT = "%(asctime)-15s %(levelname)-5s %(name)-15s - %(message)s"
 
 # https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
@@ -30,6 +31,7 @@ def formatter_message(message: str, use_color: Optional[bool] = True) -> str:
     message: str
         Message format.
     use_color: bool, optional
+        Use colored logging.
 
     Returns
     -------
@@ -56,7 +58,7 @@ class Formatter(logging.Formatter):
 
     def __init__(
         self,
-        msg: Optional[str] = formatter_message(LOG_FORMAT, True),
+        msg: Optional[str] = None,
         use_color: bool = True,
     ) -> None:
         """Instantiate.
@@ -69,10 +71,12 @@ class Formatter(logging.Formatter):
             Flag to set using colored formatting.
 
         """
+        if msg is None:
+            msg = formatter_message(LOG_FORMAT, True)
         logging.Formatter.__init__(self, msg)
         self.use_color = use_color
 
-    def format(self, record: logging.LogRecord) -> str:
+    def format(self, record: logging.LogRecord) -> str:  # noqa: A003
         """Apply formatting.
 
         Parameters

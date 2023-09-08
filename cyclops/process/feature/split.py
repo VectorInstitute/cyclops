@@ -18,7 +18,7 @@ from cyclops.utils.common import to_list
 
 
 def __normalize_fractions(
-    fractions: Sequence[Union[float, int]]
+    fractions: Sequence[Union[float, int]],
 ) -> MutableSequence[Union[float, int]]:
     """Normalize the fractions to sum to 1.
 
@@ -80,15 +80,12 @@ def fractions_to_split(
     if n_samples < 0:
         raise ValueError("'n_samples' cannot be negative.")
 
-    if isinstance(fractions, Iterable):
-        frac_list = list(fractions)
-    else:
-        frac_list = [fractions]
+    frac_list = list(fractions) if isinstance(fractions, Iterable) else [fractions]
 
-    if any(map(lambda x: not isinstance(x, (float, int)), frac_list)):
+    if any((not isinstance(x, (float, int)) for x in frac_list)):
         raise TypeError("fractions must be int or float.")
 
-    if any(map(lambda x: x < 0, frac_list)):
+    if any((x < 0 for x in frac_list)):
         raise ValueError("fractions must be non-negative.")
 
     if 0.0 <= sum(frac_list) < 1.0:
@@ -173,7 +170,7 @@ def split_idx_stratified(
         lambda group: [
             group.index.values[idx]
             for idx in split_idx(fractions, len(group), randomize=False)
-        ]
+        ],
     )
 
     # Combine stratified into subsets
@@ -219,8 +216,7 @@ def split_kfold(
 
     """
     fracs = [1 / k_folds for _ in range(k_folds - 1)]
-    idxs = split_idx(fracs, n_samples, randomize=randomize, seed=seed)
-    return idxs
+    return split_idx(fracs, n_samples, randomize=randomize, seed=seed)
 
 
 def idxs_to_splits(
@@ -306,7 +302,8 @@ def intersect_datasets(
     """
     # Concatenate the unique values in each dataset and count how many of each
     unique, counts = np.unique(
-        np.concatenate([data[on_col].unique() for data in datas]), return_counts=True
+        np.concatenate([data[on_col].unique() for data in datas]),
+        return_counts=True,
     )
 
     # If a count is equal to the length of datasets, it must exist in every dataset
@@ -351,10 +348,7 @@ def split_datasets_by_idx(
     if isinstance(datasets, np.ndarray):
         datasets = [datasets]
 
-    if axes is None:
-        axes_list = [0] * len(datasets)
-    else:
-        axes_list = to_list(axes)
+    axes_list = [0] * len(datasets) if axes is None else to_list(axes)
 
     splits = []  # type: ignore
     # For each dataset
@@ -410,10 +404,7 @@ def split_datasets(
     if isinstance(datasets, np.ndarray):
         datasets = [datasets]
 
-    if axes is None:
-        axes_list = [0] * len(datasets)
-    else:
-        axes_list = to_list(axes)
+    axes_list = [0] * len(datasets) if axes is None else to_list(axes)
 
     sizes = [np.size(data, axes_list[i]) for i, data in enumerate(datasets)]
 

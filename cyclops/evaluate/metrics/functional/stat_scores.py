@@ -101,7 +101,9 @@ def _stat_scores_from_confmat(
 
     """
     confmat = multilabel_confusion_matrix(
-        target, preds, labels=labels
+        target,
+        preds,
+        labels=labels,
     )  # shape: (n_classes, 2, 2)
 
     tn = confmat[:, 0, 0]  # shape: (n_classes,)
@@ -146,7 +148,10 @@ def _binary_stat_scores_args_check(threshold: float, pos_label: int) -> None:
 
 
 def _binary_stat_scores_format(
-    target: npt.ArrayLike, preds: npt.ArrayLike, threshold: float, pos_label: int
+    target: npt.ArrayLike,
+    preds: npt.ArrayLike,
+    threshold: float,
+    pos_label: int,
 ) -> Tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]:
     """Format the input for computing binary stat scores.
 
@@ -181,7 +186,8 @@ def _binary_stat_scores_format(
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
-        target, preds
+        target,
+        preds,
     )
 
     if type_target != "binary":
@@ -193,13 +199,14 @@ def _binary_stat_scores_format(
             f"exactly 2 columns, got an array with shape: {preds.shape}."
         )
         preds = preds[
-            ..., pos_label
+            ...,
+            pos_label,
         ]  # keep only the probabilities for the positive class
         type_preds = "continuous"
 
     if type_preds not in ["binary", "continuous"]:
         raise ValueError(
-            f"The arguments `preds` must be binary or continuous, got {type_preds}"
+            f"The arguments `preds` must be binary or continuous, got {type_preds}",
         )
 
     # check the number of classes
@@ -208,16 +215,16 @@ def _binary_stat_scores_format(
     if check:
         raise ValueError(
             f"Detected the following values in `target`: {unique_values} but"
-            f" expected only the following values {[0,1]}."
+            f" expected only the following values {[0,1]}.",
         )
 
     # If preds is label array, also check that it only contains [0,1] values
-    if not type_preds == "continuous":
+    if type_preds != "continuous":
         unique_values = np.unique(preds)
         if any((unique_values != 0) & (unique_values != 1)):
             raise ValueError(
                 f"Detected the following values in `preds`: {unique_values} but"
-                f" expected only [0,1] values since `preds` is a label array."
+                f" expected only [0,1] values since `preds` is a label array.",
             )
 
     if type_preds == "continuous":
@@ -309,17 +316,22 @@ def binary_stat_scores(
     _binary_stat_scores_args_check(threshold=threshold, pos_label=pos_label)
 
     target, preds = _binary_stat_scores_format(
-        target=target, preds=preds, threshold=threshold, pos_label=pos_label
+        target=target,
+        preds=preds,
+        threshold=threshold,
+        pos_label=pos_label,
     )
 
     tp, fp, tn, fn = _binary_stat_scores_update(
-        target=target, preds=preds, pos_label=pos_label
+        target=target,
+        preds=preds,
+        pos_label=pos_label,
     )
 
     return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=True)
 
 
-def _multiclass_stat_scores_format(
+def _multiclass_stat_scores_format(  # noqa: C901
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -372,14 +384,14 @@ def _multiclass_stat_scores_format(
     # check the target
     if type_target not in ["binary", "multiclass"]:
         raise ValueError(
-            f"The argument `target` must be multiclass, got {type_target}."
+            f"The argument `target` must be multiclass, got {type_target}.",
         )
 
     num_implied_classes = len(np.unique(target))
     if num_implied_classes > num_classes:
         raise ValueError(
             "Detected more unique values in `target` than `num_classes`. Expected only "
-            f"{num_classes} but found {num_implied_classes} in `target`."
+            f"{num_classes} but found {num_implied_classes} in `target`.",
         )
 
     # check the preds
@@ -388,12 +400,12 @@ def _multiclass_stat_scores_format(
     if type_preds == "continuous" and target.size != 1:  # type: ignore[union-attr]
         raise ValueError(
             "Expected a single element in `target` when `preds` is an array of "
-            f"continuous values, but found {target.size} elements in `target`."  # type: ignore[union-attr] # noqa: E501 # pylint: disable=line-too-long
+            f"continuous values, but found {target.size} elements in `target`.",  # type: ignore[union-attr] # noqa: E501
         )
     if type_preds not in ["multiclass", "continuous-multioutput", "continuous"]:
         raise ValueError(
             f"The argument `preds` must be multiclass or continuous multioutput, "
-            f"got {type_preds}."
+            f"got {type_preds}.",
         )
 
     if type_preds == "multiclass":
@@ -401,7 +413,7 @@ def _multiclass_stat_scores_format(
         if num_implied_classes > num_classes:
             raise ValueError(
                 "Detected more unique values in `preds` than `num_classes`. Expected "
-                f"only {num_classes} but found {num_implied_classes} in `preds`."
+                f"only {num_classes} but found {num_implied_classes} in `preds`.",
             )
 
     # check top_k
@@ -412,13 +424,14 @@ def _multiclass_stat_scores_format(
     if type_preds in ["continuous-multioutput", "continuous"]:
         if not np.all(np.logical_and(preds >= 0.0, preds <= 1.0)):  # type: ignore
             preds = sp.special.softmax(
-                preds, axis=-1
+                preds,
+                axis=-1,
             )  # convert logits to probabilities
 
         if not np.allclose(1, preds.sum(axis=-1)):  # type: ignore[union-attr]
             raise ValueError(
                 "``preds`` need to be probabilities for multiclass problems"
-                " i.e. they should sum up to 1.0 over classes"
+                " i.e. they should sum up to 1.0 over classes",
             )
 
         # convert `preds` and `target` to multilabel-indicator format
@@ -432,7 +445,7 @@ def _multiclass_stat_scores_format(
     return target.astype(np.int_), preds.astype(np.int_)  # type: ignore[union-attr]
 
 
-def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
+def _multiclass_stat_scores_update(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -468,7 +481,7 @@ def _multiclass_stat_scores_update(  # pylint: disable=too-many-arguments
     return _stat_scores_from_confmat(target, preds, labels=np.arange(num_classes))
 
 
-def multiclass_stat_scores(  # pylint: disable=too-many-arguments
+def multiclass_stat_scores(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_classes: int,
@@ -512,11 +525,16 @@ def multiclass_stat_scores(  # pylint: disable=too-many-arguments
 
     """
     target, preds = _multiclass_stat_scores_format(
-        target=target, preds=preds, num_classes=num_classes, top_k=top_k
+        target=target,
+        preds=preds,
+        num_classes=num_classes,
+        top_k=top_k,
     )
 
     tp, fp, tn, fn = _multiclass_stat_scores_update(
-        target=target, preds=preds, num_classes=num_classes
+        target=target,
+        preds=preds,
+        num_classes=num_classes,
     )
 
     return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=classwise)
@@ -562,7 +580,8 @@ def _multilabel_stat_scores_format(
 
     """
     target, preds, type_target, type_preds = common_input_checks_and_format(
-        target, preds
+        target,
+        preds,
     )
 
     # allow single-sample inputs
@@ -580,40 +599,37 @@ def _multilabel_stat_scores_format(
     # validate input type
     if not type_target == "multilabel-indicator":
         raise ValueError(
-            f"The argument `target` must be multilabel-indicator, got {type_target}."
+            f"The argument `target` must be multilabel-indicator, got {type_target}.",
         )
 
-    if not (type_preds in ["multilabel-indicator", "continuous-multioutput"]):
+    if type_preds not in ["multilabel-indicator", "continuous-multioutput"]:
         raise ValueError(
             f"The argument `preds` must be multilabel-indicator, or continuous "
-            f"multioutput, got {type_preds}."
+            f"multioutput, got {type_preds}.",
         )
 
     implied_num_labels = preds.shape[1]
     if implied_num_labels != num_labels:
         raise ValueError(
             f"Detected {implied_num_labels} labels in `preds` but expected "
-            f"{num_labels}."
+            f"{num_labels}.",
         )
 
     if top_k is not None:
         check_topk(top_k, type_preds, type_target, num_labels)
 
     if type_preds == "continuous-multioutput" and not np.all(
-        np.logical_and(preds >= 0.0, preds <= 1.0)
+        np.logical_and(preds >= 0.0, preds <= 1.0),
     ):
         preds = sigmoid(preds)
 
     if type_preds == "continuous-multioutput":
-        if top_k is not None:
-            preds = select_topk(preds, top_k)
-        else:
-            preds = preds >= threshold
+        preds = select_topk(preds, top_k) if top_k is not None else preds >= threshold
 
     return target.astype(np.int_), preds.astype(np.int_)
 
 
-def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
+def _multilabel_stat_scores_update(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -651,7 +667,7 @@ def _multilabel_stat_scores_update(  # pylint: disable=too-many-arguments
     return _stat_scores_from_confmat(target, preds, labels=np.arange(num_labels))
 
 
-def multilabel_stat_scores(  # pylint: disable=too-many-arguments
+def multilabel_stat_scores(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     num_labels: int,
@@ -711,13 +727,15 @@ def multilabel_stat_scores(  # pylint: disable=too-many-arguments
     )
 
     tp, fp, tn, fn = _multilabel_stat_scores_update(
-        target=target, preds=preds, num_labels=num_labels
+        target=target,
+        preds=preds,
+        num_labels=num_labels,
     )
 
     return _stat_scores_compute(tp=tp, fp=fp, tn=tn, fn=fn, classwise=labelwise)
 
 
-def stat_scores(  # pylint: disable=too-many-arguments
+def stat_scores(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
     task: Literal["binary", "multiclass", "multilabel"],
@@ -834,7 +852,7 @@ def stat_scores(  # pylint: disable=too-many-arguments
     else:
         raise ValueError(
             f"Unsupported task: {task}, expected one of 'binary', 'multiclass' or "
-            f"'multilabel'."
+            f"'multilabel'.",
         )
 
     return scores

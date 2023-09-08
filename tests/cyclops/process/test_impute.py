@@ -32,10 +32,10 @@ from cyclops.process.impute import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_tabular():
     """Create test input tabular features."""
-    input_ = pd.DataFrame(
+    return pd.DataFrame(
         data=[
             [np.nan, 10, 2.3],
             [1, np.nan, 1.2],
@@ -45,14 +45,14 @@ def test_tabular():
         ],
         columns=["A", "B", "C"],
     )
-    return input_
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_input_feature_temporal():
     """Create test input temporal features."""
     index = pd.MultiIndex.from_product(
-        [[0, 2], range(6)], names=[ENCOUNTER_ID, TIMESTEP]
+        [[0, 2], range(6)],
+        names=[ENCOUNTER_ID, TIMESTEP],
     )
     input_ = pd.DataFrame(index=index, columns=["A", "B", "C"])
     input_.loc[(0, 0)] = [np.nan, np.nan, 1]
@@ -71,7 +71,9 @@ def test_np_ffill():
     test_arr = np.array([np.nan, 1, 2, np.nan, 3, 4, np.nan, 5, 6])
     res = np_ffill(test_arr)
     assert np.array_equal(
-        res, np.array([np.nan, 1, 2, 2, 3, 4, 4, 5, 6]), equal_nan=True
+        res,
+        np.array([np.nan, 1, 2, 2, 3, 4, 4, 5, 6]),
+        equal_nan=True,
     )
 
 
@@ -89,7 +91,7 @@ def test_np_ffill_bfill():
     assert np.array_equal(res, np.array([1, 1, 2, 2, 3, 4, 4, 5, 6]), equal_nan=True)
 
     test_arr = np.array(
-        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
     )
     res = np_ffill_bfill(test_arr)
     assert np.array_equal(
@@ -114,7 +116,7 @@ def test_np_fill_null_num():
     assert np.array_equal(res, np.array([0, 1, 2, 0, 3, 4, 0, 5, 6]))
 
     test_arr = np.array(
-        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
     )
     res = np_fill_null_num(test_arr, 0)
     assert np.array_equal(res, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
@@ -127,7 +129,7 @@ def test_np_fill_null_zero():
     assert np.array_equal(res, np.array([0, 1, 2, 0, 3, 4, 0, 5, 6]))
 
     test_arr = np.array(
-        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
     )
     res = np_fill_null_zero(test_arr)
     assert np.array_equal(res, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
@@ -194,7 +196,7 @@ def test_series_imputation():
     assert res.equals(series)
 
 
-def test_tabular_imputation(  # pylint: disable=redefined-outer-name
+def test_tabular_imputation(
     test_tabular,
 ):
     """Test the TabularImputer and SeriesImputer."""
@@ -203,7 +205,7 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
             "A": SeriesImputer(IGNORE),
             "B": SeriesImputer(MEAN),
             "C": SeriesImputer(MEDIAN),
-        }
+        },
     )
     res, missingness = imputer(test_tabular.copy())
     assert missingness["A"] == 3 / 5
@@ -228,7 +230,7 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
             "A": SeriesImputer(FFILL_BFILL),
             "B": SeriesImputer(FFILL),
             "C": SeriesImputer(BFILL),
-        }
+        },
     )
     res, _ = imputer(test_tabular.copy())
 
@@ -246,7 +248,7 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
     imputer = TabularImputer(
         {
             "A": SeriesImputer(FFILL),
-        }
+        },
     )
     res, _ = imputer(test_tabular.copy())
     assert np.isnan(res.iloc[0]["A"])
@@ -255,7 +257,7 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
         {
             "B": SeriesImputer(MODE),
             "C": SeriesImputer(LINEAR_INTERP),
-        }
+        },
     )
     res, _ = imputer(test_tabular.copy())
 
@@ -269,7 +271,7 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
         TabularImputer(
             {
                 "A": SeriesImputer(DROP),
-            }
+            },
         )
         raise ValueError("Should have raised an error. Can't use DROP strategy here.")
     except ValueError:
@@ -279,13 +281,13 @@ def test_tabular_imputation(  # pylint: disable=redefined-outer-name
     imputer = TabularImputer(
         {
             "A": SeriesImputer(FFILL, allow_nulls_returned=False),
-        }
+        },
     )
 
     try:
         imputer(test_tabular.copy())
         raise ValueError(
-            "Should have raised an error. FFILL will return nulls, which was unallowed."
+            "Should have raised an error. FFILL will return nulls, which was unallowed.",
         )
     except ValueError:
         pass

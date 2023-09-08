@@ -47,8 +47,11 @@ class BinarySensitivity(BinaryRecall, registry_key="binary_sensitivity"):
         threshold: float = 0.5,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
-            pos_label=pos_label, threshold=threshold, zero_division=zero_division
+            pos_label=pos_label,
+            threshold=threshold,
+            zero_division=zero_division,
         )
 
 
@@ -113,6 +116,7 @@ class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivi
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
             num_classes=num_classes,
             top_k=top_k,
@@ -173,6 +177,7 @@ class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivi
         average: Literal["micro", "macro", "weighted", None] = None,
         zero_division: Literal["warn", 0, 1] = "warn",
     ) -> None:
+        """Initialize the metric."""
         super().__init__(
             num_labels=num_labels,
             threshold=threshold,
@@ -297,7 +302,9 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
         """Create a task-specific metric for computing the sensitivity score."""
         if task == "binary":
             return BinarySensitivity(
-                threshold=threshold, pos_label=pos_label, zero_division=zero_division
+                threshold=threshold,
+                pos_label=pos_label,
+                zero_division=zero_division,
             )
         if task == "multiclass":
             assert (
@@ -322,5 +329,5 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
             )
         raise ValueError(
             f"Task '{task}' not supported, expected 'binary', 'multiclass' or "
-            f"'multilabel'."
+            f"'multilabel'.",
         )

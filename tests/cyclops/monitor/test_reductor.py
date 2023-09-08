@@ -14,22 +14,19 @@ from cyclops.monitor import Reductor
 @pytest.fixture(name="generic_dataset")
 def fixture_generic_dataset():
     """Create a test input for NIH use-case."""
-    dataset = synthetic_generic_dataset()
-    return dataset
+    return synthetic_generic_dataset()
 
 
 @pytest.fixture(name="gemini_dataset")
 def fixture_gemini_dataset():
     """Create a test input for GEMINI use-case."""
-    dataset = synthetic_gemini_dataset()
-    return dataset
+    return synthetic_gemini_dataset()
 
 
 @pytest.fixture(name="nih_dataset")
 def fixture_nih_dataset():
     """Create a test input for NIH use-case."""
-    dataset = synthetic_nih_dataset()
-    return dataset
+    return synthetic_nih_dataset()
 
 
 def test_reductor_nored(generic_dataset):

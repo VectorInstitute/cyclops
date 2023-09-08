@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 from sklearn.utils.multiclass import type_of_target
 
+
 # boolean, unsigned integer, signed integer, float, complex.
 _NUMERIC_KINDS = set("buifc")
 
@@ -61,7 +62,7 @@ def _check_input_dims(*arrays: npt.NDArray[Any]) -> None:
         if array.ndim == 0 or array.ndim > 2:
             raise ValueError(
                 f"Input contains {array.ndim} dimensions, but only 1 or 2 dimensional "
-                "arrays are supported."
+                "arrays are supported.",
             )
 
 
@@ -134,7 +135,7 @@ def common_input_checks_and_format(
 def sigmoid(arr: npt.ArrayLike) -> npt.NDArray[np.float_]:
     """Sigmoid function."""
     arr = np.asanyarray(arr)
-    return 1 / (1 + np.exp(-arr))
+    return 1 / (1 + np.exp(-arr))  # type: ignore
 
 
 def check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) -> None:
@@ -165,12 +166,13 @@ def check_topk(top_k: int, type_preds: str, type_target: str, n_classes: int) ->
         raise ValueError("The `top_k` has to be an integer larger than 0.")
     if top_k >= n_classes:
         raise ValueError(
-            "The `top_k` has to be strictly smaller than the number of classes."
+            "The `top_k` has to be strictly smaller than the number of classes.",
         )
 
 
 def select_topk(
-    prob_scores: npt.ArrayLike, top_k: Optional[int] = 1
+    prob_scores: npt.ArrayLike,
+    top_k: Optional[int] = 1,
 ) -> npt.NDArray[np.int_]:
     """Convert a probability scores to binary by selecting top-k highest entries.
 
@@ -191,7 +193,8 @@ def select_topk(
         topk_indices = np.argmax(prob_scores, axis=-1, keepdims=True)
     else:
         topk_indices = np.argsort(prob_scores, axis=-1)[:, ::-1][
-            :, :top_k
+            :,
+            :top_k,
         ]  # sort in descending order, then slice the top k
 
     topk_array = np.zeros_like(prob_scores)
@@ -201,7 +204,7 @@ def select_topk(
 
 
 def _check_thresholds(
-    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]]
+    thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]],
 ) -> None:
     """Check if thresholds are valid.
 
@@ -235,28 +238,28 @@ def _check_thresholds(
     if thresholds is not None and not isinstance(thresholds, (int, list, np.ndarray)):
         raise ValueError(
             "Expected argument `thresholds` to either be an integer, list of floats or"
-            f" np.ndarray of floats, but got {thresholds}"
+            f" np.ndarray of floats, but got {thresholds}",
         )
     if isinstance(thresholds, int) and thresholds < 2:
         raise ValueError(
             "If argument `thresholds` is an integer, expected it to be "
-            f"larger than 1, but got {thresholds}"
+            f"larger than 1, but got {thresholds}",
         )
     if isinstance(thresholds, (list, np.ndarray)) and not all(
         isinstance(t, float) and 0 <= t <= 1 for t in thresholds
     ):
         raise ValueError(
             "If argument `thresholds` is a list, expected all elements to be "
-            f"floats in the [0,1] range, but got {thresholds}"
+            f"floats in the [0,1] range, but got {thresholds}",
         )
     if isinstance(thresholds, np.ndarray) and not thresholds.ndim == 1:
         raise ValueError(
-            "If argument `thresholds` is a numpy array, expected the array to be 1d"
+            "If argument `thresholds` is a numpy array, expected the array to be 1d",
         )
     if isinstance(thresholds, (list, np.ndarray)) and not all(np.diff(thresholds) > 0):
         raise ValueError(
             "Expected argument `thresholds` to be monotonically increasing,"
-            f" but got {thresholds}"
+            f" but got {thresholds}",
         )
 
 
@@ -265,12 +268,15 @@ def _check_average_arg(average: Literal["micro", "macro", "weighted", None]) -> 
     if average not in ["micro", "macro", "weighted", None]:
         raise ValueError(
             f"Argument average has to be one of 'micro', 'macro', 'weighted', "
-            f"or None, got {average}."
+            f"or None, got {average}.",
         )
 
 
 def _apply_function_recursively(
-    data: Any, func: Callable[..., Any], *args: Any, **kwargs: Any
+    data: Any,
+    func: Callable[..., Any],
+    *args: Any,
+    **kwargs: Any,
 ) -> Any:
     """Apply a function recursively to a given data structure.
 
@@ -293,14 +299,14 @@ def _apply_function_recursively(
     data_type = type(data)
     if isinstance(data, (list, tuple, set)):
         return data_type(
-            [_apply_function_recursively(el, func, *args, **kwargs) for el in data]
+            [_apply_function_recursively(el, func, *args, **kwargs) for el in data],
         )
     if isinstance(data, Mapping):
         return data_type(
             {
                 k: _apply_function_recursively(v, func, *args, **kwargs)
                 for k, v in data.items()
-            }
+            },
         )
     return func(data)
 

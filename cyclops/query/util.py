@@ -1,6 +1,4 @@
-"""Utility functions for querying."""  # pylint: disable=too-many-lines
-
-# mypy: ignore-errors
+"""Utility functions for querying."""
 
 import logging
 from dataclasses import dataclass
@@ -17,6 +15,7 @@ from sqlalchemy.types import Boolean, Date, DateTime, Float, Integer, Interval, 
 
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
+
 
 # Logging.
 LOGGER = logging.getLogger(__name__)
@@ -68,49 +67,6 @@ TABLE_OBJECTS = [Table, Select, Subquery, DBTable]
 TableTypes = Union[Select, Subquery, Table, DBTable]
 
 
-def ckwarg(kwargs: dict, kwarg: str):
-    """Get the value of a conditional keyword argument.
-
-    A keyword argument may or may not be specified in some
-    keyword arguments. If specified, return the value,
-    otherwise return None.
-
-    Parameters
-    ----------
-    kwargs: dict
-        Process keyword arguments.
-    kwarg: str
-        The keyword argument of interest.
-
-    Returns
-    -------
-    any, optional
-        The value of the keyword argument if it exists, otherwise None.
-
-    """
-    if kwarg in kwargs:
-        return kwargs[kwarg]
-    return None
-
-
-def remove_kwargs(process_kwargs: dict, kwargs: Union[str, List[str]]):
-    """Remove some keyword arguments from process_kwargs if they exist.
-
-    Parameters
-    ----------
-    process_kwargs: dict
-        Process keyword arguments.
-    kwargs: str or list of str
-        The keyword arguments to remove should they exist.
-
-    """
-    kwargs = to_list(kwargs)
-    for kwarg in kwargs:
-        if kwarg in process_kwargs:
-            del process_kwargs[kwarg]
-    return process_kwargs
-
-
 def _to_subquery(table: TableTypes) -> Subquery:
     """Convert a table from a table type object to the Subquery type.
 
@@ -139,7 +95,7 @@ def _to_subquery(table: TableTypes) -> Subquery:
 
     raise ValueError(
         f"""Table has type {type(table)}, but must have one of the
-        following types: {", ".join(TABLE_OBJECTS)}"""
+        following types: {", ".join(TABLE_OBJECTS)}""",
     )
 
 
@@ -171,11 +127,14 @@ def _to_select(table: TableTypes) -> Select:
 
     raise ValueError(
         f"""Table has type {type(table)}, but must have one of the
-        following types: {", ".join(TABLE_OBJECTS)}"""
+        following types: {", ".join(TABLE_OBJECTS)}""",
     )
 
 
-def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Callable:
+def param_types_to_type(
+    relevant_types: List[Any],
+    to_type_fn: Callable[..., Any],
+) -> Callable[..., Any]:
     """Convert TableTypes parameters to a specified type.
 
     A decorator which processes a function's arguments by taking all
@@ -196,16 +155,16 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
 
     """
 
-    def decorator(func_: Callable) -> Callable:
+    def decorator(func_: Callable[..., Any]) -> Callable[..., Any]:
         """Decorate function to convert TableTypes parameters to a specified type."""
 
         @wraps(func_)
-        def wrapper_func(*args, **kwargs) -> Callable:
+        def wrapper_func(*args: Any, **kwargs: Any) -> Any:
             # Convert relevant arguments.
-            args = list(args)
-            for i, arg in enumerate(args):
+            args_list = list(args)
+            for i, arg in enumerate(args_list):
                 if type(arg) in relevant_types:
-                    args[i] = to_type_fn(arg)
+                    args_list[i] = to_type_fn(arg)
 
             # Convert relevant keyword arguments.
             kwargs = dict(kwargs)
@@ -213,14 +172,14 @@ def param_types_to_type(relevant_types: List[Any], to_type_fn: Callable) -> Call
                 if type(kwarg) in relevant_types:
                     kwargs[key] = to_type_fn(kwarg)
 
-            return func_(*tuple(args), **kwargs)
+            return func_(*tuple(args_list), **kwargs)
 
         return wrapper_func
 
     return decorator
 
 
-def table_params_to_type(to_type: TableTypes) -> Callable:
+def table_params_to_type(to_type: TableTypes) -> Callable[..., Any]:
     """Decorate to convert TableTypes params to a specified type.
 
     Parameters
@@ -253,7 +212,7 @@ def table_params_to_type(to_type: TableTypes) -> Callable:
 def get_column(
     table: TableTypes,
     col: str,
-):
+) -> Column:
     """Extract a column object from a table by name.
 
     Parameters
@@ -273,7 +232,7 @@ def get_column(
     if col not in col_names:
         raise ValueError(f"Table does not contain column {col}")
 
-    return table.c[col_names.index(col)]
+    return table.c[col_names.index(col)]  # type: ignore
 
 
 @table_params_to_type(Subquery)
@@ -302,7 +261,7 @@ def filter_columns(
     for col in cols:
         if col not in col_names:
             continue
-        filtered.append(table.c[col_names.index(col)])
+        filtered.append(table.c[col_names.index(col)])  # type: ignore
 
     return select(filtered).subquery()
 
@@ -311,7 +270,7 @@ def filter_columns(
 def get_columns(
     table: TableTypes,
     cols: Union[str, List[str]],
-):
+) -> List[Column]:
     """Extract a number of columns from the table.
 
     Parameters
@@ -331,7 +290,7 @@ def get_columns(
 
 
 @table_params_to_type(Subquery)
-def get_column_names(table: TableTypes):
+def get_column_names(table: TableTypes) -> List[str]:
     """Extract column names from a table.
 
     Parameters
@@ -345,13 +304,15 @@ def get_column_names(table: TableTypes):
         The table column names.
 
     """
-    return [c.name for c in table.columns]
+    return [c.name for c in table.columns]  # type: ignore
 
 
 @table_params_to_type(Subquery)
 def has_columns(
-    table: TableTypes, cols: Union[str, List[str]], raise_error: bool = False
-):
+    table: TableTypes,
+    cols: Union[str, List[str]],
+    raise_error: bool = False,
+) -> bool:
     """Check whether a table has all of the specified columns.
 
     Parameters
@@ -382,7 +343,10 @@ def has_columns(
 
 
 @table_params_to_type(Subquery)
-def assert_table_has_columns(*args, **kwargs) -> Callable:
+def assert_table_has_columns(
+    *args: Any,
+    **kwargs: Any,
+) -> Callable[[TableTypes], TableTypes]:
     """Assert that TableTypes params have the necessary columns.
 
     assert_table_has_columns(["A", "B"], None) is equivalent to
@@ -406,9 +370,11 @@ def assert_table_has_columns(*args, **kwargs) -> Callable:
 
     """
 
-    def decorator(func_: Callable) -> Callable:
+    def decorator(
+        func_: Callable[..., Any],
+    ) -> Callable[..., Any]:
         @wraps(func_)
-        def wrapper_func(*fn_args, **fn_kwargs) -> Callable:
+        def wrapper_func(*fn_args: Any, **fn_kwargs: Any) -> Any:
             # Check only the table arguments
             table_args = [i for i in fn_args if isinstance(i, Subquery)]
 
@@ -435,7 +401,7 @@ def assert_table_has_columns(*args, **kwargs) -> Callable:
 
         return wrapper_func
 
-    return decorator
+    return decorator  # type: ignore
 
 
 @table_params_to_type(Subquery)
@@ -451,6 +417,8 @@ def drop_columns(
         The table.
     col : str or list of str
         Names of columns to drop.
+    drop_cols: str or list of str
+        Names of columns to drop.
 
     Returns
     -------
@@ -460,11 +428,11 @@ def drop_columns(
     """
     drop_cols = get_columns(table, drop_cols)
 
-    return select(*[c for c in table.c if c not in drop_cols]).subquery()
+    return select(*[c for c in table.c if c not in drop_cols]).subquery()  # type: ignore
 
 
 @table_params_to_type(Subquery)
-def rename_columns(table: TableTypes, rename_map: dict) -> Subquery:
+def rename_columns(table: TableTypes, rename_map: Dict[str, str]) -> Subquery:
     """Rename a table's columns.
 
     Rename the table's columns according to a dictionary of strings,
@@ -474,7 +442,7 @@ def rename_columns(table: TableTypes, rename_map: dict) -> Subquery:
     ----------
     table: cyclops.query.util.TableTypes
         The table.
-    d : dict
+    rename_map : dict
         Dictionary mapping current column names (key) to new ones (value).
 
     Returns
@@ -486,8 +454,8 @@ def rename_columns(table: TableTypes, rename_map: dict) -> Subquery:
     return select(
         *[
             c.label(rename_map[c.name]) if c.name in rename_map else c
-            for c in table.columns
-        ]
+            for c in table.columns  # type: ignore
+        ],
     ).subquery()
 
 
@@ -513,18 +481,18 @@ def reorder_columns(table: TableTypes, cols: List[str]) -> Subquery:
     new_order = [c.name for c in get_columns(table, cols)]
 
     # Make sure we have exactly the same set of old/new column names.
-    if not set(old_order) == set(new_order):
+    if set(old_order) != set(new_order):
         old_order_print = ", ".join(old_order)
         new_order_print = ", ".join(new_order)
         raise ValueError(
             f"""Must specify all columns {old_order_print}
-            to re-order, not {new_order_print}."""
+            to re-order, not {new_order_print}.""",
         )
 
     # Reorder the columns.
     new_cols = []
     for col in new_order:
-        new_cols.append(table.c[old_order.index(col)])
+        new_cols.append(table.c[old_order.index(col)])  # type: ignore
 
     return select(*new_cols).subquery()
 
@@ -533,7 +501,10 @@ def reorder_columns(table: TableTypes, cols: List[str]) -> Subquery:
 def apply_to_columns(
     table: TableTypes,
     col_names: Union[str, List[str]],
-    func_: Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
+    funcs: Union[
+        Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column],
+        List[Callable[[sqlalchemy.sql.schema.Column], sqlalchemy.sql.schema.Column]],
+    ],
     new_col_labels: Optional[Union[str, List[str]]] = None,
 ) -> Subquery:
     """Apply a function to some columns.
@@ -547,8 +518,8 @@ def apply_to_columns(
         The table.
     col_names: str or list of str
         Columns to which to apply the function.
-    func_: Callable
-        Function to apply to the columns, where it takes an column
+    funcs: callable or list of callable
+        Function(s) to apply to the columns, where the function takes an column
         as its only parameter and returns another column object.
     new_col_labels: str or list of str, optional
         If specified, create new columns with these labels. Otherwise,
@@ -563,15 +534,21 @@ def apply_to_columns(
     col_names = to_list(col_names)
     new_col_labels = to_list_optional(new_col_labels)
     cols = get_columns(table, col_names)
-
+    if isinstance(funcs, list):
+        if len(funcs) != len(cols):
+            raise ValueError(
+                f"Must specify a function for each column, not {len(funcs)} functions.",
+            )
+    else:
+        funcs = [funcs] * len(cols)
     if new_col_labels is None:
         # Apply to existing columns
         prev_order = get_column_names(table)
         table = select(table).add_columns(
             *[
-                func_(col).label("__" + col_names[i] + "__")
+                funcs[i](col).label("__" + col_names[i] + "__")
                 for i, col in enumerate(cols)
-            ]
+            ],
         )
         rename = {"__" + name + "__": name for name in col_names}
         table = drop_columns(table, col_names)
@@ -579,7 +556,9 @@ def apply_to_columns(
         table = reorder_columns(table, prev_order)
     else:
         # Apply to new columns
-        new_cols = [func_(col).label(new_col_labels[i]) for i, col in enumerate(cols)]
+        new_cols = [
+            funcs[i](col).label(new_col_labels[i]) for i, col in enumerate(cols)
+        ]
         table = select(table).add_columns(*new_cols)
 
     return _to_subquery(table)
@@ -752,7 +731,7 @@ def equals(
     value: Any,
     lower: bool = True,
     trim: bool = True,
-    **kwargs: Dict[str, bool],
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column has some value.
 
@@ -763,7 +742,7 @@ def equals(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -781,7 +760,10 @@ def equals(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs) == process_elem(
-        value, lower=lower, trim=trim, **kwargs
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
@@ -791,7 +773,7 @@ def greater_than(
     lower: bool = True,
     trim: bool = True,
     equal: bool = False,
-    **kwargs: Dict[str, bool],
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column is greater than some value.
 
@@ -802,7 +784,7 @@ def greater_than(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -823,10 +805,16 @@ def greater_than(
     """
     if equal:
         return process_column(col, lower=lower, trim=trim, **kwargs) >= process_elem(
-            value, lower=lower, trim=trim, **kwargs
+            value,
+            lower=lower,
+            trim=trim,
+            **kwargs,
         )
     return process_column(col, lower=lower, trim=trim, **kwargs) > process_elem(
-        value, lower=lower, trim=trim, **kwargs
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
@@ -836,7 +824,7 @@ def less_than(
     lower: bool = True,
     trim: bool = True,
     equal: bool = False,
-    **kwargs: Dict[str, bool],
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column is less than some value.
 
@@ -847,7 +835,7 @@ def less_than(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -868,15 +856,25 @@ def less_than(
     """
     if equal:
         return process_column(col, lower=lower, trim=trim, **kwargs) <= process_elem(
-            value, lower=lower, trim=trim, **kwargs
+            value,
+            lower=lower,
+            trim=trim,
+            **kwargs,
         )
     return process_column(col, lower=lower, trim=trim, **kwargs) < process_elem(
-        value, lower=lower, trim=trim, **kwargs
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
 def not_equals(
-    col: Column, value: Any, lower: bool = True, trim: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    lower: bool = True,
+    trim: bool = True,
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column is not equal to some value.
 
@@ -887,7 +885,7 @@ def not_equals(
     ----------
     col : sqlalchemy.sql.schema.Column
         The column to condition.
-    val : Any
+    value : Any
         The value to match in the column.
     lower : bool, default=True
         Whether to convert the value and column to lowercase.
@@ -905,12 +903,19 @@ def not_equals(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs) != process_elem(
-        value, lower=lower, trim=trim, **kwargs
+        value,
+        lower=lower,
+        trim=trim,
+        **kwargs,
     )
 
 
 def has_string_format(
-    col: Column, value: Any, fmt: str, to_str: bool = True, **kwargs: bool
+    col: Column,
+    value: Any,
+    fmt: str,
+    to_str: bool = True,
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column has some string formatting.
 
@@ -937,12 +942,15 @@ def has_string_format(
 
     """
     return process_column(col, to_str=to_str, **kwargs).like(
-        fmt.format(process_elem(value, to_str=to_str, **kwargs))
+        fmt.format(process_elem(value, to_str=to_str, **kwargs)),
     )
 
 
 def has_substring(
-    col: Column, substring: Any, lower: bool = True, **kwargs: Dict[str, bool]
+    col: Column,
+    substring: Any,
+    lower: bool = True,
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column has some substring.
 
@@ -975,7 +983,7 @@ def starts_with(
     value: Any,
     lower: bool = True,
     trim: bool = True,
-    **kwargs: Dict[str, bool],
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column starts with some value/string.
 
@@ -1012,7 +1020,7 @@ def ends_with(
     value: Any,
     lower: bool = True,
     trim: bool = True,
-    **kwargs: Dict[str, bool],
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column ends with some value/string.
 
@@ -1049,7 +1057,7 @@ def in_(
     lst: List[Any],
     lower: bool = True,
     trim: bool = True,
-    **kwargs: Dict[str, bool],
+    **kwargs: bool,
 ) -> BinaryExpression:
     """Condition that a column value is in a list of values.
 
@@ -1078,7 +1086,7 @@ def in_(
 
     """
     return process_column(col, lower=lower, trim=trim, **kwargs).in_(
-        process_list(lst, lower=lower, trim=trim, **kwargs)
+        process_list(lst, lower=lower, trim=trim, **kwargs),
     )
 
 
@@ -1086,8 +1094,8 @@ def _check_column_type(
     table: TableTypes,
     cols: Union[str, List[str]],
     types: Union[Any, List[Any]],
-    raise_error=False,
-):
+    raise_error: bool = False,
+) -> bool:
     """Check whether some columns are each one of a number of types.
 
     Parameters
@@ -1115,21 +1123,23 @@ def _check_column_type(
     ]
     if raise_error and not all(is_type):
         incorrect_type = list(
-            set(cols) - {col for i, col in enumerate(cols) if is_type[i]}
+            set(cols) - {col for i, col in enumerate(cols) if is_type[i]},
         )
         types_str = ", ".join([type_.__name__ for type_ in types])
         actual_types_str = [type(col).__name__ for col in incorrect_type]
         raise ValueError(
             f"""{incorrect_type} columns are not one of types {types_str}.
-            They have types {actual_types_str}."""
+            They have types {actual_types_str}.""",
         )
 
     return all(is_type)
 
 
 def check_timestamp_columns(
-    table: TableTypes, cols: Union[str, List[str]], raise_error=False
-):
+    table: TableTypes,
+    cols: Union[str, List[str]],
+    raise_error: bool = False,
+) -> bool:
     """Check whether some columns are Date or DateTime columns.
 
     Parameters
@@ -1185,7 +1195,7 @@ def get_delta_column(
 
     """
 
-    def get_col_or_none(col):
+    def get_col_or_none(col: Optional[str] = None) -> Optional[Column]:
         """If col is not None, get interval column from names."""
         return None if col is None else get_column(table, col)
 
@@ -1208,7 +1218,7 @@ def get_delta_column(
     interval_cols = []
     for i, col in enumerate(time_cols):
         interval_cols.append(
-            func.cast(func.concat(func.coalesce(col, 0), " " + names[i]), Interval)
+            func.cast(func.concat(func.coalesce(col, 0), " " + names[i]), Interval),
         )
 
     # Create combined interval column.

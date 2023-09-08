@@ -27,7 +27,9 @@ def fill_missing_with_nan(string: str) -> Union[float, str]:
 
 
 def replace_if_string_match(
-    search_string: str, search_terms: str, replace_value: str
+    search_string: str,
+    search_terms: str,
+    replace_value: str,
 ) -> str:
     """Replace string with value, if string has matched terms.
 
@@ -167,7 +169,7 @@ def is_non_empty_string(string: str) -> bool:
         True if non-empty string, else False.
 
     """
-    return not string == EMPTY_STRING
+    return string != EMPTY_STRING
 
 
 def normalize_special_characters(item: str) -> str:
@@ -201,8 +203,7 @@ def normalize_special_characters(item: str) -> str:
     item = item.strip()
     item = re.sub(r"\s+", "_", item)
     item = re.sub(r"[^0-9a-z_()]+", "_", item)
-    item = re.sub(r"(?s:(^[0-9_].+))", "a_\1", item)
-    return item
+    return re.sub(r"(?s:(^[0-9_].+))", "a_\1", item)
 
 
 def count_occurrences(items: Iterable) -> List:
@@ -291,6 +292,6 @@ def compute_range_avg(item: str) -> Union[int, float]:
     """
     pattern_str = r"^(?P<first>-?\d+)\s*(?:to|-)\s*(?P<second>-?\d+)$"
     pattern = re.compile(pattern_str)
-    if not (matched := pattern.search(item)):  # pylint: disable=superfluous-parens
+    if not (matched := pattern.search(item)):
         raise ValueError(f"'item' does not match expected pattern {pattern_str}")
     return (int(matched.group("first")) + int(matched.group("second"))) / 2
