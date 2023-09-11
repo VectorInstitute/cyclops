@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, get_args
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 import PIL
 import psutil
 from datasets import Dataset, DatasetDict
@@ -261,3 +262,32 @@ def apply_transforms(
 
     # convert back to a dict of lists
     return {k: [d[k] for d in examples_list] for k in examples_list[0]}
+
+
+def generate_timestamps(
+    start_time: str,
+    end_time: str,
+    periods: int,
+) -> pd.Series:
+    """Generate timestamps between start_time and end_time.
+
+    Parameters
+    ----------
+    start_time : str
+        Start time in the format "MM/DD/YYYY".
+    end_time : str
+        End time in the format "MM/DD/YYYY".
+    periods : int
+        Number of timestamps to generate.
+
+    Returns
+    -------
+    pd.Series
+        Series of timestamps.
+
+    """
+    return pd.date_range(
+        start=start_time,
+        end=end_time,
+        periods=periods,
+    )

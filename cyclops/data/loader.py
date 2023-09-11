@@ -1,6 +1,7 @@
 """Convenient functions for loading datasets as Huggingface datasets."""
 
 import os
+from typing import Tuple
 
 import pandas as pd
 from datasets import DatasetDict
@@ -9,12 +10,15 @@ from datasets.features import Image, Value
 from datasets.utils.logging import disable_progress_bar, enable_progress_bar
 
 from cyclops.data.preprocess import nihcxr_preprocess
+from cyclops.data.utils import generate_timestamps
 
 
 def load_nihcxr(
     path: str,
     image_column: str = "image",
     add_timestamps: bool = True,
+    train_time_range: Tuple[str, str] = ("1/1/2019", "10/19/2019"),
+    test_time_range: Tuple[str, str] = ("10/20/2019", "12/25/2019"),
     progress: bool = False,
 ) -> Dataset:
     """Load NIH Chest X-Ray dataset as a Huggingface dataset."""
@@ -64,21 +68,21 @@ def load_nihcxr(
         nih_ds["train"] = nih_ds["train"].cast_column(pathology, Value("float32"))
         nih_ds["test"] = nih_ds["test"].cast_column(pathology, Value("float32"))
 
-    # add timestamp column
+    # add synthetic timestamp column
     if add_timestamps:
         nih_ds["train"] = nih_ds["train"].add_column(
             "timestamp",
-            pd.date_range(
-                start="1/1/2019",
-                end="10/19/2019",
+            generate_timestamps(
+                start_time=train_time_range[0],
+                end_time=train_time_range[1],
                 periods=nih_ds["train"].num_rows,
             ),
         )
         nih_ds["test"] = nih_ds["test"].add_column(
             "timestamp",
-            pd.date_range(
-                start="10/20/2019",
-                end="12/25/2019",
+            generate_timestamps(
+                start_time=test_time_range[0],
+                end_time=test_time_range[1],
                 periods=nih_ds["test"].num_rows,
             ),
         )
