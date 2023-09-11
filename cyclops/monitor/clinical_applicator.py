@@ -125,8 +125,7 @@ class ClinicalShiftApplicator:
         """
         set_decode(dataset, False)
         if source_slice:
-            for _shift_name, shift_func in source_slice.get_slices().items():
-                # if shift_name == "overall":
+            for _, shift_func in source_slice.get_slices().items():
                 ds_source = dataset.filter(
                     shift_func,
                     batched=batched,
@@ -136,8 +135,7 @@ class ClinicalShiftApplicator:
         else:
             ds_source = dataset
         if target_slice:
-            for _shift_name, shift_func in target_slice.get_slices().items():
-                # if shift_name == "overall":
+            for _, shift_func in target_slice.get_slices().items():
                 ds_target = dataset.filter(
                     shift_func,
                     batched=batched,
@@ -202,6 +200,7 @@ class ClinicalShiftApplicator:
                         },
                     },
                 ],
+                include_overall=False,
             )
         else:
             source_slice = None
@@ -217,6 +216,7 @@ class ClinicalShiftApplicator:
                         },
                     },
                 ],
+                include_overall=False,
             )
         else:
             target_slice = None
@@ -270,11 +270,17 @@ class ClinicalShiftApplicator:
 
         """
         if source:
-            source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
+            source_slice = SliceSpec(
+                spec_list=[{shift_id: {"value": source}}],
+                include_overall=False,
+            )
         else:
             source_slice = None
         if target:
-            target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
+            target_slice = SliceSpec(
+                spec_list=[{shift_id: {"value": target}}],
+                include_overall=False,
+            )
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
@@ -338,6 +344,7 @@ class ClinicalShiftApplicator:
                         },
                     },
                 ],
+                include_overall=False,
             )
         else:
             source_slice = None
@@ -353,6 +360,7 @@ class ClinicalShiftApplicator:
                         },
                     },
                 ],
+                include_overall=False,
             )
         else:
             target_slice = None
@@ -406,11 +414,17 @@ class ClinicalShiftApplicator:
 
         """
         if source:
-            source_slice = SliceSpec(spec_list=[{shift_id: {"month": source}}])
+            source_slice = SliceSpec(
+                spec_list=[{shift_id: {"month": source}}],
+                include_overall=False,
+            )
         else:
             source_slice = None
         if target:
-            target_slice = SliceSpec(spec_list=[{shift_id: {"month": target}}])
+            target_slice = SliceSpec(
+                spec_list=[{shift_id: {"month": target}}],
+                include_overall=False,
+            )
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(
@@ -463,11 +477,17 @@ class ClinicalShiftApplicator:
 
         """
         if source:
-            source_slice = SliceSpec(spec_list=[{shift_id: {"value": source}}])
+            source_slice = SliceSpec(
+                spec_list=[{shift_id: {"value": source}}],
+                include_overall=False,
+            )
         else:
             source_slice = None
         if target:
-            target_slice = SliceSpec(spec_list=[{shift_id: {"value": target}}])
+            target_slice = SliceSpec(
+                spec_list=[{shift_id: {"value": target}}],
+                include_overall=False,
+            )
         else:
             target_slice = None
         ds_source, ds_target = self._get_source_target(

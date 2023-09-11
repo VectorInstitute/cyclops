@@ -484,6 +484,7 @@ class SKModel:
         target_columns: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         splits_mapping: dict = None,
+        dim_reduction: bool = False,
         **fit_params,
     ):
         """Fit the model.
@@ -544,7 +545,7 @@ class SKModel:
             if isinstance(feature_columns, str):
                 feature_columns = [feature_columns]
 
-            if target_columns is None:
+            if target_columns is None and not dim_reduction:
                 raise ValueError(
                     "Missing target columns 'target_columns'. Please provide \
                     the name of target columns when using a \
@@ -571,7 +572,9 @@ class SKModel:
 
             with X.formatted_as(
                 "custom" if is_callable_transform else "numpy",
-                columns=feature_columns + target_columns,
+                columns=feature_columns + target_columns
+                if not dim_reduction
+                else feature_columns,
                 **format_kwargs,
             ):
                 X_train = np.stack(
@@ -585,17 +588,20 @@ class SKModel:
                     except NotFittedError:
                         X_train = transforms.fit_transform(X_train)
 
-                y_train = np.stack(
-                    [X[target] for target in target_columns],
-                    axis=1,
-                ).squeeze()
+                if not dim_reduction:
+                    y_train = np.stack(
+                        [X[target] for target in target_columns],
+                        axis=1,
+                    ).squeeze()
+                else:
+                    y_train = None
 
                 if issparse(X_train):
                     X_train = X_train.toarray()
                 self.fit(X_train, y_train, **fit_params)
         # Train data is not a Hugging Face Dataset.
         else:
-            if y is None:
+            if y is None and not dim_reduction:
                 LOGGER.warning(
                     "Missing data labels 'y'. Please provide the labels \
                     for supervised training when not using a \
@@ -741,6 +747,7 @@ class SKModel:
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         only_predictions: bool = False,
         splits_mapping: dict = None,
+        dim_reduction: str = False,
     ) -> Union[Dataset, DatasetColumn, np.ndarray]:
         """Predict the output of the model.
 
@@ -828,7 +835,10 @@ class SKModel:
                         LOGGER.warning("Fitting preprocessor on evaluation data.")
                         X_eval = transforms.fit_transform(X_eval)
 
-                predictions = self.predict(X_eval)
+                if not dim_reduction:
+                    predictions = self.predict(X_eval)
+                else:
+                    predictions = self.transform(X_eval)
                 return {pred_column: predictions}
 
             with X.formatted_as(
@@ -849,7 +859,11 @@ class SKModel:
                 return concatenate_datasets([X, pred_ds], axis=1)
 
         # Data is not a Hugging Face Dataset.
-        return self.model_.predict(X)
+        if not dim_reduction:
+            output = self.model_.predict(X)
+        else:
+            output = self.model_.transform(X)
+        return output
 
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
         """Save model to file."""

@@ -537,13 +537,13 @@ def dce_loss(
         p = -torch.log(
             torch.rand(device=q_labels.device, size=(len(q_labels), num_classes)),
         )
-        p *= 1.0 - torch.nn.functionalone_hot(q_labels, num_classes=num_classes)
+        p *= 1.0 - torch.nn.functional.one_hot(q_labels, num_classes=num_classes)
         p /= torch.sum(p)
         ce_n = -(p * q_logits).sum(1) + torch.logsumexp(q_logits, dim=1)
 
     else:
         if labels.dtype == torch.long:
-            zero_hot = 1.0 - torch.nn.functionalone_hot(
+            zero_hot = 1.0 - torch.nn.functional.one_hot(
                 q_labels,
                 num_classes=num_classes,
             )
@@ -581,15 +581,19 @@ def dce_loss(
 class DetectronModule(nn.Module):
     """Detectron wrapper module."""
 
-    def __init__(self, model: nn.Module, alpha=None):
+    def __init__(self, model: nn.Module, feature_column: str, alpha=None):
         super().__init__()
         self.model = model
         self.alpha = alpha
+        self.feature_column = feature_column
         self.criterion = DCELoss(alpha=self.alpha)
 
-    def forward(self, image, labels=None, mask=None):
+    def forward(self, **kwargs):
         """Forward pass of the model."""
-        logits = self.model(image)
+        labels = kwargs.pop("labels", None)
+        mask = kwargs.pop("mask", None)
+        x = kwargs.pop(self.feature_column)
+        logits = self.model(x)
         return logits if labels is None else self.criterion(logits, labels, mask)
 
 

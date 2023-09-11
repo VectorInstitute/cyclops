@@ -34,7 +34,11 @@ def fixture_source_target():
 
 def test_detector_pca_mmd(source_target):
     """Test Detector."""
-    reductor = Reductor("pca", n_components=2)
+    reductor = Reductor(
+        "pca",
+        n_components=2,
+        feature_columns=[f"feature_{i}" for i in range(10)],
+    )
     tester = TSTester("mmd")
     detector = Detector(
         "sensitivity_test",

@@ -1,19 +1,23 @@
 """Reductor Module."""
 
-import contextlib
-import pickle
-from multiprocessing import set_start_method
-from typing import Any, Dict, List, Optional
+from functools import partial
+from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
 import torch
 import torchxrayvision as xrv
-from datasets.arrow_dataset import Dataset
+from datasets import Dataset, DatasetDict
+from monai.transforms import Compose
+from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.random_projection import SparseRandomProjection
 from torch import nn
+from torch.utils.data import Dataset as TorchDataset
+
+from cyclops.data.utils import apply_transforms
+from cyclops.models.catalog import SKModel, wrap_model
 
 
 class Reductor:
@@ -48,9 +52,25 @@ class Reductor:
             "bbsd-soft+txrv-tae"
     """
 
-    def __init__(self, dr_method: str, device: str = "cpu", **kwargs: Any) -> None:
+    def __init__(
+        self,
+        dr_method: str,
+        batch_size: int = 32,
+        num_workers: int = 0,
+        device: str = None,
+        transforms: Optional[Union[Callable, Compose]] = None,
+        feature_columns: Optional[Union[str, List[str]]] = None,
+        **kwargs: Any,
+    ) -> None:
         self.dr_method = dr_method.lower()
+        self.batch_size = batch_size
+        self.num_workers = num_workers
         self.device = device
+        if isinstance(transforms, Compose):
+            self.transforms = partial(apply_transforms, transforms=transforms)
+        else:
+            self.transforms = transforms
+        self.feature_columns = feature_columns
 
         # dictionary of string methods with corresponding functions
         reductor_methods = {
@@ -75,8 +95,18 @@ class Reductor:
 
         # initialize model
         self.model = reductor_methods[self.dr_method](**kwargs)
+        if isinstance(self.model, nn.Module):
+            self.model = wrap_model(
+                self.model,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                device=self.device,
+            )
+            self.model.initialize()
+        else:
+            self.model = wrap_model(self.model)
 
-    def load_model(self) -> None:
+    def load_model(self, output_path: str = None) -> None:
         """Load pre-trained model from path.
 
         For scikit-learn models, a pickle is loaded from disk. For the torch models, the
@@ -84,14 +114,11 @@ class Reductor:
 
         """
         if hasattr(self, "model_path"):
-            if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
-                with open(self.model_path, "rb") as file:
-                    self.model = pickle.load(file)
-            else:
-                self.model.load_state_dict(torch.load(self.model_path))  # type: ignore
-            print(f"Model loadded from {self.model_path}")
+            self.model.load_model(self.model_path)
+        elif output_path is not None:
+            self.model.load_model(output_path)  # type: ignore
         else:
-            raise ValueError("model_path not set.")
+            raise ValueError("No model path provided.")
 
     def save_model(self, output_path: str) -> None:
         """Save the model to disk.
@@ -102,11 +129,7 @@ class Reductor:
             path to save the model to
 
         """
-        if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
-            with open(output_path, "wb") as file:
-                pickle.dump(self.model, file)
-        else:
-            torch.save(self.model.state_dict(), output_path)
+        self.model.save_model(output_path)
         print(f"{self.dr_method} saved to {output_path}")
 
     def get_available_dr_methods(self) -> List[str]:
@@ -131,7 +154,7 @@ class Reductor:
             "bbse-soft+txrv-ae",
         ]
 
-    def fit(self, dataset: Dataset) -> None:
+    def fit(self, X: Union[Dataset, DatasetDict, np.ndarray, TorchDataset]) -> None:
         """Fit the reductor to the data.
 
         For scikit-learn models, the model is fit to the data
@@ -145,16 +168,18 @@ class Reductor:
             dataset to fit the reductor to.
 
         """
-        features = dataset["features"]
         if self.dr_method in ("pca", "srp", "kpca", "isomap", "gmm"):
-            self.model.fit(features)
+            self.model.fit(
+                X,
+                transforms=self.transforms,
+                feature_columns=self.feature_columns,
+                dim_reduction=True,
+            )
 
     def transform(
         self,
-        dataset: Dataset,
-        batch_size: int = 32,
-        num_workers: int = 1,
-    ) -> np.ndarray[float, np.dtype[np.float64]]:
+        X: Union[Dataset, DatasetDict, np.ndarray, TorchDataset],
+    ) -> np.ndarray[float, np.dtype[np.float32]]:
         """Transform the data using the chosen dimensionality reduction method.
 
         Parameters
@@ -173,96 +198,44 @@ class Reductor:
             transformed data
 
         """
-        if num_workers > 1:
-            with contextlib.suppress(RuntimeError):
-                set_start_method("spawn")
-
-        if self.dr_method == "nored":
-            dataset = dataset.map(
-                self.nored_inference,
-                batched=True,
-                batch_size=batch_size,
-                num_proc=num_workers,
+        if isinstance(self.model, SKModel) and self.dr_method != "gmm":
+            X_reduced = self.model.predict(
+                X,
+                transforms=self.transforms,
+                feature_columns=self.feature_columns,
+                only_predictions=True,
+                dim_reduction=True,
             )
-            features = np.array(dataset["outputs"])
-            dataset.remove_columns("outputs")
-
-        elif self.dr_method in ("pca", "srp", "kpca", "isomap"):
-            features = self.model.transform(dataset["features"])
-        elif self.dr_method in ("gmm"):
-            features = self.model.predict_proba(dataset["features"])
+        elif self.dr_method == "gmm":
+            X_reduced = self.model.predict_proba(
+                X,
+                transforms=self.transforms,
+                feature_columns=self.feature_columns,
+                only_predictions=True,
+            )
         else:
-            self.model = self.model.to(self.device)
-            dataset = dataset.map(
-                self.bbse_inference,
-                batched=True,
-                batch_size=batch_size,
-                num_proc=num_workers,
+            X_reduced = self.model.predict(
+                X,
+                transforms=self.transforms,
+                feature_columns=self.feature_columns,
+                only_predictions=True,
             )
-            features = np.array(dataset["outputs"])
-            dataset.remove_columns("outputs")
-            self.model = self.model.to("cpu")
-            torch.cuda.empty_cache()
-        return features
-
-    def bbse_inference(self, examples: Dict[str, Any]) -> Dict[str, Any]:
-        """Inference function for Black Box Shift Estimator models.
-
-        Parameters
-        ----------
-        examples: dict
-            dictionary containing the data to use for inference.
-
-        Returns
-        -------
-        examples: dict
-            dictionary containing the data with the outputs.
-
-        """
-        if isinstance(examples["features"][0], np.ndarray):
-            features = np.concatenate(examples["features"])
-        elif isinstance(examples["features"][0], torch.Tensor):
-            features = torch.concat(examples["features"])
-        elif isinstance(examples["features"][0], list):
-            if isinstance(self.model, torch.nn.Module):
-                features = torch.tensor(examples["features"])
-            else:
-                features = np.array(examples["features"])
-        examples["outputs"] = self.model(features)
-        return examples
-
-    def nored_inference(self, examples: Dict[str, Any]) -> Dict[str, Any]:
-        """Inference function for no dimensionality reduction.
-
-        Parameters
-        ----------
-        examples: dict
-            dictionary containing the data to use for inference.
-
-        Returns
-        -------
-        examples: dict
-            dictionary containing the data with the outputs.
-
-        """
-        if isinstance(examples["features"][0], np.ndarray):
-            features = np.concatenate(examples["features"])
-        elif isinstance(examples["features"][0], torch.Tensor):
-            features = torch.concat(examples["features"])
-        elif isinstance(examples["features"][0], list):
-            features = np.array(examples["features"])
-        examples["outputs"] = features
-        return examples
+        return np.array(X_reduced).astype("float32")
 
 
-class NoReduction:
+class NoReduction(BaseEstimator):
     """No reduction dummy function."""
 
-    def __init__(self, reduce: Optional[Any] = None) -> None:
-        self.reduce = reduce
+    def __init__(self) -> None:
+        super().__init__()
 
-    def fit(self, x: Any) -> None:
-        """Run dummy fit function."""
+    def fit(self, X: np.ndarray) -> None:
+        """Fit the model."""
+        pass
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        """Predict the model."""
+        return X
 
 
 class BlackBoxShiftEstimatorSoft(nn.Module):

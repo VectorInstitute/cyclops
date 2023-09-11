@@ -377,6 +377,11 @@ class DCTester:
                 X_s,
                 **get_args(self.tester_methods[self.tester_method], self.method_args),
             )
+        elif self.tester_method == "detectron":
+            self.tester = self.tester_methods[self.tester_method](
+                X_s,
+                **get_args(self.tester_methods[self.tester_method], self.method_args),
+            )
 
     def test_shift(
         self,
@@ -558,15 +563,58 @@ class Detectron:
     year = {2023},
     url = {https://openreview.net/forum?id=rdfgqiwz7lZ}
     }
+
+    Parameters
+    ----------
+    X_s
+        reference dataset
+    base_model
+        pre-trained base model to use for Detectron
+    feature_column
+        feature column to use for Detectron
+    model
+        optional model to use for Detectron,
+        if different from base_model
+    transforms
+        optional transforms to apply to data
+    splits_mapping
+        optional mapping of splits to use for Detectron
+        Defaults to {"train": "train", "test": "test"}
+    num_runs
+        number of runs to use for Detectron. Defaults to 100.
+    sample_size
+        sample size to use for Detectron. Defaults to 50.
+    batch_size
+        batch size to use for Detectron. Defaults to 32.
+    ensemble_size
+        ensemble size for each CDC. Defaults to 5.
+    max_epochs_per_model
+        maximum number of epochs to use for each ensemble
+    lr
+        learning rate to use for fitting CDCs. Defaults to 1e-3.
+    num_workers
+        number of workers to use for data loading
+    save_dir
+        directory to save Detectron models to. Defaults to "detectron".
+    task
+        task to use for Detectron. Defaults to "multiclass".
+        Used to infer loss function and activation function.
+
+    Methods
+    -------
+    fit(X_s: np.ndarray, **kwargs: Any) -> None
+        Fit Detectron to reference data
+    test_shift(X_t: np.ndarray, **kwargs: Any) -> Tuple[float, float]
+        Test for shift in target data
     """
 
     def __init__(
         self,
+        X_s: Union[Dataset, DatasetDict, TorchDataset, np.ndarray, torch.Tensor],
         base_model: Union[nn.Module, BaseEstimator],
-        model: nn.Module,
-        feature_columns: List[str] = None,
+        feature_column: str,
+        model: nn.Module = None,
         transforms: Callable = None,
-        criterion=nn.BCEWithLogitsLoss,
         splits_mapping=None,
         num_runs: int = 100,
         sample_size: int = 50,
@@ -580,24 +628,18 @@ class Detectron:
     ):
         if splits_mapping is None:
             splits_mapping = {"train": "train", "test": "test"}
-        if isinstance(model, nn.Module):
-            if criterion is not None:
-                self.base_model = wrap_model(
-                    base_model,
-                    batch_size=batch_size,
-                    criterion=criterion,
-                    max_epochs_per_model=max_epochs_per_model,
-                    lr=lr,
-                )
-                self.base_model.initialize()
-            else:
-                raise ValueError("Criterion must be specified for PyTorch models.")
-
+        if model is None:
+            self.model = base_model
+        if isinstance(base_model, nn.Module):
+            self.base_model = wrap_model(
+                base_model,
+                batch_size=batch_size,
+            )
+            self.base_model.initialize()
         else:
             self.base_model = wrap_model(base_model)
             self.base_model.initialize()
-        self.model = model
-        self.feature_columns = feature_columns
+        self.feature_column = feature_column
         if transforms:
             self.transforms = partial(apply_transforms, transforms=transforms)
             model_transforms = transforms
@@ -612,6 +654,9 @@ class Detectron:
                 apply_transforms,
                 transforms=model_transforms,
             )
+        else:
+            self.transforms = transforms
+            self.model_transforms = transforms
         self.splits_mapping = splits_mapping
         self.num_runs = num_runs
         self.sample_size = sample_size
@@ -624,8 +669,11 @@ class Detectron:
         if save_dir is None:
             self.save_dir = "detectron"
 
+        self.fit(X_s)
+
     def fit(self, X_s: Union[Dataset, DatasetDict, np.ndarray, TorchDataset]):
         """Fit the Detectron model."""
+        X_s = self.split_dataset(X_s)
         self.p = X_s
         self.cal_record = {
             "seed": [],
@@ -638,7 +686,11 @@ class Detectron:
             for e in range(1, self.ensemble_size + 1):
                 alpha = 1 / (len(X_s) * self.sample_size + 1)
                 model = wrap_model(
-                    DetectronModule(self.model, alpha=alpha),
+                    DetectronModule(
+                        self.model,
+                        feature_column=self.feature_column,
+                        alpha=alpha,
+                    ),
                     batch_size=self.batch_size,
                     criterion=DummyCriterion,
                     max_epochs=self.max_epochs_per_model,
@@ -658,7 +710,7 @@ class Detectron:
                     p = p.add_column("mask", [1] * len(p))
                     p_pseudolabels = self.base_model.predict(
                         X=p,
-                        feature_columns=self.feature_columns,
+                        feature_columns=self.feature_column,
                         transforms=self.transforms,
                         only_predictions=True,
                     )
@@ -673,7 +725,7 @@ class Detectron:
                     pstar = pstar.add_column("mask", [0] * len(pstar))
                     pstar_pseudolabels = self.base_model.predict(
                         X=pstar,
-                        feature_columns=self.feature_columns,
+                        feature_columns=self.feature_column,
                         transforms=self.transforms,
                         only_predictions=True,
                     )
@@ -685,8 +737,7 @@ class Detectron:
                     p_pstar = concatenate_datasets([p, pstar], axis=0)
                     p_pstar = p_pstar.train_test_split(test_size=0.5, shuffle=True)
 
-                    if isinstance(self.feature_columns, str):
-                        train_features = [self.feature_columns]
+                    train_features = [self.feature_column]
                     train_features.extend(["labels", "mask"])
                     model.fit(
                         X=p_pstar,
@@ -704,7 +755,7 @@ class Detectron:
                     )
                     pstar_logits = model.predict(
                         X=pstar,
-                        feature_columns=self.feature_columns,
+                        feature_columns=self.feature_column,
                         transforms=self.model_transforms,
                         only_predictions=True,
                     )
@@ -726,6 +777,7 @@ class Detectron:
 
     def predict(self, X_t: Union[Dataset, DatasetDict, np.ndarray, TorchDataset]):
         """Detect shift in target dataset."""
+        X_t = self.split_dataset(X_t)
         self.test_record = {
             "seed": [],
             "ensemble": [],
@@ -737,7 +789,11 @@ class Detectron:
             for e in range(1, self.ensemble_size + 1):
                 alpha = 1 / (len(X_t) * self.sample_size + 1)
                 model = wrap_model(
-                    DetectronModule(self.model, alpha=alpha),
+                    DetectronModule(
+                        self.model,
+                        feature_column=self.feature_column,
+                        alpha=alpha,
+                    ),
                     batch_size=self.batch_size,
                     criterion=DummyCriterion,
                     max_epochs=self.max_epochs_per_model,
@@ -757,7 +813,7 @@ class Detectron:
                     p = p.add_column("mask", [1] * len(p))
                     p_pseudolabels = self.base_model.predict(
                         X=p,
-                        feature_columns=self.feature_columns,
+                        feature_columns=self.feature_column,
                         transforms=self.transforms,
                         only_predictions=True,
                     )
@@ -771,7 +827,7 @@ class Detectron:
                     q = q.add_column("mask", [0] * len(q))
                     q_pseudolabels = self.base_model.predict(
                         X=q,
-                        feature_columns=self.feature_columns,
+                        feature_columns=self.feature_column,
                         transforms=self.transforms,
                         only_predictions=True,
                     )
@@ -779,8 +835,7 @@ class Detectron:
                     q = q.add_column("labels", q_pseudolabels.tolist())
                     p_q = concatenate_datasets([p, q], axis=0)
                     p_q = p_q.train_test_split(test_size=0.5, shuffle=True)
-                    if isinstance(self.feature_columns, str):
-                        train_features = [self.feature_columns]
+                    train_features = [self.feature_column]
                     train_features.extend(["labels", "mask"])
                     model.fit(
                         X=p_q,
@@ -798,7 +853,7 @@ class Detectron:
                     )
                     q_logits = model.predict(
                         X=q,
-                        feature_columns=self.feature_columns,
+                        feature_columns=self.feature_column,
                         transforms=self.model_transforms,
                         only_predictions=True,
                     )
@@ -816,8 +871,7 @@ class Detectron:
                     raise NotImplementedError("Numpy arrays are not supported yet.")
                 elif isinstance(X_t, TorchDataset):
                     raise NotImplementedError("PyTorch datasets are not supported yet.")
-        p_val, distance = self.get_pvalue_distance()
-        return p_val, distance / q_pseudolabels.size
+        return self.get_results()
 
     def format_pseudolabels(self, labels):
         """Format pseudolabels."""
@@ -827,7 +881,7 @@ class Detectron:
                 if ((labels <= 1).all() and (labels >= 0).all())
                 else (sigmoid(labels) > 0.5).astype("float32")
             )
-        if self.task == "multiclass":
+        elif self.task == "multiclass":
             labels = (
                 labels.argmax(dim=-1)
                 if np.isclose(labels.sum(axis=-1), 1).all()
@@ -880,10 +934,24 @@ class Detectron:
 
         return result
 
-    def get_pvalue_distance(self, max_ensemble_size=None) -> float:
-        """Get p-value and distance."""
+    def get_results(self, max_ensemble_size=None) -> float:
+        """Get p-value and distance along with calibration and test records."""
         cal_counts = self.counts("calibration", max_ensemble_size)
         test_count = self.counts("test", max_ensemble_size)[0]
         cdf = self.ecdf(cal_counts)
         p_value = cdf(test_count)
-        return p_value, test_count
+        return {
+            "data": {
+                "p_val": p_value,
+                "distance": test_count,
+                "cal_record": self.cal_record,
+                "test_record": self.test_record,
+            },
+        }
+
+    @staticmethod
+    def split_dataset(X: Union[Dataset, DatasetDict]) -> DatasetDict:
+        """Split dataset into train and test splits."""
+        if isinstance(X, Dataset):
+            X = X.train_test_split(test_size=0.5, shuffle=True)
+        return X

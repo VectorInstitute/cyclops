@@ -6,7 +6,7 @@ import pandas as pd
 from datasets import DatasetDict
 from datasets.arrow_dataset import Dataset
 from datasets.features import Image, Value
-from datasets.utils.logging import disable_progress_bar
+from datasets.utils.logging import disable_progress_bar, enable_progress_bar
 
 from cyclops.data.preprocess import nihcxr_preprocess
 
@@ -82,4 +82,5 @@ def load_nihcxr(
                 periods=nih_ds["test"].num_rows,
             ),
         )
+        enable_progress_bar()
     return nih_ds.cast_column(image_column, Image(decode=True))
