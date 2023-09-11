@@ -630,6 +630,8 @@ class Detectron:
             splits_mapping = {"train": "train", "test": "test"}
         if model is None:
             self.model = base_model
+        else:
+            self.model = model
         if isinstance(base_model, nn.Module):
             self.base_model = wrap_model(
                 base_model,
