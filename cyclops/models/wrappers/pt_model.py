@@ -29,6 +29,7 @@ from cyclops.models.utils import (
 from cyclops.models.wrappers.base import ModelWrapper
 from cyclops.models.wrappers.utils import (
     DatasetColumn,
+    DefaultCriterion,
     check_is_fitted,
     set_random_seed,
     to_numpy,
@@ -53,11 +54,12 @@ class PTModel(ModelWrapper):
     model : nn.Module
         A PyTorch model instance or class to wrap. If class, provide parameters
         as kwargs in the format `model__<param_name>=<param_value>`.
-    criterion : str or torch.nn.Module
+    criterion : str or torch.nn.Module, default=DefaultCriterion
         The loss function to use. Accepts a string representing the name of a
         PyTorch loss function as defined in `torch.nn.modules.loss` or a
         `torch.nn.Module` instance/class. If class, provide parameters as kwargs
         in the format `criterion__<param_name>=<param_value>`.
+        default criterion is a placeholder that takes the mean value of logits.
     optimizer : str or torch.optim.Optimizer, default=torch.optim.SGD
         The optimizer to use. Accepts a string representing the name of a
         PyTorch optimizer as defined in `torch.optim` or a `torch.optim.Optimizer`
@@ -65,7 +67,7 @@ class PTModel(ModelWrapper):
         `optimizer__<param_name>=<param_value>`.
     lr : float, default=0.01
         The learning rate to use.
-    lr_scheduler : str or torch.optim.lr_scheduler._LRScheduler, default=None
+    lr_scheduler : str or torch.optim.lr_scheduler._LRScheduler, default="ConstantLR"
         The learning rate scheduler to use. Accepts a string representing the name
         of a PyTorch learning rate scheduler as defined in `torch.optim.lr_scheduler`
         or a `torch.optim.lr_scheduler._LRScheduler` instance/class. If class,
@@ -79,7 +81,7 @@ class PTModel(ModelWrapper):
         The batch size to use. Set to -1 for full batch.
     max_epochs : int, default=10
         The maximum number of epochs to train for.
-    activation : str or torch.nn.Module, default=None
+    activation : str or torch.nn.Module, default=nn.Identity
         The activation function to use. Accepts a string representing the name of
         a PyTorch activation function as defined in `torch.nn.modules.activation`
         or a `torch.nn.Module` instance/class. If class, provide parameters as
@@ -92,6 +94,8 @@ class PTModel(ModelWrapper):
         An iterator for loading the test/validation data in batches. The class
         assumes it is a `torch.utils.data.DataLoader`. Arguments can be passed
         as kwargs in the format `test_loader__<param_name>=<param_value>`.
+    num_workers : int, default=os.cpu_count()
+        The number of workers to use for loading the train/test data.
     warm_start : bool, default=False
         Whether to re-use the weights from the previous fit call. If `True`, the
         model will continue training from the weights of the previous fit call.
@@ -108,22 +112,27 @@ class PTModel(ModelWrapper):
     deterministic : bool, default=False
         Whether to use deterministic algorithms for training. This will make
         runs reproducible but will be slower. It is ignored if `seed` is `None`.
+    concatenate_features : bool, default=True
+        Whether to concatenate the features in the dataset before passing them.
+        This is useful when the input is a Hugging Face Dataset and the features
+        are stored in different columns.
 
     """
 
     def __init__(
         self,
         model: nn.Module,
-        criterion: Union[str, nn.Module],
+        criterion: Union[str, nn.Module] = DefaultCriterion,
         optimizer: Union[str, Optimizer] = torch.optim.SGD,
         lr: float = 0.01,
-        lr_scheduler: Optional[Union[str, TorchLRScheduler]] = None,
+        lr_scheduler: Optional[Union[str, TorchLRScheduler]] = "ConstantLR",
         lr_update_per_batch: bool = False,
         batch_size: int = 32,
         max_epochs: int = 10,
-        activation: Optional[Union[str, nn.Module]] = None,
+        activation: Optional[Union[str, nn.Module]] = nn.Identity,
         train_loader=DataLoader,
         test_loader=DataLoader,
+        num_workers=1,
         warm_start: bool = False,
         save_every: int = -1,
         save_best_only: bool = True,
@@ -131,6 +140,7 @@ class PTModel(ModelWrapper):
         device: Optional[Union[str, torch.device]] = None,
         seed: Optional[int] = None,
         deterministic: bool = False,
+        concatenate_features: bool = True,
         **kwargs,
     ) -> None:
         assert is_pytorch_model(
@@ -148,6 +158,7 @@ class PTModel(ModelWrapper):
         self.activation = activation
         self.train_loader = train_loader
         self.test_loader = test_loader
+        self.num_workers = num_workers
         self.warm_start = warm_start
         self.save_every = save_every
         self.save_best_only = save_best_only
@@ -157,6 +168,7 @@ class PTModel(ModelWrapper):
         self.device = device
         self.seed = seed
         self.deterministic = deterministic
+        self.concatenate_features = concatenate_features
 
         vars(self).update(kwargs)  # add any additional kwargs to the class
 
@@ -426,7 +438,11 @@ class PTModel(ModelWrapper):
 
         """
         X = to_tensor(batch, device=self.device)
-        return self.model_(X, **fit_params)  # type: ignore[attr-defined]
+        if self.concatenate_features:
+            out = self.model_(X, **fit_params)  # type: ignore[attr-defined]
+        else:
+            out = self.model_(**X, **fit_params)  # type: ignore[attr-defined]
+        return out
 
     def _get_loss(self, target: torch.Tensor, preds: torch.Tensor) -> torch.Tensor:
         """Apply criterion and get the loss value.
@@ -570,10 +586,13 @@ class PTModel(ModelWrapper):
         if feature_columns is not None:
             if target_columns is not None:
                 for batch in data_loader:
-                    batch_features = torch.cat(
-                        [batch[feature] for feature in feature_columns],
-                        dim=1,
-                    )
+                    if self.concatenate_features:
+                        batch_features = torch.cat(
+                            [batch[feature] for feature in feature_columns],
+                            dim=1,
+                        )
+                    else:
+                        batch_features = {k: batch[k] for k in feature_columns}
                     try:
                         batch_labels = torch.cat(
                             [batch[target] for target in target_columns],
@@ -677,7 +696,7 @@ class PTModel(ModelWrapper):
         if kwargs["batch_size"] == -1:
             kwargs["batch_size"] = len(dataset)
 
-        return data_loader(dataset, **kwargs)
+        return data_loader(dataset, num_workers=self.num_workers, **kwargs)
 
     def _train_loop(
         self,
@@ -1075,10 +1094,13 @@ class PTModel(ModelWrapper):
         if isinstance(X, Dataset):
             preds = Dataset.from_dict({prediction_column: []})
             for batch in dataloader:
-                batch = torch.cat(  # noqa: PLW2901
-                    [batch[feature] for feature in feature_columns],
-                    dim=1,
-                )
+                if self.concatenate_features:
+                    batch = torch.cat(  # noqa: PLW2901
+                        [batch[feature] for feature in feature_columns],
+                        dim=1,
+                    )
+                else:
+                    batch = {k: batch[k] for k in feature_columns}  # noqa: PLW2901
                 output = self._evaluation_step(batch, training=False, **predict_params)
                 output = self.activation_(output)
                 batch_ds = Dataset.from_dict({prediction_column: output})
@@ -1299,7 +1321,7 @@ class PTModel(ModelWrapper):
         if is_best:
             if os.path.exists(best_model_path):
                 os.remove(best_model_path)
-            os.symlink(filepath, best_model_path)
+            torch.save(state_dict, best_model_path)
 
     def load_model(self, filepath: str, **kwargs):
         """Load a model from a checkpoint.

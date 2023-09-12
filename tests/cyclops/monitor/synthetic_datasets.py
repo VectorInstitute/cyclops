@@ -99,7 +99,7 @@ def synthetic_nih_dataset(size=8):
     return Dataset.from_pandas(df, preserve_index=False)
 
 
-def synthetic_generic_dataset(size=100):
+def synthetic_generic_dataset(size=100, concatenate_features=False):
     """Create a synthetic Gemini dataset."""
     columns = ["timestamp"]
 
@@ -111,6 +111,9 @@ def synthetic_generic_dataset(size=100):
         periods=size,
     )
     df["mortality"] = np.random.randint(0, 2, size=size)
-    df["features"] = np.random.rand(size, 10).tolist()
-
+    if concatenate_features:
+        df["features"] = np.random.rand(size, 10).tolist()
+    else:
+        for i in range(10):
+            df[f"feature_{i}"] = np.random.rand(size)
     return Dataset.from_pandas(df, preserve_index=False)
