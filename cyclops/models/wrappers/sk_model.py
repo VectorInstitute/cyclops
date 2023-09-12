@@ -511,7 +511,7 @@ class SKModel:
                 used when input is a dataset dictionary, by default {"train": "train"}
         dim_reduction: bool, default=False
             Whether the model is used for dimensionality reduction or prediction, \
-            Used when SKModel uses fit_transform instead of fit_predict and no labels (y)
+            Used when SKModel uses fit_transform instead of fit_predict and no labels
             are expected.
 
         Returns
@@ -781,7 +781,7 @@ class SKModel:
                 used when input is a dataset dictionary, by default {"test": "test"}
         dim_reduction: bool, default=False
             Whether the model is used for dimensionality reduction or prediction, \
-            Used when SKModel uses fit_transform instead of fit_predict and no labels (y)
+            Used when SKModel uses fit_transform instead of fit_predict and no labels
             are expected.
 
         Returns
