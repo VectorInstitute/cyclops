@@ -509,6 +509,10 @@ class SKModel:
         splits_mapping: Optional[dict], optional
             Mapping from 'train', 'validation' and 'test' to dataset splits names, \
                 used when input is a dataset dictionary, by default {"train": "train"}
+        dim_reduction: bool, default=False
+            Whether the model is used for dimensionality reduction or prediction, \
+            Used when SKModel uses fit_transform instead of fit_predict and no labels (y)
+            are expected.
 
         Returns
         -------
@@ -747,7 +751,7 @@ class SKModel:
         transforms: Optional[Union[ColumnTransformer, Callable]] = None,
         only_predictions: bool = False,
         splits_mapping: dict = None,
-        dim_reduction: str = False,
+        dim_reduction: bool = False,
     ) -> Union[Dataset, DatasetColumn, np.ndarray]:
         """Predict the output of the model.
 
@@ -775,6 +779,10 @@ class SKModel:
         splits_mapping: Optional[dict], optional
             Mapping from 'train', 'validation' and 'test' to dataset splits names, \
                 used when input is a dataset dictionary, by default {"test": "test"}
+        dim_reduction: bool, default=False
+            Whether the model is used for dimensionality reduction or prediction, \
+            Used when SKModel uses fit_transform instead of fit_predict and no labels (y)
+            are expected.
 
         Returns
         -------

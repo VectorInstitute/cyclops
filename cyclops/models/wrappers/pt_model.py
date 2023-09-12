@@ -54,11 +54,12 @@ class PTModel(ModelWrapper):
     model : nn.Module
         A PyTorch model instance or class to wrap. If class, provide parameters
         as kwargs in the format `model__<param_name>=<param_value>`.
-    criterion : str or torch.nn.Module
+    criterion : str or torch.nn.Module, default=DefaultCriterion
         The loss function to use. Accepts a string representing the name of a
         PyTorch loss function as defined in `torch.nn.modules.loss` or a
         `torch.nn.Module` instance/class. If class, provide parameters as kwargs
         in the format `criterion__<param_name>=<param_value>`.
+        default criterion is a placeholder that takes the mean value of logits.
     optimizer : str or torch.optim.Optimizer, default=torch.optim.SGD
         The optimizer to use. Accepts a string representing the name of a
         PyTorch optimizer as defined in `torch.optim` or a `torch.optim.Optimizer`
@@ -111,6 +112,10 @@ class PTModel(ModelWrapper):
     deterministic : bool, default=False
         Whether to use deterministic algorithms for training. This will make
         runs reproducible but will be slower. It is ignored if `seed` is `None`.
+    concatenate_features : bool, default=True
+        Whether to concatenate the features in the dataset before passing them.
+        This is useful when the input is a Hugging Face Dataset and the features
+        are stored in different columns.
 
     """
 
