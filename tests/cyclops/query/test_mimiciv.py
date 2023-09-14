@@ -17,10 +17,6 @@ def test_mimiciv_querier():
     assert len(diagnoses) == 10
     assert "long_title" in diagnoses
 
-    care_units = querier.care_units().run(limit=10)
-    assert "admit" in care_units
-    assert "discharge" in care_units
-
     lab_events = querier.labevents().run(limit=10)
     assert "category" in lab_events
 

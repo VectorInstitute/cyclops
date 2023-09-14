@@ -10,6 +10,7 @@ import dask.dataframe as dd
 import pandas as pd
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
+from datasets import Dataset
 from omegaconf import DictConfig
 from sqlalchemy import MetaData, create_engine, inspect
 from sqlalchemy.engine.base import Engine
@@ -166,10 +167,10 @@ class Database:
         self,
         query: Union[TableTypes, str],
         limit: Optional[int] = None,
-        backend: Literal["pandas", "dask"] = "pandas",
+        backend: Literal["pandas", "dask", "datasets"] = "pandas",
         index_col: Optional[str] = None,
         n_partitions: Optional[int] = None,
-    ) -> Union[pd.DataFrame, dd.core.DataFrame]:
+    ) -> Union[pd.DataFrame, dd.core.DataFrame, Dataset]:
         """Run query.
 
         Parameters
@@ -179,7 +180,7 @@ class Database:
         limit
             Limit query result to limit.
         backend
-            Backend computing framework to use, Pandas or Dask.
+            Backend library to use, Pandas or Dask or HF datasets.
         index_col
             Column which becomes the index, and defines the partitioning.
             Should be a indexed column in the SQL server, and any orderable type.
@@ -188,7 +189,7 @@ class Database:
 
         Returns
         -------
-        pandas.DataFrame or dask.DataFrame
+        pandas.DataFrame or dask.DataFrame or datasets.Dataset
             Extracted data from query.
 
         """
@@ -196,8 +197,10 @@ class Database:
             raise ValueError(
                 "Cannot use limit argument when running raw SQL string query!",
             )
-        if backend == "pandas" and n_partitions is not None:
-            raise ValueError("Partitions not applicable with Pandas backend, use Dask!")
+        if backend in ["pandas", "datasets"] and n_partitions is not None:
+            raise ValueError(
+                "Partitions not applicable with pandas or datasets backend, use dask!",
+            )
         # Limit the results returned.
         if limit is not None:
             query = query.limit(limit)  # type: ignore
@@ -206,6 +209,8 @@ class Database:
         with self.session.connection():
             if backend == "pandas":
                 data = pd.read_sql_query(query, self.engine, index_col=index_col)
+            elif backend == "datasets":
+                data = Dataset.from_sql(query, self.conn)
             elif backend == "dask":
                 data = dd.read_sql_query(  # type: ignore
                     query,
@@ -215,7 +220,9 @@ class Database:
                 )
                 data = data.reset_index(drop=False)
             else:
-                raise ValueError("Invalid backend, can either be Pandas or Dask!")
+                raise ValueError(
+                    "Invalid backend, can either be pandas or dask or datasets!",
+                )
         LOGGER.info("Query returned successfully!")
 
         return data

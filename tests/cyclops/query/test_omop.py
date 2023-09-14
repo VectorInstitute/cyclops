@@ -11,16 +11,14 @@ def test_omop_querier_synthea():
     """Test OMOPQuerier on synthea data."""
     querier = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
     ops = qo.Sequential(
-        [
-            qo.ConditionEquals("gender_source_value", "M"),
-            qo.Rename({"race_source_value": "race"}),
-        ],
+        qo.ConditionEquals("gender_source_value", "M"),
+        qo.Rename({"race_source_value": "race"}),
     )
-    persons_qi = querier.person(ops=ops)
-    visits = querier.visit_occurrence(
-        join=qo.JoinArgs(join_table=persons_qi.query, on="person_id"),
-    ).run()
-    persons = persons_qi.run()
+    persons = querier.person()
+    persons = persons.ops(ops)
+    visits = querier.visit_occurrence()
+    visits = visits.join(persons, "person_id").run()
+    persons = persons.run()
     observations = querier.observation().run()
     measurements = querier.measurement().run()
     visit_details = querier.visit_detail().run()

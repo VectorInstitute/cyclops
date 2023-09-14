@@ -65,7 +65,7 @@ class OMOPQuerier(DatasetQuerier):
 
         Parameters
         ----------
-        schema_name: str
+        schema_name
             Name of database schema.
         **config_overrides
             Override configuration parameters, specified as kwargs.
@@ -79,10 +79,10 @@ class OMOPQuerier(DatasetQuerier):
 
     def map_concept_ids_to_name(
         self,
-        src_table: Subquery,
+        src_table: Union[Subquery, QueryInterface],
         src_cols: Union[str, List[str]],
         dst_cols: Optional[Union[str, List[str]]] = None,
-    ) -> Subquery:
+    ) -> QueryInterface:
         """Map concept IDs in a source table to concept names from concept table.
 
         For each concept ID column with a name like `somecol_concept_ID`, the mapped
@@ -92,19 +92,21 @@ class OMOPQuerier(DatasetQuerier):
 
         Parameters
         ----------
-        src_table: Subquery
+        src_table
             Source table with concept IDs.
-        src_cols: str or list of str
+        src_cols
             Column name(s) to consider as concept IDs for mapping.
-        dst_cols: str or list of str, optional
+        dst_cols
             Column name(s) to assign for the mapped concept name columns.
 
         Returns
         -------
-        Subquery
+        cyclops.query.interface.QueryInterface
             Query with mapped columns from concept table.
 
         """
+        if isinstance(src_table, QueryInterface):
+            src_table = src_table.query
         concept_table = self.get_table(self.schema_name, "concept")
         src_cols = to_list(src_cols)
         if dst_cols:
@@ -124,43 +126,41 @@ class OMOPQuerier(DatasetQuerier):
             dst_col_name = dst_cols[i] if dst_cols else col.replace(ID, NAME)
             src_table = qo.Rename({CONCEPT_NAME: dst_col_name})(src_table)
 
-        return src_table
+        return QueryInterface(self.db, src_table)
 
-    def _map_care_site_id(self, source_table: Subquery) -> Subquery:
+    def _map_care_site_id(
+        self,
+        source_table: Union[Subquery, QueryInterface],
+    ) -> QueryInterface:
         """Map care_site_id in a source table to care_site table.
 
         Parameters
         ----------
-        source_table: Subquery
+        source_table
             Source table with care_site_id.
 
         Returns
         -------
-        Subquery
+        cyclops.query.interface.QueryInterface
             Query with mapped columns from care_site table.
 
         """
+        if isinstance(source_table, QueryInterface):
+            source_table = source_table.query
         care_site_table = self.get_table(self.schema_name, "care_site")
-        return qo.Join(
+        table = qo.Join(
             care_site_table,
             on=CARE_SITE_ID,
             join_table_cols=[CARE_SITE_NAME, CARE_SITE_SOURCE_VALUE],
             isouter=True,
         )(source_table)
 
+        return QueryInterface(self.db, table)
+
     def visit_occurrence(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query OMOP visit_occurrence table.
-
-        Parameters
-        ----------
-        join: cyclops.query.ops.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on query.
 
         Returns
         -------
@@ -178,21 +178,12 @@ class OMOPQuerier(DatasetQuerier):
         )
         table = self._map_care_site_id(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def visit_detail(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query OMOP visit_detail table.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on query.
 
         Returns
         -------
@@ -206,21 +197,12 @@ class OMOPQuerier(DatasetQuerier):
             ["visit_detail_concept_id", "visit_detail_type_concept_id"],
         )
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def person(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query OMOP person table.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on query.
 
         Returns
         -------
@@ -234,21 +216,12 @@ class OMOPQuerier(DatasetQuerier):
             ["gender_concept_id", "race_concept_id", "ethnicity_concept_id"],
         )
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def observation(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query OMOP observation table.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on query.
 
         Returns
         -------
@@ -262,21 +235,12 @@ class OMOPQuerier(DatasetQuerier):
             [OBSERVATION_CONCEPT_ID, OBSERVATION_TYPE_CONCEPT_ID],
         )
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def measurement(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query OMOP measurement table.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on query.
 
         Returns
         -------
@@ -292,4 +256,4 @@ class OMOPQuerier(DatasetQuerier):
             [MEASUREMENT_CONCEPT_ID, MEASUREMENT_TYPE_CONCEPT_ID, UNIT_CONCEPT_ID],
         )
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)

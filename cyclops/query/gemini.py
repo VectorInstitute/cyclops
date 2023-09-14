@@ -1,7 +1,7 @@
 """GEMINI query API."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
@@ -40,17 +40,8 @@ class GEMINIQuerier(DatasetQuerier):
 
     def ip_admin(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query GEMINI patient encounters.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on the table.
 
         Returns
         -------
@@ -78,21 +69,12 @@ class GEMINIQuerier(DatasetQuerier):
         table = qo.Rename({"description": "discharge_description"})(table)
         table = qo.Drop("value")(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def diagnoses(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query diagnosis data.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on the table.
 
         Returns
         -------
@@ -117,21 +99,12 @@ class GEMINIQuerier(DatasetQuerier):
         # Trim whitespace from ICD codes.
         table = qo.Trim("diagnosis_code")(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def room_transfer(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query room transfer data.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on the table.
 
         Returns
         -------
@@ -153,21 +126,12 @@ class GEMINIQuerier(DatasetQuerier):
         )(table)
         table = qo.Rename({"description": "transfer_description"})(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def care_units(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query care unit data, fetches transfer info from multiple tables.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on the table.
 
         Returns
         -------
@@ -236,21 +200,12 @@ class GEMINIQuerier(DatasetQuerier):
             select(rt_table),
         ).subquery()
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def imaging(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query imaging reports data.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to perform on the table.
 
         Returns
         -------
@@ -278,4 +233,4 @@ class GEMINIQuerier(DatasetQuerier):
             table,
         )
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)

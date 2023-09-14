@@ -42,7 +42,6 @@ from cyclops.query.ops import (
     Sequential,
     Substring,
     Trim,
-    Union,
     _addindent,
     _none_add,
     _process_checks,
@@ -61,15 +60,15 @@ def table_input():
 
 
 @pytest.fixture()
-def visits_input():
+def visits_table():
     """Test visits table input."""
-    return QUERIER.visit_occurrence().query
+    return QUERIER.visit_occurrence()
 
 
 @pytest.fixture()
-def measurements_input():
+def measurements_table():
     """Test measurement table input."""
-    return QUERIER.measurement().query
+    return QUERIER.measurement()
 
 
 def test__none_add():
@@ -146,22 +145,20 @@ class TestQueryOp:
 
 
 @pytest.mark.integration_test()
-def test_drop(visits_input):
+def test_drop(visits_table):
     """Test Drop."""
-    visits = Drop("care_site_source_value")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(Drop("care_site_source_value")).run()
     assert "care_site_source_value" not in visits.columns
 
 
 @pytest.mark.integration_test()
-def test_fill_null(visits_input):
+def test_fill_null(visits_table):
     """Test FillNull."""
-    visits_before = QUERIER.get_interface(visits_input).run()
+    visits_before = visits_table.run()
     unique_before = visits_before["preceding_visit_occurrence_id"].unique()
-    visits = FillNull(["preceding_visit_occurrence_id", "care_site_id"], 0)(
-        visits_input,
-    )
-    visits_after = QUERIER.get_interface(visits).run()
+    visits_after = visits_table.ops(
+        FillNull(["preceding_visit_occurrence_id", "care_site_id"], 0),
+    ).run()
     unique_after = visits_after["preceding_visit_occurrence_id"].unique()
     assert visits_after["preceding_visit_occurrence_id"].isna().sum() == 0
     assert visits_after["care_site_id"].isna().sum() == 0
@@ -169,12 +166,13 @@ def test_fill_null(visits_input):
     assert len(unique_after) == len(unique_before)
     assert len(visits_after["care_site_id"].unique()) == 1
 
-    visits = FillNull(
-        ["preceding_visit_occurrence_id", "care_site_id"],
-        [0, -99],
-        ["col1", "col2"],
-    )(visits_input)
-    visits_after = QUERIER.get_interface(visits).run()
+    visits_after = visits_table.ops(
+        FillNull(
+            ["preceding_visit_occurrence_id", "care_site_id"],
+            [0, -99],
+            ["col1", "col2"],
+        ),
+    ).run()
     assert visits_after["preceding_visit_occurrence_id"].isna().sum() != 0
     assert visits_after["care_site_id"].isna().sum() != 0
     assert visits_after["col1"].isna().sum() == 0
@@ -184,51 +182,46 @@ def test_fill_null(visits_input):
 
 
 @pytest.mark.integration_test()
-def test_add_column(visits_input):
+def test_add_column(visits_table):
     """Test AddColumn."""
     ops = Sequential(
-        [
-            Literal(2, "test_col1"),
-            Literal(3, "test_col2"),
-            AddColumn("test_col1", "test_col2", new_col_labels="test_col3"),
-        ],
+        Literal(2, "test_col1"),
+        Literal(3, "test_col2"),
+        AddColumn("test_col1", "test_col2", new_col_labels="test_col3"),
     )
-    visits = QUERIER.get_interface(visits_input, ops=ops).run()
+    visits = visits_table.ops(ops).run()
     assert "test_col3" in visits.columns
     assert (visits["test_col3"] == 5).all()
 
     ops = Sequential(
-        [
-            Literal(2, "test_col1"),
-            Literal(3, "test_col2"),
-            AddColumn(
-                "test_col1",
-                "test_col2",
-                negative=True,
-                new_col_labels="test_col3",
-            ),
-        ],
+        Literal(2, "test_col1"),
+        Literal(3, "test_col2"),
+        AddColumn(
+            "test_col1",
+            "test_col2",
+            negative=True,
+            new_col_labels="test_col3",
+        ),
     )
-    visits = QUERIER.get_interface(visits_input, ops=ops).run()
+    visits = visits_table.ops(ops).run()
     assert "test_col3" in visits.columns
     assert (visits["test_col3"] == -1).all()
 
 
 @pytest.mark.integration_test()
-def test_rename(visits_input):
+def test_rename(visits_table):
     """Test Rename."""
-    visits = Rename({"care_site_name": "hospital_name"})(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    rename_op = Rename({"care_site_name": "hospital_name"})
+    visits = visits_table.ops(rename_op).run()
     assert "hospital_name" in visits.columns
     assert "care_site_name" not in visits.columns
 
 
 @pytest.mark.integration_test()
-def test_literal(visits_input):
+def test_literal(visits_table):
     """Test Literal."""
-    visits = Literal(1, "new_col")(visits_input)
-    visits = Literal("a", "new_col2")(visits)
-    visits = QUERIER.get_interface(visits).run()
+    literal_ops = Sequential(Literal(1, "new_col"), Literal("a", "new_col2"))
+    visits = visits_table.ops(literal_ops).run()
     assert "new_col" in visits.columns
     assert visits["new_col"].iloc[0] == 1
     assert "new_col2" in visits.columns
@@ -236,88 +229,84 @@ def test_literal(visits_input):
 
 
 @pytest.mark.integration_test()
-def test_reorder_after(visits_input):
+def test_reorder_after(visits_table):
     """Test ReorderAfter."""
-    visits = ReorderAfter("visit_concept_name", "care_site_id")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    reorder_op = ReorderAfter("visit_concept_name", "care_site_id")
+    visits = visits_table.ops(reorder_op).run()
     assert list(visits.columns).index("care_site_id") + 1 == list(visits.columns).index(
         "visit_concept_name",
     )
 
 
 @pytest.mark.integration_test()
-def test_limit(visits_input):
+def test_limit(visits_table):
     """Test Limit."""
-    visits = Limit(10)(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(Limit(10)).run()
     assert len(visits) == 10
 
 
 @pytest.mark.integration_test()
-def test_order_by(visits_input):
+def test_order_by(visits_table):
     """Test OrderBy."""
-    visits = OrderBy("visit_concept_name")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    orderby_op = OrderBy("visit_concept_name")
+    visits = visits_table.ops(orderby_op).run()
     assert visits["visit_concept_name"].is_monotonic_increasing
 
 
 @pytest.mark.integration_test()
-def test_substring(visits_input):
+def test_substring(visits_table):
     """Test Substring."""
-    visits = Substring("visit_concept_name", 0, 3, "visit_concept_name_substr")(
-        visits_input,
-    )
-    visits = QUERIER.get_interface(visits).run()
+    substring_op = Substring("visit_concept_name", 0, 3, "visit_concept_name_substr")
+    visits = visits_table.ops(substring_op).run()
     assert visits["visit_concept_name_substr"].iloc[0] == "In"
 
 
 @pytest.mark.integration_test()
-def test_trim(visits_input):
+def test_trim(visits_table):
     """Test Trim."""
-    visits = Trim("visit_concept_name", "visit_concept_name_trim")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    trim_op = Trim("visit_concept_name", "visit_concept_name_trim")
+    visits = visits_table.ops(trim_op).run()
     assert visits["visit_concept_name_trim"].iloc[0] == "Inpatient Visit"
 
 
 @pytest.mark.integration_test()
 def test_extract_timestamp_component(
-    visits_input,
+    visits_table,
 ):
     """Test ExtractTimestampComponent."""
-    visits = ExtractTimestampComponent(
+    extract_ts_op = ExtractTimestampComponent(
         "visit_start_date",
         "year",
         "visit_start_date_year",
-    )(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    )
+    visits = visits_table.ops(extract_ts_op).run()
     assert visits["visit_start_date_year"].iloc[0] == 2021
 
 
 @pytest.mark.integration_test()
-def test_add_numeric(visits_input):
+def test_add_numeric(visits_table):
     """Test AddNumeric."""
-    visits = Literal(1, "new_col")(visits_input)
-    visits = AddNumeric("new_col", 1, "new_col_plus_1")(visits)
-    visits = QUERIER.get_interface(visits).run()
+    ops = Sequential(Literal(1, "new_col"), AddNumeric("new_col", 1, "new_col_plus_1"))
+    visits = visits_table.ops(ops).run()
     assert visits["new_col_plus_1"].iloc[0] == 2
 
 
 @pytest.mark.integration_test()
-def test_apply(visits_input):
+def test_apply(visits_table):
     """Test Apply."""
-    visits = Apply(
+    apply_op = Apply(
         "visit_concept_name",
         lambda x: x + "!",
         "visit_concept_name_exclaim",
-    )(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    )
+    visits = visits_table.ops(apply_op).run()
     assert visits["visit_concept_name_exclaim"].iloc[0] == "Inpatient Visit!"
-    visits = Apply(
+    apply_op = Apply(
         ["visit_occurrence_id", "preceding_visit_occurrence_id"],
         lambda x, y: x + y,
         "sum_id",
-    )(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    )
+    visits = visits_table.ops(apply_op).run()
     assert (
         visits["sum_id"].iloc[0]
         == visits["visit_occurrence_id"].iloc[0]
@@ -327,12 +316,12 @@ def test_apply(visits_input):
         visits["sum_id"].isna().sum()
         == visits["preceding_visit_occurrence_id"].isna().sum()
     )
-    visits = Apply(
+    apply_op = Apply(
         ["visit_occurrence_id", "preceding_visit_occurrence_id"],
         [lambda x: x + 1, lambda x: x + 2],
         ["sum_id", "sum_id2"],
-    )(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    )
+    visits = visits_table.ops(apply_op).run()
     assert visits["sum_id"].iloc[0] == visits["visit_occurrence_id"].iloc[0] + 1
     assert (
         visits["sum_id2"].iloc[0] == visits["preceding_visit_occurrence_id"].iloc[0] + 2
@@ -341,15 +330,15 @@ def test_apply(visits_input):
 
 @pytest.mark.integration_test()
 def test_condition_regex_match(
-    measurements_input,
+    measurements_table,
 ):
     """Test ConditionRegexMatch."""
-    measurements = ConditionRegexMatch(
+    measurements_op = ConditionRegexMatch(
         "value_source_value",
         r"^[0-9]+(\.[0-9]+)?$",
         binarize_col="value_source_value_match",
-    )(measurements_input)
-    measurements = QUERIER.get_interface(measurements).run()
+    )
+    measurements = measurements_table.ops(measurements_op).run()
     assert "value_source_value_match" in measurements.columns
     assert (
         measurements["value_source_value_match"].sum()
@@ -359,56 +348,62 @@ def test_condition_regex_match(
 
 @pytest.mark.integration_test()
 def test_group_by_aggregate(
-    visits_input,
-    measurements_input,
+    visits_table,
+    measurements_table,
 ):
     """Test GroupByAggregate."""
     with pytest.raises(ValueError):
-        GroupByAggregate("person_id", {"person_id": ("donkey", "visit_count")})(
-            visits_input,
+        visits_table.ops(
+            GroupByAggregate("person_id", {"person_id": ("donkey", "visit_count")}),
         )
     with pytest.raises(ValueError):
-        GroupByAggregate("person_id", {"person_id": ("count", "person_id")})(
-            visits_input,
+        visits_table.ops(
+            GroupByAggregate("person_id", {"person_id": ("count", "person_id")}),
         )
 
-    visits_count = GroupByAggregate(
-        "person_id",
-        {"person_id": ("count", "num_visits")},
-    )(visits_input)
-    visits_string_agg = GroupByAggregate(
-        "person_id",
-        {"visit_concept_name": ("string_agg", "visit_concept_names")},
-        {"visit_concept_name": ", "},
-    )(visits_input)
-    measurements_sum = GroupByAggregate(
-        "person_id",
-        {"value_as_number": ("sum", "value_as_number_sum")},
-    )(measurements_input)
-    measurements_average = GroupByAggregate(
-        "person_id",
-        {"value_as_number": ("average", "value_as_number_average")},
-    )(measurements_input)
-    measurements_min = GroupByAggregate(
-        "person_id",
-        {"value_as_number": ("min", "value_as_number_min")},
-    )(measurements_input)
-    measurements_max = GroupByAggregate(
-        "person_id",
-        {"value_as_number": ("max", "value_as_number_max")},
-    )(measurements_input)
-    measurements_median = GroupByAggregate(
-        "person_id",
-        {"value_as_number": ("median", "value_as_number_median")},
-    )(measurements_input)
-
-    visits_count = QUERIER.get_interface(visits_count).run()
-    visits_string_agg = QUERIER.get_interface(visits_string_agg).run()
-    measurements_sum = QUERIER.get_interface(measurements_sum).run()
-    measurements_average = QUERIER.get_interface(measurements_average).run()
-    measurements_min = QUERIER.get_interface(measurements_min).run()
-    measurements_max = QUERIER.get_interface(measurements_max).run()
-    measurements_median = QUERIER.get_interface(measurements_median).run()
+    visits_count = visits_table.ops(
+        GroupByAggregate(
+            "person_id",
+            {"person_id": ("count", "num_visits")},
+        ),
+    ).run()
+    visits_string_agg = visits_table.ops(
+        GroupByAggregate(
+            "person_id",
+            {"visit_concept_name": ("string_agg", "visit_concept_names")},
+            {"visit_concept_name": ", "},
+        ),
+    ).run()
+    measurements_sum = measurements_table.ops(
+        GroupByAggregate(
+            "person_id",
+            {"value_as_number": ("sum", "value_as_number_sum")},
+        ),
+    ).run()
+    measurements_average = measurements_table.ops(
+        GroupByAggregate(
+            "person_id",
+            {"value_as_number": ("average", "value_as_number_average")},
+        ),
+    ).run()
+    measurements_min = measurements_table.ops(
+        GroupByAggregate(
+            "person_id",
+            {"value_as_number": ("min", "value_as_number_min")},
+        ),
+    ).run()
+    measurements_max = measurements_table.ops(
+        GroupByAggregate(
+            "person_id",
+            {"value_as_number": ("max", "value_as_number_max")},
+        ),
+    ).run()
+    measurements_median = measurements_table.ops(
+        GroupByAggregate(
+            "person_id",
+            {"value_as_number": ("median", "value_as_number_median")},
+        ),
+    ).run()
 
     assert "num_visits" in visits_count.columns
     assert visits_count[visits_count["person_id"] == 33]["num_visits"][0] == 86
@@ -452,133 +447,135 @@ def test_group_by_aggregate(
 
 
 @pytest.mark.integration_test()
-def test_drop_nulls(visits_input):
+def test_drop_nulls(visits_table):
     """Test DropNulls."""
-    visits = DropNulls("preceding_visit_occurrence_id")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(DropNulls("preceding_visit_occurrence_id")).run()
     assert visits["preceding_visit_occurrence_id"].isnull().sum() == 0
 
 
 @pytest.mark.integration_test()
-def test_condition_before_date(visits_input):
+def test_condition_before_date(visits_table):
     """Test ConditionBeforeDate."""
-    visits = ConditionBeforeDate("visit_start_date", "2018-01-01")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(
+        ConditionBeforeDate("visit_start_date", "2018-01-01"),
+    ).run()
     assert pd.Timestamp(visits["visit_start_date"].max()) < pd.Timestamp("2018-01-01")
 
 
 @pytest.mark.integration_test()
-def test_condition_after_date(visits_input):
+def test_condition_after_date(visits_table):
     """Test ConditionAfterDate."""
-    visits = ConditionAfterDate("visit_start_date", "2018-01-01")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(
+        ConditionAfterDate("visit_start_date", "2018-01-01"),
+    ).run()
     assert pd.Timestamp(visits["visit_start_date"].min()) > pd.Timestamp("2018-01-01")
 
 
 @pytest.mark.integration_test()
-def test_condition_in(visits_input):
+def test_condition_in(visits_table):
     """Test ConditionIn."""
-    visits = ConditionIn("visit_concept_name", ["Outpatient Visit"])(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(
+        ConditionIn("visit_concept_name", ["Outpatient Visit"]),
+    ).run()
     assert all(visits["visit_concept_name"] == "Outpatient Visit")
 
 
 @pytest.mark.integration_test()
-def test_condition_in_months(visits_input):
+def test_condition_in_months(visits_table):
     """Test ConditionInMonths."""
-    visits_input = Cast("visit_start_date", "timestamp")(visits_input)
-    visits = ConditionInMonths("visit_start_date", 6)(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    ops = Sequential(
+        Cast("visit_start_date", "timestamp"),
+        ConditionInMonths("visit_start_date", 6),
+    )
+    visits = visits_table.ops(ops).run()
     assert (visits["visit_start_date"].dt.month == 6).all()
 
 
 @pytest.mark.integration_test()
-def test_condition_in_years(visits_input):
+def test_condition_in_years(visits_table):
     """Test ConditionInYears."""
-    visits_input = Cast("visit_start_date", "timestamp")(visits_input)
-    visits = ConditionInYears("visit_start_date", 2018)(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    ops = Sequential(
+        Cast("visit_start_date", "timestamp"),
+        ConditionInYears("visit_start_date", 2018),
+    )
+    visits = visits_table.ops(ops).run()
     assert (visits["visit_start_date"].dt.year == 2018).all()
 
 
 @pytest.mark.integration_test()
-def test_condition_substring(visits_input):
+def test_condition_substring(visits_table):
     """Test ConditionSubstring."""
-    visits = ConditionSubstring("visit_concept_name", "Outpatient")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(
+        ConditionSubstring("visit_concept_name", "Outpatient"),
+    ).run()
     assert all(visits["visit_concept_name"].str.contains("Outpatient"))
 
 
 @pytest.mark.integration_test()
-def test_condition_starts_with(visits_input):
+def test_condition_starts_with(visits_table):
     """Test ConditionStartsWith."""
-    visits = ConditionStartsWith("visit_concept_name", "Outpatient")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(
+        ConditionStartsWith("visit_concept_name", "Outpatient"),
+    ).run()
     assert all(visits["visit_concept_name"].str.startswith("Outpatient"))
 
 
 @pytest.mark.integration_test()
-def test_condition_ends_with(visits_input):
+def test_condition_ends_with(visits_table):
     """Test ConditionEndsWith."""
-    visits = ConditionEndsWith("visit_concept_name", "Visit")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(ConditionEndsWith("visit_concept_name", "Visit")).run()
     assert all(visits["visit_concept_name"].str.endswith("Visit"))
 
 
 @pytest.mark.integration_test()
-def test_condition_equals(visits_input):
+def test_condition_equals(visits_table):
     """Test ConditionEquals."""
-    visits = ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(
+        ConditionEquals("visit_concept_name", "Outpatient Visit"),
+    ).run()
     assert all(visits["visit_concept_name"] == "Outpatient Visit")
-    visits = ConditionEquals("visit_concept_name", "Outpatient Visit", not_=True)(
-        visits_input,
-    )
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(
+        ConditionEquals("visit_concept_name", "Outpatient Visit", not_=True),
+    ).run()
     assert all(visits["visit_concept_name"] != "Outpatient Visit")
 
 
 @pytest.mark.integration_test()
-def test_condition_greater_than(visits_input):
+def test_condition_greater_than(visits_table):
     """Test ConditionGreaterThan."""
-    visits = ConditionGreaterThan("visit_concept_id", 9300)(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(ConditionGreaterThan("visit_concept_id", 9300)).run()
     assert all(visits["visit_concept_id"] > 9300)
 
 
 @pytest.mark.integration_test()
-def test_condition_less_than(visits_input):
+def test_condition_less_than(visits_table):
     """Test ConditionLessThan."""
-    visits = ConditionLessThan("visit_concept_id", 9300)(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    visits = visits_table.ops(ConditionLessThan("visit_concept_id", 9300)).run()
     assert all(visits["visit_concept_id"] < 9300)
 
 
 @pytest.mark.integration_test()
-def test_union(visits_input):
+def test_union(visits_table):
     """Test Union."""
-    visits = Union(
-        ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
-    )(ConditionEquals("visit_concept_name", "Emergency Room Visit")(visits_input))
-    visits = QUERIER.get_interface(visits).run()
+    outpatient_filtered = visits_table.ops(
+        ConditionEquals("visit_concept_name", "Outpatient Visit"),
+    )
+    emergency_filtered = visits_table.ops(
+        ConditionEquals("visit_concept_name", "Emergency Room Visit"),
+    )
+    visits = emergency_filtered.union(outpatient_filtered).run()
     assert len(visits) == 4212
     assert all(
         visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"]),
     )
-    visits = Union(
-        ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input),
-        union_all=True,
-    )(ConditionEquals("visit_concept_name", "Outpatient Visit")(visits_input))
-    visits = QUERIER.get_interface(visits).run()
-    assert len(visits) == 8114
+    visits = emergency_filtered.union_all(emergency_filtered).run()
+    assert len(visits) == 310
 
 
 @pytest.mark.integration_test()
-def test_sequential(visits_input):
+def test_sequential(visits_table):
     """Test Sequential."""
-    substr_op = Sequential(
-        Substring("visit_concept_name", 0, 4, "visit_concept_name_substr"),
-    )
+    substr_op = Substring("visit_concept_name", 0, 4, "visit_concept_name_substr")
     operations = [
         Literal(33, "const"),
         Rename({"care_site_name": "hospital_name"}),
@@ -587,7 +584,7 @@ def test_sequential(visits_input):
         substr_op,
     ]
     sequential_ops = Sequential(operations)
-    visits = QUERIER.get_interface(visits_input, ops=sequential_ops).run()
+    visits = visits_table.ops(sequential_ops).run()
     assert "hospital_name" in visits.columns
     assert "visit_concept_name_exclaim" in visits.columns
     assert list(visits[visits["person_id"] == 33]["visit_concept_name_exclaim"])[0] == (
@@ -600,15 +597,13 @@ def test_sequential(visits_input):
 
 
 @pytest.mark.integration_test()
-def test_or(visits_input):
+def test_or(visits_table):
     """Test Or."""
-    visits = Or(
-        [
-            ConditionEquals("visit_concept_name", "Outpatient Visit"),
-            ConditionLike("visit_concept_name", "%Emergency%"),
-        ],
-    )(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    or_op = Or(
+        ConditionEquals("visit_concept_name", "Outpatient Visit"),
+        ConditionLike("visit_concept_name", "%Emergency%"),
+    )
+    visits = visits_table.ops(or_op).run()
     assert len(visits) == 4212
     assert all(
         visits["visit_concept_name"].isin(["Outpatient Visit", "Emergency Room Visit"]),
@@ -616,37 +611,36 @@ def test_or(visits_input):
 
 
 @pytest.mark.integration_test()
-def test_and(visits_input):
+def test_and(visits_table):
     """Test And."""
-    visits = And(
+    and_op = And(
         [
             ConditionEquals("visit_concept_name", "Outpatient Visit"),
             ConditionLike("visit_concept_name", "%Emergency%", not_=True),
         ],
-    )(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    )
+    visits = visits_table.ops(and_op).run()
     assert len(visits) == 4057
-    visits = And(
+    and_op = And(
         ConditionEquals("visit_concept_name", "Outpatient Visit"),
         ConditionLike("visit_concept_name", "%Emergency%", not_=True),
-    )(visits_input)
-    visits = QUERIER.get_interface(visits).run()
+    )
+    visits = visits_table.ops(and_op).run()
     assert len(visits) == 4057
 
 
 @pytest.mark.integration_test()
-def test_distinct(visits_input):
+def test_distinct(visits_table):
     """Test Distinct."""
     distinct_op = Distinct(["person_id"])
-    visits = QUERIER.get_interface(visits_input, ops=distinct_op).run()
+    visits = visits_table.ops(distinct_op).run()
     assert len(visits) == 109
-    visits = QUERIER.get_interface(visits_input).run()
 
 
 @pytest.mark.integration_test()
-def test_condition_like(visits_input):
+def test_condition_like(visits_table):
     """Test ConditionLike."""
     like_op = ConditionLike("visit_concept_name", "Outpatient%")
-    visits = QUERIER.get_interface(visits_input, ops=like_op).run()
+    visits = visits_table.ops(like_op).run()
     assert len(visits) == 4057
     assert all(visits["visit_concept_name"].str.startswith("Outpatient"))

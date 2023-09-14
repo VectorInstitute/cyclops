@@ -30,16 +30,13 @@ SYNTHEA = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
 def visits_table() -> pd.DataFrame:
     """Get the visits table."""
     ops = qo.Sequential(
-        [
-            qo.ConditionEquals("gender_source_value", "M"),  # type: ignore
-            qo.Rename({"race_source_value": "race"}),  # type: ignore
-        ],
+        qo.ConditionEquals("gender_source_value", "M"),  # type: ignore
+        qo.Rename({"race_source_value": "race"}),  # type: ignore
     )
-
-    persons_qi = SYNTHEA.person(ops=ops)
-    return SYNTHEA.visit_occurrence(
-        join=qo.JoinArgs(join_table=persons_qi.query, on="person_id"),
-    ).run()
+    persons = SYNTHEA.person()
+    persons = persons.ops(ops)
+    visits = SYNTHEA.visit_occurrence()
+    return visits.join(persons, on="person_id").run()
 
 
 def measurement_table() -> pd.DataFrame:

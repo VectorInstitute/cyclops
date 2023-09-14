@@ -3,7 +3,7 @@
 import logging
 import os
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import yaml
 from hydra import compose, initialize
@@ -12,14 +12,12 @@ from sqlalchemy import MetaData
 from sqlalchemy.sql.selectable import Subquery
 
 from cyclops.query import ops as qo
-from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
+from cyclops.query.interface import QueryInterface
 from cyclops.query.orm import Database
 from cyclops.query.util import (
     DBSchema,
-    TableTypes,
     _to_subquery,
     get_attr_name,
-    table_params_to_type,
 )
 from cyclops.utils.file import join as join_path
 from cyclops.utils.log import setup_logging
@@ -35,9 +33,9 @@ def _create_get_table_lambdafn(schema_name: str, table_name: str) -> Callable[..
 
     Parameters
     ----------
-    schema_name: str
+    schema_name
         The schema name.
-    table_name: str
+    table_name
         The table name.
 
     Returns
@@ -54,7 +52,7 @@ def _cast_timestamp_cols(table: Subquery) -> Subquery:
 
     Parameters
     ----------
-    table: sqlalchemy.sql.selectable.Subquery
+    table
         Table to cast.
 
     Returns
@@ -78,8 +76,14 @@ class DatasetQuerier:
 
     Attributes
     ----------
-    db: cyclops.query.orm.Database
+    db
         ORM Database used to run queries.
+
+    Parameters
+    ----------
+    config_overrides
+        Override configuration parameters, specified as kwargs.
+
 
     Notes
     -----
@@ -96,14 +100,6 @@ class DatasetQuerier:
         self,
         **config_overrides: Dict[str, Any],
     ) -> None:
-        """Initialize.
-
-        Parameters
-        ----------
-        **config_overrides
-             Override configuration parameters, specified as kwargs.
-
-        """
         overrides = []
         if config_overrides:
             config_file = join_path(os.path.dirname(__file__), "configs", "config.yaml")
@@ -139,8 +135,13 @@ class DatasetQuerier:
         """
         return list(self.db.inspector.get_schema_names())
 
-    def list_tables(self) -> List[str]:
+    def list_tables(self, schema_name: Optional[str] = None) -> List[str]:
         """List table methods that can be queried using the database.
+
+        Parameters
+        ----------
+        schema_name
+            Name of schema in the database.
 
         Returns
         -------
@@ -148,16 +149,25 @@ class DatasetQuerier:
             List of table names.
 
         """
-        return self.db.list_tables()
+        if schema_name:
+            table_names = []
+            for table in self.db.list_tables():
+                schema_name_, _ = table.split(".")
+                if schema_name_ == schema_name:
+                    table_names.append(table)
+        else:
+            table_names = self.db.list_tables()
+
+        return table_names
 
     def list_columns(self, schema_name: str, table_name: str) -> List[str]:
         """List columns in a table.
 
         Parameters
         ----------
-        schema_name: str
+        schema_name
             Name of schema in the database.
-        table_name: str
+        table_name
             Name of GEMINI table.
 
         Returns
@@ -196,36 +206,6 @@ class DatasetQuerier:
 
         return custom_tables
 
-    @table_params_to_type(Subquery)
-    def get_interface(
-        self,
-        table: TableTypes,
-        ops: Optional[qo.Sequential] = None,
-        process_fn: Optional[Callable[..., Any]] = None,
-    ) -> Union[QueryInterface, QueryInterfaceProcessed]:
-        """Get a query interface for a GEMINI table.
-
-        Parameters
-        ----------
-        table: cyclops.query.util.TableTypes
-            Table to wrap in the interface.
-        ops: cyclops.query.ops.Sequential
-            Operations to perform on the query.
-        process_fn
-            Process function to apply on the Pandas DataFrame returned from the query.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterface or
-        cyclops.query.interface.QueryInterfaceProcessed
-            A query interface using the GEMINI database object.
-
-        """
-        if process_fn is None:
-            return QueryInterface(self.db, table, ops=ops)
-
-        return QueryInterfaceProcessed(self.db, table, ops=ops, process_fn=process_fn)
-
     def get_table(
         self,
         schema_name: str,
@@ -239,11 +219,11 @@ class DatasetQuerier:
 
         Parameters
         ----------
-        schema_name: str
+        schema_name
             Name of schema in the database.
-        table_name: str
+        table_name
             Name of GEMINI table.
-        cast_timestamp_cols: bool
+        cast_timestamp_cols
             Whether to cast timestamp columns to datetime.
 
         Returns
@@ -263,21 +243,15 @@ class DatasetQuerier:
         self,
         schema_name: str,
         table_name: str,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Template method for table methods.
 
         Parameters
         ----------
-        schema_name: str
+        schema_name
             Name of schema in the database.
-        table_name: str
+        table_name
             Name of table in the database.
-        join: cyclops.query.ops.JoinArgs
-            Join arguments.
-        ops: cyclops.query.ops.Sequential or cyclops.query.ops.QueryOp, optional
-            Operations to perform on the query.
 
         Returns
         -------
@@ -288,7 +262,7 @@ class DatasetQuerier:
         table = getattr(getattr(self.db, schema_name), table_name).data
         table = _to_subquery(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def _setup_table_methods(self) -> None:
         """Add table methods.

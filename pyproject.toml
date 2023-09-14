@@ -69,12 +69,12 @@ pillow = "^9.5.0"
 pytest = "^7.1.1"
 pre-commit = "^2.17.0"
 black = "^22.1.0"
-pyproject-flake8 = "^5.0.4"
 pytest-cov = "^3.0.0"
 codecov = "^2.1.13"
 nbstripout = "^0.6.1"
 mypy = "^1.0.0"
-ruff = "^0.0.286"
+ruff = "^0.0.288"
+nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 
 [tool.poetry.group.docs.dependencies]
 numpydoc = "^1.2"
@@ -192,10 +192,6 @@ convention = "numpy"
 
 [tool.ruff.pycodestyle]
 max-doc-length = 88
-
-[tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203", "W503", "F401"]
 
 [tool.pytest.ini_options]
 markers = [
