@@ -176,7 +176,7 @@ class QueryInterface:
     def run(
         self,
         limit: Optional[int] = None,
-        backend: Literal["pandas", "dask"] = "pandas",
+        backend: Literal["pandas", "dask", "datasets"] = "pandas",
         index_col: Optional[str] = None,
         n_partitions: Optional[int] = None,
     ) -> Union[pd.DataFrame, dd.core.DataFrame]:
@@ -187,7 +187,7 @@ class QueryInterface:
         limit
             No. of rows to limit the query return.
         backend
-            Backend computing framework to use, Pandas or Dask.
+            Backend computing framework to use, pandas or dask or datasets.
         index_col
             Column which becomes the index, and defines the partitioning.
             Should be a indexed column in the SQL server, and any orderable type.
@@ -196,8 +196,8 @@ class QueryInterface:
 
         Returns
         -------
-        pandas.DataFrame or dask.DataFrame
-            Query result dataframe.
+        pandas.DataFrame or dask.DataFrame or datasets.Dataset
+            Query result.
 
         """
         self._data = self.database.run_query(
