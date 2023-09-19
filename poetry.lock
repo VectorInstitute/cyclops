@@ -582,13 +582,13 @@ files = [
 
 [[package]]
 name = "beartype"
-version = "0.16.0"
+version = "0.16.1"
 description = "Unbearably fast runtime type checking in pure Python."
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "beartype-0.16.0-py3-none-any.whl", hash = "sha256:f0aa0f09468f732c9c4d07c024d3d69cff64cb07fd81e8ab52962e1db16ff04a"},
-    {file = "beartype-0.16.0.tar.gz", hash = "sha256:231379a056da2fc1811a2e1324d5c3d0fa2082e305bfa15cb3acb9b7ce9df516"},
+    {file = "beartype-0.16.1-py3-none-any.whl", hash = "sha256:d86f5472e5e6ff8f643da28ff537469d57b01505ad211aee007c49c5a7de2a05"},
+    {file = "beartype-0.16.1.tar.gz", hash = "sha256:b3bfb911ed6af91aeada851a44b4d564c23662869b5391d71fe3648f2c643b6d"},
 ]
 
 [package.extras]
@@ -4489,13 +4489,13 @@ setuptools = "*"
 
 [[package]]
 name = "notebook"
-version = "6.5.5"
+version = "6.5.6"
 description = "A web-based notebook environment for interactive computing"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "notebook-6.5.5-py3-none-any.whl", hash = "sha256:171039245a5b1a8f8233165091210632c21250ce2a652daed38fe8f94389984f"},
-    {file = "notebook-6.5.5.tar.gz", hash = "sha256:457caa1fa1c647395420945b2b7559f603eedbc9aeb2a59a0c286c8029e31efa"},
+    {file = "notebook-6.5.6-py3-none-any.whl", hash = "sha256:c1e2eb2e3b6079a0552a04974883a48d04c3c05792170d64a4b23d707d453181"},
+    {file = "notebook-6.5.6.tar.gz", hash = "sha256:b4625a4b7a597839dd3156b140d5ba2c7123761f98245a3290f67a8b8ee048d9"},
 ]
 
 [package.dependencies]
@@ -7682,13 +7682,13 @@ files = [
 
 [[package]]
 name = "tifffile"
-version = "2023.8.30"
+version = "2023.9.18"
 description = "Read and write TIFF files"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "tifffile-2023.8.30-py3-none-any.whl", hash = "sha256:62364eef35a6fdcc7bc2ad6f97dd270f577efb01b31260ff800af76a66c1e145"},
-    {file = "tifffile-2023.8.30.tar.gz", hash = "sha256:6a8c53b012a286b75d09a1498ab32f202f24cc6270a105b5d5911dc4426f162a"},
+    {file = "tifffile-2023.9.18-py3-none-any.whl", hash = "sha256:03574dc63a333111227c7710b52033def22db0072f9b49fdb25c9eea8249b026"},
+    {file = "tifffile-2023.9.18.tar.gz", hash = "sha256:391d49e5e10a0f50f627b9083116f965e37d40bfe4e4713154e5edd57591590c"},
 ]
 
 [package.dependencies]
@@ -8791,17 +8791,17 @@ test = ["mypy", "pre-commit", "pytest", "pytest-asyncio", "websockets (>=10.0)"]
 
 [[package]]
 name = "zipp"
-version = "3.16.2"
+version = "3.17.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "zipp-3.16.2-py3-none-any.whl", hash = "sha256:679e51dd4403591b2d6838a48de3d283f3d188412a9782faadf845f298736ba0"},
-    {file = "zipp-3.16.2.tar.gz", hash = "sha256:ebc15946aa78bd63458992fc81ec3b6f7b1e92d51c35e6de1c3804e73b799147"},
+    {file = "zipp-3.17.0-py3-none-any.whl", hash = "sha256:0e923e726174922dce09c53c59ad483ff7bbb8e572e00c7f7c46b88556409f31"},
+    {file = "zipp-3.17.0.tar.gz", hash = "sha256:84e64a1c28cf7e91ed2078bb8cc8c259cb19b76942096c8d7b84947690cabaf0"},
 ]
 
 [package.extras]
-docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-lint"]
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
 
 [extras]
