@@ -1,5 +1,7 @@
 """Plotting functions."""
 
+# mypy: ignore-errors
+
 from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt

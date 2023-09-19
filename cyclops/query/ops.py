@@ -7,7 +7,6 @@ import operator
 import typing
 from abc import abstractmethod
 from collections import OrderedDict
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import islice
 
@@ -53,53 +52,6 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 
 # ruff: noqa: W505
-
-
-@dataclass
-class JoinArgs:
-    """Arguments for joining tables.
-
-    Parameters
-    ----------
-    join_table
-        Table to join.
-    on
-        Column(s) to join on.
-    on_to_type
-        A list of types to which to convert the on columns before joining. Useful when
-        two columns have the same values but in different format, e.g., strings of int.
-    cond
-        Condition on which to join to tables.
-    table_cols
-        Filters to keep only these columns from the table.
-    join_table_cols
-        Filters to keep only these columns from the join_table.
-    isouter
-        Flag to say if the join is a left outer join.
-
-    """
-
-    join_table: TableTypes
-    on: typing.Optional[
-        typing.Union[
-            str,
-            typing.List[str],
-            typing.Tuple[str],
-            typing.List[typing.Tuple[str, str]],
-        ]
-    ] = None
-    on_to_type: typing.Optional[typing.Union[type, typing.List[type]]] = None
-    cond: typing.Optional[BinaryExpression] = None
-    table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None
-    join_table_cols: typing.Optional[typing.Union[str, typing.List[str]]] = None
-    isouter: typing.Optional[bool] = False
-
-    def __post_init__(self) -> None:
-        """Post initialization."""
-        self.on = to_list_optional(self.on)
-        self.on_to_type = to_list_optional(self.on_to_type)
-        self.table_cols = to_list_optional(self.table_cols)
-        self.join_table_cols = to_list_optional(self.join_table_cols)
 
 
 def _addindent(s_: str, num_spaces: int = 4) -> str:

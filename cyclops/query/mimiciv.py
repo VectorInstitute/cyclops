@@ -5,14 +5,13 @@ Supports querying of MIMICIV-2.0.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy import Integer, func, select
 
 import cyclops.query.ops as qo
 from cyclops.query.base import DatasetQuerier
-from cyclops.query.interface import QueryInterface, QueryInterfaceProcessed
-from cyclops.query.post_process.mimiciv import process_mimic_care_units
+from cyclops.query.interface import QueryInterface
 from cyclops.query.util import get_column
 from cyclops.utils.log import setup_logging
 
@@ -41,17 +40,8 @@ class MIMICIVQuerier(DatasetQuerier):
 
     def patients(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query MIMIC patient data.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to apply to the query.
 
         Returns
         -------
@@ -110,20 +100,18 @@ class MIMICIVQuerier(DatasetQuerier):
             ],
         )(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def diagnoses(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query MIMIC diagnosis data.
 
         Parameters
         ----------
-        join: qo.JoinArgs, optional
+        join
             Join arguments.
-        ops: qo.Sequential, optional
+        ops
             Additional operations to apply to the query.
 
         Returns
@@ -141,50 +129,12 @@ class MIMICIVQuerier(DatasetQuerier):
             on_to_type=["str", "int"],
         )(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
-
-    def care_units(
-        self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
-    ) -> QueryInterfaceProcessed:
-        """Get care unit table within a given set of encounters.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to apply to the query.
-
-        Returns
-        -------
-        cyclops.query.interface.QueryInterfaceProcessed
-            Constructed table, wrapped in an interface object.
-
-        """
-        table = self.get_table("mimiciv_hosp", "transfers")
-        return QueryInterfaceProcessed(
-            self.db,
-            table,
-            process_fn=lambda x: process_mimic_care_units(x, specific=False),
-            join=join,
-            ops=ops,
-        )
+        return QueryInterface(self.db, table)
 
     def labevents(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query lab events from the hospital module.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to apply to the query.
 
         Returns
         -------
@@ -201,21 +151,12 @@ class MIMICIVQuerier(DatasetQuerier):
             on=["itemid"],
         )(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def chartevents(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query ICU chart events from the ICU module.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to apply to the query.
 
         Returns
         -------
@@ -232,4 +173,4 @@ class MIMICIVQuerier(DatasetQuerier):
             on="itemid",
         )(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)

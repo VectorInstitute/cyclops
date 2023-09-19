@@ -5,7 +5,7 @@ Supports querying of MIMIC-III.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import cyclops.query.ops as qo
 from cyclops.query.base import DatasetQuerier
@@ -37,17 +37,8 @@ class MIMICIIIQuerier(DatasetQuerier):
 
     def diagnoses(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query MIMICIII diagnosis data.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to apply to the query.
 
         Returns
         -------
@@ -64,21 +55,12 @@ class MIMICIIIQuerier(DatasetQuerier):
             on_to_type=["str"],
         )(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def labevents(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query MIMICIII labevents data.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to apply to the query.
 
         Returns
         -------
@@ -95,21 +77,12 @@ class MIMICIIIQuerier(DatasetQuerier):
             on_to_type=["str"],
         )(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)
 
     def chartevents(
         self,
-        join: Optional[qo.JoinArgs] = None,
-        ops: Optional[qo.Sequential] = None,
     ) -> QueryInterface:
         """Query MIMICIII chartevents data.
-
-        Parameters
-        ----------
-        join: qo.JoinArgs, optional
-            Join arguments.
-        ops: qo.Sequential, optional
-            Additional operations to apply to the query.
 
         Returns
         -------
@@ -126,4 +99,4 @@ class MIMICIIIQuerier(DatasetQuerier):
             on_to_type=["str"],
         )(table)
 
-        return QueryInterface(self.db, table, join=join, ops=ops)
+        return QueryInterface(self.db, table)

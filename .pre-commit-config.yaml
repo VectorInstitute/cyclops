@@ -21,7 +21,7 @@ repos:
     - id: black
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.286'
+    rev: 'v0.0.288'
     hooks:
     - id: ruff
       args: [--fix, --exit-non-zero-on-fix]
@@ -38,17 +38,24 @@ repos:
 
   - repo: local
     hooks:
+    - id: nbstripout
+      name: nbstripout
+      language: python
+      entry: nbstripout
+      exclude: ^docs/source/tutorials/gemini/.*\.ipynb$
+
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.7.0
+    hooks:
+    - id: nbqa-black
+    - id: nbqa-ruff
+      args: [--fix, --exit-non-zero-on-fix]
+
+  - repo: local
+    hooks:
     - id: pytest
       name: pytest
       entry: pytest -m "not integration_test"
       language: system
       pass_filenames: false
       always_run: true
-
-  - repo: local
-    hooks:
-    - id: nbstripout
-      name: nbstripout
-      language: python
-      entry: nbstripout
-      exclude: ^docs/source/tutorials/gemini/.*\.ipynb$
