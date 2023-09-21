@@ -13,6 +13,7 @@ from cyclops.report.model_card.sections import (
     FairnessAnalysis,
     ModelDetails,
     ModelParameters,
+    Overview,
     QuantitativeAnalysis,
 )
 
@@ -30,6 +31,10 @@ class ModelCard(BaseModel):
 
         extra: Extra = Extra.forbid
 
+    overview: Optional[Overview] = Field(
+        None,
+        description="A high-level overview of the model.",
+    )
     model_details: Optional[ModelDetails] = Field(
         None,
         description="Descriptive metadata for the model.",

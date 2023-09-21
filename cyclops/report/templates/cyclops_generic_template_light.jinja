@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 
+
 {% set tests = [] %}  {# init variable to aggregate tests #}
 {{ sweep_tests(model_card, tests) or "" }}
-
-{% set trends = []%}
-{{ sweep_graphics(model_card, trends, "Performance over time") or ""}}
 
 {% macro render_if_exist_list(values) %}
 <div>
@@ -83,10 +81,10 @@
 {% endif %}
 {% endmacro %}
 
-{% macro render_test_table(tests, passing) %}
+{% macro render_test_table(tests, passing, title) %}
 {% if passing %}
 <table class="styled-table-pass" style="border: 3px solid green; ">
-  <tr><th style="background-color: green;">Tests Passing</th></tr>
+  <tr><th style="background-color: green;">{{title}}</th></tr>
   {% for test in tests %}
     {% if test.passed %}
       <tr>
@@ -96,7 +94,7 @@
   {% endfor %}
 {% else %}
 <table class="styled-table-fail" style="border: 3px solid red;">
-  <tr><th style="background-color: red;">Tests Failing</th></tr>
+  <tr><th style="background-color: red;">{{title}}</th></tr>
   {% for test in tests %}
     {% if not test.passed %}
       <tr>
@@ -133,44 +131,61 @@
 
 {% macro test_overview(tests) %}
 {% if tests|length != 0 %}
-  <div class="card" id="overview" style="justify-content: center;">
-  <h2>Overview</h2>
-      <div class="subcard">
-        <h3>Test Summary</h3>
-        {{ render_graphic(tests|donut_chart_tests, "") }}
-      </div>
-      {% set passed_tests = [0] %}
-      {% for test in tests %}
-        {% if test.passed %}
-          {% if passed_tests.append(passed_tests.pop() + 1) %}{% endif %}
-        {% endif %}
-      {% endfor %}
-      {% if passed_tests[0] != 0 %}
-        <div class="subcard" style="max-height: 460px; overflow: auto;">
-          {{ render_test_table(tests, True) }}
-        </div>
-      {% endif %}
-      {% set failed_tests = [0] %}
-      {% for test in tests %}
-        {% if not test.passed %}
-          {% if failed_tests.append(failed_tests.pop() + 1) %}{% endif %}
-        {% endif %}
-      {% endfor %}
-      {% if failed_tests[0] != 0 %}
-        <div class="subcard" style="max-height: 460px; overflow: auto;">
-          {{ render_test_table(tests, False) }}
-        </div>
-      {% endif %}
-      {% if trends|length != 0%}
-        <div class="subcard">
-          <h3>Performance Over Time</h3>
-          {% for trend in trends %}
-            {{ render_graphic(trend) }}
-          {% endfor %}
-        </div>
-      {% endif %}
+  <div class="subcard">
+    <h3>Test Summary</h3>
+    {{ render_graphic(tests|donut_chart_tests, "") }}
   </div>
+  {% set passed_tests = [0] %}
+  {% for test in tests %}
+    {% if test.passed %}
+      {% if passed_tests.append(passed_tests.pop() + 1) %}{% endif %}
+    {% endif %}
+  {% endfor %}
+  {% if passed_tests[0] != 0 %}
+    <div class="subcard" style="max-height: 460px; overflow: auto;">
+      {{ render_test_table(tests, True, "Tests Passing") }}
+    </div>
+  {% endif %}
+  {% set failed_tests = [0] %}
+  {% for test in tests %}
+    {% if not test.passed %}
+      {% if failed_tests.append(failed_tests.pop() + 1) %}{% endif %}
+    {% endif %}
+  {% endfor %}
+  {% if failed_tests[0] != 0 %}
+    <div class="subcard" style="max-height: 460px; overflow: auto;">
+      {{ render_test_table(tests, False, "Tests Failing") }}
+    </div>
+  {% endif %}
 {% endif %}
+{% endmacro %}
+
+{% macro test_overview_periodic(comp) %}
+<div class="subcard" style="display: inline-block;">
+  <h3>Test Fail Rate</h3>
+    <div style="text-align: center;">
+      <div display: inline-block;>
+        <span style="font-size: 36px; font-weight:bolder">{{ comp.fail_rate }}</span>
+        <br>
+        <span style="font-size: 12px;">failed</span>
+        <br>
+        <span style="display: inline-block; margin-top: 20px;">
+          {% if comp.fail_rate_change[:-1]|float > 0 %}
+            <span style="font-size: 24px; color: red;">&#9650; {{comp.fail_rate_change}}</span>
+          {% else %}
+            <span style="font-size: 24px; color: green;">&#9660; {{comp.fail_rate_change}}</span>
+          {% endif %}
+          {{comp.time_diff_string}}
+        </span>
+      </div>
+    </div>
+</div>
+<div class="subcard" style="max-height: 200px; overflow: auto;">
+  {{ render_test_table(comp.new_tests_failed, False, "New Tests Failing") }}
+</div>
+<div class="subcard" style="max-height: 200px; overflow: auto;">
+  {{ render_test_table(comp.new_tests_passed, True, "New Tests Passing") }}
+</div>
 {% endmacro %}
 
 {% macro render_objects(section)%}
@@ -222,15 +237,22 @@
       {% endfor %}
 
       {# Display global plots from GraphicsCollection in Datasets, temporary fix #}
-      {% if section is hasattr "graphics"%}
+      {% if section is hasattr "graphics" %}
         <div class="subcard" style="flex-basis:100%;">
           <h3>{{ "Graphics" }}</h3>
           {{ render_if_exist_list(section.graphics) }}
         </div>
       {% endif %}
-    {% elif header == "QuantitativeAnalysis"%}
+    {% elif header == "QuantitativeAnalysis" %}
       {{render_metric_table(section.performance_metrics)}}
       {{ render_objects(section) }}
+
+    {% elif header == "Overview" %}
+      {% if section.baseline_comparison.report_type == "baseline" %}
+        {{ test_overview(tests) }}
+      {% elif section.baseline_comparison.report_type == "periodic" %}
+        {{ test_overview_periodic(section.baseline_comparison) }}
+      {% endif %}
     {% else %}
       {{ render_objects(section) }}
     {% endif %}
@@ -254,11 +276,9 @@
   <span class='title'>CARD SECTIONS</span>
   <hr>
   <ul id='contents'>
-    {% if tests|length != 0 %}
-      <a href="#{{ overview }}">
-        <li id="button">Overview</li>
-      </a>
-    {% endif %}
+    {# <a href="#{{ overview }}">
+      <li id="button">Overview</li>
+    </a> #}
     {% for name, section in model_card %}
       {% if section is not empty%}
         <a href="#{{ name }}">
@@ -534,10 +554,8 @@
   <body>
     {{ render_sidebar(model_card) }}
     <main id="container">
-      {{ test_overview(tests) }}
-      {# {{ render_banner() }} #}
       {% for name, section in model_card %}
-        {{ render_section(name, section)}}
+        {{ render_section(name, section) }}
       {% endfor %}
     </main>
   </body>
