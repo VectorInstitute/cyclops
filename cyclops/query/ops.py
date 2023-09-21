@@ -2913,6 +2913,46 @@ class DropNulls(QueryOp):
 
         cond = and_(*[not_equals(get_column(table, col), None) for col in self.cols])
         return select(table).where(cond).subquery()
+    
+    
+class DropEmpty(QueryOp):
+    """Remove rows with empty values in some specified columns.
+
+    Parameters
+    ----------
+    cols
+        Columns in which, if a value is empty, the corresponding row is removed.
+
+    Examples
+    --------
+    >>> DropEmpty("col1")(table)
+    >>> DropEmpty(["col1", "col2"])(table)
+
+    """
+
+    def __init__(self, cols: typing.Union[str, typing.List[str]]):
+        super().__init__()
+        self.cols = cols
+
+    def __call__(self, table: TableTypes) -> Subquery:
+        """Process the table.
+
+        Parameters
+        ----------
+        table
+            Table on which to perform the operation.
+
+        Returns
+        -------
+        sqlalchemy.sql.selectable.Subquery
+            Processed table.
+
+        """
+        self.cols = to_list(self.cols)
+        table = _process_checks(table, cols=self.cols)
+
+        cond = and_(*[not_equals(get_column(table, col), "") for col in self.cols])
+        return select(table).where(cond).subquery()
 
 
 class Apply(QueryOp):
