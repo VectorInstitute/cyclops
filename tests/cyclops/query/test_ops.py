@@ -28,6 +28,7 @@ from cyclops.query.ops import (
     ConditionSubstring,
     Distinct,
     Drop,
+    DropEmpty,
     DropNulls,
     ExtractTimestampComponent,
     FillNull,
@@ -451,6 +452,13 @@ def test_drop_nulls(visits_table):
     """Test DropNulls."""
     visits = visits_table.ops(DropNulls("preceding_visit_occurrence_id")).run()
     assert visits["preceding_visit_occurrence_id"].isnull().sum() == 0
+
+
+@pytest.mark.integration_test()
+def test_drop_empty(visits_table):
+    """Test DropEmpty."""
+    visits = visits_table.ops(DropEmpty("visit_concept_name")).run()
+    assert (visits["visit_concept_name"] == "").sum() == 0
 
 
 @pytest.mark.integration_test()
