@@ -545,3 +545,37 @@ class FairnessReport(BaseModelCardField, composable_with=["FairnessAnalysis"]):
         description="Tests related to fairness considerations.",
         default_factory=list,
     )
+
+
+class ComparativeMetrics(BaseModelCardField):
+    """A collection of comparative metrics between baseline and periodic reports."""
+
+    report_type: StrictStr = Field(
+        "baseline",
+        description="The type of report being generated.",
+    )
+
+    fail_rate: Optional[StrictStr] = Field(
+        None,
+        description="The fail rate of the periodic report.",
+    )
+
+    fail_rate_change: Optional[StrictStr] = Field(
+        None,
+        description="The change in fail rate between the baseline and periodic report.",
+    )
+
+    time_diff_string: Optional[StrictStr] = Field(
+        None,
+        description="The time difference between the baseline and periodic report.",
+    )
+
+    new_tests_failed: Optional[List[Test]] = Field(
+        description="The new tests that failed in the periodic report.",
+        default_factory=list,
+    )
+
+    new_tests_passed: Optional[List[Test]] = Field(
+        description="The new tests that passed in the periodic report.",
+        default_factory=list,
+    )
