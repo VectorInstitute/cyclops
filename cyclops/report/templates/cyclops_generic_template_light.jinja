@@ -170,20 +170,22 @@
         <span style="display: inline-block; margin-top: 20px;">
           {% if comp.fail_rate_change[:-1]|float > 0 %}
             <span style="font-size: 24px; color: red;">&#9650; {{comp.fail_rate_change}}</span>
-          {% else %}
+          {% elif comp.fail_rate_change[:-1]|float < 0 %}
             <span style="font-size: 24px; color: green;">&#9660; {{comp.fail_rate_change}}</span>
+          {% else %}
+            <span style="font-size: 24px; color: gray;">&#9472; {{comp.fail_rate_change}}</span>
           {% endif %}
           {{comp.time_diff_string}}
         </span>
       </div>
     </div>
 </div>
-<div class="subcard" style="max-height: 200px; overflow: auto;">
-  {{ render_test_table(comp.new_tests_failed, False, "New Tests Failing") }}
-</div>
-<div class="subcard" style="max-height: 200px; overflow: auto;">
-  {{ render_test_table(comp.new_tests_passed, True, "New Tests Passing") }}
-</div>
+{% if comp.new_metrics_failed_periodic|length != 0 %}
+  <div class="subcard" style="max-height: 200px; overflow: auto; justify-content: center; ">
+    <h3>New Tests Failing</h3>
+    {{render_metric_table(comp)}}
+  </div>
+{% endif %}
 {% endmacro %}
 
 {% macro render_objects(section)%}
@@ -246,9 +248,7 @@
         </div>
       {% endif %}
     {% elif header == "QuantitativeAnalysis" %}
-      {{render_metric_table(section.performance_metrics)}}
       {{ render_objects(section) }}
-
     {% elif header == "Overview" %}
       {% if section.baseline_comparison.report_type == "baseline" %}
         {{ test_overview(tests) }}

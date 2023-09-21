@@ -14,7 +14,12 @@ from typing import Any, Dict, List, Mapping, Optional, Union
 import numpy as np
 
 from cyclops.report.model_card import ModelCard  # type: ignore[attr-defined]
-from cyclops.report.model_card.fields import ComparativeMetrics, Graphic, Test
+from cyclops.report.model_card.fields import (
+    ComparativeMetrics,
+    Graphic,
+    PerformanceMetric,
+    Test,
+)
 
 
 def str_to_snake_case(string: str) -> str:
@@ -352,6 +357,38 @@ def sweep_tests(model_card: Any, tests: List[Any]) -> None:
                     sweep_tests(item, tests)
 
 
+def sweep_metrics(model_card: Any, metrics: List[Any]) -> None:
+    """Sweep model card to find all instances of PerformanceMetric.
+
+    Parameters
+    ----------
+    model_card : Any
+        The model card to sweep.
+    tests : List[Any]
+        The list to append all tests to.
+    """
+    for field in model_card:
+        if isinstance(field, ComparativeMetrics):
+            continue
+        if isinstance(field, tuple):
+            field = field[1]  # noqa: PLW2901
+            if isinstance(field, ComparativeMetrics):
+                continue
+        if isinstance(field, PerformanceMetric):
+            metrics.append(field)
+        if hasattr(field, "__fields__"):
+            sweep_metrics(field, metrics)
+        if isinstance(field, list) and len(field) != 0:
+            for item in field:
+                if isinstance(item, PerformanceMetric):
+                    if len(field) == 1:
+                        metrics.append(field[0])
+                    else:
+                        metrics.append(field)
+                else:
+                    sweep_metrics(item, metrics)
+
+
 def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
     """Sweep model card to find all instances of Graphic with a given caption.
 
@@ -380,14 +417,16 @@ def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
                     sweep_graphics(item, graphics, caption)
 
 
-def compare_tests(
+def compare_tests_metrics(  # noqa: PLR0912
     baseline_tests: List[Test],
     periodic_tests: List[Test],
+    baseline_metrics: List[PerformanceMetric],
+    periodic_metrics: List[PerformanceMetric],
     baseline_timestamp: str,
     periodic_timestamp: str,
     report_type: str,
 ) -> Dict[str, Any]:
-    """Compare baseline and periodic tests."""
+    """Compare baseline and periodic tests and metrics."""
     baseline_passed = []
     periodic_passed = []
     for test in baseline_tests:
@@ -415,6 +454,23 @@ def compare_tests(
                     new_tests_failed.append(ptest)
                 elif not btest.passed and ptest.passed:
                     new_tests_passed.append(ptest)
+
+    # get all metrics failed for periodic report
+    all_metrics_failed = []
+    for metric in periodic_metrics:
+        if metric.tests and not metric.tests[0].passed:
+            all_metrics_failed.append(metric)
+    # get new metrics failed for periodic report
+    new_metrics_failed_periodic = []
+    new_metrics_failed_baseline = []
+    new_metrics_passed = []
+    for pmetric, bmetric in zip(periodic_metrics, baseline_metrics):
+        if pmetric.type == bmetric.type:
+            if bmetric.tests[0].passed and not pmetric.tests[0].passed:  # type: ignore[index]
+                new_metrics_failed_periodic.append(pmetric)
+                new_metrics_failed_baseline.append(bmetric)
+            elif not bmetric.tests[0].passed and pmetric.tests[0].passed:  # type: ignore[index]
+                new_metrics_passed.append(pmetric)
     return {
         "report_type": report_type,
         "fail_rate": str(round(fail_rate * 100)) + "%",
@@ -422,6 +478,10 @@ def compare_tests(
         "time_diff_string": time_diff_string,
         "new_tests_failed": new_tests_failed,
         "new_tests_passed": new_tests_passed,
+        "all_metrics_failed": all_metrics_failed,
+        "new_metrics_failed_periodic": new_metrics_failed_periodic,
+        "new_metrics_failed_baseline": new_metrics_failed_baseline,
+        "new_metrics_passed": new_metrics_passed,
     }
 
 
