@@ -57,28 +57,26 @@
 </div>
 {% endmacro %}
 
-{% macro render_metric_table(metrics) %}
-{% if metrics|length != 0 %}
-  <div class="subcard" style="max-height: 600px; overflow: auto;">
-    <table class="styled-table">
-      <tr><th>Metric</th><th>Slice</th><th>Value</th><th>Threshold</th><th>Result</th></tr>
-      {% for metric in metrics %}
-        <tr>
-          <td style="padding: 5px; text-align: center;">{{ metric.type }}</td>
-          <td style="padding: 5px; text-align: center;">{{ metric.slice }}</td>
-          <td style="padding: 5px; text-align: center;" id="{{ metric.type }}/{{ metric.slice }}">{{ metric.value|round(2) }}</td>
-          {% if metric.tests|length != 0 %}
-            <td style="padding: 5px; text-align: center;">{{ metric.tests[0].threshold|round(2) }}</td>
-            <td style="padding: 5px; text-align: center; color: {% if metric.tests[0].passed %}green{% else %}red{% endif %}">{% if metric.tests[0].passed %}Passed{% else %}Failed{% endif %}</td>
-          {% else %}
-            <td style="padding: 5px; text-align: center;">-</td>
-            <td style="padding: 5px; text-align: center;">-</td>
-          {% endif %}
-        </tr>
-      {% endfor %}
-    </table>
-  </div>
-{% endif %}
+{% macro render_metric_table(comp) %}
+  <table class="styled-table">
+    <tr><th>Metric</th><th>Slice</th><th>Current Value</th><th>Threshold</th><th>Previous Value</th></tr>
+    {% for mp, mb in comp.new_metrics_failed_periodic|zip(comp.new_metrics_failed_baseline) %}
+    {% if mp.value != 0 %}
+      <tr>
+        <td style="padding: 5px; text-align: center;">{{ mp.type }}</td>
+        <td style="padding: 5px; text-align: center;">{{ mp.slice }}</td>
+          <td style="padding: 5px; text-align: center;" id="{{ mp.type }}/{{ mp.slice }}">{{ mp.value|round(2) }}</td>
+        {% if mp.tests|length != 0 %}
+          <td style="padding: 5px; text-align: center;">{{ mp.tests[0].threshold|round(2) }}</td>
+          <td style="padding: 5px; text-align: center;">{{mb.value|round(2)}}</td>
+        {% else %}
+          <td style="padding: 5px; text-align: center;">-</td>
+          <td style="padding: 5px; text-align: center;">-</td>
+        {% endif %}
+      </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
 {% endmacro %}
 
 {% macro render_test_table(tests, passing, title) %}
@@ -172,20 +170,22 @@
         <span style="display: inline-block; margin-top: 20px;">
           {% if comp.fail_rate_change[:-1]|float > 0 %}
             <span style="font-size: 24px; color: red;">&#9650; {{comp.fail_rate_change}}</span>
-          {% else %}
+          {% elif comp.fail_rate_change[:-1]|float < 0 %}
             <span style="font-size: 24px; color: green;">&#9660; {{comp.fail_rate_change}}</span>
+          {% else %}
+            <span style="font-size: 24px; color: gray;">&#9472; {{comp.fail_rate_change}}</span>
           {% endif %}
           {{comp.time_diff_string}}
         </span>
       </div>
     </div>
 </div>
-<div class="subcard" style="max-height: 200px; overflow: auto;">
-  {{ render_test_table(comp.new_tests_failed, False, "New Tests Failing") }}
-</div>
-<div class="subcard" style="max-height: 200px; overflow: auto;">
-  {{ render_test_table(comp.new_tests_passed, True, "New Tests Passing") }}
-</div>
+{% if comp.new_metrics_failed_periodic|length != 0 %}
+  <div class="subcard" style="max-height: 200px; overflow: auto; justify-content: center; ">
+    <h3>New Tests Failing</h3>
+    {{render_metric_table(comp)}}
+  </div>
+{% endif %}
 {% endmacro %}
 
 {% macro render_objects(section)%}
@@ -229,7 +229,11 @@
 {% macro render_section(name, section)%}
 {% if section is not empty%}
   {% set header = section.__class__.__name__ %}
-  <div class = "card" id={{name}}>
+  {% if header == "Overview" %}
+    <div class = "card" id={{name}} style="justify-content: center;" >
+  {% else %}
+    <div class = "card" id={{name}}>
+  {% endif %}
     <h2>{{ header|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
     {% if header == "Datasets" %}
       {% for dataset in section.data %}
@@ -244,9 +248,7 @@
         </div>
       {% endif %}
     {% elif header == "QuantitativeAnalysis" %}
-      {{render_metric_table(section.performance_metrics)}}
       {{ render_objects(section) }}
-
     {% elif header == "Overview" %}
       {% if section.baseline_comparison.report_type == "baseline" %}
         {{ test_overview(tests) }}
