@@ -20,6 +20,7 @@ from cyclops.report.model_card import ModelCard  # type: ignore[attr-defined]
 from cyclops.report.model_card.base import BaseModelCardField
 from cyclops.report.model_card.fields import (
     Citation,
+    ComparativeMetrics,
     Dataset,
     ExplainabilityReport,
     FairnessAssessment,
@@ -43,20 +44,9 @@ from cyclops.report.model_card.fields import (
 from cyclops.report.utils import (
     _object_is_in_model_card_module,
     _raise_if_not_dict_with_str_keys,
-    create_metric_cards,
-    empty,
-    get_names,
-    get_passed,
-    get_plots,
-    get_slices,
-    get_thresholds,
-    get_trends,
-    regex_replace,
-    regex_search,
+    compare_tests,
     str_to_snake_case,
     sweep_graphics,
-    sweep_metric_cards,
-    sweep_metrics,
     sweep_tests,
 )
 
@@ -1053,6 +1043,7 @@ class ModelCardReport:
         template_path: Optional[str] = None,
         interactive: bool = True,
         save_json: bool = True,
+        report_type: str = "baseline",
         synthetic_timestamp: Optional[str] = None,
     ) -> str:
         """Export the model card report to an HTML file.
@@ -1069,6 +1060,10 @@ class ModelCardReport:
             Whether to create an interactive HTML report. The default is True.
         save_json : bool, optional
             Whether to save the model card as a JSON file. The default is True.
+        report_type : str, optional
+            The type of report to generate. The default is "baseline", which
+            generates a baseline model card report. The other option is "periodic",
+            which generates a periodic model card report to compare with a baseline.
         synthetic_timestamp : str, optional
             A synthetic timestamp to use for the report. This is useful for
             generating back-dated reports. The default is None, which uses the
@@ -1092,58 +1087,63 @@ class ModelCardReport:
         else:
             today = dt_date.today().strftime("%Y-%m-%d")
 
-        current_report_metrics: List[List[PerformanceMetric]] = []
-        sweep_metrics(self._model_card, current_report_metrics)
-        current_report_metrics_set = current_report_metrics[0]
-
-        report_paths = glob.glob(
-            os.path.join(
-                self.output_dir,
-                "cyclops_reports",
-                "*",
-                "*",
-                "*.json",
-            ),
-        )
-
-        if len(report_paths) != 0:
-            latest_report_path = sorted(report_paths)[-1]
-            latest_report = ModelCard.parse_file(
-                latest_report_path,
+        if report_type == "periodic":
+            baseline_report_paths = glob.glob(
+                os.path.join(
+                    self.output_dir,
+                    "cyclops_reports",
+                    "*",
+                    "*",
+                    "*_baseline.json",
+                ),
             )
-            latest_report_metric_cards: List[List[MetricCard]] = []
-            sweep_metric_cards(latest_report, latest_report_metric_cards)
-            latest_report_metric_cards_set = latest_report_metric_cards[0]
-        else:
-            latest_report_metric_cards_set = None
-        # check if overview section exists
-        if self._model_card.overview is None:
+
+            try:
+                latest_baseline_report_path = sorted(baseline_report_paths)[-1]
+                latest_baseline_report = ModelCard.parse_file(
+                    latest_baseline_report_path,
+                )
+            except IndexError as err:
+                raise FileNotFoundError("No baseline model card report found.") from err
+
+            baseline_report_tests: List[Test] = []
+            periodic_report_tests: List[Test] = []
+            sweep_tests(latest_baseline_report, baseline_report_tests)
+            sweep_tests(self._model_card, periodic_report_tests)
+
             # compare tests
-            metrics, tooltips, slices, values, metric_cards = create_metric_cards(
-                current_report_metrics_set,
-                latest_report_metric_cards_set,
+            comp_metrics = compare_tests(
+                baseline_report_tests,
+                periodic_report_tests,
+                latest_baseline_report_path.split("/")[-3],
+                today,
+                report_type,
             )
-            self._log_metric_card_collection(
-                metrics,
-                tooltips,
-                slices,
-                values,
-                metric_cards,
+            for _ in range(2):
+                self._log_field(
+                    data=comp_metrics,
+                    section_name="overview",
+                    field_name="baseline_comparison",
+                    field_type=ComparativeMetrics,
+                )
+
+        elif report_type == "baseline":
+            for _ in range(2):
+                self._log_field(
+                    data={"report_type": report_type},
+                    section_name="overview",
+                    field_name="baseline_comparison",
+                    field_type=ComparativeMetrics,
+                )
+        else:
+            raise ValueError(
+                f"Invalid report type {report_type}. Must be one of 'baseline' or 'periodic'.",
             )
 
         self._validate()
         template = self._get_jinja_template(template_path=template_path)
 
-        func_dict = {
-            "sweep_tests": sweep_tests,
-            "sweep_graphics": sweep_graphics,
-            "get_slices": get_slices,
-            "get_plots": get_plots,
-            "get_thresholds": get_thresholds,
-            "get_trends": get_trends,
-            "get_passed": get_passed,
-            "get_names": get_names,
-        }
+        func_dict = {"sweep_tests": sweep_tests, "sweep_graphics": sweep_graphics}
         template.globals.update(func_dict)
 
         plotlyjs = get_plotlyjs() if interactive else None

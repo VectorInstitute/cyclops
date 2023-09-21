@@ -4,7 +4,6 @@ import os
 from typing import Tuple
 
 import pandas as pd
-from sklearn.model_selection import GroupShuffleSplit
 from datasets import DatasetDict
 from datasets.arrow_dataset import Dataset
 from datasets.features import Image, Value
@@ -22,7 +21,7 @@ def load_nihcxr(
     train_time_range: Tuple[str, str] = ("1/1/2019", "10/19/2019"),
     test_time_range: Tuple[str, str] = ("10/20/2019", "12/25/2019"),
     progress: bool = False,
-    seed: int = 0
+    seed: int = 0,
 ) -> Dataset:
     """Load NIH Chest X-Ray dataset as a Huggingface dataset."""
     if not progress:
@@ -44,7 +43,9 @@ def load_nihcxr(
     test_df = df[df["Image Index"].isin(test_id)]
 
     gss = GroupShuffleSplit(train_size=0.8, test_size=0.2, random_state=seed)
-    train_inds, val_inds = next(gss.split(X=range(len(train_df)), groups=train_df["Patient ID"]))
+    train_inds, val_inds = next(
+        gss.split(X=range(len(train_df)), groups=train_df["Patient ID"]),
+    )
 
     nih_ds = DatasetDict(
         {

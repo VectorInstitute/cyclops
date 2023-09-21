@@ -8,6 +8,7 @@ from pydantic import Field, StrictStr
 from cyclops.report.model_card.base import BaseModelCardSection
 from cyclops.report.model_card.fields import (
     Citation,
+    ComparativeMetrics,
     Dataset,
     ExplainabilityReport,
     FairnessAssessment,
@@ -30,7 +31,7 @@ from cyclops.report.model_card.fields import (
 class Overview(BaseModelCardSection):
     """Overview section with aggregate metrics."""
 
-    metric_cards: Optional[MetricCardCollection] = Field(
+    baseline_comparison: Optional[ComparativeMetrics] = Field(
         None,
         description="Comparative metrics between baseline and periodic report.",
     )

@@ -7,20 +7,14 @@ import json
 import os
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
-from re import findall, sub
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+from datetime import timedelta
+from re import sub
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 import numpy as np
-import plotly.graph_objects as go
 
 from cyclops.report.model_card import ModelCard  # type: ignore[attr-defined]
-from cyclops.report.model_card.fields import (
-    Graphic,
-    GraphicsCollection,
-    MetricCard,
-    PerformanceMetric,
-    Test,
-)
+from cyclops.report.model_card.fields import ComparativeMetrics, Graphic, Test
 
 
 def str_to_snake_case(string: str) -> str:
@@ -337,19 +331,17 @@ def sweep_tests(model_card: Any, tests: List[Any]) -> None:
         The list to append all tests to.
     """
     for field in model_card:
+        if isinstance(field, ComparativeMetrics):
+            continue
         if isinstance(field, tuple):
             field = field[1]  # noqa: PLW2901
+            if isinstance(field, ComparativeMetrics):
+                continue
         if isinstance(field, Test):
             tests.append(field)
         if hasattr(field, "__fields__"):
             sweep_tests(field, tests)
-        if (
-            isinstance(field, list)
-            and len(field) != 0
-            and not isinstance(field[0], str)
-            and not isinstance(field[0], int)
-            and not isinstance(field[0], float)
-        ):
+        if isinstance(field, list) and len(field) != 0:
             for item in field:
                 if isinstance(item, Test):
                     if len(field) == 1:
@@ -358,74 +350,6 @@ def sweep_tests(model_card: Any, tests: List[Any]) -> None:
                         tests.append(field)
                 else:
                     sweep_tests(item, tests)
-
-
-def sweep_metrics(model_card: Any, metrics: List[Any]) -> None:
-    """Sweep model card to find all instances of PerformanceMetric.
-
-    Parameters
-    ----------
-    model_card : Any
-        The model card to sweep.
-    tests : List[Any]
-        The list to append all tests to.
-    """
-    for field in model_card:
-        if isinstance(field, tuple):
-            field = field[1]  # noqa: PLW2901
-        if isinstance(field, PerformanceMetric):
-            metrics.append(field)
-        if hasattr(field, "__fields__"):
-            sweep_metrics(field, metrics)
-        if (
-            isinstance(field, list)
-            and len(field) != 0
-            and not isinstance(field[0], str)
-            and not isinstance(field[0], int)
-            and not isinstance(field[0], float)
-        ):
-            for item in field:
-                if isinstance(item, PerformanceMetric):
-                    if len(field) == 1:
-                        metrics.append(field[0])
-                    else:
-                        metrics.append(field)
-                else:
-                    sweep_metrics(item, metrics)
-
-
-def sweep_metric_cards(model_card: Any, metric_cards: List[Any]) -> None:
-    """Sweep model card to find all instances of MetricCard.
-
-    Parameters
-    ----------
-    model_card : Any
-        The model card to sweep.
-    metric_cards : List[Any]
-        The list to append all metric cards to.
-    """
-    for field in model_card:
-        if isinstance(field, tuple):
-            field = field[1]  # noqa: PLW2901
-        if isinstance(field, MetricCard):
-            metric_cards.append(field)
-        if hasattr(field, "__fields__"):
-            sweep_metric_cards(field, metric_cards)
-        if (
-            isinstance(field, list)
-            and len(field) != 0
-            and not isinstance(field[0], str)
-            and not isinstance(field[0], int)
-            and not isinstance(field[0], float)
-        ):
-            for item in field:
-                if isinstance(item, MetricCard):
-                    if len(field) == 1:
-                        metric_cards.append(field[0])
-                    else:
-                        metric_cards.append(field)
-                else:
-                    sweep_metric_cards(item, metric_cards)
 
 
 def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
@@ -447,13 +371,7 @@ def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
             graphics.append(field)
         if hasattr(field, "__fields__"):
             sweep_graphics(field, graphics, caption)
-        if (
-            isinstance(field, list)
-            and len(field) != 0
-            and not isinstance(field[0], str)
-            and not isinstance(field[0], int)
-            and not isinstance(field[0], float)
-        ):
+        if isinstance(field, list) and len(field) != 0:
             for item in field:
                 if isinstance(item, Graphic):
                     if item.name == caption:
@@ -462,419 +380,72 @@ def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
                     sweep_graphics(item, graphics, caption)
 
 
-def get_slices(model_card: ModelCard) -> str:
-    """Get all slices from a model card."""
-    names = {}
-    if (
-        (model_card.overview is None)
-        or (model_card.overview.metric_cards is None)
-        or (model_card.overview.metric_cards.collection is None)
-    ):
-        pass
-    else:
-        for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
-            name = (
-                ["metric:" + metric_card.name] if metric_card.name else ["metric:none"]
-            )
-            card_slice = metric_card.slice
-            card_slice_list = card_slice.split("&") if card_slice else "overall"
-            name.extend(card_slice_list)
-            name = [e for e in name if e != "overall"]
-            names[itr] = name
-    return json.dumps(names)
+def compare_tests(
+    baseline_tests: List[Test],
+    periodic_tests: List[Test],
+    baseline_timestamp: str,
+    periodic_timestamp: str,
+    report_type: str,
+) -> Dict[str, Any]:
+    """Compare baseline and periodic tests."""
+    baseline_passed = []
+    periodic_passed = []
+    for test in baseline_tests:
+        baseline_passed.append(test.passed)
+    for test in periodic_tests:
+        periodic_passed.append(test.passed)
+    baseline_pass_fail = np.array(baseline_passed)
+    periodic_pass_fail = np.array(periodic_passed)
+    baseline_fail_rate = 1 - (baseline_pass_fail.sum() / baseline_pass_fail.shape[0])
+    fail_rate = 1 - (periodic_pass_fail.sum() / periodic_pass_fail.shape[0])
+    fail_rate_change = fail_rate - baseline_fail_rate
 
+    time_diff = dt_datetime.strptime(
+        periodic_timestamp,
+        "%Y-%m-%d",
+    ) - dt_datetime.strptime(baseline_timestamp, "%Y-%m-%d")
+    time_diff_string = get_time_diff_string(time_diff)
 
-def get_plots(model_card: ModelCard) -> str:
-    """Get all plots from a model card."""
-    plots: Dict[int, Optional[List[str]]] = {}
-    if (
-        (model_card.overview is None)
-        or (model_card.overview.metric_cards is None)
-        or (model_card.overview.metric_cards.collection is None)
-    ):
-        pass
-    else:
-        for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
-            if metric_card.plot is not None:
-                plots[itr] = [str(history) for history in metric_card.history]
-            else:
-                plots[itr] = None
-    return json.dumps(plots)
-
-
-def get_thresholds(model_card: ModelCard) -> str:
-    """Get all thresholds from a model card."""
-    thresholds: Dict[int, Optional[str]] = {}
-    if (
-        (model_card.overview is None)
-        or (model_card.overview.metric_cards is None)
-        or (model_card.overview.metric_cards.collection is None)
-    ):
-        pass
-    else:
-        for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
-            if metric_card.plot is not None:
-                thresholds[itr] = str(metric_card.threshold)
-            else:
-                thresholds[itr] = None
-    return json.dumps(thresholds)
-
-
-def get_trends(model_card: ModelCard) -> str:
-    """Get all trends from a model card."""
-    trends: Dict[int, Optional[str]] = {}
-    if (
-        (model_card.overview is None)
-        or (model_card.overview.metric_cards is None)
-        or (model_card.overview.metric_cards.collection is None)
-    ):
-        pass
-    else:
-        for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
-            if metric_card.plot is not None:
-                trends[itr] = metric_card.trend
-            else:
-                trends[itr] = None
-    return json.dumps(trends)
-
-
-def get_passed(model_card: ModelCard) -> str:
-    """Get all passed from a model card."""
-    passed: Dict[int, Optional[bool]] = {}
-    if (
-        (model_card.overview is None)
-        or (model_card.overview.metric_cards is None)
-        or (model_card.overview.metric_cards.collection is None)
-    ):
-        pass
-    else:
-        for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
-            if metric_card.plot is not None:
-                passed[itr] = metric_card.passed
-            else:
-                passed[itr] = None
-    return json.dumps(passed)
-
-
-def get_names(model_card: ModelCard) -> str:
-    """Get all names from a model card."""
-    names = {}
-    if (
-        (model_card.overview is None)
-        or (model_card.overview.metric_cards is None)
-        or (model_card.overview.metric_cards.collection is None)
-    ):
-        pass
-    else:
-        for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
-            names[itr] = metric_card.name
-    return json.dumps(names)
-
-
-def create_metric_cards(  # noqa: PLR0912 PLR0915
-    current_metrics: List[PerformanceMetric],
-    last_metric_cards: Optional[List[MetricCard]] = None,
-) -> Tuple[
-    List[str],
-    List[Optional[str]],
-    List[str],
-    List[List[str]],
-    List[MetricCard],
-]:
-    """Create metric cards for each metric."""
-    slices_values = []
-    for current_metric in current_metrics:
-        if current_metric.slice is not None:
-            for slice_val in current_metric.slice.split("&"):
-                if slice_val not in slices_values:
-                    slices_values.append(slice_val)
-    slices = [
-        slice_val.split(":")[0]
-        for slice_val in slices_values
-        if slice_val.split(":")[0] != "overall"
-    ]
-    slices = list(dict.fromkeys(slices))
-    values_all = [
-        slice_val.split(":")[1]
-        for slice_val in slices_values
-        if slice_val.split(":")[0] != "overall"
-    ]
-
-    values: List[List[str]] = [[] for _ in range(len(slices))]
-
-    for i, slice_name in enumerate(slices):
-        for j, slice_val in enumerate(slices_values):
-            if slice_val.startswith(slice_name):
-                values[i].append(values_all[j])
-
-    all_metrics = []
-    # gather overall metrics with matching type
-    for current_metric in current_metrics:
-        if last_metric_cards is None:
-            last_metric_card_match = None
-        else:
-            last_metric_card_match = None
-            for last_metric_card in last_metric_cards:
-                if (
-                    current_metric.type == last_metric_card.type
-                    and current_metric.slice == last_metric_card.slice
-                ):
-                    last_metric_card_match = last_metric_card
-        all_metrics.append(
-            {
-                "type": current_metric.type,
-                "slice": current_metric.slice,
-                "current_metric": current_metric,
-                "last_metric_card": last_metric_card_match,
-            },
-        )
-
-    # create dict to populate metrics cards
-    metric_cards = []
-    metrics = []
-    tooltips = []
-    for metric in all_metrics:
-        # split into words by camelcase
-        if isinstance(metric["type"], str):
-            # check if name has prefix "Binary", "Multiclass", or "Multilabel"
-            if metric["type"].startswith("Binary"):
-                name = metric["type"][6:]
-            elif metric["type"].startswith("Multiclass") or metric["type"].startswith(
-                "Multilabel",
-            ):
-                name = metric["type"][10:]
-            name = name.replace(
-                "PositivePredictiveValue",
-                "Positive Predictive Value (PPV)",
-            )
-            name = name.replace(
-                "NegativePredictiveValue",
-                "Negative Predictive Value (NPV)",
-            )
-            name = name.replace(
-                "FalsePositiveRate",
-                "False Positive Rate (FPR)",
-            )
-            name = name.replace(
-                "FalseNegativeRate",
-                "False Negative Rate (FNR)",
-            )
-            name = name.replace(
-                "F1Score",
-                "F1 Score",
-            )
-        metrics.append(name)
-        if isinstance(metric["current_metric"], PerformanceMetric):
-            tooltips.append(metric["current_metric"].description)
-
-        if metric["last_metric_card"] and isinstance(
-            metric["last_metric_card"],
-            MetricCard,
-        ):
-            history = metric["last_metric_card"].history
-            if (isinstance(metric["current_metric"], PerformanceMetric)) and (
-                isinstance(metric["current_metric"].value, float)
-            ):
-                history.append(metric["current_metric"].value)
-            if (
-                isinstance(metric["current_metric"], PerformanceMetric)
-                and (metric["current_metric"].tests is not None)
-                and (isinstance(metric["current_metric"].tests[0], Test))
-                and (metric["current_metric"].tests[0].threshold is not None)
-            ):
-                plot = create_metric_card_plot(
-                    history,
-                    metric["current_metric"].tests[0].threshold,
-                )
-            (m, b) = np.polyfit(range(len(history)), history, deg=1)
-            if m >= 0.03:
-                trend = "positive"
-            elif m <= -0.03:
-                trend = "negative"
-            else:
-                trend = "neutral"
-
-            metric_cards.append(
-                MetricCard(
-                    name=name,
-                    type=metric["current_metric"].type
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    slice=metric["current_metric"].slice
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    tooltip=metric["current_metric"].description
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    value=metric["current_metric"].value
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    and isinstance(metric["current_metric"].value, float)
-                    else None,
-                    threshold=metric["current_metric"].tests[0].threshold
-                    if (
-                        isinstance(metric["current_metric"], PerformanceMetric)
-                        and (metric["current_metric"].tests is not None)
-                        and (isinstance(metric["current_metric"].tests[0], Test))
-                        and (metric["current_metric"].tests[0].threshold is not None)
-                    )
-                    else None,
-                    passed=metric["current_metric"].tests[0].passed
-                    if (
-                        isinstance(metric["current_metric"], PerformanceMetric)
-                        and (metric["current_metric"].tests is not None)
-                        and (isinstance(metric["current_metric"].tests[0], Test))
-                        and (metric["current_metric"].tests[0].passed is not None)
-                    )
-                    else None,
-                    history=history,
-                    trend=trend
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    plot=plot
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                ),
-            )
-        else:
-            metric_cards.append(
-                MetricCard(
-                    name=name,
-                    type=metric["current_metric"].type
-                    if isinstance(
-                        metric["current_metric"],
-                        PerformanceMetric,
-                    )
-                    else None,
-                    slice=metric["current_metric"].slice
-                    if isinstance(
-                        metric["current_metric"],
-                        PerformanceMetric,
-                    )
-                    else None,
-                    tooltip=metric["current_metric"].description
-                    if isinstance(
-                        metric["current_metric"],
-                        PerformanceMetric,
-                    )
-                    else None,
-                    value=metric["current_metric"].value
-                    if isinstance(
-                        metric["current_metric"],
-                        PerformanceMetric,
-                    )
-                    and isinstance(metric["current_metric"].value, float)
-                    else None
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    threshold=metric["current_metric"].tests[0].threshold
-                    if (
-                        isinstance(metric["current_metric"], PerformanceMetric)
-                        and (metric["current_metric"].tests is not None)
-                        and (isinstance(metric["current_metric"].tests[0], Test))
-                        and (metric["current_metric"].tests[0].threshold is not None)
-                    )
-                    else None,
-                    passed=metric["current_metric"].tests[0].passed
-                    if (
-                        isinstance(metric["current_metric"], PerformanceMetric)
-                        and (metric["current_metric"].tests is not None)
-                        and (isinstance(metric["current_metric"].tests[0], Test))
-                        and (metric["current_metric"].tests[0].passed is not None)
-                    )
-                    else None,
-                    history=[
-                        metric["current_metric"].value
-                        if isinstance(
-                            metric["current_metric"],
-                            PerformanceMetric,
-                        )
-                        and isinstance(metric["current_metric"].value, float)
-                        else 0,
-                    ],
-                    trend="neutral",
-                    plot=None,
-                ),
-            )
-    metrics = list(dict.fromkeys(metrics))
-    tooltips = list(dict.fromkeys(tooltips))
-    return metrics, tooltips, slices, values, metric_cards
-
-
-def create_metric_card_plot(
-    history: List[float],
-    threshold: float,
-) -> GraphicsCollection:
-    """Create a plot for a metric card."""
-    fig = go.Figure(
-        data=[
-            go.Scatter(
-                y=history,
-                mode="lines+markers",
-                marker={"color": "rgb(31,111,235)"},
-                line={"color": "rgb(31,111,235)"},
-                showlegend=False,
-            ),
-            # dotted black threshold line
-            go.Scatter(
-                y=[threshold for _ in range(len(history))],
-                mode="lines",
-                line={"color": "black", "dash": "dot"},
-                showlegend=False,
-            ),
-        ],
-        layout=go.Layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            # hide x-axis
-            xaxis={
-                "zeroline": False,
-                "showticklabels": False,
-                "showgrid": False,
-            },
-            yaxis={
-                "gridcolor": "#ffffff",  # add this line to change the grid color
-            },
-        ),
-    )
-    fig.update_layout(
-        margin={"l": 0, "r": 0, "t": 0, "b": 0},
-        height=125,
-        width=250,
-        # ),
-    )
-    data = {
-        "name": None,
-        "image": fig.to_html(
-            full_html=False,
-            include_plotlyjs=False,
-            config={"displayModeBar": False},
-        ),
+    new_tests_passed = []
+    new_tests_failed = []
+    for ptest in periodic_tests:
+        for btest in baseline_tests:
+            if ptest.name == btest.name:
+                if btest.passed and not ptest.passed:
+                    new_tests_failed.append(ptest)
+                elif not btest.passed and ptest.passed:
+                    new_tests_passed.append(ptest)
+    return {
+        "report_type": report_type,
+        "fail_rate": str(round(fail_rate * 100)) + "%",
+        "fail_rate_change": str(round(fail_rate_change * 100, 1)) + "%",
+        "time_diff_string": time_diff_string,
+        "new_tests_failed": new_tests_failed,
+        "new_tests_passed": new_tests_passed,
     }
-    graphic = Graphic.parse_obj(data)
-    return GraphicsCollection(description="plot", collection=[graphic])
 
 
-def regex_replace(string: str, find: str, replace: str) -> str:
-    """Replace a regex pattern with a string."""
-    return sub(find, replace, string)
+def get_time_diff_string(time_diff: timedelta) -> str:
+    """Get a time difference string from a timedelta object."""
+    if time_diff.days == 0:
+        if time_diff.total_seconds() < 60:
+            result = f"past {time_diff.seconds} seconds"
+        elif time_diff.total_seconds() < 3600:
+            if time_diff.seconds % 60 == 1:
+                result = "past minute"
+            else:
+                result = f"past {time_diff.total_seconds() // 60} minutes"
+        elif time_diff.seconds % 3600 == 1:
+            result = "past hour"
+        else:
+            result = f"past {time_diff.total_seconds() // 3600} hours"
 
+    elif time_diff.days % 7 == 0:
+        if time_diff.days == 7:
+            result = "past week"
+        else:
+            result = f"past {time_diff.days // 7} weeks"
+    else:
+        result = f"past {time_diff.days} days"
 
-def regex_search(string: str, find: str) -> List[Any]:
-    """Search a regex pattern in a string and return the match."""
-    return findall(r"\((.*?)\)", string)
-
-
-def empty(x: Optional[List[Any]]) -> bool:
-    """Check if a variable is empty."""
-    empty = True
-    if x is not None:
-        for _, obj in x:
-            if isinstance(obj, list):
-                if len(obj) > 0:
-                    empty = False
-            elif isinstance(obj, GraphicsCollection):
-                if len(obj.collection) > 0:  # type: ignore[arg-type]
-                    empty = False
-            elif obj is not None:
-                empty = False
-    return empty
+    return result

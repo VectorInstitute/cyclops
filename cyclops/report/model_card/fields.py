@@ -547,88 +547,35 @@ class FairnessReport(BaseModelCardField, composable_with=["FairnessAnalysis"]):
     )
 
 
-class MetricCard(
-    BaseModelCardField,
-    list_factory=True,
-    composable_with=["MetricCardCollection"],
-):
-    """A metric card."""
+class ComparativeMetrics(BaseModelCardField):
+    """A collection of comparative metrics between baseline and periodic reports."""
 
-    name: Optional[StrictStr] = Field(
-        None,
-        description="The name of the metric.",
+    report_type: StrictStr = Field(
+        "baseline",
+        description="The type of report being generated.",
     )
 
-    type: Optional[StrictStr] = Field(
+    fail_rate: Optional[StrictStr] = Field(
         None,
-        description="The type of metric.",
+        description="The fail rate of the periodic report.",
     )
 
-    slice: Optional[StrictStr] = Field(
+    fail_rate_change: Optional[StrictStr] = Field(
         None,
-        description="The name of the slice the metric was computed on.",
+        description="The change in fail rate between the baseline and periodic report.",
     )
 
-    tooltip: Optional[StrictStr] = Field(
+    time_diff_string: Optional[StrictStr] = Field(
         None,
-        description="A tooltip for the metric.",
+        description="The time difference between the baseline and periodic report.",
     )
 
-    value: Optional[StrictFloat] = Field(
-        None,
-        description="The value of the metric.",
+    new_tests_failed: Optional[List[Test]] = Field(
+        description="The new tests that failed in the periodic report.",
+        default_factory=list,
     )
 
-    threshold: Optional[StrictFloat] = Field(
-        None,
-        description="Threshold required to pass the test.",
-    )
-
-    passed: Optional[StrictBool] = Field(
-        None,
-        description="Whether the model result satisfies the given threshold.",
-    )
-
-    history: List[StrictFloat] = Field(
-        None,
-        description="History of the metric over time.",
-    )
-
-    trend: Optional[StrictStr] = Field(
-        None,
-        description="The trend of the metric over time.",
-    )
-
-    plot: Optional[GraphicsCollection] = Field(
-        None,
-        description="A plot of the performance over time.",
-    )
-
-
-class MetricCardCollection(BaseModelCardField, composable_with="Overview"):
-    """A collection of metric cards to be displayed in the model card."""
-
-    metrics: Optional[List[StrictStr]] = Field(
-        None,
-        description="A list of metric names in the Metric Card collection.",
-    )
-
-    tooltips: Optional[List[StrictStr]] = Field(
-        None,
-        description="A list of tooltips in the Metric Card collection.",
-    )
-
-    slices: Optional[List[StrictStr]] = Field(
-        None,
-        description="A list of slices in the Metric Card collection.",
-    )
-
-    values: Optional[List[List[StrictStr]]] = Field(
-        None,
-        description="A list of values for each slice in the Metric Card collection.",
-    )
-
-    collection: Optional[List[MetricCard]] = Field(
-        description="A collection of metric cards.",
+    new_tests_passed: Optional[List[Test]] = Field(
+        description="The new tests that passed in the periodic report.",
         default_factory=list,
     )
