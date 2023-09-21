@@ -571,11 +571,36 @@ class ComparativeMetrics(BaseModelCardField):
     )
 
     new_tests_failed: Optional[List[Test]] = Field(
-        description="The new tests that failed in the periodic report.",
+        description="The new tests that failed in the periodic report.\
+            but passed in the baseline report.",
         default_factory=list,
     )
 
     new_tests_passed: Optional[List[Test]] = Field(
-        description="The new tests that passed in the periodic report.",
+        description="The new tests that passed in the periodic report.\
+            but failed in the baseline report.",
+        default_factory=list,
+    )
+
+    all_metrics_failed: Optional[List[PerformanceMetric]] = Field(
+        description="The metrics that failed in the periodic report.",
+        default_factory=list,
+    )
+
+    new_metrics_failed_periodic: Optional[List[PerformanceMetric]] = Field(
+        description="The new metrics that failed in the periodic report\
+            but passed in the baseline report.",
+        default_factory=list,
+    )
+
+    new_metrics_failed_baseline: Optional[List[PerformanceMetric]] = Field(
+        description="The old metrics that failed in the periodic report\
+            but passed in the baseline report.",
+        default_factory=list,
+    )
+
+    new_metrics_passed: Optional[List[PerformanceMetric]] = Field(
+        description="The new metrics that passed in the periodic report\
+            but failed in the baseline report.",
         default_factory=list,
     )

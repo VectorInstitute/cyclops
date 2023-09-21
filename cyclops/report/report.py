@@ -44,9 +44,10 @@ from cyclops.report.model_card.fields import (
 from cyclops.report.utils import (
     _object_is_in_model_card_module,
     _raise_if_not_dict_with_str_keys,
-    compare_tests,
+    compare_tests_metrics,
     str_to_snake_case,
     sweep_graphics,
+    sweep_metrics,
     sweep_tests,
 )
 
@@ -1057,6 +1058,7 @@ class ModelCardReport:
 
         jinja_env.filters["donut_chart_tests"] = donut_chart_tests
         jinja_env.filters["regex_replace"] = regex_replace
+        jinja_env.filters["zip"] = zip
         jinja_env.tests["list"] = lambda x: isinstance(x, list)
         jinja_env.tests["empty"] = empty
         jinja_env.tests["hasattr"] = hasattr
@@ -1141,17 +1143,26 @@ class ModelCardReport:
             sweep_tests(latest_baseline_report, baseline_report_tests)
             sweep_tests(self._model_card, periodic_report_tests)
 
+            baseline_report_metrics: List[List[PerformanceMetric]] = []
+            periodic_report_metrics: List[List[PerformanceMetric]] = []
+            sweep_metrics(latest_baseline_report, baseline_report_metrics)
+            sweep_metrics(self._model_card, periodic_report_metrics)
+            baseline_report_metrics_set = baseline_report_metrics[0]
+            periodic_report_metrics_set = periodic_report_metrics[0]
+
             # compare tests
-            comp_metrics = compare_tests(
+            comparison_results = compare_tests_metrics(
                 baseline_report_tests,
                 periodic_report_tests,
+                baseline_report_metrics_set,
+                periodic_report_metrics_set,
                 latest_baseline_report_path.split("/")[-3],
                 today,
                 report_type,
             )
             for _ in range(2):
                 self._log_field(
-                    data=comp_metrics,
+                    data=comparison_results,
                     section_name="overview",
                     field_name="baseline_comparison",
                     field_type=ComparativeMetrics,
