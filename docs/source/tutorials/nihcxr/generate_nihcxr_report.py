@@ -1,16 +1,14 @@
 """Chest X-ray Disease Classification."""
 
-import os
+# get args from command line
+import argparse
 import shutil
-from datetime import date
 from functools import partial
-from pathlib import Path
 
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from dateutil.relativedelta import relativedelta
-from monai.transforms import Compose, Lambdad, Resized
+from monai.transforms import Compose, Lambdad, Resized  # type: ignore
 from torchxrayvision.models import DenseNet
 
 from cyclops.data.loader import load_nihcxr
@@ -20,49 +18,66 @@ from cyclops.data.slicer import (
 )
 from cyclops.data.utils import apply_transforms
 from cyclops.evaluate import evaluator
-from cyclops.evaluate.fairness import evaluate_fairness  # noqa: E402
+from cyclops.evaluate.fairness import evaluate_fairness  # type: ignore
 from cyclops.evaluate.metrics.factory import create_metric
-from cyclops.models.wrappers import PTModel
-from cyclops.report import ModelCardReport
+from cyclops.models.wrappers import PTModel  # type: ignore
+from cyclops.report import ModelCardReport  # type: ignore
 
-# get args from command line
-import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--output_dir", type=str, default="cyclops_reports")
-parser.add_argument("--report_type", type=str, default="model_card", choices=["baseline", "periodic"])
+parser.add_argument(
+    "--report_type",
+    type=str,
+    default="baseline",
+    choices=["baseline", "periodic"],
+)
+parser.add_argument("--sample_size", type=int, default=4000)
+parser.add_argument("--synthetic_timestamp", type=str, default=None)
+
+args = parser.parse_args()
 
 report = ModelCardReport()
 
 data_dir = "/mnt/data/clinical_datasets/NIHCXR"
-nih_ds = load_nihcxr(data_dir)["test"]
-nih_ds = nih_ds.select(range(4000))
+if args.report_type == "baseline":
+    nih_ds = load_nihcxr(data_dir)["val"]
+elif args.report_type == "periodic":
+    nih_ds = load_nihcxr(data_dir)["test"]
+
+nih_ds = nih_ds.select(range(args.sample_size))
 
 transforms = Compose(
     [
         Resized(
-            keys=("image",), spatial_size=(224, 224), allow_missing_keys=True,
+            keys=("image",),
+            spatial_size=(224, 224),
+            allow_missing_keys=True,
         ),
         Lambdad(
             keys=("image",),
             func=lambda x: ((2 * (x / 255.0)) - 1.0) * 1024,
             allow_missing_keys=True,
         ),
-        Lambdad(("image",), func=lambda x: np.mean(x, axis=0)[np.newaxis, :] if x.shape[0] != 1 else x),
+        Lambdad(
+            ("image",),
+            func=lambda x: np.mean(x, axis=0)[np.newaxis, :] if x.shape[0] != 1 else x,
+        ),
     ],
 )
 
 model = PTModel(DenseNet(weights="densenet121-res224-nih"))
-model.initialize()
-nih_ds = model.predict(nih_ds,
-                   feature_columns=["image"],
-                   transforms=partial(apply_transforms, transforms=transforms),
-                   model_name="densenet",
-              )
+model.initialize()  # type: ignore
+nih_ds = model.predict(
+    nih_ds,
+    feature_columns=["image"],
+    transforms=partial(apply_transforms, transforms=transforms),
+    model_name="densenet",
+)
 
 # remove any rows with No Finding == 1
 nih_ds = nih_ds.filter(
-    partial(filter_value, column_name="No Finding", value=1, negate=True), batched=True,
+    partial(filter_value, column_name="No Finding", value=1, negate=True),
+    batched=True,
 )
 
 # remove the No Finding column and adjust the predictions to account for it
@@ -74,23 +89,23 @@ nih_ds = nih_ds.map(
 )
 
 
-pathologies = model.model.pathologies[:14]
+pathologies = list(model.model.pathologies[:14])  # type: ignore
 
 auroc = create_metric(
     metric_name="auroc",
-    task="multilabel",
-    num_labels=len(pathologies),
-    thresholds=np.arange(0, 1, 0.01),
+    task="multilabel",  # type: ignore
+    num_labels=len(pathologies),  # type: ignore
+    thresholds=np.arange(0, 1, 0.01),  # type: ignore
 )
 
 # define the slices
-slices = [
+slices_sex = [
     {"Patient Gender": {"value": "M"}},
     {"Patient Gender": {"value": "F"}},
 ]
 
 # create the slice functions
-slice_spec = SliceSpec(spec_list=slices)
+slice_spec = SliceSpec(spec_list=slices_sex)
 
 nih_eval_results_gender = evaluator.evaluate(
     dataset=nih_ds,
@@ -133,20 +148,20 @@ perf_metric_gender.update_traces(
 
 auroc = create_metric(
     metric_name="auroc",
-    task="multilabel",
-    num_labels=len(pathologies),
-    thresholds=np.arange(0, 1, 0.01),
+    task="multilabel",  # type: ignore
+    num_labels=len(pathologies),  # type: ignore
+    thresholds=np.arange(0, 1, 0.01),  # type: ignore
 )
 
 # define the slices
-slices = [
+slices_age = [
     {"Patient Age": {"min_value": 19, "max_value": 35}},
     {"Patient Age": {"min_value": 35, "max_value": 65}},
     {"Patient Age": {"min_value": 65, "max_value": 100}},
 ]
 
 # create the slice functions
-slice_spec = SliceSpec(spec_list=slices)
+slice_spec = SliceSpec(spec_list=slices_age)
 
 nih_eval_results_age = evaluator.evaluate(
     dataset=nih_ds,
@@ -225,21 +240,21 @@ fig.update_layout(
 )
 
 report.log_plotly_figure(
-    fig=fig, caption="Pathology Distribution", section_name="datasets",
+    fig=fig,
+    caption="Pathology Distribution",
+    section_name="datasets",
 )
-
-fig.show()
 
 
 specificity = create_metric(
     metric_name="specificity",
-    task="multilabel",
-    num_labels=len(pathologies),
+    task="multilabel",  # type: ignore
+    num_labels=len(pathologies),  # type: ignore
 )
 sensitivity = create_metric(
     metric_name="sensitivity",
-    task="multilabel",
-    num_labels=len(pathologies),
+    task="multilabel",  # type: ignore
+    num_labels=len(pathologies),  # type: ignore
 )
 
 
@@ -462,4 +477,9 @@ report.log_plotly_figure(
     section_name="Fairness Analysis",
 )
 
-report_path = report.export()
+report_path = report.export(
+    output_filename=f"nihcxr_report_{args.report_type}.html",
+    report_type=args.report_type,
+    synthetic_timestamp=args.synthetic_timestamp,
+)
+shutil.copy(f"{report_path}", ".")

@@ -1,6 +1,7 @@
 """Cyclops report module."""
 
 import base64
+import glob
 import os
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
@@ -21,6 +22,7 @@ from cyclops.report.model_card import ModelCard  # type: ignore[attr-defined]
 from cyclops.report.model_card.base import BaseModelCardField
 from cyclops.report.model_card.fields import (
     Citation,
+    ComparativeMetrics,
     Dataset,
     ExplainabilityReport,
     FairnessAssessment,
@@ -42,7 +44,10 @@ from cyclops.report.model_card.fields import (
 from cyclops.report.utils import (
     _object_is_in_model_card_module,
     _raise_if_not_dict_with_str_keys,
+    compare_tests,
     str_to_snake_case,
+    sweep_graphics,
+    sweep_tests,
 )
 
 
@@ -1068,6 +1073,8 @@ class ModelCardReport:
         template_path: Optional[str] = None,
         interactive: bool = True,
         save_json: bool = True,
+        report_type: str = "baseline",
+        synthetic_timestamp: Optional[str] = None,
     ) -> str:
         """Export the model card report to an HTML file.
 
@@ -1079,8 +1086,18 @@ class ModelCardReport:
         template_path : str, optional
             The path to the jinja2 template to use. The default is None, which uses
             the default template provided by CyclOps.
+        interactive : bool, optional
+            Whether to create an interactive HTML report. The default is True.
         save_json : bool, optional
             Whether to save the model card as a JSON file. The default is True.
+        report_type : str, optional
+            The type of report to generate. The default is "baseline", which
+            generates a baseline model card report. The other option is "periodic",
+            which generates a periodic model card report to compare with a baseline.
+        synthetic_timestamp : str, optional
+            A synthetic timestamp to use for the report. This is useful for
+            generating back-dated reports. The default is None, which uses the
+            current date and time.
 
         Returns
         -------
@@ -1093,44 +1110,68 @@ class ModelCardReport:
             or isinstance(output_filename, str)
             and output_filename.endswith(".html")
         ), "`output_filename` must be a string ending with '.html'"
+
+        # write to file
+        if synthetic_timestamp is not None:
+            today = synthetic_timestamp
+        else:
+            today = dt_date.today().strftime("%Y-%m-%d")
+
+        if report_type == "periodic":
+            baseline_report_paths = glob.glob(
+                os.path.join(
+                    self.output_dir,
+                    "cyclops_reports",
+                    "*",
+                    "*",
+                    "*_baseline.json",
+                ),
+            )
+
+            try:
+                latest_baseline_report_path = sorted(baseline_report_paths)[-1]
+                latest_baseline_report = ModelCard.parse_file(
+                    latest_baseline_report_path,
+                )
+            except IndexError as err:
+                raise FileNotFoundError("No baseline model card report found.") from err
+
+            baseline_report_tests: List[Test] = []
+            periodic_report_tests: List[Test] = []
+            sweep_tests(latest_baseline_report, baseline_report_tests)
+            sweep_tests(self._model_card, periodic_report_tests)
+
+            # compare tests
+            comp_metrics = compare_tests(
+                baseline_report_tests,
+                periodic_report_tests,
+                latest_baseline_report_path.split("/")[-3],
+                today,
+                report_type,
+            )
+            for _ in range(2):
+                self._log_field(
+                    data=comp_metrics,
+                    section_name="overview",
+                    field_name="baseline_comparison",
+                    field_type=ComparativeMetrics,
+                )
+
+        elif report_type == "baseline":
+            for _ in range(2):
+                self._log_field(
+                    data={"report_type": report_type},
+                    section_name="overview",
+                    field_name="baseline_comparison",
+                    field_type=ComparativeMetrics,
+                )
+        else:
+            raise ValueError(
+                f"Invalid report type {report_type}. Must be one of 'baseline' or 'periodic'.",
+            )
+
         self._validate()
         template = self._get_jinja_template(template_path=template_path)
-
-        def sweep_tests(model_card: Any, tests: List[Any]) -> None:
-            """Sweep model card to find all instances of Test."""
-            for field in model_card:
-                if isinstance(field, tuple):
-                    field = field[1]  # noqa: PLW2901
-                if isinstance(field, Test):
-                    tests.append(field)
-                if hasattr(field, "__fields__"):
-                    sweep_tests(field, tests)
-                if isinstance(field, list) and len(field) != 0:
-                    for item in field:
-                        if isinstance(item, Test):
-                            if len(field) == 1:
-                                tests.append(field[0])
-                            else:
-                                tests.append(field)
-                        else:
-                            sweep_tests(item, tests)
-
-        def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
-            """Sweep model card to find all instances of Test."""
-            for field in model_card:
-                if isinstance(field, tuple):
-                    field = field[1]  # noqa: PLW2901
-                if isinstance(field, Graphic) and field.name == caption:
-                    graphics.append(field)
-                if hasattr(field, "__fields__"):
-                    sweep_graphics(field, graphics, caption)
-                if isinstance(field, list) and len(field) != 0:
-                    for item in field:
-                        if isinstance(item, Graphic):
-                            if item.name == caption:
-                                graphics.append(item)
-                        else:
-                            sweep_graphics(item, graphics, caption)
 
         func_dict = {"sweep_tests": sweep_tests, "sweep_graphics": sweep_graphics}
         template.globals.update(func_dict)
@@ -1138,8 +1179,6 @@ class ModelCardReport:
         plotlyjs = get_plotlyjs() if interactive else None
         content = template.render(model_card=self._model_card, plotlyjs=plotlyjs)
 
-        # write to file
-        today = dt_date.today().strftime("%Y-%m-%d")
         now = dt_datetime.now().strftime("%H-%M-%S")
         report_path = os.path.join(
             self.output_dir,
@@ -1149,7 +1188,6 @@ class ModelCardReport:
             output_filename or "model_card.html",
         )
         self._write_file(report_path, content)
-
         if save_json:
             json_path = report_path.replace(".html", ".json")
             self._write_file(

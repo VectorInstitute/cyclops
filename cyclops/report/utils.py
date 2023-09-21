@@ -7,10 +7,14 @@ import json
 import os
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
+from datetime import timedelta
 from re import sub
 from typing import Any, Dict, List, Mapping, Optional, Union
 
+import numpy as np
+
 from cyclops.report.model_card import ModelCard  # type: ignore[attr-defined]
+from cyclops.report.model_card.fields import ComparativeMetrics, Graphic, Test
 
 
 def str_to_snake_case(string: str) -> str:
@@ -329,3 +333,134 @@ def get_metrics_trends(
     else:
         performance_history[today] = performance_recent
     return performance_history
+
+
+def sweep_tests(model_card: Any, tests: List[Any]) -> None:
+    """Sweep model card to find all instances of Test.
+
+    Parameters
+    ----------
+    model_card : Any
+        The model card to sweep.
+    tests : List[Any]
+        The list to append all tests to.
+    """
+    for field in model_card:
+        if isinstance(field, ComparativeMetrics):
+            continue
+        if isinstance(field, tuple):
+            field = field[1]  # noqa: PLW2901
+            if isinstance(field, ComparativeMetrics):
+                continue
+        if isinstance(field, Test):
+            tests.append(field)
+        if hasattr(field, "__fields__"):
+            sweep_tests(field, tests)
+        if isinstance(field, list) and len(field) != 0:
+            for item in field:
+                if isinstance(item, Test):
+                    if len(field) == 1:
+                        tests.append(field[0])
+                    else:
+                        tests.append(field)
+                else:
+                    sweep_tests(item, tests)
+
+
+def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
+    """Sweep model card to find all instances of Graphic with a given caption.
+
+    Parameters
+    ----------
+    model_card : Any
+        The model card to sweep.
+    graphics : List[Any]
+        The list to append all graphics to.
+    caption : str
+        The caption to match.
+    """
+    for field in model_card:
+        if isinstance(field, tuple):
+            field = field[1]  # noqa: PLW2901
+        if isinstance(field, Graphic) and field.name == caption:
+            graphics.append(field)
+        if hasattr(field, "__fields__"):
+            sweep_graphics(field, graphics, caption)
+        if isinstance(field, list) and len(field) != 0:
+            for item in field:
+                if isinstance(item, Graphic):
+                    if item.name == caption:
+                        graphics.append(item)
+                else:
+                    sweep_graphics(item, graphics, caption)
+
+
+def compare_tests(
+    baseline_tests: List[Test],
+    periodic_tests: List[Test],
+    baseline_timestamp: str,
+    periodic_timestamp: str,
+    report_type: str,
+) -> Dict[str, Any]:
+    """Compare baseline and periodic tests."""
+    baseline_passed = []
+    periodic_passed = []
+    for test in baseline_tests:
+        baseline_passed.append(test.passed)
+    for test in periodic_tests:
+        periodic_passed.append(test.passed)
+    baseline_pass_fail = np.array(baseline_passed)
+    periodic_pass_fail = np.array(periodic_passed)
+    baseline_fail_rate = 1 - (baseline_pass_fail.sum() / baseline_pass_fail.shape[0])
+    fail_rate = 1 - (periodic_pass_fail.sum() / periodic_pass_fail.shape[0])
+    fail_rate_change = fail_rate - baseline_fail_rate
+
+    time_diff = dt_datetime.strptime(
+        periodic_timestamp,
+        "%Y-%m-%d",
+    ) - dt_datetime.strptime(baseline_timestamp, "%Y-%m-%d")
+    time_diff_string = get_time_diff_string(time_diff)
+
+    new_tests_passed = []
+    new_tests_failed = []
+    for ptest in periodic_tests:
+        for btest in baseline_tests:
+            if ptest.name == btest.name:
+                if btest.passed and not ptest.passed:
+                    new_tests_failed.append(ptest)
+                elif not btest.passed and ptest.passed:
+                    new_tests_passed.append(ptest)
+    return {
+        "report_type": report_type,
+        "fail_rate": str(round(fail_rate * 100)) + "%",
+        "fail_rate_change": str(round(fail_rate_change * 100, 1)) + "%",
+        "time_diff_string": time_diff_string,
+        "new_tests_failed": new_tests_failed,
+        "new_tests_passed": new_tests_passed,
+    }
+
+
+def get_time_diff_string(time_diff: timedelta) -> str:
+    """Get a time difference string from a timedelta object."""
+    if time_diff.days == 0:
+        if time_diff.total_seconds() < 60:
+            result = f"past {time_diff.seconds} seconds"
+        elif time_diff.total_seconds() < 3600:
+            if time_diff.seconds % 60 == 1:
+                result = "past minute"
+            else:
+                result = f"past {time_diff.total_seconds() // 60} minutes"
+        elif time_diff.seconds % 3600 == 1:
+            result = "past hour"
+        else:
+            result = f"past {time_diff.total_seconds() // 3600} hours"
+
+    elif time_diff.days % 7 == 0:
+        if time_diff.days == 7:
+            result = "past week"
+        else:
+            result = f"past {time_diff.days // 7} weeks"
+    else:
+        result = f"past {time_diff.days} days"
+
+    return result
