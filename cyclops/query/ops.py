@@ -2913,8 +2913,8 @@ class DropNulls(QueryOp):
 
         cond = and_(*[not_equals(get_column(table, col), None) for col in self.cols])
         return select(table).where(cond).subquery()
-    
-    
+
+
 class DropEmpty(QueryOp):
     """Remove rows with empty values in some specified columns.
 
