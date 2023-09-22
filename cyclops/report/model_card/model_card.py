@@ -35,14 +35,6 @@ class ModelCard(BaseModel):
         None,
         description="A high-level overview of the model.",
     )
-    model_details: Optional[ModelDetails] = Field(
-        None,
-        description="Descriptive metadata for the model.",
-    )
-    model_parameters: Optional[ModelParameters] = Field(
-        None,
-        description="A high-level overview of the model.",
-    )
     datasets: Optional[Datasets] = Field(
         None,
         description="Information about the datasets used to train, validate \
