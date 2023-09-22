@@ -35,26 +35,10 @@ class ModelCard(BaseModel):
         None,
         description="A high-level overview of the model.",
     )
-    model_details: Optional[ModelDetails] = Field(
-        None,
-        description="Descriptive metadata for the model.",
-    )
-    model_parameters: Optional[ModelParameters] = Field(
-        None,
-        description="Technical metadata for the model.",
-    )
     datasets: Optional[Datasets] = Field(
         None,
         description="Information about the datasets used to train, validate \
         and/or test the model.",
-    )
-    considerations: Optional[Considerations] = Field(
-        None,
-        description=inspect.cleandoc(
-            """
-            Any considerations related to model construction, training, and
-             application""",
-        ),
     )
     quantitative_analysis: Optional[QuantitativeAnalysis] = Field(
         None,
@@ -67,6 +51,22 @@ class ModelCard(BaseModel):
     fairness_analysis: Optional[FairnessAnalysis] = Field(
         None,
         description="Fairness analysis being reported.",
+    )
+    model_details: Optional[ModelDetails] = Field(
+        None,
+        description="Descriptive metadata for the model.",
+    )
+    model_parameters: Optional[ModelParameters] = Field(
+        None,
+        description="Technical metadata for the model.",
+    )
+    considerations: Optional[Considerations] = Field(
+        None,
+        description=inspect.cleandoc(
+            """
+            Any considerations related to model construction, training, and
+             application""",
+        ),
     )
 
     def get_section(self, section_name: str) -> BaseModelCardSection:
