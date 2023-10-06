@@ -13,7 +13,7 @@ def test_mimiciv_querier():
         user="postgres",
         password="pwd",
     )
- 
+
     patients = querier.patients().run(limit=10)
     assert len(patients) == 10
     assert "anchor_year_difference" in patients

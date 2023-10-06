@@ -13,7 +13,7 @@ def test_eicu_querier():
         user="postgres",
         password="pwd",
     )
- 
+
     patients = querier.eicu_crd.patient().run(limit=10)
     assert len(patients) == 10
     assert "age" in patients
