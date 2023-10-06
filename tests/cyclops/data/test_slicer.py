@@ -24,7 +24,12 @@ from cyclops.data.slicer import (
 from cyclops.query.omop import OMOPQuerier
 
 
-SYNTHEA = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
+SYNTHEA = OMOPQuerier(
+    database="synthea_integration_test",
+    user="postgres",
+    password="pwd",
+    schema_name="cdm_synthea10",
+)
 
 
 def visits_table() -> pd.DataFrame:

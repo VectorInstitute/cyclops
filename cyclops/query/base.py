@@ -1,7 +1,6 @@
 """Base querier class."""
 
 import logging
-from dataclasses import dataclass
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional
 
@@ -10,7 +9,7 @@ from sqlalchemy.sql.selectable import Subquery
 
 from cyclops.query import ops as qo
 from cyclops.query.interface import QueryInterface
-from cyclops.query.orm import Database
+from cyclops.query.orm import Database, DatasetQuerierConfig
 from cyclops.query.util import (
     DBSchema,
     _to_subquery,
@@ -67,35 +66,6 @@ def _cast_timestamp_cols(table: Subquery) -> Subquery:
     return table
 
 
-@dataclass
-class DatasetQuerierConfig:
-    """Configuration for the dataset querier.
-
-    Attributes
-    ----------
-    dbms
-        Database management system.
-    host
-        Hostname of database.
-    port
-        Port of database.
-    database
-        Name of database.
-    user
-        Username for database.
-    password
-        Password for database.
-
-    """
-
-    dbms: str = "postgresql"
-    host: str = "localhost"
-    port: int = 5432
-    database: str
-    user: str
-    password: str
-
-
 class DatasetQuerier:
     """Base class to query EHR datasets.
 
@@ -140,12 +110,12 @@ class DatasetQuerier:
         port: int = 5432,
     ) -> None:
         config = DatasetQuerierConfig(
-            dbms=dbms,
-            host=host,
-            port=port,
             database=database,
             user=user,
             password=password,
+            dbms=dbms,
+            host=host,
+            port=port,
         )
         self.db = Database(config)
         if not self.db.is_connected:

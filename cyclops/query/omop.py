@@ -67,9 +67,9 @@ class OMOPQuerier(DatasetQuerier):
         schema_name: str = "omop",
     ) -> None:
         super().__init__(
-            database,
-            user,
-            password,
+            database=database,
+            user=user,
+            password=password,
             dbms=dbms,
             host=host,
             port=port,
