@@ -8,7 +8,12 @@ from cyclops.query import OMOPQuerier
 @pytest.mark.integration_test()
 def test_dataset_querier():
     """Test base querier methods using OMOPQuerier."""
-    querier = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
+    querier = OMOPQuerier(
+        database="synthea_integration_test",
+        schema_name="cdm_synthea10",
+        user="postgres",
+        password="pwd",
+    )
     assert len(querier.list_tables()) == 69
     assert len(querier.list_schemas()) == 4
     assert len(querier.list_tables(schema_name="cdm_synthea10")) == 43

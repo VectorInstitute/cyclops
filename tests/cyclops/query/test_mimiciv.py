@@ -8,7 +8,12 @@ from cyclops.query import MIMICIVQuerier
 @pytest.mark.integration_test()
 def test_mimiciv_querier():
     """Test MIMICQuerier on MIMICIV-2.0."""
-    querier = MIMICIVQuerier()
+    querier = MIMICIVQuerier(
+        database="mimiciv-2.0",
+        user="postgres",
+        password="pwd",
+    )
+ 
     patients = querier.patients().run(limit=10)
     assert len(patients) == 10
     assert "anchor_year_difference" in patients
