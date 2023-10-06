@@ -6,6 +6,7 @@ import os
 import socket
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Union
+from urllib.parse import quote_plus
 
 import dask.dataframe as dd
 import pandas as pd
@@ -47,7 +48,7 @@ def _get_db_url(
     database: str,
 ) -> str:
     """Combine to make Database URL string."""
-    return f"{dbms}://{user}:{pwd}@{host}:{str(port)}/{database}"
+    return f"{dbms}://{user}:{quote_plus(pwd)}@{host}:{str(port)}/{database}"
 
 
 @dataclass
