@@ -9,7 +9,12 @@ from cyclops.query import OMOPQuerier
 @pytest.mark.integration_test()
 def test_omop_querier_synthea():
     """Test OMOPQuerier on synthea data."""
-    querier = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
+    querier = OMOPQuerier(
+        database="synthea_integration_test",
+        schema_name="cdm_synthea10",
+        user="postgres",
+        password="pwd",
+    )
     ops = qo.Sequential(
         qo.ConditionEquals("gender_source_value", "M"),
         qo.Rename({"race_source_value": "race"}),
@@ -36,6 +41,11 @@ def test_omop_querier_synthea():
 @pytest.mark.integration_test()
 def test_omop_querier_mimiciii():
     """Test OMOPQuerier on MIMICIII data."""
-    querier = OMOPQuerier("omop", database="mimiciii")
+    querier = OMOPQuerier(
+        database="mimiciii",
+        schema_name="omop",
+        user="postgres",
+        password="pwd",
+    )
     visits = querier.visit_occurrence().run()
     assert len(visits) == 58976

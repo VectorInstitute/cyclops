@@ -42,7 +42,6 @@ pillow = { version = "^9.5.0", optional = true }
 
 [tool.poetry.group.query.dependencies]
 psycopg2 = "^2.9.5"
-hydra-core = "^1.2.0"
 SQLAlchemy = "^1.4.32, <2.0"
 
 [tool.poetry.group.models.dependencies]

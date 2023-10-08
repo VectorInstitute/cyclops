@@ -11,7 +11,12 @@ from cyclops.query import OMOPQuerier
 @pytest.mark.integration_test()
 def test_omop_querier():
     """Test ORM using OMOPQuerier."""
-    querier = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
+    querier = OMOPQuerier(
+        database="synthea_integration_test",
+        schema_name="cdm_synthea10",
+        user="postgres",
+        password="pwd",
+    )
     assert querier is not None
     db_ = querier.db
     visits_query = querier.visit_occurrence().query

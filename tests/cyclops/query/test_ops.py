@@ -50,7 +50,12 @@ from cyclops.query.ops import (
 from cyclops.query.util import process_column
 
 
-QUERIER = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
+QUERIER = OMOPQuerier(
+    database="synthea_integration_test",
+    user="postgres",
+    password="pwd",
+    schema_name="cdm_synthea10",
+)
 
 
 @pytest.fixture()

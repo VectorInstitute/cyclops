@@ -1,7 +1,6 @@
 """GEMINI query API."""
 
 import logging
-from typing import Any, Dict
 
 from sqlalchemy import select
 from sqlalchemy.sql.expression import union_all
@@ -23,20 +22,6 @@ CARE_UNIT = "care_unit"
 
 class GEMINIQuerier(DatasetQuerier):
     """GEMINI dataset querier."""
-
-    def __init__(self, **config_overrides: Dict[str, Any]) -> None:
-        """Initialize.
-
-        Parameters
-        ----------
-        **config_overrides
-            Override configuration parameters, specified as kwargs.
-
-        """
-        overrides = {}
-        if config_overrides:
-            overrides = config_overrides
-        super().__init__(**overrides)
 
     def ip_admin(
         self,

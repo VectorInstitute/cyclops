@@ -8,7 +8,12 @@ from cyclops.query import EICUQuerier
 @pytest.mark.integration_test()
 def test_eicu_querier():
     """Test EICUQuerier on eICU-CRD."""
-    querier = EICUQuerier(database="eicu")
+    querier = EICUQuerier(
+        database="eicu",
+        user="postgres",
+        password="pwd",
+    )
+
     patients = querier.eicu_crd.patient().run(limit=10)
     assert len(patients) == 10
     assert "age" in patients

@@ -5,7 +5,6 @@ Supports querying of MIMIC-III.
 """
 
 import logging
-from typing import Any, Dict
 
 import cyclops.query.ops as qo
 from cyclops.query.base import DatasetQuerier
@@ -20,20 +19,6 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 class MIMICIIIQuerier(DatasetQuerier):
     """MIMIC-III dataset querier."""
-
-    def __init__(self, **config_overrides: Dict[str, Any]) -> None:
-        """Initialize.
-
-        Parameters
-        ----------
-        **config_overrides
-            Override configuration parameters, specified as kwargs.
-
-        """
-        overrides = {}
-        if config_overrides:
-            overrides = config_overrides
-        super().__init__(**overrides)
 
     def diagnoses(
         self,

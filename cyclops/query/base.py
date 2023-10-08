@@ -1,25 +1,20 @@
 """Base querier class."""
 
 import logging
-import os
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional
 
-import yaml
-from hydra import compose, initialize
-from omegaconf import OmegaConf
 from sqlalchemy import MetaData
 from sqlalchemy.sql.selectable import Subquery
 
 from cyclops.query import ops as qo
 from cyclops.query.interface import QueryInterface
-from cyclops.query.orm import Database
+from cyclops.query.orm import Database, DatasetQuerierConfig
 from cyclops.query.util import (
     DBSchema,
     _to_subquery,
     get_attr_name,
 )
-from cyclops.utils.file import join as join_path
 from cyclops.utils.log import setup_logging
 
 
@@ -81,9 +76,18 @@ class DatasetQuerier:
 
     Parameters
     ----------
-    config_overrides
-        Override configuration parameters, specified as kwargs.
-
+    database
+        Name of database.
+    user
+        Username for database.
+    password
+        Password for database.
+    dbms
+        Database management system.
+    host
+        Hostname of database.
+    port
+        Port of database.
 
     Notes
     -----
@@ -98,26 +102,21 @@ class DatasetQuerier:
 
     def __init__(
         self,
-        **config_overrides: Dict[str, Any],
+        database: str,
+        user: str,
+        password: str,
+        dbms: str = "postgresql",
+        host: str = "localhost",
+        port: int = 5432,
     ) -> None:
-        overrides = []
-        if config_overrides:
-            config_file = join_path(os.path.dirname(__file__), "configs", "config.yaml")
-            with open(config_file, "r", encoding="utf-8") as file:
-                config_keys = list(yaml.safe_load(file).keys())
-            for key, value in config_overrides.items():
-                if key in config_keys:
-                    overrides.append(f"{key}={value}")
-                else:
-                    overrides.append(f"+{key}={value}")
-        with initialize(
-            version_base=None,
-            config_path="configs",
-            job_name="DatasetQuerier",
-        ):
-            config = compose(config_name="config", overrides=overrides)
-            LOGGER.debug(OmegaConf.to_yaml(config))
-
+        config = DatasetQuerierConfig(
+            database=database,
+            user=user,
+            password=password,
+            dbms=dbms,
+            host=host,
+            port=port,
+        )
         self.db = Database(config)
         if not self.db.is_connected:
             LOGGER.error("Database is not connected, cannot run queries.")

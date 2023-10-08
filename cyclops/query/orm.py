@@ -4,14 +4,15 @@ import csv
 import logging
 import os
 import socket
+from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Union
+from urllib.parse import quote_plus
 
 import dask.dataframe as dd
 import pandas as pd
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
 from datasets import Dataset
-from omegaconf import DictConfig
 from sqlalchemy import MetaData, create_engine, inspect
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker
@@ -43,11 +44,40 @@ def _get_db_url(
     user: str,
     pwd: str,
     host: str,
-    port: str,
+    port: int,
     database: str,
 ) -> str:
     """Combine to make Database URL string."""
-    return f"{dbms}://{user}:{pwd}@{host}:{port}/{database}"
+    return f"{dbms}://{user}:{quote_plus(pwd)}@{host}:{str(port)}/{database}"
+
+
+@dataclass
+class DatasetQuerierConfig:
+    """Configuration for the dataset querier.
+
+    Attributes
+    ----------
+    dbms
+        Database management system.
+    host
+        Hostname of database.
+    port
+        Port of database.
+    database
+        Name of database.
+    user
+        Username for database.
+    password
+        Password for database.
+
+    """
+
+    database: str
+    user: str
+    password: str
+    dbms: str = "postgresql"
+    host: str = "localhost"
+    port: int = 5432
 
 
 class Database:
@@ -55,20 +85,20 @@ class Database:
 
     Attributes
     ----------
-    config: argparse.Namespace
-        Configuration stored in object.
-    engine: sqlalchemy.engine.base.Engine
+    config
+        Configuration stored in a dataclass.
+    engine
         SQL extraction engine.
-    inspector: sqlalchemy.engine.reflection.Inspector
+    inspector
         Module for schema inspection.
-    session: sqlalchemy.orm.session.Session
+    session
         Session for ORM.
-    is_connected: bool
+    is_connected
         Whether the database is setup, connected and ready to run queries.
 
     """
 
-    def __init__(self, config: DictConfig) -> None:
+    def __init__(self, config: DatasetQuerierConfig) -> None:
         """Instantiate.
 
         Parameters

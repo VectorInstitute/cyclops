@@ -1,7 +1,7 @@
 """OMOP query API."""
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from sqlalchemy.sql.selectable import Subquery
 
@@ -58,24 +58,23 @@ class OMOPQuerier(DatasetQuerier):
 
     def __init__(
         self,
-        schema_name: str,
-        **config_overrides: Dict[str, Any],
+        database: str,
+        user: str,
+        password: str,
+        dbms: str = "postgresql",
+        host: str = "localhost",
+        port: int = 5432,
+        schema_name: str = "omop",
     ) -> None:
-        """Initialize.
-
-        Parameters
-        ----------
-        schema_name
-            Name of database schema.
-        **config_overrides
-            Override configuration parameters, specified as kwargs.
-
-        """
+        super().__init__(
+            database=database,
+            user=user,
+            password=password,
+            dbms=dbms,
+            host=host,
+            port=port,
+        )
         self.schema_name = schema_name
-        overrides = {}
-        if config_overrides:
-            overrides = config_overrides
-        super().__init__(**overrides)
 
     def map_concept_ids_to_name(
         self,
