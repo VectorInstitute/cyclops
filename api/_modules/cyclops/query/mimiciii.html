@@ -169,7 +169,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
 
 <span class="kn">import</span> <span class="nn">cyclops.query.ops</span> <span class="k">as</span> <span class="nn">qo</span>
 <span class="kn">from</span> <span class="nn">cyclops.query.base</span> <span class="kn">import</span> <span class="n">DatasetQuerier</span>
@@ -186,23 +185,6 @@
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.query.mimiciii.MIMICIIIQuerier.html#cyclops.query.mimiciii.MIMICIIIQuerier">[docs]</a>
 <span class="k">class</span> <span class="nc">MIMICIIIQuerier</span><span class="p">(</span><span class="n">DatasetQuerier</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;MIMIC-III dataset querier.&quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="MIMICIIIQuerier.__init__">
-<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.query.mimiciii.MIMICIIIQuerier.html#cyclops.query.mimiciii.MIMICIIIQuerier.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">config_overrides</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        **config_overrides</span>
-<span class="sd">            Override configuration parameters, specified as kwargs.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">overrides</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">config_overrides</span><span class="p">:</span>
-            <span class="n">overrides</span> <span class="o">=</span> <span class="n">config_overrides</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">)</span></div>
-
 
 <div class="viewcode-block" id="MIMICIIIQuerier.diagnoses">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.query.mimiciii.MIMICIIIQuerier.html#cyclops.query.mimiciii.MIMICIIIQuerier.diagnoses">[docs]</a>

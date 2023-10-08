@@ -165,25 +165,20 @@
 <span></span><span class="sd">&quot;&quot;&quot;Base querier class.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">import</span> <span class="nn">yaml</span>
-<span class="kn">from</span> <span class="nn">hydra</span> <span class="kn">import</span> <span class="n">compose</span><span class="p">,</span> <span class="n">initialize</span>
-<span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">OmegaConf</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">MetaData</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.sql.selectable</span> <span class="kn">import</span> <span class="n">Subquery</span>
 
 <span class="kn">from</span> <span class="nn">cyclops.query</span> <span class="kn">import</span> <span class="n">ops</span> <span class="k">as</span> <span class="n">qo</span>
 <span class="kn">from</span> <span class="nn">cyclops.query.interface</span> <span class="kn">import</span> <span class="n">QueryInterface</span>
-<span class="kn">from</span> <span class="nn">cyclops.query.orm</span> <span class="kn">import</span> <span class="n">Database</span>
+<span class="kn">from</span> <span class="nn">cyclops.query.orm</span> <span class="kn">import</span> <span class="n">Database</span><span class="p">,</span> <span class="n">DatasetQuerierConfig</span>
 <span class="kn">from</span> <span class="nn">cyclops.query.util</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DBSchema</span><span class="p">,</span>
     <span class="n">_to_subquery</span><span class="p">,</span>
     <span class="n">get_attr_name</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">cyclops.utils.file</span> <span class="kn">import</span> <span class="n">join</span> <span class="k">as</span> <span class="n">join_path</span>
 <span class="kn">from</span> <span class="nn">cyclops.utils.log</span> <span class="kn">import</span> <span class="n">setup_logging</span>
 
 
@@ -247,9 +242,18 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    config_overrides</span>
-<span class="sd">        Override configuration parameters, specified as kwargs.</span>
-
+<span class="sd">    database</span>
+<span class="sd">        Name of database.</span>
+<span class="sd">    user</span>
+<span class="sd">        Username for database.</span>
+<span class="sd">    password</span>
+<span class="sd">        Password for database.</span>
+<span class="sd">    dbms</span>
+<span class="sd">        Database management system.</span>
+<span class="sd">    host</span>
+<span class="sd">        Hostname of database.</span>
+<span class="sd">    port</span>
+<span class="sd">        Port of database.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -264,26 +268,21 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">config_overrides</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">database</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">user</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">dbms</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;postgresql&quot;</span><span class="p">,</span>
+        <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+        <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5432</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">overrides</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="n">config_overrides</span><span class="p">:</span>
-            <span class="n">config_file</span> <span class="o">=</span> <span class="n">join_path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;configs&quot;</span><span class="p">,</span> <span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">config_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config_overrides</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config_keys</span><span class="p">:</span>
-                    <span class="n">overrides</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">overrides</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;+</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">initialize</span><span class="p">(</span>
-            <span class="n">version_base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">config_path</span><span class="o">=</span><span class="s2">&quot;configs&quot;</span><span class="p">,</span>
-            <span class="n">job_name</span><span class="o">=</span><span class="s2">&quot;DatasetQuerier&quot;</span><span class="p">,</span>
-        <span class="p">):</span>
-            <span class="n">config</span> <span class="o">=</span> <span class="n">compose</span><span class="p">(</span><span class="n">config_name</span><span class="o">=</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">overrides</span><span class="o">=</span><span class="n">overrides</span><span class="p">)</span>
-            <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
-
+        <span class="n">config</span> <span class="o">=</span> <span class="n">DatasetQuerierConfig</span><span class="p">(</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">,</span>
+            <span class="n">dbms</span><span class="o">=</span><span class="n">dbms</span><span class="p">,</span>
+            <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+            <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
             <span class="n">LOGGER</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Database is not connected, cannot run queries.&quot;</span><span class="p">)</span>

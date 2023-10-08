@@ -169,7 +169,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
 
 <span class="kn">from</span> <span class="nn">cyclops.query.base</span> <span class="kn">import</span> <span class="n">DatasetQuerier</span>
 <span class="kn">from</span> <span class="nn">cyclops.utils.log</span> <span class="kn">import</span> <span class="n">setup_logging</span>
@@ -183,24 +182,7 @@
 <div class="viewcode-block" id="EICUQuerier">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.query.eicu.EICUQuerier.html#cyclops.query.eicu.EICUQuerier">[docs]</a>
 <span class="k">class</span> <span class="nc">EICUQuerier</span><span class="p">(</span><span class="n">DatasetQuerier</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;EICU dataset querier.&quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="EICUQuerier.__init__">
-<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.query.eicu.EICUQuerier.html#cyclops.query.eicu.EICUQuerier.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">config_overrides</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        **config_overrides</span>
-<span class="sd">            Override configuration parameters, specified as kwargs.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">overrides</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">config_overrides</span><span class="p">:</span>
-            <span class="n">overrides</span> <span class="o">=</span> <span class="n">config_overrides</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">)</span></div>
-</div>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;EICU dataset querier.&quot;&quot;&quot;</span></div>
 
 </pre></div>
 
