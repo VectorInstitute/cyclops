@@ -306,7 +306,9 @@ def test_apply(visits_table):
         "visit_concept_name_exclaim",
     )
     visits = visits_table.ops(apply_op).run()
-    assert visits["visit_concept_name_exclaim"].value_counts()["Outpatient Visit!"] == 4057
+    assert (
+        visits["visit_concept_name_exclaim"].value_counts()["Outpatient Visit!"] == 4057
+    )
     apply_op = Apply(
         ["visit_occurrence_id", "person_id"],
         lambda x, y: x + y,
@@ -315,13 +317,9 @@ def test_apply(visits_table):
     visits = visits_table.ops(apply_op).run()
     assert (
         visits["sum_id"].iloc[0]
-        == visits["visit_occurrence_id"].iloc[0]
-        + visits["person_id"].iloc[0]
+        == visits["visit_occurrence_id"].iloc[0] + visits["person_id"].iloc[0]
     )
-    assert (
-        visits["sum_id"].isna().sum()
-        == visits["person_id"].isna().sum()
-    )
+    assert visits["sum_id"].isna().sum() == visits["person_id"].isna().sum()
     apply_op = Apply(
         ["visit_occurrence_id", "person_id"],
         [lambda x: x + 1, lambda x: x + 2],
@@ -329,9 +327,7 @@ def test_apply(visits_table):
     )
     visits = visits_table.ops(apply_op).run()
     assert visits["sum_id"].iloc[0] == visits["visit_occurrence_id"].iloc[0] + 1
-    assert (
-        visits["sum_id2"].iloc[0] == visits["person_id"].iloc[0] + 2
-    )
+    assert visits["sum_id2"].iloc[0] == visits["person_id"].iloc[0] + 2
 
 
 @pytest.mark.integration_test()
