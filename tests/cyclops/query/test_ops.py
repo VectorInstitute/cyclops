@@ -264,7 +264,7 @@ def test_substring(visits_table):
     """Test Substring."""
     substring_op = Substring("visit_concept_name", 0, 3, "visit_concept_name_substr")
     visits = visits_table.ops(substring_op).run()
-    assert visits["visit_concept_name_substr"].iloc[0] == "In"
+    assert visits["visit_concept_name_substr"].value_counts()["Ou"] == 4057
 
 
 @pytest.mark.integration_test()
@@ -272,7 +272,7 @@ def test_trim(visits_table):
     """Test Trim."""
     trim_op = Trim("visit_concept_name", "visit_concept_name_trim")
     visits = visits_table.ops(trim_op).run()
-    assert visits["visit_concept_name_trim"].iloc[0] == "Inpatient Visit"
+    assert visits["visit_concept_name_trim"].value_counts()["Inpatient Visit"] == 108
 
 
 @pytest.mark.integration_test()
@@ -286,7 +286,7 @@ def test_extract_timestamp_component(
         "visit_start_date_year",
     )
     visits = visits_table.ops(extract_ts_op).run()
-    assert visits["visit_start_date_year"].iloc[0] == 2021
+    assert visits["visit_start_date_year"].value_counts()[2021] == 371
 
 
 @pytest.mark.integration_test()
@@ -306,32 +306,28 @@ def test_apply(visits_table):
         "visit_concept_name_exclaim",
     )
     visits = visits_table.ops(apply_op).run()
-    assert visits["visit_concept_name_exclaim"].iloc[0] == "Inpatient Visit!"
+    assert (
+        visits["visit_concept_name_exclaim"].value_counts()["Outpatient Visit!"] == 4057
+    )
     apply_op = Apply(
-        ["visit_occurrence_id", "preceding_visit_occurrence_id"],
+        ["visit_occurrence_id", "person_id"],
         lambda x, y: x + y,
         "sum_id",
     )
     visits = visits_table.ops(apply_op).run()
     assert (
         visits["sum_id"].iloc[0]
-        == visits["visit_occurrence_id"].iloc[0]
-        + visits["preceding_visit_occurrence_id"].iloc[0]
+        == visits["visit_occurrence_id"].iloc[0] + visits["person_id"].iloc[0]
     )
-    assert (
-        visits["sum_id"].isna().sum()
-        == visits["preceding_visit_occurrence_id"].isna().sum()
-    )
+    assert visits["sum_id"].isna().sum() == visits["person_id"].isna().sum()
     apply_op = Apply(
-        ["visit_occurrence_id", "preceding_visit_occurrence_id"],
+        ["visit_occurrence_id", "person_id"],
         [lambda x: x + 1, lambda x: x + 2],
         ["sum_id", "sum_id2"],
     )
     visits = visits_table.ops(apply_op).run()
     assert visits["sum_id"].iloc[0] == visits["visit_occurrence_id"].iloc[0] + 1
-    assert (
-        visits["sum_id2"].iloc[0] == visits["preceding_visit_occurrence_id"].iloc[0] + 2
-    )
+    assert visits["sum_id2"].iloc[0] == visits["person_id"].iloc[0] + 2
 
 
 @pytest.mark.integration_test()
