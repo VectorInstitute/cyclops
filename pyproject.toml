@@ -14,7 +14,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.9, <3.12"
 pandas = "^1.4.1"
-numpy = "^1.23.0"
+numpy = "1.24.4"
 datasets = "^2.10.1"
 psutil = "^5.9.4"
 pyarrow = "^11.0.0"
@@ -39,6 +39,7 @@ scour = { version = "^0.38.2", optional = true }
 category-encoders = { version = "^2.6.1", optional = true }
 plotly = { version = "^5.7.0", optional = true }
 pillow = { version = "^9.5.0", optional = true }
+array-api-compat = {version = "^1.4", optional = true}
 
 [tool.poetry.group.query.dependencies]
 psycopg2 = "^2.9.5"
@@ -54,6 +55,7 @@ xgboost = "^1.5.2"
 alibi = { version = "^0.9.4", extras = ["shap"] }
 alibi-detect = { version = "^0.11.0", extras = ["torch"] }
 llvmlite = "^0.40.0"
+array-api-compat = {version = "^1.4"}
 
 [tool.poetry.group.report.dependencies]
 pydantic = "^1.10.11"
@@ -100,6 +102,9 @@ prefect = "^2.7.10"
 ipympl = "^0.9.3"
 evidently = "^0.2.8"
 ipywidgets = "^8.0.6"
+torchmetrics = {version = "^1.2.0", extras = ["classification"]}
+cupy = "^12.2.0"
+mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 
 [tool.poetry.group.interface.dependencies]
 dash = "^2.4.1"
@@ -111,7 +116,7 @@ Flask-Caching = "^1.10.1"
 
 [tool.poetry.extras]
 query = ["psycopg2", "hydra-core", "SQLAlchemy"]
-models = ["hydra-core", "scikit-learn", "torch", "torchxrayvision", "xgboost", "alibi", "alibi-detect", "llvmlite"]
+models = ["hydra-core", "scikit-learn", "torch", "torchxrayvision", "xgboost", "alibi", "alibi-detect", "llvmlite", "array-api-compat"]
 report = ["pydantic", "spdx-tools", "pybtex", "kaleido", "scour", "category-encoders", "plotly", "pillow"]
 
 [tool.mypy]
