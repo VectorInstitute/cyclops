@@ -92,12 +92,9 @@ kaggle = "^1.5.13"
 [tool.poetry.group.dev.dependencies]
 seaborn = "^0.11.2"
 matplotlib = "^3.5.1"
-mlflow = "^1.24.0"
 jupyter = "^1.0.0"
 jupyterlab = "^3.4.2"
-prefect = "^2.7.10"
 ipympl = "^0.9.3"
-evidently = "^0.2.8"
 ipywidgets = "^8.0.6"
 
 [tool.poetry.group.interface.dependencies]
