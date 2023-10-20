@@ -400,7 +400,7 @@
             <span class="c1"># since we have base values, remove overall slice</span>
             <span class="n">slice_spec</span><span class="o">.</span><span class="n">_registry</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;overall&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-        <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">slice_name</span><span class="p">,</span> <span class="n">slice_fn</span> <span class="ow">in</span> <span class="n">slice_spec</span><span class="o">.</span><span class="n">slices</span><span class="p">():</span>
             <span class="n">sliced_dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">remove_columns</span><span class="p">(</span><span class="n">remove_columns</span> <span class="ow">or</span> <span class="p">[])</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
@@ -1103,25 +1103,25 @@
 
 
 <span class="k">def</span> <span class="nf">_compute_parity_metrics</span><span class="p">(</span>
-    <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]],</span>
+    <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
     <span class="n">base_slice_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the parity metrics for each group and threshold if specified.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    results : Dict[str, Dict[str, Dict[str, Dict[str, float]]]]</span>
+<span class="sd">    results : Dict[str, Dict[str, Dict[str, Any]]]</span>
 <span class="sd">        A dictionary mapping the prediction column to the metrics dictionary.</span>
 <span class="sd">    base_slice_name : str</span>
 <span class="sd">        The name of the base slice.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Dict[str, Dict[str, Dict[str, Dict[str, float]]]]</span>
+<span class="sd">    Dict[str, Dict[str, Dict[str, Any]]]</span>
 <span class="sd">        A dictionary mapping the prediction column to the metrics dictionary.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">parity_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">parity_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">prediction_result</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">parity_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1129,6 +1129,7 @@
             <span class="k">for</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">metric_value</span> <span class="ow">in</span> <span class="n">slice_result</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s2">&quot;Group Size&quot;</span><span class="p">:</span>
                     <span class="k">continue</span>
+
                 <span class="c1"># add &#39;Parity&#39; to the metric name before @threshold, if specified</span>
                 <span class="n">metric_name_parts</span> <span class="o">=</span> <span class="n">metric_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)</span>
                 <span class="n">parity_metric_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_name_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> Parity&quot;</span>
@@ -1137,14 +1138,13 @@
 
                 <span class="n">numerator</span> <span class="o">=</span> <span class="n">metric_value</span>
                 <span class="n">denominator</span> <span class="o">=</span> <span class="n">prediction_result</span><span class="p">[</span><span class="n">base_slice_name</span><span class="p">][</span><span class="n">metric_name</span><span class="p">]</span>
-                <span class="n">parity_metric_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>  <span class="c1"># type: ignore[call-overload]</span>
+                <span class="n">parity_metric_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
                     <span class="n">numerator</span><span class="p">,</span>
                     <span class="n">denominator</span><span class="p">,</span>
                     <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">),</span>
                     <span class="n">where</span><span class="o">=</span><span class="n">denominator</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
                 <span class="p">)</span>
 
-                <span class="c1"># add the parity metric to the results</span>
                 <span class="n">parity_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">slice_name</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
                     <span class="p">{</span>
                         <span class="n">parity_metric_name</span><span class="p">:</span> <span class="n">_get_value_if_singleton_array</span><span class="p">(</span>
