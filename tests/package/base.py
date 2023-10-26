@@ -16,8 +16,6 @@ def test_import_cyclops():
     with pytest.raises(ImportError):
         import cyclops.evaluate
     with pytest.raises(ImportError):
-        import cyclops.query
-    with pytest.raises(ImportError):
         import cyclops.models
     with pytest.raises(ImportError):
         import cyclops.monitor
