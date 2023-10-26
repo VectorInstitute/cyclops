@@ -10,7 +10,6 @@
 ``cyclops`` is a toolkit for facilitating research and deployment of ML
 models for healthcare. It provides a few high-level APIs namely:
 
--  ``query`` - Query EHR databases (such as MIMIC-IV)
 -  ``data`` - Create datasets for training, inference and evaluation. We
    use the popular 🤗
    `datasets <https://github.com/huggingface/datasets>`__ to efficiently
@@ -53,12 +52,6 @@ tasks.
 To install additional functionality from the other APIs, they can be
 installed as extras.
 
-To install with ``query`` API support,
-
-.. code:: bash
-
-   python3 -m pip install 'pycyclops[query]'
-
 To install with ``models``, ``tasks``, ``evaluate`` and ``monitor`` API
 support,
 
@@ -73,11 +66,11 @@ To install with ``report`` API support,
    python3 -m pip install 'pycyclops[report]'
 
 Multiple extras could also be combined, for example to install with both
-``query`` and ``models`` support:
+``report`` and ``models`` support:
 
 .. code:: bash
 
-   python3 -m pip install 'pycyclops[query,models]'
+   python3 -m pip install 'pycyclops[report,models]'
 
 🧑🏿‍💻 Developing
 =======================
@@ -94,18 +87,11 @@ sure it is installed and then run:
    python3 -m poetry install
    source $(poetry env info --path)/bin/activate
 
-Using Conda
------------
-
-The development environment can also be set up using
-`conda <https://docs.conda.io/en/latest/>`__. Hence, make sure it is
-installed and then run:
+In order to install dependencies for testing, run:
 
 .. code:: bash
 
-   conda env create
-   conda install conda-build
-   conda develop .
+   python3 -m poetry install --with test
 
 API documentation is built using
 `Sphinx <https://www.sphinx-doc.org/en/master/>`__ and can be locally
@@ -113,6 +99,7 @@ built by:
 
 .. code:: bash
 
+   python3 -m poetry install --with docs
    cd docs
    make html SPHINXOPTS="-D nbsphinx_allow_errors=True"
 
