@@ -14,6 +14,8 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=fc0e58c9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -126,7 +128,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api.html">API Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../cyclops.query.html">cyclops.query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cyclops.data.html">cyclops.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cyclops.tasks.html">cyclops.tasks</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../cyclops.evaluate.html">cyclops.evaluate</a><ul class="current">
@@ -211,7 +212,7 @@
 <li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – If given, and predictions are probabilities/logits, the score will
 be computed only for the top k classes. Otherwise, <code class="docutils literal notranslate"><span class="pre">top_k</span></code> will be
 set to 1.</p></li>
-<li><p><strong>average</strong> (<a class="reference internal" href="cyclops.query.ops.Literal.html#cyclops.query.ops.Literal" title="cyclops.query.ops.Literal"><em>Literal</em></a><em>[</em><em>&quot;micro&quot;</em><em>, </em><em>&quot;macro&quot;</em><em>, </em><em>&quot;weighted&quot;</em><em>, </em><em>None</em><em>]</em><em>, </em><em>default=None</em>) – <p>If <code class="docutils literal notranslate"><span class="pre">None</span></code>, return the score for each label. Otherwise,
+<li><p><strong>average</strong> (<em>Literal</em><em>[</em><em>&quot;micro&quot;</em><em>, </em><em>&quot;macro&quot;</em><em>, </em><em>&quot;weighted&quot;</em><em>, </em><em>None</em><em>]</em><em>, </em><em>default=None</em>) – <p>If <code class="docutils literal notranslate"><span class="pre">None</span></code>, return the score for each label. Otherwise,
 use one of the following options to compute the average score:</p>
 <ul>
 <li><dl class="simple">
@@ -233,7 +234,7 @@ imbalance.</p>
 </li>
 </ul>
 </p></li>
-<li><p><strong>zero_division</strong> (<a class="reference internal" href="cyclops.query.ops.Literal.html#cyclops.query.ops.Literal" title="cyclops.query.ops.Literal"><em>Literal</em></a><em>[</em><em>&quot;warn&quot;</em><em>, </em><em>0</em><em>, </em><em>1</em><em>]</em><em>, </em><em>default=&quot;warn&quot;</em>) – Value to return when there is a zero division. If set to “warn”, this
+<li><p><strong>zero_division</strong> (<em>Literal</em><em>[</em><em>&quot;warn&quot;</em><em>, </em><em>0</em><em>, </em><em>1</em><em>]</em><em>, </em><em>default=&quot;warn&quot;</em>) – Value to return when there is a zero division. If set to “warn”, this
 acts as 0, but warnings are also raised.</p></li>
 </ul>
 </dd>
@@ -299,7 +300,7 @@ of shape (num_labels,) is returned.</p>
   </div>
 
   <div class="copyright">
-    &copy; Copyright 2022, Vector AI Engineering
+    &copy; Copyright 2023, Vector AI Engineering
   </div>
 
   <div class="copyright">

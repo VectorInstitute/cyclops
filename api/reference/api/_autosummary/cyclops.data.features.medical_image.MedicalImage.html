@@ -14,6 +14,8 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=fc0e58c9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -126,7 +128,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api.html">API Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../cyclops.query.html">cyclops.query</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../cyclops.data.html">cyclops.data</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="cyclops.data.slicer.html">cyclops.data.slicer</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../cyclops.data.html#module-cyclops.data.features">cyclops.data.features</a><ul class="current">
@@ -196,7 +197,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>decode</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em><em>, </em><em>default=True</em>) – Whether to decode the image. If False, the image will be returned as a
 dictionary in the format <cite>{“path”: image_path, “bytes”: image_bytes}</cite>.</p></li>
-<li><p><strong>reader</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>ImageReader</em><em>]</em><em>, </em><em>optional</em><em>, </em><em>default=&quot;ITKReader&quot;</em>) – The MONAI image reader to use.</p></li>
+<li><p><strong>reader</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>ImageReader</em><em>]</em><em>, </em><em>optional</em><em>, </em><em>default=&quot;ITKReader&quot;</em>) – The MONAI image reader to use.</p></li>
 <li><p><strong>suffix</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em><em>, </em><em>default=&quot;.jpg&quot;</em>) – The suffix to use when decoding bytes to image.</p></li>
 </ul>
 </dd>
@@ -329,7 +330,7 @@ you can pass a dictionary repo_id (<cite>str</cite>) -&gt; token (<cite>bool</ci
 <dd><p>Encode example into a format for Arrow.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a><em>, </em><em>np.ndarray</em><em>]</em>) – Data passed as input to MedicalImage feature.</p>
+<dd class="field-odd"><p><strong>value</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a><em>, </em><em>np.ndarray</em><em>]</em>) – Data passed as input to MedicalImage feature.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The encoded example.</p>
@@ -393,7 +394,7 @@ you can pass a dictionary repo_id (<cite>str</cite>) -&gt; token (<cite>bool</ci
   </div>
 
   <div class="copyright">
-    &copy; Copyright 2022, Vector AI Engineering
+    &copy; Copyright 2023, Vector AI Engineering
   </div>
 
   <div class="copyright">

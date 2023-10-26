@@ -42,9 +42,11 @@
     "from datetime import date\n",
     "from pathlib import Path\n",
     "\n",
+    "import cycquery.ops as qo\n",
     "import numpy as np\n",
     "import plotly.express as px\n",
     "import plotly.graph_objects as go\n",
+    "from cycquery import DatasetQuerier\n",
     "from datasets import Dataset\n",
     "from datasets.features import ClassLabel\n",
     "from dateutil.relativedelta import relativedelta\n",
@@ -53,13 +55,11 @@
     "from sklearn.pipeline import Pipeline\n",
     "from sklearn.preprocessing import MinMaxScaler, OneHotEncoder\n",
     "\n",
-    "import cyclops.query.ops as qo\n",
     "from cyclops.data.slicer import SliceSpec\n",
     "from cyclops.evaluate.fairness import FairnessConfig  # noqa: E402\n",
     "from cyclops.evaluate.metrics import MetricCollection, create_metric\n",
     "from cyclops.models.catalog import create_model\n",
     "from cyclops.process.feature.feature import TabularFeatures\n",
-    "from cyclops.query import DatasetQuerier\n",
     "from cyclops.report import ModelCardReport\n",
     "from cyclops.report.plot.classification import ClassificationPlotter\n",
     "from cyclops.report.utils import flatten_results_dict, get_metrics_trends\n",
@@ -1540,9 +1540,9 @@
  ],
  "metadata": {
   "kernelspec": {
-   "display_name": "cyclops",
+   "display_name": "Python 3 (ipykernel)",
    "language": "python",
-   "name": "cyclops"
+   "name": "python3"
   },
   "language_info": {
    "codemirror_mode": {
@@ -1554,7 +1554,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.9.7"
+   "version": "3.10.12"
   }
  },
  "nbformat": 4,

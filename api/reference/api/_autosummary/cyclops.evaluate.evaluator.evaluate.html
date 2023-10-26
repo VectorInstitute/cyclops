@@ -14,6 +14,8 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=fc0e58c9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -126,7 +128,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api.html">API Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../cyclops.query.html">cyclops.query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cyclops.data.html">cyclops.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cyclops.tasks.html">cyclops.tasks</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../cyclops.evaluate.html">cyclops.evaluate</a><ul class="current">
@@ -195,23 +196,23 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Dataset</em><em>, </em><em>DatasetDict</em><em>]</em>) – The dataset to evaluate on. If a string, the dataset will be loaded
+<li><p><strong>dataset</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Dataset</em><em>, </em><em>DatasetDict</em><em>]</em>) – The dataset to evaluate on. If a string, the dataset will be loaded
 using <cite>datasets.load_dataset</cite>. If <cite>DatasetDict</cite>, the <cite>split</cite> argument
 must be specified.</p></li>
-<li><p><strong>metrics</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference internal" href="cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric" title="cyclops.evaluate.metrics.metric.Metric"><em>Metric</em></a><em>, </em><em>Sequence</em><em>[</em><a class="reference internal" href="cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric" title="cyclops.evaluate.metrics.metric.Metric"><em>Metric</em></a><em>]</em><em>, </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric" title="cyclops.evaluate.metrics.metric.Metric"><em>Metric</em></a><em>]</em><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection" title="cyclops.evaluate.metrics.metric.MetricCollection"><em>MetricCollection</em></a><em>]</em>) – The metrics to compute.</p></li>
-<li><p><strong>target_columns</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em>) – The name of the column(s) containing the target values.</p></li>
-<li><p><strong>feature_columns</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – The name of the column(s) containing the feature values. This must be provided
+<li><p><strong>metrics</strong> (<em>Union</em><em>[</em><a class="reference internal" href="cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric" title="cyclops.evaluate.metrics.metric.Metric"><em>Metric</em></a><em>, </em><em>Sequence</em><em>[</em><a class="reference internal" href="cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric" title="cyclops.evaluate.metrics.metric.Metric"><em>Metric</em></a><em>]</em><em>, </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric" title="cyclops.evaluate.metrics.metric.Metric"><em>Metric</em></a><em>]</em><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection" title="cyclops.evaluate.metrics.metric.MetricCollection"><em>MetricCollection</em></a><em>]</em>) – The metrics to compute.</p></li>
+<li><p><strong>target_columns</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em>) – The name of the column(s) containing the target values.</p></li>
+<li><p><strong>feature_columns</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – The name of the column(s) containing the feature values. This must be provided
 if <cite>models</cite> is not None.</p></li>
 <li><p><strong>prediction_column_prefix</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The prefix of the column(s) containing the predictions. If <cite>models</cite> is not
 None, the predictions will be added to the dataset and the column names will
 be <cite>{prediction_column_prefix}.{model_name}</cite>. If <cite>models</cite> is None, the
 predictions will be read from the dataset and the column names must start
 with <cite>prediction_column_prefix</cite>.</p></li>
-<li><p><strong>remove_columns</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – The name of the column(s) to remove from the dataset before filtering
+<li><p><strong>remove_columns</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – The name of the column(s) to remove from the dataset before filtering
 and computing metrics. This is useful if the dataset contains columns
 that are not needed for computing metrics but may be expensive to
 keep in memory (e.g. image columns).</p></li>
-<li><p><strong>models</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><em>WrappedModel</em><em>, </em><em>Sequence</em><em>[</em><em>WrappedModel</em><em>]</em><em>, </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>WrappedModel</em><em>]</em><em>]</em>) – The model(s) to evaluate. If a <cite>Sequence</cite> of <cite>WrappedModel</cite>, each model will
+<li><p><strong>models</strong> (<em>Union</em><em>[</em><em>WrappedModel</em><em>, </em><em>Sequence</em><em>[</em><em>WrappedModel</em><em>]</em><em>, </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>WrappedModel</em><em>]</em><em>]</em>) – The model(s) to evaluate. If a <cite>Sequence</cite> of <cite>WrappedModel</cite>, each model will
 be evaluated on the entire dataset and the model class name will be used as
 the model name. If a <cite>Dict</cite> of <cite>WrappedModel</cite>, each model will be evaluated
 on the entire dataset and the keys will be used as the model names.</p></li>
@@ -221,7 +222,7 @@ the model.</p></li>
 <li><p><strong>slice_spec</strong> (<a class="reference internal" href="cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec" title="cyclops.data.slicer.SliceSpec"><em>SliceSpec</em></a><em>, </em><em>optional</em>) – The slice specification to use for computing metrics. If None, no slices
 will be computed - the metrics will be computed on the entire dataset.
 Note that this is not used for computing fairness metrics.</p></li>
-<li><p><strong>split</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Split</em><em>]</em><em>, </em><em>optional</em>) – The split of the dataset to use. If None and <cite>dataset</cite> is a string, a
+<li><p><strong>split</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Split</em><em>]</em><em>, </em><em>optional</em>) – The split of the dataset to use. If None and <cite>dataset</cite> is a string, a
 split will be chosen based on the available splits in the dataset. The
 first split that matches one of the following in order will be chosen:
 (“test”, “testing”, “eval”, “evaluation”, “validation”, “val”, “valid”,
@@ -303,7 +304,7 @@ the <cite>metrics</cite> argument provided to this function.</p></li>
   </div>
 
   <div class="copyright">
-    &copy; Copyright 2022, Vector AI Engineering
+    &copy; Copyright 2023, Vector AI Engineering
   </div>
 
   <div class="copyright">

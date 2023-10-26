@@ -14,6 +14,8 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=fc0e58c9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -126,7 +128,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api.html">API Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../cyclops.query.html">cyclops.query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cyclops.data.html">cyclops.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cyclops.tasks.html">cyclops.tasks</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../cyclops.evaluate.html">cyclops.evaluate</a><ul class="current">
@@ -211,7 +212,7 @@
 <li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em><em>, </em><em>default=None</em>) – The number of highest probability or logit predictions considered
 to find the correct label. Only works when <code class="docutils literal notranslate"><span class="pre">preds</span></code> contains
 probabilities/logits.</p></li>
-<li><p><strong>average</strong> (<a class="reference internal" href="cyclops.query.ops.Literal.html#cyclops.query.ops.Literal" title="cyclops.query.ops.Literal"><em>Literal</em></a><em>[</em><em>'micro'</em><em>, </em><em>'macro'</em><em>, </em><em>'weighted'</em><em>, </em><em>None</em><em>]</em><em>, </em><em>default=None</em>) – <p>If None, return the accuracy score per label, otherwise this determines
+<li><p><strong>average</strong> (<em>Literal</em><em>[</em><em>'micro'</em><em>, </em><em>'macro'</em><em>, </em><em>'weighted'</em><em>, </em><em>None</em><em>]</em><em>, </em><em>default=None</em>) – <p>If None, return the accuracy score per label, otherwise this determines
 the type of averaging performed on the data:</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">micro</span></code>: Calculate metrics globally.</p></li>
@@ -228,7 +229,7 @@ each label).</p>
 </li>
 </ul>
 </p></li>
-<li><p><strong>zero_division</strong> (<a class="reference internal" href="cyclops.query.ops.Literal.html#cyclops.query.ops.Literal" title="cyclops.query.ops.Literal"><em>Literal</em></a><em>[</em><em>'warn'</em><em>, </em><em>0</em><em>, </em><em>1</em><em>]</em><em>, </em><em>default=&quot;warn&quot;</em>) – Sets the value to return when there is a zero division. If set to <code class="docutils literal notranslate"><span class="pre">warn</span></code>,
+<li><p><strong>zero_division</strong> (<em>Literal</em><em>[</em><em>'warn'</em><em>, </em><em>0</em><em>, </em><em>1</em><em>]</em><em>, </em><em>default=&quot;warn&quot;</em>) – Sets the value to return when there is a zero division. If set to <code class="docutils literal notranslate"><span class="pre">warn</span></code>,
 this acts as 0, but warnings are also raised.</p></li>
 </ul>
 </dd>
@@ -318,7 +319,7 @@ this acts as 0, but warnings are also raised.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The name of the state variable.</p></li>
-<li><p><strong>default</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><em>List</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>]</em>) – The default value of the state variable.</p></li>
+<li><p><strong>default</strong> (<em>Union</em><em>[</em><em>List</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>]</em>) – The default value of the state variable.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
@@ -421,7 +422,7 @@ None. Also resets the state variables to their default values.</p>
   </div>
 
   <div class="copyright">
-    &copy; Copyright 2022, Vector AI Engineering
+    &copy; Copyright 2023, Vector AI Engineering
   </div>
 
   <div class="copyright">

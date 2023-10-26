@@ -14,6 +14,8 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="_static/css/cyclops.css?v=fc0e58c9" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -124,7 +126,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#developing">🧑🏿‍💻 Developing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#using-poetry">Using poetry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#using-conda">Using Conda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#contributing">Contributing</a></li>
 </ul>
 </li>
@@ -180,7 +181,6 @@
 <p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> is a toolkit for facilitating research and deployment of ML
 models for healthcare. It provides a few high-level APIs namely:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">query</span></code> - Query EHR databases (such as MIMIC-IV)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> - Create datasets for training, inference and evaluation. We
 use the popular 🤗
 <a class="reference external" href="https://github.com/huggingface/datasets">datasets</a> to efficiently
@@ -219,10 +219,6 @@ datasets such as</p>
 tasks.</p>
 <p>To install additional functionality from the other APIs, they can be
 installed as extras.</p>
-<p>To install with <code class="docutils literal notranslate"><span class="pre">query</span></code> API support,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pycyclops[query]&#39;</span>
-</pre></div>
-</div>
 <p>To install with <code class="docutils literal notranslate"><span class="pre">models</span></code>, <code class="docutils literal notranslate"><span class="pre">tasks</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> and <code class="docutils literal notranslate"><span class="pre">monitor</span></code> API
 support,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pycyclops[models]&#39;</span>
@@ -233,8 +229,8 @@ support,</p>
 </pre></div>
 </div>
 <p>Multiple extras could also be combined, for example to install with both
-<code class="docutils literal notranslate"><span class="pre">query</span></code> and <code class="docutils literal notranslate"><span class="pre">models</span></code> support:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pycyclops[query,models]&#39;</span>
+<code class="docutils literal notranslate"><span class="pre">report</span></code> and <code class="docutils literal notranslate"><span class="pre">models</span></code> support:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pycyclops[report,models]&#39;</span>
 </pre></div>
 </div>
 </section>
@@ -250,21 +246,15 @@ sure it is installed and then run:</p>
 <span class="nb">source</span><span class="w"> </span><span class="k">$(</span>poetry<span class="w"> </span>env<span class="w"> </span>info<span class="w"> </span>--path<span class="k">)</span>/bin/activate
 </pre></div>
 </div>
-</section>
-<section id="using-conda">
-<h2>Using Conda<a class="headerlink" href="#using-conda" title="Link to this heading"></a></h2>
-<p>The development environment can also be set up using
-<a class="reference external" href="https://docs.conda.io/en/latest/">conda</a>. Hence, make sure it is
-installed and then run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create
-conda<span class="w"> </span>install<span class="w"> </span>conda-build
-conda<span class="w"> </span>develop<span class="w"> </span>.
+<p>In order to install dependencies for testing, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span><span class="nb">test</span>
 </pre></div>
 </div>
 <p>API documentation is built using
 <a class="reference external" href="https://www.sphinx-doc.org/en/master/">Sphinx</a> and can be locally
 built by:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>docs
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>docs
+<span class="nb">cd</span><span class="w"> </span>docs
 make<span class="w"> </span>html<span class="w"> </span><span class="nv">SPHINXOPTS</span><span class="o">=</span><span class="s2">&quot;-D nbsphinx_allow_errors=True&quot;</span>
 </pre></div>
 </div>
@@ -345,7 +335,7 @@ virtual environment, run:</p>
   </div>
 
   <div class="copyright">
-    &copy; Copyright 2022, Vector AI Engineering
+    &copy; Copyright 2023, Vector AI Engineering
   </div>
 
   <div class="copyright">

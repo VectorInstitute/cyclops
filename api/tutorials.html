@@ -14,6 +14,8 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="_static/css/cyclops.css?v=fc0e58c9" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -30,7 +32,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="query API" href="tutorials_query.html" />
+    <link rel="next" title="monitor API" href="tutorials_monitor.html" />
     <link rel="prev" title="Contributing to cyclops" href="contributing.html" /> 
 </head>
 
@@ -125,7 +127,6 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html#citation">🎓 Citation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to cyclops</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials_query.html">query API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials_monitor.html">monitor API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials_use_cases.html">Example use cases</a></li>
 </ul>
@@ -172,54 +173,6 @@
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorials_query.html">query API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciii/query_api.html">MIMIC-III query API tutorial</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciii/query_api.html#Imports-and-instantiate-MIMICIIIQuerier">Imports and instantiate <code class="docutils literal notranslate"><span class="pre">MIMICIIIQuerier</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciii/query_api.html#Example-1.-Get-all-male-patients-with-a-mortality-outcome.">Example 1. Get all male patients with a mortality outcome.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciii/query_api.html#Example-2.-Get-all-female-patient-encounters-with-diagnoses-(gastroenteritis-in-ICD-9-long-title).">Example 2. Get all female patient encounters with diagnoses (<code class="docutils literal notranslate"><span class="pre">gastroenteritis</span></code> in ICD-9 long title).</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciii/query_api.html#Example-3.-Get-potassium-lab-tests-for-female-patients.">Example 3. Get potassium lab tests for female patients.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciii/query_api.html#Example-4.-Get-AaDO2-carevue-chart-events-for-male-patients-that-have-a-valuenum-of-less-than-20.">Example 4. Get AaDO2 carevue chart events for male patients that have a <code class="docutils literal notranslate"><span class="pre">valuenum</span></code> of less than 20.</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/query_api.html">MIMIC-IV query API tutorial</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Imports-and-instantiate-MIMICIVQuerier">Imports and instantiate <code class="docutils literal notranslate"><span class="pre">MIMICIVQuerier</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Example-1.-Get-all-patient-admissions-from-2021-or-later-(approx-year-of-admission)">Example 1. Get all patient admissions from 2021 or later (approx year of admission)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Example-2.-Get-all-patient-encounters-with-diagnoses-(schizophrenia-in-ICD-10-long-title),-in-the-year-2015.">Example 2. Get all patient encounters with diagnoses (<code class="docutils literal notranslate"><span class="pre">schizophrenia</span></code> in ICD-10 long title), in the year 2015.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Example-3.-Advanced---uses-ConditionRegexMatch-from-cyclops.query.ops.-Get-all-patient-encounters-with-diagnoses-(ICD-9-long-title-contains-schizophrenia-and-chronic-),-in-the-year-2015.">Example 3. Advanced - uses <code class="docutils literal notranslate"><span class="pre">ConditionRegexMatch</span></code> from <code class="docutils literal notranslate"><span class="pre">cyclops.query.ops</span></code>. Get all patient encounters with diagnoses (ICD-9 long title contains <code class="docutils literal notranslate"><span class="pre">schizophrenia</span></code> and <code class="docutils literal notranslate"><span class="pre">chronic</span></code> ), in the year 2015.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Example-4.-Get-routine-vital-signs-for-patients-from-year-2015.">Example 4. Get routine vital signs for patients from year 2015.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Example-5.-Get-hemoglobin-lab-tests-for-patients-from-year-2009.">Example 5. Get hemoglobin lab tests for patients from year 2009.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Example-6.-Get-radiology-reports-and-filter-on-keywords-lymphadenopathy-and-infectious-occurring-together-from-year-2009.">Example 6. Get radiology reports and filter on keywords <code class="docutils literal notranslate"><span class="pre">lymphadenopathy</span></code> and <code class="docutils literal notranslate"><span class="pre">infectious</span></code> occurring together from year 2009.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Example-7.-Get-all-female-patient-encounters-from-year-2015,-and-return-as-dask-dataframe-(lazy-evaluation)-with-4-partitions-(batches)-aggregated-based-on-subject_id.">Example 7. Get all female patient encounters from year 2015, and return as dask dataframe (lazy evaluation) with 4 partitions (batches) aggregated based on <code class="docutils literal notranslate"><span class="pre">subject_id</span></code>.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/query_api.html#Example-8.-Running-a-raw-SQL-string.">Example 8. Running a raw SQL string.</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/eicu/query_api.html">eICU-CRD query API tutorial</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/eicu/query_api.html#Imports-and-instantiate-EICUQuerier">Imports and instantiate <code class="docutils literal notranslate"><span class="pre">EICUQuerier</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/eicu/query_api.html#Example-1.-Get-all-female-patients-discharged-in-2014-(limit-to-100-rows).">Example 1. Get all female patients discharged in 2014 (limit to 100 rows).</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/eicu/query_api.html#Example-2.-Get-all-patient-encounters-with-diagnoses-(schizophrenia-in-diagnosisstring),-discharged-in-the-year-2015.">Example 2. Get all patient encounters with diagnoses (<code class="docutils literal notranslate"><span class="pre">schizophrenia</span></code> in <code class="docutils literal notranslate"><span class="pre">diagnosisstring</span></code>), discharged in the year 2015.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/eicu/query_api.html#Example-3.-Get-potassium-lab-tests-for-patients-discharged-in-the-year-2014,-for-all-teaching-hospitals.">Example 3. Get potassium lab tests for patients discharged in the year 2014, for all teaching hospitals.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/eicu/query_api.html#Example-4.-Get-glucose-medications-(substring-search)-for-female-patients-discharged-in-2014.">Example 4. Get glucose medications (substring search) for female patients discharged in 2014.</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/omop/query_api.html">OMOP query API tutorial</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/omop/query_api.html#Imports-and-instantiate-OMOPQuerier.">Imports and instantiate <code class="docutils literal notranslate"><span class="pre">OMOPQuerier</span></code>.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/omop/query_api.html#Example-1.-Get-all-patient-visits-in-or-after-2010.">Example 1. Get all patient visits in or after 2010.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/omop/query_api.html#Example-2.-Get-measurements-for-all-visits-in-or-after-2020.">Example 2. Get measurements for all visits in or after 2020.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/omop/query_api.html#id1">Imports and instantiate <code class="docutils literal notranslate"><span class="pre">OMOPQuerier</span></code>.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/omop/query_api.html#Example-1.-Get-all-patient-visits-that-ended-in-a-mortality-outcome-in-or-after-2010.">Example 1. Get all patient visits that ended in a mortality outcome in or after 2010.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/omop/query_api.html#Example-2.-Get-all-measurements-for-female-patient-visits-with-sepsis-diagnoses,-that-ended-in-a-mortality-outcome.">Example 2. Get all measurements for female patient visits with <code class="docutils literal notranslate"><span class="pre">sepsis</span></code> diagnoses, that ended in a mortality outcome.</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/gemini/query_api.html">GEMINI query API tutorial</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/gemini/query_api.html#Imports-and-instantiate-GEMINIQuerier.">Imports and instantiate <code class="docutils literal notranslate"><span class="pre">GEMINIQuerier</span></code>.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/gemini/query_api.html#Example-1a.-Create-a-table-with-only-one-hospitalization-per-patient,-keeping-the-most-recent-encounter-for-each-patient.-Sort-the-dataset-by-patient_id_hashed-and-discharge_date_time,-and-then-keep-the-recent-record.">Example 1a. Create a table with only one hospitalization per patient, keeping the most recent encounter for each patient. Sort the dataset by <code class="docutils literal notranslate"><span class="pre">patient_id_hashed</span></code> and <code class="docutils literal notranslate"><span class="pre">discharge_date_time</span></code>, and then keep the recent record.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/gemini/query_api.html#Example-1b.-From-the-above-set-of-encounters,-take-a-subset-of-patients-who-were-discharged-between-April-1,-2015-and-March-31,-2016.">Example 1b. From the above set of encounters, take a subset of patients who were discharged between April 1, 2015 and March 31, 2016.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/gemini/query_api.html#Example-1c.-From-the-above-set-of-encounters,-get-the-total-number-of-admissions-for-each-hospital.">Example 1c. From the above set of encounters, get the total number of admissions for each hospital.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/gemini/query_api.html#Example-2a.-How-many-sodium-tests-were-placed-between-Apr-1,-2015-and-May-31,-2015-at-hospital-101?">Example 2a. How many sodium tests were placed between Apr 1, 2015 and May 31, 2015 at hospital 101?</a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials_monitor.html">monitor API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html">NIHCXR Clinical Drift Experiments Tutorial</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Import-Libraries-and-Load-NIHCXR-Dataset">Import Libraries and Load NIHCXR Dataset</a></li>
@@ -326,7 +279,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="contributing.html" class="btn btn-neutral float-left" title="Contributing to cyclops" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="tutorials_query.html" class="btn btn-neutral float-right" title="query API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tutorials_monitor.html" class="btn btn-neutral float-right" title="monitor API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
@@ -359,7 +312,7 @@
   </div>
 
   <div class="copyright">
-    &copy; Copyright 2022, Vector AI Engineering
+    &copy; Copyright 2023, Vector AI Engineering
   </div>
 
   <div class="copyright">

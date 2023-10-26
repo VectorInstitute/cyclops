@@ -14,6 +14,8 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=fc0e58c9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -126,7 +128,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api.html">API Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../cyclops.query.html">cyclops.query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cyclops.data.html">cyclops.data</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../cyclops.tasks.html">cyclops.tasks</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="cyclops.tasks.cxr_classification.html">cyclops.tasks.cxr_classification</a><ul class="current">
@@ -256,7 +257,7 @@
 <dd><p>Add a model to the task.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>WrappedModel</em><em>, </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>WrappedModel</em><em>]</em><em>]</em>) – Model to be added.</p>
+<dd class="field-odd"><p><strong>model</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>WrappedModel</em><em>, </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>WrappedModel</em><em>]</em><em>]</em>) – Model to be added.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -282,15 +283,15 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><em>Dataset</em><em>, </em><em>DatasetDict</em><em>]</em>) – HuggingFace dataset.</p></li>
-<li><p><strong>metrics</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection" title="cyclops.evaluate.metrics.metric.MetricCollection"><em>MetricCollection</em></a><em>]</em>) – Metrics to be evaluated.</p></li>
-<li><p><strong>model_names</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – Model names to be evaluated, required if more than one model exists,                 by default Nonee</p></li>
+<li><p><strong>dataset</strong> (<em>Union</em><em>[</em><em>Dataset</em><em>, </em><em>DatasetDict</em><em>]</em>) – HuggingFace dataset.</p></li>
+<li><p><strong>metrics</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection" title="cyclops.evaluate.metrics.metric.MetricCollection"><em>MetricCollection</em></a><em>]</em>) – Metrics to be evaluated.</p></li>
+<li><p><strong>model_names</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – Model names to be evaluated, required if more than one model exists,                 by default Nonee</p></li>
 <li><p><strong>transforms</strong> (<em>Optional</em><em>[</em><em>Compose</em><em>]</em><em>, </em><em>optional</em>) – Transforms to be applied to the data, by default None</p></li>
 <li><p><strong>prediction_column_prefix</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the prediction column to be added to the dataset,                 by default “predictions”</p></li>
 <li><p><strong>splits_mapping</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a><em>]</em><em>, </em><em>optional</em>) – Mapping from ‘train’, ‘validation’ and ‘test’ to dataset splits names                 used when input is a dataset dictionary, by default {“test”: “test”}</p></li>
 <li><p><strong>slice_spec</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec" title="cyclops.data.slicer.SliceSpec"><em>SliceSpec</em></a><em>]</em><em>, </em><em>optional</em>) – Specifications for creating a slices of a dataset, by default None</p></li>
 <li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – Batch size for batched evaluation, by default 64</p></li>
-<li><p><strong>remove_columns</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Unnecessary columns to be removed from the dataset, by default None</p></li>
+<li><p><strong>remove_columns</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Unnecessary columns to be removed from the dataset, by default None</p></li>
 <li><p><strong>fairness_config</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="cyclops.evaluate.fairness.config.FairnessConfig.html#cyclops.evaluate.fairness.config.FairnessConfig" title="cyclops.evaluate.fairness.config.FairnessConfig"><em>FairnessConfig</em></a><em>]</em><em>, </em><em>optional</em>) – The configuration for computing fairness metrics. If None, no fairness             metrics will be computed, by default None</p></li>
 <li><p><strong>override_fairness_metrics</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, the <cite>metrics</cite> argument in fairness_config will be overridden by             the <cite>metrics</cite>, by default False</p></li>
 </ul>
@@ -362,7 +363,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset</strong> (<a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union"><em>Union</em></a><em>[</em><em>np.ndarray</em><em>, </em><em>Dataset</em><em>, </em><em>DatasetDict</em><em>]</em>) – Image representation as a numpy array or a Hugging Face dataset.</p></li>
+<li><p><strong>dataset</strong> (<em>Union</em><em>[</em><em>np.ndarray</em><em>, </em><em>Dataset</em><em>, </em><em>DatasetDict</em><em>]</em>) – Image representation as a numpy array or a Hugging Face dataset.</p></li>
 <li><p><strong>model_name</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – Model name, required if more than one model exists, by default None</p></li>
 <li><p><strong>transforms</strong> (<em>Optional</em><em>[</em><em>Compose</em><em>]</em><em>, </em><em>optional</em>) – Transforms to be applied to the data, by default None</p></li>
 <li><p><strong>splits_mapping</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a><em>]</em><em>, </em><em>optional</em>) – Mapping from ‘train’, ‘validation’ and ‘test’ to dataset splits names,                 used when input is a dataset dictionary, by default {“test”: “test”}</p></li>
@@ -373,7 +374,7 @@
 <dd class="field-even"><p>Predicted labels or the Hugging Face dataset with predicted labels.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="cyclops.query.ops.Union.html#cyclops.query.ops.Union" title="cyclops.query.ops.Union">Union</a>[np.ndarray, Dataset]</p>
+<dd class="field-odd"><p>Union[np.ndarray, Dataset]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -434,7 +435,7 @@
   </div>
 
   <div class="copyright">
-    &copy; Copyright 2022, Vector AI Engineering
+    &copy; Copyright 2023, Vector AI Engineering
   </div>
 
   <div class="copyright">
