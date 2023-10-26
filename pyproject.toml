@@ -13,12 +13,13 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.9, <3.11"
-pandas = "^2.0"
+pandas = "^1.4.1"
 numpy = "^1.23.0"
 datasets = "^2.10.1"
 psutil = "^5.9.4"
 pyarrow = "^11.0.0"
 monai = { version = "^1.1.0", extras = ["itk"] }
+dask = { version = "^2023.10.0", extras = ["dataframe"] }
 
 hydra-core = { version = "^1.2.0", optional = true }
 scikit-learn = { version = "^1.2.2", optional = true }
