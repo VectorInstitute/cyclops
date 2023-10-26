@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath("../../cyclops"))
 # -- Project information -----------------------------------------------------
 
 project = "cyclops"
-copyright = "2022, Vector AI Engineering"  # noqa: A001
+copyright = "2023, Vector AI Engineering"  # noqa: A001
 author = "Vector AI Engineering"
 
 
