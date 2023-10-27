@@ -3,6 +3,18 @@ name: docker
 on:
   release:
     types: [published]
+  push:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - .github/workflows/docker.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - .github/workflows/docker.yml
 
 jobs:
   push_to_registry:
