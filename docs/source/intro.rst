@@ -87,7 +87,8 @@ sure it is installed and then run:
    python3 -m poetry install
    source $(poetry env info --path)/bin/activate
 
-In order to install dependencies for testing, run:
+In order to install dependencies for testing (codestyle, unit tests,
+integration tests), run:
 
 .. code:: bash
 
