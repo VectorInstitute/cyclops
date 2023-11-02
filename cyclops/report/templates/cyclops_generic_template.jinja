@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+
+{% macro render_if_exist_list(values) %}
+<div>
+  {% if values.__class__.__name__ == "User"%}
+  <li>
+    {% for name, value in values %}
+      {% if value %}
+          {{ value }}
+      {% endif %}
+    {% endfor %}
+  </li>
+  {% elif values.__class__.__name__ == "Citation"%}
+  <li>
+    {# {% for name, value in values %} #}
+      {# {% if value %} #}
+        {{ values.content | safe }}
+      {# {% endif %} #}
+    {# {% endfor %} #}
+  </li>
+  {% elif values.__class__.__name__ == "Graphic"%}
+    {{ render_graphic(values) }}
+  {% elif values.__class__.__name__ == "GraphicsCollection" %}
+    {{ render_graphics(values.collection) }}
+  {% else %}
+    {% if (values is string) or (values|int != 0) or (values|float != 0) %}
+    <li>
+      {{ values }}
+    </li>
+    {% else %}
+    <li>
+      {% for name, value in values %}
+        {% if value %}
+          {% if value.__class__.__name__ == "GraphicsCollection" %}
+            {{ render_graphics(value.collection) }}
+          {% elif (name == "description")%}
+            {{ value }}
+          {% elif (name == "link")%}
+            <a href="{{ value }}">{{ value }}</a>
+          {% else %}
+            {% if "str" in name%}
+              {{ value }}
+            {% else %}
+              <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
+            {% endif %}
+          {% endif %}
+          <br>
+        {% endif %}
+      {% endfor %}
+    </li>
+    {% endif %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_metric_table(comp) %}
+  <table class="styled-table">
+    <tr><th>Metric</th><th>Slice</th><th>Current Value</th><th>Threshold</th><th>Previous Value</th></tr>
+    {% for mp, mb in comp.new_metrics_failed_periodic|zip(comp.new_metrics_failed_baseline) %}
+    {% if mp.value != 0 %}
+      <tr>
+        <td style="padding: 5px; text-align: center;">{{ mp.type }}</td>
+        <td style="padding: 5px; text-align: center;">{{ mp.slice }}</td>
+          <td style="padding: 5px; text-align: center;" id="{{ mp.type }}/{{ mp.slice }}">{{ mp.value|round(2) }}</td>
+        {% if mp.tests|length != 0 %}
+          <td style="padding: 5px; text-align: center;">{{ mp.tests[0].threshold|round(2) }}</td>
+          <td style="padding: 5px; text-align: center;">{{mb.value|round(2)}}</td>
+        {% else %}
+          <td style="padding: 5px; text-align: center;">-</td>
+          <td style="padding: 5px; text-align: center;">-</td>
+        {% endif %}
+      </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+{% endmacro %}
+
+{% macro render_test_table(tests, passing, title) %}
+{% if passing %}
+  <table class="styled-table-pass" style="border: 3px solid green; ">
+    <tr><th style="background-color: green;">{{title}}</th></tr>
+    {% for test in tests %}
+      {% if test.passed %}
+        <tr>
+          <td style="padding: 5px; text-align: center;"><a href="#{{ test.name }}">{{ test.name }}</a></td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+  </table>
+{% else %}
+<table class="styled-table-fail" style="border: 3px solid red;">
+  <tr><th style="background-color: red;">{{title}}</th></tr>
+  {% for test in tests %}
+    {% if not test.passed %}
+      <tr>
+        <td style="padding: 5px; text-align: center;"><a href="#{{ test.name }}">{{ test.name }}</a></td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+</table>
+{% endmacro %}
+
+{% macro render_graphic(graphic, class="img-item") %}
+<div class="{{ class }}">
+  {% if graphic.image.startswith('<div') %}
+    {{ graphic.image|safe }}
+  {% else %}
+    {% if 'data' in graphic.image %}
+      <img src='{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% else %}
+      <img src='data:image/png;base64,{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% endif %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_graphics(graphics) %}
+<div>
+  {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
+  {% for graph in graphics %}
+    {{ render_graphic(graph) }}
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro render_metric_card(card)%}
+<div class="subcard">
+  <div>
+   <span style="font-size: 18px; font-weight:bold;">
+      <div class="tooltip">
+      {{ card.name }}
+        <div class="tooltiptext">
+          {{ card.tooltip }}
+        <div class="arrow-up"></div>
+        </div>
+      </div>
+    </span>
+    <div display: inline-block;>
+      {% if card.passed %}
+        <span style="font-size: 48px; font-weight:bolder; color: green">{{ card.value|round(2) }}</span>
+      {% elif not card.passed %}
+        <span style="font-size: 48px; font-weight:bolder; color: red">{{ card.value|round(2) }}</span>
+      {% else %}
+        <span style="font-size: 48px; font-weight:bolder; color: gray">{{ card.value|round(2) }}</span>
+      {% endif %}
+      <span style="display: inline-block; margin-left: 60px; margin-top: 60px;">
+        {% if card.passed %}
+          <span style="font-size: 40px; color: green;">&#9650;</span>
+        {% elif not card.passed %}
+          <span style="font-size: 40px; color: red;">&#9660;</span>
+        {% else %}
+          <span style="font-size: 40px; color: gray;">&#9472;</span>
+        {% endif %}        
+      </span>
+      <span style="display: inline-block; line-height:1;">
+        <span style="font-size: 14px">{{card.threshold}}<br>minimum<br>threshold</span>
+      </span>
+      {% if card.plot %}
+        {{ render_graphic(card.plot.collection[0], class="") }}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_perf(name, comp)%}
+<div class="card" id={{name}}>
+<h3 style="color: black; font-weight:normal;">How is your model doing?</h3><br>
+<h3 style="color: gray;  font-weight:normal;">A quick glance of your most important metrics.</h3>
+{% for metric_card in comp.metric_cards.collection%}
+  {% if metric_card.slice == 'overall' %}
+    {{ render_metric_card(metric_card) }}
+  {% endif %}
+{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro render_perf_over_time(name, comp)%}
+<div class="card" id={{name}} style="display: flex; flex-wrap:col;">
+  <h3 style="color: black; font-weight:normal;">How is your model doing over time?</h3><br>
+  <h3 style="color: gray;  font-weight:normal;">See how your model is performing over several metrics and subgroups over time.</h3>
+  <div class="column" style="float: left;">
+    <div class="subcard" style="padding:10px; margin-bottom:20px; max-width:500px;">
+      <h4>Metrics</h4>
+      <div class="radio-buttons">
+          <input type="radio" id="{{comp.metric_cards.metrics[0]}}" name="metric" value="{{comp.metric_cards.metrics[0]}}" checked>
+          {% if comp.metric_cards.metrics[0]|regex_search("\((.*?)\)")|length != 0 %}
+            {% set acronym = comp.metric_cards.metrics[0]|regex_search("\((.*?)\)") %}
+            <div class="tooltip">
+              <label for="{{comp.metric_cards.metrics[0]}}">{{acronym[0]}}</label>
+              <div class="tooltiptext">
+                {{ comp.metric_cards.tooltips[0] }}
+                <div class="arrow-up"></div>
+              </div>
+            </div>
+          {% else %}
+            <div class="tooltip">
+              <label for="{{comp.metric_cards.metrics[0]}}">{{comp.metric_cards.metrics[0]}}</label>
+              <div class="tooltiptext">
+                {{ comp.metric_cards.tooltips[0] }}
+                <div class="arrow-up"></div>
+              </div>
+            </div>
+          {% endif %}
+        {% for metric, tooltip in comp.metric_cards.metrics[1:]|zip(comp.metric_cards.tooltips[1:]) %}
+          <input type="radio" id="{{metric}}" name="metric" value="{{metric}}">
+          {# when creating label look for "()" and display acronym inside brackets instead of full name #}
+          {% if metric|regex_search("\((.*?)\)")|length != 0 %}
+            {% set acronym = metric|regex_search("\((.*?)\)") %}
+            <div class="tooltip">
+              <label for="{{metric}}">{{acronym[0]}}</label>
+              <div class="tooltiptext">
+                {{ tooltip }}
+                <div class="arrow-up"></div>
+              </div>
+            </div>
+          {% else %}
+            <div class="tooltip">
+              <label for="{{metric}}">{{metric}}</label>
+              <div class="tooltiptext">
+                {{ tooltip }}
+                <div class="arrow-up"></div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% for slice, values in comp.metric_cards.slices|zip(comp.metric_cards.values) %}
+      <div class="subcard" style="padding:10px; margin-bottom:10px; max-width:500px;">
+        <h4>{{slice|title}}</h4>
+        <div class="radio-buttons">
+          <input type="radio" id="overall_{{slice}}" name="{{slice}}" value="overall_{{slice}}" checked>
+          <label for="overall_{{slice}}">All</label>
+          {% for value in values %}
+            <input type="radio" id="{{value}}" name="{{slice}}" value="{{value}}">
+            <label for="{{value}}">{{value|regex_replace('_+', ' ')|title}}</label>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="subcard" style="margin:auto; float:right;">
+    <div id="plot">
+      <script>
+        const filters = document.querySelectorAll('select');
+        const plot = document.getElementById('plot');
+        const inputs_all = document.querySelectorAll('input[type="radio"]');
+
+        // Define a function to update the plot based on selected filters
+        function updatePlot() {
+
+          const inputs = document.querySelectorAll('input[type="radio"]:checked');
+          // get all inputs values from div class radio-buttons
+          // get name of inputs
+          var inputs_name = [];
+          var inputs_value = [];
+          for (let i = 0; i < inputs.length; i++) {
+            inputs_name.push(inputs[i].name);
+            inputs_value.push(inputs[i].value);
+          }
+
+          var selection = [];
+          for (let i = 0; i < inputs_value.length; i++) {
+            // check if *_overall in string, if so don't push
+            if (inputs_value[i].includes("overall_")) {
+              continue;
+              }
+            else {
+              selection.push(inputs_name[i] + ":" + inputs_value[i]);
+              }
+          }
+          selection.sort();
+
+          var slices = JSON.parse({{ get_slices(model_card)|safe|tojson }});
+          var plots = JSON.parse({{ get_plots(model_card)|safe|tojson }});
+          var thresholds = JSON.parse({{ get_thresholds(model_card)|safe|tojson }});
+          var trends = JSON.parse({{ get_trends(model_card)|safe|tojson }});
+          var passed = JSON.parse({{ get_passed(model_card)|safe|tojson }});
+          var names = JSON.parse({{ get_names(model_card)|safe|tojson }});
+
+          // get idx of slices where all elements match
+          var idx = Object.keys(slices).find(key => JSON.stringify(slices[key].sort()) === JSON.stringify(selection));
+
+          var plot_data = [];
+          for (let i = 0; i < plots[idx].length; i++) {
+            plot_data.push(parseFloat(plots[idx][i]));
+          }
+          threshold = parseFloat(thresholds[idx]);
+          trend = trends[idx];
+          passed = passed[idx];
+          name = names[idx];
+
+          // if trend is "positive" set keyword to upwards, if trend is "negative" set keyword to downwards, else set keyword to flat
+          if (trend === "positive") {
+            var trend_keyword = "upwards";
+          } else if (trend === "negative") {
+            var trend_keyword = "downwards";
+          } else {
+            var trend_keyword = "flat";
+          }
+          // if passed is true set keyword to Above, if passed is false set keyword to Below
+          if (passed) {
+            var passed_keyword = "above";
+          }
+          else {
+            var passed_keyword = "below";
+          }
+          // create title for plot: Current {metric name} is trending {trend_keyword} and is {passed_keyword} the threshold.
+          var plot_title = "Current " + name + " is trending " + trend_keyword + " and is " + passed_keyword + " the threshold.";
+
+          var trace = {
+            // range of x is the length of the list of floats
+            x: Array.from({length: plot_data.length}, (_, i) => i),
+            y: plot_data,
+            mode: 'lines+markers',
+            type: 'scatter',
+            marker: {color: 'rgb(31,111,235)'},
+            line: {color: 'rgb(31,111,235)'},
+          };
+
+          var threshold_trace = {
+            x: Array.from({length: plot_data.length}, (_, i) => i),
+            y: Array.from({length: plot_data.length}, (_, i) => threshold),
+            mode: 'lines',
+            type: 'scatter',
+            marker: {color: 'rgb(0,0,0)'},
+            line: {color: 'rgb(0,0,0)', dash: 'dot'},
+          };
+
+          var layout = {
+            title: {
+              text: plot_title,
+              font: {
+                family:  'Arial, Helvetica, sans-serif',
+                size: 18,
+              }
+            },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            xaxis: {
+              zeroline: false,
+              showticklabels: false,
+              showgrid: false,
+            },
+            yaxis: {
+              gridcolor: '#ffffff',
+            },
+            showlegend: false,
+            margin: {
+              l: 50,
+              r: 50,
+              b: 50,
+              t: 50,
+              pad: 4
+            },
+            // set height and width of plot to extra-wide to fit the plot
+            height: 500,
+            width: 900,
+          }
+
+          Plotly.newPlot(plot, [trace, threshold_trace], layout, {displayModeBar: false});
+
+          // document.getElementById("plot").innerHTML = plots[idx];
+        }
+        
+
+        // Add event listeners to the filters
+        {# for (let filter of filters) {
+            filter.addEventListener('change', updatePlot,);
+        } #}
+        // Add event listeners to radio buttons
+        for (let input of inputs_all) {
+          input.addEventListener('change', updatePlot,);
+        }
+        // Initial update when the page loads
+        updatePlot();
+      </script>
+
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_overview(name, comp) %}
+{{ render_perf(name, comp) }}
+{% set val = {'history': false} %}
+{% for metric_card in comp.metric_cards.collection%}
+    {% if metric_card.history|length > 1 %}
+      {% set _ = val.update({'history':true}) %}
+    {% endif %}
+{% endfor %}
+{% if val['history'] %}
+  {{ render_perf_over_time(name, comp) }}
+{% endif %}
+{% endmacro %}
+
+{% macro render_objects(section)%}
+{% for name, object in section %}
+  {% if name == "performance_metrics" %} {# do nothing #}
+  {% elif object.__class__.__name__ == "GraphicsCollection"%}
+    <div class="subcard" style="flex-basis:100%;">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      <ul>
+        {{render_if_exist_list(object)}}
+      </ul>
+    </div>
+  {% else %}
+    {% if (object is list) and object|length != 0 %}
+    <div class="subcard">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      {% for objects in object%}
+          <ul>
+          {{ render_if_exist_list(objects) }}
+          </ul>
+      {% endfor %}
+    </div>
+    {% elif ( (object is string) or (object is int) or (object is float) or (object is bool) ) %}
+    <div class="subcard">
+      <h3>{{ name|title|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h3>
+      {{ object }}
+    </div>
+    {% elif (object is None) or (object is empty) %}
+    {% else %}
+    <div class="subcard">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      <ul>
+      {{render_if_exist_list(object)}}
+      </ul>
+    </div>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% endmacro %}
+
+{% macro render_section(name, section)%}
+{% if section is not empty%}
+  {% set header = section.__class__.__name__ %}
+    <div class="card" id={{name}}>
+    <h2>{{ header|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
+    {% if header == "Datasets" %}
+      {% for dataset in section.data %}
+          {{ render_objects(dataset) }}
+      {% endfor %}
+      {# Display global plots from GraphicsCollection in Datasets, temporary fix #}
+      {% if section is hasattr "graphics" %}
+        <div class="subcard" style="min-width:1400px;">
+          <h3>{{ "Graphics" }}</h3>
+          {{ render_if_exist_list(section.graphics) }}
+        </div>
+      {% endif %}
+    {% elif header == "QuantitativeAnalysis"%}
+      {% for metric_card in model_card.overview.metric_cards.collection %}
+        {% if metric_card.slice == 'overall' %}
+          {{ render_metric_card(metric_card) }}
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      {{ render_objects(section) }}
+    {% endif %}
+  </div>
+{% endif %}
+{% endmacro %}
+
+{% macro render_sidebar(model_card) %}
+<input class=minimizer type='checkbox' id='sidebar-toggle' />
+<label for="sidebar-toggle" id='sidebar-btn'>
+  <div id='sidebar_toggle_icon'>
+    <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H9V18H6C5.44772 18 5 17.5523 5 17V7ZM11 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H11V18Z" fill="#000000"/>
+    </svg>
+  </div>
+</label>
+<div id='sidebar'>
+  <a href="https://vectorinstitute.github.io/cyclops/" target="_blank"><img
+    src="https://raw.githubusercontent.com/VectorInstitute/cyclops/main/docs/source/theme/static/cyclops_logo-dark.png"
+    alt="CyclOps Logo" id="logo"></a>
+  <span class='title'>CARD SECTIONS</span>
+  <hr>
+  <ul id='contents'>
+    {% for name, section in model_card %}
+      {% if section is not empty %}
+        <a href="#{{ name }}">
+          <li class="button" id="{{name}}_button">{{ section.__class__.__name__|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</li>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+{% endmacro %}
+
+<html lang="en">
+  <head>
+    {# <meta id="slices" data-slices="{{ get_slices(model_card)|safe }}" /> #}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial_scale=1">
+    {# <link href="css/bootstrap.min.css" rel="stylesheet"> #}
+    {# <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"> #}
+    {# <script src="js/bootstrap.bundle.min.js"></script> #}
+    {# <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> #}
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      h2 {
+        color: #214d87;
+        flex-basis: 100%;
+      }
+
+      h3 {
+        color: #0073e4;
+        flex-basis: 100%;
+      }
+
+      .card {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: left;
+        padding: 1em;
+        border: 1px solid #DADCE0;
+        margin: 10px;
+        background-color: #ffffff;
+        border-radius: 5px;
+      }
+
+      .subcard {
+        padding: 30px;
+        border: 1px solid #DADCE0;
+        margin: 10px;
+        background-color: #f3f4f6;
+        border-radius: 5px;
+        box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
+      }
+
+      ul li {
+        width: 100%;
+        float:left;
+      }
+
+      .img-item {
+        min-width: 1024px;
+        width: 100%;
+        height: auto;
+        flex-basis: 100%;
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+
+      #banner {
+        width: 100%;
+        height: 170px;
+        position: relative;
+        z-index: 0;
+        top: 0;
+        left: 0;
+      }
+
+      #banner #logo {
+        float: left;
+        max-width: 500px;
+        width: auto;
+        height: auto;
+      }
+
+      #logo {
+        margin-top: 50px;
+        padding-bottom: 10px;
+        float: left;
+        max-width: 200px;
+        width: auto;
+        height: auto;
+      }
+
+      #sidebar {
+        background-color: #ffffff;
+        height: 100%;
+        width: 15rem;
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        display: block;
+        box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2);
+        transition: left 0.2s ease-in-out;
+      }
+
+      #sidebar-btn:hover {
+        background-color: rgba(247, 247, 248, 0.9);
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #sidebar-toggle {
+        display: none;
+      }
+
+      #sidebar-btn {
+        position: fixed;
+        top: 10px;
+        left: 190px;
+        z-index: 2;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        background-color: #ffffff;
+        transition: left 0.2s ease-in-out;
+        outline: 2px solid #0000001a;
+        border-radius: 5px;
+      }
+
+      #sidebar-toggle:checked+#sidebar-btn+#sidebar {
+        left: -16rem;
+      }
+
+      #sidebar-toggle:checked+#sidebar-btn+#sidebar>hr {
+        margin: 0.5em 0.5em 0.5em 12.5em;
+      }
+
+      hr {
+        border: 0.75px solid;
+        color: #e5e7eb;
+        opacity: 0.7;
+        margin: 0.5em 0.5em 0.5em 0.5em;
+        transition: margin 0.2s ease-in-out;
+      }
+
+      #sidebar-toggle:checked+#sidebar-btn {
+        left: 10px;
+      }
+
+      #sidebar-toggle:checked~#container {
+        margin-left: 50px;
+      }
+
+      #sidebar .title {
+        display: block;
+        font-size: .75rem;
+        line-height: 1rem;
+        font-weight: 900;
+        padding: 3.0rem 1rem 0rem 1rem
+      }
+
+      #sidebar #contents {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        margin-left: 10px;
+        margin-right: 40px;
+      }
+
+      #sidebar #contents .button:hover {
+        background-color: rgba(0, 115, 228, 0.3);
+        cursor: pointer;
+      }
+
+      .active {
+        background-color: rgba(0, 115, 228, 0.3);
+        cursor: pointer;
+      }
+
+      #sidebar .button {
+        display: block;
+        font-size: .75rem;
+        line-height: 0.5rem;
+        font-weight: 500;
+        font-size: 15px;
+        padding: 1rem 1rem 1rem 1rem;
+        text-decoration: none;
+        color: #000000;
+      }
+
+      #sidebar #button_min {
+        display: none;
+        float: right;
+        font-size: .75rem;
+        line-height: 0.5rem;
+        font-weight: 500;
+        font-size: 15px;
+        margin-top: -2.5rem;
+        padding: 1rem 1rem 1rem 1.3rem;
+        text-decoration: none;
+        color: #000000;
+      }
+
+      #sidebar #button_min:hover {
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #container {
+        max-width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        margin-left: 250px;
+        margin-right: 25px;
+        transition: margin-left 0.2s ease-in-out;
+      }
+
+      body {
+        background-color: #f3f4f6;
+      }
+
+      .styled-table {
+        border-spacing: 0;
+        border-collapse: separate;
+        border-radius: 10px;
+        border: 3px solid #0073e4;
+        margin: 25px;
+        font-size: 16px;
+        font-family: Arial, Helvetica, sans-serif;
+        min-width: 200px;
+        box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      .styled-table-pass {
+        border-spacing: 0;
+        border-collapse: separate;
+        border-radius: 10px;
+        border: 3px solid green;
+        font-size: 16px;
+        font-family: Arial, Helvetica, sans-serif;
+        min-width: 200px;
+        box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      .styled-table-fail {
+        border-spacing: 0;
+        border-collapse: separate;
+        border-radius: 10px;
+        border: 3px solid red;
+        font-size: 16px;
+        font-family: Arial, Helvetica, sans-serif;
+        min-width: 200px;
+        box-shadow: 6px 6px 6px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      th {
+        padding: 12px 15px;
+        color: white;
+        background-color: #0073e4;
+      }
+
+      tbody tr {
+        border-bottom: 1px solid #dddddd;
+      }
+
+      tr:nth-of-type(even) {
+        background-color: #ffffff;
+      }
+
+      caption {
+        font-weight: bold;
+      }
+
+      .tooltip {
+        position: relative;
+        display: inline-block;
+      }
+
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        padding: 5px;
+        font-size: 12px;
+        font-weight:lighter;
+        position: absolute;
+        z-index: 1;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+
+      .tooltip .tooltiptext .arrow-up {
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 10px solid black;
+        position: absolute;
+        bottom: -10px;
+        left: 45%;
+        transform: translateX(-50%);
+        transform: scaleY(-1);
+      }
+
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      .tooltip:hover {
+        color:#0073e4;
+      }
+
+      .radio-buttons {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: left;
+        align-items: center;
+      }
+
+      input[type="radio"] {
+        display: none;
+      }
+
+      .radio-buttons label {
+        font-size:14px;
+        cursor: pointer;
+        padding: 5px 20px;
+        margin: 0px;
+        margin-top: 2px;
+        margin-bottom: 2px;
+        color: black;
+        text-align: center;
+        transition: background-color 0.3s ease;
+        background-color: #ffffff;
+        border: 2px solid #DADCE0;
+      }
+
+      .radio-buttons label:not(:first-child):not(:last-child) {
+        border-top: 2px solid #DADCE0;
+        border-bottom: 2px solid #DADCE0;
+        border-left: 1px solid #DADCE0;
+        border-right: 1px solid #DADCE0;
+      }
+
+      .radio-buttons .tooltip label:not(:first-child):not(:last-child) {
+        border-top: 2px solid #DADCE0;
+        border-bottom: 2px solid #DADCE0;
+        border-left: 1px solid #DADCE0;
+        border-right: 1px solid #DADCE0;
+      }
+
+      .radio-buttons label:last-child {
+        border-left: 1px solid #DADCE0;
+      }
+
+      .radio-buttons .tooltip label:first-child {
+        border-right: 1px solid #DADCE0;
+      }
+
+      .radio-buttons label:hover {
+        color: #0073e4;
+      }
+
+      .radio-buttons .tooltip label:hover {
+        color: #0073e4;
+      }
+
+      .radio-buttons input[type="radio"]:checked+label {
+        background-color: rgba(0, 115, 228, 0.2);
+        border: 2px solid #0073e4;
+        color: #0073e4;
+      }
+
+      .radio-buttons input[type="radio"]:checked + .tooltip label {
+        background-color: rgba(0, 115, 228, 0.2);
+        border: 2px solid #0073e4;
+        color: #0073e4;
+      }
+
+
+    </style>
+    <script>{{ plotlyjs|safe }}</script>
+  </head>
+  <body>
+    {{ render_sidebar(model_card) }}
+    <main id="container">
+      {% for name, section in model_card %}
+        {% if name == "overview" %}
+          {{ render_overview(name, section) }}
+        {% else %}
+          {{ render_section(name, section) }}
+        {% endif %}
+      {% endfor %}
+    </main>
+  </body>
+</html>
+<script>
+  function isInView(element) {
+    // return true if element is in view
+    var rect     = element.getBoundingClientRect(),
+        vWidth   = window.innerWidth || document.documentElement.clientWidth,
+        vHeight  = window.innerHeight || document.documentElement.clientHeight,
+        efp      = function (x, y) { return document.elementFromPoint(x, y) };     
+
+    // Return false if it's not in the viewport
+    if (rect.right < 0 || rect.bottom < 0 
+            || rect.left > vWidth || rect.top > vHeight - 2*vHeight/3)  {
+        return false;
+            }
+    else {
+      return true;
+    }
+  }
+
+  function setActiveButton() {
+    const buttons = document.querySelectorAll('#contents li');
+    const sections = document.querySelectorAll('.card');
+
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+      if (isInView(section)) {
+        // find button from buttons with same id as section with "_button" appended
+        for (let j = 0; j < buttons.length; j++) {
+          const button = buttons[j];
+          if (button.id == section.id + "_button") {
+            button.classList.add("active");
+          }
+          else {
+            button.classList.remove("active");
+          }
+        }
+      }
+    }
+  }
+
+  document.addEventListener('scroll', setActiveButton);
+  setActiveButton();
+</script>
