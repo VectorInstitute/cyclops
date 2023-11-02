@@ -151,7 +151,7 @@
           <span style="font-size: 40px; color: red;">&#9660;</span>
         {% else %}
           <span style="font-size: 40px; color: gray;">&#9472;</span>
-        {% endif %}        
+        {% endif %}
       </span>
       <span style="display: inline-block; line-height:1;">
         <span style="font-size: 14px">{{card.threshold}}<br>minimum<br>threshold</span>
@@ -364,7 +364,7 @@
 
           // document.getElementById("plot").innerHTML = plots[idx];
         }
-        
+
 
         // Add event listeners to the filters
         {# for (let filter of filters) {
@@ -895,10 +895,10 @@
     var rect     = element.getBoundingClientRect(),
         vWidth   = window.innerWidth || document.documentElement.clientWidth,
         vHeight  = window.innerHeight || document.documentElement.clientHeight,
-        efp      = function (x, y) { return document.elementFromPoint(x, y) };     
+        efp      = function (x, y) { return document.elementFromPoint(x, y) };
 
     // Return false if it's not in the viewport
-    if (rect.right < 0 || rect.bottom < 0 
+    if (rect.right < 0 || rect.bottom < 0
             || rect.left > vWidth || rect.top > vHeight - 2*vHeight/3)  {
         return false;
             }
