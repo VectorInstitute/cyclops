@@ -1,1 +1,0 @@
-"""Tabs for the interface."""
