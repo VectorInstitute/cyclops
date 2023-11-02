@@ -547,60 +547,88 @@ class FairnessReport(BaseModelCardField, composable_with=["FairnessAnalysis"]):
     )
 
 
-class ComparativeMetrics(BaseModelCardField):
-    """A collection of comparative metrics between baseline and periodic reports."""
+class MetricCard(
+    BaseModelCardField,
+    list_factory=True,
+    composable_with=["MetricCardCollection"],
+):
+    """A metric card."""
 
-    report_type: StrictStr = Field(
-        "baseline",
-        description="The type of report being generated.",
-    )
-
-    fail_rate: Optional[StrictStr] = Field(
+    name: Optional[StrictStr] = Field(
         None,
-        description="The fail rate of the periodic report.",
+        description="The name of the metric.",
     )
 
-    fail_rate_change: Optional[StrictStr] = Field(
+    type: Optional[StrictStr] = Field(
         None,
-        description="The change in fail rate between the baseline and periodic report.",
+        description="The type of metric.",
     )
 
-    time_diff_string: Optional[StrictStr] = Field(
+    slice: Optional[StrictStr] = Field(
         None,
-        description="The time difference between the baseline and periodic report.",
+        description="The name of the slice the metric was computed on.",
     )
 
-    new_tests_failed: Optional[List[Test]] = Field(
-        description="The new tests that failed in the periodic report.\
-            but passed in the baseline report.",
-        default_factory=list,
+    tooltip: Optional[StrictStr] = Field(
+        None,
+        description="A tooltip for the metric.",
     )
 
-    new_tests_passed: Optional[List[Test]] = Field(
-        description="The new tests that passed in the periodic report.\
-            but failed in the baseline report.",
-        default_factory=list,
+    value: Optional[StrictFloat] = Field(
+        None,
+        description="The value of the metric.",
     )
 
-    all_metrics_failed: Optional[List[PerformanceMetric]] = Field(
-        description="The metrics that failed in the periodic report.",
-        default_factory=list,
+    threshold: Optional[StrictFloat] = Field(
+        None,
+        description="Threshold required to pass the test.",
     )
 
-    new_metrics_failed_periodic: Optional[List[PerformanceMetric]] = Field(
-        description="The new metrics that failed in the periodic report\
-            but passed in the baseline report.",
-        default_factory=list,
+    passed: Optional[StrictBool] = Field(
+        None,
+        description="Whether the model result satisfies the given threshold.",
     )
 
-    new_metrics_failed_baseline: Optional[List[PerformanceMetric]] = Field(
-        description="The old metrics that failed in the periodic report\
-            but passed in the baseline report.",
-        default_factory=list,
+    history: List[StrictFloat] = Field(
+        None,
+        description="History of the metric over time.",
     )
 
-    new_metrics_passed: Optional[List[PerformanceMetric]] = Field(
-        description="The new metrics that passed in the periodic report\
-            but failed in the baseline report.",
+    trend: Optional[StrictStr] = Field(
+        None,
+        description="The trend of the metric over time.",
+    )
+
+    plot: Optional[GraphicsCollection] = Field(
+        None,
+        description="A plot of the performance over time.",
+    )
+
+
+class MetricCardCollection(BaseModelCardField, composable_with="Any"):
+    """A collection of metric cards to be displayed in the model card."""
+
+    metrics: Optional[List[StrictStr]] = Field(
+        None,
+        description="A list of metric names in the Metric Card collection.",
+    )
+
+    tooltips: Optional[List[StrictStr]] = Field(
+        None,
+        description="A list of tooltips in the Metric Card collection.",
+    )
+
+    slices: Optional[List[StrictStr]] = Field(
+        None,
+        description="A list of slices in the Metric Card collection.",
+    )
+
+    values: Optional[List[List[StrictStr]]] = Field(
+        None,
+        description="A list of values for each slice in the Metric Card collection.",
+    )
+
+    collection: Optional[List[MetricCard]] = Field(
+        description="A collection of metric cards.",
         default_factory=list,
     )
