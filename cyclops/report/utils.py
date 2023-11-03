@@ -1,14 +1,14 @@
 """Utility functions for the `cyclops.report` module."""
 
+import glob
 import importlib
 import inspect
 import json
-from re import findall, sub
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+import os
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
-import glob
-import os
+from re import findall, sub
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import numpy as np
 import plotly.graph_objects as go
@@ -165,12 +165,14 @@ def flatten_results_dict(  # noqa: PLR0912
 
     return results_flat
 
+
 def filter_results(
     results: List[Dict[str, Any]],
     slice_names: Optional[Union[str, List[str]]] = None,
     metric_names: Optional[Union[str, List[str]]] = None,
 ) -> List[Dict[str, Any]]:
     """Filter results by slice and metric names.
+
     Parameters
     ----------
     results : List[Dict[str, Any]]
@@ -182,6 +184,7 @@ def filter_results(
     metric_names : Union[str, List[str]], optional
         Names of metrics to filter by, if None, return all metrics, \
         by default None
+
     Returns
     -------
     List[Dict[str, Any]]
@@ -197,6 +200,8 @@ def filter_results(
         if (metric_names is None or d["type"] in metric_names)
         and (slice_names is None or d["slice"] in slice_names)
     ]
+
+
 def extract_performance_metrics(
     root_directory: str,
     slice_names: Optional[Union[str, List[str]]] = None,
@@ -204,6 +209,7 @@ def extract_performance_metrics(
     keep_timestamps: bool = False,
 ) -> Dict[str, List[Dict[str, Any]]]:
     """Extract performance metrics from previous model cards.
+
     Parameters
     ----------
     root_directory : str
@@ -217,6 +223,7 @@ def extract_performance_metrics(
     keep_timestamps : bool, optional
         Whether or not to keep timestamps in the results keys, \
             by default False
+
     Returns
     -------
     Dict[str, List[Dict[str, Any]]]
@@ -247,6 +254,8 @@ def extract_performance_metrics(
                 # only keep the most recent one
                 metrics_dict[date_string] = performance_metrics
     return metrics_dict
+
+
 def get_metrics_trends(
     report_directory: str,
     flat_results: Dict[str, Any],
@@ -255,6 +264,7 @@ def get_metrics_trends(
     metric_names: Optional[Union[str, List[str]]] = None,
 ) -> Dict[str, List[Dict[str, Any]]]:
     """Get the trends of the metrics over time to plot.
+
     Parameters
     ----------
     report_directory : str
@@ -271,6 +281,7 @@ def get_metrics_trends(
     keep_timestamps : bool, optional
         Whether or not to keep timestamps in the results keys, \
         by default False
+
     Returns
     -------
     Dict[str, List[Dict[str, Any]]]
@@ -548,7 +559,7 @@ def get_names(model_card: ModelCard) -> str:
     return json.dumps(names)
 
 
-def create_metric_cards(  # noqa: PLR0912
+def create_metric_cards(  # noqa: PLR0912 PLR0915
     current_metrics: List[PerformanceMetric],
     last_metric_cards: Optional[List[MetricCard]] = None,
 ) -> Tuple[
@@ -613,12 +624,12 @@ def create_metric_cards(  # noqa: PLR0912
     for metric in all_metrics:
         # split into words by camelcase
         if isinstance(metric["type"], str):
-            # check if name has prefix "Binary", "Multiclass", or "Multilabel" and remove it
+            # check if name has prefix "Binary", "Multiclass", or "Multilabel"
             if metric["type"].startswith("Binary"):
                 name = metric["type"][6:]
-            elif metric["type"].startswith("Multiclass"):
-                name = metric["type"][10:]
-            elif metric["type"].startswith("Multilabel"):
+            elif metric["type"].startswith("Multiclass") or metric["type"].startswith(
+                "Multilabel",
+            ):
                 name = metric["type"][10:]
             name = name.replace(
                 "Positive Predictive Value",
