@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.1.37"
+version = "0.1.40"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -12,18 +12,16 @@ packages = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.12"
+python = ">=3.9, <3.11"
 pandas = "^1.4.1"
 numpy = "1.24.4"
 datasets = "^2.10.1"
 psutil = "^5.9.4"
 pyarrow = "^11.0.0"
 monai = { version = "^1.1.0", extras = ["itk"] }
-dask = { version = "^2022.9.1", extras = ["dataframe"] }
+dask = { version = "^2023.10.0", extras = ["dataframe"] }
 
-psycopg2 = { version = "^2.9.6", optional = true }
 hydra-core = { version = "^1.2.0", optional = true }
-SQLAlchemy = { version = "^1.4.32, <2.0", optional = true }
 scikit-learn = { version = "^1.2.2", optional = true }
 torch = { version = "^1.11.0", optional = true }
 torchxrayvision = { version = "^1.2.0", optional = true }
@@ -36,7 +34,6 @@ spdx-tools = { version = "^0.8.1", optional = true }
 pybtex = { version = "^0.24.0", optional = true }
 kaleido = { version = "0.2.1", optional = true }
 scour = { version = "^0.38.2", optional = true }
-category-encoders = { version = "^2.6.1", optional = true }
 plotly = { version = "^5.7.0", optional = true }
 pillow = { version = "^9.5.0", optional = true }
 array-api-compat = {version = "^1.4", optional = true}
@@ -63,11 +60,13 @@ spdx-tools = "^0.8.1"
 pybtex = "^0.24.0"
 kaleido = "0.2.1"
 scour = "^0.38.2"
-category-encoders = "^2.6.1"
 plotly = "^5.7.0"
 pillow = "^9.5.0"
 
-[tool.poetry.group.codestyle.dependencies]
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
 pytest = "^7.1.1"
 pre-commit = "^2.17.0"
 black = "^22.1.0"
@@ -75,8 +74,12 @@ pytest-cov = "^3.0.0"
 codecov = "^2.1.13"
 nbstripout = "^0.6.1"
 mypy = "^1.0.0"
-ruff = "^0.0.288"
+ruff = "^0.1.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
+cycquery = "^0.1.0" # used for integration test
+
+[tool.poetry.group.docs]
+optional = true
 
 [tool.poetry.group.docs.dependencies]
 numpydoc = "^1.2"
@@ -92,15 +95,16 @@ ipython = "^8.8.0"
 ipykernel = "^6.23.0"
 kaggle = "^1.5.13"
 
+[tool.poetry.group.dev]
+optional = true
+
 [tool.poetry.group.dev.dependencies]
+cycquery = "^0.1.0"
 seaborn = "^0.11.2"
 matplotlib = "^3.5.1"
-mlflow = "^1.24.0"
 jupyter = "^1.0.0"
 jupyterlab = "^3.4.2"
-prefect = "^2.7.10"
 ipympl = "^0.9.3"
-evidently = "^0.2.8"
 ipywidgets = "^8.0.6"
 torchmetrics = {version = "^1.2.0", extras = ["classification"]}
 cupy = "^12.2.0"
@@ -141,7 +145,6 @@ warn_return_any = true
 implicit_reexport = false
 strict_equality = true
 extra_checks = true
-plugins = ["sqlalchemy.ext.mypy.plugin"]
 
 [tool.ruff]
 include = ["*.py", "pyproject.toml", "*.ipynb"]
@@ -168,8 +171,6 @@ fixable = ["A", "B", "COM", "C4", "RET", "SIM", "ICN", "Q", "RSE", "D", "E", "F"
 line-length = 88
 exclude = [
     "cyclops/process",
-    "apps",
-    "cyclops/workflow",
     "use_cases",
     "nbs",
 ]
@@ -212,24 +213,3 @@ markers = [
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry2conda]
-name = "cyclops"
-
-[tool.poetry2conda.dependencies]
-monai = { channel = "pip" }
-torchxrayvision = { channel = "pip" }
-kaleido = { channel = "pip" }
-psycopg2 = { channel = "pip" }
-hydra-core = { channel = "pip" }
-dask = { channel = "pip" }
-pydantic = { channel = "pip" }
-category-encoders = { channel = "pip" }
-alibi = { channel = "pip" }
-alibi-detect = { channel = "pip" }
-psutil = { channel = "pip" }
-spdx-tools = { channel = "pip" }
-pillow = { channel = "pip" }
-pybtex = { channel = "pip" }
-scour = { channel = "pip" }
-torch = { channel = "pip" }

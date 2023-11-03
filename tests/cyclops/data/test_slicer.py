@@ -3,13 +3,14 @@
 from functools import partial
 from typing import Any, Callable, List, Union
 
+import cycquery.ops as qo
 import numpy as np
 import pandas as pd
 import pytest
+from cycquery import OMOPQuerier
 from datasets import Dataset
 from datasets.splits import Split
 
-import cyclops.query.ops as qo
 from cyclops.data.slicer import (
     SliceSpec,
     _maybe_convert_to_datetime,
@@ -21,10 +22,14 @@ from cyclops.data.slicer import (
     filter_value,
     overall,
 )
-from cyclops.query.omop import OMOPQuerier
 
 
-SYNTHEA = OMOPQuerier("cdm_synthea10", database="synthea_integration_test")
+SYNTHEA = OMOPQuerier(
+    database="synthea_integration_test",
+    user="postgres",
+    password="pwd",
+    schema_name="cdm_synthea10",
+)
 
 
 def visits_table() -> pd.DataFrame:
