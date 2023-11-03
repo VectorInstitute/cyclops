@@ -293,8 +293,8 @@ def _prepare_models(
 ) -> Dict[str, WrappedModel]:
     """Prepare models for evaluation."""
     if isinstance(model, get_args(WrappedModel)):
-        model_name: str = model.model_.__class__.__name__  # type: ignore
-        return {model_name: model}  # type: ignore[dict-item]
+        model_name: str = model.model_.__class__.__name__
+        return {model_name: model}
     if isinstance(model, (list, tuple)):
         assert all(isinstance(m, get_args(WrappedModel)) for m in model)
         return {m.getattr("model_").__class__.__name__: m for m in model}

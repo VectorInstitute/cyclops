@@ -234,7 +234,7 @@ def evaluate_fairness(
             # since we have base values, remove overall slice
             slice_spec._registry.pop("overall", None)
 
-        results: Dict[str, Dict[str, Any]] = {}
+        results: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
         for slice_name, slice_fn in slice_spec.slices():
             sliced_dataset = dataset.remove_columns(remove_columns or []).filter(
@@ -933,25 +933,25 @@ def _construct_base_slice_name(base_values: Dict[str, Any]) -> str:
 
 
 def _compute_parity_metrics(
-    results: Dict[str, Dict[str, Dict[str, Dict[str, float]]]],
+    results: Dict[str, Dict[str, Dict[str, Any]]],
     base_slice_name: str,
-) -> Dict[str, Dict[str, Dict[str, Dict[str, float]]]]:
+) -> Dict[str, Dict[str, Dict[str, Any]]]:
     """Compute the parity metrics for each group and threshold if specified.
 
     Parameters
     ----------
-    results : Dict[str, Dict[str, Dict[str, Dict[str, float]]]]
+    results : Dict[str, Dict[str, Dict[str, Any]]]
         A dictionary mapping the prediction column to the metrics dictionary.
     base_slice_name : str
         The name of the base slice.
 
     Returns
     -------
-    Dict[str, Dict[str, Dict[str, Dict[str, float]]]]
+    Dict[str, Dict[str, Dict[str, Any]]]
         A dictionary mapping the prediction column to the metrics dictionary.
 
     """
-    parity_results: Dict[str, Dict[str, Any]] = {}
+    parity_results: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
     for key, prediction_result in results.items():
         parity_results[key] = {}
@@ -959,6 +959,7 @@ def _compute_parity_metrics(
             for metric_name, metric_value in slice_result.items():
                 if metric_name == "Group Size":
                     continue
+
                 # add 'Parity' to the metric name before @threshold, if specified
                 metric_name_parts = metric_name.split("@")
                 parity_metric_name = f"{metric_name_parts[0]} Parity"
@@ -967,14 +968,13 @@ def _compute_parity_metrics(
 
                 numerator = metric_value
                 denominator = prediction_result[base_slice_name][metric_name]
-                parity_metric_value = np.divide(  # type: ignore[call-overload]
+                parity_metric_value = np.divide(
                     numerator,
                     denominator,
                     out=np.zeros_like(numerator, dtype=np.float_),
                     where=denominator != 0,
                 )
 
-                # add the parity metric to the results
                 parity_results[key].setdefault(slice_name, {}).update(
                     {
                         parity_metric_name: _get_value_if_singleton_array(

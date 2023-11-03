@@ -316,8 +316,7 @@ class Detector:
                     np.random.choice(ds_target.shape[0], sample, replace=False),
                 )
                 ds_target_balanced = concatenate_datasets(
-                    ds_target_sample1,
-                    ds_target_sample2,
+                    [ds_target_sample1, ds_target_sample2],
                 )
 
                 drift_results = self._detect_shift_sample(ds_target_balanced)
