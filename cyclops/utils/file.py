@@ -3,9 +3,8 @@
 import logging
 import os
 import pickle
-from typing import Any, Generator, List, Optional, Union
+from typing import Any, Generator, List, Optional
 
-import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 
@@ -129,7 +128,7 @@ def process_dir_save_path(save_path: str, create_dir: bool = True) -> str:
 
 
 def save_dataframe(
-    data: Union[pd.DataFrame, dd.core.DataFrame],
+    data: pd.DataFrame,
     save_path: str,
     file_format: str = "parquet",
     log: bool = True,
@@ -153,22 +152,14 @@ def save_dataframe(
         Processed save path for upstream use.
 
     """
-    if not isinstance(data, (pd.DataFrame, dd.core.DataFrame)):
+    if not isinstance(data, pd.DataFrame):
         raise ValueError("Input data is not a DataFrame.")
     save_path = process_file_save_path(save_path, file_format)
-    if isinstance(data, dd.core.DataFrame):
-        save_path, _ = os.path.splitext(save_path)
     if log:
         LOGGER.info("Saving dataframe to %s", save_path)
     if file_format == "parquet":
         if isinstance(data, pd.DataFrame):
             data.to_parquet(save_path, schema=None)
-        if isinstance(data, dd.core.DataFrame):
-            data.to_parquet(  # type: ignore
-                save_path,
-                schema=None,
-                name_function=lambda x: f"batch-{str(x).zfill(3)}.parquet",
-            )
     elif file_format == "csv":
         data.to_csv(save_path)
     else:
@@ -183,8 +174,8 @@ def load_dataframe(
     load_path: str,
     file_format: str = "parquet",
     log: bool = True,
-) -> Union[pd.DataFrame, dd.core.DataFrame]:
-    """Load file to a pandas.DataFrame or dask.DataFrame object.
+) -> pd.DataFrame:
+    """Load file to a pandas.DataFrame object.
 
     Parameters
     ----------
@@ -201,15 +192,11 @@ def load_dataframe(
         Loaded data.
 
     """
-    is_dask = True
-    if not os.path.isdir(load_path):
-        load_path = process_file_save_path(load_path, file_format)
-        is_dask = False
+    load_path = process_file_save_path(load_path, file_format)
     if log:
         LOGGER.info("Loading DataFrame from %s", load_path)
     if file_format == "parquet":
-        data_reader = dd.read_parquet if is_dask else pd.read_parquet  # type: ignore
-        data = data_reader(load_path)
+        data = pd.read_parquet(load_path)
     elif file_format == "csv":
         data = pd.read_csv(load_path, index_col=[0])
     else:

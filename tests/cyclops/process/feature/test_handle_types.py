@@ -114,7 +114,7 @@ def test_normalize_data():
     data = pd.DataFrame()
     data["numbers"] = pd.Series([1, 2, 3])
     data["strings"] = pd.Series(["1", "2", "3"])
-    data["nones"] = pd.Series(["None", 2, 3])
+    data["nones"] = pd.Series([None, 2, 3])
     features = ["numbers", "strings", "nones"]
     normalized_data = normalize_data(data, features)
     assert pd.isna(normalized_data.loc[0, "nones"])

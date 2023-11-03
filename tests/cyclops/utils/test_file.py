@@ -4,7 +4,6 @@ import os
 import shutil
 from unittest import TestCase
 
-import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 import pytest
@@ -146,11 +145,6 @@ def test_save_dataframe(
     loaded_data = pd.read_csv(path + ".csv", index_col=[0])
     assert loaded_data.equals(test_data_without_index)
 
-    dask_df = dd.from_pandas(test_data_with_index, npartitions=2)
-    save_dataframe(dask_df, path, file_format="parquet")
-    loaded_data = dd.read_parquet(path)
-    assert loaded_data.compute().equals(test_data_with_index)
-
     shutil.rmtree("test_save")
 
     with pytest.raises(ValueError):
@@ -189,11 +183,6 @@ def test_load_dataframe(
     save_dataframe(test_data_without_index, path, file_format="csv")
     loaded_data = load_dataframe(path, file_format="csv")
     assert loaded_data.equals(test_data_without_index)
-
-    dask_df = dd.from_pandas(test_data_with_index, npartitions=2)
-    save_dataframe(dask_df, path, file_format="parquet")
-    loaded_data = load_dataframe(path)
-    assert loaded_data.compute().equals(test_data_with_index)
 
     with pytest.raises(ValueError):
         load_dataframe(path, file_format="donkey")
