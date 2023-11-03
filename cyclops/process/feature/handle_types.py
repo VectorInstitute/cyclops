@@ -97,7 +97,6 @@ def _type_to_dtype(type_: str) -> Optional[Union[type, str]]:
     """
     if type_ == STRING:
         # If string, leave as is - the user can choose the specific length/type.
-        # return str
         return None
 
     if type_ == NUMERIC:
@@ -105,7 +104,6 @@ def _type_to_dtype(type_: str) -> Optional[Union[type, str]]:
         return None
 
     if type_ in (BINARY, CATEGORICAL_INDICATOR):
-        # return np.uint8
         return "category"
 
     if type_ == ORDINAL:
