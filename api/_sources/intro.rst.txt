@@ -4,8 +4,8 @@
 
 --------------
 
-|PyPI| |code checks| |integration tests| |docs| |codecov| |docker|
-|license|
+|PyPI| |PyPI - Python Version| |code checks| |integration tests| |docs|
+|codecov| |docker| |license|
 
 ``cyclops`` is a toolkit for facilitating research and deployment of ML
 models for healthcare. It provides a few high-level APIs namely:
@@ -73,7 +73,7 @@ Multiple extras could also be combined, for example to install with both
    python3 -m pip install 'pycyclops[report,models]'
 
 🧑🏿‍💻 Developing
-=======================
+=============
 
 Using poetry
 ------------
@@ -148,6 +148,7 @@ Reference to cite when you use CyclOps in a project or a research paper:
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/pycyclops
    :target: https://pypi.org/project/pycyclops
+.. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/pycyclops
 .. |code checks| image:: https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg
    :target: https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml
 .. |integration tests| image:: https://github.com/VectorInstitute/cyclops/actions/workflows/integration_tests.yml/badge.svg
