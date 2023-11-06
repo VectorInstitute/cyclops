@@ -1,15 +1,14 @@
 """Cyclops report module."""
 
 import base64
+import glob
 import os
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 from io import BytesIO
-from re import sub as re_sub
 from typing import Any, Callable, Dict, List, Literal, Optional, Type, Union
 
 import jinja2
-import plotly.graph_objects as go
 from PIL import Image
 from plotly.graph_objects import Figure
 from plotly.io import write_image
@@ -28,6 +27,8 @@ from cyclops.report.model_card.fields import (
     Graphic,
     GraphicsCollection,
     License,
+    MetricCard,
+    MetricCardCollection,
     Owner,
     PerformanceMetric,
     Reference,
@@ -42,12 +43,26 @@ from cyclops.report.model_card.fields import (
 from cyclops.report.utils import (
     _object_is_in_model_card_module,
     _raise_if_not_dict_with_str_keys,
+    create_metric_cards,
+    empty,
+    get_names,
+    get_passed,
+    get_plots,
+    get_slices,
+    get_thresholds,
+    get_trends,
+    regex_replace,
+    regex_search,
     str_to_snake_case,
+    sweep_graphics,
+    sweep_metric_cards,
+    sweep_metrics,
+    sweep_tests,
 )
 
 
 _TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
-_DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template_light.jinja"
+_DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template.jinja"
 
 
 class ModelCardReport:
@@ -243,6 +258,40 @@ class ModelCardReport:
                 section_name=section_name,
                 field_name="graphics",
                 field_type=GraphicsCollection,
+            )
+
+    def _log_metric_card_collection(
+        self,
+        metrics: List[str],
+        tooltips: List[Optional[str]],
+        slices: List[str],
+        values: List[List[str]],
+        metric_cards: List[MetricCard],
+        section_name: str = "overview",
+    ) -> None:
+        # get the section
+        section_name = str_to_snake_case(section_name)
+        section = self._model_card.get_section(section_name)
+
+        # append graphic to exisiting GraphicsCollection or create new one
+        if (
+            "metric_cards" in section.__fields__
+            and section.__fields__["metric_cards"].type_ is MetricCardCollection
+            and section.metric_cards is not None  # type: ignore
+        ):
+            section.metric_cards.collection.append(metric_cards)  # type: ignore
+        else:
+            self._log_field(
+                data={
+                    "metrics": metrics,
+                    "tooltips": tooltips,
+                    "slices": slices,
+                    "values": values,
+                    "collection": metric_cards,
+                },
+                section_name=section_name,
+                field_name="metric_cards",
+                field_type=MetricCardCollection,
             )
 
     def log_image(self, img_path: str, caption: str, section_name: str) -> None:
@@ -985,73 +1034,9 @@ class ModelCardReport:
             cache_size=0,
         )
 
-        def regex_replace(string: str, find: str, replace: str) -> str:
-            """Replace a regex pattern with a string."""
-            return re_sub(find, replace, string)
-
-        def empty(x: Optional[List[Any]]) -> bool:
-            """Check if a variable is empty."""
-            empty = True
-            if x is not None:
-                for _, obj in x:
-                    if isinstance(obj, list):
-                        if len(obj) > 0:
-                            empty = False
-                    elif isinstance(obj, GraphicsCollection):
-                        if len(obj.collection) > 0:  # type: ignore[arg-type]
-                            empty = False
-                    elif obj is not None:
-                        empty = False
-            return empty
-
-        def donut_chart_tests(tests: List[Test]) -> Graphic:
-            """Create a plotly donut chart for the given tests."""
-            colors = ["green", "red"]
-            passed = 0
-            failed = 0
-            for test in tests:
-                if test.passed:
-                    passed += 1
-                else:
-                    failed += 1
-
-            fig = go.Figure(
-                data=[
-                    go.Pie(
-                        labels=["Passed", "Failed"],
-                        values=[passed, failed],
-                        hole=0.4,
-                        pull=[0.005, 0.005],
-                        textinfo="percent",
-                        marker={"colors": colors},
-                        showlegend=False,
-                        title=f"<b>{passed}/{passed+failed}</b><br>Tests Passed",
-                    ),
-                ],
-            )
-            # Increase font size and change font
-            fig.update_layout(
-                font={
-                    "family": "Courier New, monospace",
-                    "size": 20,
-                    "color": "#7f7f7f",
-                },
-                autosize=False,
-                width=400,
-                height=400,
-                margin={"l": 0, "r": 0, "b": 0, "t": 0, "pad": 0},
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-            )
-
-            data = {
-                "name": "Tests (Pass/Fail) Donut Chart",
-                "image": fig.to_html(full_html=False, include_plotlyjs=False),
-            }
-            return Graphic.parse_obj(data)  # create Graphic object from data
-
-        jinja_env.filters["donut_chart_tests"] = donut_chart_tests
         jinja_env.filters["regex_replace"] = regex_replace
+        jinja_env.filters["regex_search"] = regex_search
+        jinja_env.filters["zip"] = zip
         jinja_env.tests["list"] = lambda x: isinstance(x, list)
         jinja_env.tests["empty"] = empty
         jinja_env.tests["hasattr"] = hasattr
@@ -1068,6 +1053,7 @@ class ModelCardReport:
         template_path: Optional[str] = None,
         interactive: bool = True,
         save_json: bool = True,
+        synthetic_timestamp: Optional[str] = None,
     ) -> str:
         """Export the model card report to an HTML file.
 
@@ -1079,8 +1065,14 @@ class ModelCardReport:
         template_path : str, optional
             The path to the jinja2 template to use. The default is None, which uses
             the default template provided by CyclOps.
+        interactive : bool, optional
+            Whether to create an interactive HTML report. The default is True.
         save_json : bool, optional
             Whether to save the model card as a JSON file. The default is True.
+        synthetic_timestamp : str, optional
+            A synthetic timestamp to use for the report. This is useful for
+            generating back-dated reports. The default is None, which uses the
+            current date and time.
 
         Returns
         -------
@@ -1093,53 +1085,70 @@ class ModelCardReport:
             or isinstance(output_filename, str)
             and output_filename.endswith(".html")
         ), "`output_filename` must be a string ending with '.html'"
+
+        # write to file
+        if synthetic_timestamp is not None:
+            today = synthetic_timestamp
+        else:
+            today = dt_date.today().strftime("%Y-%m-%d")
+
+        current_report_metrics: List[List[PerformanceMetric]] = []
+        sweep_metrics(self._model_card, current_report_metrics)
+        current_report_metrics_set = current_report_metrics[0]
+
+        report_paths = glob.glob(
+            os.path.join(
+                self.output_dir,
+                "cyclops_reports",
+                "*",
+                "*",
+                "*.json",
+            ),
+        )
+
+        if len(report_paths) != 0:
+            latest_report_path = sorted(report_paths)[-1]
+            latest_report = ModelCard.parse_file(
+                latest_report_path,
+            )
+            latest_report_metric_cards: List[List[MetricCard]] = []
+            sweep_metric_cards(latest_report, latest_report_metric_cards)
+            latest_report_metric_cards_set = latest_report_metric_cards[0]
+        else:
+            latest_report_metric_cards_set = None
+        # check if overview section exists
+        if self._model_card.overview is None:
+            # compare tests
+            metrics, tooltips, slices, values, metric_cards = create_metric_cards(
+                current_report_metrics_set,
+                latest_report_metric_cards_set,
+            )
+            self._log_metric_card_collection(
+                metrics,
+                tooltips,
+                slices,
+                values,
+                metric_cards,
+            )
+
         self._validate()
         template = self._get_jinja_template(template_path=template_path)
 
-        def sweep_tests(model_card: Any, tests: List[Any]) -> None:
-            """Sweep model card to find all instances of Test."""
-            for field in model_card:
-                if isinstance(field, tuple):
-                    field = field[1]  # noqa: PLW2901
-                if isinstance(field, Test):
-                    tests.append(field)
-                if hasattr(field, "__fields__"):
-                    sweep_tests(field, tests)
-                if isinstance(field, list) and len(field) != 0:
-                    for item in field:
-                        if isinstance(item, Test):
-                            if len(field) == 1:
-                                tests.append(field[0])
-                            else:
-                                tests.append(field)
-                        else:
-                            sweep_tests(item, tests)
-
-        def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
-            """Sweep model card to find all instances of Test."""
-            for field in model_card:
-                if isinstance(field, tuple):
-                    field = field[1]  # noqa: PLW2901
-                if isinstance(field, Graphic) and field.name == caption:
-                    graphics.append(field)
-                if hasattr(field, "__fields__"):
-                    sweep_graphics(field, graphics, caption)
-                if isinstance(field, list) and len(field) != 0:
-                    for item in field:
-                        if isinstance(item, Graphic):
-                            if item.name == caption:
-                                graphics.append(item)
-                        else:
-                            sweep_graphics(item, graphics, caption)
-
-        func_dict = {"sweep_tests": sweep_tests, "sweep_graphics": sweep_graphics}
+        func_dict = {
+            "sweep_tests": sweep_tests,
+            "sweep_graphics": sweep_graphics,
+            "get_slices": get_slices,
+            "get_plots": get_plots,
+            "get_thresholds": get_thresholds,
+            "get_trends": get_trends,
+            "get_passed": get_passed,
+            "get_names": get_names,
+        }
         template.globals.update(func_dict)
 
         plotlyjs = get_plotlyjs() if interactive else None
         content = template.render(model_card=self._model_card, plotlyjs=plotlyjs)
 
-        # write to file
-        today = dt_date.today().strftime("%Y-%m-%d")
         now = dt_datetime.now().strftime("%H-%M-%S")
         report_path = os.path.join(
             self.output_dir,
@@ -1149,7 +1158,6 @@ class ModelCardReport:
             output_filename or "model_card.html",
         )
         self._write_file(report_path, content)
-
         if save_json:
             json_path = report_path.replace(".html", ".json")
             self._write_file(

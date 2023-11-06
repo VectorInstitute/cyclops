@@ -545,3 +545,90 @@ class FairnessReport(BaseModelCardField, composable_with=["FairnessAnalysis"]):
         description="Tests related to fairness considerations.",
         default_factory=list,
     )
+
+
+class MetricCard(
+    BaseModelCardField,
+    list_factory=True,
+    composable_with=["MetricCardCollection"],
+):
+    """A metric card."""
+
+    name: Optional[StrictStr] = Field(
+        None,
+        description="The name of the metric.",
+    )
+
+    type: Optional[StrictStr] = Field(
+        None,
+        description="The type of metric.",
+    )
+
+    slice: Optional[StrictStr] = Field(
+        None,
+        description="The name of the slice the metric was computed on.",
+    )
+
+    tooltip: Optional[StrictStr] = Field(
+        None,
+        description="A tooltip for the metric.",
+    )
+
+    value: Optional[StrictFloat] = Field(
+        None,
+        description="The value of the metric.",
+    )
+
+    threshold: Optional[StrictFloat] = Field(
+        None,
+        description="Threshold required to pass the test.",
+    )
+
+    passed: Optional[StrictBool] = Field(
+        None,
+        description="Whether the model result satisfies the given threshold.",
+    )
+
+    history: List[StrictFloat] = Field(
+        None,
+        description="History of the metric over time.",
+    )
+
+    trend: Optional[StrictStr] = Field(
+        None,
+        description="The trend of the metric over time.",
+    )
+
+    plot: Optional[GraphicsCollection] = Field(
+        None,
+        description="A plot of the performance over time.",
+    )
+
+
+class MetricCardCollection(BaseModelCardField, composable_with="Overview"):
+    """A collection of metric cards to be displayed in the model card."""
+
+    metrics: Optional[List[StrictStr]] = Field(
+        None,
+        description="A list of metric names in the Metric Card collection.",
+    )
+
+    tooltips: Optional[List[StrictStr]] = Field(
+        None,
+        description="A list of tooltips in the Metric Card collection.",
+    )
+
+    slices: Optional[List[StrictStr]] = Field(
+        None,
+        description="A list of slices in the Metric Card collection.",
+    )
+
+    values: Optional[List[List[StrictStr]]] = Field(
+        None,
+        description="A list of values for each slice in the Metric Card collection.",
+    )
+
+    collection: Optional[List[MetricCard]] = Field(
+        description="A collection of metric cards.",
+        default_factory=list,
+    )

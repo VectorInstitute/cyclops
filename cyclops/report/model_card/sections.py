@@ -15,6 +15,7 @@ from cyclops.report.model_card.fields import (
     GraphicsCollection,
     KeyVal,
     License,
+    MetricCardCollection,
     Owner,
     PerformanceMetric,
     Reference,
@@ -24,6 +25,15 @@ from cyclops.report.model_card.fields import (
     User,
     Version,
 )
+
+
+class Overview(BaseModelCardSection):
+    """Overview section with aggregate metrics."""
+
+    metric_cards: Optional[MetricCardCollection] = Field(
+        None,
+        description="Comparative metrics between baseline and periodic report.",
+    )
 
 
 class ModelDetails(BaseModelCardSection):

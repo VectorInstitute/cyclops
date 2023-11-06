@@ -7,11 +7,36 @@ from datetime import date as dt_date
 
 import pytest
 
+from cyclops.report.model_card import ModelCard
+from cyclops.report.model_card.fields import (
+    Graphic,
+    MetricCard,
+    PerformanceMetric,
+    Test,
+)
+from cyclops.report.model_card.sections import (
+    GraphicsCollection,
+    MetricCardCollection,
+    Overview,
+    QuantitativeAnalysis,
+)
 from cyclops.report.utils import (
+    create_metric_card_plot,
+    create_metric_cards,
     extract_performance_metrics,
     filter_results,
     flatten_results_dict,
     get_metrics_trends,
+    get_names,
+    get_passed,
+    get_plots,
+    get_slices,
+    get_thresholds,
+    get_trends,
+    sweep_graphics,
+    sweep_metric_cards,
+    sweep_metrics,
+    sweep_tests,
 )
 
 
@@ -219,3 +244,145 @@ def test_get_metrics_trends():
     )
     assert any(d["type"] == "precision" and d["value"] == 0.4 for d in trends[today])
     shutil.rmtree(tmpdir)
+
+
+@pytest.fixture(name="model_card")
+def model_card():
+    """Create a test input for model card."""
+    model_card = ModelCard()
+    model_card.overview = Overview(
+        metric_cards=MetricCardCollection(
+            collection=[
+                MetricCard(
+                    name="Accuracy",
+                    type="BinaryAccuracy",
+                    slice="overall",
+                    tooltip="Accuracy is the proportion of correct predictions among all predictions.",
+                    value=0.85,
+                    threshold=0.7,
+                    passed=True,
+                    history=[0.8, 0.85, 0.9],
+                    trend="positive",
+                    plot=GraphicsCollection(collection=[Graphic(name="Accuracy")]),
+                ),
+                MetricCard(
+                    name="Precision",
+                    type="BinaryPrecision",
+                    slice="overall",
+                    tooltip="Precision is the proportion of correct positive predictions among all positive predictions.",
+                    value=0.8,
+                    threshold=0.7,
+                    passed=True,
+                    history=[0.7, 0.8, 0.9],
+                    trend="positive",
+                    plot=GraphicsCollection(collection=[Graphic(name="Precision")]),
+                ),
+            ],
+        ),
+    )
+    model_card.quantitative_analysis = QuantitativeAnalysis()
+    model_card.quantitative_analysis.performance_metrics = [
+        PerformanceMetric(
+            type="BinaryAccuracy",
+            value=0.85,
+            slice="overall",
+            tests=[Test()],
+        ),
+        PerformanceMetric(
+            type="BinaryPrecision",
+            value=0.8,
+            slice="overall",
+            tests=[Test()],
+        ),
+    ]
+    return model_card
+
+
+def test_sweep_tests(model_card):
+    """Test sweep_tests function."""
+    tests = []
+    sweep_tests(model_card, tests)
+    assert len(tests) == 2
+
+
+def test_sweep_metrics(model_card):
+    """Test sweep_metrics function."""
+    metrics = []
+    sweep_metrics(model_card, metrics)
+    assert len(metrics) == 2
+
+
+def test_sweep_metric_cards(model_card):
+    """Test sweep_metric_cards function."""
+    metric_cards = []
+    sweep_metric_cards(model_card, metric_cards)
+    assert len(metric_cards) == 2
+
+
+def test_sweep_graphics(model_card):
+    """Test sweep_graphics function."""
+    graphics = []
+    sweep_graphics(model_card, graphics, caption="Precision")
+    assert len(graphics) == 1
+
+
+def test_get_slices(model_card):
+    """Test get_slices function."""
+    slices = get_slices(model_card)
+    # read slices from json to dict
+    slices_dict = json.loads(slices)
+    assert len(slices_dict.values()) == 2
+
+
+def test_get_plots(model_card):
+    """Test get_plots function."""
+    plots = get_plots(model_card)
+    # read plots from json to dict
+    plots_dict = json.loads(plots)
+    assert len(plots_dict.values()) == 2
+
+
+def test_get_thresholds(model_card):
+    """Test get_thresholds function."""
+    thresholds = get_thresholds(model_card)
+    # read thresholds from json to dict
+    thresholds_dict = json.loads(thresholds)
+    assert len(thresholds_dict.values()) == 2
+
+
+def test_get_trends(model_card):
+    """Test get_trends function."""
+    trends = get_trends(model_card)
+    # read trends from json to dict
+    trends_dict = json.loads(trends)
+    assert len(trends_dict.values()) == 2
+
+
+def test_get_passed(model_card):
+    """Test get_passed function."""
+    passed = get_passed(model_card)
+    # read passed from json to dict
+    passed_dict = json.loads(passed)
+    assert len(passed_dict.values()) == 2
+
+
+def test_get_names(model_card):
+    """Test get_names function."""
+    names = get_names(model_card)
+    # read names from json to dict
+    names_dict = json.loads(names)
+    assert len(names_dict.values()) == 2
+
+
+def test_create_metric_cards(model_card):
+    """Test create_metric_cards function."""
+    current_metrics = []
+    sweep_metrics(model_card, metrics=current_metrics)
+    metric_cards = create_metric_cards(current_metrics=current_metrics[0])[-1]
+    assert len(metric_cards) == 2
+
+
+def test_create_metric_card_plot():
+    """Test create_metric_card_plot function."""
+    metric_card_plot = create_metric_card_plot(history=[0.7, 0.8, 0.9], threshold=0.7)
+    assert isinstance(metric_card_plot, GraphicsCollection)

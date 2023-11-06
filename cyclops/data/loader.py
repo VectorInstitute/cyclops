@@ -8,6 +8,7 @@ from datasets import DatasetDict
 from datasets.arrow_dataset import Dataset
 from datasets.features import Image, Value
 from datasets.utils.logging import disable_progress_bar, enable_progress_bar
+from sklearn.model_selection import GroupShuffleSplit
 
 from cyclops.data.preprocess import nihcxr_preprocess
 from cyclops.data.utils import generate_timestamps
@@ -20,6 +21,7 @@ def load_nihcxr(
     train_time_range: Tuple[str, str] = ("1/1/2019", "10/19/2019"),
     test_time_range: Tuple[str, str] = ("10/20/2019", "12/25/2019"),
     progress: bool = False,
+    seed: int = 0,
 ) -> Dataset:
     """Load NIH Chest X-Ray dataset as a Huggingface dataset."""
     if not progress:
@@ -40,9 +42,15 @@ def load_nihcxr(
     train_df = df[df["Image Index"].isin(train_id)]
     test_df = df[df["Image Index"].isin(test_id)]
 
+    gss = GroupShuffleSplit(train_size=0.8, test_size=0.2, random_state=seed)
+    train_inds, val_inds = next(
+        gss.split(X=range(len(train_df)), groups=train_df["Patient ID"]),
+    )
+
     nih_ds = DatasetDict(
         {
-            "train": Dataset.from_pandas(train_df),
+            "train": Dataset.from_pandas(train_df.iloc[train_inds]),
+            "val": Dataset.from_pandas(train_df.iloc[val_inds]),
             "test": Dataset.from_pandas(test_df),
         },
     )
