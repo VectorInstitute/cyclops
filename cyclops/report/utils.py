@@ -632,19 +632,19 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
             ):
                 name = metric["type"][10:]
             name = name.replace(
-                "Positive Predictive Value",
+                "PositivePredictiveValue",
                 "Positive Predictive Value (PPV)",
             )
             name = name.replace(
-                "Negative Predictive Value",
+                "NegativePredictiveValue",
                 "Negative Predictive Value (NPV)",
             )
             name = name.replace(
-                "False Positive Rate",
+                "FalsePositiveRate",
                 "False Positive Rate (FPR)",
             )
             name = name.replace(
-                "False Negative Rate",
+                "FalseNegativeRate",
                 "False Negative Rate (FNR)",
             )
             name = name.replace(
