@@ -167,15 +167,14 @@
 <span></span><span class="sd">&quot;&quot;&quot;Cyclops report module.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span> <span class="k">as</span> <span class="n">dt_date</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt_datetime</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
-<span class="kn">from</span> <span class="nn">re</span> <span class="kn">import</span> <span class="n">sub</span> <span class="k">as</span> <span class="n">re_sub</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">jinja2</span>
-<span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="nn">go</span>
 <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 <span class="kn">from</span> <span class="nn">plotly.graph_objects</span> <span class="kn">import</span> <span class="n">Figure</span>
 <span class="kn">from</span> <span class="nn">plotly.io</span> <span class="kn">import</span> <span class="n">write_image</span>
@@ -194,6 +193,8 @@
     <span class="n">Graphic</span><span class="p">,</span>
     <span class="n">GraphicsCollection</span><span class="p">,</span>
     <span class="n">License</span><span class="p">,</span>
+    <span class="n">MetricCard</span><span class="p">,</span>
+    <span class="n">MetricCardCollection</span><span class="p">,</span>
     <span class="n">Owner</span><span class="p">,</span>
     <span class="n">PerformanceMetric</span><span class="p">,</span>
     <span class="n">Reference</span><span class="p">,</span>
@@ -208,12 +209,26 @@
 <span class="kn">from</span> <span class="nn">cyclops.report.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_object_is_in_model_card_module</span><span class="p">,</span>
     <span class="n">_raise_if_not_dict_with_str_keys</span><span class="p">,</span>
+    <span class="n">create_metric_cards</span><span class="p">,</span>
+    <span class="n">empty</span><span class="p">,</span>
+    <span class="n">get_names</span><span class="p">,</span>
+    <span class="n">get_passed</span><span class="p">,</span>
+    <span class="n">get_plots</span><span class="p">,</span>
+    <span class="n">get_slices</span><span class="p">,</span>
+    <span class="n">get_thresholds</span><span class="p">,</span>
+    <span class="n">get_trends</span><span class="p">,</span>
+    <span class="n">regex_replace</span><span class="p">,</span>
+    <span class="n">regex_search</span><span class="p">,</span>
     <span class="n">str_to_snake_case</span><span class="p">,</span>
+    <span class="n">sweep_graphics</span><span class="p">,</span>
+    <span class="n">sweep_metric_cards</span><span class="p">,</span>
+    <span class="n">sweep_metrics</span><span class="p">,</span>
+    <span class="n">sweep_tests</span><span class="p">,</span>
 <span class="p">)</span>
 
 
 <span class="n">_TEMPLATE_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;templates&quot;</span><span class="p">)</span>
-<span class="n">_DEFAULT_TEMPLATE_FILENAME</span> <span class="o">=</span> <span class="s2">&quot;cyclops_generic_template_light.jinja&quot;</span>
+<span class="n">_DEFAULT_TEMPLATE_FILENAME</span> <span class="o">=</span> <span class="s2">&quot;cyclops_generic_template.jinja&quot;</span>
 
 
 <div class="viewcode-block" id="ModelCardReport">
@@ -420,6 +435,40 @@
                 <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
                 <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;graphics&quot;</span><span class="p">,</span>
                 <span class="n">field_type</span><span class="o">=</span><span class="n">GraphicsCollection</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_log_metric_card_collection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">tooltips</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">metric_cards</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">MetricCard</span><span class="p">],</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overview&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># get the section</span>
+        <span class="n">section_name</span> <span class="o">=</span> <span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+        <span class="n">section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+
+        <span class="c1"># append graphic to exisiting GraphicsCollection or create new one</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;metric_cards&quot;</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span>
+            <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;metric_cards&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span> <span class="ow">is</span> <span class="n">MetricCardCollection</span>
+            <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">metric_cards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
+        <span class="p">):</span>
+            <span class="n">section</span><span class="o">.</span><span class="n">metric_cards</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric_cards</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">,</span>
+                    <span class="s2">&quot;tooltips&quot;</span><span class="p">:</span> <span class="n">tooltips</span><span class="p">,</span>
+                    <span class="s2">&quot;slices&quot;</span><span class="p">:</span> <span class="n">slices</span><span class="p">,</span>
+                    <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">values</span><span class="p">,</span>
+                    <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">metric_cards</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+                <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;metric_cards&quot;</span><span class="p">,</span>
+                <span class="n">field_type</span><span class="o">=</span><span class="n">MetricCardCollection</span><span class="p">,</span>
             <span class="p">)</span>
 
 <div class="viewcode-block" id="ModelCardReport.log_image">
@@ -1210,73 +1259,9 @@
             <span class="n">cache_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">regex_replace</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">find</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Replace a regex pattern with a string.&quot;&quot;&quot;</span>
-            <span class="k">return</span> <span class="n">re_sub</span><span class="p">(</span><span class="n">find</span><span class="p">,</span> <span class="n">replace</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Check if a variable is empty.&quot;&quot;&quot;</span>
-            <span class="n">empty</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="n">empty</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GraphicsCollection</span><span class="p">):</span>
-                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">collection</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># type: ignore[arg-type]</span>
-                            <span class="n">empty</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="k">elif</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">empty</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">return</span> <span class="n">empty</span>
-
-        <span class="k">def</span> <span class="nf">donut_chart_tests</span><span class="p">(</span><span class="n">tests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Test</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Graphic</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Create a plotly donut chart for the given tests.&quot;&quot;&quot;</span>
-            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">]</span>
-            <span class="n">passed</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">failed</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">tests</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">test</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
-                    <span class="n">passed</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
-
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span>
-                <span class="n">data</span><span class="o">=</span><span class="p">[</span>
-                    <span class="n">go</span><span class="o">.</span><span class="n">Pie</span><span class="p">(</span>
-                        <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Passed&quot;</span><span class="p">,</span> <span class="s2">&quot;Failed&quot;</span><span class="p">],</span>
-                        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">passed</span><span class="p">,</span> <span class="n">failed</span><span class="p">],</span>
-                        <span class="n">hole</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
-                        <span class="n">pull</span><span class="o">=</span><span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">],</span>
-                        <span class="n">textinfo</span><span class="o">=</span><span class="s2">&quot;percent&quot;</span><span class="p">,</span>
-                        <span class="n">marker</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;colors&quot;</span><span class="p">:</span> <span class="n">colors</span><span class="p">},</span>
-                        <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                        <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{</span><span class="n">passed</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">passed</span><span class="o">+</span><span class="n">failed</span><span class="si">}</span><span class="s2">&lt;/b&gt;&lt;br&gt;Tests Passed&quot;</span><span class="p">,</span>
-                    <span class="p">),</span>
-                <span class="p">],</span>
-            <span class="p">)</span>
-            <span class="c1"># Increase font size and change font</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
-                <span class="n">font</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;Courier New, monospace&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
-                    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;#7f7f7f&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="n">autosize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">width</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
-                <span class="n">height</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
-                <span class="n">margin</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;l&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;pad&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
-                <span class="n">plot_bgcolor</span><span class="o">=</span><span class="s2">&quot;rgba(0,0,0,0)&quot;</span><span class="p">,</span>
-                <span class="n">paper_bgcolor</span><span class="o">=</span><span class="s2">&quot;rgba(0,0,0,0)&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Tests (Pass/Fail) Donut Chart&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">fig</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="n">full_html</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plotlyjs</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-            <span class="p">}</span>
-            <span class="k">return</span> <span class="n">Graphic</span><span class="o">.</span><span class="n">parse_obj</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># create Graphic object from data</span>
-
-        <span class="n">jinja_env</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="s2">&quot;donut_chart_tests&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">donut_chart_tests</span>
         <span class="n">jinja_env</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="s2">&quot;regex_replace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">regex_replace</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="s2">&quot;regex_search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">regex_search</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="s2">&quot;zip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">zip</span>
         <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
         <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;empty&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">empty</span>
         <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;hasattr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">hasattr</span>
@@ -1295,6 +1280,7 @@
         <span class="n">template_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">save_json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">synthetic_timestamp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the model card report to an HTML file.</span>
 
@@ -1306,8 +1292,14 @@
 <span class="sd">        template_path : str, optional</span>
 <span class="sd">            The path to the jinja2 template to use. The default is None, which uses</span>
 <span class="sd">            the default template provided by CyclOps.</span>
+<span class="sd">        interactive : bool, optional</span>
+<span class="sd">            Whether to create an interactive HTML report. The default is True.</span>
 <span class="sd">        save_json : bool, optional</span>
 <span class="sd">            Whether to save the model card as a JSON file. The default is True.</span>
+<span class="sd">        synthetic_timestamp : str, optional</span>
+<span class="sd">            A synthetic timestamp to use for the report. This is useful for</span>
+<span class="sd">            generating back-dated reports. The default is None, which uses the</span>
+<span class="sd">            current date and time.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1320,53 +1312,70 @@
             <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_filename</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
             <span class="ow">and</span> <span class="n">output_filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.html&quot;</span><span class="p">)</span>
         <span class="p">),</span> <span class="s2">&quot;`output_filename` must be a string ending with &#39;.html&#39;&quot;</span>
+
+        <span class="c1"># write to file</span>
+        <span class="k">if</span> <span class="n">synthetic_timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">today</span> <span class="o">=</span> <span class="n">synthetic_timestamp</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">today</span> <span class="o">=</span> <span class="n">dt_date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">current_report_metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PerformanceMetric</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sweep_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="p">,</span> <span class="n">current_report_metrics</span><span class="p">)</span>
+        <span class="n">current_report_metrics_set</span> <span class="o">=</span> <span class="n">current_report_metrics</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">report_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
+                <span class="s2">&quot;cyclops_reports&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;*.json&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">report_paths</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">latest_report_path</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">report_paths</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">latest_report</span> <span class="o">=</span> <span class="n">ModelCard</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span>
+                <span class="n">latest_report_path</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">latest_report_metric_cards</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">MetricCard</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">sweep_metric_cards</span><span class="p">(</span><span class="n">latest_report</span><span class="p">,</span> <span class="n">latest_report_metric_cards</span><span class="p">)</span>
+            <span class="n">latest_report_metric_cards_set</span> <span class="o">=</span> <span class="n">latest_report_metric_cards</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">latest_report_metric_cards_set</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># check if overview section exists</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">overview</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># compare tests</span>
+            <span class="n">metrics</span><span class="p">,</span> <span class="n">tooltips</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">metric_cards</span> <span class="o">=</span> <span class="n">create_metric_cards</span><span class="p">(</span>
+                <span class="n">current_report_metrics_set</span><span class="p">,</span>
+                <span class="n">latest_report_metric_cards_set</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_metric_card_collection</span><span class="p">(</span>
+                <span class="n">metrics</span><span class="p">,</span>
+                <span class="n">tooltips</span><span class="p">,</span>
+                <span class="n">slices</span><span class="p">,</span>
+                <span class="n">values</span><span class="p">,</span>
+                <span class="n">metric_cards</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
         <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_jinja_template</span><span class="p">(</span><span class="n">template_path</span><span class="o">=</span><span class="n">template_path</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">sweep_tests</span><span class="p">(</span><span class="n">model_card</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">tests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Sweep model card to find all instances of Test.&quot;&quot;&quot;</span>
-            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">model_card</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-                    <span class="n">field</span> <span class="o">=</span> <span class="n">field</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># noqa: PLW2901</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">Test</span><span class="p">):</span>
-                    <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s2">&quot;__fields__&quot;</span><span class="p">):</span>
-                    <span class="n">sweep_tests</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">tests</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Test</span><span class="p">):</span>
-                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                                <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                            <span class="k">else</span><span class="p">:</span>
-                                <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">sweep_tests</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">tests</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">sweep_graphics</span><span class="p">(</span><span class="n">model_card</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">graphics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">caption</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Sweep model card to find all instances of Test.&quot;&quot;&quot;</span>
-            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">model_card</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-                    <span class="n">field</span> <span class="o">=</span> <span class="n">field</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># noqa: PLW2901</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">Graphic</span><span class="p">)</span> <span class="ow">and</span> <span class="n">field</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">caption</span><span class="p">:</span>
-                    <span class="n">graphics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s2">&quot;__fields__&quot;</span><span class="p">):</span>
-                    <span class="n">sweep_graphics</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">graphics</span><span class="p">,</span> <span class="n">caption</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Graphic</span><span class="p">):</span>
-                            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">caption</span><span class="p">:</span>
-                                <span class="n">graphics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">sweep_graphics</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">graphics</span><span class="p">,</span> <span class="n">caption</span><span class="p">)</span>
-
-        <span class="n">func_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sweep_tests&quot;</span><span class="p">:</span> <span class="n">sweep_tests</span><span class="p">,</span> <span class="s2">&quot;sweep_graphics&quot;</span><span class="p">:</span> <span class="n">sweep_graphics</span><span class="p">}</span>
+        <span class="n">func_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;sweep_tests&quot;</span><span class="p">:</span> <span class="n">sweep_tests</span><span class="p">,</span>
+            <span class="s2">&quot;sweep_graphics&quot;</span><span class="p">:</span> <span class="n">sweep_graphics</span><span class="p">,</span>
+            <span class="s2">&quot;get_slices&quot;</span><span class="p">:</span> <span class="n">get_slices</span><span class="p">,</span>
+            <span class="s2">&quot;get_plots&quot;</span><span class="p">:</span> <span class="n">get_plots</span><span class="p">,</span>
+            <span class="s2">&quot;get_thresholds&quot;</span><span class="p">:</span> <span class="n">get_thresholds</span><span class="p">,</span>
+            <span class="s2">&quot;get_trends&quot;</span><span class="p">:</span> <span class="n">get_trends</span><span class="p">,</span>
+            <span class="s2">&quot;get_passed&quot;</span><span class="p">:</span> <span class="n">get_passed</span><span class="p">,</span>
+            <span class="s2">&quot;get_names&quot;</span><span class="p">:</span> <span class="n">get_names</span><span class="p">,</span>
+        <span class="p">}</span>
         <span class="n">template</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">func_dict</span><span class="p">)</span>
 
         <span class="n">plotlyjs</span> <span class="o">=</span> <span class="n">get_plotlyjs</span><span class="p">()</span> <span class="k">if</span> <span class="n">interactive</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="n">content</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">model_card</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="p">,</span> <span class="n">plotlyjs</span><span class="o">=</span><span class="n">plotlyjs</span><span class="p">)</span>
 
-        <span class="c1"># write to file</span>
-        <span class="n">today</span> <span class="o">=</span> <span class="n">dt_date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">now</span> <span class="o">=</span> <span class="n">dt_datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%H-%M-%S&quot;</span><span class="p">)</span>
         <span class="n">report_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
@@ -1376,7 +1385,6 @@
             <span class="n">output_filename</span> <span class="ow">or</span> <span class="s2">&quot;model_card.html&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_write_file</span><span class="p">(</span><span class="n">report_path</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">save_json</span><span class="p">:</span>
             <span class="n">json_path</span> <span class="o">=</span> <span class="n">report_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.html&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_write_file</span><span class="p">(</span>
