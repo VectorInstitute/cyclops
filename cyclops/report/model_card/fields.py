@@ -605,7 +605,7 @@ class MetricCard(
     )
 
 
-class MetricCardCollection(BaseModelCardField, composable_with="Any"):
+class MetricCardCollection(BaseModelCardField, composable_with="Overview"):
     """A collection of metric cards to be displayed in the model card."""
 
     metrics: Optional[List[StrictStr]] = Field(
