@@ -343,7 +343,13 @@ def sweep_tests(model_card: Any, tests: List[Any]) -> None:
             tests.append(field)
         if hasattr(field, "__fields__"):
             sweep_tests(field, tests)
-        if isinstance(field, list) and len(field) != 0:
+        if (
+            isinstance(field, list)
+            and len(field) != 0
+            and not isinstance(field[0], str)
+            and not isinstance(field[0], int)
+            and not isinstance(field[0], float)
+        ):
             for item in field:
                 if isinstance(item, Test):
                     if len(field) == 1:
@@ -441,7 +447,13 @@ def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
             graphics.append(field)
         if hasattr(field, "__fields__"):
             sweep_graphics(field, graphics, caption)
-        if isinstance(field, list) and len(field) != 0:
+        if (
+            isinstance(field, list)
+            and len(field) != 0
+            and not isinstance(field[0], str)
+            and not isinstance(field[0], int)
+            and not isinstance(field[0], float)
+        ):
             for item in field:
                 if isinstance(item, Graphic):
                     if item.name == caption:
