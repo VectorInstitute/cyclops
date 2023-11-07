@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+'<!DOCTYPE html>
 
 {% macro render_if_exist_list(values) %}
 <div>
@@ -473,10 +473,16 @@
   </div>
 </label>
 <div id='sidebar'>
-  <a href="https://vectorinstitute.github.io/cyclops/" target="_blank"><img
-    src="https://raw.githubusercontent.com/VectorInstitute/cyclops/main/docs/source/theme/static/cyclops_logo-dark.png"
-    alt="CyclOps Logo" id="logo"></a>
-  <span class='title'>CARD SECTIONS</span>
+  <div id="model_info_card">
+    <div id="model_info">
+        <h4 style="margin: 0.5rem;">{{ model_card.model_details.name }}</h4>
+        <h6 style="margin: 0.5rem;">Model Monitoring Report</h6>
+        <br>
+        <h6 style="margin: 0.5rem;">Model Developed By: {{ model_card.model_details.owners[0].name }}</h6>
+        <h6 style="margin: 0.5rem;">Contact: {{ model_card.model_details.owners[0].contact }}</h6>
+        <h6 style="margin: 0.5rem;">Email: {{ model_card.model_details.owners[0].email }}</h6>
+    </div>
+  </div>
   <hr>
   <ul id='contents'>
     {% for name, section in model_card %}
@@ -701,6 +707,19 @@
         margin-left: 250px;
         margin-right: 25px;
         transition: margin-left 0.2s ease-in-out;
+      }
+
+      #model_info_card {
+        width: 100%;
+        background-color: #0073e4;
+        text-align: left;
+        color: white;
+        display: inline-block;
+      }
+
+      #model_info {
+        padding-top: 2.5rem;
+        padding-left: 1rem;
       }
 
       body {
@@ -931,3 +950,4 @@
   document.addEventListener('scroll', setActiveButton);
   setActiveButton();
 </script>
+'
