@@ -166,8 +166,8 @@ class Features:
         self,
         data: pd.DataFrame,
         features: Union[str, List[str]],
-        by: Optional[Union[str, List[str]]],
-        targets: Union[str, List[str], None] = None,
+        by: Optional[Union[str, List[str]]] = None,
+        targets: Optional[Union[str, List[str], None]] = None,
         force_types: Optional[dict] = None,
         normalizers: Optional[Dict[str, GroupbyNormalizer]] = None,
     ):
