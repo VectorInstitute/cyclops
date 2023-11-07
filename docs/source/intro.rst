@@ -25,7 +25,7 @@ models for healthcare. It provides a few high-level APIs namely:
 -  ``evaluate`` - Evaluate models on clinical prediction tasks
 -  ``monitor`` - Detect dataset shift relevant for clinical use cases
 -  ``report`` - Create `model report
-   cards <https://vectorinstitute.github.io/cyclops/api/tutorials/kaggle/model_card.html>`__
+   cards <https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html>`__
    for clinical ML models
 
 ``cyclops`` also provides a library of end-to-end use cases on clinical
@@ -73,7 +73,7 @@ Multiple extras could also be combined, for example to install with both
    python3 -m pip install 'pycyclops[report,models]'
 
 🧑🏿‍💻 Developing
-=============
+=======================
 
 Using poetry
 ------------
