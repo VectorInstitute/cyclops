@@ -417,6 +417,60 @@ def moveaxis(
     return xp.permute_dims(array, order)
 
 
+def remove_ignore_index(
+    *arrays: Array,
+    ignore_index: Optional[Union[Tuple[int, ...], int]],
+) -> Tuple[Array, ...]:
+    """Remove samples that are equal to the ignore_index in comparison functions.
+
+    Parameters
+    ----------
+    arrays : Array
+        The input arrays.
+    ignore_index : int or Tuple[int], optional, default=None
+        The index or indices to ignore. If None, no indices will be ignored.
+
+    Returns
+    -------
+    Tuple[Array, ...]
+        The input arrays with the samples removed.
+    """
+    xp = apc.array_namespace(*arrays)
+    if ignore_index is None:
+        return tuple(arrays)
+
+    if not (
+        isinstance(ignore_index, int)
+        or (
+            isinstance(ignore_index, tuple)
+            and all(isinstance(x, int) for x in ignore_index)
+        )
+    ):
+        raise TypeError(
+            "Expected `ignore_index` to be an integer or a tuple of integers. "
+            f"Got {type(ignore_index)} instead.",
+        )
+
+    modified_arrays = []
+    for array in arrays:
+        if not apc.is_array_api_obj(array):
+            raise TypeError(
+                f"Expected input arrays to be Array objects. Got {type(array)} instead.",
+            )
+
+        if isinstance(ignore_index, int):
+            modified_arrays.append(array[array != ignore_index])
+            continue
+
+        ignore_mask = xp.zeros_like(array, dtype=xp.bool, device=apc.device(array))
+        for index in ignore_index:
+            ignore_mask = xp.logical_or(ignore_mask, array == index)
+
+        modified_arrays.append(array[~ignore_mask])
+
+    return tuple(modified_arrays)
+
+
 def safe_divide(numerator: Array, denominator: Array) -> Array:
     """Divide two arrays and return zero if denominator is zero.
 

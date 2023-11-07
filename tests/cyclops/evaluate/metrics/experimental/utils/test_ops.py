@@ -17,6 +17,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     flatten,
     flatten_seq,
     moveaxis,
+    remove_ignore_index,
     safe_divide,
     sigmoid,
     squeeze_all,
@@ -705,6 +706,87 @@ class TestMoveAxis:
         # Test with destination as a dictionary
         with pytest.raises(ValueError):
             moveaxis(array, 0, {"2": 2})  # type: ignore
+
+
+class TestRemoveIgnoreIndex:
+    """Test the `remove_ignore_index` utility function."""
+
+    def test_return_same_input_arrays_if_ignore_index_is_none(self):
+        """Test case when `ignore_index` is None."""
+        input_arrays = (anp.asarray([1, 2, 3]), anp.asarray([4, 5, 6]))
+        ignore_index = None
+
+        result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+
+        assert result == input_arrays
+
+    def test_remove_samples_equal_to_ignore_index_from_input_arrays(self):
+        """Test removing samples that are equal to `ignore_index`."""
+        input_arrays = (anp.asarray([1, 2, 3]), anp.asarray([4, 5, 6]))
+        ignore_index = 2
+        expected_result = (anp.asarray([1, 3]), anp.asarray([4, 5, 6]))
+
+        result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+
+        assert all(anp.all(a == b) for a, b in zip(result, expected_result))
+
+    def test_return_same_output_arrays_if_ignore_index_not_in_input_arrays(self):
+        """Test returning the same arrays if `ignore_index` is not in array."""
+        input_arrays = (anp.asarray([1, 2, 3]), anp.asarray([4, 5, 6]))
+        ignore_index = 7
+
+        result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+
+        assert all(anp.all(a == b) for a, b in zip(result, input_arrays))
+
+    def test_raise_type_error_if_ignore_index_not_integer_or_tuple_of_integers(self):
+        """Test raising TypeError on invalid `ignore_index` type."""
+        input_arrays = (anp.asarray([1, 2, 3]), anp.asarray([4, 5, 6]))
+        ignore_index = "ignore"
+
+        with pytest.raises(TypeError):
+            remove_ignore_index(*input_arrays, ignore_index=ignore_index)  # type: ignore
+
+    def test_raise_type_error_if_input_arrays_not_array_objects(self):
+        """Test raising TypeError on invalid input array type."""
+        input_arrays = ([1, 2, 3], [4, 5, 6])
+        ignore_index = 2
+
+        with pytest.raises(TypeError):
+            remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+
+    def test_return_empty_tuple_if_all_input_arrays_empty(self):
+        """Test with all input arrays empty."""
+        input_arrays = (anp.asarray([]), anp.asarray([]))
+        ignore_index = 2
+
+        result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+
+        assert all(anp.all(a == b) for a, b in zip(result, input_arrays))
+
+    def test_return_empty_tuple_if_all_samples_are_equal_to_ignore_index(self):
+        """Test ignoring all samples in input arrays."""
+        input_arrays = (anp.asarray([1, 1, 1]), anp.asarray([1, 1, 1]))
+        ignore_index = 1
+        expected_result = (
+            anp.asarray([], dtype=anp.int64),
+            anp.asarray([], dtype=anp.int64),
+        )
+
+        result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+
+        assert all(anp.all(a == b) for a, b in zip(result, expected_result))
+
+    def test_remove_samples_with_tuple_ignore_index(self):
+        """Test with tuple of ignore_index values."""
+        # Arrange
+        input_arrays = (anp.asarray([1, 2, 3]), anp.asarray([4, 5, 6]))
+        ignore_index = (2, 3)
+
+        result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+
+        expected_result = (anp.asarray([1]), anp.asarray([4, 5, 6]))
+        assert all(anp.all(a == b) for a, b in zip(result, expected_result))
 
 
 class TestSafeDivide:
