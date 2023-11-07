@@ -7592,4 +7592,4 @@ report = ["kaleido", "pillow", "plotly", "pybtex", "pydantic", "scour", "spdx-to
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.11"
-content-hash = "ecccbee9f264885b10ee608b66ef64ba292a5d3570986c74b93c79bf3317df33"
+content-hash = "6571a670b7d0bf06bd5a42c7021294fc2c47aedfc3995849bbb7e007e5a01884"

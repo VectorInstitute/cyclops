@@ -25,6 +25,10 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
 from cyclops.utils.optional import import_optional_module
 
 
+cp = import_optional_module("cupy")
+torch = import_optional_module("torch")
+
+
 def multiply_by_two(x):
     """Multiply the input by two."""
     return x * 2
@@ -315,28 +319,37 @@ class TestClone:
         assert y is not x
         assert np.array_equal(y, x)
 
-    # Clones a cupy array and returns a new copy.
+    @pytest.mark.skipif(cp is None, reason="Cupy is not installed.")
     def test_clone_cupy_array(self):
         """Test if the clone function creates a new copy of a cupy array."""
-        cp = import_optional_module("cupy")
-        if cp is None:
-            pytest.skip("Cupy is not installed.")
-
         try:
-            if not cp.cuda.is_available():
+            if not cp.cuda.is_available():  # type: ignore
                 pytest.skip("CUDA is not available.")
-        except cp.cuda.runtime.CUDARuntimeError:
+        except cp.cuda.runtime.CUDARuntimeError:  # type: ignore
             pytest.skip("CUDA is not available.")
 
         # Create a cupy array
-        x = cp.asarray([1, 2, 3])
+        x = cp.asarray([1, 2, 3])  # type: ignore
 
         # Clone the array
         y = clone(x)
 
         # Check if y is a new copy of x
         assert y is not x
-        assert cp.array_equal(y, x)
+        assert cp.array_equal(y, x)  # type: ignore
+
+    @pytest.mark.skipif(torch is None, reason="PyTorch is not installed.")
+    def test_clone_torch_tensor(self):
+        """Test if the clone function properly clones a torch tensor."""
+        # Create a torch tensor
+        x = torch.tensor([1, 2, 3])  # type: ignore
+
+        # Clone the tensor
+        y = clone(x)
+
+        # Check if y is a new copy of x
+        assert y is not x
+        assert torch.equal(y, x)  # type: ignore
 
     def test_clone_empty_array(self):
         """Test if the clone function creates a new copy of an empty array."""
@@ -351,21 +364,6 @@ class TestClone:
         # Check if y is a new copy of x
         assert y is not x
         assert np.all(y == x)
-
-    # Clones a torch tensor and returns a new copy.
-    def test_clone_torch_tensor(self):
-        """Test if the clone function properly clones a torch tensor."""
-        import torch
-
-        # Create a torch tensor
-        x = torch.tensor([1, 2, 3])
-
-        # Clone the tensor
-        y = clone(x)
-
-        # Check if y is a new copy of x
-        assert y is not x
-        assert torch.equal(y, x)
 
 
 class TestDimZeroCat:
