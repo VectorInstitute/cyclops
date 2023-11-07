@@ -1211,7 +1211,7 @@
     "tags": []
    },
    "source": [
-    "You can view the generated HTML [report](./model_card.html)."
+    "You can view the generated HTML [report](./heart_failure_report_periodic.html)."
    ]
   }
  ],
