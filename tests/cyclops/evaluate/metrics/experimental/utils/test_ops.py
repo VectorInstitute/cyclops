@@ -25,8 +25,8 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
 from cyclops.utils.optional import import_optional_module
 
 
-cp = import_optional_module("cupy")
-torch = import_optional_module("torch")
+cp = import_optional_module("cupy", error="ignore")
+torch = import_optional_module("torch", error="ignore")
 
 
 def multiply_by_two(x):
