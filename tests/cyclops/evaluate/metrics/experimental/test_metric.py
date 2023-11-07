@@ -12,8 +12,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     dim_zero_sum,
 )
 from cyclops.utils.optional import import_optional_module
-
-from .testers import DummyListStateMetric, DummyMetric
+from metrics.experimental.testers import DummyListStateMetric, DummyMetric
 
 
 torch = import_optional_module("torch", "ignore")
