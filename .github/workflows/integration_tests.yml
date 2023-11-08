@@ -38,6 +38,17 @@ jobs:
   integration-tests:
     runs-on: [self-hosted, gpu, db]
     steps:
+      - name: Install dependencies for mpi4py
+        run: |
+          sudo apt-get update
+          wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz
+          tar xvf openmpi-4.1.5.tar.gz
+          cd openmpi-4.1.5/
+          ./configure --with-cuda --prefix=/opt/openmpi-4.1.5
+          sudo make -j4 all install
+          export MPICC=/opt/openmpi-4.1.5/bin/mpicc
+          echo which mpicc
+          rm -rf openmpi-4.1.5.tar.gz openmpi-4.1.5
       - uses: actions/checkout@v3
       - name: Install poetry
         run: pip install poetry
@@ -49,6 +60,7 @@ jobs:
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with test
+          poetry add --test cupy git+https://github.com/mpi4py/mpi4py
           coverage run -m pytest -m integration_test && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v1.0.36
