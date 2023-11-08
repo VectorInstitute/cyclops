@@ -49,7 +49,7 @@ jobs:
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with test
-          poetry add --test cupy
+          poetry add --group test cupy
           coverage run -m pytest -m integration_test && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v1.0.36
