@@ -59,6 +59,18 @@ class SKModel:
         self.batch_size = params.pop("batch_size", 64)
         self.initialize_model(**params)
 
+    @property
+    def model_name(self) -> str:
+        """Model name.
+
+        Returns
+        -------
+        str
+            Model name.
+
+        """
+        return self.model_.__class__.__name__
+
     def initialize_model(self, **kwargs):
         """Initialize model.
 
@@ -381,8 +393,7 @@ class SKModel:
             splits_mapping = {"train": "train"}
         if not hasattr(self.model_, "partial_fit"):
             raise AttributeError(
-                f"Model {self.model_.__class__.__name__}"
-                "does not have a `partial_fit` method.",
+                f"Model {self.model_name}" "does not have a `partial_fit` method.",
             )
         # Train data is a Hugging Face Dataset Dictionary.
         if isinstance(X, DatasetDict):
@@ -669,8 +680,7 @@ class SKModel:
             splits_mapping = {"test": "test"}
         if not hasattr(self.model_, "predict_proba"):
             raise AttributeError(
-                f"Model {self.model_.__class__.__name__}"
-                "does not have a `predict_proba` method.",
+                f"Model {self.model_name}" "does not have a `predict_proba` method.",
             )
         # Data is a Hugging Face Dataset Dictionary.
         if isinstance(X, DatasetDict):
@@ -697,9 +707,7 @@ class SKModel:
             if model_name:
                 pred_column = f"{prediction_column_prefix}.{model_name}"
             else:
-                pred_column = (
-                    f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
-                )
+                pred_column = f"{prediction_column_prefix}.{self.model_name}"
 
             format_kwargs = {}
             is_callable_transform = callable(transforms)
@@ -822,9 +830,7 @@ class SKModel:
             if model_name:
                 pred_column = f"{prediction_column_prefix}.{model_name}"
             else:
-                pred_column = (
-                    f"{prediction_column_prefix}.{self.model_.__class__.__name__}"
-                )
+                pred_column = f"{prediction_column_prefix}.{self.model_name}"
 
             format_kwargs = {}
             is_callable_transform = callable(transforms)
@@ -873,19 +879,35 @@ class SKModel:
             output = self.model_.transform(X)
         return output
 
-    def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
-        """Save model to file."""
+    def save_model(self, filepath: str, overwrite: bool = True, **kwargs) -> str:
+        """Save model to file.
+
+        Parameters
+        ----------
+        filepath : str
+            The path to save the model.
+        overwrite : bool, optional
+            Whether to overwrite the existing model, by default True
+        **kwargs : dict, optional
+            Additional keyword arguments to be passed to the save function.
+
+        Returns
+        -------
+        str
+            The path to the saved model.
+
+        """
         # filepath could be a directory
         if len(os.path.basename(filepath).split(".")) == 1:
             process_dir_save_path(filepath)
 
         if os.path.isdir(filepath):
-            filepath = join(filepath, self.model_.__class__.__name__, "model.pkl")
+            filepath = join(filepath, self.model_name, "model.pkl")
 
         # filepath could be a file
         dir_path = os.path.dirname(filepath)
         if dir_path == "":
-            dir_path = f"./{self.model_.__class__.__name__}"
+            dir_path = f"./{self.model_name}"
             filepath = join(dir_path, filepath)
         process_dir_save_path(dir_path)
 
@@ -895,9 +917,11 @@ class SKModel:
                 "The file %s already exists and will not be overwritten.",
                 filepath,
             )
-            return
+            return None
 
         save_pickle(self.model_, filepath, log=kwargs.get("log", True))
+
+        return filepath
 
     def load_model(self, filepath: str, **kwargs):
         """Load a saved model.

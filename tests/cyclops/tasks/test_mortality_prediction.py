@@ -3,7 +3,7 @@
 from unittest import TestCase
 
 from cyclops.models.catalog import create_model
-from cyclops.tasks.mortality_prediction import MortalityPredictionTask
+from cyclops.tasks import MortalityPredictionTask
 
 
 class TestMortalityPredictionTask(TestCase):

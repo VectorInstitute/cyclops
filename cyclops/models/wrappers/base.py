@@ -14,6 +14,18 @@ class ModelWrapper(ABC):
     """
 
     @abstractmethod
+    def model_name(self) -> str:
+        """Name of the model.
+
+        Returns
+        -------
+        str
+            Name of the model.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def partial_fit(
         self,
         X,
@@ -48,6 +60,7 @@ class ModelWrapper(ABC):
             The fitted model.
 
         """
+        raise NotImplementedError
 
     @abstractmethod
     def fit(
@@ -89,6 +102,7 @@ class ModelWrapper(ABC):
             The fitted model.
 
         """
+        raise NotImplementedError
 
     @abstractmethod
     def find_best(
@@ -140,6 +154,7 @@ class ModelWrapper(ABC):
         self
 
         """
+        raise NotImplementedError
 
     @abstractmethod
     def predict(
@@ -187,6 +202,7 @@ class ModelWrapper(ABC):
             The output of the model.
 
         """
+        raise NotImplementedError
 
     @abstractmethod
     def predict_proba(
@@ -214,6 +230,7 @@ class ModelWrapper(ABC):
             The probabilities of the output of the model.
 
         """
+        raise NotImplementedError
 
     @abstractmethod
     def save_model(self, filepath: str, overwrite: bool = True, **kwargs):
@@ -234,6 +251,7 @@ class ModelWrapper(ABC):
         None
 
         """
+        raise NotImplementedError
 
     @abstractmethod
     def load_model(self, filepath: str, **kwargs):
@@ -252,6 +270,7 @@ class ModelWrapper(ABC):
         self
 
         """
+        raise NotImplementedError
 
     def get_params(self) -> Dict[str, Any]:
         """Get parameters for the wrapper.

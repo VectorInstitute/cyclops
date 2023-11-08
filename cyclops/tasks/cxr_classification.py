@@ -13,10 +13,9 @@ from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection
-from cyclops.models.catalog import _img_model_keys, _model_names_mapping
 from cyclops.models.utils import get_split
 from cyclops.models.wrappers import WrappedModel
-from cyclops.tasks.base import BaseTask
+from cyclops.tasks import MultilabelImageClassificationTask
 from cyclops.tasks.utils import CXR_TARGET, apply_image_transforms
 from cyclops.utils.log import setup_logging
 
@@ -25,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-class CXRClassificationTask(BaseTask):
+class CXRClassificationTask(MultilabelImageClassificationTask):
     """Chest X-ray classification task modeled as a multi-label classification task."""
 
     def __init__(
@@ -52,40 +51,6 @@ class CXRClassificationTask(BaseTask):
 
         """
         super().__init__(models, task_features, task_target)
-
-    @property
-    def task_type(self):
-        """The classification task type.
-
-        Returns
-        -------
-        str
-            Classification task type.
-
-        """
-        return "multilabel"
-
-    @property
-    def data_type(self):
-        """The data type.
-
-        Returns
-        -------
-        str
-            The data type.
-
-        """
-        return "image"
-
-    def _validate_models(self):
-        """Validate the models for the task data type."""
-        assert all(
-            _model_names_mapping.get(model.model.__name__) in _img_model_keys
-            for model in self.models.values()
-        ), "All models must be image type model."
-
-        for model in self.models.values():
-            model.initialize()
 
     def predict(
         self,
