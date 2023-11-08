@@ -3,7 +3,7 @@
 from unittest import TestCase
 
 from cyclops.models.catalog import create_model
-from cyclops.tasks.cxr_classification import CXRClassificationTask
+from cyclops.tasks import CXRClassificationTask
 
 
 class TestCXRClassificationTask(TestCase):

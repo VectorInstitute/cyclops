@@ -20,7 +20,7 @@
     * Chest X-ray classification
 * `evaluate` - Evaluate models on clinical prediction tasks
 * `monitor` - Detect dataset shift relevant for clinical use cases
-* `report` - Create [model report cards](https://vectorinstitute.github.io/cyclops/api/tutorials/kaggle/model_card.html) for clinical ML models
+* `report` - Create [model report cards](https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html) for clinical ML models
 
 ``cyclops`` also provides a library of end-to-end use cases on clinical datasets such as
 
