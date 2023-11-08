@@ -93,7 +93,7 @@ def process_file_save_path(
     elif ext != "." + file_format:
         raise ValueError(
             f"""The file extension on the save path must be {file_format}.
-            Alternatively, sesider changing the file format.""",
+            Alternatively, consider changing the file format.""",
         )
 
     return save_path

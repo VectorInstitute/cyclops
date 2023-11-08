@@ -176,6 +176,18 @@ class PTModel(ModelWrapper):
         self.train_loss_ = LossMeter("train")
         self.val_loss_ = LossMeter("val")
 
+    @property
+    def model_name(self) -> str:
+        """The model name.
+
+        Returns
+        -------
+        str
+            The model name.
+
+        """
+        return self.model_.__class__.__name__
+
     def collect_params_for(self, prefix: str) -> Dict:
         """Collect parameters for a given prefix.
 
@@ -748,7 +760,7 @@ class PTModel(ModelWrapper):
             val_loader = self._get_dataloader(val_dataset, test=True)
 
         save_dir = self.save_dir if self.save_dir else os.getcwd()
-        model_dir = join(save_dir, "saved_models", self.model_.__class__.__name__)
+        model_dir = join(save_dir, "saved_models", self.model_name)
 
         best_loss = np.inf
         for epoch in range(1, self.max_epochs + 1):

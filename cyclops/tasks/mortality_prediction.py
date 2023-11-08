@@ -1,7 +1,6 @@
 """Mortality Prediction Task."""
 
 import logging
-import os
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
@@ -15,11 +14,10 @@ from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.metrics.metric import MetricCollection
-from cyclops.models.catalog import _model_names_mapping, _static_model_keys
 from cyclops.models.wrappers import WrappedModel
 from cyclops.models.wrappers.sk_model import SKModel
 from cyclops.models.wrappers.utils import to_numpy
-from cyclops.tasks.base import BaseTask
+from cyclops.tasks.classification import BinaryTabularClassificationTask
 from cyclops.utils.log import setup_logging
 
 
@@ -27,7 +25,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-class MortalityPredictionTask(BaseTask):
+class MortalityPredictionTask(BinaryTabularClassificationTask):
     """Mortality prediction task for tabular data as binary classification."""
 
     def __init__(
@@ -58,48 +56,6 @@ class MortalityPredictionTask(BaseTask):
         if task_features is None:
             task_features = ["age", "sex", "admission_type", "admission_location"]
         super().__init__(models, task_features, task_target)
-
-    @property
-    def task_type(self) -> str:
-        """The classification task type.
-
-        Returns
-        -------
-        str
-            Classification task type.
-
-        """
-        return "binary"
-
-    @property
-    def data_type(self) -> str:
-        """The data type.
-
-        Returns
-        -------
-        str
-            The data type.
-
-        """
-        return "tabular"
-
-    def _validate_models(self):
-        """Validate the models for the task data type."""
-        assert all(
-            _model_names_mapping.get(model.model.__name__) in _static_model_keys
-            for model in self.models.values()
-        ), "All models must be static type model."
-
-    def list_models_params(self) -> Dict[str, Any]:
-        """List the parameters of the models in the task.
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dictionary of model parameters.
-
-        """
-        return {n: m.get_params() for n, m in self.models.items()}
 
     def train(
         self,
@@ -383,81 +339,3 @@ class MortalityPredictionTask(BaseTask):
             override_fairness_metrics=override_fairness_metrics,
         )
         return results, dataset
-
-    def save_model(
-        self,
-        filepath: Union[str, Dict[str, str]],
-        model_names: Optional[Union[str, List[str]]] = None,
-        **kwargs,
-    ) -> None:
-        """Save the model to a specified filepath.
-
-        Parameters
-        ----------
-        filepath : Union[str, Dict[str, str]]
-            The destination path(s) where the model(s) will be saved.
-            Can be a dictionary of model names and their corresponding paths
-            or a single parent dirctory.
-        model_name : Optional[Union[str, List[str]]], optional
-            Model name, required if more than one model exists, by default None.
-        **kwargs : Any
-            Additional keyword arguments to be passed to the model's save method.
-
-        Returns
-        -------
-        None
-
-        """
-        if isinstance(model_names, str):
-            model_names = [model_names]
-        elif not model_names:
-            model_names = self.trained_models
-
-        if isinstance(filepath, Dict):
-            assert len(filepath) == len(model_names), (
-                "Number of filepaths must match number of models"
-                "if a dictionary is given."
-            )
-        if isinstance(filepath, str) and len(model_names) > 1:
-            assert len(os.path.basename(filepath).split(".")) == 1, (
-                "Filepath must be a directory if a single string is given"
-                "for multiple models."
-            )
-
-        for model_name in model_names:
-            if model_name not in self.trained_models:
-                LOGGER.warning(
-                    "It seems you have not trained the %s model.",
-                    model_name,
-                )
-            model_name, model = self.get_model(model_name)  # noqa: PLW2901
-            model_path = (
-                filepath[model_name] if isinstance(filepath, Dict) else filepath
-            )
-            model.save_model(model_path, **kwargs)
-
-    def load_model(
-        self,
-        filepath: str,
-        model_name: Optional[str] = None,
-        **kwargs,
-    ) -> WrappedModel:
-        """Load a pretrained model.
-
-        Parameters
-        ----------
-        filepath : str
-            Path to the save model.
-        model_name : Optional[str], optional
-            Model name, required if more than one model exists, by default Nonee
-
-        Returns
-        -------
-        WrappedModel
-            The loaded model.
-
-        """
-        model_name, model = self.get_model(model_name)
-        model.load_model(filepath, **kwargs)
-        self.pretrained_models.append(model_name)
-        return model
