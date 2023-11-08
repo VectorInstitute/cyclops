@@ -298,6 +298,7 @@ class TestClone:
         assert np.array_equal(y, x)
 
     @pytest.mark.skipif(cp is None, reason="Cupy is not installed.")
+    @pytest.mark.integration_test()  # machine for integration test has GPU
     def test_clone_cupy_array(self):
         """Test if the clone function creates a new copy of a cupy array."""
         try:
@@ -515,21 +516,26 @@ def test_dim_zero_sum():
 def test_flatten():
     """Test the `flatten` utility function."""
     x = anp.asarray([1, 2, 3])
-    assert anp.all(flatten(x) == x)
+    result = flatten(x)
+    assert anp.all(result == x)
+    assert not np.shares_memory(result, x)
 
     x = anp.asarray([[1, 2, 3], [4, 5, 6]])
     result = flatten(x)
     expected_result = anp.asarray([1, 2, 3, 4, 5, 6])
     assert anp.all(result == expected_result)
+    assert not np.shares_memory(result, x)
 
     x = anp.asarray([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
     result = flatten(x)
     expected_result = anp.asarray([1, 2, 3, 4, 5, 6, 7, 8])
     assert anp.all(result == expected_result)
+    assert not np.shares_memory(result, x)
 
     x = anp.asarray([])
     result = flatten(x)
     assert anp.all(result == x)
+    assert not np.shares_memory(result, x)
 
 
 def test_flatten_seq():

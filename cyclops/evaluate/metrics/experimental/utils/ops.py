@@ -286,7 +286,11 @@ def flatten(array: Array) -> Array:
     (6,)
     """
     xp = apc.array_namespace(array)
-    return xp.asarray(xp.reshape(array, shape=(-1,)), device=apc.device(array))
+    return xp.asarray(
+        xp.reshape(array, shape=(-1,)),
+        device=apc.device(array),
+        copy=True,
+    )
 
 
 def flatten_seq(inp: Sequence[Any]) -> List[Any]:
