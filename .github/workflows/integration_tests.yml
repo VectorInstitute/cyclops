@@ -38,10 +38,6 @@ jobs:
   integration-tests:
     runs-on: [self-hosted, gpu, db]
     steps:
-      - name: Install dependencies for mpi4py
-        run: |
-          apt-get install gcc
-          apt-get install openmpi-bin openmpi-common libopenmpi-dev
       - uses: actions/checkout@v3
       - name: Install poetry
         run: pip install poetry
@@ -53,7 +49,7 @@ jobs:
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with test
-          poetry add --test cupy git+https://github.com/mpi4py/mpi4py
+          poetry add --test cupy
           coverage run -m pytest -m integration_test && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v1.0.36
