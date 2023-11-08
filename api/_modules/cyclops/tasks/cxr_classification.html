@@ -179,10 +179,9 @@
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.fairness.config</span> <span class="kn">import</span> <span class="n">FairnessConfig</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.factory</span> <span class="kn">import</span> <span class="n">create_metric</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.metric</span> <span class="kn">import</span> <span class="n">MetricCollection</span>
-<span class="kn">from</span> <span class="nn">cyclops.models.catalog</span> <span class="kn">import</span> <span class="n">_img_model_keys</span><span class="p">,</span> <span class="n">_model_names_mapping</span>
 <span class="kn">from</span> <span class="nn">cyclops.models.utils</span> <span class="kn">import</span> <span class="n">get_split</span>
 <span class="kn">from</span> <span class="nn">cyclops.models.wrappers</span> <span class="kn">import</span> <span class="n">WrappedModel</span>
-<span class="kn">from</span> <span class="nn">cyclops.tasks.base</span> <span class="kn">import</span> <span class="n">BaseTask</span>
+<span class="kn">from</span> <span class="nn">cyclops.tasks</span> <span class="kn">import</span> <span class="n">MultilabelImageClassificationTask</span>
 <span class="kn">from</span> <span class="nn">cyclops.tasks.utils</span> <span class="kn">import</span> <span class="n">CXR_TARGET</span><span class="p">,</span> <span class="n">apply_image_transforms</span>
 <span class="kn">from</span> <span class="nn">cyclops.utils.log</span> <span class="kn">import</span> <span class="n">setup_logging</span>
 
@@ -193,7 +192,7 @@
 
 <div class="viewcode-block" id="CXRClassificationTask">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.tasks.cxr_classification.CXRClassificationTask.html#cyclops.tasks.cxr_classification.CXRClassificationTask">[docs]</a>
-<span class="k">class</span> <span class="nc">CXRClassificationTask</span><span class="p">(</span><span class="n">BaseTask</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">CXRClassificationTask</span><span class="p">(</span><span class="n">MultilabelImageClassificationTask</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Chest X-ray classification task modeled as a multi-label classification task.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="CXRClassificationTask.__init__">
@@ -223,40 +222,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">models</span><span class="p">,</span> <span class="n">task_features</span><span class="p">,</span> <span class="n">task_target</span><span class="p">)</span></div>
 
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The classification task type.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            Classification task type.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;multilabel&quot;</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">data_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The data type.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            The data type.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;image&quot;</span>
-
-    <span class="k">def</span> <span class="nf">_validate_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the models for the task data type.&quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="n">_model_names_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_img_model_keys</span>
-            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-        <span class="p">),</span> <span class="s2">&quot;All models must be image type model.&quot;</span>
-
-        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
 
 <div class="viewcode-block" id="CXRClassificationTask.predict">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.tasks.cxr_classification.CXRClassificationTask.html#cyclops.tasks.cxr_classification.CXRClassificationTask.predict">[docs]</a>

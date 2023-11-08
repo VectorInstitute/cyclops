@@ -20,7 +20,10 @@ cyclops.tasks.cxr\_classification.CXRClassificationTask
       ~CXRClassificationTask.evaluate
       ~CXRClassificationTask.get_model
       ~CXRClassificationTask.list_models
+      ~CXRClassificationTask.list_models_params
+      ~CXRClassificationTask.load_model
       ~CXRClassificationTask.predict
+      ~CXRClassificationTask.save_model
    
    
 
