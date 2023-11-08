@@ -218,9 +218,14 @@ class TestBincount:
     def test_empty_array(self):
         """Test using an empty array as input."""
         input_array = anp.asarray([], dtype=anp.int32)
-        expected_output = anp.asarray([], dtype=anp.int32)
+        expected_output = anp.asarray([], dtype=anp.int64)
 
-        result = bincount(input_array, minlength=5)
+        result = bincount(input_array, minlength=0)
+
+        assert anp.all(result == expected_output)
+
+        result = bincount(input_array, minlength=10)
+        expected_output = anp.zeros(10, dtype=anp.int64)
 
         assert anp.all(result == expected_output)
 
@@ -684,13 +689,35 @@ class TestRemoveIgnoreIndex:
 
     def test_remove_samples_equal_to_ignore_index_from_input_arrays(self):
         """Test removing samples that are equal to `ignore_index`."""
-        input_arrays = (anp.asarray([1, 2, 3]), anp.asarray([4, 5, 6]))
+        target = anp.asarray([1, 2, 3])
+        preds = anp.asarray([4, 5, 6])
         ignore_index = 2
-        expected_result = (anp.asarray([1, 3]), anp.asarray([4, 5, 6]))
+        expected_target = anp.asarray([1, 3])
+        expected_preds = anp.asarray([4, 6])
 
-        result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+        out_target, out_preds = remove_ignore_index(
+            target,
+            preds,
+            ignore_index=ignore_index,
+        )
 
-        assert all(anp.all(a == b) for a, b in zip(result, expected_result))
+        assert anp.all(out_target == expected_target)
+        assert anp.all(out_preds == expected_preds)
+
+        target = anp.asarray([[1, 2, 3], [4, 5, 6]])
+        preds = anp.asarray([[7, 8, 9], [10, 11, 12]])
+        ignore_index = 1
+        expected_target = anp.asarray([2, 3, 4, 5, 6])
+        expected_preds = anp.asarray([8, 9, 10, 11, 12])
+
+        out_target, out_preds = remove_ignore_index(
+            target,
+            preds,
+            ignore_index=ignore_index,
+        )
+
+        assert anp.all(out_target == expected_target)
+        assert anp.all(out_preds == expected_preds)
 
     def test_return_same_output_arrays_if_ignore_index_not_in_input_arrays(self):
         """Test returning the same arrays if `ignore_index` is not in array."""
@@ -741,13 +768,23 @@ class TestRemoveIgnoreIndex:
 
     def test_remove_samples_with_tuple_ignore_index(self):
         """Test with tuple of ignore_index values."""
-        # Arrange
         input_arrays = (anp.asarray([1, 2, 3]), anp.asarray([4, 5, 6]))
         ignore_index = (2, 3)
 
         result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
 
-        expected_result = (anp.asarray([1]), anp.asarray([4, 5, 6]))
+        expected_result = (anp.asarray([1]), anp.asarray([4]))
+        assert all(anp.all(a == b) for a, b in zip(result, expected_result))
+
+        input_arrays = (
+            anp.asarray([[1, 2, 3], [4, 5, 6]]),
+            anp.asarray([[7, 8, 9], [10, 11, 12]]),
+        )
+        ignore_index = (2, 6)
+
+        result = remove_ignore_index(*input_arrays, ignore_index=ignore_index)
+
+        expected_result = (anp.asarray([1, 3, 4, 5]), anp.asarray([7, 9, 10, 11]))
         assert all(anp.all(a == b) for a, b in zip(result, expected_result))
 
 

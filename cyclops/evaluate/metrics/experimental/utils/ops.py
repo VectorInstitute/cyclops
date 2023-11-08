@@ -130,8 +130,14 @@ def bincount(
     """
     xp = apc.array_namespace(array)
 
+    if not (isinstance(minlength, int) and minlength >= 0):
+        raise ValueError(
+            "Expected `min_length` to be a non-negative integer. "
+            f"Got minlength={minlength}.",
+        )
+
     if apc.size(array) == 0:
-        return xp.asarray([], dtype=xp.int32, device=apc.device(array))
+        return xp.zeros(shape=(minlength,), dtype=xp.int64, device=apc.device(array))
 
     if array.ndim != 1:
         raise ValueError(f"Expected `array` to be a 1D array. Got {array.ndim}D array.")
@@ -148,12 +154,6 @@ def bincount(
         raise ValueError(
             "Expected `array` and `weights` to have the same shape. "
             f"Got array.shape={array.shape} and weights.shape={weights.shape}.",
-        )
-
-    if minlength < 0:
-        raise ValueError(
-            "Expected `min_length` must be a non-negative integer. "
-            f"Got minlength={minlength}.",
         )
 
     size = int(xp.max(array)) + 1
@@ -418,26 +418,29 @@ def moveaxis(
 
 
 def remove_ignore_index(
-    *arrays: Array,
+    target: Array,
+    preds: Array,
     ignore_index: Optional[Union[Tuple[int, ...], int]],
-) -> Tuple[Array, ...]:
-    """Remove samples that are equal to the ignore_index in comparison functions.
+) -> Tuple[Array, Array]:
+    """Remove the samples at the indices where target values match `ignore_index`.
 
     Parameters
     ----------
-    arrays : Array
-        The input arrays.
+    target : Array
+        The target array.
+    preds : Array
+        The predictions array.
     ignore_index : int or Tuple[int], optional, default=None
         The index or indices to ignore. If None, no indices will be ignored.
 
     Returns
     -------
-    Tuple[Array, ...]
-        The input arrays with the samples removed.
+    Tuple[Array, Array]
+        The `target` and `preds` arrays with the samples at the indices where target
+        values match `ignore_index` removed.
     """
-    xp = apc.array_namespace(*arrays)
     if ignore_index is None:
-        return tuple(arrays)
+        return target, preds
 
     if not (
         isinstance(ignore_index, int)
@@ -451,24 +454,16 @@ def remove_ignore_index(
             f"Got {type(ignore_index)} instead.",
         )
 
-    modified_arrays = []
-    for array in arrays:
-        if not apc.is_array_api_obj(array):
-            raise TypeError(
-                f"Expected input arrays to be Array objects. Got {type(array)} instead.",
-            )
+    xp = apc.array_namespace(target, preds)
 
-        if isinstance(ignore_index, int):
-            modified_arrays.append(array[array != ignore_index])
-            continue
-
-        ignore_mask = xp.zeros_like(array, dtype=xp.bool, device=apc.device(array))
+    if isinstance(ignore_index, int):
+        mask = target == ignore_index
+    else:
+        mask = xp.zeros_like(target, dtype=xp.bool, device=apc.device(target))
         for index in ignore_index:
-            ignore_mask = xp.logical_or(ignore_mask, array == index)
+            mask = xp.logical_or(mask, target == index)
 
-        modified_arrays.append(array[~ignore_mask])
-
-    return tuple(modified_arrays)
+    return clone(target[~mask]), clone(preds[~mask])
 
 
 def safe_divide(numerator: Array, denominator: Array) -> Array:
