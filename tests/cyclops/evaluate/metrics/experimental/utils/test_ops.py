@@ -4,6 +4,7 @@ from collections import defaultdict, namedtuple
 import numpy as np
 import numpy.array_api as anp
 import pytest
+import torch
 
 from cyclops.evaluate.metrics.experimental.utils.ops import (
     apply_to_array_collection,
@@ -26,7 +27,6 @@ from cyclops.utils.optional import import_optional_module
 
 
 cp = import_optional_module("cupy", error="ignore")
-torch = import_optional_module("torch", error="ignore")
 
 
 def multiply_by_two(x):
@@ -148,7 +148,6 @@ class TestApplyToArrayCollection:
 
     def test_apply_to_nested_collections(self):
         """Test applying a function to nested collections of arrays."""
-        # Given
         data = {
             "a": anp.asarray(
                 [
@@ -168,10 +167,8 @@ class TestApplyToArrayCollection:
             },
         }
 
-        # When
         result = apply_to_array_collection(data, multiply_by_two)
 
-        # Then
         expected_result = {
             "a": anp.asarray(
                 [
@@ -211,95 +208,73 @@ class TestBincount:
 
     def test_non_negative_integers(self):
         """Test using non-negative integers as input."""
-        # Arrange
         input_array = anp.asarray([0, 1, 1, 2, 2, 2])
         expected_output = anp.asarray([1, 2, 3])
 
-        # Act
         result = bincount(input_array)
 
-        # Assert
         assert anp.all(result == expected_output)
 
     def test_empty_array(self):
         """Test using an empty array as input."""
-        # Arrange
         input_array = anp.asarray([], dtype=anp.int32)
         expected_output = anp.asarray([], dtype=anp.int32)
 
-        # Act
         result = bincount(input_array, minlength=5)
 
-        # Assert
         assert anp.all(result == expected_output)
 
     def test_single_unique_value(self):
         """Test using an array with a single unique value as input."""
-        # Arrange
         input_array = anp.asarray([3, 3, 3, 3])
         expected_output = anp.asarray([0, 0, 0, 4])
 
-        # Act
         result = bincount(input_array)
 
-        # Assert
         assert anp.all(result == expected_output)
 
     def test_no_repeated_values(self):
         """Test using an array with no repeated values as input."""
-        # Arrange
         input_array = anp.asarray([0, 1, 2, 3, 4, 5])
         expected_output = anp.ones_like(input_array)
 
-        # Act
         result = bincount(input_array)
 
-        # Assert
         assert anp.all(result == expected_output)
 
     def test_negative_integers(self):
         """Test using an array with negative integers as input."""
-        # Arrange
         input_array = anp.asarray([-1, 0, 1, 2])
 
-        # Act and Assert
         with pytest.raises(ValueError):
             bincount(input_array)
 
     def test_negative_minlength(self):
         """Test using a negative minlength as input."""
-        # Arrange
         input_array = anp.asarray([1, 2, 3])
 
-        # Act and Assert
         with pytest.raises(ValueError):
             bincount(input_array, minlength=-5)
 
     def test_different_shapes(self):
         """Test using arrays and weights with different shapes as input."""
-        # Arrange
         input_array = anp.asarray([1, 2, 3])
         weights = anp.asarray([0.5, 0.5])
 
-        # Act and Assert
         with pytest.raises(ValueError):
             bincount(input_array, weights=weights)
 
     def test_not_one_dimensional(self):
         """Test using a multi-dimensional array as input."""
-        # Arrange
         input_array = anp.asarray([[1, 2], [3, 4]])
 
-        # Act and Assert
         with pytest.raises(ValueError):
             bincount(input_array)
 
     def test_not_integer_type(self):
         """Test using a non-integer array as input."""
-        # Arrange
         input_array = anp.asarray([1.5, 2.5, 3.5])
 
-        # Act and Assert
         with pytest.raises(ValueError):
             bincount(input_array)
 
@@ -309,10 +284,8 @@ class TestClone:
 
     def test_clone_numpy_array(self):
         """Test if the clone function creates a new copy of a numpy array."""
-        # Create a numpy array
         x = np.array([1, 2, 3])
 
-        # Clone the array
         y = clone(x)
 
         # Check if y is a new copy of x
@@ -328,23 +301,18 @@ class TestClone:
         except cp.cuda.runtime.CUDARuntimeError:  # type: ignore
             pytest.skip("CUDA is not available.")
 
-        # Create a cupy array
         x = cp.asarray([1, 2, 3])  # type: ignore
 
-        # Clone the array
         y = clone(x)
 
         # Check if y is a new copy of x
         assert y is not x
         assert cp.array_equal(y, x)  # type: ignore
 
-    @pytest.mark.skipif(torch is None, reason="PyTorch is not installed.")
     def test_clone_torch_tensor(self):
         """Test if the clone function properly clones a torch tensor."""
-        # Create a torch tensor
         x = torch.tensor([1, 2, 3])  # type: ignore
 
-        # Clone the tensor
         y = clone(x)
 
         # Check if y is a new copy of x
@@ -353,17 +321,13 @@ class TestClone:
 
     def test_clone_empty_array(self):
         """Test if the clone function creates a new copy of an empty array."""
-        import numpy.array_api as np
+        x = anp.asarray([])
 
-        # Create an empty array
-        x = np.asarray([])
-
-        # Clone the array
         y = clone(x)
 
         # Check if y is a new copy of x
         assert y is not x
-        assert np.all(y == x)
+        assert anp.all(y == x)
 
 
 class TestDimZeroCat:

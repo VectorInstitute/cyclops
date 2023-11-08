@@ -71,6 +71,7 @@ mypy = "^1.0.0"
 ruff = "^0.1.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 cycquery = "^0.1.0" # used for integration test
+torchmetrics = {version = "^1.2.0", extras = ["classification"]}
 
 [tool.poetry.group.docs]
 optional = true

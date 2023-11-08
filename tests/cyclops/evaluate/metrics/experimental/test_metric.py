@@ -3,6 +3,7 @@ import array_api_compat as apc
 import numpy as np
 import numpy.array_api as anp
 import pytest
+import torch
 
 from cyclops.evaluate.metrics.experimental.utils.ops import (
     dim_zero_cat,
@@ -11,11 +12,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     dim_zero_min,
     dim_zero_sum,
 )
-from cyclops.utils.optional import import_optional_module
-from metrics.experimental.testers import DummyListStateMetric, DummyMetric
-
-
-torch = import_optional_module("torch", "ignore")
+from evaluate.metrics.experimental.testers import DummyListStateMetric, DummyMetric
 
 
 class TestMetricBaseClass:
@@ -328,8 +325,8 @@ class TestMetricBaseClass:
             DummyMetric(dist_backend=42)
 
     @pytest.mark.skipif(
-        torch is None or not torch.cuda.is_available(),
-        reason="Test requires torch and cuda.",
+        not torch.cuda.is_available(),
+        reason="CUDA is not available.",
     )
     def test_to_device_torch(self):
         """Test that `to_device` method works as expected."""

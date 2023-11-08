@@ -1,1 +1,1 @@
-"""Test array-API-compatible implementations of evalution metrics."""
+"""Test the `cyclops.evaluate.metrics.experimental` package."""

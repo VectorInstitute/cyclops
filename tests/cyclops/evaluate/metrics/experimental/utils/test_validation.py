@@ -1,12 +1,12 @@
 """Test utility functions for validating input arrays."""
 import numpy as np
 import numpy.array_api as anp
+import torch
 
 from cyclops.evaluate.metrics.experimental.utils.validation import (
     is_floating_point,
     is_numeric,
 )
-from cyclops.utils.optional import import_optional_module
 
 
 def test_is_floating_point():
@@ -17,13 +17,11 @@ def test_is_floating_point():
     x = anp.asarray([1, 2, 3], dtype=anp.float64)
     assert is_floating_point(x)
 
-    torch = import_optional_module("torch")
-    if torch is not None:
-        x = torch.tensor([1, 2, 3], dtype=torch.float16)
-        assert is_floating_point(x)
+    x = torch.tensor([1, 2, 3], dtype=torch.float16)
+    assert is_floating_point(x)
 
-        x = torch.tensor([1, 2, 3], dtype=torch.bfloat16)
-        assert is_floating_point(x)
+    x = torch.tensor([1, 2, 3], dtype=torch.bfloat16)
+    assert is_floating_point(x)
 
     x = anp.asarray([1, 2, 3], dtype=anp.int32)
     assert not is_floating_point(x)
