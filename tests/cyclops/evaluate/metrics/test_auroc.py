@@ -11,8 +11,9 @@ from sklearn.metrics import roc_auc_score as sk_roc_auc_score
 from cyclops.evaluate.metrics.auroc import AUROC
 from cyclops.evaluate.metrics.functional import auroc as cyclops_auroc
 from cyclops.evaluate.metrics.utils import sigmoid
-from metrics.helpers import MetricTester
-from metrics.inputs import (
+
+from .helpers import MetricTester
+from .inputs import (
     NUM_CLASSES,
     NUM_LABELS,
     _binary_cases,

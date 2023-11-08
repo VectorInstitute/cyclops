@@ -8,8 +8,9 @@ import pytest
 
 from cyclops.evaluate.metrics.functional.specificity import specificity
 from cyclops.evaluate.metrics.specificity import Specificity
-from metrics.helpers import MetricTester
-from metrics.inputs import (
+
+from .helpers import MetricTester
+from .inputs import (
     NUM_CLASSES,
     NUM_LABELS,
     THRESHOLD,
@@ -17,7 +18,7 @@ from metrics.inputs import (
     _multiclass_cases,
     _multilabel_cases,
 )
-from metrics.test_stat_scores import (
+from .test_stat_scores import (
     _sk_stat_scores_binary,
     _sk_stat_scores_multiclass,
     _sk_stat_scores_multilabel,

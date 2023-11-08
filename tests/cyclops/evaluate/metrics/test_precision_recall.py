@@ -16,8 +16,9 @@ from cyclops.evaluate.metrics.functional.precision_recall import (
 )
 from cyclops.evaluate.metrics.precision_recall import Precision, Recall
 from cyclops.evaluate.metrics.utils import sigmoid
-from metrics.helpers import MetricTester
-from metrics.inputs import (
+
+from .helpers import MetricTester
+from .inputs import (
     NUM_CLASSES,
     NUM_LABELS,
     THRESHOLD,

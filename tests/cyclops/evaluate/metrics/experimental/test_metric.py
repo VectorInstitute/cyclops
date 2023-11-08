@@ -12,7 +12,8 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     dim_zero_min,
     dim_zero_sum,
 )
-from evaluate.metrics.experimental.testers import DummyListStateMetric, DummyMetric
+
+from .testers import DummyListStateMetric, DummyMetric
 
 
 class TestMetricBaseClass:
