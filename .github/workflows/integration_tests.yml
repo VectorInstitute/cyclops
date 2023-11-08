@@ -40,14 +40,10 @@ jobs:
     steps:
       - name: Install dependencies for mpi4py
         run: |
-          echo which mpicc
-          wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz
-          tar xvf openmpi-4.1.5.tar.gz
+          ompi_info
           cd openmpi-4.1.5/
-          ./configure --with-cuda --prefix=/opt/openmpi-4.1.5
-          make -j4 all install
-          export MPICC=/opt/openmpi-4.1.5/bin/mpicc
           rm -rf openmpi-4.1.5.tar.gz openmpi-4.1.5
+          cd ..
       - uses: actions/checkout@v3
       - name: Install poetry
         run: pip install poetry
