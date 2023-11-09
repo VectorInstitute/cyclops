@@ -320,8 +320,8 @@ def flatten_seq(inp: Sequence[Any]) -> List[Any]:
     if len(inp) == 0:
         return []
 
-    if len(inp) == 1:
-        return list(inp)
+    if isinstance(inp, str) and len(inp) == 1:
+        return [inp]
 
     result = []
     for sublist in inp:
