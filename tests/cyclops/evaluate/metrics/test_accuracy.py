@@ -16,15 +16,9 @@ from evaluate.metrics.test_stat_scores import (
     _sk_stat_scores_multilabel,
 )
 
+from .conftest import NUM_CLASSES, NUM_LABELS, THRESHOLD
 from .helpers import MetricTester
-from .inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    THRESHOLD,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 
 
 np.seterr(divide="ignore", invalid="ignore")  # ignore divide by zero or nan

@@ -13,14 +13,9 @@ from cyclops.evaluate.metrics.functional import (
 from cyclops.evaluate.metrics.precision_recall_curve import PrecisionRecallCurve
 from cyclops.evaluate.metrics.utils import sigmoid
 
+from .conftest import NUM_CLASSES, NUM_LABELS
 from .helpers import MetricTester
-from .inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 
 
 def _sk_binary_precision_recall_curve(

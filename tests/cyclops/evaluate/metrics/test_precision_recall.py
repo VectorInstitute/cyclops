@@ -17,15 +17,9 @@ from cyclops.evaluate.metrics.functional.precision_recall import (
 from cyclops.evaluate.metrics.precision_recall import Precision, Recall
 from cyclops.evaluate.metrics.utils import sigmoid
 
+from .conftest import NUM_CLASSES, NUM_LABELS, THRESHOLD
 from .helpers import MetricTester
-from .inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    THRESHOLD,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 
 
 def _sk_binary_precision_recall(

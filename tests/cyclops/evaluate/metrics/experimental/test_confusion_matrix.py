@@ -29,14 +29,8 @@ from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
 from cyclops.evaluate.metrics.experimental.utils.ops import to_int
 from cyclops.evaluate.metrics.experimental.utils.validation import is_floating_point
 
-from .inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    THRESHOLD,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
+from ..conftest import NUM_CLASSES, NUM_LABELS, THRESHOLD
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 from .testers import MetricTester, _inject_ignore_index
 
 

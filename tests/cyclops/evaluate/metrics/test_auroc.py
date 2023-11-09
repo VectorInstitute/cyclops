@@ -12,10 +12,9 @@ from cyclops.evaluate.metrics.auroc import AUROC
 from cyclops.evaluate.metrics.functional import auroc as cyclops_auroc
 from cyclops.evaluate.metrics.utils import sigmoid
 
+from .conftest import NUM_CLASSES, NUM_LABELS
 from .helpers import MetricTester
 from .inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
     _binary_cases,
     _multiclass_cases,
     _multilabel_cases,

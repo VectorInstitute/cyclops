@@ -11,14 +11,9 @@ from cyclops.evaluate.metrics.functional import roc_curve as cyclops_roc_curve
 from cyclops.evaluate.metrics.roc import ROCCurve
 from cyclops.evaluate.metrics.utils import sigmoid
 
+from .conftest import NUM_CLASSES, NUM_LABELS
 from .helpers import MetricTester
-from .inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 
 
 def _sk_binary_roc_curve(

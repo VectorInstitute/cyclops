@@ -11,13 +11,8 @@ from scipy.special import log_softmax
 
 from cyclops.evaluate.metrics.experimental.utils.typing import Array
 
+from ..conftest import BATCH_SIZE, EXTRA_DIM, NUM_BATCHES, NUM_CLASSES, NUM_LABELS
 
-BATCH_SIZE = 32
-NUM_BATCHES = 8
-NUM_CLASSES = 10
-NUM_LABELS = 10
-EXTRA_DIM = 4
-THRESHOLD = random.random()
 
 InputSpec = namedtuple("InputSpec", ["target", "preds"])
 
