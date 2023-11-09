@@ -38,6 +38,12 @@ jobs:
   integration-tests:
     runs-on: [self-hosted, gpu, db]
     steps:
+      - name: Check openmpi installation
+        run: |
+          /opt/openmpi-4.1.5/bin/ompi_info
+          export PATH=/opt/openmpi-4.1.5/bin:$PATH
+          export LD_LIBRARY_PATH=/opt/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
+          ompi_info
       - uses: actions/checkout@v3
       - name: Install poetry
         run: pip install poetry
