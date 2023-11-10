@@ -229,7 +229,7 @@
     </div>
     {% for slice, values in comp.metric_cards.slices|zip(comp.metric_cards.values) %}
       <div class="subcard" style="padding:10px; margin-bottom:10px; max-width:500px;">
-        <h4>{{slice|title}}</h4>
+        <h4>{{slice|regex_replace('(?<!^)(?=[A-Z])', ' ')|title}}</h4>
         <div class="radio-buttons">
           <input type="radio" id="overall_{{slice}}" name="{{slice}}" value="overall_{{slice}}" checked>
           <label for="overall_{{slice}}">All</label>
