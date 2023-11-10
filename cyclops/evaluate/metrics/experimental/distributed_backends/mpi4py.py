@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List
 
 import array_api_compat as apc
 
-from cyclops.evaluate.metrics.experimental.distributed.backends.base import (
+from cyclops.evaluate.metrics.experimental.distributed_backends.base import (
     DistributedBackend,
 )
 from cyclops.evaluate.metrics.experimental.utils.ops import flatten

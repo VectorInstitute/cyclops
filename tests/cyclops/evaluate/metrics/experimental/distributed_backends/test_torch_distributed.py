@@ -4,7 +4,7 @@ from functools import partial
 
 import pytest
 
-from cyclops.evaluate.metrics.experimental.distributed.backends.torch_distributed import (
+from cyclops.evaluate.metrics.experimental.distributed_backends.torch_distributed import (
     TorchDistributed,
 )
 from cyclops.utils.optional import import_optional_module

@@ -1,15 +1,15 @@
 """Distributed backends for distributed metric computation."""
-from cyclops.evaluate.metrics.experimental.distributed.backends.base import (
+from cyclops.evaluate.metrics.experimental.distributed_backends.base import (
     _DISTRIBUTED_BACKEND_REGISTRY,
     DistributedBackend,
 )
-from cyclops.evaluate.metrics.experimental.distributed.backends.mpi4py import (
+from cyclops.evaluate.metrics.experimental.distributed_backends.mpi4py import (
     MPI4Py,
 )
-from cyclops.evaluate.metrics.experimental.distributed.backends.non_distributed import (
+from cyclops.evaluate.metrics.experimental.distributed_backends.non_distributed import (
     NonDistributed,
 )
-from cyclops.evaluate.metrics.experimental.distributed.backends.torch_distributed import (
+from cyclops.evaluate.metrics.experimental.distributed_backends.torch_distributed import (
     TorchDistributed,
 )
 

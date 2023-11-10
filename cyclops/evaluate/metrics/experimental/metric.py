@@ -19,7 +19,7 @@ from typing import (
 
 import array_api_compat as apc
 
-from cyclops.evaluate.metrics.experimental.distributed import get_backend
+from cyclops.evaluate.metrics.experimental.distributed_backends import get_backend
 from cyclops.evaluate.metrics.experimental.utils.ops import (
     apply_to_array_collection,
     clone,

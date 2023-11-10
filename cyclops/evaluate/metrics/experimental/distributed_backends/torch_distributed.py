@@ -1,7 +1,7 @@
 """`torch.distributed` backend for synchronizing `torch.Tensor` objects."""
 from typing import TYPE_CHECKING, List, TypeVar
 
-from cyclops.evaluate.metrics.experimental.distributed.backends.base import (
+from cyclops.evaluate.metrics.experimental.distributed_backends.base import (
     DistributedBackend,
 )
 from cyclops.utils.optional import import_optional_module

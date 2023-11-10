@@ -1,7 +1,7 @@
 """A dummy object for non-distributed environments."""
 from typing import Any, List
 
-from cyclops.evaluate.metrics.experimental.distributed.backends.base import (
+from cyclops.evaluate.metrics.experimental.distributed_backends.base import (
     DistributedBackend,
 )
 
