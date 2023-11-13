@@ -150,14 +150,14 @@ npv = MultilabelNegativePredictiveValue(num_labels=len(pathologies))
 
 specificity = create_metric(
     metric_name="specificity",
-    task="multilabel",  # type: ignore[arg-type]
-    num_labels=len(pathologies),  # type: ignore[arg-type]
+    task="multilabel",
+    num_labels=len(pathologies),
 )
 
 sensitivity = create_metric(
     metric_name="sensitivity",
-    task="multilabel",  # type: ignore[arg-type]
-    num_labels=len(pathologies),  # type: ignore[arg-type]
+    task="multilabel",
+    num_labels=len(pathologies),
 )
 # create the slice functions
 slice_spec = SliceSpec(spec_list=slices_sex)
