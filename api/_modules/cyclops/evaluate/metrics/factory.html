@@ -167,21 +167,21 @@
 <span></span><span class="sd">&quot;&quot;&quot;Factory for creating metrics.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">difflib</span> <span class="kn">import</span> <span class="n">get_close_matches</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.metric</span> <span class="kn">import</span> <span class="n">_METRIC_REGISTRY</span><span class="p">,</span> <span class="n">Metric</span>
 
 
 <div class="viewcode-block" id="create_metric">
 <a class="viewcode-back" href="../../../../reference/api/_autosummary/cyclops.evaluate.metrics.factory.create_metric.html#cyclops.evaluate.metrics.factory.create_metric">[docs]</a>
-<span class="k">def</span> <span class="nf">create_metric</span><span class="p">(</span><span class="n">metric_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">create_metric</span><span class="p">(</span><span class="n">metric_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a metric instance from a name.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    metric_name : str</span>
 <span class="sd">        The name of the metric.</span>
-<span class="sd">    **kwargs : Mapping[str, Any], optional</span>
+<span class="sd">    **kwargs : Any</span>
 <span class="sd">        The keyword arguments to pass to the metric constructor.</span>
 
 <span class="sd">    Returns</span>
