@@ -1,19 +1,19 @@
 """Factory for creating metrics."""
 
 from difflib import get_close_matches
-from typing import Any, List, Mapping, Optional
+from typing import Any, List
 
 from cyclops.evaluate.metrics.metric import _METRIC_REGISTRY, Metric
 
 
-def create_metric(metric_name: str, **kwargs: Optional[Mapping[str, Any]]) -> Metric:
+def create_metric(metric_name: str, **kwargs: Any) -> Metric:
     """Create a metric instance from a name.
 
     Parameters
     ----------
     metric_name : str
         The name of the metric.
-    **kwargs : Mapping[str, Any], optional
+    **kwargs : Any
         The keyword arguments to pass to the metric constructor.
 
     Returns

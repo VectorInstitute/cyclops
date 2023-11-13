@@ -29,3 +29,4 @@ _autosummary
 *cyclops_reports*
 *dummy_reports*
 .mypy_cache
+*code-workspace*
