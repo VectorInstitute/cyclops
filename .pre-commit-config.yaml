@@ -21,7 +21,7 @@ repos:
     - id: black
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.1.0'
+    rev: 'v0.1.5'
     hooks:
     - id: ruff
       args: [--fix, --exit-non-zero-on-fix]
@@ -34,7 +34,7 @@ repos:
       entry: python3 -m mypy --config-file pyproject.toml
       language: system
       types: [python]
-      exclude: "use_cases|tests|cyclops/(process|models|tasks|monitor|report/plot)"
+      exclude: "use_cases|tests|cyclops/(process|models|monitor|report/plot)"
 
   - repo: local
     hooks:

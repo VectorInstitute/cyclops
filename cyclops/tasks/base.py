@@ -44,18 +44,16 @@ class BaseTask(ABC):
         """
         self.models = prepare_models(models)
         self._validate_models()
-        self.task_features = (
-            [task_features] if isinstance(task_features, str) else task_features
-        )
+        self.task_features = task_features
         self.task_target = (
             [task_target] if isinstance(task_target, str) else task_target
         )
         self.device = get_device()
-        self.trained_models = []
-        self.pretrained_models = []
+        self.trained_models: List[str] = []
+        self.pretrained_models: List[str] = []
 
     @property
-    def models_count(self):
+    def models_count(self) -> int:
         """Number of models in the task.
 
         Returns
@@ -92,7 +90,7 @@ class BaseTask(ABC):
         """
         raise NotImplementedError
 
-    def list_models(self):
+    def list_models(self) -> List[str]:
         """List the names of the models in the task.
 
         Returns
@@ -104,14 +102,14 @@ class BaseTask(ABC):
         return list(self.models.keys())
 
     @abstractmethod
-    def _validate_models(self):
+    def _validate_models(self) -> None:
         """Validate the models for the task data type."""
         raise NotImplementedError
 
     def add_model(
         self,
         model: Union[str, WrappedModel, Dict[str, WrappedModel]],
-    ):
+    ) -> None:
         """Add a model to the task.
 
         Parameters
@@ -167,7 +165,7 @@ class BaseTask(ABC):
         self,
         filepath: Union[str, Dict[str, str]],
         model_names: Optional[Union[str, List[str]]] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Save the model to a specified filepath.
 
@@ -219,7 +217,7 @@ class BaseTask(ABC):
         self,
         filepath: str,
         model_name: Optional[str] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> WrappedModel:
         """Load a pretrained model.
 
