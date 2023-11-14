@@ -35,6 +35,7 @@ def _test_mpi4py_class_init(rank: int, worldsize: int = 2):
     assert backend.world_size == worldsize
 
 
+@pytest.mark.integration_test()
 def test_mpi4py_backend_class_init():
     """Test `TorchDistributed` class."""
     pytest.mpi_pool.starmap(_test_mpi4py_class_init, [(rank, 2) for rank in range(2)])  # type: ignore
