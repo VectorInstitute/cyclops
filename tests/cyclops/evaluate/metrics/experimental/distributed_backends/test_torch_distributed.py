@@ -49,7 +49,7 @@ def _test_torch_distributed_class(rank: int, worldsize: int = NUM_PROCESSES):
         assert (val == torch.ones_like(val)).all()  # type: ignore
 
     # test all gather uneven tensors
-    tensor = torch.ones(rank + 1, 2 - rank)  # type: ignore
+    tensor = torch.ones(rank)  # type: ignore
     result = backend.all_gather(tensor)
     assert len(result) == worldsize
     for idx in range(worldsize):
@@ -68,7 +68,7 @@ def _test_torch_distributed_class(rank: int, worldsize: int = NUM_PROCESSES):
 @pytest.mark.skipif(sys.platform == "win32", reason="DDP not available on windows")
 def test_torch_distributed_backend_class():
     """Test `TorchDistributed` class."""
-    pytest.pool.map(_test_torch_distributed_class, range(NUM_PROCESSES))  # type: ignore
+    pytest.torch_pool.map(_test_torch_distributed_class, range(NUM_PROCESSES))  # type: ignore
 
 
 def _test_dist_sum(rank: int, worldsize: int = NUM_PROCESSES) -> None:
@@ -101,9 +101,9 @@ def _test_dist_sum_cat(rank: int, worldsize: int = NUM_PROCESSES) -> None:
 
 
 def _test_dist_compositional_tensor(rank: int, worldsize: int = NUM_PROCESSES) -> None:
-    dummy = DummyMetric()
+    dummy = DummyMetric(dist_backend="torch_distributed")
     dummy = dummy.clone() + dummy.clone()
-    dummy.update_state(torch.tensor(1))
+    dummy.update(torch.tensor(1))
     val = dummy.compute()
     assert val == 2 * worldsize
 
@@ -121,12 +121,12 @@ def _test_dist_compositional_tensor(rank: int, worldsize: int = NUM_PROCESSES) -
 )
 def test_ddp(process):
     """Test ddp functions."""
-    pytest.pool.map(process, range(NUM_PROCESSES))  # type: ignore
+    pytest.torch_pool.map(process, range(NUM_PROCESSES))  # type: ignore
 
 
 def _test_sync_on_compute_tensor_state(rank):
     dummy = DummyMetric(dist_backend="torch_distributed")
-    dummy.update_state(torch.tensor(rank + 1))
+    dummy.update(torch.tensor(rank + 1))
     val = dummy.compute()
 
     assert val == 3
@@ -134,7 +134,7 @@ def _test_sync_on_compute_tensor_state(rank):
 
 def _test_sync_on_compute_list_state(rank):
     dummy = DummyListStateMetric(dist_backend="torch_distributed")
-    dummy.update_state(torch.tensor(rank + 1))
+    dummy.update(torch.tensor(rank + 1))
     val = dummy.compute()
     assert val.sum() == 3
     assert torch.allclose(val, torch.tensor([1, 2])) or torch.allclose(
@@ -150,4 +150,4 @@ def _test_sync_on_compute_list_state(rank):
 )
 def test_sync_on_compute(test_func):
     """Test that synchronization of states can be enabled and disabled for compute."""
-    pytest.pool.map(partial(test_func), range(NUM_PROCESSES))
+    pytest.torch_pool.map(partial(test_func), range(NUM_PROCESSES))

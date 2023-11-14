@@ -283,17 +283,17 @@ class DummyMetric(Metric):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.add_state_factory(
+        self.add_state_default_factory(
             "x",
             lambda xp: xp.asarray(0.0, dtype=xp.float32, device=self.device),  # type: ignore
             dist_reduce_fn="sum",
         )
 
-    def update_state(self, x: Array) -> None:
+    def _update_state(self, x: Array) -> None:
         """Update state."""
         self.x += x  # type: ignore
 
-    def compute(self) -> Array:
+    def _compute_metric(self) -> Array:
         """Compute value."""
         return self.x  # type: ignore
 
@@ -305,13 +305,13 @@ class DummyListStateMetric(Metric):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.add_state_factory("x", list, dist_reduce_fn="cat")  # type: ignore
+        self.add_state_default_factory("x", list, dist_reduce_fn="cat")  # type: ignore
 
-    def update_state(self, x: Array):
+    def _update_state(self, x: Array):
         """Update state."""
         self.x.append(apc.to_device(x, self.device))  # type: ignore
 
-    def compute(self):
+    def _compute_metric(self):
         """Compute value."""
         return self.x  # type: ignore
 

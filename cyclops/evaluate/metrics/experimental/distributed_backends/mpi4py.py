@@ -80,11 +80,13 @@ class MPI4Py(DistributedBackend, registry_key="mpi4py"):
         # prepare displacements for `Allgatherv``
         displacements = [0]
         for shape in all_shapes[:-1]:
-            shape_arr = xp.asarray(shape)
+            shape_arr = xp.asarray(shape, dtype=xp.int32)
             displacements.append(displacements[-1] + int(xp.prod(shape_arr)))
 
         # allocate memory for gathered data based on total size
-        total_size = sum([int(xp.prod(xp.asarray(shape))) for shape in all_shapes])
+        total_size = sum(
+            [int(xp.prod(xp.asarray(shape, dtype=xp.int32))) for shape in all_shapes],
+        )
         gathered_data = xp.empty(total_size, dtype=arr.dtype)
 
         # gather data from all processes to all processes, accounting for uneven shapes
@@ -96,7 +98,7 @@ class MPI4Py(DistributedBackend, registry_key="mpi4py"):
         # reshape gathered data back to original shape
         reshaped_data = []
         for shape in all_shapes:
-            shape_arr = xp.asarray(shape)
+            shape_arr = xp.asarray(shape, dtype=xp.int32)
             reshaped_data.append(
                 xp.reshape(gathered_data[: xp.prod(shape_arr)], shape=shape),
             )

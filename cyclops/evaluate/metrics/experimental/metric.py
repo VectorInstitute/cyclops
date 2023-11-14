@@ -1,15 +1,13 @@
 """Base class for all metrics."""
-import functools
 import inspect
 import logging
+import warnings
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
 from copy import deepcopy
 from typing import (
     Any,
     Callable,
     Dict,
-    Generator,
     List,
     Optional,
     Protocol,
@@ -44,10 +42,10 @@ TState = Union[Array, List[Array]]
 
 @runtime_checkable
 class StateFactory(Protocol):
-    """Protocol for a function that creates a state variable."""
+    """Protocol for a function that creates a metric state."""
 
     def __call__(self, xp: Optional[Any] = None) -> TState:
-        """Create a state variable."""
+        """Create a metric state."""
         ...
 
 
@@ -55,14 +53,6 @@ class Metric(ABC):
     """Abstract base class for all metrics."""
 
     def __init__(self, **kwargs: Any) -> None:
-        """Initialize the metric."""
-        self.update_state: Callable[..., Any] = self._wrap_update(  # type: ignore
-            self.update_state,
-        )
-        self.compute: Callable[..., Any] = self._wrap_compute(  # type: ignore
-            self.compute,
-        )
-
         dist_backend = kwargs.get("dist_backend", "non_distributed")
         self.dist_backend = get_backend(dist_backend)
 
@@ -80,72 +70,105 @@ class Metric(ABC):
         cls: Any,
         registry_key: Optional[str] = None,
         force_register: bool = False,
-        **kwargs: Any,
-    ):
+    ) -> None:
         """Add subclass to the metric registry."""
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__()
 
-        excluded_classes = ("Metric", "OperatorMetric", "MetricCollection")
-        if (  # subclass has not implemented abstract methods
-            not (
-                cls.update_state is Metric.update_state or cls.compute is Metric.compute
+        if registry_key is None and not force_register:
+            warnings.warn(
+                "A registry key must be provided when `force_register` is True. "
+                "The registration will be skipped.",
+                category=UserWarning,
+                stacklevel=2,
             )
-            and cls.__name__ not in excluded_classes
-        ) or force_register:
-            if registry_key is None:
-                LOGGER.warning(
-                    "Metric subclass %s has not defined a name. "
-                    "It will not be registered in the metric registry.",
-                    cls.__name__,
-                )
-            else:
-                if registry_key in _METRIC_REGISTRY:
-                    LOGGER.warning(
-                        "Metric %s has already been registered. "
-                        "It will be overwritten by %s.",
-                        registry_key,
-                        cls.__name__,
-                    )
-                _METRIC_REGISTRY[registry_key] = cls
+            return
+
+        if registry_key is not None and not isinstance(registry_key, str):
+            raise TypeError(
+                f"Expected `registry_key` to be a string, but got {type(registry_key)}.",
+            )
+
+        is_abstract_cls = inspect.isabstract(cls)
+        excluded_classes = ("OperatorMetric", "MetricCollection")
+        if force_register or (
+            not (is_abstract_cls or cls.__name__ in excluded_classes)
+            and registry_key is not None
+        ):
+            _METRIC_REGISTRY[registry_key] = cls
 
     @property
     def device(self) -> Union[str, Any]:
-        """Return the device where the metric states are stored."""
+        """Return the device on which the metric states are stored."""
         return self._device
 
     @property
-    def state(self) -> Dict[str, TState]:
-        """Return the state of the metric."""
+    def state_vars(self) -> Dict[str, TState]:
+        """Return the state variables of the metric as a dictionary."""
         return {attr: getattr(self, attr) for attr in self._defaults}
 
-    def add_state_factory(
+    @abstractmethod
+    def _update_state(self, *args: Any, **kwargs: Any) -> None:
+        """Update the state of the metric."""
+
+    @abstractmethod
+    def _compute_metric(self) -> Any:
+        """Compute the final value of the metric from the state variables."""
+
+    def _add_states(self, xp: Any) -> None:
+        """Add the state variables as attributes using the default factory functions."""
+        # raise error if no default factories have been added
+        if not self._default_factories:
+            warnings.warn(
+                f"The metric `{self.__class__.__name__}` has no state variables, "
+                "which may lead to unexpected behavior. This is likely because the "
+                "`update` method was called before the `add_state_default_factory` "
+                "method was called.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+
+        for name, factory in self._default_factories.items():
+            params = inspect.signature(factory).parameters
+            if len(params) == 1 and list(params.keys())[0] == "xp":
+                value = factory(xp=xp)
+            else:
+                value = factory()
+
+            _validate_state_variable_type(name, value)
+
+            setattr(self, name, value)
+            self._defaults[name] = (
+                clone(value) if apc.is_array_api_obj(value) else deepcopy(value)
+            )
+
+    def add_state_default_factory(
         self,
         name: str,
         default_factory: StateFactory,
         dist_reduce_fn: Optional[Union[str, Callable[..., Any]]] = None,
     ) -> None:
-        """Add a factory function for creating a state variable.
+        """Add a function for creating default values for state variables.
 
         Parameters
         ----------
         name : str
-            The name of the state variable.
+            The name of the state.
         default_factory : Callable[..., Union[Array, List[Array]]]
-            A function that creates the state variable. The function can take
+            A function that creates the state. The function can take
             no arguments or exactly one argument named `xp` (the array API namespace)
             and must return an array-API-compatible object or a list of
             array-API-compatible objects.
         dist_reduce_fn : str or Callable[..., Any], optional
-            The function to use to reduce the state variable across all processes.
+            The function to use to reduce the state across all processes.
             If `None`, no reduction will be performed. If a string, the string
             must be one of ['mean', 'sum', 'cat', 'min', 'max']. If a callable,
-            the callable must take a single argument (the state variable) and
-            return a reduced version of the state variable.
+            the callable must take a single argument (the state) and
+            return a reduced version of the state.
 
         """
         if not name.isidentifier():
             raise ValueError(
-                f"Argument `name` must be a valid python identifier, but got `{name}`.",
+                f"Argument `name` must be a valid python identifier. Got `{name}`.",
             )
         if not callable(default_factory):
             raise TypeError(
@@ -188,64 +211,6 @@ class Metric(ABC):
         self._default_factories[name] = default_factory
         self._reductions[name] = dist_reduce_fn
 
-    def _add_states(self, xp: Any) -> None:
-        """Add the state variables as attributes using the factory functions."""
-        for name, factory in self._default_factories.items():
-            params = inspect.signature(factory).parameters
-            if len(params) == 1 and list(params.keys())[0] == "xp":
-                value = factory(xp=xp)
-            else:
-                value = factory()
-
-            _validate_state_variable_type(name, value)
-
-            setattr(self, name, value)
-            self._defaults[name] = (
-                clone(value) if apc.is_array_api_obj(value) else deepcopy(value)
-            )
-
-    @abstractmethod
-    def update_state(self, *args: Any, **kwargs: Any) -> None:
-        """Update the state of the metric."""
-
-    @abstractmethod
-    def compute(self) -> Any:
-        """Compute the final value of the metric from the state variables."""
-
-    def reset_state(self) -> None:
-        """Reset the state variables of the metric to the default values."""
-        for state_name, default_value in self._defaults.items():
-            if apc.is_array_api_obj(default_value):
-                setattr(
-                    self,
-                    state_name,
-                    apc.to_device(clone(default_value), self.device),
-                )
-            elif isinstance(default_value, list):
-                setattr(
-                    self,
-                    state_name,
-                    [
-                        apc.to_device(clone(array), self.device)
-                        for array in default_value
-                    ],
-                )
-            else:
-                raise TypeError(
-                    "The value of state variable must be an array API-compatible "
-                    "object or a list of array API-compatible objects. "
-                    f"But got {state_name}={default_value} instead.",
-                )
-
-        self._update_count = 0
-        self._computed = None
-        self._cache = None
-        self._is_synced = False
-
-    def clone(self) -> "Metric":
-        """Return a copy of the metric."""
-        return deepcopy(self)
-
     def to_device(
         self,
         device: str,
@@ -276,6 +241,50 @@ class Metric(ABC):
         self._device = device
         return self
 
+    def update(self, *args: Any, **kwargs: Any) -> None:
+        """Update the state of the metric.
+
+        This method calls the `_update_state` method, which should be implemented
+        by the subclass. The `_update_state` method should update the state variables
+        of the metric using the array API-compatible objects passed to this method.
+        This method enusres that the state variables are created using the factory
+        functions added via the `add_state_default_factory` before the first call to
+        `_update_state`. It also ensures that the state variables are moved to the
+        device of the first array-API-compatible object passed to it. The method
+        tracks the number of times `update` is called and resets the cached result
+        of `compute` whenever `update` is called.
+
+        Notes
+        -----
+        - This method should be called before the `compute` method is called
+        for the first time to ensure that the state variables are initialized.
+        """
+        if (
+            not bool(self._defaults) and bool(self._default_factories)
+        ) or self._default_factories.keys() != self._defaults.keys():
+            arrays = [obj for obj in args if apc.is_array_api_obj(obj)]
+            arrays.extend(
+                (obj for obj in kwargs.values() if apc.is_array_api_obj(obj)),
+            )
+            if len(arrays) == 0:
+                raise ValueError(
+                    f"The `update` method of metric {self.__class__.__name__} "
+                    "was called without any array API-compatible objects. "
+                    "This may lead to errors as metric state variables may "
+                    "not yet be defined.",
+                )
+            xp = apc.get_namespace(*arrays)
+            self._add_states(xp)
+
+            # move state variables to device of first array
+            device = apc.device(arrays[0])
+            self.to_device(device)
+
+        self._computed = None
+        self._update_count += 1
+
+        self._update_state(*args, **kwargs)
+
     def sync(self) -> None:
         """Synchronzie the metric states across all processes.
 
@@ -288,17 +297,12 @@ class Metric(ABC):
         if not self.dist_backend.is_initialized:
             if self.dist_backend.world_size == 1:
                 self._is_synced = True
-
-                # cache prior to syncing
                 self._cache = {attr: getattr(self, attr) for attr in self._defaults}
             return
 
-        # cache prior to syncing
         self._cache = {attr: getattr(self, attr) for attr in self._defaults}
 
-        # sync
         input_dict = {attr: getattr(self, attr) for attr in self._reductions}
-
         for attr, reduction_fn in self._reductions.items():
             # pre-concatenate metric states that are lists to reduce number of
             # all_gather operations
@@ -340,10 +344,7 @@ class Metric(ABC):
         self._is_synced = True
 
     def unsync(self) -> None:
-        """Un-sync the metric states across all processes.
-
-        Restore cached local state variables of the object.
-        """
+        """Restore cached local metric state."""
         if not self._is_synced:
             raise RuntimeError(
                 "The Metric has already been un-synced. "
@@ -364,95 +365,78 @@ class Metric(ABC):
         self._is_synced = False
         self._cache = None
 
-    @contextmanager
-    def _sync_context(self) -> Generator[None, None, None]:
-        """Sync and unsync the metric states within a context manager."""
+    def compute(self, *args: Any, **kwargs: Any) -> Any:
+        """Compute the final value of the metric from the state variables.
+
+        Prior to calling the `_compute_metric` method, which should be implemented
+        by the subclass, this method ensures that the metric states are synced
+        across all processes and guards against potentially calling the `compute`
+        method before the state variables have been initialized. This method
+        also caches the result of the metric computation so that it can be returned
+        without recomputing the metric.
+        """
+        if self._update_count == 0:
+            raise RuntimeError(
+                f"The `compute` method of {self.__class__.__name__} was called "
+                "before the `update` method. This will lead to errors, "
+                "as the state variables have not yet been initialized.",
+            )
+
+        if self._computed is not None:
+            return self._computed  # return cached result
+
         self.sync()
-
-        yield
-
+        value = self._compute_metric(*args, **kwargs)
         self.unsync()
 
-    def _wrap_update(self, update: Callable[..., None]) -> Callable[..., None]:
-        """Wrap the update function.
+        self._computed = value
 
-        Enusres that the state varibales are created using the factory functions
-        before the first call to `update_state`. Also ensures that the state variables
-        are moved to the device of the first array API-compatible object passed to
-        `update_state`.
-        Tracks the number of times `update_state` is called and resets the cached
-        result of `compute` if `update_state` is called again.
-        """
+        return value
 
-        @functools.wraps(update)
-        def wrapped_func(*args: Any, **kwargs: Any) -> None:
-            if (
-                not bool(self._defaults) and bool(self._default_factories)
-            ) or self._default_factories.keys() != self._defaults.keys():
-                arrays = [obj for obj in args if apc.is_array_api_obj(obj)]
-                arrays.extend(
-                    (obj for obj in kwargs.values() if apc.is_array_api_obj(obj)),
+    def reset(self) -> None:
+        """Reset the metric state to default values."""
+        for state_name, default_value in self._defaults.items():
+            if apc.is_array_api_obj(default_value):
+                setattr(
+                    self,
+                    state_name,
+                    apc.to_device(clone(default_value), self.device),
                 )
-                if len(arrays) == 0:
-                    raise ValueError(
-                        f"The `update` method of metric {self.__class__.__name__} "
-                        "was called without any array API-compatible objects. "
-                        "This may lead to errors as metric state variables may "
-                        "not yet be defined.",
-                    )
-                xp = apc.get_namespace(*arrays)
-                self._add_states(xp)
-
-                # move state variables to device of first array
-                device = apc.device(arrays[0])
-                self.to_device(device)
-
-            self._computed = None
-            self._update_count += 1
-
-            return update(*args, **kwargs)
-
-        return wrapped_func
-
-    def _wrap_compute(self, compute: Callable[..., Any]) -> Callable[..., Any]:
-        """Wrap the compute function.
-
-        Synchoronizes the metric states across all processes before computing the
-        final value of the metric. Also returns the cached result if the metric
-        has already been computed, avoiding redundant computation.
-        """
-
-        @functools.wraps(compute)
-        def wrapped_func(*args: Any, **kwargs: Any) -> Any:
-            if self._update_count == 0:
-                raise RuntimeError(
-                    f"The `compute` method of {self.__class__.__name__} was called "
-                    "before the `update` method. This will lead to errors, "
-                    "as the state variables have not yet been initialized.",
+            elif isinstance(default_value, list):
+                setattr(
+                    self,
+                    state_name,
+                    [
+                        apc.to_device(clone(array), self.device)
+                        for array in default_value
+                    ],
+                )
+            else:
+                raise TypeError(
+                    f"Expected the value of state `{state_name}` to be an array API "
+                    "object or a list of array API objects. But got "
+                    f"`{type(default_value)} instead.",
                 )
 
-            if self._computed is not None:
-                return self._computed  # return cached result
+        self._update_count = 0
+        self._computed = None
+        self._cache = None
+        self._is_synced = False
 
-            with self._sync_context():
-                value = compute(*args, **kwargs)
-
-            self._computed = value
-
-            return value
-
-        return wrapped_func
+    def clone(self) -> "Metric":
+        """Return a deep copy of the metric."""
+        return deepcopy(self)
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """Update the global metric state and compute the metric value for a batch."""
         # global accumulation
-        self.update_state(*args, **kwargs)
+        self.update(*args, **kwargs)
         update_count = self._update_count
         cache = {attr: getattr(self, attr) for attr in self._defaults}
 
         # batch computation
-        self.reset_state()
-        self.update_state(*args, **kwargs)
+        self.reset()
+        self.update(*args, **kwargs)
         batch_result = self.compute()
 
         # restore global state
@@ -568,7 +552,7 @@ class Metric(ABC):
 
     def __pos__(self) -> "Metric":
         """Evaluate `+self` for every element of the metric result."""
-        return OperatorMetric("__pos__", self, None)
+        return OperatorMetric("__abs__", self, None)
 
     def __pow__(self, other: Union[int, float, "Metric", Array]) -> "Metric":
         """Raise the metric to the power of another object."""
@@ -592,14 +576,13 @@ def _validate_state_variable_type(name: str, value: Any) -> None:
         isinstance(value, list) and all(apc.is_array_api_obj(x) for x in value)
     ):
         raise TypeError(
-            "The value of state variable must be an array API-compatible "
-            "object or a list of array API-compatible objects. "
-            f"Got {name}={value} instead.",
+            f"Expected the value of state `{name}` to be an array API object or a "
+            f"list of array API-compatible objects. But got {type(value)} instead.",
         )
 
 
 class OperatorMetric(Metric):
-    """A metric used to apply an operation to one or two metrics.
+    """A metric used to apply an operator to one or two metrics.
 
     Parameters
     ----------
@@ -623,16 +606,24 @@ class OperatorMetric(Metric):
         super().__init__()
 
         self._op = operator
-        self.metric_a = metric_a
-        self.metric_b = metric_b
+        self.metric_a = metric_a.clone() if isinstance(metric_a, Metric) else metric_a
+        self.metric_b = metric_b.clone() if isinstance(metric_b, Metric) else metric_b
 
-    def update_state(self, *args: Any, **kwargs: Any) -> None:
+    def _update_state(self, *args: Any, **kwargs: Any) -> None:
         """Update the state of each metric."""
         if isinstance(self.metric_a, Metric):
-            self.metric_a.update_state(*args, **kwargs)
+            self.metric_a.update(*args, **kwargs)
 
         if isinstance(self.metric_b, Metric):
-            self.metric_b.update_state(*args, **kwargs)
+            self.metric_b.update(*args, **kwargs)
+
+    def _compute_metric(self) -> None:
+        """Not implemented and not required.
+
+        The `compute` is overridden to call the `compute` method of `metric_a`
+        and/or `metric_b` and then apply the operator.
+
+        """
 
     def compute(self) -> Any:
         """Compute the value of each metric, then apply the operator."""
@@ -653,13 +644,13 @@ class OperatorMetric(Metric):
 
         return getattr(result_a, self._op)(result_b)
 
-    def reset_state(self) -> None:
+    def reset(self) -> None:
         """Reset the state of each metric."""
         if isinstance(self.metric_a, Metric):
-            self.metric_a.reset_state()
+            self.metric_a.reset()
 
         if isinstance(self.metric_b, Metric):
-            self.metric_b.reset_state()
+            self.metric_b.reset()
 
     def to_device(
         self,
@@ -679,70 +670,7 @@ class OperatorMetric(Metric):
 
         return self
 
-    def _wrap_compute(self, compute: Callable[..., Any]) -> Callable[..., Any]:
-        """Wrap the compute function to apply the operator."""
-        return compute
-
     def __repr__(self) -> str:
         """Return a string representation of the object."""
         _op_metrics = f"(\n  {self._op}(\n    {self.metric_a!r},\n    {self.metric_b!r}\n  )\n)"  # noqa: E501
         return self.__class__.__name__ + _op_metrics
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Set an attribute on the metric or one of its submetrics."""
-        # only use after __init__ is done and avoid infinite recursion
-        # use __dict__
-        if name in ("metric_a", "metric_b", "op"):
-            super().__setattr__(name, value)
-            return
-
-        attr_set = False
-        if (  # bool, int, float don't have __dict__
-            self.__dict__.get("metric_a") is not None
-            and isinstance(self.__dict__["metric_a"], Metric)
-            and name in self.__dict__["metric_a"].__dict__
-        ):
-            setattr(self.metric_a, name, value)
-            attr_set = True
-        if (
-            self.__dict__.get("metric_b") is not None
-            and isinstance(self.__dict__["metric_b"], Metric)
-            and name in self.__dict__["metric_b"].__dict__
-        ):
-            setattr(self.metric_b, name, value)
-            attr_set = True
-
-        if attr_set:
-            return
-
-        super().__setattr__(name, value)
-
-    def __getattr__(self, name: str) -> Any:
-        """Get an attribute from the metric or its sub-metrics."""
-        if name not in ("metric_a", "metric_a", "op"):
-            # if only one of them is a Metric, return the attribute from that one
-            if hasattr(self.metric_a, name) and not isinstance(self.metric_b, Metric):
-                return getattr(self.metric_a, name)
-            if hasattr(self.metric_b, name) and not isinstance(self.metric_a, Metric):
-                return getattr(self.metric_b, name)
-            # if they are both Metrics, only return if they both have the attribute
-            # with the same value
-            if (
-                hasattr(self.metric_a, name)
-                and hasattr(self.metric_b, name)
-                and getattr(self.metric_a, name) == getattr(self.metric_b, name)
-            ):
-                return getattr(self.metric_a, name)
-            # otherwise raise an error telling the user that they are both Metrics
-            # and have different values for the attribute
-            if hasattr(self.metric_a, name) and hasattr(self.metric_b, name):
-                raise AttributeError(
-                    f"Both {self.metric_a.__class__.__name__} and "
-                    f"{self.metric_b.__class__.__name__} have attribute {name} "
-                    f"but they have different values: {getattr(self.metric_a, name)} "
-                    f"and {getattr(self.metric_b, name)}.",
-                )
-
-        raise AttributeError(
-            f"Neither the metric nor its sub-metrics have attribute {name}.",
-        )

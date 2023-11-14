@@ -31,20 +31,13 @@ class _AbstractConfusionMatrix(Metric):
     tn: Union[Array, List[Array]]
     fn: Union[Array, List[Array]]
 
-    def _create_state(
-        self,
-        size: int = 1,
-    ) -> None:
+    def _create_state(self, size: int = 1) -> None:
         """Create the state variables.
 
         Parameters
         ----------
         size : int
-            The size of the default Array to create for the state variables.
-
-        Returns
-        -------
-        None
+            The size of the default Array to create for the state variables
 
         Raises
         ------
@@ -61,13 +54,13 @@ class _AbstractConfusionMatrix(Metric):
         def default(xp: Any) -> Array:
             return xp.zeros(shape=size, dtype=xp.int64)
 
-        self.add_state_factory("tp", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
-        self.add_state_factory("fp", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
-        self.add_state_factory("tn", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
-        self.add_state_factory("fn", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
+        self.add_state_default_factory("tp", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
+        self.add_state_default_factory("fp", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
+        self.add_state_default_factory("tn", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
+        self.add_state_default_factory("fn", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
 
-    def _update_state(self, tp: Array, fp: Array, tn: Array, fn: Array) -> None:
-        """Update the state variables."""
+    def _update_stat_scores(self, tp: Array, fp: Array, tn: Array, fn: Array) -> None:
+        """Update the stat scores."""
         self.tp += tp
         self.fp += fp
         self.tn += tn
@@ -146,7 +139,7 @@ class BinaryConfusionMatrix(
 
         self._create_state(size=1)
 
-    def update_state(self, target: Array, preds: Array) -> None:
+    def _update_state(self, target: Array, preds: Array) -> None:
         """Update the state variables."""
         _binary_confusion_matrix_validate_arrays(
             target,
@@ -161,9 +154,9 @@ class BinaryConfusionMatrix(
         )
 
         tn, fp, fn, tp = _binary_confusion_matrix_update_state(target, preds)
-        self._update_state(tp, fp, tn, fn)
+        self._update_stat_scores(tp, fp, tn, fn)
 
-    def compute(self) -> Array:
+    def _compute_metric(self) -> Array:
         """Compute the confusion matrix."""
         tp, fp, tn, fn = self._final_state()
         return _binary_confusion_matrix_compute(
@@ -243,9 +236,9 @@ class MulticlassConfusionMatrix(Metric, registry_key="multiclass_confusion_matri
         def default(xp: Any) -> Array:
             return xp.zeros((num_classes,) * 2, dtype=xp.int64)
 
-        self.add_state_factory("confmat", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
+        self.add_state_default_factory("confmat", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
 
-    def update_state(self, target: Array, preds: Array) -> None:
+    def _update_state(self, target: Array, preds: Array) -> None:
         """Update the state variable."""
         _multiclass_confusion_matrix_validate_arrays(
             target,
@@ -266,7 +259,7 @@ class MulticlassConfusionMatrix(Metric, registry_key="multiclass_confusion_matri
 
         self.confmat += confmat
 
-    def compute(self) -> Array:
+    def _compute_metric(self) -> Array:
         """Compute the confusion matrix."""
         confmat = self.confmat
         return _multiclass_confusion_matrix_compute(
@@ -353,7 +346,7 @@ class MultilabelConfusionMatrix(
 
         self._create_state(size=num_labels)
 
-    def update_state(self, target: Array, preds: Array) -> None:
+    def _update_state(self, target: Array, preds: Array) -> None:
         """Update the state variables."""
         _multilabel_confusion_matrix_validate_arrays(
             target,
@@ -368,9 +361,9 @@ class MultilabelConfusionMatrix(
             ignore_index=self.ignore_index,
         )
         tn, fp, fn, tp = _multilabel_confusion_matrix_update_state(target, preds)
-        self._update_state(tp, fp, tn, fn)
+        self._update_stat_scores(tp, fp, tn, fn)
 
-    def compute(self) -> Array:
+    def _compute_metric(self) -> Array:
         """Compute the confusion matrix."""
         tp, fp, tn, fn = self._final_state()
         return _multilabel_confusion_matrix_compute(

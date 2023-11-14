@@ -7,8 +7,13 @@ from functools import partial
 
 import pytest
 import torch.distributed
-from torch.multiprocessing import Pool, set_sharing_strategy, set_start_method
+from torch.multiprocessing import Pool as TorchPool
+from torch.multiprocessing import set_sharing_strategy, set_start_method
 
+from cyclops.utils.optional import import_optional_module
+
+
+MPI_pool = import_optional_module("mpi4py.util.pool", error="ignore")
 
 with contextlib.suppress(RuntimeError):
     set_start_method("spawn")
@@ -49,15 +54,23 @@ def setup_ddp(rank, world_size, port):
 
 def pytest_configure():
     """Inject attributes into the pytest namespace."""
-    pool = Pool(processes=NUM_PROCESSES)
-    pool.starmap(
+    torch_pool = TorchPool(processes=NUM_PROCESSES)
+    torch_pool.starmap(
         partial(setup_ddp, port=get_open_port()),
         [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)],
     )
-    pytest.pool = pool  # type: ignore
+    pytest.torch_pool = torch_pool  # type: ignore
+
+    if MPI_pool is not None:
+        mpi_pool = MPI_pool.Pool(processes=NUM_PROCESSES, path=sys.path)
+        pytest.mpi_pool = mpi_pool  # type: ignore
 
 
 def pytest_sessionfinish():
-    """Close the global multiprocessing pool after all tests are done."""
-    pytest.pool.close()  # type: ignore
-    pytest.pool.join()  # type: ignore
+    """Close the global multiprocessing pools after all tests are done."""
+    pytest.torch_pool.close()  # type: ignore
+    pytest.torch_pool.join()  # type: ignore
+
+    if MPI_pool is not None:
+        pytest.mpi_pool.close()  # type: ignore
+        pytest.mpi_pool.join()  # type: ignore
