@@ -1,6 +1,6 @@
 """Tasks utility functions."""
 
-from typing import Dict, List, Sequence, Union, get_args
+from typing import Any, Callable, Dict, List, Sequence, Union, get_args
 
 import PIL
 from torchvision.transforms import PILToTensor
@@ -31,7 +31,10 @@ CXR_TARGET = [
 ]
 
 
-def apply_image_transforms(examples: Dict[str, List], transforms: callable) -> dict:
+def apply_image_transforms(
+    examples: Dict[str, List[Any]],
+    transforms: Callable[[Any], Any],
+) -> Dict[str, List[Any]]:
     """Apply transforms to examples.
 
     Used for applying image transformations to examples for chest X-ray classification.
@@ -41,7 +44,7 @@ def apply_image_transforms(examples: Dict[str, List], transforms: callable) -> d
     # doing a conversion from PIL to tensor is necessary here when working
     # with the Image feature type.
     value_len = len(list(examples.values())[0])
-    examples = [
+    examples_ = [
         {
             k: PILToTensor()(v[i]) if isinstance(v[i], PIL.Image.Image) else v[i]
             for k, v in examples.items()
@@ -50,10 +53,10 @@ def apply_image_transforms(examples: Dict[str, List], transforms: callable) -> d
     ]
 
     # apply the transforms to each example
-    examples = [transforms(example) for example in examples]
+    examples_ = [transforms(example) for example in examples_]
 
     # convert back to a dict of lists
-    return {k: [d[k] for d in examples] for k in examples[0]}
+    return {k: [d[k] for d in examples_] for k in examples_[0]}
 
 
 def prepare_models(
@@ -122,8 +125,8 @@ def prepare_models(
     # models contains a dictionary of model names and wrapped models
     elif isinstance(models, dict):
         assert all(isinstance(m, get_args(WrappedModel)) for m in models.values())
-        models_dict = models
+        models_dict = models  # type: ignore
     else:
         raise TypeError(f"Invalid model type: {type(models)}")
 
-    return models_dict
+    return models_dict  # type: ignore

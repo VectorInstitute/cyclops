@@ -4,7 +4,7 @@ import inspect
 import os
 import random
 from collections import defaultdict
-from typing import Mapping, Sequence, Union
+from typing import Any, Mapping, Sequence, Union
 
 import numpy as np
 import torch
@@ -65,7 +65,7 @@ def to_tensor(
     )
 
 
-def to_numpy(X):
+def to_numpy(X) -> Union[np.typing.NDArray[Any], Sequence, Mapping]:
     """Convert the input to a numpy array.
 
     Parameters
