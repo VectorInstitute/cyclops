@@ -11,19 +11,14 @@ from sklearn.metrics import top_k_accuracy_score as sk_top_k_accuracy_score
 from cyclops.evaluate.metrics.accuracy import Accuracy
 from cyclops.evaluate.metrics.functional.accuracy import accuracy
 from cyclops.evaluate.metrics.utils import sigmoid
-from metrics.helpers import MetricTester
-from metrics.inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    THRESHOLD,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
-from metrics.test_stat_scores import (
+from evaluate.metrics.test_stat_scores import (
     _sk_stat_scores_multiclass,
     _sk_stat_scores_multilabel,
 )
+
+from .conftest import NUM_CLASSES, NUM_LABELS, THRESHOLD
+from .helpers import MetricTester
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 
 
 np.seterr(divide="ignore", invalid="ignore")  # ignore divide by zero or nan
