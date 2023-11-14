@@ -164,6 +164,7 @@ def _test_sync_on_compute_list_state(rank):
     )
 
 
+@pytest.mark.integration_test()
 @pytest.mark.parametrize(
     "test_func",
     [_test_sync_on_compute_list_state, _test_sync_on_compute_array_state],
