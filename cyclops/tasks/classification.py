@@ -135,7 +135,6 @@ class BinaryTabularClassificationTask(BaseTask):
                     splits_mapping=splits_mapping,
                     **kwargs,
                 )
-
         else:
             if y is None:
                 raise ValueError(
@@ -143,7 +142,6 @@ class BinaryTabularClassificationTask(BaseTask):
                     the training data when not using a Hugging Face dataset \
                     as the input.",
                 )
-
             X = to_numpy(X)
             if transforms is not None:
                 try:
@@ -152,7 +150,6 @@ class BinaryTabularClassificationTask(BaseTask):
                     X = transforms.fit_transform(X)
             y = to_numpy(y)
             assert len(X) == len(y)
-
             if best_model_params:
                 metric = best_model_params.pop("metric", None)
                 method = best_model_params.pop("method", "grid")
@@ -166,8 +163,8 @@ class BinaryTabularClassificationTask(BaseTask):
                 )
             else:
                 model.fit(X, y, **kwargs)  # type: ignore
-
         self.trained_models.append(model_name)
+
         return model
 
     def predict(
@@ -218,7 +215,6 @@ class BinaryTabularClassificationTask(BaseTask):
                 f"It seems you have neither trained the {model_name} model nor \
                 loaded a pretrained model.",
             )
-
         if isinstance(dataset, (Dataset, DatasetDict)):
             if proba and isinstance(model, SKModel):
                 return model.predict_proba(
@@ -229,7 +225,6 @@ class BinaryTabularClassificationTask(BaseTask):
                     splits_mapping=splits_mapping,
                     **kwargs,
                 )
-
             return model.predict(
                 dataset,
                 feature_columns=self.task_features,
@@ -238,16 +233,13 @@ class BinaryTabularClassificationTask(BaseTask):
                 splits_mapping=splits_mapping,
                 **kwargs,
             )
-
         dataset = to_numpy(dataset)
-
         if transforms is not None:
             try:
                 dataset = transforms.transform(dataset)
             except NotFittedError:
                 LOGGER.warning("Fitting preprocessor on evaluation dataset.")
                 dataset = transforms.fit_transform(dataset)
-
         if proba and isinstance(model, SKModel):
             predictions = model.predict_proba(dataset, **kwargs)
         else:
@@ -322,19 +314,18 @@ class BinaryTabularClassificationTask(BaseTask):
                     for m in metrics
                 ],
             )
-
+        elif isinstance(metrics, MetricCollection):
+            metrics_collection = metrics
         if isinstance(model_names, str):
             model_names = [model_names]
         elif not model_names:
             model_names = self.pretrained_models + self.trained_models
-
         for model_name in model_names:
             if model_name not in self.pretrained_models + self.trained_models:
                 LOGGER.warning(
                     "It seems you have neither trained the model nor \
                     loaded a pretrained model.",
                 )
-
             dataset = self.predict(
                 dataset,
                 model_name=model_name,
@@ -343,7 +334,6 @@ class BinaryTabularClassificationTask(BaseTask):
                 only_predictions=False,
                 splits_mapping=splits_mapping,
             )
-
         results = evaluate(
             dataset=dataset,
             metrics=metrics_collection,
@@ -392,7 +382,6 @@ class MultilabelImageClassificationTask(BaseTask):
             _model_names_mapping.get(model.model.__name__) in _img_model_keys  # type: ignore
             for model in self.models.values()
         ), "All models must be image type model."
-
         for model in self.models.values():
             model.initialize()
 
@@ -429,10 +418,8 @@ class MultilabelImageClassificationTask(BaseTask):
         if splits_mapping is None:
             splits_mapping = {"test": "test"}
         model_name, model = self.get_model(model_name)
-
         if transforms:
             transforms = partial(apply_image_transforms, transforms=transforms)  # type: ignore
-
         if isinstance(dataset, (Dataset, DatasetDict)):
             return model.predict(
                 dataset,
@@ -514,7 +501,6 @@ class MultilabelImageClassificationTask(BaseTask):
                 return examples
 
             dataset = dataset.map(add_missing_labels)
-
         if isinstance(metrics, list) and len(metrics):
             metrics_collection = MetricCollection(
                 [
@@ -526,12 +512,12 @@ class MultilabelImageClassificationTask(BaseTask):
                     for m in metrics
                 ],
             )
-
+        elif isinstance(metrics, MetricCollection):
+            metrics_collection = metrics
         if isinstance(model_names, str):
             model_names = [model_names]
         elif model_names is None:
             model_names = self.list_models()
-
         for model_name in model_names:
             dataset = self.predict(
                 dataset,
@@ -541,7 +527,6 @@ class MultilabelImageClassificationTask(BaseTask):
                 only_predictions=False,
                 splits_mapping=splits_mapping,
             )
-
         results = evaluate(
             dataset=dataset,
             metrics=metrics_collection,
