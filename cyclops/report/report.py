@@ -45,11 +45,12 @@ from cyclops.report.utils import (
     _raise_if_not_dict_with_str_keys,
     create_metric_cards,
     empty,
+    get_histories,
     get_names,
     get_passed,
-    get_plots,
     get_slices,
     get_thresholds,
+    get_timestamps,
     get_trends,
     regex_replace,
     regex_search,
@@ -1089,8 +1090,10 @@ class ModelCardReport:
         # write to file
         if synthetic_timestamp is not None:
             today = synthetic_timestamp
+            today_now = synthetic_timestamp
         else:
             today = dt_date.today().strftime("%Y-%m-%d")
+            today_now = dt_datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         current_report_metrics: List[List[PerformanceMetric]] = []
         sweep_metrics(self._model_card, current_report_metrics)
@@ -1121,6 +1124,7 @@ class ModelCardReport:
             # compare tests
             metrics, tooltips, slices, values, metric_cards = create_metric_cards(
                 current_report_metrics_set,
+                today_now,
                 latest_report_metric_cards_set,
             )
             self._log_metric_card_collection(
@@ -1138,11 +1142,12 @@ class ModelCardReport:
             "sweep_tests": sweep_tests,
             "sweep_graphics": sweep_graphics,
             "get_slices": get_slices,
-            "get_plots": get_plots,
             "get_thresholds": get_thresholds,
             "get_trends": get_trends,
             "get_passed": get_passed,
             "get_names": get_names,
+            "get_histories": get_histories,
+            "get_timestamps": get_timestamps,
         }
         template.globals.update(func_dict)
 

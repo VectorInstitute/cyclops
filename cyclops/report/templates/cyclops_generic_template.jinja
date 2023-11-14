@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 
+{# Get indices of all metric cards for 'overall' slice #}
+{% set overall_indices = [] %}
+{% for metric_card in model_card.overview.metric_cards.collection%}
+  {% if metric_card.slice == 'overall' %}
+    {% set _ = overall_indices.append(loop.index-1) %}
+  {% endif %}
+{% endfor %}
+
 {% macro render_if_exist_list(values) %}
 <div>
   {% if values.__class__.__name__ == "User"%}
@@ -124,7 +132,7 @@
 </div>
 {% endmacro %}
 
-{% macro render_metric_card(card)%}
+{% macro render_metric_card(card, idx)%}
 <div class="subcard">
   <div>
    <span style="font-size: 18px; font-weight:bold;">
@@ -156,9 +164,8 @@
       <span style="display: inline-block; line-height:1;">
         <span style="font-size: 14px">{{card.threshold}}<br>minimum<br>threshold</span>
       </span>
-      {% if card.plot %}
-        {{ render_graphic(card.plot.collection[0], class="") }}
-      {% endif %}
+      <div id="model-card-plot-{{idx}}">
+      </div>
     </div>
   </div>
 </div>
@@ -170,7 +177,7 @@
 <h3 style="color: gray;  font-weight:normal;">A quick glance of your most important metrics.</h3>
 {% for metric_card in comp.metric_cards.collection%}
   {% if metric_card.slice == 'overall' %}
-    {{ render_metric_card(metric_card) }}
+    {{ render_metric_card(metric_card, loop.index-1) }}
   {% endif %}
 {% endfor %}
 </div>
@@ -274,18 +281,23 @@
           selection.sort();
 
           var slices = JSON.parse({{ get_slices(model_card)|safe|tojson }});
-          var plots = JSON.parse({{ get_plots(model_card)|safe|tojson }});
+          var histories = JSON.parse({{ get_histories(model_card)|safe|tojson }});
           var thresholds = JSON.parse({{ get_thresholds(model_card)|safe|tojson }});
           var trends = JSON.parse({{ get_trends(model_card)|safe|tojson }});
           var passed = JSON.parse({{ get_passed(model_card)|safe|tojson }});
           var names = JSON.parse({{ get_names(model_card)|safe|tojson }});
+          var timestamps = JSON.parse({{ get_timestamps(model_card)|safe|tojson }});
 
           // get idx of slices where all elements match
           var idx = Object.keys(slices).find(key => JSON.stringify(slices[key].sort()) === JSON.stringify(selection));
 
-          var plot_data = [];
-          for (let i = 0; i < plots[idx].length; i++) {
-            plot_data.push(parseFloat(plots[idx][i]));
+          var history_data = [];
+          for (let i = 0; i < histories[idx].length; i++) {
+            history_data.push(parseFloat(histories[idx][i]));
+          }
+          var timestamp_data = [];
+          for (let i = 0; i < timestamps[idx].length; i++) {
+            timestamp_data.push(timestamps[idx][i]);
           }
           threshold = parseFloat(thresholds[idx]);
           trend = trends[idx];
@@ -309,24 +321,25 @@
           }
           // create title for plot: Current {metric name} is trending {trend_keyword} and is {passed_keyword} the threshold.
           var plot_title = "Current " + name + " is trending " + trend_keyword + " and is " + passed_keyword + " the threshold.";
-
           var trace = {
             // range of x is the length of the list of floats
-            x: Array.from({length: plot_data.length}, (_, i) => i),
-            y: plot_data,
+            x: timestamp_data,
+            y: history_data,
             mode: 'lines+markers',
             type: 'scatter',
             marker: {color: 'rgb(31,111,235)'},
             line: {color: 'rgb(31,111,235)'},
+            name: '',
           };
 
           var threshold_trace = {
-            x: Array.from({length: plot_data.length}, (_, i) => i),
-            y: Array.from({length: plot_data.length}, (_, i) => threshold),
+            x: timestamp_data,
+            y: Array.from({length: history_data.length}, (_, i) => threshold),
             mode: 'lines',
             type: 'scatter',
             marker: {color: 'rgb(0,0,0)'},
             line: {color: 'rgb(0,0,0)', dash: 'dot'},
+            name: '',
           };
 
           var layout = {
@@ -925,7 +938,6 @@
       return true;
     }
   }
-
   function setActiveButton() {
     const buttons = document.querySelectorAll('#contents li');
     const sections = document.querySelectorAll('.card');
@@ -946,7 +958,71 @@
       }
     }
   }
-
   document.addEventListener('scroll', setActiveButton);
   setActiveButton();
+
+  function generate_model_card_plot() {
+    var model_card_plots = []
+    var overall_indices = {{overall_indices}}
+    var histories = JSON.parse({{ get_histories(model_card)|safe|tojson }});
+    var thresholds = JSON.parse({{ get_thresholds(model_card)|safe|tojson }});
+    var timestamps = JSON.parse({{ get_timestamps(model_card)|safe|tojson }});
+
+    for (let i = 0; i < overall_indices.length; i++) {
+      var idx = overall_indices[i];
+      var model_card_plot = "model-card-plot-" + idx;
+      var threshold = thresholds[idx];
+      var history_data = [];
+      for (let i = 0; i < histories[idx].length; i++) {
+        history_data.push(parseFloat(histories[idx][i]));
+      }
+      var timestamp_data = [];
+      for (let i = 0; i < timestamps[idx].length; i++) {
+        timestamp_data.push(timestamps[idx][i]);
+      }
+
+      var model_card_fig = {
+        data: [
+          {
+            x: timestamp_data,
+            y: history_data,
+            mode: "lines+markers",
+            marker: { color: "rgb(31,111,235)" },
+            line: { color: "rgb(31,111,235)" },
+            showlegend: false,
+            type: "scatter",
+            name: ""
+          },
+          {
+            x: timestamp_data,
+            y: Array(history_data.length).fill(threshold),
+            mode: "lines",
+            line: { color: "black", dash: "dot" },
+            showlegend: false,
+            type: "scatter",
+            name: ""
+          }
+        ],
+        layout: {
+          paper_bgcolor: "rgba(0,0,0,0)",
+          plot_bgcolor: "rgba(0,0,0,0)",
+          xaxis: {
+            zeroline: false,
+            showticklabels: false,
+            showgrid: false
+          },
+          yaxis: {
+            gridcolor: "#ffffff"
+          },
+          margin: { l: 0, r: 0, t: 0, b: 0 },
+          height: 125,
+          width: 250
+        }
+      };
+      if (history.length > 0) {
+        Plotly.newPlot(model_card_plot, model_card_fig.data, model_card_fig.layout, {displayModeBar: false});
+      }
+    }
+  }
+  generate_model_card_plot();
 </script>

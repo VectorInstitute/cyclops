@@ -599,9 +599,9 @@ class MetricCard(
         description="The trend of the metric over time.",
     )
 
-    plot: Optional[GraphicsCollection] = Field(
+    timestamps: Optional[List[StrictStr]] = Field(
         None,
-        description="A plot of the performance over time.",
+        description="Timestamps for each point in the history.",
     )
 
 
