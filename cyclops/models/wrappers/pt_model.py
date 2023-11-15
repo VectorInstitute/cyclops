@@ -3,14 +3,23 @@
 import contextlib
 import logging
 import os
-from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Union,
+)
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from datasets import Dataset, DatasetDict
 from datasets.combine import concatenate_datasets
-from monai.data.meta_tensor import MetaTensor
 from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
@@ -37,6 +46,13 @@ from cyclops.models.wrappers.utils import (
 )
 from cyclops.utils.file import join, process_dir_save_path
 from cyclops.utils.log import setup_logging
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    from monai.data import meta_tensor
+else:
+    meta_tensor = import_optional_module("monai.data.meta_tensor", error="ignore")
 
 
 LOGGER = logging.getLogger(__name__)
@@ -660,7 +676,7 @@ class PTModel(ModelWrapper):
         if isinstance(X, (Dataset, TorchDataset, DatasetDict)):
             return X
 
-        if isinstance(X, MetaTensor):
+        if meta_tensor is not None and isinstance(X, meta_tensor.MetaTensor):
             return PTDataset(X.data, y)
 
         if isinstance(X, (np.ndarray, torch.Tensor)):

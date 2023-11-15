@@ -5,7 +5,7 @@ import os
 import tempfile
 from dataclasses import dataclass, field
 from io import BytesIO
-from typing import Any, ClassVar, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -15,13 +15,32 @@ from datasets.download.streaming_download_manager import xopen
 from datasets.features import Image, features
 from datasets.utils.file_utils import is_local_path
 from datasets.utils.py_utils import string_to_dict
-from monai.data.image_reader import ImageReader
-from monai.data.image_writer import ITKWriter
-from monai.transforms.compose import Compose
-from monai.transforms.io.array import LoadImage
-from monai.transforms.utility.array import ToNumpy
 
 from cyclops.utils.log import setup_logging
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import monai.data.image_reader as monai_image_reader
+    import monai.data.image_writer as monai_image_writer
+    import monai.transforms.compose as monai_compose
+    import monai.transforms.io.array as monai_array_io
+    import monai.transforms.utility.array as monai_array_util
+else:
+    monai_image_reader = import_optional_module(
+        "monai.data.image_reader",
+        error="ignore",
+    )
+    monai_image_writer = import_optional_module(
+        "monai.data.image_writer",
+        error="ignore",
+    )
+    monai_compose = import_optional_module("monai.transforms.compose", error="ignore")
+    monai_array_io = import_optional_module("monai.transforms.io.array", error="ignore")
+    monai_array_util = import_optional_module(
+        "monai.transforms.utility.array",
+        error="ignore",
+    )
 
 
 # Logging.
@@ -45,12 +64,31 @@ class MedicalImage(Image):  # type: ignore
 
     """
 
-    reader: Union[str, ImageReader] = "ITKReader"
+    if any(
+        module is None
+        for module in (
+            monai_image_writer,
+            monai_compose,
+            monai_array_io,
+            monai_array_util,
+        )
+    ):
+        raise ImportError(
+            "The `MedicalImage` feature requires MONAI to be installed. "
+            "Please install it with `pip install monai`.",
+        )
+
+    reader: Union[str, monai_image_reader.ImageReader] = "ITKReader"
     suffix: str = ".jpg"  # used when decoding/encoding bytes to image
-    _loader = Compose(
+    _loader = monai_compose.Compose(
         [
-            LoadImage(reader=reader, simple_keys=True, dtype=None, image_only=True),
-            ToNumpy(),
+            monai_array_io.LoadImage(
+                reader=reader,
+                simple_keys=True,
+                dtype=None,
+                image_only=True,
+            ),
+            monai_array_util.ToNumpy(),
         ],
     )
     # Automatically constructed
@@ -226,7 +264,7 @@ def _encode_ndarray(
     # TODO: figure out output dtype
 
     with tempfile.NamedTemporaryFile(mode="wb", suffix=image_format) as temp_file:
-        writer = ITKWriter(output_dtype=np.uint8)
+        writer = monai_image_writer.ITKWriter(output_dtype=np.uint8)
         writer.set_data_array(data_array=array, channel_dim=-1, squeeze_end_dims=False)
         writer.set_metadata(meta_dict=metadata, resample=True)
         writer.write(temp_file.name)

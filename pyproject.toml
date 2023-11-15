@@ -18,8 +18,8 @@ numpy = "^1.24.4"
 datasets = "^2.10.1"
 psutil = "^5.9.4"
 pyarrow = "^11.0.0"
-monai = { version = "^1.1.0", extras = ["itk"] }
 
+monai = { version = "^1.1.0", extras = ["itk"], optional = true }
 hydra-core = { version = "^1.2.0", optional = true }
 scikit-learn = { version = "^1.2.2", optional = true }
 torch = { version = "^1.11.0", optional = true }
@@ -47,6 +47,7 @@ alibi = { version = "^0.9.4", extras = ["shap"] }
 alibi-detect = { version = "^0.11.0", extras = ["torch"] }
 llvmlite = "^0.40.0"
 array-api-compat = {version = "^1.4"}
+monai = { version = "^1.1.0", extras = ["itk"] }
 
 [tool.poetry.group.report.dependencies]
 pydantic = "^1.10.11"
@@ -107,7 +108,18 @@ mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 lightning = "^2.1.0"
 
 [tool.poetry.extras]
-models = ["array-api-compat", "hydra-core", "scikit-learn", "torch", "torchxrayvision", "xgboost", "alibi", "alibi-detect", "llvmlite"]
+models = [
+    "array-api-compat",
+    "hydra-core",
+    "scikit-learn",
+    "monai",
+    "torch",
+    "torchxrayvision",
+    "xgboost",
+    "alibi",
+    "alibi-detect",
+    "llvmlite",
+]
 report = ["pydantic", "spdx-tools", "pybtex", "kaleido", "scour", "plotly", "pillow"]
 
 [tool.mypy]
