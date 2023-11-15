@@ -4,19 +4,19 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.process.column_names import (
-    ENCOUNTER_ID,
-    EVENT_NAME,
-    EVENT_VALUE,
-    EVENT_VALUE_UNIT,
-    SUBJECT_ID,
-)
 from cyclops.process.constants import MIN_MAX, STANDARD
 from cyclops.process.feature.normalize import (
     GroupbyNormalizer,
     SklearnNormalizer,
     VectorizedNormalizer,
 )
+
+
+ENCOUNTER_ID = "enc_id"
+EVENT_NAME = "event_name"
+EVENT_VALUE = "event_value"
+EVENT_VALUE_UNIT = "event_value_unit"
+SUBJECT_ID = "subject_id"
 
 
 @pytest.fixture()

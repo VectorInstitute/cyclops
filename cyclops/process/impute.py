@@ -52,7 +52,7 @@ def compute_inter_range(null: pd.Series) -> Optional[Tuple[int, int]]:
     return inds[0], inds[-1] + 1
 
 
-def np_ffill(arr: np.ndarray) -> np.ndarray:
+def np_ffill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
     """Forward fill a 1D array.
 
     Parameters
@@ -67,7 +67,7 @@ def np_ffill(arr: np.ndarray) -> np.ndarray:
     return arr[idx]
 
 
-def np_bfill(arr: np.ndarray) -> np.ndarray:
+def np_bfill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
     """Backward fill a 1D array.
 
     Parameters
@@ -87,7 +87,7 @@ def np_bfill(arr: np.ndarray) -> np.ndarray:
     return arr[idx]
 
 
-def np_ffill_bfill(arr: np.ndarray) -> np.ndarray:
+def np_ffill_bfill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
     """Equivalent to forward filling and then backward filling a 1D array.
 
     Parameters
@@ -109,7 +109,9 @@ def np_ffill_bfill(arr: np.ndarray) -> np.ndarray:
     return arr
 
 
-def np_fill_null_num(arr: np.ndarray, num: float) -> np.ndarray:
+def np_fill_null_num(
+    arr: np.typing.NDArray[np.float64], num: float
+) -> np.typing.NDArray[np.float64]:
     """Fill null values with a number.
 
     Parameters
@@ -126,7 +128,9 @@ def np_fill_null_num(arr: np.ndarray, num: float) -> np.ndarray:
     return np.nan_to_num(arr, nan=num)
 
 
-def np_fill_null_zero(arr: np.ndarray) -> np.ndarray:
+def np_fill_null_zero(
+    arr: np.typing.NDArray[np.float64],
+) -> np.typing.NDArray[np.float64]:
     """Fill null values with zero.
 
     Parameters
@@ -143,7 +147,9 @@ def np_fill_null_zero(arr: np.ndarray) -> np.ndarray:
     return np_fill_null_num(arr, 0)
 
 
-def np_fill_null_mean(arr: np.ndarray) -> np.ndarray:
+def np_fill_null_mean(
+    arr: np.typing.NDArray[np.float64],
+) -> np.typing.NDArray[np.float64]:
     """Fill null values with the array mean.
 
     Parameters
@@ -253,10 +259,10 @@ class SeriesImputer:
 
     def __init__(
         self,
-        imputefunc: Union[str, Callable] = MEAN,
-        allow_nulls_returned=True,
-        limit_area=None,
-    ):
+        imputefunc: Union[str, Callable[[pd.Series, pd.Series], pd.Series]],
+        allow_nulls_returned: bool = True,
+        limit_area: Optional[str] = None,
+    ) -> None:
         """Init."""
         self.using_drop = imputefunc == DROP
 
@@ -277,7 +283,9 @@ class SeriesImputer:
 
         self.limit_area = limit_area
 
-    def _process_imputefunc(self, imputefunc: Union[str, Callable]) -> Callable:
+    def _process_imputefunc(
+        self, imputefunc: Union[str, Callable[..., Any]]
+    ) -> Callable[..., Any]:
         """Process imputation function.
 
         Convert a imputefunc string to an imputefunc if recognized.
@@ -568,7 +576,7 @@ class AggregatedImputer:
         return self.extra_imputer(group)
 
 
-def numpy_2d_ffill(arr: np.ndarray) -> np.ndarray:
+def numpy_2d_ffill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
     """Foward fill a 2D array in a row-wise fashion, i.e., filling each row separately.
 
     Parameters

@@ -27,9 +27,9 @@ from cyclops.utils.common import to_list
 
 
 def get_unique(
-    values: Union[np.ndarray, pd.Series],
-    unique: Optional[np.ndarray] = None,
-) -> np.ndarray:
+    values: Union[np.typing.NDArray[Any], pd.Series],
+    unique: Optional[np.typing.NDArray[Any]] = None,
+) -> np.typing.NDArray[Any]:
     """Get the unique values of pandas series.
 
     The utility of this function comes from checking whether the
@@ -145,7 +145,7 @@ def to_dtype(series: pd.Series, type_: str) -> pd.Series:
 
 def _valid_string(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid string type.
@@ -175,7 +175,7 @@ def _valid_string(
 
 def _convertible_to_string(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type string.
@@ -200,7 +200,7 @@ def _convertible_to_string(
 
 def _to_string(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> Tuple[pd.Series, Dict[str, Any]]:
     """Convert type to string.
 
@@ -224,7 +224,7 @@ def _to_string(
 
 def _valid_numeric(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid numeric type.
@@ -255,7 +255,7 @@ def _valid_numeric(
 
 def _convertible_to_numeric(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to type numeric.
@@ -290,7 +290,7 @@ def _convertible_to_numeric(
 
 def _to_numeric(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> Tuple[pd.Series, Dict[str, Any]]:
     """Convert type to numeric.
 
@@ -317,7 +317,7 @@ def _convertible_to_categorical(
     series: pd.Series,
     category_min: Optional[int] = None,
     category_max: Optional[int] = None,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error_over_max: bool = False,
     raise_error_under_min: bool = False,
 ) -> bool:
@@ -376,7 +376,7 @@ def _convertible_to_categorical(
 
 def _valid_ordinal(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid ordinal type.
@@ -411,7 +411,7 @@ def _valid_ordinal(
 
 def _convertible_to_ordinal(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     category_max: int = 20,
     raise_error_over_max: bool = False,
 ) -> bool:
@@ -445,7 +445,7 @@ def _convertible_to_ordinal(
 
 def _numeric_categorical_mapping(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> Tuple[pd.Series, Dict[str, Any]]:
     """Map values to categories in a series.
 
@@ -469,7 +469,7 @@ def _numeric_categorical_mapping(
 
     unique.sort()
 
-    map_dict: dict = {}
+    map_dict: Dict[Any, int] = {}
     for i, unique_val in enumerate(unique):
         map_dict[unique_val] = i
 
@@ -483,7 +483,7 @@ def _numeric_categorical_mapping(
 
 def _to_ordinal(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> Tuple[pd.Series, Dict[str, Any]]:
     """Convert type to ordinal.
 
@@ -508,7 +508,7 @@ def _to_ordinal(
 
 def _valid_binary(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid binary type.
@@ -543,7 +543,7 @@ def _valid_binary(
 
 def _convertible_to_binary(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> bool:
     """Check whether a feature can be converted to type binary.
 
@@ -573,7 +573,7 @@ def _convertible_to_binary(
 
 def _to_binary(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> Tuple[pd.Series, Dict[str, Any]]:
     """Convert type to binary.
 
@@ -605,7 +605,7 @@ def _to_binary(
 
 def _valid_categorical_indicator(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature is a valid categorical indicator type.
@@ -638,7 +638,7 @@ def _valid_categorical_indicator(
 
 def _convertible_to_categorical_indicators(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     category_max: int = 20,
     raise_error_over_max: bool = False,
 ) -> bool:
@@ -669,7 +669,7 @@ def _convertible_to_categorical_indicators(
 def _to_categorical_indicators(
     data: pd.DataFrame,
     col: str,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Convert type to binary categorical indicators.
 
@@ -719,7 +719,7 @@ def _to_categorical_indicators(
 def convertible_to_type(
     series: pd.Series,
     type_: str,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
     raise_error: bool = False,
 ) -> bool:
     """Check whether a feature can be converted to some type.
@@ -768,7 +768,7 @@ def convertible_to_type(
 def is_valid(
     series: pd.Series,
     type_: str,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> bool:
     """Check whether a feature is valid as a given type.
 
@@ -843,7 +843,7 @@ def _to_type(
     data: pd.DataFrame,
     col: str,
     new_type: str,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> Tuple[Union[pd.Series, pd.DataFrame], Dict[str, Any]]:
     """Convert a feature to a given type.
 
@@ -898,7 +898,7 @@ def _to_type(
 
 def to_types(
     data: pd.DataFrame,
-    new_types: dict,
+    new_types: Dict[str, str],
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Convert features to given types.
 
@@ -926,7 +926,7 @@ def to_types(
 
 def _infer_type(
     series: pd.Series,
-    unique: Optional[np.ndarray] = None,
+    unique: Optional[np.typing.NDArray[Any]] = None,
 ) -> str:
     """Infer intended feature type and perform the relevant conversion.
 

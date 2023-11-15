@@ -6,7 +6,6 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from cyclops.process.column_names import ENCOUNTER_ID
 from cyclops.process.constants import (
     BINARY,
     FEATURE_MAPPING_ATTR,
@@ -18,6 +17,9 @@ from cyclops.process.constants import (
 )
 from cyclops.process.feature.feature import FeatureMeta, Features
 from cyclops.process.feature.normalize import GroupbyNormalizer
+
+
+ENCOUNTER_ID = "enc_id"
 
 
 def test__feature_meta__get_type():

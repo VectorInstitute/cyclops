@@ -8,15 +8,6 @@ import numpy as np
 import pandas as pd
 
 from cyclops.process.clean import dropna_rows
-from cyclops.process.column_names import (
-    EVENT_NAME,
-    EVENT_VALUE,
-    RESTRICT_TIMESTAMP,
-    START_TIMESTAMP,
-    START_TIMESTEP,
-    STOP_TIMESTAMP,
-    TIMESTEP,
-)
 from cyclops.process.constants import ALL, FIRST, LAST, MEAN, MEDIAN
 from cyclops.process.feature.vectorized import Vectorized
 from cyclops.process.impute import AggregatedImputer, numpy_2d_ffill
@@ -32,10 +23,15 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 
 AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
+RESTRICT_TIMESTAMP = "restrict_timestamp"
+WINDOW_START_TIMESTAMP = "window_start_timestamp"
+WINDOW_STOP_TIMESTAMP = "window_stop_timestamp"
+START_TIMESTEP = "start_timestep"
+TIMESTEP = "timestep"
 
 
 class Aggregator:
-    """Equal-spaced aggregation, or binning, of temporal data.
+    """Equal-spaced aggregation, or binning, of time-series data.
 
     Computing aggregation metadata is expensive and should be done sparingly.
 
@@ -66,7 +62,7 @@ class Aggregator:
 
     def __init__(
         self,
-        aggfuncs: Dict[str, Union[str, Callable]],
+        aggfuncs: Dict[str, Union[str, Callable[[pd.Series], Any]]],
         timestamp_col: str,
         time_by: Union[str, List[str]],
         agg_by: Union[str, List[str]],
@@ -102,31 +98,9 @@ class Aggregator:
             if divided != int(divided):
                 raise ValueError("Window duration be divisible by bucket size.")
 
-    def get_timestamp_col(self) -> str:
-        """Get timestamp column.
-
-        Returns
-        -------
-        str
-            Name of timestamp column.
-
-        """
-        return self.timestamp_col
-
-    def get_aggfuncs(self) -> Dict[str, Callable]:
-        """Get aggregation functions.
-
-        Returns
-        -------
-        dict
-            Aggregation functions.
-
-        """
-        return self.aggfuncs
-
     def _process_aggfuncs(
         self,
-        aggfuncs: Dict[str, Union[str, Callable]],
+        aggfuncs: Dict[str, Union[str, Callable[[pd.Series], Any]]],
     ) -> Dict[str, Any]:
         """Process aggregation functions for respective columns.
 
@@ -188,8 +162,8 @@ class Aggregator:
         """
         data = data.merge(self.window_times, on=self.time_by, how="left")
 
-        cond = (data[self.timestamp_col] >= data[START_TIMESTAMP]) & (
-            data[self.timestamp_col] < data[STOP_TIMESTAMP]
+        cond = (data[self.timestamp_col] >= data[WINDOW_START_TIMESTAMP]) & (
+            data[self.timestamp_col] < data[WINDOW_STOP_TIMESTAMP]
         )
 
         # Keep if no match was made (i.e., no restriction performed)
@@ -200,7 +174,7 @@ class Aggregator:
         self,
         window_time: pd.DataFrame,
         default_time: pd.DataFrame,
-        warning_args: Tuple,
+        warning_args: Tuple[str, str],
     ) -> pd.DataFrame:
         """Process a window start/stop time.
 
@@ -351,7 +325,7 @@ class Aggregator:
         data: pd.DataFrame,
         window_start_time: Optional[pd.DataFrame] = None,
         window_stop_time: Optional[pd.DataFrame] = None,
-    ):
+    ) -> pd.DataFrame:
         """Compute the start/stop timestamps for each time_by window.
 
         Parameters
@@ -384,11 +358,11 @@ class Aggregator:
 
         # Combine and compute additional information
         window_start_time = window_start_time.rename(
-            {RESTRICT_TIMESTAMP: START_TIMESTAMP},
+            {RESTRICT_TIMESTAMP: WINDOW_START_TIMESTAMP},
             axis=1,
         )
         window_stop_time = window_stop_time.rename(
-            {RESTRICT_TIMESTAMP: STOP_TIMESTAMP},
+            {RESTRICT_TIMESTAMP: WINDOW_STOP_TIMESTAMP},
             axis=1,
         )
         return window_start_time.join(window_stop_time)
@@ -408,7 +382,7 @@ class Aggregator:
 
         """
         loc = tuple(group[self.time_by].values[0])
-        start = self.window_times.loc[loc][START_TIMESTAMP]
+        start = self.window_times.loc[loc][WINDOW_START_TIMESTAMP]
         group[TIMESTEP] = (group[self.timestamp_col] - start) / pd.Timedelta(
             hours=self.timestep_size,
         )
@@ -520,12 +494,14 @@ class Aggregator:
         # Get the start timestamp for each timestep
         aggregated = aggregated.reset_index().set_index(self.time_by)
 
-        aggregated = aggregated.join(self.window_times[START_TIMESTAMP])
-        aggregated[START_TIMESTEP] = aggregated[START_TIMESTAMP] + pd.to_timedelta(
+        aggregated = aggregated.join(self.window_times[WINDOW_START_TIMESTAMP])
+        aggregated[START_TIMESTEP] = aggregated[
+            WINDOW_START_TIMESTAMP
+        ] + pd.to_timedelta(
             aggregated[TIMESTEP] * self.timestep_size,
             unit="h",
         )
-        aggregated = aggregated.drop(START_TIMESTAMP, axis=1)
+        aggregated = aggregated.drop(WINDOW_START_TIMESTAMP, axis=1)
         aggregated = aggregated.reset_index()
         return aggregated.set_index(self.agg_by + [TIMESTEP])
 
@@ -577,7 +553,7 @@ class Aggregator:
         )
 
         if has_columns(data, TIMESTEP):
-            raise ValueError(f"Inputted data cannot have a column called {TIMESTEP}.")
+            raise ValueError(f"Input data cannot have a column called {TIMESTEP}.")
 
         # Ensure the timestamp column is a timestamp. Drop null times (NaT).
         is_timestamp_series(data[self.timestamp_col], raise_error=True)
@@ -596,7 +572,7 @@ class Aggregator:
         return self._aggregate(data, include_timestep_start=include_timestep_start)
 
     @time_function
-    def vectorize(self, aggregated: pd.DataFrame) -> np.ndarray:
+    def vectorize(self, aggregated: pd.DataFrame) -> Vectorized:
         """Vectorize aggregated data.
 
         Parameters
@@ -656,9 +632,9 @@ class Aggregator:
         data: pd.DataFrame,
         window_start_time: Optional[pd.DataFrame] = None,
         window_stop_time: Optional[pd.DataFrame] = None,
-        start_bound_func: Optional[Callable] = None,
-        stop_bound_func: Optional[Callable] = None,
-    ):
+        start_bound_func: Optional[Callable[[pd.Series], pd.Series]] = None,
+        stop_bound_func: Optional[Callable[[pd.Series], pd.Series]] = None,
+    ) -> pd.DataFrame:
         """Aggregate temporal values.
 
         The temporal values are restricted by start/stop and then aggregated.
@@ -675,7 +651,7 @@ class Aggregator:
             window_duration was set.
         start_bound_func : Optional[Callable[[pd.Series], pd.Series]], optional
             A function to bound the start timestamp values, by default None
-        stop_bound_func : Optional[Callable], optional
+        stop_bound_func : Optional[Callable[[pd.Series], pd.Series]], optional
             A function to bound the start timestamp values, by default None
 
         Returns
@@ -712,8 +688,8 @@ class Aggregator:
 def tabular_as_aggregated(
     tab: pd.DataFrame,
     index: str,
-    var_name: str = EVENT_NAME,
-    value_name: str = EVENT_VALUE,
+    var_name: str,
+    value_name: str,
     strategy: str = ALL,
     num_timesteps: Optional[int] = None,
     sort: bool = True,
@@ -726,9 +702,9 @@ def tabular_as_aggregated(
         Tabular data.
     index: str
         Index column name.
-    var_name: str, optional
+    var_name: str
         The name of the resultant column containing the original tabular column names.
-    value_name: str, optional
+    value_name: str
         The name of the resultant column containing the tabular values.
     strategy: str
         Strategy to fake aggregation. E.g., FIRST sets a first timestep to the value,
@@ -784,7 +760,7 @@ def timestamp_ffill_agg(
     num_timesteps: int,
     val: float = 1,
     fill_nan: Optional[float] = None,
-):
+) -> np.typing.ArrayLike:
     """Perform single-value aggregation with fill forward functionality given timesteps.
 
     If a timestep is negative, it is treated as occuring before the regular window and

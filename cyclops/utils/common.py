@@ -70,7 +70,7 @@ def add_years_approximate(
 
     # Subtract 1 from potentially invalid leap days to avoid issues
     leap_days = (month == 2) & (day == 29)
-    data["day"][leap_days] -= 1
+    data.loc[leap_days, "day"] -= 1
 
     return pd.to_datetime(data)
 
