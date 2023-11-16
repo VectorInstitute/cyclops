@@ -3,7 +3,7 @@
 import logging
 import os
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Tuple, Union
 
@@ -54,47 +54,57 @@ class MedicalImage(Image):  # type: ignore
 
     Parameters
     ----------
-    decode : bool, optional, default=True
-        Whether to decode the image. If False, the image will be returned as a
-        dictionary in the format `{"path": image_path, "bytes": image_bytes}`.
     reader : Union[str, ImageReader], optional, default="ITKReader"
         The MONAI image reader to use.
     suffix : str, optional, default=".jpg"
         The suffix to use when decoding bytes to image.
+    decode : bool, optional, default=True
+        Whether to decode the image. If False, the image will be returned as a
+        dictionary in the format `{"path": image_path, "bytes": image_bytes}`.
 
     """
 
-    if any(
-        module is None
-        for module in (
-            monai_image_writer,
-            monai_compose,
-            monai_array_io,
-            monai_array_util,
-        )
-    ):
-        raise ImportError(
-            "The `MedicalImage` feature requires MONAI to be installed. "
-            "Please install it with `pip install monai`.",
-        )
-
-    reader: Union[str, monai_image_reader.ImageReader] = "ITKReader"
-    suffix: str = ".jpg"  # used when decoding/encoding bytes to image
-    _loader = monai_compose.Compose(
-        [
-            monai_array_io.LoadImage(
-                reader=reader,
-                simple_keys=True,
-                dtype=None,
-                image_only=True,
-            ),
-            monai_array_util.ToNumpy(),
-        ],
-    )
-    # Automatically constructed
     dtype: ClassVar[str] = "dict"
     pa_type: ClassVar[Any] = pa.struct({"bytes": pa.binary(), "path": pa.string()})
-    _type: str = field(default="MedicalImage", init=False, repr=False)
+
+    def __init__(
+        self,
+        reader: Union[str, monai_image_reader.ImageReader] = "ITKReader",
+        suffix: str = ".jpg",
+        decode: bool = True,
+        id_: Optional[str] = None,
+    ):
+        super().__init__(decode=decode, id=id_)
+
+        if any(
+            module is None
+            for module in (
+                monai_image_writer,
+                monai_compose,
+                monai_array_io,
+                monai_array_util,
+            )
+        ):
+            raise ImportError(
+                "The `MedicalImage` feature requires MONAI to be installed. "
+                "Please install it with `pip install monai`.",
+            )
+
+        self.reader: Union[str, monai_image_reader.ImageReader] = "ITKReader"
+        self.suffix: str = suffix  # used when decoding/encoding bytes to image
+        self._loader = monai_compose.Compose(
+            [
+                monai_array_io.LoadImage(
+                    reader=reader,
+                    simple_keys=True,
+                    dtype=None,
+                    image_only=False,
+                ),
+                monai_array_util.ToNumpy(),
+            ],
+        )
+        # Automatically constructed
+        self._type: str = "MedicalImage"
 
     def encode_example(
         self,
@@ -278,5 +288,5 @@ def _encode_ndarray(
         return {"path": None, "bytes": temp_file_bytes}
 
 
-# add the `MedicalImage` feature to the `features` module
+# add the `MedicalImage` feature to the `features` module namespace
 features.MedicalImage = MedicalImage

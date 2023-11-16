@@ -33,7 +33,7 @@ class MedicalImageFolderConfig(
 class MedicalImageFolder(folder_based_builder.FolderBasedBuilder):  # type: ignore
     """MedicalImageFolder."""
 
-    BASE_FEATURE = MedicalImage()
+    BASE_FEATURE = MedicalImage
     BASE_COLUMN_NAME = "image"
     BUILDER_CONFIG_CLASS = MedicalImageFolderConfig
     EXTENSIONS: List[str]  # definition at the bottom of the script
