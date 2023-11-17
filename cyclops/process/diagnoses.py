@@ -2,12 +2,11 @@
 
 import logging
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import pandas as pd
 
-from cyclops.process.column_names import DIAGNOSIS_TRAJECTORY
-from cyclops.process.constants import EMPTY_STRING, TRAJECTORIES
+from cyclops.process.constants import DIAGNOSIS_TRAJECTORY, EMPTY_STRING, TRAJECTORIES
 from cyclops.utils.log import setup_logging
 
 
@@ -81,14 +80,16 @@ def get_numeric(code: str) -> str:
     return re.sub("[^0-9]", EMPTY_STRING, code)
 
 
-def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> str:
+def get_icd_category(
+    code: str, trajectories: Dict[str, Tuple[str, str]], raise_err: bool = False
+) -> str:
     """Get ICD10 category.
 
     Parameters
     ----------
     code: str
         Input diagnosis code.
-    trajectories: dict
+    trajectories: Dict[str, Tuple[str, str]]
         Dictionary mapping of ICD10 trajectories.
     raise_err: Flag to raise error if code cannot be converted (for debugging.)
 
@@ -121,7 +122,7 @@ def get_icd_category(code: str, trajectories: dict, raise_err: bool = False) -> 
 
 def process_diagnoses(
     series: pd.Series,
-    trajectories: Optional[Dict] = None,
+    trajectories: Optional[Dict[str, Tuple[str, str]]] = None,
 ) -> pd.Series:
     """Process diagnoses data (codes) into trajectories.
 
@@ -129,7 +130,7 @@ def process_diagnoses(
     ----------
     series: pd.Series
         Diagnosis code data.
-    trajectories: dict, optional
+    trajectories: Dict[str, Tuple[str, str]], optional
         Mapping from code to trajectory.
 
     Returns

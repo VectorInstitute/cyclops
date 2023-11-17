@@ -71,28 +71,9 @@ FIRST = "first"
 LAST = "last"
 ALL = "all"
 
-# GEMINI Admin.
-THPM = "THPM"
-SBK = "SBK"
-UHNTG = "UHNTG"
-SMH = "SMH"
-UHNTW = "UHNTW"
-THPC = "THPC"
-PMH = "PMH"
-MSH = "MSH"
-HOSPITAL_ID_MAP = {
-    THPM: 0,
-    SBK: 1,
-    UHNTG: 2,
-    SMH: 3,
-    UHNTW: 4,
-    THPC: 5,
-    PMH: 6,
-    MSH: 7,
-}
-MORTALITY_DISCHARGE_DISPOSITION_CODES = [7, 72, 73, 74]
 
 # Diagnostic codes (ICD-10).
+DIAGNOSIS_TRAJECTORY = "diagnosis_trajectory"
 TRAJECTORIES = {
     "Certain infectious and parasitic diseases": ("A00", "B99"),
     "Neoplasms": ("C00", "D49"),
@@ -132,58 +113,6 @@ TRAJECTORIES = {
         "Z99",
     ),
 }
-
-# GEMINI labs.
-DRUG_SCREEN = [
-    "amitriptyline",
-    "amphetamine",
-    "barbiturates",
-    "barbiturates_scn",
-    "barbiturates_and_sedatives_blood",
-    "benzodiazepine_scn",
-    "benzodiazepines_screen",
-    "cannabinoids",
-    "clozapine",
-    "cocaine",
-    "cocaine_metabolite",
-    "codeine",
-    "cocaine_metabolite",
-    "codeine_metabolite_urine",
-    "desipramine",
-    "dextromethorphan",
-    "dim_per_dip_metabolite",
-    "dimen_per_diphenhydramine",
-    "doxepin",
-    "ephedrine_per_pseudo",
-    "fluoxetine",
-    "hydrocodone",
-    "hydromorphone",
-    "imipramine",
-    "lidocaine",
-    "mda_urine",
-    "mdma_ecstacy",
-    "methadone",
-    "meperidine_urine",
-    "methadone_metabolite_urine",
-    "methamphetamine",
-    "morphine",
-    "morphine_metabolite_urine",
-    "nortriptyline",
-    "olanzapine_metabolite_u",
-    "olanzapine_urine",
-    "opiates_urine",
-    "oxycodone",
-    "oxycodone_cobas",
-    "oxycodone_metabolite",
-    "phenylpropanolamine",
-    "propoxyphene",
-    "sertraline",
-    "trazodone",
-    "trazodone_metabolite",
-    "tricyclics_scn",
-    "venlafaxine",
-    "venlafaxine_metabolite",
-]
 EMPTY_STRING = ""
 UNDERSCORE = "_"
 NEGATIVE_RESULT_TERMS = [

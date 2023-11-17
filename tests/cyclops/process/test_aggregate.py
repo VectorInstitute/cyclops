@@ -8,17 +8,14 @@ import pandas as pd
 import pytest
 from pandas import Timestamp
 
-from cyclops.process.aggregate import AGGFUNCS, Aggregator
-from cyclops.process.column_names import (
-    ENCOUNTER_ID,
-    EVENT_NAME,
-    EVENT_TIMESTAMP,
-    EVENT_VALUE,
+from cyclops.process.aggregate import (
+    AGGFUNCS,
     RESTRICT_TIMESTAMP,
-    START_TIMESTAMP,
     START_TIMESTEP,
-    STOP_TIMESTAMP,
     TIMESTEP,
+    WINDOW_START_TIMESTAMP,
+    WINDOW_STOP_TIMESTAMP,
+    Aggregator,
 )
 from cyclops.process.constants import MEAN, MEDIAN
 
@@ -27,6 +24,10 @@ DATE1 = datetime(2022, 11, 3, hour=13)
 DATE2 = datetime(2022, 11, 3, hour=14)
 DATE3 = datetime(2022, 11, 4, hour=3)
 DATE4 = datetime(2022, 11, 4, hour=13)
+ENCOUNTER_ID = "enc_id"
+EVENT_NAME = "event_name"
+EVENT_VALUE = "event_value"
+EVENT_TIMESTAMP = "event_timestamp"
 
 
 @pytest.fixture()
@@ -275,8 +276,8 @@ def test_aggregate_one_group_outlier():
         EVENT_VALUE,
         EVENT_TIMESTAMP,
         "some_str_col",
-        START_TIMESTAMP,
-        STOP_TIMESTAMP,
+        WINDOW_START_TIMESTAMP,
+        WINDOW_STOP_TIMESTAMP,
         TIMESTEP,
     ]
 
