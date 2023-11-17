@@ -41,7 +41,7 @@ def create_indicator_variables(
     return indicator_features.notnull().astype(int).add_suffix("_indicator")
 
 
-def is_timestamp_series(series: pd.Series, raise_error: bool = False) -> bool:
+def is_timestamp_series(series: pd.Series, raise_error: bool = False) -> Any:
     """Check whether a series has the Pandas Timestamp datatype.
 
     Parameters

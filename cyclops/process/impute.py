@@ -52,7 +52,7 @@ def compute_inter_range(null: pd.Series) -> Optional[Tuple[int, int]]:
     return inds[0], inds[-1] + 1
 
 
-def np_ffill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
+def np_ffill(arr: np.typing.NDArray[np.float64]) -> Any:
     """Forward fill a 1D array.
 
     Parameters
@@ -64,10 +64,11 @@ def np_ffill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64
     mask = np.isnan(arr)
     idx = np.where(~mask, np.arange(mask.shape[0]), 0)
     idx = np.maximum.accumulate(idx, axis=0, out=idx)
+
     return arr[idx]
 
 
-def np_bfill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
+def np_bfill(arr: np.typing.NDArray[np.float64]) -> Any:
     """Backward fill a 1D array.
 
     Parameters
@@ -163,7 +164,7 @@ def np_fill_null_mean(
         Imputed array.
 
     """
-    return np_fill_null_num(arr, np.nanmean(arr))
+    return np_fill_null_num(arr, float(np.nanmean(arr)))
 
 
 def fill_null_with(series: pd.Series, null: pd.Series, value: Any) -> pd.Series:
@@ -576,7 +577,7 @@ class AggregatedImputer:
         return self.extra_imputer(group)
 
 
-def numpy_2d_ffill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
+def numpy_2d_ffill(arr: np.typing.NDArray[np.float64]) -> Any:
     """Foward fill a 2D array in a row-wise fashion, i.e., filling each row separately.
 
     Parameters
@@ -596,4 +597,5 @@ def numpy_2d_ffill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.f
     mask = np.isnan(arr)
     idx = np.where(~mask, np.arange(mask.shape[1]), 0)
     np.maximum.accumulate(idx, axis=1, out=idx)
+
     return arr[np.arange(idx.shape[0])[:, None], idx]

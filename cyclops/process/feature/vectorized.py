@@ -80,7 +80,7 @@ def intersect_vectorized(
     axes_list: List[int] = process_axes(vecs, axes)
 
     # Get intersection
-    index_sets = [set(vec.get_index(axes_list[i])) for i, vec in enumerate(vecs)]
+    index_sets = [set(vec.get_index(axes_list[i])) for i, vec in enumerate(vecs)]  # type: ignore
     intersect = np.array(list(set.intersection(*index_sets)))
 
     # Return intersected datasets
@@ -144,7 +144,7 @@ def split_vectorized(
     )
 
     splits = [
-        vec.split_by_indices(axes_list[i], index_splits) for i, vec in enumerate(vecs)
+        vec.split_by_indices(axes_list[i], index_splits) for i, vec in enumerate(vecs)  # type: ignore
     ]
 
     return tuple(splits)
@@ -205,10 +205,10 @@ class Vectorized:
                 raise ValueError(
                     "Each index must have no duplicate values to uniquely identify.",
                 )
-            indexes[i] = index
+            indexes[i] = index  # type: ignore
         self.data: np.typing.NDArray[Any] = data
-        self.indexes: List[np.typing.NDArray[Any]] = indexes
-        self.index_maps: List[Dict[str, int]] = [
+        self.indexes: List[np.typing.NDArray[Any]] = indexes  # type: ignore
+        self.index_maps: List[Dict[Any, int]] = [
             {val: i for i, val in enumerate(index)} for index in indexes
         ]
         self.axis_names: List[str] = axis_names
@@ -278,7 +278,7 @@ class Vectorized:
         index_map = self.index_maps[axis_index]
         if normalizer_map is None:
             # Use the same normalization method for all features
-            normalizer_map = {feat: normalization_method for feat in index_map}
+            normalizer_map = {feat: normalization_method for feat in index_map}  # type: ignore
         else:
             missing = set(normalizer_map.keys()) - set(index_map.keys())
             if len(missing) != 0:
@@ -360,7 +360,7 @@ class Vectorized:
     def take_with_indices(
         self,
         axis: Union[str, int],
-        indices: Union[List[int], np.typing.NDArray[int]],
+        indices: Union[List[Any], np.typing.NDArray[Any]],
     ) -> Vectorized:
         """Get data by indexing an axis.
 
@@ -382,14 +382,13 @@ class Vectorized:
         data = take_indices_over_axis(self.data, axis_index, indices)
         # Create the corresponding indexes
         new_indexes = list(self.indexes)
-        new_indexes[axis_index] = [self.indexes[axis_index][ind] for ind in indices]
+        new_indexes[axis_index] = [self.indexes[axis_index][ind] for ind in indices]  # type: ignore
         vec = Vectorized(
             data,
             new_indexes,
             self.axis_names,
             is_normalized=self.is_normalized,
         )
-
         # Add normalizers (and possibly a subset of the existing normalizers if
         # splitting on the normalization axis)
         if self.normalizer is not None:
@@ -404,7 +403,7 @@ class Vectorized:
     def take_with_index(
         self,
         axis: Union[str, int],
-        index: Union[List[Any], np.ndarray],
+        index: Union[List[Any], np.typing.NDArray[Any]],
     ) -> Vectorized:
         """Get data by indexing an axis using its index.
 
@@ -482,7 +481,7 @@ class Vectorized:
         """
         return self.indexes[self.get_axis(axis)]
 
-    def get_index_map(self, axis: Union[int, str]) -> np.typing.ArrayLike:
+    def get_index_map(self, axis: Union[int, str]) -> Dict[Any, int]:
         """Get an axis index by index or by name.
 
         Parameters
@@ -501,7 +500,7 @@ class Vectorized:
     def split_by_indices(
         self,
         axis: Union[str, int],
-        indices: Union[Sequence[int], np.typing.NDArray[int]],
+        indices: List[Union[List[Any], np.typing.NDArray[Any]]],
         allow_drops: bool = False,
     ) -> Tuple[Vectorized, ...]:
         """Split the data over an axis using indices.
@@ -523,7 +522,6 @@ class Vectorized:
 
         """
         axis_index = self.get_axis(axis)
-
         # Check for invalid duplicate indices
         all_vals = np.concatenate(indices).ravel()
         if len(all_vals) != len(np.unique(all_vals)):
@@ -568,7 +566,7 @@ class Vectorized:
         """
         axis_index = self.get_axis(axis)
         index_map = self.index_maps[axis_index]
-        indices: List[Union[List[int], np.typing.NDArray[int]]] = []
+        indices: List[Union[List[Any], np.typing.NDArray[Any]]] = []
         for names in index_names:
             indices.append([])
             for name in names:
@@ -577,7 +575,7 @@ class Vectorized:
                     if allow_drops:
                         continue
                     raise ValueError(f"Invalid index name {name}.")
-                indices[-1].append(index_map[name])
+                indices[-1].append(index_map[name])  # type: ignore
             indices[-1] = np.array(indices[-1])
 
         return self.split_by_indices(
@@ -592,7 +590,7 @@ class Vectorized:
         fractions: Union[float, List[float]],
         randomize: bool = True,
         seed: Optional[int] = None,
-    ) -> Tuple[Vectorized, Vectorized]:
+    ) -> Tuple[Vectorized, ...]:
         """Split the data over an axis using split fractions.
 
         Parameters
@@ -623,7 +621,7 @@ class Vectorized:
 
         return self.split_by_indices(
             axis=axis_index,
-            indices=indices,
+            indices=indices,  # type: ignore
             allow_drops=False,
         )
 
@@ -631,7 +629,7 @@ class Vectorized:
         self,
         axis: Union[str, int],
         index_names: Union[List[Any], np.typing.ArrayLike],
-    ) -> Tuple[Vectorized, Vectorized]:
+    ) -> Tuple[Vectorized, ...]:
         """Split out some indexes by name.
 
         Parameters
@@ -735,7 +733,7 @@ class Vectorized:
         self,
         axis: Union[str, int],
         index: Any,
-    ) -> Tuple[np.typing.ArrayLike, np.typing.ArrayLike]:
+    ) -> Tuple[Any, ...]:
         """Return the value counts for a given axis and index.
 
         Parameters

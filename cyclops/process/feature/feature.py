@@ -191,15 +191,12 @@ class Features:
         # Force a range index
         data = to_range_index(data)
         feature_list = to_list(features)
-        target_list = to_list_optional(targets, none_to_empty=True)
+        target_list = [] if targets is None else to_list(targets)
         if len(feature_list) == 0:
             raise ValueError("Must specify at least one feature.")
         has_columns(data, feature_list, raise_error=True)
         has_columns(data, target_list, raise_error=True)
-        if by is None:
-            self.by_ = []
-        else:
-            self.by_ = to_list(by)
+        self.by_ = [] if by is None else to_list(by)
         if self.by_:
             has_columns(data, self.by_, raise_error=True)
             if len(set(self.by_).intersection(set(feature_list))) != 0:
@@ -238,15 +235,12 @@ class Features:
 
         """
         data = self.data
-
         # Take only the feature columns
-        if features_only:
-            data = data[self.features + to_list_optional(self.by_, none_to_empty=True)]
-
+        if self.by_ and features_only:
+            data = data[self.by_ + self.features]
         # Convert to binary categorical indicators
         if to_binary_indicators is not None:
             data = self._ordinal_to_indicators(data, to_list(to_binary_indicators))
-
         # Convert binary columns from boolean to integer
         binary_cols = [col for col, value in self.types.items() if value == BINARY]
         for col in binary_cols:
@@ -255,7 +249,7 @@ class Features:
         return data.set_index(self.by_)
 
     @property
-    def columns(self) -> List[str]:
+    def columns(self) -> pd.Index:
         """Access as attribute, data columns.
 
         Returns
@@ -367,9 +361,9 @@ class Features:
         if not np.array_equal(unique, all_vals):
             raise ValueError("Invalid split values.")
         datas = []
-        for split in value_splits:
+        for value_split in value_splits:
             data_copy = self.data.copy()
-            datas.append(data_copy[data_copy[on_col].isin(split)])
+            datas.append(data_copy[data_copy[on_col].isin(value_split)])
         save_data = self.data
         self.data = None
         splits = [copy.deepcopy(self) for _ in range(len(value_splits))]

@@ -1,6 +1,7 @@
 """Dataset split processing."""
 
 from typing import (
+    Any,
     Generator,
     Iterable,
     List,
@@ -44,7 +45,7 @@ def __normalize_fractions(
 def fractions_to_split(
     fractions: Union[int, float, Sequence[Union[float, int]]],
     n_samples: int,
-) -> np.typing.NDArray[np.int_]:
+) -> Any:
     """Create an array of index split points useful for dataset splitting.
 
     Created using the length of the data and the desired split fractions.
@@ -125,7 +126,6 @@ def split_idx(
     """
     split = fractions_to_split(fractions, n_samples)
     idx = np.arange(n_samples)
-
     # Optionally randomize
     if randomize:
         rng = np.random.default_rng(seed)
@@ -193,7 +193,7 @@ def split_kfold(
     n_samples: int,
     randomize: bool = True,
     seed: Optional[int] = None,
-) -> np.typing.NDArray[np.int_]:
+) -> Tuple[np.typing.NDArray[np.int_], ...]:
     """Create K disjoint subsets of indices equal in length.
 
     These K equally sized folds are useful for K-fold cross validation.
@@ -366,7 +366,7 @@ def split_datasets_by_idx(
         splits[-1] = tuple(splits[-1])
 
     if len(splits) == 1:
-        return splits[0]
+        return splits[0]  # type: ignore
 
     return tuple(splits)
 
