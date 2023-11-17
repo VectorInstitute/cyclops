@@ -1,9 +1,8 @@
 """Medical image feature."""
 
-import logging
 import os
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Tuple, Union
 
@@ -16,7 +15,6 @@ from datasets.features import Image, features
 from datasets.utils.file_utils import is_local_path
 from datasets.utils.py_utils import string_to_dict
 
-from cyclops.utils.log import setup_logging
 from cyclops.utils.optional import import_optional_module
 
 
@@ -27,25 +25,29 @@ if TYPE_CHECKING:
     import monai.transforms.io.array as monai_array_io
     import monai.transforms.utility.array as monai_array_util
 else:
-    monai_image_reader = import_optional_module(
-        "monai.data.image_reader",
-        error="ignore",
-    )
-    monai_image_writer = import_optional_module(
-        "monai.data.image_writer",
-        error="ignore",
-    )
-    monai_compose = import_optional_module("monai.transforms.compose", error="ignore")
-    monai_array_io = import_optional_module("monai.transforms.io.array", error="ignore")
+    monai_image_reader = import_optional_module("monai.data.image_reader", error="warn")
+    monai_image_writer = import_optional_module("monai.data.image_writer", error="warn")
+    monai_compose = import_optional_module("monai.transforms.compose", error="warn")
+    monai_array_io = import_optional_module("monai.transforms.io.array", error="warn")
     monai_array_util = import_optional_module(
         "monai.transforms.utility.array",
-        error="ignore",
+        error="warn",
     )
 
-
-# Logging.
-LOGGER = logging.getLogger(__name__)
-setup_logging(print_level="INFO", logger=LOGGER)
+_monai_available = all(
+    module is not None
+    for module in (
+        monai_image_reader,
+        monai_image_writer,
+        monai_compose,
+        monai_array_io,
+        monai_array_util,
+    )
+)
+_monai_unavailable_message = (
+    "The MONAI library is required to use the `MedicalImage` feature. "
+    "Please install it with `pip install monai`."
+)
 
 
 @dataclass
@@ -61,50 +63,32 @@ class MedicalImage(Image):  # type: ignore
     decode : bool, optional, default=True
         Whether to decode the image. If False, the image will be returned as a
         dictionary in the format `{"path": image_path, "bytes": image_bytes}`.
+    id : str, optional, default=None
+        The id of the feature.
 
     """
 
-    dtype: ClassVar[str] = "dict"
-    pa_type: ClassVar[Any] = pa.struct({"bytes": pa.binary(), "path": pa.string()})
+    reader: Union[str, monai_image_reader.ImageReader] = "ITKReader"
+    suffix: str = ".jpg"  # used when decoding/encoding bytes to image
 
-    def __init__(
-        self,
-        reader: Union[str, monai_image_reader.ImageReader] = "ITKReader",
-        suffix: str = ".jpg",
-        decode: bool = True,
-        id_: Optional[str] = None,
-    ):
-        super().__init__(decode=decode, id=id_)
-
-        if any(
-            module is None
-            for module in (
-                monai_image_writer,
-                monai_compose,
-                monai_array_io,
-                monai_array_util,
-            )
-        ):
-            raise ImportError(
-                "The `MedicalImage` feature requires MONAI to be installed. "
-                "Please install it with `pip install monai`.",
-            )
-
-        self.reader: Union[str, monai_image_reader.ImageReader] = "ITKReader"
-        self.suffix: str = suffix  # used when decoding/encoding bytes to image
-        self._loader = monai_compose.Compose(
+    _loader = None
+    if _monai_available:
+        _loader = monai_compose.Compose(
             [
                 monai_array_io.LoadImage(
                     reader=reader,
                     simple_keys=True,
                     dtype=None,
-                    image_only=False,
+                    image_only=True,
                 ),
                 monai_array_util.ToNumpy(),
             ],
         )
-        # Automatically constructed
-        self._type: str = "MedicalImage"
+
+    # Automatically constructed
+    dtype: ClassVar[str] = "dict"
+    pa_type: ClassVar[Any] = pa.struct({"bytes": pa.binary(), "path": pa.string()})
+    _type: str = field(default="MedicalImage", init=False, repr=False)
 
     def encode_example(
         self,
@@ -124,12 +108,14 @@ class MedicalImage(Image):  # type: ignore
 
         """
         if isinstance(value, list):
-            value = np.array(value)
+            value = np.asarray(value)
 
         if isinstance(value, str):
             return {"path": value, "bytes": None}
+
         if isinstance(value, np.ndarray):
             return _encode_ndarray(value, image_format=self.suffix)
+
         if "array" in value and "metadata" in value:
             output_ext_ = self.suffix
             metadata_ = value["metadata"]
@@ -180,7 +166,7 @@ class MedicalImage(Image):  # type: ignore
         if not self.decode:
             raise RuntimeError(
                 "Decoding is disabled for this feature. "
-                "Please use MedicalImage(decode=True) instead.",
+                "Please use `MedicalImage(decode=True)` instead.",
             )
 
         if token_per_repo_id is None:
@@ -195,6 +181,8 @@ class MedicalImage(Image):  # type: ignore
                 )
 
             if is_local_path(path):
+                if self._loader is None:
+                    raise RuntimeError(_monai_unavailable_message)
                 image, metadata = self._loader(path)
             else:
                 source_url = path.split("::")[-1]
@@ -236,6 +224,9 @@ class MedicalImage(Image):  # type: ignore
             Image as numpy array and metadata as dictionary.
 
         """
+        if self._loader is None:
+            raise RuntimeError(_monai_unavailable_message)
+
         # XXX: Can we avoid writing to disk?
         with tempfile.NamedTemporaryFile(mode="wb", suffix=self.suffix) as fp:
             fp.write(buffer.getvalue())
@@ -267,6 +258,9 @@ def _encode_ndarray(
         Dictionary containing the image bytes and path.
 
     """
+    if not _monai_available:
+        raise RuntimeError(_monai_unavailable_message)
+
     if not image_format.startswith("."):
         image_format = "." + image_format
 
