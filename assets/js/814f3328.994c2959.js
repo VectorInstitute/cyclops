@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocusaurus=self.webpackChunkdocusaurus||[]).push([[535],{5641:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"CyclOps Alpha Release","permalink":"/cyclops/blog/cyclops-alpha-release","unlisted":false}]}')}}]);

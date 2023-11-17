@@ -9,7 +9,7 @@
     <icon>https://vectorinstitute.github.io/cyclops/img/favicon.ico</icon>
     <entry>
         <title type="html"><![CDATA[CyclOps Alpha Release]]></title>
-        <id>cyclops-alpha-release</id>
+        <id>https://vectorinstitute.github.io/cyclops/blog/cyclops-alpha-release</id>
         <link href="https://vectorinstitute.github.io/cyclops/blog/cyclops-alpha-release"/>
         <updated>2023-03-03T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Developing machine learning (ML) systems for clinical use cases is difficult. Furthermore, evaluating ML models]]></summary>
