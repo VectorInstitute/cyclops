@@ -7587,9 +7587,9 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 
 [extras]
 models = ["alibi", "alibi-detect", "array-api-compat", "hydra-core", "llvmlite", "monai", "scikit-learn", "torch", "torchxrayvision", "xgboost"]
-report = ["kaleido", "pillow", "plotly", "pybtex", "pydantic", "scour", "spdx-tools"]
+report = ["Jinja2", "kaleido", "pillow", "plotly", "pybtex", "pydantic", "scour", "spdx-tools"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.11"
-content-hash = "89daf41a6a3d955b02a59de0c424f1b1fddbb4891e3447381e22129a766a9216"
+content-hash = "dcbfa12c2f056ed7d3e0464e3cf364ea1ff981d1bb147a71189b02db7ac255bf"

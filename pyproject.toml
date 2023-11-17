@@ -28,6 +28,7 @@ xgboost = { version = "^1.5.2", optional = true }
 alibi = { version = "^0.9.4", optional = true, extras = ["shap"] }
 alibi-detect = { version = "^0.11.0", optional = true, extras = ["torch"] }
 llvmlite = { version = "^0.40.0", optional = true }
+Jinja2 = { version = "^3.1.2", optional = true }
 pydantic = { version = "^1.10.11", optional = true }
 spdx-tools = { version = "^0.8.1", optional = true }
 pybtex = { version = "^0.24.0", optional = true }
@@ -51,12 +52,14 @@ monai = { version = "^1.1.0", extras = ["itk"] }
 
 [tool.poetry.group.report.dependencies]
 pydantic = "^1.10.11"
+Jinja2 = "^3.1.2"
 spdx-tools = "^0.8.1"
 pybtex = "^0.24.0"
 kaleido = "0.2.1"
 scour = "^0.38.2"
 plotly = "^5.7.0"
 pillow = "^9.5.0"
+
 
 [tool.poetry.group.test]
 optional = true
@@ -120,7 +123,7 @@ models = [
     "alibi-detect",
     "llvmlite",
 ]
-report = ["pydantic", "spdx-tools", "pybtex", "kaleido", "scour", "plotly", "pillow"]
+report = ["pydantic", "Jinja2", "spdx-tools", "pybtex", "kaleido", "scour", "plotly", "pillow"]
 
 [tool.mypy]
 ignore_missing_imports = true
