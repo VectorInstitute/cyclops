@@ -19,29 +19,45 @@ from cyclops.utils.optional import import_optional_module
 
 
 if TYPE_CHECKING:
-    import monai.data.image_reader as monai_image_reader
-    import monai.data.image_writer as monai_image_writer
-    import monai.transforms.compose as monai_compose
-    import monai.transforms.io.array as monai_array_io
-    import monai.transforms.utility.array as monai_array_util
+    from monai.data.image_reader import ImageReader
+    from monai.data.image_writer import ITKWriter
+    from monai.transforms.compose import Compose
+    from monai.transforms.io.array import LoadImage
+    from monai.transforms.utility.array import ToNumpy
 else:
-    monai_image_reader = import_optional_module("monai.data.image_reader", error="warn")
-    monai_image_writer = import_optional_module("monai.data.image_writer", error="warn")
-    monai_compose = import_optional_module("monai.transforms.compose", error="warn")
-    monai_array_io = import_optional_module("monai.transforms.io.array", error="warn")
-    monai_array_util = import_optional_module(
-        "monai.transforms.utility.array",
+    ImageReader = import_optional_module(
+        "monai.data.image_reader",
+        attribute="ImageReader",
         error="warn",
     )
-
+    ITKWriter = import_optional_module(
+        "monai.data.image_writer",
+        attribute="ITKWriter",
+        error="warn",
+    )
+    Compose = import_optional_module(
+        "monai.transforms.compose",
+        attribute="Compose",
+        error="warn",
+    )
+    LoadImage = import_optional_module(
+        "monai.transforms.io.array",
+        attribute="LoadImage",
+        error="warn",
+    )
+    ToNumpy = import_optional_module(
+        "monai.transforms.utility.array",
+        attribute="ToNumpy",
+        error="warn",
+    )
 _monai_available = all(
     module is not None
     for module in (
-        monai_image_reader,
-        monai_image_writer,
-        monai_compose,
-        monai_array_io,
-        monai_array_util,
+        ImageReader,
+        ITKWriter,
+        Compose,
+        LoadImage,
+        ToNumpy,
     )
 )
 _monai_unavailable_message = (
@@ -68,20 +84,20 @@ class MedicalImage(Image):  # type: ignore
 
     """
 
-    reader: Union[str, monai_image_reader.ImageReader] = "ITKReader"
+    reader: Union[str, ImageReader] = "ITKReader"
     suffix: str = ".jpg"  # used when decoding/encoding bytes to image
 
     _loader = None
     if _monai_available:
-        _loader = monai_compose.Compose(
+        _loader = Compose(
             [
-                monai_array_io.LoadImage(
+                LoadImage(
                     reader=reader,
                     simple_keys=True,
                     dtype=None,
-                    image_only=True,
+                    image_only=False,
                 ),
-                monai_array_util.ToNumpy(),
+                ToNumpy(),
             ],
         )
 
@@ -268,7 +284,7 @@ def _encode_ndarray(
     # TODO: figure out output dtype
 
     with tempfile.NamedTemporaryFile(mode="wb", suffix=image_format) as temp_file:
-        writer = monai_image_writer.ITKWriter(output_dtype=np.uint8)
+        writer = ITKWriter(output_dtype=np.uint8)
         writer.set_data_array(data_array=array, channel_dim=-1, squeeze_end_dims=False)
         writer.set_metadata(meta_dict=metadata, resample=True)
         writer.write(temp_file.name)
