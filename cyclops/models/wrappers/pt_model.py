@@ -50,9 +50,13 @@ from cyclops.utils.optional import import_optional_module
 
 
 if TYPE_CHECKING:
-    from monai.data import meta_tensor
+    from monai.data.meta_tensor import MetaTensor
 else:
-    meta_tensor = import_optional_module("monai.data.meta_tensor", error="ignore")
+    MetaTensor = import_optional_module(
+        "monai.data.meta_tensor",
+        attribute="MetaTensor",
+        error="warn",
+    )
 
 
 LOGGER = logging.getLogger(__name__)
@@ -676,7 +680,7 @@ class PTModel(ModelWrapper):
         if isinstance(X, (Dataset, TorchDataset, DatasetDict)):
             return X
 
-        if meta_tensor is not None and isinstance(X, meta_tensor.MetaTensor):
+        if MetaTensor is not None and isinstance(X, MetaTensor):
             return PTDataset(X.data, y)
 
         if isinstance(X, (np.ndarray, torch.Tensor)):

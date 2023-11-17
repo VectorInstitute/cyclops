@@ -1,28 +1,23 @@
 """Utilities for handling optional dependencies."""
 import importlib
 import importlib.util
-import logging
 import warnings
-from types import ModuleType
-from typing import Literal, Optional
-
-from cyclops.utils.log import setup_logging
-
-
-LOGGER = logging.getLogger(__name__)
-setup_logging(print_level="WARN", logger=LOGGER)
+from typing import Any, Literal, Optional
 
 
 def import_optional_module(
     name: str,
+    attribute: Optional[str] = None,
     error: Literal["raise", "warn", "ignore"] = "raise",
-) -> Optional[ModuleType]:
+) -> Optional[Any]:
     """Import an optional module.
 
     Parameters
     ----------
     name : str
         The name of the module to import.
+    attribute : Optional[str], optional
+        The name of an attribute to import from the module.
     error : ErrorOption, optional
         How to handle errors. One of:
         - "raise": raise an error if the module cannot be imported.
@@ -31,8 +26,9 @@ def import_optional_module(
 
     Returns
     -------
-    Optional[ModuleType]
-        The imported module, if it exists. Otherwise, `None`.
+    Optional[Any]
+        The imported module or attribute from the module, or `None` if the
+        module could not be imported.
 
     """
     if error not in ("raise", "warn", "ignore"):
@@ -42,7 +38,10 @@ def import_optional_module(
         )
 
     try:
-        return importlib.import_module(name)
+        module = importlib.import_module(name)
+        if attribute is not None and module is not None:
+            module = getattr(module, attribute)
+        return module
     except ModuleNotFoundError as exc:
         msg = (
             f"Missing optional dependency '{name}'. "
