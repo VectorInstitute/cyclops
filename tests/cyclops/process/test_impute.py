@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.process.column_names import ENCOUNTER_ID, TIMESTEP
 from cyclops.process.constants import (
     BFILL,
     DROP,
@@ -30,6 +29,10 @@ from cyclops.process.impute import (
     np_fill_null_num,
     np_fill_null_zero,
 )
+
+
+ENCOUNTER_ID = "enc_id"
+TIMESTEP = "timestep"
 
 
 @pytest.fixture()

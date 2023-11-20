@@ -10,15 +10,10 @@ from sklearn.metrics import fbeta_score as sk_fbeta_score
 from cyclops.evaluate.metrics.f_beta import F1Score, FbetaScore
 from cyclops.evaluate.metrics.functional.f_beta import f1_score, fbeta_score
 from cyclops.evaluate.metrics.utils import sigmoid
-from metrics.helpers import MetricTester
-from metrics.inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    THRESHOLD,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
+
+from .conftest import NUM_CLASSES, NUM_LABELS, THRESHOLD
+from .helpers import MetricTester
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 
 
 def _sk_binary_fbeta_score(

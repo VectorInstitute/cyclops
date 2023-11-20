@@ -8,12 +8,8 @@ import pytest
 import scipy as sp
 from numpy.typing import ArrayLike
 
+from .conftest import BATCH_SIZE, NUM_BATCHES, NUM_CLASSES, NUM_LABELS
 
-BATCH_SIZE = 16
-NUM_BATCHES = 8
-NUM_CLASSES = 10
-NUM_LABELS = 5
-THRESHOLD = random.random()
 
 Input = namedtuple("Input", ["target", "preds"])
 

@@ -2,7 +2,7 @@
 
 import re
 from collections import Counter
-from typing import Iterable, List, Union
+from typing import Iterable, List, Tuple, Union
 
 import numpy as np
 
@@ -206,7 +206,7 @@ def normalize_special_characters(item: str) -> str:
     return re.sub(r"(?s:(^[0-9_].+))", "a_\1", item)
 
 
-def count_occurrences(items: Iterable) -> List:
+def count_occurrences(items: Iterable[str]) -> List[Tuple[str, int]]:
     """Count number of occurrences of the items.
 
     Parameters

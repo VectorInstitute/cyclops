@@ -13,15 +13,10 @@ from sklearn.preprocessing import label_binarize
 from cyclops.evaluate.metrics.functional.stat_scores import stat_scores
 from cyclops.evaluate.metrics.stat_scores import StatScores
 from cyclops.evaluate.metrics.utils import sigmoid
-from metrics.helpers import MetricTester
-from metrics.inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    THRESHOLD,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
+
+from .conftest import NUM_CLASSES, NUM_LABELS, THRESHOLD
+from .helpers import MetricTester
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 
 
 def _sk_stat_scores_binary(

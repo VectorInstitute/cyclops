@@ -5,14 +5,10 @@ import pytest
 
 from cyclops.evaluate.metrics import MetricCollection
 from cyclops.evaluate.metrics.metric import _METRIC_REGISTRY
-from metrics.helpers import _assert_allclose
-from metrics.inputs import (
-    NUM_CLASSES,
-    NUM_LABELS,
-    _binary_cases,
-    _multiclass_cases,
-    _multilabel_cases,
-)
+
+from .conftest import NUM_CLASSES, NUM_LABELS
+from .helpers import _assert_allclose
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 
 
 @pytest.fixture(name="binary_metrics")
