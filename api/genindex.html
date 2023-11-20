@@ -383,8 +383,6 @@
         <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.__call__">(StatScores method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.__init__">__init__() (Accuracy method)</a>
 
       <ul>
@@ -411,6 +409,8 @@
         <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.__init__">(BinarySpecificity method)</a>
 </li>
         <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.__init__">(BinaryStatScores method)</a>
+</li>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.__init__">(BinaryTabularClassificationTask method)</a>
 </li>
         <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.__init__">(F1Score method)</a>
 </li>
@@ -450,6 +450,8 @@
 </li>
         <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.__init__">(MultilabelFbetaScore method)</a>
 </li>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.__init__">(MultilabelImageClassificationTask method)</a>
+</li>
         <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.__init__">(MultilabelPrecision method)</a>
 </li>
         <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.__init__">(MultilabelPrecisionRecallCurve method)</a>
@@ -481,6 +483,8 @@
         <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.__init__">(StatScores method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.__mul__">__mul__() (Accuracy method)</a>
 
       <ul>
@@ -587,6 +591,12 @@
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.add_metrics">add_metrics() (MetricCollection method)</a>
 </li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.add_model">add_model() (BinaryTabularClassificationTask method)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.add_model">(MultilabelImageClassificationTask method)</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.add_slice_spec">add_slice_spec() (SliceSpec method)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.add_state">add_state() (Accuracy method)</a>
@@ -717,10 +727,10 @@
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC">BinaryAUROC (class in cyclops.evaluate.metrics.auroc)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score">BinaryF1Score (class in cyclops.evaluate.metrics.f_beta)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore">BinaryFbetaScore (class in cyclops.evaluate.metrics.f_beta)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision">BinaryPrecision (class in cyclops.evaluate.metrics.precision_recall)</a>
@@ -736,6 +746,8 @@
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity">BinarySpecificity (class in cyclops.evaluate.metrics.specificity)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores">BinaryStatScores (class in cyclops.evaluate.metrics.stat_scores)</a>
+</li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask">BinaryTabularClassificationTask (class in cyclops.tasks.classification)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1210,11 +1222,26 @@
         <li><a href="reference/api/cyclops.tasks.html#module-cyclops.tasks">module</a>
 </li>
       </ul></li>
+      <li>
+    cyclops.tasks.classification
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.html#module-cyclops.tasks.classification">module</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.data_type">data_type (BinaryTabularClassificationTask property)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.data_type">(MultilabelImageClassificationTask property)</a>
+</li>
+      </ul></li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html#cyclops.data.features.medical_image.MedicalImage.decode_example">decode_example() (MedicalImage method)</a>
 </li>
@@ -1228,10 +1255,16 @@
 </li>
       <li><a href="reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html#cyclops.data.features.medical_image.MedicalImage.encode_example">encode_example() (MedicalImage method)</a>
 </li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.evaluate">evaluate() (BinaryTabularClassificationTask method)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.evaluate.evaluator.evaluate.html#cyclops.evaluate.evaluator.evaluate">(in module cyclops.evaluate.evaluator)</a>
+</li>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.evaluate">(MultilabelImageClassificationTask method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.evaluator.evaluate.html#cyclops.evaluate.evaluator.evaluate">evaluate() (in module cyclops.evaluate.evaluator)</a>
-</li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.fairness.evaluator.evaluate_fairness.html#cyclops.evaluate.fairness.evaluator.evaluate_fairness">evaluate_fairness() (in module cyclops.evaluate.fairness.evaluator)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.export">export() (ModelCardReport method)</a>
@@ -1280,10 +1313,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.gaussian_noise_shift.html#cyclops.monitor.synthetic_applicator.gaussian_noise_shift">gaussian_noise_shift() (in module cyclops.monitor.synthetic_applicator)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.get">get() (MetricCollection method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.get_model">get_model() (BinaryTabularClassificationTask method)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.get_model">(MultilabelImageClassificationTask method)</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.get_slices">get_slices() (SliceSpec method)</a>
 </li>
   </ul></td>
@@ -1326,6 +1365,24 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.list_models">list_models() (BinaryTabularClassificationTask method)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.list_models">(MultilabelImageClassificationTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.list_models_params">list_models_params() (BinaryTabularClassificationTask method)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.list_models_params">(MultilabelImageClassificationTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.load_model">load_model() (BinaryTabularClassificationTask method)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.load_model">(MultilabelImageClassificationTask method)</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_citation">log_citation() (ModelCardReport method)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_dataset">log_dataset() (ModelCardReport method)</a>
@@ -1338,14 +1395,14 @@
 </li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_image">log_image() (ModelCardReport method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_license">log_license() (ModelCardReport method)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_model_parameters">log_model_parameters() (ModelCardReport method)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_owner">log_owner() (ModelCardReport method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_performance_metrics">log_performance_metrics() (ModelCardReport method)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_plotly_figure">log_plotly_figure() (ModelCardReport method)</a>
@@ -1378,6 +1435,12 @@
 </li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport">ModelCardReport (class in cyclops.report.report)</a>
 </li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.models_count">models_count (BinaryTabularClassificationTask property)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.models_count">(MultilabelImageClassificationTask property)</a>
+</li>
+      </ul></li>
       <li>
     module
 
@@ -1456,6 +1519,8 @@
 </li>
         <li><a href="reference/api/cyclops.tasks.html#module-cyclops.tasks">cyclops.tasks</a>
 </li>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.html#module-cyclops.tasks.classification">cyclops.tasks.classification</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -1511,6 +1576,8 @@
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore">MultilabelFbetaScore (class in cyclops.evaluate.metrics.f_beta)</a>
 </li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask">MultilabelImageClassificationTask (class in cyclops.tasks.classification)</a>
+</li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision">MultilabelPrecision (class in cyclops.evaluate.metrics.precision_recall)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve">MultilabelPrecisionRecallCurve (class in cyclops.evaluate.metrics.precision_recall_curve)</a>
@@ -1547,14 +1614,20 @@
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.popitem">popitem() (MetricCollection method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision">Precision (class in cyclops.evaluate.metrics.precision_recall)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.precision.html#cyclops.evaluate.metrics.functional.precision_recall.precision">precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve">PrecisionRecallCurve (class in cyclops.evaluate.metrics.precision_recall_curve)</a>
 </li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.predict">predict() (BinaryTabularClassificationTask method)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.predict">(MultilabelImageClassificationTask method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1673,16 +1746,22 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.save_model">save_model() (BinaryTabularClassificationTask method)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.save_model">(MultilabelImageClassificationTask method)</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity">Sensitivity (class in cyclops.evaluate.metrics.sensitivity)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.setdefault">setdefault() (MetricCollection method)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html#cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.sex">sex() (ClinicalShiftApplicator method)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.slices">slices() (SliceSpec method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.slices">slices() (SliceSpec method)</a>
+</li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec">SliceSpec (class in cyclops.data.slicer)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.spec_list">spec_list (SliceSpec attribute)</a>
@@ -1699,7 +1778,17 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.task_type">task_type (BinaryTabularClassificationTask property)</a>
+
+      <ul>
+        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.task_type">(MultilabelImageClassificationTask property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html#cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.time">time() (ClinicalShiftApplicator method)</a>
+</li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.train">train() (BinaryTabularClassificationTask method)</a>
 </li>
   </ul></td>
 </tr></table>

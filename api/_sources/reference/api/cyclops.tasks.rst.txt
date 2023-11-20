@@ -12,5 +12,4 @@ cyclops.tasks
     :nosignatures:
     :template: custom-module-template.rst
 
-    cxr_classification
-    mortality_prediction
+    classification
