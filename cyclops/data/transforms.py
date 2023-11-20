@@ -1,9 +1,29 @@
 """Transforms for the datasets."""
+from typing import TYPE_CHECKING, Tuple
 
-from typing import Tuple
-
-from monai.transforms import Lambdad, Resized, ToDeviced  # type: ignore
 from torchvision.transforms import Compose
+
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    from monai.transforms import Lambdad, Resized, ToDeviced  # type: ignore
+else:
+    Lambdad = import_optional_module(
+        "monai.transforms.utility.dictionary",
+        "Lambdad",
+        error="raise",
+    )
+    Resized = import_optional_module(
+        "monai.transforms.spatial.dictionary",
+        "Resized",
+        error="raise",
+    )
+    ToDeviced = import_optional_module(
+        "monai.transforms.utility.dictionary",
+        "ToDeviced",
+        error="raise",
+    )
 
 
 def txrv_transforms(
