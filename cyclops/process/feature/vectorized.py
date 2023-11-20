@@ -57,7 +57,7 @@ def process_axes(
 def intersect_vectorized(
     vecs: List[Vectorized],
     axes: Union[str, int, List[str], List[int]] = 0,
-) -> Tuple:
+) -> Tuple[Vectorized, ...]:
     """Perform an intersection over the indexes of vectorized datasets.
 
     This is especially useful to align the samples of separate datasets.
@@ -80,7 +80,7 @@ def intersect_vectorized(
     axes_list: List[int] = process_axes(vecs, axes)
 
     # Get intersection
-    index_sets = [set(vec.get_index(axes_list[i])) for i, vec in enumerate(vecs)]
+    index_sets = [set(vec.get_index(axes_list[i])) for i, vec in enumerate(vecs)]  # type: ignore
     intersect = np.array(list(set.intersection(*index_sets)))
 
     # Return intersected datasets
@@ -97,7 +97,7 @@ def split_vectorized(
     axes: Union[str, int, List[str], List[int]] = 0,
     randomize: bool = True,
     seed: Optional[int] = None,
-) -> Tuple:
+) -> Tuple[Tuple[Vectorized, ...], ...]:
     """Split vectorized datasets matching the index.
 
     Parameters
@@ -144,7 +144,7 @@ def split_vectorized(
     )
 
     splits = [
-        vec.split_by_indices(axes_list[i], index_splits) for i, vec in enumerate(vecs)
+        vec.split_by_indices(axes_list[i], index_splits) for i, vec in enumerate(vecs)  # type: ignore
     ]
 
     return tuple(splits)
@@ -171,34 +171,29 @@ class Vectorized:
 
     def __init__(
         self,
-        data: np.ndarray,
-        indexes: List[Union[List, np.ndarray]],
+        data: np.typing.NDArray[Any],
+        indexes: Sequence[Union[List[Any], np.typing.NDArray[Any]]],
         axis_names: List[str],
         is_normalized: bool = False,
     ) -> None:
         """Init."""
         if not isinstance(data, np.ndarray):
             raise ValueError("Data must be a numpy.ndarray.")
-
         if len(indexes) != data.ndim:
             raise ValueError(
                 "Number of array axes and the number of indexes do not match.",
             )
-
         if len(axis_names) != data.ndim:
             raise ValueError(
                 "Number of array axes and the number of axis names do not match.",
             )
-
         if not all(isinstance(name, str) for name in axis_names):
             raise ValueError("Axis names must be strings.")
-
         for i, index in enumerate(indexes):
             if not isinstance(index, list) and not isinstance(index, np.ndarray):
                 raise ValueError("Indexes must be a list of list or numpy.ndarray.")
 
             index = np.array(index)
-
             if len(index) != data.shape[i]:
                 raise ValueError(
                     (
@@ -210,21 +205,18 @@ class Vectorized:
                 raise ValueError(
                     "Each index must have no duplicate values to uniquely identify.",
                 )
-
-            indexes[i] = index
-
-        self.data: np.ndarray = data
-        self.indexes: List[np.ndarray] = indexes
-        self.index_maps: List[Dict[str, int]] = [
+            indexes[i] = index  # type: ignore
+        self.data: np.typing.NDArray[Any] = data
+        self.indexes: List[np.typing.NDArray[Any]] = indexes  # type: ignore
+        self.index_maps: List[Dict[Any, int]] = [
             {val: i for i, val in enumerate(index)} for index in indexes
         ]
         self.axis_names: List[str] = axis_names
-
         self.normalizer: Optional[VectorizedNormalizer] = None
         self.is_normalized = is_normalized
 
     @property
-    def shape(self) -> Tuple:
+    def shape(self) -> Tuple[int, ...]:
         """Get data shape, as an attribute.
 
         Returns
@@ -235,7 +227,7 @@ class Vectorized:
         """
         return self.data.shape
 
-    def get_data(self) -> np.ndarray:
+    def get_data(self) -> np.typing.NDArray[Any]:
         """Get the vectorized data.
 
         Returns
@@ -250,7 +242,7 @@ class Vectorized:
         self,
         axis: Union[str, int],
         normalization_method: Optional[str] = None,
-        normalizer_map: Optional[dict] = None,
+        normalizer_map: Optional[Dict[str, str]] = None,
     ) -> None:
         """Add a normalizer.
 
@@ -284,15 +276,13 @@ class Vectorized:
 
         axis_index = self.get_axis(axis)
         index_map = self.index_maps[axis_index]
-
         if normalizer_map is None:
             # Use the same normalization method for all features
-            normalizer_map = {feat: normalization_method for feat in index_map}
+            normalizer_map = {feat: normalization_method for feat in index_map}  # type: ignore
         else:
             missing = set(normalizer_map.keys()) - set(index_map.keys())
             if len(missing) != 0:
                 raise ValueError(f"Invalid index values {', '.join(missing)}.")
-
         normalizer = VectorizedNormalizer(axis_index, normalizer_map)
         self.normalizer = normalizer
 
@@ -310,17 +300,14 @@ class Vectorized:
 
         if self.normalizer is not None:
             LOGGER.warning("Replacing existing normalizer.")
-
         self.normalizer = normalizer
 
     def fit_normalizer(self) -> None:
         """Fit the normalizer."""
         if self.normalizer is None:
             raise ValueError("Must add a normalizer.")
-
         if self.normalizer.is_fit:
             LOGGER.warning("Re-fitting existing normalizer.")
-
         index_map = self.index_maps[self.normalizer.axis]
         self.normalizer.fit(self.data, index_map)
 
@@ -332,10 +319,8 @@ class Vectorized:
         """
         if self.normalizer is None:
             raise ValueError("No normalizer was added.")
-
         if self.is_normalized:
             raise ValueError("Data normalized. Cannot normalize.")
-
         index_map = self.index_maps[self.normalizer.axis]
         self.normalizer.transform(self.data, index_map)
         self.is_normalized = True
@@ -348,10 +333,8 @@ class Vectorized:
         """
         if self.normalizer is None:
             raise ValueError("No normalizer was added.")
-
         if not self.is_normalized:
             raise ValueError("Data not normalized. Cannot inverse normalize.")
-
         index_map = self.index_maps[self.normalizer.axis]
         self.normalizer.inverse_transform(self.data, index_map)
         self.is_normalized = False
@@ -377,7 +360,7 @@ class Vectorized:
     def take_with_indices(
         self,
         axis: Union[str, int],
-        indices: Union[List[int], np.ndarray],
+        indices: Union[List[Any], np.typing.NDArray[Any]],
     ) -> Vectorized:
         """Get data by indexing an axis.
 
@@ -395,21 +378,17 @@ class Vectorized:
 
         """
         axis_index = self.get_axis(axis)
-
         # Index the data accordingly
         data = take_indices_over_axis(self.data, axis_index, indices)
-
         # Create the corresponding indexes
         new_indexes = list(self.indexes)
-        new_indexes[axis_index] = [self.indexes[axis_index][ind] for ind in indices]
-
+        new_indexes[axis_index] = [self.indexes[axis_index][ind] for ind in indices]  # type: ignore
         vec = Vectorized(
             data,
             new_indexes,
             self.axis_names,
             is_normalized=self.is_normalized,
         )
-
         # Add normalizers (and possibly a subset of the existing normalizers if
         # splitting on the normalization axis)
         if self.normalizer is not None:
@@ -417,7 +396,6 @@ class Vectorized:
                 normalizer = copy.deepcopy(self.normalizer)
             else:
                 normalizer = self.normalizer.subset(vec.indexes[self.normalizer.axis])
-
             vec.add_normalizer_direct(normalizer)
 
         return vec
@@ -425,7 +403,7 @@ class Vectorized:
     def take_with_index(
         self,
         axis: Union[str, int],
-        index: Union[List[Any], np.ndarray],
+        index: Union[List[Any], np.typing.NDArray[Any]],
     ) -> Vectorized:
         """Get data by indexing an axis using its index.
 
@@ -444,15 +422,12 @@ class Vectorized:
         """
         axis_index = self.get_axis(axis)
         index_map = self.index_maps[axis_index]
-
         if not isinstance(index, list) and not isinstance(index, np.ndarray):
             raise ValueError("Index must either be a list or a NumPy array.")
-
         # Map values to indices
         missing = [val for val in index if val not in index_map]
         if len(missing) > 0:
             raise ValueError(f"Index does not have values {', '.join(missing)}.")
-
         indices = [index_map[val] for val in index]
 
         return self.take_with_indices(axis_index, indices)
@@ -476,7 +451,6 @@ class Vectorized:
             if axis >= len(self.indexes) or axis < 0:
                 raise ValueError("Axis out of bounds.")
             return axis
-
         # If an axis name was given
         if isinstance(axis, str):
             if self.axis_names is None:
@@ -491,7 +465,7 @@ class Vectorized:
 
         raise ValueError("Axis is an invalid type. Must be an int or string.")
 
-    def get_index(self, axis: Union[int, str]) -> np.ndarray:
+    def get_index(self, axis: Union[int, str]) -> np.typing.ArrayLike:
         """Get an axis index by index or by name.
 
         Parameters
@@ -507,7 +481,7 @@ class Vectorized:
         """
         return self.indexes[self.get_axis(axis)]
 
-    def get_index_map(self, axis: Union[int, str]) -> np.ndarray:
+    def get_index_map(self, axis: Union[int, str]) -> Dict[Any, int]:
         """Get an axis index by index or by name.
 
         Parameters
@@ -526,9 +500,9 @@ class Vectorized:
     def split_by_indices(
         self,
         axis: Union[str, int],
-        indices: Union[Sequence[int], np.ndarray],
+        indices: List[Union[List[Any], np.typing.NDArray[Any]]],
         allow_drops: bool = False,
-    ):
+    ) -> Tuple[Vectorized, ...]:
         """Split the data over an axis using indices.
 
         Parameters
@@ -548,7 +522,6 @@ class Vectorized:
 
         """
         axis_index = self.get_axis(axis)
-
         # Check for invalid duplicate indices
         all_vals = np.concatenate(indices).ravel()
         if len(all_vals) != len(np.unique(all_vals)):
@@ -556,13 +529,11 @@ class Vectorized:
                 "Splits cannot contain duplicate values. "
                 "Ensure all values are unique across the splits.",
             )
-
         if not allow_drops:
             required_indices = set(np.arange(self.data.shape[axis_index]))
             diff = required_indices - set(all_vals)
             if len(diff) > 0:
                 raise ValueError("Not allowing dropping and missing certain values.")
-
         vec_splits = []
         for split_indices in indices:
             vec_splits.append(self.take_with_indices(axis_index, split_indices))
@@ -572,9 +543,9 @@ class Vectorized:
     def split_by_index(
         self,
         axis: Union[str, int],
-        index_names: List[Union[List[Any], np.ndarray]],
+        index_names: List[Union[List[Any], np.typing.NDArray[Any]]],
         allow_drops: bool = False,
-    ):
+    ) -> Tuple[Vectorized, ...]:
         """Split the data over an axis using index names.
 
         Parameters
@@ -595,8 +566,7 @@ class Vectorized:
         """
         axis_index = self.get_axis(axis)
         index_map = self.index_maps[axis_index]
-
-        indices: List[Union[List[int], np.ndarray]] = []
+        indices: List[Union[List[Any], np.typing.NDArray[Any]]] = []
         for names in index_names:
             indices.append([])
             for name in names:
@@ -605,7 +575,7 @@ class Vectorized:
                     if allow_drops:
                         continue
                     raise ValueError(f"Invalid index name {name}.")
-                indices[-1].append(index_map[name])
+                indices[-1].append(index_map[name])  # type: ignore
             indices[-1] = np.array(indices[-1])
 
         return self.split_by_indices(
@@ -620,7 +590,7 @@ class Vectorized:
         fractions: Union[float, List[float]],
         randomize: bool = True,
         seed: Optional[int] = None,
-    ):
+    ) -> Tuple[Vectorized, ...]:
         """Split the data over an axis using split fractions.
 
         Parameters
@@ -642,7 +612,6 @@ class Vectorized:
 
         """
         axis_index = self.get_axis(axis)
-
         indices = split_idx(
             fractions=fractions,
             n_samples=self.data.shape[axis_index],
@@ -652,15 +621,15 @@ class Vectorized:
 
         return self.split_by_indices(
             axis=axis_index,
-            indices=indices,
+            indices=indices,  # type: ignore
             allow_drops=False,
         )
 
     def split_out(
         self,
         axis: Union[str, int],
-        index_names: Union[List[Any], np.ndarray],
-    ):
+        index_names: Union[List[Any], np.typing.ArrayLike],
+    ) -> Tuple[Vectorized, ...]:
         """Split out some indexes by name.
 
         Parameters
@@ -690,8 +659,8 @@ class Vectorized:
     def remove_with_index(
         self,
         axis: Union[str, int],
-        index_names: Union[List[Any], np.ndarray],
-    ):
+        index_names: Union[List[Any], np.typing.ArrayLike],
+    ) -> Vectorized:
         """Split out some indexes by name.
 
         Parameters
@@ -710,6 +679,7 @@ class Vectorized:
         axis_index = self.get_axis(axis)
         index_names = np.array(index_names)
         remaining = np.setdiff1d(self.indexes[axis_index], index_names)
+
         return self.take_with_index(axis_index, remaining)
 
     def rename_axis(self, axis: Union[str, int], name: str) -> None:
@@ -746,15 +716,12 @@ class Vectorized:
         # Process axes
         axis1_index: int = self.get_axis(axis1)
         axis2_index: int = self.get_axis(axis2)
-
         # Call moveaxis before meta changes in case there are errors
         self.data = np.swapaxes(self.data, axis1_index, axis2_index)
-
         # Update meta
         self.indexes = list_swap(self.indexes, axis1_index, axis2_index)
         self.index_maps = list_swap(self.index_maps, axis1_index, axis2_index)
         self.axis_names = list_swap(self.axis_names, axis1_index, axis2_index)
-
         # Update axis on which the normalizer acts if it was switched
         if self.normalizer is not None:
             if self.normalizer.axis == axis1_index:
@@ -766,7 +733,7 @@ class Vectorized:
         self,
         axis: Union[str, int],
         index: Any,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[Any, ...]:
         """Return the value counts for a given axis and index.
 
         Parameters
@@ -780,9 +747,10 @@ class Vectorized:
         axis_index = self.get_axis(axis)
         index_map = self.index_maps[axis_index]
         data = take_indices_over_axis(self.data, axis_index, [index_map[index]])
+
         return np.unique(data, return_counts=True)
 
-    def _check_index_exp(self, index_exp: Tuple) -> None:
+    def _check_index_exp(self, index_exp: Tuple[slice, ...]) -> None:
         """Check that an index expression is valid.
 
         Parameters
@@ -793,7 +761,6 @@ class Vectorized:
         """
         if not isinstance(index_exp, tuple):
             raise ValueError("Index expression must be a tuple.")
-
         for i in index_exp:
             if not isinstance(i, slice):
                 raise ValueError(
@@ -806,9 +773,9 @@ class Vectorized:
     def impute_over_axis(
         self,
         axis: Union[str, int],
-        impute_fn: Callable,
-        index_exp: Optional[Tuple] = None,
-    ):
+        impute_fn: Callable[[np.typing.ArrayLike], np.typing.ArrayLike],
+        index_exp: Optional[Tuple[slice, ...]] = None,
+    ) -> None:
         """Imputes values over an axis, treating the other axes as grouping.
 
         For example, imputing over the timesteps of an event for some encounter.
@@ -824,7 +791,6 @@ class Vectorized:
 
         """
         axis_index = self.get_axis(axis)
-
         if index_exp is not None:
             self._check_index_exp(index_exp)
             sliced_data = self.data[index_exp]
@@ -833,7 +799,6 @@ class Vectorized:
                 axis_index,
                 sliced_data,
             )
-
         else:
             self.data = np.apply_along_axis(impute_fn, axis_index, self.data)
 
@@ -841,8 +806,8 @@ class Vectorized:
         self,
         impute_axis: Union[str, int],
         data_axis: Union[str, int],
-        impute_fn: Callable,
-    ):
+        impute_fn: Callable[[np.typing.ArrayLike], np.typing.ArrayLike],
+    ) -> None:
         """Impute values with forward fill and/or backward fill and fill null values \
         with feature mean.
 
@@ -857,7 +822,6 @@ class Vectorized:
 
         """
         self.impute_over_axis(impute_axis, impute_fn)
-
         axis = self.get_axis(data_axis)
 
         for i in range(self.data.shape[axis]):
@@ -870,8 +834,8 @@ class Vectorized:
     def concat_over_axis(
         self,
         axis: Union[str, int],
-        arr: np.ndarray,
-        concat_index: Union[List, np.ndarray],
+        arr: np.typing.NDArray[Any],
+        concat_index: Union[List[Any], np.typing.NDArray[Any]],
     ) -> Vectorized:
         """Concatenate an array over an axis to create a new Vectorized object.
 
@@ -897,19 +861,15 @@ class Vectorized:
         """
         axis_index = self.get_axis(axis)
         concat_index = np.array(concat_index)
-
         # Check dimensionality for issues
         shape = self.shape
         arr_shape = arr.shape
-
         if len(concat_index) != arr.shape[axis_index]:
             raise ValueError(
                 "Incorrect number of index names for the data to concatenate.",
             )
-
         if len(shape) != len(arr_shape):
             raise ValueError("Array must have the same number of dimensions.")
-
         equal_shape = [arr_shape[i] == shape[i] for i in range(len(shape))]
         equal_shape = (
             equal_shape[:axis_index] + equal_shape[axis_index + 1 :]  # noqa: E203
@@ -918,16 +878,15 @@ class Vectorized:
             raise ValueError(
                 "Array shape must be identical except along the concatenated axis.",
             )
-
         # Check that none of the new indexes already exist
         index_inter = np.intersect1d(self.indexes[axis_index], concat_index)
         if len(index_inter) > 0:
             raise ValueError(f"Forbidden intersection of indexes: {index_inter}.")
-
         # Concatenate and return a new Vectorized object
         res = np.concatenate([self.data, arr], axis=axis_index)
         indexes = [ind.copy() for ind in self.indexes]
         indexes[axis_index] = np.concatenate([indexes[axis_index], concat_index])
+
         return Vectorized(res, indexes, self.axis_names)
 
 
@@ -940,7 +899,7 @@ class VectorizedIndexExpression:
 
     """
 
-    def __getitem__(self, item: Tuple) -> Tuple:
+    def __getitem__(self, item: Tuple[Any, ...]) -> Tuple[slice, ...]:
         """Create index expression using slice notation.
 
         Parameters

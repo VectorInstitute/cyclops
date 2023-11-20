@@ -50,7 +50,7 @@ class SklearnNormalizer:
 
         self.scaler = METHOD_MAP[method]()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Repr method.
 
         Returns
@@ -61,7 +61,7 @@ class SklearnNormalizer:
         """
         return self.method
 
-    def fit(self, data: Union[np.ndarray, pd.Series]) -> None:
+    def fit(self, data: Union[np.typing.NDArray[Any], pd.Series]) -> None:
         """Fit the scaler.
 
         Parameters
@@ -93,9 +93,9 @@ class SklearnNormalizer:
 
     def _transform_by_method(
         self,
-        data: Union[np.ndarray, pd.Series],
+        data: Union[np.typing.NDArray[Any], pd.Series],
         method: str,
-    ) -> Union[np.ndarray, pd.Series]:
+    ) -> Union[np.typing.NDArray[Any], pd.Series]:
         """Apply a method on the scaler.
 
         If a numpy.ndarray is given, a numpy.ndarray is returned. Similarly, if a
@@ -142,8 +142,8 @@ class SklearnNormalizer:
 
     def transform(
         self,
-        data: Union[np.ndarray, pd.Series],
-    ) -> Union[np.ndarray, pd.Series]:
+        data: Union[np.typing.NDArray[Any], pd.Series],
+    ) -> Union[np.typing.NDArray[Any], pd.Series]:
         """Apply normalization.
 
         If a numpy.ndarray is given, a numpy.ndarray is returned. Similarly, if a
@@ -164,8 +164,8 @@ class SklearnNormalizer:
 
     def inverse_transform(
         self,
-        data: Union[np.ndarray, pd.Series],
-    ) -> Union[np.ndarray, pd.Series]:
+        data: Union[np.typing.NDArray[Any], pd.Series],
+    ) -> Union[np.typing.NDArray[Any], pd.Series]:
         """Apply inverse normalization.
 
         If a numpy.ndarray is given, a numpy.ndarray is returned. Similarly, if a
@@ -205,7 +205,7 @@ class GroupbyNormalizer:
 
     def __init__(
         self,
-        normalizer_map: dict,
+        normalizer_map: Dict[str, str],
         by: Optional[Union[str, List[str]]] = None,
     ) -> None:
         """Initialize."""
@@ -219,7 +219,7 @@ class GroupbyNormalizer:
         self.by = to_list_optional(by)
         self.normalizers = None
 
-    def get_map(self) -> dict:
+    def get_map(self) -> Dict[str, str]:
         """Get normalization mapping from features to type.
 
         Returns
@@ -230,7 +230,7 @@ class GroupbyNormalizer:
         """
         return self.normalizer_map
 
-    def get_by(self) -> Optional[List]:
+    def get_by(self) -> Optional[List[str]]:
         """Get groupby columns.
 
         Returns
@@ -255,7 +255,7 @@ class GroupbyNormalizer:
                 "DataFrame required to have a range index. Try resetting the index.",
             )
 
-        def get_normalizer_for_group(group: pd.DataFrame):
+        def get_normalizer_for_group(group: pd.DataFrame) -> pd.DataFrame:
             cols = []
             data = []
             for col, method in self.normalizer_map.items():
@@ -306,7 +306,7 @@ class GroupbyNormalizer:
                 "DataFrame required to have a range index. Try resetting the index.",
             )
 
-        def transform_group(group):
+        def transform_group(group) -> pd.DataFrame:
             for col in self.normalizer_map:
                 # Get normalizer object and transform
                 normalizer = self.normalizers.loc[group.index.values[0]][col]
@@ -335,7 +335,7 @@ class GroupbyNormalizer:
 
         return data
 
-    def transform(self, data: pd.DataFrame):
+    def transform(self, data: pd.DataFrame) -> pd.DataFrame:
         """Normalize the data.
 
         Parameters
@@ -351,7 +351,7 @@ class GroupbyNormalizer:
         """
         return self._transform_by_method(data, "transform")
 
-    def inverse_transform(self, data: pd.DataFrame):
+    def inverse_transform(self, data: pd.DataFrame) -> pd.DataFrame:
         """Inversely normalize the data.
 
         Parameters
@@ -387,7 +387,7 @@ class VectorizedNormalizer:
     def __init__(
         self,
         axis: int,
-        normalizer_map: dict,
+        normalizer_map: Dict[Any, str],
     ) -> None:
         """Initialize."""
         self.axis = axis
@@ -395,7 +395,7 @@ class VectorizedNormalizer:
         self.normalizers: Dict[Any, SklearnNormalizer] = {}
         self.is_fit: bool = False
 
-    def get_map(self) -> Optional[dict]:
+    def get_map(self) -> Optional[Dict[str, str]]:
         """Get normalization mapping from features to type.
 
         Returns
@@ -422,7 +422,7 @@ class VectorizedNormalizer:
         if len(missing) != 0:
             raise ValueError(f"Missing features {', '.join(missing)} in the data.")
 
-    def fit(self, data: np.ndarray, index_map: Dict[str, int]) -> None:
+    def fit(self, data: np.typing.NDArray[Any], index_map: Dict[str, int]) -> None:
         """Fit the normalizing objects.
 
         Parameters
@@ -454,10 +454,10 @@ class VectorizedNormalizer:
 
     def _transform_by_method(
         self,
-        data: np.ndarray,
+        data: np.typing.NDArray[Any],
         index_map: Dict[str, int],
         method: str,
-    ) -> np.ndarray:
+    ) -> np.typing.NDArray[Any]:
         """Apply a method from the normalizer object to the data.
 
         Parameters
@@ -491,7 +491,9 @@ class VectorizedNormalizer:
 
         return data
 
-    def transform(self, data: np.ndarray, index_map: Dict[str, int]):
+    def transform(
+        self, data: np.typing.NDArray[Any], index_map: Dict[str, int]
+    ) -> np.typing.NDArray[Any]:
         """Normalize the data.
 
         Parameters
@@ -512,7 +514,9 @@ class VectorizedNormalizer:
 
         return self._transform_by_method(data, index_map, "transform")
 
-    def inverse_transform(self, data: np.ndarray, index_map: Dict[str, int]):
+    def inverse_transform(
+        self, data: np.typing.NDArray[Any], index_map: Dict[str, int]
+    ) -> np.typing.NDArray[Any]:
         """Inversely normalize the data.
 
         Parameters
@@ -547,7 +551,7 @@ class VectorizedNormalizer:
         self.normalizers = normalizers
         self.is_fit = True
 
-    def subset(self, indexes: np.ndarray) -> VectorizedNormalizer:
+    def subset(self, indexes: np.typing.NDArray[Any]) -> VectorizedNormalizer:
         """Subset the normalizers and return this new VectorizedNormalizer.
 
         Parameters

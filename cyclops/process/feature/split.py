@@ -1,6 +1,7 @@
 """Dataset split processing."""
 
 from typing import (
+    Any,
     Generator,
     Iterable,
     List,
@@ -44,7 +45,7 @@ def __normalize_fractions(
 def fractions_to_split(
     fractions: Union[int, float, Sequence[Union[float, int]]],
     n_samples: int,
-) -> np.ndarray:
+) -> Any:
     """Create an array of index split points useful for dataset splitting.
 
     Created using the length of the data and the desired split fractions.
@@ -103,7 +104,7 @@ def split_idx(
     n_samples: int,
     randomize: bool = True,
     seed: Optional[int] = None,
-) -> tuple:
+) -> Tuple[np.typing.NDArray[np.int_], ...]:
     """Create disjoint subsets of indices.
 
     Parameters
@@ -125,7 +126,6 @@ def split_idx(
     """
     split = fractions_to_split(fractions, n_samples)
     idx = np.arange(n_samples)
-
     # Optionally randomize
     if randomize:
         rng = np.random.default_rng(seed)
@@ -136,10 +136,10 @@ def split_idx(
 
 def split_idx_stratified(
     fractions: Union[float, List[float]],
-    stratify_labels: np.ndarray,
+    stratify_labels: np.typing.NDArray[np.int_],
     randomize: bool = True,
     seed: Optional[int] = None,
-) -> tuple:
+) -> Tuple[np.typing.NDArray[np.int_], ...]:
     """Create disjoint, label-stratified subsets of indices.
 
     There will be the equal label proportions in each subset.
@@ -193,7 +193,7 @@ def split_kfold(
     n_samples: int,
     randomize: bool = True,
     seed: Optional[int] = None,
-) -> np.ndarray:
+) -> Tuple[np.typing.NDArray[np.int_], ...]:
     """Create K disjoint subsets of indices equal in length.
 
     These K equally sized folds are useful for K-fold cross validation.
@@ -220,9 +220,9 @@ def split_kfold(
 
 
 def idxs_to_splits(
-    samples: np.ndarray,
-    idxs: Tuple,
-):
+    samples: np.typing.NDArray[np.float_],
+    idxs: Tuple[np.typing.NDArray[np.int_], ...],
+) -> Tuple[np.typing.NDArray[np.float_], ...]:
     """Create data subsets using subsets of indices.
 
     Parameters
@@ -243,10 +243,10 @@ def idxs_to_splits(
 
 def kfold_cross_val(
     k_folds: int,
-    samples: np.ndarray,
+    samples: np.typing.NDArray[np.float_],
     randomize: bool = True,
     seed: Optional[int] = None,
-) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+) -> Generator[Tuple[np.typing.NDArray[np.float_], ...], None, None]:
     """Perform K-fold cross validation.
 
     Parameters
@@ -279,7 +279,7 @@ def intersect_datasets(
     datas: List[pd.DataFrame],
     on_col: str,
     sort: bool = True,
-) -> Tuple:
+) -> Tuple[pd.DataFrame, ...]:
     """Perform an intersection across datasets over a column.
 
     This can be used to align dataset samples e.g., aligning encounters for a tabular
@@ -320,10 +320,10 @@ def intersect_datasets(
 
 
 def split_datasets_by_idx(
-    datasets: Union[np.ndarray, List[np.ndarray]],
-    idx_splits: Tuple,
+    datasets: Union[np.typing.NDArray[np.float_], List[np.typing.NDArray[np.float_]]],
+    idx_splits: Tuple[np.typing.NDArray[np.int_], ...],
     axes: Optional[Union[int, List[int]]] = None,
-):
+) -> Tuple[np.typing.NDArray[np.float_], ...]:
     """Split datasets by index over given axes.
 
     Parameters
@@ -366,18 +366,18 @@ def split_datasets_by_idx(
         splits[-1] = tuple(splits[-1])
 
     if len(splits) == 1:
-        return splits[0]
+        return splits[0]  # type: ignore
 
     return tuple(splits)
 
 
 def split_datasets(
-    datasets: Union[np.ndarray, List[np.ndarray]],
+    datasets: Union[np.typing.NDArray[np.float_], List[np.typing.NDArray[np.float_]]],
     fractions: Union[float, List[float]],
     axes: Optional[Union[int, List[int]]] = None,
     randomize: bool = True,
     seed: Optional[int] = None,
-) -> Tuple:
+) -> Tuple[np.typing.NDArray[np.float_], ...]:
     """Split a dataset into a number of datasets.
 
     Parameters
