@@ -252,7 +252,10 @@ def model_card():
     """Create a test input for model card."""
     model_card = ModelCard()
     model_card.overview = Overview(
+        slices=["overall"],
         metric_cards=MetricCardCollection(
+            metrics=["BinaryAccuracy", "BinaryPrecision"],
+            slices=["overall"],
             collection=[
                 MetricCard(
                     name="Accuracy",

@@ -468,18 +468,35 @@ def get_slices(model_card: ModelCard) -> str:
     if (
         (model_card.overview is None)
         or (model_card.overview.metric_cards is None)
+        or (model_card.overview.metric_cards.slices is None)
         or (model_card.overview.metric_cards.collection is None)
     ):
         pass
     else:
+        all_slices = model_card.overview.metric_cards.slices
         for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
             name = (
                 ["metric:" + metric_card.name] if metric_card.name else ["metric:none"]
             )
             card_slice = metric_card.slice
-            card_slice_list = card_slice.split("&") if card_slice else "overall"
-            name.extend(card_slice_list)
-            name = [e for e in name if e != "overall"]
+            if card_slice is not None:
+                if card_slice == "overall":
+                    card_slice_list = [
+                        f"{slices}:overall_{slices}" for slices in all_slices
+                    ]
+                else:
+                    card_slice_list = card_slice.split("&")
+                    card_slice_list_split = [
+                        card_slice.split(":")[0] for card_slice in card_slice_list
+                    ]
+
+                    for slices in all_slices:
+                        card_slice_list_split = [
+                            card_slice.split(":")[0] for card_slice in card_slice_list
+                        ]
+                        if slices not in card_slice_list_split:
+                            card_slice_list.append(f"{slices}:overall_{slices}")
+                name.extend(card_slice_list)
             names[itr] = name
     return json.dumps(names)
 
@@ -590,7 +607,7 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
     for current_metric in current_metrics:
         if current_metric.slice is not None:
             for slice_val in current_metric.slice.split("&"):
-                if slice_val not in slices_values:
+                if slice_val not in slices_values and slice_val != "overall":
                     slices_values.append(slice_val)
     slices = [
         slice_val.split(":")[0]
