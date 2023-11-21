@@ -7,7 +7,6 @@ import numpy as np
 import torch
 import torchxrayvision as xrv
 from datasets import Dataset, DatasetDict
-from monai.transforms import Compose
 from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
@@ -15,6 +14,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn.random_projection import SparseRandomProjection
 from torch import nn
 from torch.utils.data import Dataset as TorchDataset
+from torchvision.transforms import Compose
 
 from cyclops.data.utils import apply_transforms
 from cyclops.models.catalog import SKModel, wrap_model

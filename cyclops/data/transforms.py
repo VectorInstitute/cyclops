@@ -1,48 +1,85 @@
 """Transforms for the datasets."""
-from typing import TYPE_CHECKING, Tuple
+from typing import Any, Callable, Tuple
 
-from torchvision.transforms import Compose
-
-from cyclops.utils.optional import import_optional_module
+from torchvision.transforms import Lambda, Resize
 
 
-if TYPE_CHECKING:
-    from monai.transforms import Lambdad, Resized, ToDeviced  # type: ignore
-else:
-    Lambdad = import_optional_module(
-        "monai.transforms.utility.dictionary",
-        "Lambdad",
-        error="raise",
-    )
-    Resized = import_optional_module(
-        "monai.transforms.spatial.dictionary",
-        "Resized",
-        error="raise",
-    )
-    ToDeviced = import_optional_module(
-        "monai.transforms.utility.dictionary",
-        "ToDeviced",
-        error="raise",
-    )
+# generic dictionary-based wrapper for any transform
+class Dictd:
+    """Generic dictionary-based wrapper for any transform."""
+
+    def __init__(
+        self,
+        transform: Callable[..., Any],
+        keys: Tuple[str, ...],
+        allow_missing_keys: bool = False,
+    ):
+        self.transform = transform
+        self.keys = keys
+        self.allow_missing_keys = allow_missing_keys
+
+    def __call__(self, data: Any) -> Any:
+        """Apply the transform to the data."""
+        d = dict(data)
+        for key in self.keys:
+            if self.allow_missing_keys and key not in d:
+                continue
+            d[key] = self.transform(d[key])
+        return d
+
+    def __repr__(self) -> str:
+        """Return a string representation of the transform."""
+        return (
+            f"{self.__class__.__name__}(transform={self.transform}, "
+            f"keys={self.keys}, allow_missing_keys={self.allow_missing_keys})"
+        )
 
 
-def txrv_transforms(
-    keys: Tuple[str, ...] = ("features",),
-    device: str = "cpu",
-) -> Compose:
-    """Set of transforms for the models in the TXRV library."""
-    return Compose(
-        [
-            Resized(
-                keys=keys,
-                spatial_size=(1, 224, 224),
-                allow_missing_keys=True,
-            ),
-            Lambdad(
-                keys=keys,
-                func=lambda x: ((2 * (x / 255.0)) - 1.0) * 1024,
-                allow_missing_keys=True,
-            ),
-            ToDeviced(keys=keys, device=device, allow_missing_keys=True),
-        ],
-    )
+# dictionary-based wrapper of Lambda transform using Dictd
+class Lambdad:
+    """Dictionary-based wrapper of Lambda transform using Dictd."""
+
+    def __init__(
+        self,
+        func: Callable[..., Any],
+        keys: Tuple[str, ...],
+        allow_missing_keys: bool = False,
+    ):
+        self.transform = Dictd(
+            transform=Lambda(func=func),
+            keys=keys,
+            allow_missing_keys=allow_missing_keys,
+        )
+
+    def __call__(self, data: Any) -> Any:
+        """Apply the transform to the data."""
+        return self.transform(data)
+
+    def get_function(self) -> str:
+        """Return a string representation of the transform."""
+        return f"{self.__class__.__name__}(keys={self.transform.keys}, allow_missing_keys={self.transform.allow_missing_keys})"
+
+
+# dictionary-based wrapper of Resize transform using Dictd
+class Resized:
+    """Dictionary-based wrapper of Resize transform using Dictd."""
+
+    def __init__(
+        self,
+        spatial_size: Tuple[int, int],
+        keys: Tuple[str, ...],
+        allow_missing_keys: bool = False,
+    ):
+        self.transform = Dictd(
+            transform=Resize(spatial_size=spatial_size),
+            keys=keys,
+            allow_missing_keys=allow_missing_keys,
+        )
+
+    def __call__(self, data: Any) -> Any:
+        """Apply the transform to the data."""
+        return self.transform(data)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the transform."""
+        return f"{self.__class__.__name__}(keys={self.transform.keys}, allow_missing_keys={self.transform.allow_missing_keys})"
