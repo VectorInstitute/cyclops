@@ -26,6 +26,8 @@ from cyclops.evaluate.metrics.experimental.utils.typing import Array
 class _AbstractConfusionMatrix(Metric):
     """Base class defining the common interface for confusion matrix classes."""
 
+    name: str = "Confusion Matrix"
+
     tp: Union[Array, List[Array]]
     fp: Union[Array, List[Array]]
     tn: Union[Array, List[Array]]
@@ -209,6 +211,7 @@ class MulticlassConfusionMatrix(Metric, registry_key="multiclass_confusion_matri
 
     """
 
+    name: str = "Confusion Matrix"
     confmat: Array
 
     def __init__(

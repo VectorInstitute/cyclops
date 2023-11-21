@@ -1,6 +1,7 @@
 """Evaluate one or more models on a dataset."""
 
 import logging
+import warnings
 from dataclasses import asdict
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union, get_args
 
@@ -40,6 +41,7 @@ def evaluate(
     slice_spec: Optional[SliceSpec] = None,
     split: Optional[Union[str, Split]] = None,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
+    raise_on_empty_slice: bool = False,
     fairness_config: Optional[FairnessConfig] = None,
     override_fairness_metrics: bool = True,
     load_dataset_kwargs: Optional[Dict[str, Any]] = None,
@@ -94,6 +96,9 @@ def evaluate(
         The batch size to use when computing metrics. If None or a negative
         integer, the entire dataset will be loaded into memory and metrics
         will be computed in one batch.
+    raise_on_empty_slice : bool, default=False
+        Whether to raise an error if a slice is empty. If False, a warning will
+        be logged and the metric values will be set to `NaN`.
     fairness_config : Optional[FairnessConfig], optional
         The configuration for computing fairness metrics. If None, no fairness
         metrics will be computed. Before computing fairness metrics, the following
@@ -178,6 +183,7 @@ def evaluate(
         prediction_column_prefix=prediction_column_prefix,
         remove_columns=remove_columns,
         batch_size=batch_size,
+        raise_on_empty_slice=raise_on_empty_slice,
     )
     if "default" in metric_results:
         if models is not None and len(models) > 1:
@@ -317,6 +323,7 @@ def _compute_metrics(
     prediction_column_prefix: str = "predictions",
     remove_columns: Optional[Union[str, List[str]]] = None,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
+    raise_on_empty_slice: bool = False,
 ) -> Dict[str, Dict[str, Any]]:
     """Compute metrics for a dataset."""
     if isinstance(target_columns, str):
@@ -347,14 +354,24 @@ def _compute_metrics(
                 desc=f"Filter -> {slice_name}",
             )
 
-            if len(sliced_dataset) == 0:
+            if len(sliced_dataset) == 0 and raise_on_empty_slice:
                 raise RuntimeError(
                     f"Slice {slice_name} is empty. Please check your slice "
                     f"configuration or the data.",
                 )
 
             for prediction_column in prediction_columns:
-                if (
+                if len(sliced_dataset) == 0:
+                    warnings.warn(
+                        "Got an empty dataset after applying the slice "
+                        "%s. Metric values will be set to `None`." % slice_name,
+                        RuntimeWarning,
+                        stacklevel=1,
+                    )
+                    metric_output = {
+                        metric_name: float("NaN") for metric_name in metrics
+                    }
+                elif (
                     batch_size is None or batch_size < 0
                 ):  # dataset.iter does not support getting all batches at once
                     targets = get_columns_as_numpy_array(

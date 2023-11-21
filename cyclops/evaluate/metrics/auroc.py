@@ -52,6 +52,8 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
 
     """
 
+    name: str = "ROC AUC Score"
+
     def __init__(
         self,
         max_fpr: Optional[float] = None,
@@ -122,6 +124,8 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
 
     """
 
+    name: str = "ROC AUC Score"
+
     def __init__(
         self,
         num_classes: int,
@@ -191,6 +195,8 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_a
     array([1.   , 0.625])
 
     """
+
+    name: str = "ROC AUC Score"
 
     def __init__(
         self,
@@ -302,6 +308,8 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     array([1.   , 0.625])
 
     """
+
+    name: str = "ROC AUC Score"
 
     def __new__(  # type: ignore # mypy expects a subclass of AUROC
         cls,

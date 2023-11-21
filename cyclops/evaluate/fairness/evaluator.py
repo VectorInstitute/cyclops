@@ -3,6 +3,7 @@
 import inspect
 import itertools
 import logging
+import warnings
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -49,6 +50,7 @@ def evaluate_fairness(
     compute_optimal_threshold: bool = False,  # expensive operation
     remove_columns: Optional[Union[str, List[str]]] = None,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
+    raise_on_empty_slice: bool = False,
     metric_name: Optional[str] = None,
     metric_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Union[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Dict[str, Any]]]]:
@@ -98,10 +100,6 @@ def evaluate_fairness(
         created using np.linspace(0, 1, thresholds). If list, the values must be
         between 0 and 1, and monotonic. If None, the default threshold value for the
         metric will be used.
-    batch_size : int, optional, default=1000
-        The batch size to use when computing metrics. This is used to control memory
-        usage when computing metrics on large datasets. For image datasets, this
-        value should be relatively small (e.g. 32) to avoid memory issues.
     compute_optimal_threshold : bool, optional, default=False
         Whether to compute the optimal threshold for each metric. This is an
         expensive operation, and should only be used when necessary.
@@ -110,6 +108,13 @@ def evaluate_fairness(
         and computing metrics. This is useful if the dataset contains columns
         that are not needed for computing metrics but may be expensive to
         keep in memory (e.g. image columns).
+    batch_size : int, optional, default=1000
+        The batch size to use when computing metrics. This is used to control memory
+        usage when computing metrics on large datasets. For image datasets, this
+        value should be relatively small (e.g. 32) to avoid memory issues.
+    raise_on_empty_slice : bool, optional, default=False
+        Whether to raise an error if an empty slice is encountered when computing
+        metrics. If False, the metric values for the slice will be set to `NaN`.
     metric_name : Optional[str], optional, default=None
         The name of the metric. If None, the name of the metric will be used.
     metric_kwargs : Optional[Dict[str, Any]], optional, default=None
@@ -244,7 +249,7 @@ def evaluate_fairness(
                 desc=f"Filter -> {slice_name}",
             )
 
-            if len(sliced_dataset) == 0:
+            if len(sliced_dataset) == 0 and raise_on_empty_slice:
                 raise RuntimeError(
                     f"Slice {slice_name} is empty. Please check your slice "
                     f"configuration or the data.",
@@ -253,7 +258,7 @@ def evaluate_fairness(
             for prediction_column in fmt_prediction_columns:
                 results.setdefault(prediction_column, {})
                 results[prediction_column].setdefault(slice_name, {}).update(
-                    {"Group Size": sliced_dataset.num_rows},
+                    {"Group Size": len(sliced_dataset)},
                 )
 
                 pred_result = _get_metric_results_for_prediction_and_slice(
@@ -758,6 +763,10 @@ def _compute_metrics(  # noqa: C901, PLR0912
         The computed metrics.
 
     """
+    empty_dataset_msg = (
+        "Encountered empty dataset while computing metrics. "
+        "The metric values will be set to `None`."
+    )
     if isinstance(metrics, MetricCollection):
         if threshold is not None:
             # set the threshold for each metric in the collection
@@ -771,7 +780,12 @@ def _compute_metrics(  # noqa: C901, PLR0912
                         name,
                     )
 
-        if (
+        if len(dataset) == 0:
+            warnings.warn(empty_dataset_msg, RuntimeWarning, stacklevel=1)
+            results: Dict[str, Any] = {
+                metric_name: float("NaN") for metric_name in metrics
+            }
+        elif (
             batch_size is None or batch_size <= 0
         ):  # dataset.iter does not support getting all rows
             targets = get_columns_as_numpy_array(
@@ -782,7 +796,7 @@ def _compute_metrics(  # noqa: C901, PLR0912
                 dataset=dataset,
                 columns=prediction_column,
             )
-            results: Dict[str, Any] = metrics(targets, predictions)
+            results = metrics(targets, predictions)
         else:
             for batch in dataset.iter(batch_size=batch_size):
                 targets = get_columns_as_numpy_array(
@@ -802,6 +816,13 @@ def _compute_metrics(  # noqa: C901, PLR0912
 
         return results
     if callable(metrics):
+        if metric_name is None:
+            metric_name = getattr(metrics, "__name__", "Unnamed Metric")
+
+        if len(dataset) == 0:
+            warnings.warn(empty_dataset_msg, RuntimeWarning, stacklevel=1)
+            return {metric_name.title(): float("NaN")}
+
         targets = get_columns_as_numpy_array(dataset=dataset, columns=target_columns)
         predictions = get_columns_as_numpy_array(
             dataset=dataset,
@@ -821,9 +842,6 @@ def _compute_metrics(  # noqa: C901, PLR0912
                 output = metrics(targets, predictions)
         else:
             output = metrics(targets, predictions)
-
-        if metric_name is None:
-            metric_name = getattr(metrics, "__name__", "Unnamed Metric")
 
         return {metric_name.title(): output}
 
@@ -968,12 +986,16 @@ def _compute_parity_metrics(
 
                 numerator = metric_value
                 denominator = prediction_result[base_slice_name][metric_name]
-                parity_metric_value = np.divide(
-                    numerator,
-                    denominator,
-                    out=np.zeros_like(numerator, dtype=np.float_),
-                    where=denominator != 0,
-                )
+                # value is NaN if either the numerator or denominator is NaN
+                if np.isnan(numerator).all() or np.isnan(denominator).all():
+                    parity_metric_value = np.nan
+                else:
+                    parity_metric_value = np.divide(  # type: ignore[assignment]
+                        numerator,
+                        denominator,
+                        out=np.zeros_like(numerator, dtype=np.float_),
+                        where=denominator != 0,
+                    )
 
                 parity_results[key].setdefault(slice_name, {}).update(
                     {

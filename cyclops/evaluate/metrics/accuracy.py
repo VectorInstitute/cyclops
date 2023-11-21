@@ -48,6 +48,8 @@ class BinaryAccuracy(BinaryStatScores, registry_key="binary_accuracy"):
 
     """
 
+    name = "Accuracy Score"
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -114,6 +116,8 @@ class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy
     array([0., 1., 0.])
 
     """
+
+    name = "Accuracy Score"
 
     def __init__(
         self,
@@ -188,6 +192,8 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
     array([0.5, 0.5, 0.5])
 
     """
+
+    name = "Accuracy Score"
 
     def __init__(
         self,
@@ -309,6 +315,8 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     array([0.5, 0.5, 0.5])
 
     """
+
+    name: str = "Accuracy Score"
 
     def __new__(  # type: ignore # mypy expects a subclass of Accuracy
         cls: Type[Metric],

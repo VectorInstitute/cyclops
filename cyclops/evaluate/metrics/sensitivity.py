@@ -41,6 +41,8 @@ class BinarySensitivity(BinaryRecall, registry_key="binary_sensitivity"):
 
     """
 
+    name: str = "Sensitivity Score"
+
     def __init__(
         self,
         pos_label: int = 1,
@@ -109,6 +111,8 @@ class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivi
 
     """
 
+    name: str = "Sensitivity Score"
+
     def __init__(
         self,
         num_classes: int,
@@ -168,6 +172,8 @@ class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivi
     array([0., 1., 1., 0.])
 
     """
+
+    name: str = "Sensitivity Score"
 
     def __init__(
         self,
@@ -287,6 +293,8 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     array([0.33333333, 1.        ])
 
     """
+
+    name: str = "Sensitivity Score"
 
     def __new__(  # type: ignore # mypy expects a subclass of Sensitivity
         cls,

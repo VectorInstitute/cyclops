@@ -49,6 +49,8 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
 
     """
 
+    name: str = "Specificity Score"
+
     def __init__(
         self,
         pos_label: int = 1,
@@ -119,6 +121,8 @@ class MulticlassSpecificity(
     array([0.625     , 0.57142857, 0.55555556])
 
     """
+
+    name: str = "Specificity Score"
 
     def __init__(
         self,
@@ -198,6 +202,8 @@ class MultilabelSpecificity(
     array([0.5       , 0.66666667, 0.6       ])
 
     """
+
+    name: str = "Specificity Score"
 
     def __init__(
         self,
@@ -324,6 +330,8 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     array([0.5, 0.5, 1. ])
 
     """
+
+    name: str = "Specificity Score"
 
     def __new__(  # type: ignore # mypy expects a subclass of Specificity
         cls: Type[Metric],
