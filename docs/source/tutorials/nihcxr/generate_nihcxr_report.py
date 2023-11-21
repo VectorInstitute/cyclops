@@ -57,7 +57,7 @@ transforms = Compose(
         ),
         Lambdad(
             keys=("image",),
-            func=lambda x: np.mean(x, axis=0)[np.newaxis, :] if x.shape[0] != 1 else x,
+            func=lambda x: x[0][np.newaxis, :] if x.shape[0] != 1 else x,
         ),
     ],
 )
