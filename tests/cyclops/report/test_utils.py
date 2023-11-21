@@ -26,12 +26,13 @@ from cyclops.report.utils import (
     extract_performance_metrics,
     filter_results,
     flatten_results_dict,
+    get_histories,
     get_metrics_trends,
     get_names,
     get_passed,
-    get_plots,
     get_slices,
     get_thresholds,
+    get_timestamps,
     get_trends,
     sweep_graphics,
     sweep_metric_cards,
@@ -251,7 +252,10 @@ def model_card():
     """Create a test input for model card."""
     model_card = ModelCard()
     model_card.overview = Overview(
+        slices=["overall"],
         metric_cards=MetricCardCollection(
+            metrics=["BinaryAccuracy", "BinaryPrecision"],
+            slices=["overall"],
             collection=[
                 MetricCard(
                     name="Accuracy",
@@ -334,9 +338,17 @@ def test_get_slices(model_card):
     assert len(slices_dict.values()) == 2
 
 
-def test_get_plots(model_card):
+def test_get_timestamps(model_card):
+    """Test get_timestamps function."""
+    timestamps = get_timestamps(model_card)
+    # read timestamps from json to dict
+    timestamps_dict = json.loads(timestamps)
+    assert len(timestamps_dict.values()) == 2
+
+
+def test_get_histories(model_card):
     """Test get_plots function."""
-    plots = get_plots(model_card)
+    plots = get_histories(model_card)
     # read plots from json to dict
     plots_dict = json.loads(plots)
     assert len(plots_dict.values()) == 2
@@ -376,9 +388,13 @@ def test_get_names(model_card):
 
 def test_create_metric_cards(model_card):
     """Test create_metric_cards function."""
+    timestamp = "2021-01-01"
     current_metrics = []
     sweep_metrics(model_card, metrics=current_metrics)
-    metric_cards = create_metric_cards(current_metrics=current_metrics[0])[-1]
+    metric_cards = create_metric_cards(
+        current_metrics=current_metrics[0],
+        timestamp=timestamp,
+    )[-1]
     assert len(metric_cards) == 2
 
 
