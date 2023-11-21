@@ -13,16 +13,16 @@ from ...conftest import NUM_PROCESSES
 from ..testers import DummyListStateMetric, DummyMetric
 
 
-torch = import_optional_module("torch", error="ignore")
+torch = import_optional_module("torch", error="warn")
 
 
 def _test_torch_distributed_class(rank: int, worldsize: int = NUM_PROCESSES):
     """Run test."""
-    torch_dist = import_optional_module("torch.distributed", error="ignore")
+    torch_dist = import_optional_module("torch.distributed", error="warn")
     if torch is None:
         with pytest.raises(
             ImportError,
-            match="For availability of TorchDistributed please install .*",
+            match="For availability of `TorchDistributed` please install .*",
         ):
             backend = TorchDistributed()
 
@@ -32,7 +32,7 @@ def _test_torch_distributed_class(rank: int, worldsize: int = NUM_PROCESSES):
 
     # skip if torch distributed is not available
     if torch_dist is None:
-        pytest.skip("torch.distributed is not available")
+        pytest.skip("`torch.distributed` is not available")
 
     backend = TorchDistributed()
 

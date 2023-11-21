@@ -15,10 +15,10 @@ from ...conftest import NUM_PROCESSES
 from ..testers import DummyListStateMetric, DummyMetric
 
 
-MPI = import_optional_module("mpi4py.MPI", error="ignore")
+MPI = import_optional_module("mpi4py.MPI", error="warn")
 
 
-def _test_mpi4py_class_init(rank: int, worldsize: int = 2):
+def _test_mpi4py_class_init(rank: int, worldsize: int = NUM_PROCESSES):
     """Run test."""
     if MPI is None:
         with pytest.raises(
@@ -38,10 +38,10 @@ def _test_mpi4py_class_init(rank: int, worldsize: int = 2):
 @pytest.mark.integration_test()
 def test_mpi4py_backend_class_init():
     """Test `TorchDistributed` class."""
-    pytest.mpi_pool.starmap(_test_mpi4py_class_init, [(rank, 2) for rank in range(2)])  # type: ignore
+    pytest.mpi_pool.starmap(_test_mpi4py_class_init, [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)])  # type: ignore
 
 
-def _test_all_gather_simple(rank: int, worldsize: int = 2):
+def _test_all_gather_simple(rank: int, worldsize: int = NUM_PROCESSES):
     """Run test."""
     backend = MPI4Py()
 
@@ -53,7 +53,7 @@ def _test_all_gather_simple(rank: int, worldsize: int = 2):
         assert anp.all(val == anp.ones_like(val))
 
 
-def _test_all_gather_uneven_arrays(rank: int, worldsize: int = 2):
+def _test_all_gather_uneven_arrays(rank: int, worldsize: int = NUM_PROCESSES):
     """Run test."""
     backend = MPI4Py()
 
@@ -65,7 +65,7 @@ def _test_all_gather_uneven_arrays(rank: int, worldsize: int = 2):
         assert anp.all(val == anp.ones_like(val))
 
 
-def _test_all_gather_uneven_multidim_arrays(rank: int, worldsize: int = 2):
+def _test_all_gather_uneven_multidim_arrays(rank: int, worldsize: int = NUM_PROCESSES):
     """Run test."""
     backend = MPI4Py()
 
@@ -89,7 +89,7 @@ def _test_all_gather_uneven_multidim_arrays(rank: int, worldsize: int = 2):
 )
 def test_mpi4py_all_gather(case_fn):
     """Test `all_gather` method."""
-    pytest.mpi_pool.starmap(case_fn, [(rank, 2) for rank in range(NUM_PROCESSES)])  # type: ignore
+    pytest.mpi_pool.starmap(case_fn, [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)])  # type: ignore
 
 
 def _test_dist_sum(rank: int, worldsize: int = NUM_PROCESSES) -> None:

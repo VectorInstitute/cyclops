@@ -22,13 +22,13 @@ from alibi_detect.cd import (
 )
 from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
 from datasets import Dataset, DatasetDict, concatenate_datasets
-from monai.transforms import Lambdad
 from scipy.special import expit as sigmoid
 from scipy.special import softmax
 from sklearn.base import BaseEstimator
 from torch import nn
 from torch.utils.data import Dataset as TorchDataset
 
+from cyclops.data.transforms import Lambdad
 from cyclops.data.utils import apply_transforms
 from cyclops.models.catalog import wrap_model
 from cyclops.monitor.utils import DetectronModule, DummyCriterion, get_args

@@ -1,11 +1,10 @@
 """Medical image feature."""
 
-import logging
 import os
 import tempfile
 from dataclasses import dataclass, field
 from io import BytesIO
-from typing import Any, ClassVar, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -15,18 +14,56 @@ from datasets.download.streaming_download_manager import xopen
 from datasets.features import Image, features
 from datasets.utils.file_utils import is_local_path
 from datasets.utils.py_utils import string_to_dict
-from monai.data.image_reader import ImageReader
-from monai.data.image_writer import ITKWriter
-from monai.transforms.compose import Compose
-from monai.transforms.io.array import LoadImage
-from monai.transforms.utility.array import ToNumpy
 
-from cyclops.utils.log import setup_logging
+from cyclops.utils.optional import import_optional_module
 
 
-# Logging.
-LOGGER = logging.getLogger(__name__)
-setup_logging(print_level="INFO", logger=LOGGER)
+if TYPE_CHECKING:
+    from monai.data.image_reader import ImageReader
+    from monai.data.image_writer import ITKWriter
+    from monai.transforms.compose import Compose
+    from monai.transforms.io.array import LoadImage
+    from monai.transforms.utility.array import ToNumpy
+else:
+    ImageReader = import_optional_module(
+        "monai.data.image_reader",
+        attribute="ImageReader",
+        error="warn",
+    )
+    ITKWriter = import_optional_module(
+        "monai.data.image_writer",
+        attribute="ITKWriter",
+        error="warn",
+    )
+    Compose = import_optional_module(
+        "monai.transforms.compose",
+        attribute="Compose",
+        error="warn",
+    )
+    LoadImage = import_optional_module(
+        "monai.transforms.io.array",
+        attribute="LoadImage",
+        error="warn",
+    )
+    ToNumpy = import_optional_module(
+        "monai.transforms.utility.array",
+        attribute="ToNumpy",
+        error="warn",
+    )
+_monai_available = all(
+    module is not None
+    for module in (
+        ImageReader,
+        ITKWriter,
+        Compose,
+        LoadImage,
+        ToNumpy,
+    )
+)
+_monai_unavailable_message = (
+    "The MONAI library is required to use the `MedicalImage` feature. "
+    "Please install it with `pip install monai`."
+)
 
 
 @dataclass
@@ -35,24 +72,35 @@ class MedicalImage(Image):  # type: ignore
 
     Parameters
     ----------
-    decode : bool, optional, default=True
-        Whether to decode the image. If False, the image will be returned as a
-        dictionary in the format `{"path": image_path, "bytes": image_bytes}`.
     reader : Union[str, ImageReader], optional, default="ITKReader"
         The MONAI image reader to use.
     suffix : str, optional, default=".jpg"
         The suffix to use when decoding bytes to image.
+    decode : bool, optional, default=True
+        Whether to decode the image. If False, the image will be returned as a
+        dictionary in the format `{"path": image_path, "bytes": image_bytes}`.
+    id : str, optional, default=None
+        The id of the feature.
 
     """
 
     reader: Union[str, ImageReader] = "ITKReader"
     suffix: str = ".jpg"  # used when decoding/encoding bytes to image
-    _loader = Compose(
-        [
-            LoadImage(reader=reader, simple_keys=True, dtype=None, image_only=True),
-            ToNumpy(),
-        ],
-    )
+
+    _loader = None
+    if _monai_available:
+        _loader = Compose(
+            [
+                LoadImage(
+                    reader=reader,
+                    simple_keys=True,
+                    dtype=None,
+                    image_only=False,
+                ),
+                ToNumpy(),
+            ],
+        )
+
     # Automatically constructed
     dtype: ClassVar[str] = "dict"
     pa_type: ClassVar[Any] = pa.struct({"bytes": pa.binary(), "path": pa.string()})
@@ -76,12 +124,14 @@ class MedicalImage(Image):  # type: ignore
 
         """
         if isinstance(value, list):
-            value = np.array(value)
+            value = np.asarray(value)
 
         if isinstance(value, str):
             return {"path": value, "bytes": None}
+
         if isinstance(value, np.ndarray):
             return _encode_ndarray(value, image_format=self.suffix)
+
         if "array" in value and "metadata" in value:
             output_ext_ = self.suffix
             metadata_ = value["metadata"]
@@ -132,7 +182,7 @@ class MedicalImage(Image):  # type: ignore
         if not self.decode:
             raise RuntimeError(
                 "Decoding is disabled for this feature. "
-                "Please use MedicalImage(decode=True) instead.",
+                "Please use `MedicalImage(decode=True)` instead.",
             )
 
         if token_per_repo_id is None:
@@ -147,6 +197,8 @@ class MedicalImage(Image):  # type: ignore
                 )
 
             if is_local_path(path):
+                if self._loader is None:
+                    raise RuntimeError(_monai_unavailable_message)
                 image, metadata = self._loader(path)
             else:
                 source_url = path.split("::")[-1]
@@ -188,6 +240,9 @@ class MedicalImage(Image):  # type: ignore
             Image as numpy array and metadata as dictionary.
 
         """
+        if self._loader is None:
+            raise RuntimeError(_monai_unavailable_message)
+
         # XXX: Can we avoid writing to disk?
         with tempfile.NamedTemporaryFile(mode="wb", suffix=self.suffix) as fp:
             fp.write(buffer.getvalue())
@@ -219,6 +274,9 @@ def _encode_ndarray(
         Dictionary containing the image bytes and path.
 
     """
+    if not _monai_available:
+        raise RuntimeError(_monai_unavailable_message)
+
     if not image_format.startswith("."):
         image_format = "." + image_format
 
@@ -240,5 +298,5 @@ def _encode_ndarray(
         return {"path": None, "bytes": temp_file_bytes}
 
 
-# add the `MedicalImage` feature to the `features` module
+# add the `MedicalImage` feature to the `features` module namespace
 features.MedicalImage = MedicalImage

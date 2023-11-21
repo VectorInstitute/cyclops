@@ -1,5 +1,5 @@
 """`torch.distributed` backend for synchronizing `torch.Tensor` objects."""
-from typing import TYPE_CHECKING, List, TypeVar
+from typing import TYPE_CHECKING, List
 
 from cyclops.evaluate.metrics.experimental.distributed_backends.base import (
     DistributedBackend,
@@ -11,10 +11,8 @@ if TYPE_CHECKING:
     import torch
     import torch.distributed as torch_dist
 else:
-    torch = import_optional_module("torch", error="ignore")
-    torch_dist = import_optional_module("torch.distributed", error="ignore")
-
-Tensor = TypeVar("Tensor", bound="torch.Tensor")
+    torch = import_optional_module("torch", error="warn")
+    torch_dist = import_optional_module("torch.distributed", error="warn")
 
 
 class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
@@ -25,13 +23,13 @@ class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
         super().__init__()
         if torch is None:
             raise ImportError(
-                f"For availability of {self.__class__.__name__},"
-                " please install pytorch first.",
+                f"For availability of `{self.__class__.__name__}`,"
+                " please install `torch` first.",
             )
         if not torch_dist.is_available():
             raise RuntimeError(
-                f"For availability of {self.__class__.__name__},"
-                " make sure torch.distributed is available.",
+                f"For availability of `{self.__class__.__name__}`,"
+                " make sure `torch.distributed` is available.",
             )
 
     @property

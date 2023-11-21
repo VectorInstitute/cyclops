@@ -1,7 +1,5 @@
 """Test import of subpackages with base cyclops + models extra install."""
 
-import pytest
-
 
 def test_import_cyclops():
     """Test import of cyclops."""
@@ -24,6 +22,3 @@ def test_import_cyclops():
     from cyclops import monitor
 
     assert monitor.__name__ == "cyclops.monitor"
-
-    with pytest.raises(ImportError):
-        import cyclops.report

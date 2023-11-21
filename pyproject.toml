@@ -18,8 +18,16 @@ numpy = "^1.24.4"
 datasets = "^2.10.1"
 psutil = "^5.9.4"
 pyarrow = "^11.0.0"
-monai = { version = "^1.1.0", extras = ["itk"] }
+pydantic = "^1.10.11"
+Jinja2 = "^3.1.2"
+spdx-tools = "^0.8.1"
+pybtex = "^0.24.0"
+kaleido = "0.2.1"
+scour = "^0.38.2"
+plotly = "^5.7.0"
+pillow = "^9.5.0"
 
+monai = { version = "^1.1.0", extras = ["itk"], optional = true }
 hydra-core = { version = "^1.2.0", optional = true }
 scikit-learn = { version = "^1.2.2", optional = true }
 torch = { version = "^1.11.0", optional = true }
@@ -28,13 +36,6 @@ xgboost = { version = "^1.5.2", optional = true }
 alibi = { version = "^0.9.4", optional = true, extras = ["shap"] }
 alibi-detect = { version = "^0.11.0", optional = true, extras = ["torch"] }
 llvmlite = { version = "^0.40.0", optional = true }
-pydantic = { version = "^1.10.11", optional = true }
-spdx-tools = { version = "^0.8.1", optional = true }
-pybtex = { version = "^0.24.0", optional = true }
-kaleido = { version = "0.2.1", optional = true }
-scour = { version = "^0.38.2", optional = true }
-plotly = { version = "^5.7.0", optional = true }
-pillow = { version = "^9.5.0", optional = true }
 array-api-compat = {version = "^1.4", optional = true}
 
 [tool.poetry.group.models.dependencies]
@@ -47,15 +48,7 @@ alibi = { version = "^0.9.4", extras = ["shap"] }
 alibi-detect = { version = "^0.11.0", extras = ["torch"] }
 llvmlite = "^0.40.0"
 array-api-compat = {version = "^1.4"}
-
-[tool.poetry.group.report.dependencies]
-pydantic = "^1.10.11"
-spdx-tools = "^0.8.1"
-pybtex = "^0.24.0"
-kaleido = "0.2.1"
-scour = "^0.38.2"
-plotly = "^5.7.0"
-pillow = "^9.5.0"
+monai = { version = "^1.1.0", extras = ["itk"] }
 
 [tool.poetry.group.test]
 optional = true
@@ -107,8 +100,18 @@ mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 lightning = "^2.1.0"
 
 [tool.poetry.extras]
-models = ["array-api-compat", "hydra-core", "scikit-learn", "torch", "torchxrayvision", "xgboost", "alibi", "alibi-detect", "llvmlite"]
-report = ["pydantic", "spdx-tools", "pybtex", "kaleido", "scour", "plotly", "pillow"]
+models = [
+    "array-api-compat",
+    "hydra-core",
+    "scikit-learn",
+    "monai",
+    "torch",
+    "torchxrayvision",
+    "xgboost",
+    "alibi",
+    "alibi-detect",
+    "llvmlite",
+]
 
 [tool.mypy]
 ignore_missing_imports = true

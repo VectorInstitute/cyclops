@@ -15,7 +15,7 @@ from cyclops.utils.optional import import_optional_module
 if TYPE_CHECKING:
     from mpi4py import MPI
 else:
-    MPI = import_optional_module("mpi4py.MPI", error="ignore")
+    MPI = import_optional_module("mpi4py.MPI", error="warn")
 # mypy: disable-error-code="no-any-return"
 
 
