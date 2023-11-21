@@ -211,11 +211,12 @@
     <span class="n">_raise_if_not_dict_with_str_keys</span><span class="p">,</span>
     <span class="n">create_metric_cards</span><span class="p">,</span>
     <span class="n">empty</span><span class="p">,</span>
+    <span class="n">get_histories</span><span class="p">,</span>
     <span class="n">get_names</span><span class="p">,</span>
     <span class="n">get_passed</span><span class="p">,</span>
-    <span class="n">get_plots</span><span class="p">,</span>
     <span class="n">get_slices</span><span class="p">,</span>
     <span class="n">get_thresholds</span><span class="p">,</span>
+    <span class="n">get_timestamps</span><span class="p">,</span>
     <span class="n">get_trends</span><span class="p">,</span>
     <span class="n">regex_replace</span><span class="p">,</span>
     <span class="n">regex_search</span><span class="p">,</span>
@@ -1316,8 +1317,10 @@
         <span class="c1"># write to file</span>
         <span class="k">if</span> <span class="n">synthetic_timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">today</span> <span class="o">=</span> <span class="n">synthetic_timestamp</span>
+            <span class="n">today_now</span> <span class="o">=</span> <span class="n">synthetic_timestamp</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">today</span> <span class="o">=</span> <span class="n">dt_date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">today_now</span> <span class="o">=</span> <span class="n">dt_datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
 
         <span class="n">current_report_metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PerformanceMetric</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">sweep_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="p">,</span> <span class="n">current_report_metrics</span><span class="p">)</span>
@@ -1348,6 +1351,7 @@
             <span class="c1"># compare tests</span>
             <span class="n">metrics</span><span class="p">,</span> <span class="n">tooltips</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">metric_cards</span> <span class="o">=</span> <span class="n">create_metric_cards</span><span class="p">(</span>
                 <span class="n">current_report_metrics_set</span><span class="p">,</span>
+                <span class="n">today_now</span><span class="p">,</span>
                 <span class="n">latest_report_metric_cards_set</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log_metric_card_collection</span><span class="p">(</span>
@@ -1365,11 +1369,12 @@
             <span class="s2">&quot;sweep_tests&quot;</span><span class="p">:</span> <span class="n">sweep_tests</span><span class="p">,</span>
             <span class="s2">&quot;sweep_graphics&quot;</span><span class="p">:</span> <span class="n">sweep_graphics</span><span class="p">,</span>
             <span class="s2">&quot;get_slices&quot;</span><span class="p">:</span> <span class="n">get_slices</span><span class="p">,</span>
-            <span class="s2">&quot;get_plots&quot;</span><span class="p">:</span> <span class="n">get_plots</span><span class="p">,</span>
             <span class="s2">&quot;get_thresholds&quot;</span><span class="p">:</span> <span class="n">get_thresholds</span><span class="p">,</span>
             <span class="s2">&quot;get_trends&quot;</span><span class="p">:</span> <span class="n">get_trends</span><span class="p">,</span>
             <span class="s2">&quot;get_passed&quot;</span><span class="p">:</span> <span class="n">get_passed</span><span class="p">,</span>
             <span class="s2">&quot;get_names&quot;</span><span class="p">:</span> <span class="n">get_names</span><span class="p">,</span>
+            <span class="s2">&quot;get_histories&quot;</span><span class="p">:</span> <span class="n">get_histories</span><span class="p">,</span>
+            <span class="s2">&quot;get_timestamps&quot;</span><span class="p">:</span> <span class="n">get_timestamps</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="n">template</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">func_dict</span><span class="p">)</span>
 

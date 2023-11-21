@@ -570,7 +570,7 @@
    "source": [
     "## Task Creation\n",
     "\n",
-    "We use Cyclops tasks to define our model's task (in this case, MortalityPrediction), train the model, make predictions, and evaluate performance. Cyclops task classes encapsulate the entire ML pipeline into a single, cohesive structure, making the process smooth and easy to manage."
+    "We use Cyclops tasks to define our model's task (in this case, heart failure prediction), train the model, make predictions, and evaluate performance. Cyclops task classes encapsulate the entire ML pipeline into a single, cohesive structure, making the process smooth and easy to manage."
    ]
   },
   {
@@ -581,7 +581,7 @@
    },
    "outputs": [],
    "source": [
-    "mortality_task = BinaryTabularClassificationTask(\n",
+    "heart_failure_prediction_task = BinaryTabularClassificationTask(\n",
     "    {model_name: model},\n",
     "    task_features=features_list,\n",
     "    task_target=\"outcome\",\n",
@@ -596,7 +596,7 @@
    },
    "outputs": [],
    "source": [
-    "mortality_task.list_models()"
+    "heart_failure_prediction_task.list_models()"
    ]
   },
   {
@@ -626,7 +626,7 @@
     "    \"method\": \"grid\",\n",
     "}\n",
     "\n",
-    "mortality_task.train(\n",
+    "heart_failure_prediction_task.train(\n",
     "    dataset[\"train\"],\n",
     "    model_name=model_name,\n",
     "    transforms=preprocessor,\n",
@@ -640,7 +640,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "model_params = mortality_task.list_models_params()[model_name]\n",
+    "model_params = heart_failure_prediction_task.list_models_params()[model_name]\n",
     "print(model_params)"
    ]
   },
@@ -679,7 +679,7 @@
    },
    "outputs": [],
    "source": [
-    "y_pred = mortality_task.predict(\n",
+    "y_pred = heart_failure_prediction_task.predict(\n",
     "    dataset[\"test\"],\n",
     "    model_name=model_name,\n",
     "    transforms=preprocessor,\n",
@@ -836,9 +836,9 @@
    },
    "outputs": [],
    "source": [
-    "results, dataset_with_preds = mortality_task.evaluate(\n",
-    "    dataset[\"test\"],\n",
-    "    metric_collection,\n",
+    "results, dataset_with_preds = heart_failure_prediction_task.evaluate(\n",
+    "    dataset=dataset[\"test\"],\n",
+    "    metrics=metric_collection,\n",
     "    model_names=model_name,\n",
     "    transforms=preprocessor,\n",
     "    prediction_column_prefix=\"preds\",\n",
@@ -846,6 +846,25 @@
     "    batch_size=32,\n",
     "    fairness_config=fairness_config,\n",
     "    override_fairness_metrics=False,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "results_female, _ = heart_failure_prediction_task.evaluate(\n",
+    "    dataset=dataset[\"test\"],\n",
+    "    metrics=MetricCollection(\n",
+    "        {\"BinaryAccuracy\": create_metric(metric_name=\"accuracy\", task=\"binary\")},\n",
+    "    ),\n",
+    "    model_names=model_name,\n",
+    "    transforms=preprocessor,\n",
+    "    prediction_column_prefix=\"preds\",\n",
+    "    slice_spec=SliceSpec([{\"Sex\": {\"value\": \"F\"}}], include_overall=False),\n",
+    "    batch_size=32,\n",
     ")"
    ]
   },
@@ -871,6 +890,30 @@
     "    remove_metrics=[\"BinaryROCCurve\", \"BinaryPrecisionRecallCurve\"],\n",
     "    model_name=model_name,\n",
     ")\n",
+    "\n",
+    "results_female_flat = flatten_results_dict(\n",
+    "    results=results_female,\n",
+    "    model_name=model_name,\n",
+    ")\n",
+    "\n",
+    "for name, metric in results_female_flat.items():\n",
+    "    split, name = name.split(\"/\")  # noqa: PLW2901\n",
+    "    descriptions = {\n",
+    "        \"BinaryPrecision\": \"The proportion of predicted positive instances that are correctly predicted.\",\n",
+    "        \"BinaryRecall\": \"The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.\",\n",
+    "        \"BinaryAccuracy\": \"The proportion of all instances that are correctly predicted.\",\n",
+    "        \"BinaryAUROC\": \"The area under the receiver operating characteristic curve (AUROC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryF1Score\": \"The harmonic mean of precision and recall.\",\n",
+    "    }\n",
+    "    report.log_quantitative_analysis(\n",
+    "        \"performance\",\n",
+    "        name=name,\n",
+    "        value=metric,\n",
+    "        description=descriptions[name],\n",
+    "        metric_slice=split,\n",
+    "        pass_fail_thresholds=0.7,\n",
+    "        pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),\n",
+    "    )\n",
     "\n",
     "for name, metric in results_flat.items():\n",
     "    split, name = name.split(\"/\")  # noqa: PLW2901\n",
@@ -1174,9 +1217,20 @@
    },
    "outputs": [],
    "source": [
-    "report_path = report.export(output_filename=\"heart_failure_report_periodic.html\")\n",
+    "synthetic_timestamps = [\n",
+    "    \"2021-09-01\",\n",
+    "    \"2021-10-01\",\n",
+    "    \"2021-11-01\",\n",
+    "    \"2021-12-01\",\n",
+    "    \"2022-01-01\",\n",
+    "]\n",
+    "report._model_card.overview = None\n",
+    "report_path = report.export(\n",
+    "    output_filename=\"heart_failure_report_periodic.html\",\n",
+    "    synthetic_timestamp=synthetic_timestamps[0],\n",
+    ")\n",
     "shutil.copy(f\"{report_path}\", \".\")\n",
-    "for _ in range(5):\n",
+    "for i in range(4):\n",
     "    report._model_card.overview = None\n",
     "    report._model_card.quantitative_analysis = None\n",
     "    results_flat = flatten_results_dict(\n",
@@ -1184,6 +1238,25 @@
     "        remove_metrics=[\"BinaryROCCurve\", \"BinaryPrecisionRecallCurve\"],\n",
     "        model_name=model_name,\n",
     "    )\n",
+    "\n",
+    "    for name, metric in results_female_flat.items():\n",
+    "        split, name = name.split(\"/\")  # noqa: PLW2901\n",
+    "        descriptions = {\n",
+    "            \"BinaryPrecision\": \"The proportion of predicted positive instances that are correctly predicted.\",\n",
+    "            \"BinaryRecall\": \"The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.\",\n",
+    "            \"BinaryAccuracy\": \"The proportion of all instances that are correctly predicted.\",\n",
+    "            \"BinaryAUROC\": \"The area under the receiver operating characteristic curve (AUROC) is a measure of the performance of a binary classification model.\",\n",
+    "            \"BinaryF1Score\": \"The harmonic mean of precision and recall.\",\n",
+    "        }\n",
+    "        report.log_quantitative_analysis(\n",
+    "            \"performance\",\n",
+    "            name=name,\n",
+    "            value=np.clip(metric + np.random.normal(0, 0.1), 0, 1),\n",
+    "            description=descriptions[name],\n",
+    "            metric_slice=split,\n",
+    "            pass_fail_thresholds=0.7,\n",
+    "            pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),\n",
+    "        )\n",
     "\n",
     "    for name, metric in results_flat.items():\n",
     "        split, name = name.split(\"/\")  # noqa: PLW2901\n",
@@ -1203,8 +1276,12 @@
     "            pass_fail_thresholds=0.7,\n",
     "            pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),\n",
     "        )\n",
-    "    report_path = report.export(output_filename=\"heart_failure_report_periodic.html\")\n",
-    "    shutil.copy(f\"{report_path}\", \".\")"
+    "    report_path = report.export(\n",
+    "        output_filename=\"heart_failure_report_periodic.html\",\n",
+    "        synthetic_timestamp=synthetic_timestamps[i + 1],\n",
+    "    )\n",
+    "    shutil.copy(f\"{report_path}\", \".\")\n",
+    "shutil.rmtree(\"./cyclops_reports\")"
    ]
   },
   {
