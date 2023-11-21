@@ -21,6 +21,8 @@ from cyclops.evaluate.metrics.metric import Metric
 class _AbstractScores(Metric):
     """Abstract base class for classes that compute stat scores."""
 
+    name: str = "Statistical Scores"
+
     def _create_state(self, size: int = 1) -> None:
         """Create the state variables.
 

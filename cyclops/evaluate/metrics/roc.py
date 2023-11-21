@@ -54,6 +54,8 @@ class BinaryROCCurve(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"
 
     """
 
+    name: str = "ROC Curve"
+
     def compute(
         self,
     ) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
@@ -130,6 +132,8 @@ class MulticlassROCCurve(
 
     """
 
+    name: str = "ROC Curve"
+
     def compute(
         self,
     ) -> Union[
@@ -203,6 +207,8 @@ class MultilabelROCCurve(
     array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
     """
+
+    name: str = "ROC Curve"
 
     def compute(
         self,
@@ -336,6 +342,8 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
     """
+
+    name: str = "ROC Curve"
 
     def __new__(  # type: ignore # mypy expects a subclass of ROCCurve
         cls,

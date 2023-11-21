@@ -49,6 +49,8 @@ class BinaryFbetaScore(BinaryStatScores, registry_key="binary_fbeta_score"):
 
     """
 
+    name: str = "F-beta Score"
+
     def __init__(
         self,
         beta: float,
@@ -133,6 +135,8 @@ class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_
 
     """
 
+    name: str = "F-beta Score"
+
     def __init__(
         self,
         beta: float,
@@ -212,6 +216,8 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
     array([1.        , 0.90909091])
 
     """
+
+    name: str = "F-beta Score"
 
     def __init__(
         self,
@@ -338,6 +344,8 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
 
     """
 
+    name: str = "F-beta Score"
+
     def __new__(  # type: ignore # mypy expects a subclass of FbetaScore
         cls: Type[Metric],
         beta: float,
@@ -418,6 +426,8 @@ class BinaryF1Score(BinaryFbetaScore, registry_key="binary_f1_score"):
 
     """
 
+    name: str = "F1 Score"
+
     def __init__(
         self,
         pos_label: int = 1,
@@ -478,6 +488,8 @@ class MulticlassF1Score(MulticlassFbetaScore, registry_key="multiclass_f1_score"
     array([0.        , 0.85714286, 0.        ])
 
     """
+
+    name: str = "F1 Score"
 
     def __init__(
         self,
@@ -544,6 +556,8 @@ class MultilabelF1Score(MultilabelFbetaScore, registry_key="multilabel_f1_score"
     array([0. , 0.8, 0. ])
 
     """
+
+    name: str = "F1 Score"
 
     def __init__(
         self,
@@ -652,6 +666,8 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     array([0. , 0.8, 0. ])
 
     """
+
+    name: str = "F1 Score"
 
     def __new__(  # type: ignore # mypy expects a subclass of F1Score
         cls: Type[Metric],

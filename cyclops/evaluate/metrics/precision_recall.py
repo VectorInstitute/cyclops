@@ -48,6 +48,8 @@ class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
 
     """
 
+    name: str = "Precision Score"
+
     def __init__(
         self,
         pos_label: int = 1,
@@ -125,6 +127,8 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
 
     """
 
+    name: str = "Precision Score"
+
     def __init__(
         self,
         num_classes: int,
@@ -200,6 +204,8 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
     array([1., 1.])
 
     """
+
+    name: str = "Precision Score"
 
     def __init__(
         self,
@@ -336,6 +342,8 @@ class Precision(Metric, registry_key="precision", force_register=True):
 
     """
 
+    name: str = "Precision Score"
+
     def __new__(  # type: ignore # mypy expects a subclass of Precision
         cls: Type[Metric],
         task: Literal["binary", "multiclass", "multilabel"],
@@ -411,6 +419,8 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
     0.5
 
     """
+
+    name: str = "Recall Score"
 
     def __init__(
         self,
@@ -490,6 +500,8 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
 
     """
 
+    name: str = "Recall Score"
+
     def __init__(
         self,
         num_classes: int,
@@ -558,6 +570,8 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
     array([0., 1., 1., 0.])
 
     """
+
+    name: str = "Recall Score"
 
     def __init__(
         self,
@@ -689,6 +703,8 @@ class Recall(Metric, registry_key="recall", force_register=True):
     array([0.33333333, 1.        ])
 
     """
+
+    name: str = "Recall Score"
 
     def __new__(  # type: ignore # mypy expects a subclass of Recall
         cls: Type[Metric],

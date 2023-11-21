@@ -10,6 +10,8 @@ from cyclops.evaluate.metrics.experimental.utils.typing import Array
 class DummyMetric(Metric):
     """DummyMetric class for testing operator metrics."""
 
+    name: str = "DummyMetric"
+
     def __init__(self, val_to_return: Array) -> None:
         super().__init__()
         self.add_state_default_factory(

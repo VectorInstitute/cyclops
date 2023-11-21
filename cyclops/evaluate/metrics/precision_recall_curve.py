@@ -55,6 +55,8 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
     """
 
+    name: str = "Precision-Recall Curve"
+
     def __init__(
         self,
         thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
@@ -207,6 +209,8 @@ class MulticlassPrecisionRecallCurve(
         array([0. , 0.5, 1. ]))
 
     """
+
+    name: str = "Precision-Recall Curve"
 
     def __init__(
         self,
@@ -361,6 +365,8 @@ class MultilabelPrecisionRecallCurve(
     array([0. , 0.5, 1. ]))
 
     """
+
+    name: str = "Precision-Recall Curve"
 
     def __init__(
         self,
@@ -578,6 +584,8 @@ class PrecisionRecallCurve(
     array([0. , 0.5, 1. ]))
 
     """
+
+    name: str = "Precision-Recall Curve"
 
     def __new__(  # type: ignore # mypy expects a subclass of PrecisionRecallCurve
         cls: Type[Metric],

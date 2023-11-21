@@ -106,6 +106,16 @@ class Metric(ABC):
         """Return the state variables of the metric as a dictionary."""
         return {attr: getattr(self, attr) for attr in self._defaults}
 
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Return the name of the metric.
+
+        This name can be different from the class name and does not need to be
+        unique.
+
+        """
+
     @abstractmethod
     def _update_state(self, *args: Any, **kwargs: Any) -> None:
         """Update the state of the metric."""
@@ -595,6 +605,8 @@ class OperatorMetric(Metric):
         should be None.
 
     """
+
+    name: str = "OperatorMetric"
 
     def __init__(
         self,

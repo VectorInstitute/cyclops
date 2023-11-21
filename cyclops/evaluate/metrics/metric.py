@@ -82,6 +82,16 @@ class Metric(ABC):
                     )
                 _METRIC_REGISTRY[registry_key] = cls
 
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Return the name of the metric.
+
+        This name can be different from the class name and does not need to be
+        unique.
+
+        """
+
     def add_state(self, name: str, default: Union[List[Any], npt.NDArray[Any]]) -> None:
         """Add a state variable to the metric.
 
@@ -471,6 +481,8 @@ class OperatorMetric(Metric):
         should be None.
 
     """
+
+    name: str = "OperatorMetric"
 
     def __init__(
         self,
