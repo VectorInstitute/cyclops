@@ -20,12 +20,11 @@ class Dictd:
 
     def __call__(self, data: Any) -> Any:
         """Apply the transform to the data."""
-        d = dict(data)
         for key in self.keys:
-            if self.allow_missing_keys and key not in d:
+            if self.allow_missing_keys and key not in data:
                 continue
-            d[key] = self.transform(d[key])
-        return d
+            data[key] = self.transform(data[key])
+        return data
 
     def __repr__(self) -> str:
         """Return a string representation of the transform."""
