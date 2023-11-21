@@ -45,7 +45,7 @@ class Lambdad:
         allow_missing_keys: bool = False,
     ):
         self.transform = Dictd(
-            transform=Lambda(func=func),
+            transform=Lambda(func),
             keys=keys,
             allow_missing_keys=allow_missing_keys,
         )
@@ -70,7 +70,7 @@ class Resized:
         allow_missing_keys: bool = False,
     ):
         self.transform = Dictd(
-            transform=Resize(spatial_size=spatial_size),
+            transform=Resize(size=spatial_size),
             keys=keys,
             allow_missing_keys=allow_missing_keys,
         )
