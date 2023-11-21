@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import numpy.typing as npt
 import plotly.express as px
-from monai.transforms import Compose, Lambdad, Resized  # type: ignore[attr-defined]
+from torchvision.transforms import Compose
 from torchxrayvision.models import DenseNet
 
 from cyclops.data.loader import load_nihcxr
@@ -16,6 +16,7 @@ from cyclops.data.slicer import (
     SliceSpec,
     filter_value,  # noqa: E402
 )
+from cyclops.data.transforms import Lambdad, Resized
 from cyclops.data.utils import apply_transforms
 from cyclops.evaluate import evaluator
 from cyclops.evaluate.metrics.factory import create_metric
@@ -55,7 +56,7 @@ transforms = Compose(
             allow_missing_keys=True,
         ),
         Lambdad(
-            ("image",),
+            keys=("image",),
             func=lambda x: np.mean(x, axis=0)[np.newaxis, :] if x.shape[0] != 1 else x,
         ),
     ],

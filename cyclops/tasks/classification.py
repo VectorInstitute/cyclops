@@ -7,9 +7,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 from datasets import Dataset, DatasetDict, config
-from monai.transforms import Compose  # type: ignore
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
+from torchvision.transforms import Compose
 
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
@@ -419,7 +419,7 @@ class MultilabelImageClassificationTask(BaseTask):
             splits_mapping = {"test": "test"}
         model_name, model = self.get_model(model_name)
         if transforms:
-            transforms = partial(apply_image_transforms, transforms=transforms)  # type: ignore
+            transforms = partial(apply_image_transforms, transforms=transforms)
         if isinstance(dataset, (Dataset, DatasetDict)):
             return model.predict(
                 dataset,
