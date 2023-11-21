@@ -55,7 +55,7 @@ class Lambdad:
         """Apply the transform to the data."""
         return self.transform(data)
 
-    def get_function(self) -> str:
+    def __repr__(self) -> str:
         """Return a string representation of the transform."""
         return f"{self.__class__.__name__}(keys={self.transform.keys}, allow_missing_keys={self.transform.allow_missing_keys})"
 
