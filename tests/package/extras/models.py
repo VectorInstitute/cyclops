@@ -1,6 +1,5 @@
 """Test import of subpackages with base cyclops + models extra install."""
 
-import pytest
 
 
 def test_import_cyclops():
