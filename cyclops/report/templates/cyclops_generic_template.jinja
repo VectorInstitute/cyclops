@@ -184,7 +184,7 @@
 {% endmacro %}
 
 {% macro render_perf_over_time(name, comp)%}
-<div class="card" id={{name}} style="display: block;">
+<div class="card" id={{name}} style="display: block; flex-basis: 100%">
   <h3 style="color: black; font-weight:normal;">How is your model doing over time?</h3><br>
   <h3 style="color: gray;  font-weight:normal;">See how your model is performing over several metrics and subgroups over time.</h3>
   {# <div class="subcard" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 10px; margin-bottom: 20px;"> #}
@@ -408,6 +408,7 @@
       .card {
         display: flex;
         flex-wrap: wrap;
+        flex-basis: 100%;
         justify-content: left;
         padding: 1em;
         border: 1px solid #DADCE0;
@@ -773,6 +774,23 @@
       }
 
 
+      .radio-buttons #button {
+        padding-right: 5px;
+        margin-left: 5px;
+        margin-right: 0px;
+        font-size:18px;
+        font-weight: bold;
+        cursor: pointer;
+        color: black;
+        background-color: #ffffff;
+        border: 2px solid #DADCE0;
+      }
+
+      .radio-buttons #button:hover {
+        color: #0073e4;
+      }
+
+
     </style>
     <script>{{ plotlyjs|safe }}</script>
   </head>
@@ -897,7 +915,7 @@
   const plot = document.getElementById('plot');
   const inputs_all = document.querySelectorAll('#slice-selection input[type="radio"]');
   const plot_selection = document.querySelectorAll('#plot-selection input[type="radio"]');
-  var selections = [null, null, null, null, null, null, null, null, null, null];
+  var selections = [null, null, null, null, null, null, null, null, null, null, null];
   var plot_colors = [
     "rgb(0, 115, 228)",
     "rgb(31, 119, 180)",
@@ -909,33 +927,97 @@
     "rgb(227, 119, 194)",
     "rgb(127, 127, 127)",
     "rgb(188, 189, 34)",
+    "rgb(23, 190, 207)"
   ];
+
+  function deletePlotSelection(plot_number) {
+    var plot_selection = document.querySelectorAll('#plot-selection input[type="radio"]');
+    var label_selection = document.querySelectorAll('#plot-selection label');
+    var label_slice_selection = document.querySelectorAll('#slice-selection label');
+    var button_plot_selection = document.querySelectorAll('#plot-selection button');
+
+    // set last plot to checked
+    // get plot_selection with name "Plot N" where N is plot_number
+    for (let i = 0; i < plot_selection.length; i++) {
+      var plot_name = "Plot " + (plot_number+1)
+      if (plot_selection[i].value === plot_name) {
+        plot_number = i;
+      }
+    }
+    plot_selection[plot_number].checked = false;
+    plot_selection[plot_number-1].checked = true;
+
+    // delete plot_selected and label
+    plot_selection[plot_number].remove();
+    label_selection[plot_number].remove();
+
+    selections[plot_number] = null;
+
+    // set selection to last plot
+    selection = selections[plot_number-1];
+    plot_color = plot_colors[plot_number-1];
+
+    // set current plot selection color to plot_color
+    const [r, g, b] = plot_color.match(/\d+/g);
+    const rgbaColor = `rgba(${r}, ${g}, ${b}, 0.2)`;
+    plot_selection[plot_number-1].style.backgroundColor = rgbaColor;
+    plot_selection[plot_number-1].style.border = "2px solid " + plot_color;
+    plot_selection[plot_number-1].style.color = plot_color;
+
+    // make visibility of delete button from last plot visible
+    if (button_plot_selection.length >= 2) {
+      button_plot_selection[button_plot_selection.length-2].style.visibility = "visible";
+    }
+
+    for (let i = 0; i < selection.length; i++) {
+      // use selection to set label_slice_selection background color
+      for (let j = 0; j < inputs_all.length; j++) {
+        if (inputs_all[j].name === selection[i].split(":")[0]) {
+          if (inputs_all[j].value == selection[i].split(":")[1]) {
+            inputs_all[j].checked = true;
+            label_slice_selection[j].style.backgroundColor = rgbaColor;
+            label_slice_selection[j].style.border = "2px solid " + plot_color;
+            label_slice_selection[j].style.color = plot_color;
+          }
+        }
+      }
+    }
+    updatePlot();
+  }
 
   function updatePlotSelection() {
     const inputs = document.querySelectorAll('#slice-selection input[type="radio"]:checked');
     var plot_selection = document.querySelectorAll('#plot-selection input[type="radio"]');
     var plot_selected = document.querySelectorAll('#plot-selection input[type="radio"]:checked')[0];
     // get number from value in plot_selected "Plot 1" -> 1
+    var plot_number = parseInt(plot_selected.value.split(" ")[1]);
     var label_selection = document.querySelectorAll('#plot-selection label');
     var label_slice_selection = document.querySelectorAll('#slice-selection label');
+    var button_plot_selection = document.querySelectorAll('#plot-selection button');
 
     // if plot_selected is "+" then add new radio button to plot_selection called "Plot N" where last plot is N-1 but keep "+" at end and set new radio button to checked for second last element
     if (plot_selected.value === "+") {
       // if 10 plots already exist, don't add new plot and gray out "+"
-      if (plot_selection.length === 13) {
+      if (plot_selection.length === 11) {
         plot_selected.checked = false;
-        label_selection[-1].style.color = "gray";
+        label_selection[label_selection.length-1].style.color = "gray";
         return;
+      }
+      // plot_name should be name of last plot + 1
+      if (plot_selection.length === 2) {
+        var plot_name = "Plot 2"
+      } else {
+        var plot_name = "Plot " + (parseInt(plot_selection[plot_selection.length - 2].value.split(" ")[1]) + 1);
       }
       var new_plot = document.createElement("input");
       new_plot.type = "radio";
-      new_plot.id = "Plot " + (plot_selection.length);
+      new_plot.id = plot_name;
       new_plot.name = "plot";
-      new_plot.value = "Plot " + (plot_selection.length);
+      new_plot.value = plot_name;
       new_plot.checked = true;
       var new_label = document.createElement("label");
-      new_label.htmlFor = "Plot " + (plot_selection.length);
-      new_label.innerHTML = "Plot " + (plot_selection.length);
+      new_label.htmlFor = plot_name;
+      new_label.innerHTML = plot_name;
 
       // Parse plot_color to get r, g, b values
       var plot_color = plot_colors[plot_selection.length]
@@ -946,9 +1028,28 @@
       new_label.style.border = "2px solid " + plot_color;
       new_label.style.color = plot_color;
 
+      // add button to delete plot
+      var delete_button = document.createElement("button");
+      delete_button.id = "button";
+      delete_button.innerHTML = "&times";
+      delete_button.style.backgroundColor = "transparent";
+      delete_button.style.border = "none";
+      new_label.style.padding = "1.5px 0px";
+      new_label.style.paddingLeft = "10px";
+
+      new_label.appendChild(delete_button)
+
+      // make delete button from last plot invisible if not Plot 1
+      if (plot_selection.length > 2) {
+        button_plot_selection[button_plot_selection.length-1].style.visibility = "hidden";
+      }
+      // add on_click event to delete button and send plot number to deletePlotSelection
+      delete_button.onclick = function() {deletePlotSelection(plot_number)};
+
       // insert new radio button and label before "+" radio button and after last radio button
       plot_selected.insertAdjacentElement("beforebegin", new_plot);
       plot_selected.insertAdjacentElement("beforebegin", new_label);
+
       // Add event listener to new radio button
       new_plot.addEventListener('change', updatePlotSelection);
 
@@ -1120,13 +1221,14 @@
 
       // create title for plot: Current {metric name} is trending {trend_keyword} and is {passed_keyword} the threshold.
       // get number of nulls in selections, if 9 then plot title, else don't plot title
+      console.log(selections)
       var nulls = 0;
       for (let i = 0; i < selections.length; i++) {
         if (selections[i] === null) {
           nulls += 1;
         }
       }
-      if (nulls === 9) {
+      if (nulls === 10) {
         var plot_title = "Current " + name + " is trending " + trend_keyword + " and is " + passed_keyword + " the threshold.";
         var showlegend = false;
       }
@@ -1170,7 +1272,7 @@
       traces.push(trace);
     }
 
-    if (nulls === 9) {
+    if (nulls === 10) {
       var threshold_trace = {
         x: timestamp_data,
         y: Array.from({length: history_data.length}, (_, i) => threshold),
@@ -1238,10 +1340,6 @@
     var plot_number = parseInt(plot_selected.value.split(" ")[1]-1);
     var selection = [];
     for (let i = 0; i < inputs_value.length; i++) {
-      // check if *_overall in string, if so don't push
-    //  if (inputs_value[i].includes("overall_")) {
-     //   continue;
-      //  }
       selection.push(inputs_name[i] + ":" + inputs_value[i]);
     }
     selection.sort();
@@ -1425,7 +1523,7 @@
           nulls += 1;
         }
       }
-      if (nulls === 9) {
+      if (nulls === 10) {
         var plot_title = "Current " + name + " is trending " + trend_keyword + " and is " + passed_keyword + " the threshold.";
         var showlegend = false;
       }
@@ -1469,7 +1567,7 @@
       traces.push(trace);
     }
 
-    if (nulls === 9) {
+    if (nulls === 10) {
       var threshold_trace = {
         x: timestamp_data,
         y: Array.from({length: history_data.length}, (_, i) => threshold),
