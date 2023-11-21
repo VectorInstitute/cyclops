@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.precision\_recall\_curve.MultilabelPrecisionRecallCurve
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultilabelPrecisionRecallCurve.name
+   
    

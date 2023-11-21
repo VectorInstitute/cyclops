@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.accuracy.Accuracy
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Accuracy.name
+   
    

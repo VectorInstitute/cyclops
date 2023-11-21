@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.f\_beta.F1Score
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~F1Score.name
+   
    

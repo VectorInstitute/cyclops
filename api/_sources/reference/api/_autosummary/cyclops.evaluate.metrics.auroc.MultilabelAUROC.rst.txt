@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.auroc.MultilabelAUROC
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultilabelAUROC.name
+   
    

@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.sensitivity.BinarySensitivity
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BinarySensitivity.name
+   
    

@@ -167,6 +167,7 @@
 <span></span><span class="sd">&quot;&quot;&quot;Evaluate one or more models on a dataset.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">get_args</span>
 
@@ -208,6 +209,7 @@
     <span class="n">slice_spec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SliceSpec</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">split</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Split</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">DEFAULT_MAX_BATCH_SIZE</span><span class="p">,</span>
+    <span class="n">raise_on_empty_slice</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">fairness_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FairnessConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">override_fairness_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">load_dataset_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -262,6 +264,9 @@
 <span class="sd">        The batch size to use when computing metrics. If None or a negative</span>
 <span class="sd">        integer, the entire dataset will be loaded into memory and metrics</span>
 <span class="sd">        will be computed in one batch.</span>
+<span class="sd">    raise_on_empty_slice : bool, default=False</span>
+<span class="sd">        Whether to raise an error if a slice is empty. If False, a warning will</span>
+<span class="sd">        be logged and the metric values will be set to `NaN`.</span>
 <span class="sd">    fairness_config : Optional[FairnessConfig], optional</span>
 <span class="sd">        The configuration for computing fairness metrics. If None, no fairness</span>
 <span class="sd">        metrics will be computed. Before computing fairness metrics, the following</span>
@@ -346,6 +351,7 @@
         <span class="n">prediction_column_prefix</span><span class="o">=</span><span class="n">prediction_column_prefix</span><span class="p">,</span>
         <span class="n">remove_columns</span><span class="o">=</span><span class="n">remove_columns</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">raise_on_empty_slice</span><span class="o">=</span><span class="n">raise_on_empty_slice</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="n">metric_results</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">models</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -486,6 +492,7 @@
     <span class="n">prediction_column_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;predictions&quot;</span><span class="p">,</span>
     <span class="n">remove_columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">DEFAULT_MAX_BATCH_SIZE</span><span class="p">,</span>
+    <span class="n">raise_on_empty_slice</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute metrics for a dataset.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_columns</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -516,14 +523,24 @@
                 <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Filter -&gt; </span><span class="si">{</span><span class="n">slice_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sliced_dataset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sliced_dataset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">raise_on_empty_slice</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Slice </span><span class="si">{</span><span class="n">slice_name</span><span class="si">}</span><span class="s2"> is empty. Please check your slice &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;configuration or the data.&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
 
             <span class="k">for</span> <span class="n">prediction_column</span> <span class="ow">in</span> <span class="n">prediction_columns</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sliced_dataset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="s2">&quot;Got an empty dataset after applying the slice &quot;</span>
+                        <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">. Metric values will be set to `None`.&quot;</span> <span class="o">%</span> <span class="n">slice_name</span><span class="p">,</span>
+                        <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">metric_output</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">metric_name</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;NaN&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">metrics</span>
+                    <span class="p">}</span>
+                <span class="k">elif</span> <span class="p">(</span>
                     <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">batch_size</span> <span class="o">&lt;</span> <span class="mi">0</span>
                 <span class="p">):</span>  <span class="c1"># dataset.iter does not support getting all batches at once</span>
                     <span class="n">targets</span> <span class="o">=</span> <span class="n">get_columns_as_numpy_array</span><span class="p">(</span>

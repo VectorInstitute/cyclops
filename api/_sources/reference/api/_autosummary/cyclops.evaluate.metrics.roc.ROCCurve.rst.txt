@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.roc.ROCCurve
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ROCCurve.name
+   
    

@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.precision\_recall.MulticlassRecall
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MulticlassRecall.name
+   
    

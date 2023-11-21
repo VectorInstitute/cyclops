@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.f\_beta.BinaryF1Score
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BinaryF1Score.name
+   
    

@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MulticlassSensitivity.name
+   
    

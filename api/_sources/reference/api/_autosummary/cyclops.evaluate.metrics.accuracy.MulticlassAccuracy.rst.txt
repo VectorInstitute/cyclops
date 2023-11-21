@@ -26,4 +26,10 @@ cyclops.evaluate.metrics.accuracy.MulticlassAccuracy
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MulticlassAccuracy.name
+   
    
