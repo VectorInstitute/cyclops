@@ -24,6 +24,3 @@ def test_import_cyclops():
     from cyclops import monitor
 
     assert monitor.__name__ == "cyclops.monitor"
-
-    with pytest.raises(ImportError):
-        import cyclops.report

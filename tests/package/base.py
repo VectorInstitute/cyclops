@@ -20,8 +20,6 @@ def test_import_cyclops():
         import cyclops.models
     with pytest.raises(ImportError):
         import cyclops.monitor
-    with pytest.raises(ImportError):
-        import cyclops.report
 
 
 def test_medical_image_feature_without_monai():
