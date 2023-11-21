@@ -184,28 +184,25 @@ models for healthcare. It provides a few high-level APIs namely:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> - Create datasets for training, inference and evaluation. We
 use the popular 🤗
 <a class="reference external" href="https://github.com/huggingface/datasets">datasets</a> to efficiently
-load and slice different modalities of data.</p></li>
+load and slice different modalities of data</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">models</span></code> - Use common model implementations using
 <a class="reference external" href="https://scikit-learn.org/stable/">scikit-learn</a> and
-<a class="reference external" href="https://pytorch.org/">PyTorch</a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tasks</span></code> - Use canonical Healthcare ML tasks such as</p>
-<ul>
-<li><p>Mortality prediction</p></li>
-<li><p>Chest X-ray classification</p></li>
-</ul>
-</li>
+<a class="reference external" href="https://pytorch.org/">PyTorch</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tasks</span></code> - Use common ML task formulations such as binary
+classification or multi-label classification on tabular, time-series
+and image data</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code> - Evaluate models on clinical prediction tasks</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">monitor</span></code> - Detect dataset shift relevant for clinical use cases</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">report</span></code> - Create <a class="reference external" href="https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html">model report
 cards</a>
 for clinical ML models</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> also provides a library of end-to-end use cases on clinical
-datasets such as</p>
+<p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> also provides example end-to-end use case implementations on
+clinical datasets such as</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://physionet.org/content/mimiciii/1.4/">MIMIC-III</a></p></li>
+<li><p><a class="reference external" href="https://www.nih.gov/news-events/news-releases/nih-clinical-center-provides-one-largest-publicly-available-chest-x-ray-datasets-scientific-community">NIH chest
+x-ray</a></p></li>
 <li><p><a class="reference external" href="https://physionet.org/content/mimiciv/2.0/">MIMIC-IV</a></p></li>
-<li><p><a class="reference external" href="https://eicu-crd.mit.edu/about/eicu/">eICU-CRD</a></p></li>
 </ul>
 <section id="getting-started">
 <h1>🐣 Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
@@ -214,23 +211,9 @@ datasets such as</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pycyclops
 </pre></div>
 </div>
-<p>The base package installation supports the use of the <code class="docutils literal notranslate"><span class="pre">data</span></code> and
-<code class="docutils literal notranslate"><span class="pre">process</span></code> APIs to load and transform clinical data, for downstream
-tasks.</p>
-<p>To install additional functionality from the other APIs, they can be
-installed as extras.</p>
-<p>To install with <code class="docutils literal notranslate"><span class="pre">models</span></code>, <code class="docutils literal notranslate"><span class="pre">tasks</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> and <code class="docutils literal notranslate"><span class="pre">monitor</span></code> API
-support,</p>
+<p>The base cyclops installation doesn’t include modelling packages.</p>
+<p>To install additional dependencies for using models,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pycyclops[models]&#39;</span>
-</pre></div>
-</div>
-<p>To install with <code class="docutils literal notranslate"><span class="pre">report</span></code> API support,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pycyclops[report]&#39;</span>
-</pre></div>
-</div>
-<p>Multiple extras could also be combined, for example to install with both
-<code class="docutils literal notranslate"><span class="pre">report</span></code> and <code class="docutils literal notranslate"><span class="pre">models</span></code> support:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pycyclops[report,models]&#39;</span>
 </pre></div>
 </div>
 </section>

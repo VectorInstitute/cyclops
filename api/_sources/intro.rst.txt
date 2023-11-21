@@ -13,27 +13,25 @@ models for healthcare. It provides a few high-level APIs namely:
 -  ``data`` - Create datasets for training, inference and evaluation. We
    use the popular 🤗
    `datasets <https://github.com/huggingface/datasets>`__ to efficiently
-   load and slice different modalities of data.
+   load and slice different modalities of data
 -  ``models`` - Use common model implementations using
    `scikit-learn <https://scikit-learn.org/stable/>`__ and
-   `PyTorch <https://pytorch.org/>`__.
--  ``tasks`` - Use canonical Healthcare ML tasks such as
-
-   -  Mortality prediction
-   -  Chest X-ray classification
-
+   `PyTorch <https://pytorch.org/>`__
+-  ``tasks`` - Use common ML task formulations such as binary
+   classification or multi-label classification on tabular, time-series
+   and image data
 -  ``evaluate`` - Evaluate models on clinical prediction tasks
 -  ``monitor`` - Detect dataset shift relevant for clinical use cases
 -  ``report`` - Create `model report
    cards <https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html>`__
    for clinical ML models
 
-``cyclops`` also provides a library of end-to-end use cases on clinical
-datasets such as
+``cyclops`` also provides example end-to-end use case implementations on
+clinical datasets such as
 
--  `MIMIC-III <https://physionet.org/content/mimiciii/1.4/>`__
+-  `NIH chest
+   x-ray <https://www.nih.gov/news-events/news-releases/nih-clinical-center-provides-one-largest-publicly-available-chest-x-ray-datasets-scientific-community>`__
 -  `MIMIC-IV <https://physionet.org/content/mimiciv/2.0/>`__
--  `eICU-CRD <https://eicu-crd.mit.edu/about/eicu/>`__
 
 🐣 Getting Started
 ==================
@@ -45,32 +43,13 @@ Installing cyclops using pip
 
    python3 -m pip install pycyclops
 
-The base package installation supports the use of the ``data`` and
-``process`` APIs to load and transform clinical data, for downstream
-tasks.
+The base cyclops installation doesn’t include modelling packages.
 
-To install additional functionality from the other APIs, they can be
-installed as extras.
-
-To install with ``models``, ``tasks``, ``evaluate`` and ``monitor`` API
-support,
+To install additional dependencies for using models,
 
 .. code:: bash
 
    python3 -m pip install 'pycyclops[models]'
-
-To install with ``report`` API support,
-
-.. code:: bash
-
-   python3 -m pip install 'pycyclops[report]'
-
-Multiple extras could also be combined, for example to install with both
-``report`` and ``models`` support:
-
-.. code:: bash
-
-   python3 -m pip install 'pycyclops[report,models]'
 
 🧑🏿‍💻 Developing
 =======================

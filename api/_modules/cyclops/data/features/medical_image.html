@@ -166,12 +166,11 @@
   <h1>Source code for cyclops.data.features.medical_image</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Medical image feature.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
@@ -181,18 +180,56 @@
 <span class="kn">from</span> <span class="nn">datasets.features</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">features</span>
 <span class="kn">from</span> <span class="nn">datasets.utils.file_utils</span> <span class="kn">import</span> <span class="n">is_local_path</span>
 <span class="kn">from</span> <span class="nn">datasets.utils.py_utils</span> <span class="kn">import</span> <span class="n">string_to_dict</span>
-<span class="kn">from</span> <span class="nn">monai.data.image_reader</span> <span class="kn">import</span> <span class="n">ImageReader</span>
-<span class="kn">from</span> <span class="nn">monai.data.image_writer</span> <span class="kn">import</span> <span class="n">ITKWriter</span>
-<span class="kn">from</span> <span class="nn">monai.transforms.compose</span> <span class="kn">import</span> <span class="n">Compose</span>
-<span class="kn">from</span> <span class="nn">monai.transforms.io.array</span> <span class="kn">import</span> <span class="n">LoadImage</span>
-<span class="kn">from</span> <span class="nn">monai.transforms.utility.array</span> <span class="kn">import</span> <span class="n">ToNumpy</span>
 
-<span class="kn">from</span> <span class="nn">cyclops.utils.log</span> <span class="kn">import</span> <span class="n">setup_logging</span>
+<span class="kn">from</span> <span class="nn">cyclops.utils.optional</span> <span class="kn">import</span> <span class="n">import_optional_module</span>
 
 
-<span class="c1"># Logging.</span>
-<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-<span class="n">setup_logging</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">LOGGER</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">monai.data.image_reader</span> <span class="kn">import</span> <span class="n">ImageReader</span>
+    <span class="kn">from</span> <span class="nn">monai.data.image_writer</span> <span class="kn">import</span> <span class="n">ITKWriter</span>
+    <span class="kn">from</span> <span class="nn">monai.transforms.compose</span> <span class="kn">import</span> <span class="n">Compose</span>
+    <span class="kn">from</span> <span class="nn">monai.transforms.io.array</span> <span class="kn">import</span> <span class="n">LoadImage</span>
+    <span class="kn">from</span> <span class="nn">monai.transforms.utility.array</span> <span class="kn">import</span> <span class="n">ToNumpy</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">ImageReader</span> <span class="o">=</span> <span class="n">import_optional_module</span><span class="p">(</span>
+        <span class="s2">&quot;monai.data.image_reader&quot;</span><span class="p">,</span>
+        <span class="n">attribute</span><span class="o">=</span><span class="s2">&quot;ImageReader&quot;</span><span class="p">,</span>
+        <span class="n">error</span><span class="o">=</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ITKWriter</span> <span class="o">=</span> <span class="n">import_optional_module</span><span class="p">(</span>
+        <span class="s2">&quot;monai.data.image_writer&quot;</span><span class="p">,</span>
+        <span class="n">attribute</span><span class="o">=</span><span class="s2">&quot;ITKWriter&quot;</span><span class="p">,</span>
+        <span class="n">error</span><span class="o">=</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">Compose</span> <span class="o">=</span> <span class="n">import_optional_module</span><span class="p">(</span>
+        <span class="s2">&quot;monai.transforms.compose&quot;</span><span class="p">,</span>
+        <span class="n">attribute</span><span class="o">=</span><span class="s2">&quot;Compose&quot;</span><span class="p">,</span>
+        <span class="n">error</span><span class="o">=</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">LoadImage</span> <span class="o">=</span> <span class="n">import_optional_module</span><span class="p">(</span>
+        <span class="s2">&quot;monai.transforms.io.array&quot;</span><span class="p">,</span>
+        <span class="n">attribute</span><span class="o">=</span><span class="s2">&quot;LoadImage&quot;</span><span class="p">,</span>
+        <span class="n">error</span><span class="o">=</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ToNumpy</span> <span class="o">=</span> <span class="n">import_optional_module</span><span class="p">(</span>
+        <span class="s2">&quot;monai.transforms.utility.array&quot;</span><span class="p">,</span>
+        <span class="n">attribute</span><span class="o">=</span><span class="s2">&quot;ToNumpy&quot;</span><span class="p">,</span>
+        <span class="n">error</span><span class="o">=</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="n">_monai_available</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
+    <span class="n">module</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="n">ImageReader</span><span class="p">,</span>
+        <span class="n">ITKWriter</span><span class="p">,</span>
+        <span class="n">Compose</span><span class="p">,</span>
+        <span class="n">LoadImage</span><span class="p">,</span>
+        <span class="n">ToNumpy</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">_monai_unavailable_message</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;The MONAI library is required to use the `MedicalImage` feature. &quot;</span>
+    <span class="s2">&quot;Please install it with `pip install monai`.&quot;</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="MedicalImage">
@@ -203,24 +240,35 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    decode : bool, optional, default=True</span>
-<span class="sd">        Whether to decode the image. If False, the image will be returned as a</span>
-<span class="sd">        dictionary in the format `{&quot;path&quot;: image_path, &quot;bytes&quot;: image_bytes}`.</span>
 <span class="sd">    reader : Union[str, ImageReader], optional, default=&quot;ITKReader&quot;</span>
 <span class="sd">        The MONAI image reader to use.</span>
 <span class="sd">    suffix : str, optional, default=&quot;.jpg&quot;</span>
 <span class="sd">        The suffix to use when decoding bytes to image.</span>
+<span class="sd">    decode : bool, optional, default=True</span>
+<span class="sd">        Whether to decode the image. If False, the image will be returned as a</span>
+<span class="sd">        dictionary in the format `{&quot;path&quot;: image_path, &quot;bytes&quot;: image_bytes}`.</span>
+<span class="sd">    id : str, optional, default=None</span>
+<span class="sd">        The id of the feature.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">reader</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ImageReader</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ITKReader&quot;</span>
     <span class="n">suffix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.jpg&quot;</span>  <span class="c1"># used when decoding/encoding bytes to image</span>
-    <span class="n">_loader</span> <span class="o">=</span> <span class="n">Compose</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">LoadImage</span><span class="p">(</span><span class="n">reader</span><span class="o">=</span><span class="n">reader</span><span class="p">,</span> <span class="n">simple_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">image_only</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">ToNumpy</span><span class="p">(),</span>
-        <span class="p">],</span>
-    <span class="p">)</span>
+
+    <span class="n">_loader</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">_monai_available</span><span class="p">:</span>
+        <span class="n">_loader</span> <span class="o">=</span> <span class="n">Compose</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">LoadImage</span><span class="p">(</span>
+                    <span class="n">reader</span><span class="o">=</span><span class="n">reader</span><span class="p">,</span>
+                    <span class="n">simple_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">image_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">ToNumpy</span><span class="p">(),</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+
     <span class="c1"># Automatically constructed</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;dict&quot;</span>
     <span class="n">pa_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">struct</span><span class="p">({</span><span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">binary</span><span class="p">(),</span> <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()})</span>
@@ -246,12 +294,14 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span> <span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">_encode_ndarray</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">image_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="s2">&quot;array&quot;</span> <span class="ow">in</span> <span class="n">value</span> <span class="ow">and</span> <span class="s2">&quot;metadata&quot;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
             <span class="n">output_ext_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span>
             <span class="n">metadata_</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
@@ -305,7 +355,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Decoding is disabled for this feature. &quot;</span>
-                <span class="s2">&quot;Please use MedicalImage(decode=True) instead.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Please use `MedicalImage(decode=True)` instead.&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">token_per_repo_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -320,6 +370,8 @@
                 <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">is_local_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">_monai_unavailable_message</span><span class="p">)</span>
                 <span class="n">image</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">source_url</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -362,6 +414,9 @@
 <span class="sd">            Image as numpy array and metadata as dictionary.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">_monai_unavailable_message</span><span class="p">)</span>
+
         <span class="c1"># XXX: Can we avoid writing to disk?</span>
         <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wb&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
             <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
@@ -394,6 +449,9 @@
 <span class="sd">        Dictionary containing the image bytes and path.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_monai_available</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">_monai_unavailable_message</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="ow">not</span> <span class="n">image_format</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">):</span>
         <span class="n">image_format</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">image_format</span>
 
@@ -415,7 +473,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="n">temp_file_bytes</span><span class="p">}</span>
 
 
-<span class="c1"># add the `MedicalImage` feature to the `features` module</span>
+<span class="c1"># add the `MedicalImage` feature to the `features` module namespace</span>
 <span class="n">features</span><span class="o">.</span><span class="n">MedicalImage</span> <span class="o">=</span> <span class="n">MedicalImage</span>
 </pre></div>
 
