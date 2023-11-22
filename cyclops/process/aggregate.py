@@ -66,7 +66,7 @@ class Aggregator:
         timestamp_col: str,
         time_by: Union[str, List[str]],
         agg_by: Union[str, List[str]],
-        timestep_size: int,
+        timestep_size: Optional[int] = None,
         window_duration: Optional[int] = None,
         imputer: Optional[AggregatedImputer] = None,
         agg_meta_for: Optional[List[str]] = None,
@@ -78,9 +78,9 @@ class Aggregator:
         self.timestamp_col = timestamp_col
         self.time_by = to_list(time_by)
         self.agg_by = to_list(agg_by)
+        self.agg_meta_for = to_list_optional(agg_meta_for)
         self.timestep_size = timestep_size
         self.window_duration = window_duration
-        self.agg_meta_for = to_list_optional(agg_meta_for)
         self.window_times = pd.DataFrame()  # Calculated when given the data
         self.imputer = imputer
         # Parameter checking
@@ -90,8 +90,8 @@ class Aggregator:
             raise ValueError(
                 "Cannot compute meta for a column not being aggregated.",
             )
-        if self.window_duration is not None:
-            divided = self.window_duration / self.timestep_size
+        if window_duration is not None and timestep_size is not None:
+            divided = window_duration / timestep_size
             if divided != int(divided):
                 raise ValueError("Window duration be divisible by bucket size.")
 
@@ -568,6 +568,10 @@ class Aggregator:
             raise NotImplementedError(
                 "Cannot currently vectorize data aggregated with no window duration.",
             )
+        if self.timestep_size is None:
+            raise NotImplementedError(
+                "Cannot currently vectorize data aggregated with no timestep size.",
+            )
         num_timesteps = int(self.window_duration / self.timestep_size)
         # Parameter checking
         has_columns(aggregated, list(self.aggfuncs.keys()), raise_error=True)
@@ -605,8 +609,6 @@ class Aggregator:
         data: pd.DataFrame,
         window_start_time: Optional[pd.DataFrame] = None,
         window_stop_time: Optional[pd.DataFrame] = None,
-        start_bound_func: Optional[Callable[[pd.Series], pd.Series]] = None,
-        stop_bound_func: Optional[Callable[[pd.Series], pd.Series]] = None,
     ) -> pd.DataFrame:
         """Aggregate temporal values.
 
@@ -622,10 +624,6 @@ class Aggregator:
         window_stop_time: pd.DataFrame, optional
             An optionally provided window stop time. This cannot be provided if
             window_duration was set.
-        start_bound_func : Optional[Callable[[pd.Series], pd.Series]], optional
-            A function to bound the start timestamp values, by default None
-        stop_bound_func : Optional[Callable[[pd.Series], pd.Series]], optional
-            A function to bound the start timestamp values, by default None
 
         Returns
         -------
@@ -648,9 +646,6 @@ class Aggregator:
         )
         # Restrict the data according to the start/stop
         data = self._restrict_by_timestamp(data)
-        # Filter the data based on bounds on start/stop
-        data = start_bound_func(data) if start_bound_func else data
-        data = stop_bound_func(data) if stop_bound_func else data
         grouped = data.groupby(self.agg_by, sort=False)
 
         return grouped.agg(self.aggfuncs)
