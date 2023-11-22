@@ -33,7 +33,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Heart Failure Prediction" href="tutorials/kaggle/heart_failure_prediction.html" />
-    <link rel="prev" title="NIHCXR Clinical Drift Experiments Tutorial" href="tutorials/nihcxr/monitor_api.html" /> 
+    <link rel="prev" title="Tutorials" href="tutorials.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -127,10 +127,10 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html#citation">🎓 Citation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to cyclops</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="tutorials_monitor.html">monitor API</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Example use cases</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#tabular-data">Tabular data</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#kaggle-heart-failure-prediction">Kaggle Heart Failure Prediction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mimiciv-mortality-prediction">MIMICIV Mortality Prediction</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#synthea-prolonged-length-of-stay-prediction">Synthea Prolonged Length of Stay Prediction</a></li>
 </ul>
 </li>
@@ -140,6 +140,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials_monitor.html">monitor API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
@@ -215,6 +216,40 @@ variable.</p>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/kaggle/heart_failure_prediction.html#Report-Generation">Report Generation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="mimiciv-mortality-prediction">
+<h3>MIMICIV Mortality Prediction<a class="headerlink" href="#mimiciv-mortality-prediction" title="Link to this heading"></a></h3>
+<p>This is a binary classification problem where the goal is to predict
+risk of in-hospital mortality. The <a class="reference external" href="https://mimic.mit.edu/">MIMICIV dataset</a> is an EHR dataset collected from a single hospital site, which includes ICU data.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html">Mortality Prediction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Import-Libraries">Import Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Constants">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Data-Querying-&amp;-Processing">Data Querying &amp; Processing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Compute-mortality-(labels)">Compute mortality (labels)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Data-Inspection-and-Preprocessing">Data Inspection and Preprocessing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Drop-NaNs-based-on-the-NAN_THRESHOLD">Drop NaNs based on the <code class="docutils literal notranslate"><span class="pre">NAN_THRESHOLD</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Outcome-distribution">Outcome distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Gender-distribution">Gender distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Age-distribution">Age distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Identifying-feature-types">Identifying feature types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Creating-data-preprocessors">Creating data preprocessors</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Creating-Hugging-Face-Dataset">Creating Hugging Face Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Model-Creation">Model Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Task-Creation">Task Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Prediction">Prediction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Evaluation">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Report-Generation">Report Generation</a></li>
 </ul>
 </li>
 </ul>
@@ -297,7 +332,7 @@ performance of a model on the task.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="tutorials/nihcxr/monitor_api.html" class="btn btn-neutral float-left" title="NIHCXR Clinical Drift Experiments Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="tutorials/kaggle/heart_failure_prediction.html" class="btn btn-neutral float-right" title="Heart Failure Prediction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

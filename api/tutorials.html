@@ -32,7 +32,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="monitor API" href="tutorials_monitor.html" />
+    <link rel="next" title="Example use cases" href="tutorials_use_cases.html" />
     <link rel="prev" title="Contributing to cyclops" href="contributing.html" /> 
 </head>
 
@@ -127,8 +127,8 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html#citation">🎓 Citation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to cyclops</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials_monitor.html">monitor API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials_use_cases.html">Example use cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials_monitor.html">monitor API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
@@ -173,18 +173,6 @@
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorials_monitor.html">monitor API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html">NIHCXR Clinical Drift Experiments Tutorial</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Import-Libraries-and-Load-NIHCXR-Dataset">Import Libraries and Load NIHCXR Dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-1.-Generate-Source/Target-Dataset-for-Experiments-(1-2)">Example 1. Generate Source/Target Dataset for Experiments (1-2)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-2.-Sensitivity-test-experiment-with-3-dimensionality-reduction-techniques">Example 2. Sensitivity test experiment with 3 dimensionality reduction techniques</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-3.-Sensitivity-test-experiment-with-models-trained-on-different-datasets">Example 3. Sensitivity test experiment with models trained on different datasets</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-4.-Sensitivity-test-experiment-with-different-clinical-shifts">Example 4. Sensitivity test experiment with different clinical shifts</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-5.-Rolling-window-experiment-with-synthetic-timestamps-using-biweekly-window">Example 5. Rolling window experiment with synthetic timestamps using biweekly window</a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials_use_cases.html">Example use cases</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials_use_cases.html#tabular-data">Tabular data</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="tutorials_use_cases.html#kaggle-heart-failure-prediction">Kaggle Heart Failure Prediction</a><ul>
@@ -209,6 +197,34 @@
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="tutorials/kaggle/heart_failure_prediction.html#Report-Generation">Report Generation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials_use_cases.html#mimiciv-mortality-prediction">MIMICIV Mortality Prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html">Mortality Prediction</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Import-Libraries">Import Libraries</a></li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Constants">Constants</a></li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Data-Querying-&amp;-Processing">Data Querying &amp; Processing</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Compute-mortality-(labels)">Compute mortality (labels)</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Data-Inspection-and-Preprocessing">Data Inspection and Preprocessing</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Drop-NaNs-based-on-the-NAN_THRESHOLD">Drop NaNs based on the <code class="docutils literal notranslate"><span class="pre">NAN_THRESHOLD</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Outcome-distribution">Outcome distribution</a></li>
+<li class="toctree-l6"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Gender-distribution">Gender distribution</a></li>
+<li class="toctree-l6"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Age-distribution">Age distribution</a></li>
+<li class="toctree-l6"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Identifying-feature-types">Identifying feature types</a></li>
+<li class="toctree-l6"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Creating-data-preprocessors">Creating data preprocessors</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Creating-Hugging-Face-Dataset">Creating Hugging Face Dataset</a></li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Model-Creation">Model Creation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Task-Creation">Task Creation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Training">Training</a></li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Prediction">Prediction</a></li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Evaluation">Evaluation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html#Report-Generation">Report Generation</a></li>
 </ul>
 </li>
 </ul>
@@ -270,6 +286,18 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials_monitor.html">monitor API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html">NIHCXR Clinical Drift Experiments Tutorial</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Import-Libraries-and-Load-NIHCXR-Dataset">Import Libraries and Load NIHCXR Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-1.-Generate-Source/Target-Dataset-for-Experiments-(1-2)">Example 1. Generate Source/Target Dataset for Experiments (1-2)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-2.-Sensitivity-test-experiment-with-3-dimensionality-reduction-techniques">Example 2. Sensitivity test experiment with 3 dimensionality reduction techniques</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-3.-Sensitivity-test-experiment-with-models-trained-on-different-datasets">Example 3. Sensitivity test experiment with models trained on different datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-4.-Sensitivity-test-experiment-with-different-clinical-shifts">Example 4. Sensitivity test experiment with different clinical shifts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/monitor_api.html#Example-5.-Rolling-window-experiment-with-synthetic-timestamps-using-biweekly-window">Example 5. Rolling window experiment with synthetic timestamps using biweekly window</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -279,7 +307,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="contributing.html" class="btn btn-neutral float-left" title="Contributing to cyclops" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="tutorials_monitor.html" class="btn btn-neutral float-right" title="monitor API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tutorials_use_cases.html" class="btn btn-neutral float-right" title="Example use cases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

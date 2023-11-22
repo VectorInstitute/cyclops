@@ -235,6 +235,7 @@
     "        \"encounter_id\",\n",
     "        {\"description\": (\"count\", \"n_meds\")},\n",
     "    )\n",
+    "\n",
     "    return cohort.ops(groupby_op).run()\n",
     "\n",
     "\n",
@@ -249,6 +250,7 @@
     "        \"encounter_id\",\n",
     "        {\"description\": (\"count\", \"n_procedures\")},\n",
     "    )\n",
+    "\n",
     "    return cohort.ops(groupby_op).run()\n",
     "\n",
     "\n",
@@ -269,6 +271,7 @@
     "            on=\"encounter_id\",\n",
     "            how=\"left\",\n",
     "        )\n",
+    "\n",
     "    return cohort\n",
     "\n",
     "\n",
@@ -288,18 +291,6 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "id": "c095179e-ea22-4549-9e65-cfce72f441bc",
-   "metadata": {
-    "tags": []
-   },
-   "outputs": [],
-   "source": [
-    "querier.list_columns(\"native\", \"encounters\")"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
    "id": "c576ee51-e825-4970-86e8-3e5f221f145c",
    "metadata": {
     "tags": []
@@ -308,14 +299,12 @@
    "source": [
     "null_counts = cohort.isnull().sum()[cohort.isnull().sum() > 0]\n",
     "fig = go.Figure(data=[go.Bar(x=null_counts.index, y=null_counts.values)])\n",
-    "\n",
     "fig.update_layout(\n",
     "    title=\"Number of Null Values per Column\",\n",
     "    xaxis_title=\"Columns\",\n",
     "    yaxis_title=\"Number of Null Values\",\n",
     "    height=600,\n",
     ")\n",
-    "\n",
     "fig.show()"
    ]
   },
@@ -496,11 +485,9 @@
    "outputs": [],
    "source": [
     "fig = px.pie(cohort, names=\"gender\")\n",
-    "\n",
     "fig.update_layout(\n",
     "    title=\"Gender Distribution\",\n",
     ")\n",
-    "\n",
     "fig.show()"
    ]
   },
@@ -554,7 +541,6 @@
     "    yaxis_title=\"Count\",\n",
     "    bargap=0.2,\n",
     ")\n",
-    "\n",
     "fig.show()"
    ]
   },
@@ -775,7 +761,7 @@
    "source": [
     "## Model Creation\n",
     "\n",
-    "CyclOps model registry allows for straightforward creation and selection of models. This registry maintains a list of pre-configured models, which can be instantiated with a single line of code. Here we use a SGD classifier to fit a logisitic regression model. The model configurations can be passed to `create_model` based on the sllearn parameters for SGDClassifer."
+    "CyclOps model registry allows for straightforward creation and selection of models. This registry maintains a list of pre-configured models, which can be instantiated with a single line of code. Here we use a XGBoost classifier to fit a logisitic regression model. The model configurations can be passed to `create_model` based on the parameters for XGBClassifer."
    ]
   },
   {
@@ -798,7 +784,7 @@
    "source": [
     "## Task Creation\n",
     "\n",
-    "We use Cyclops tasks to define our model's task (in this case, MortalityPrediction), train the model, make predictions, and evaluate performance. Cyclops task classes encapsulate the entire ML pipeline into a single, cohesive structure, making the process smooth and easy to manage."
+    "We use Cyclops tasks to define our model's task (in this case, BinaryTabularClassificationTask), train the model, make predictions, and evaluate performance. Cyclops task classes encapsulate the entire ML pipeline into a single, cohesive structure, making the process smooth and easy to manage."
    ]
   },
   {
@@ -814,18 +800,7 @@
     "    {model_name: model},\n",
     "    task_features=features_list,\n",
     "    task_target=\"outcome\",\n",
-    ")"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "96323637-f5ea-41dd-8899-ce6680d5d58d",
-   "metadata": {
-    "tags": []
-   },
-   "outputs": [],
-   "source": [
+    ")\n",
     "los_task.list_models()"
    ]
   },
@@ -1028,12 +1003,9 @@
     "    metric_name=\"sensitivity\",\n",
     "    task=\"binary\",\n",
     ")\n",
-    "\n",
     "fpr = 1 - specificity\n",
     "fnr = 1 - sensitivity\n",
-    "\n",
     "ber = (fpr + fnr) / 2\n",
-    "\n",
     "fairness_metric_collection = MetricCollection(\n",
     "    {\n",
     "        \"Sensitivity\": sensitivity,\n",

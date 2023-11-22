@@ -16,6 +16,15 @@ variable.
 
     tutorials/kaggle/heart_failure_prediction.ipynb
 
+MIMICIV Mortality Prediction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a binary classification problem where the goal is to predict
+risk of in-hospital mortality. The `MIMICIV dataset <https://mimic.mit.edu/>`_ is an EHR dataset collected from a single hospital site, which includes ICU data.
+
+.. toctree::
+
+    tutorials/mimiciv/mortality_prediction.ipynb
 
 Synthea Prolonged Length of Stay Prediction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
