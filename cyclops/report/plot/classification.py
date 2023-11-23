@@ -976,7 +976,6 @@ class ClassificationPlotter(Plotter):
     def plot_confusion_matrix(
         self,
         confusion_matrix: np.typing.NDArray[Any],
-        class_names: List[str],
     ) -> go.Figure:
         """Plot confusion matrix.
 
@@ -984,8 +983,6 @@ class ClassificationPlotter(Plotter):
         ----------
         confusion_matrix : np.typing.NDArray[Any]
             confusion matrix
-        class_names : list
-            data class names
 
         Returns
         -------
@@ -1005,8 +1002,8 @@ class ClassificationPlotter(Plotter):
         fig = go.Figure(
             data=go.Heatmap(
                 z=confusion_matrix,
-                x=class_names,
-                y=class_names,
+                x=self.class_names,
+                y=self.class_names,
                 hoverongaps=False,
                 colorscale="Greens",
             ),
