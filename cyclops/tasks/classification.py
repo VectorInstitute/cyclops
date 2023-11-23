@@ -9,6 +9,7 @@ import pandas as pd
 from datasets import Dataset, DatasetDict, config
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
+from sklearn.pipeline import Pipeline
 from torchvision.transforms import Compose
 
 from cyclops.data.slicer import SliceSpec
@@ -73,7 +74,7 @@ class BinaryTabularClassificationTask(BaseTask):
         X: Union[np.typing.NDArray[Any], pd.DataFrame, Dataset, DatasetDict],
         y: Optional[Union[np.typing.NDArray[Any], pd.Series]] = None,
         model_name: Optional[str] = None,
-        transforms: Optional[ColumnTransformer] = None,
+        transforms: Optional[Union[ColumnTransformer, Pipeline]] = None,
         best_model_params: Optional[Dict[str, Any]] = None,
         splits_mapping: Optional[Dict[str, str]] = None,
         **kwargs: Any,
@@ -90,9 +91,9 @@ class BinaryTabularClassificationTask(BaseTask):
         model_name : Optional[str], optional
             Model name, required if more than one model exists, \
                 by default None
-        transforms : Optional[ColumnTransformer], optional
+        transforms : Optional[Union[ColumnTransformer, Pipeline]], optional
             Transformations to be applied to the data before \
-                fitting the model, by default Noney default None
+                fitting the model, default None
         splits_mapping: Optional[dict], optional
             Mapping from 'train', 'validation' and 'test' to dataset splits names \
                 used when input is a dataset dictionary, \
