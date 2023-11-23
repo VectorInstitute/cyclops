@@ -972,3 +972,43 @@ class ClassificationPlotter(Plotter):
         if layout is not None:
             fig.update_layout(layout)
         return fig
+
+    def plot_confusion_matrix(
+        self,
+        confusion_matrix: np.typing.NDArray[Any],
+    ) -> go.Figure:
+        """Plot confusion matrix.
+
+        Parameters
+        ----------
+        confusion_matrix : np.typing.NDArray[Any]
+            confusion matrix
+
+        Returns
+        -------
+        go.Figure
+            plot figure
+
+        """
+        confusion_matrix = (
+            confusion_matrix.astype("float")
+            / confusion_matrix.sum(axis=1)[:, np.newaxis]
+        )
+        layout = {
+            "title": "Confusion Matrix",
+            "xaxis": {"title": "Predicted value"},
+            "yaxis": {"title": "Groundtruth value"},
+        }
+        fig = go.Figure(
+            data=go.Heatmap(
+                z=confusion_matrix,
+                x=self.class_names,
+                y=self.class_names,
+                hoverongaps=False,
+                colorscale="Greens",
+            ),
+            layout=layout,
+        )
+        fig.update_layout(height=512, width=1024)
+
+        return fig

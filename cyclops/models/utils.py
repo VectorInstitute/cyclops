@@ -7,7 +7,6 @@ from typing import Dict, List, Literal, Optional
 import numpy as np
 import torch
 from datasets import DatasetDict
-from sklearn import metrics
 from sklearn.base import BaseEstimator
 
 
@@ -352,80 +351,6 @@ class LossMeter:
 
         """
         return sum(self.losses)
-
-
-def metrics_binary(
-    y_test_labels: np.ndarray,
-    y_pred_values: np.ndarray,
-    y_pred_labels: np.ndarray,
-    verbose: bool,
-) -> dict:
-    """Compute metrics for binary classification.
-
-    Parameters
-    ----------
-    y_pred_values : np.ndarray
-        Predicted values/probs.
-    y_pred_labels : np.ndarray
-        Predicted labels.
-    y_test_labels : np.ndarray
-        Test labels.
-    verbose : bool
-        Print the metric values.
-
-    Returns
-    -------
-    dict
-        Dict of metric names and values.
-
-    """
-    cf = metrics.confusion_matrix(y_test_labels, y_pred_labels)
-    if verbose:
-        print("confusion matrix:")
-        print(cf)
-    cf = cf.astype(np.float32)
-    tn, fp, fn, tp = cf.ravel()
-    acc = (tn + tp) / np.sum(cf)
-    prec0 = tn / (tn + fn)
-    prec1 = tp / (tp + fp)
-    rec0 = tn / (tn + fp)
-    rec1 = tp / (tp + fn)
-
-    prec = (prec0 + prec1) / 2
-    rec = (rec0 + rec1) / 2
-
-    auroc = metrics.roc_auc_score(y_test_labels, y_pred_values)
-
-    (precisions, recalls, _) = metrics.precision_recall_curve(
-        y_test_labels,
-        y_pred_values,
-    )
-    auprc = metrics.auc(recalls, precisions)
-    minpse = np.max([min(x, y) for (x, y) in zip(precisions, recalls)])
-
-    if verbose:
-        print(f"accuracy = {acc}")
-        print(f"precision class 0 = {prec0}")
-        print(f"precision class 1 = {prec1}")
-        print(f"recall class 0 = {rec0}")
-        print(f"recall class 1 = {rec1}")
-        print(f"AUC of ROC = {auroc}")
-        print(f"AUC of PRC = {auprc}")
-        print(f"min(+P, Se) = {minpse}")
-
-    return {
-        "confusion": cf,
-        "accuracy": acc,
-        "precision_0": prec0,
-        "precision_1": prec1,
-        "precision": prec,
-        "recall_0": rec0,
-        "recall_1": rec1,
-        "recall": rec,
-        "aucroc": auroc,
-        "auprc": auprc,
-        "minpse": minpse,
-    }
 
 
 def get_split(
