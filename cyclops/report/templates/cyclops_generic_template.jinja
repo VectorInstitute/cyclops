@@ -337,11 +337,13 @@
           {{ render_metric_card(metric_card) }}
         {% endif %}
       {% endfor %}
-      {% if section is hasattr "graphics" %}
-        <div class="subcard" style="min-width:1400px;">
-          <h3>{{ "Graphics" }}</h3>
-          {{ render_if_exist_list(section.graphics) }}
-        </div>
+      {% if section is hasattr "graphics"%}
+        {% if section.graphics is not none%}
+          <div class="subcard" style="min-width:1400px;">
+            <h3>{{ "Graphics" }}</h3>
+            {{ render_if_exist_list(section.graphics) }}
+          </div>
+        {% endif %}
       {% endif %}
     {% else %}
       {{ render_objects(section) }}
