@@ -166,10 +166,9 @@ slice_spec = SliceSpec(spec_list=slices_sex)
 nih_eval_results_gender = evaluator.evaluate(
     dataset=nih_ds,
     metrics=[ppv, npv, sensitivity, specificity],
-    feature_columns="image",
     target_columns=pathologies,
-    prediction_column_prefix="predictions",
-    remove_columns="image",
+    prediction_columns="predictions.densenet",
+    ignore_columns="image",
     slice_spec=slice_spec,
 )
 
@@ -210,10 +209,9 @@ slice_spec = SliceSpec(spec_list=slices_age)
 nih_eval_results_age = evaluator.evaluate(
     dataset=nih_ds,
     metrics=[ppv, npv, sensitivity, specificity],
-    feature_columns="image",
     target_columns=pathologies,
-    prediction_column_prefix="predictions",
-    remove_columns="image",
+    prediction_columns="predictions.densenet",
+    ignore_columns="image",
     slice_spec=slice_spec,
 )
 
