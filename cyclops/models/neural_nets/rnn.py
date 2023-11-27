@@ -1,11 +1,17 @@
 """RNN models."""
 
-from typing import Optional
-
-import torch
-from torch import nn
+from typing import TYPE_CHECKING, Optional
 
 from cyclops.models.catalog import register_model
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import torch
+    from torch import nn
+else:
+    torch = import_optional_module("torch", error="warn")
+    nn = import_optional_module("torch.nn", error="warn")
 
 
 @register_model("rnn", model_type="temporal")

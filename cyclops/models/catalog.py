@@ -1,25 +1,56 @@
 """Model catalog."""
 
 import logging
+import os
 from difflib import get_close_matches
-from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Union,
+)
 
-import torch.nn.modules
-import torch.optim
 import yaml
 from hydra import compose, initialize
 from omegaconf import OmegaConf
 from sklearn.base import BaseEstimator
 
-from cyclops.models.constants import CONFIG_ROOT
 from cyclops.models.utils import is_pytorch_model, is_sklearn_model
 from cyclops.models.wrappers import PTModel, SKModel, WrappedModel
 from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
+from cyclops.utils.optional import import_optional_module
+
+
+CONFIG_ROOT = join(os.path.dirname(__file__), "configs")
+if TYPE_CHECKING:
+    import torch
+else:
+    torch = import_optional_module("torch", error="warn")
 
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
+_xgboost_unavailable_message = (
+    "The XGBoost library is required to use the `XGBClassifier` model. "
+    "Please install it as an extra using `python3 -m pip install 'pycyclops[xgboost]'`\
+        or using `python3 -m pip install xgboost`."
+)
+_torchxrayvision_unavailable_message = (
+    "The torchxrayvision library is required to use the `DenseNet` or `ResNet` model. "
+    "Please install it as an extra using `python3 -m pip install 'pycyclops[torchxrayvision]'`\
+        or using `python3 -m pip install torchxrayvision`."
+)
+_torch_unavailable_message = (
+    "The PyTorch library is required to use the `DenseNet` or `ResNet` model. "
+    "Please install it as an extra using `python3 -m pip install 'pycyclops[torch]'`\
+        or using `python3 -m pip install torch`."
+)
 
 ####################
 # Model catalogs   #
@@ -65,7 +96,6 @@ def register_model(
                 "It will be replaced by the new model.",
                 name,
             )
-
         _model_catalog[name] = model_obj
         _model_names_mapping[model_obj.__name__] = name
 
@@ -186,6 +216,10 @@ def create_model(
     """
     model_class = _model_catalog.get(model_name, None)
     if model_class is None:
+        if model_name == "xgb_classifier":
+            raise RuntimeError(_xgboost_unavailable_message)
+        if model_name in ["densenet", "resnet"]:
+            raise RuntimeError(_torchxrayvision_unavailable_message)
         similar_keys_list: List[str] = get_close_matches(
             model_name,
             _model_catalog.keys(),
@@ -197,7 +231,7 @@ def create_model(
             if similar_keys
             else "It may not be in the catalog."
         )
-        raise ValueError(f"Model {model_name} not found.{similar_keys}")
+        raise ValueError(f"Model {model_name} not found. {similar_keys}")
 
     overrides = []
     if config_overrides:

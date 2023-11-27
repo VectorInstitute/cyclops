@@ -34,14 +34,18 @@
 python3 -m pip install pycyclops
 ```
 
-The base cyclops installation doesn't include modelling packages.
+`cyclops` has many optional dependencies that are used for specific functionality. For
+example, the [monai](https://github.com/Project-MONAI/MONAI) library is used for loading
+DICOM images to create datasets. All optional dependencies can be installed with
+``pycyclops[all]``, and specific sets of dependencies are listed in the sections below.
 
-To install additional dependencies for using models,
 
-
-```bash
-python3 -m pip install 'pycyclops[models]'
-```
+| Dependency       | pip extra       | Notes                                                                             |
+| ----------       | ---------       | -----                                                                             |
+| xgboost          | xgboost         | Allows use of [XGBoost](https://xgboost.readthedocs.io/en/stable/) model          |
+| torch            | torch           | Allows use of [PyTorch](https://pytorch.org/) models                              |
+| torchxrayvision  | torchxrayvision | Uses [torchxrayvision](https://mlmed.org/torchxrayvision/) library                |
+| monai            | monai           | Uses [monai](https://github.com/Project-MONAI/MONAI) to load and transform images |
 
 
 ## 🧑🏿‍💻 Developing

@@ -1,13 +1,19 @@
 """MLP models."""
 
 import math
-from typing import Tuple, Union
-
-import torch
-from torch import nn
+from typing import TYPE_CHECKING, Tuple, Union
 
 from cyclops.models.catalog import register_model
 from cyclops.models.utils import get_module
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import torch
+    from torch import nn
+else:
+    torch = import_optional_module("torch", error="warn")
+    nn = import_optional_module("torch.nn", error="warn")
 
 
 @register_model("mlp_pt", model_type="static")

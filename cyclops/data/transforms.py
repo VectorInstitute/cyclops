@@ -1,7 +1,23 @@
 """Transforms for the datasets."""
-from typing import Any, Callable, Tuple
 
-from torchvision.transforms import Lambda, Resize
+from typing import TYPE_CHECKING, Any, Callable, Tuple
+
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    from torchvision.transforms import Lambda, Resize
+else:
+    Lambda = import_optional_module(
+        "torchvision.transforms",
+        attribute="Lambda",
+        error="warn",
+    )
+    Resize = import_optional_module(
+        "torchvision.transforms",
+        attribute="Resize",
+        error="warn",
+    )
 
 
 # generic dictionary-based wrapper for any transform

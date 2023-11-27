@@ -1,6 +1,6 @@
 """Utilities for datasets."""
 
-from typing import Any, Callable, Dict, List, Optional, Union, get_args
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union, get_args
 
 import numpy as np
 import numpy.typing as npt
@@ -18,7 +18,18 @@ from datasets.features import (
     Value,
 )
 from numpy.typing import ArrayLike
-from torchvision.transforms import PILToTensor
+
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    from torchvision.transforms import PILToTensor
+else:
+    PILToTensor = import_optional_module(
+        "torchvision.transforms",
+        attribute="PILToTensor",
+        error="warn",
+    )
 
 
 NUMERIC_FEATURE_TYPES = (

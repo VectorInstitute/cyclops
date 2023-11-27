@@ -2,12 +2,26 @@
 
 import inspect
 from difflib import get_close_matches
-from typing import Dict, List, Literal, Optional
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional
 
 import numpy as np
-import torch
 from datasets import DatasetDict
 from sklearn.base import BaseEstimator
+
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import torch
+else:
+    torch = import_optional_module("torch", error="warn")
+_torch_unavailable_message = (
+    "The PyTorch library is required to use the `DenseNet` or `ResNet` model. "
+    "Please install it as an extra using `python3 -m pip install 'pycyclops[torch]'`\
+        or using `python3 -m pip install torch`."
+)
+if torch is None:
+    raise RuntimeError(_torch_unavailable_message)
 
 
 def _get_class_members(

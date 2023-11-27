@@ -4,14 +4,28 @@ import inspect
 import os
 import random
 from collections import defaultdict
-from typing import Any, Mapping, Sequence, Union
+from typing import TYPE_CHECKING, Any, Mapping, Sequence, Union
 
 import numpy as np
-import torch
+import numpy.typing as npt
 from datasets import Dataset
 from sklearn.utils.validation import check_is_fitted as _check_is_fitted
-from torch import nn
-from torch.nn.utils.rnn import PackedSequence
+
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import torch
+    from torch import nn
+    from torch.nn.utils.rnn import PackedSequence
+else:
+    torch = import_optional_module("torch", error="warn")
+    nn = import_optional_module("torch.nn", error="warn")
+    PackedSequence = import_optional_module(
+        "torch.nn.utils.rnn",
+        attribute="PackedSequence",
+        error="warn",
+    )
 
 
 def to_tensor(
@@ -65,7 +79,7 @@ def to_tensor(
     )
 
 
-def to_numpy(X) -> Union[np.typing.NDArray[Any], Sequence, Mapping]:
+def to_numpy(X) -> Union[npt.NDArray[Any], Sequence, Mapping]:
     """Convert the input to a numpy array.
 
     Parameters

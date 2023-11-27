@@ -15,16 +15,9 @@ from typing import (
     Union,
 )
 
-import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from datasets import Dataset, DatasetDict
 from datasets.combine import concatenate_datasets
-from torch import nn
-from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
-from torch.utils.data import DataLoader
-from torch.utils.data import Dataset as TorchDataset
 
 from cyclops.models.data import PTDataset
 from cyclops.models.utils import (
@@ -50,11 +43,39 @@ from cyclops.utils.optional import import_optional_module
 
 
 if TYPE_CHECKING:
+    import torch
     from monai.data.meta_tensor import MetaTensor
+    from torch import nn
+    from torch.optim import Optimizer
+    from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
+    from torch.utils.data import DataLoader
+    from torch.utils.data import Dataset as TorchDataset
 else:
     MetaTensor = import_optional_module(
         "monai.data.meta_tensor",
         attribute="MetaTensor",
+        error="warn",
+    )
+    torch = import_optional_module("torch", error="warn")
+    nn = import_optional_module("torch.nn", error="warn")
+    Optimizer = import_optional_module(
+        "torch.optim",
+        attribute="Optimizer",
+        error="warn",
+    )
+    TorchLRScheduler = import_optional_module(
+        "torch.optim.lr_scheduler",
+        attribute="_LRScheduler",
+        error="warn",
+    )
+    DataLoader = import_optional_module(
+        "torch.utils.data",
+        attribute="DataLoader",
+        error="warn",
+    )
+    TorchDataset = import_optional_module(
+        "torch.utils.data",
+        attribute="Dataset",
         error="warn",
     )
 
@@ -1390,9 +1411,4 @@ class PTModel(ModelWrapper):
 
     def plot_losses(self) -> None:
         """Plot train and validation losses per epoch."""
-        plt.plot(self.train_loss_.losses, label="Training loss")
-        plt.plot(self.val_loss_.losses, label="Validation loss")
-        plt.legend()
-        plt.title("Losses")
-        plt.show()
-        plt.close()
+        pass
