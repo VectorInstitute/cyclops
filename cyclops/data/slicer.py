@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 from dateutil.parser import parse
+from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
 
 
 @dataclass
@@ -552,11 +553,11 @@ def filter_range(
     example_values = pd.Series(
         examples[column_name],
         dtype="datetime64[ns]" if value_is_datetime else None,
-    ).to_numpy()
+    )
 
     if not (  # column does not contain number or datetime values
-        np.issubdtype(example_values.dtype, np.number)
-        or np.issubdtype(example_values.dtype, np.datetime64)
+        is_numeric_dtype(example_values.dtype)
+        or is_datetime64_any_dtype(example_values.dtype)
     ):
         raise TypeError(
             "Expected feature to be numeric or datetime, but got "
