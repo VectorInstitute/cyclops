@@ -17,7 +17,6 @@ from sklearn.model_selection import GridSearchCV, PredefinedSplit, RandomizedSea
 
 from cyclops.data.utils import is_out_of_core
 from cyclops.models.utils import get_split, is_sklearn_class, is_sklearn_instance
-from cyclops.models.wrappers.base import ModelWrapper
 from cyclops.models.wrappers.utils import DatasetColumn
 from cyclops.utils.file import join, load_pickle, process_dir_save_path, save_pickle
 from cyclops.utils.log import setup_logging
@@ -27,7 +26,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-class SKModel(ModelWrapper):
+class SKModel:
     """Scikit-learn model wrapper.
 
     Parameters
