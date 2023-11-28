@@ -80,16 +80,16 @@ are listed in the sections below.
 |                             |                          | library      |
 +-----------------------------+--------------------------+--------------+
 | torchxrayvision             | torchxrayvision          | Uses         |
-|                             |                          | `torchxr     |
-|                             |                          | ayvision <ht |
+|                             |                          | `TorchXR     |
+|                             |                          | ayVision <ht |
 |                             |                          | tps://mlmed. |
 |                             |                          | org/torchxra |
 |                             |                          | yvision/>`__ |
 |                             |                          | library      |
 +-----------------------------+--------------------------+--------------+
 | monai                       | monai                    | Uses         |
-|                             |                          | `m           |
-|                             |                          | onai <https: |
+|                             |                          | `M           |
+|                             |                          | ONAI <https: |
 |                             |                          | //github.com |
 |                             |                          | /Project-MON |
 |                             |                          | AI/MONAI>`__ |
@@ -98,7 +98,7 @@ are listed in the sections below.
 |                             |                          | images       |
 +-----------------------------+--------------------------+--------------+
 | alibi                       | alibi                    | Uses         |
-|                             |                          | `alibi <http |
+|                             |                          | `Alibi <http |
 |                             |                          | s://docs.sel |
 |                             |                          | don.io/proje |
 |                             |                          | cts/alibi/en |
@@ -110,9 +110,8 @@ are listed in the sections below.
 |                             |                          | f            |
 |                             |                          | unctionality |
 +-----------------------------+--------------------------+--------------+
-| alibi-detect                | alibi-detect             | Uses         |
-|                             |                          | `a           |
-|                             |                          | libi-detect  |
+| alibi-detect                | alibi-detect             | Uses `Alibi  |
+|                             |                          | Detect       |
 |                             |                          | <https://doc |
 |                             |                          | s.seldon.io/ |
 |                             |                          | projects/ali |
