@@ -33,7 +33,7 @@ jobs:
           python3 -m pip install --upgrade pip && python3 -m pip install poetry
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          poetry install --with docs,test
+          poetry install --with docs,dev,test --all-extras
           # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
