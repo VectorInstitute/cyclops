@@ -4,7 +4,7 @@
 import pandas as pd
 import pytest
 
-from cyclops.process.clean import normalize_events
+from cyclops.data.clean import normalize_events
 
 
 ENCOUNTER_ID = "enc_id"

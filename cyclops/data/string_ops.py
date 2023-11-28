@@ -6,7 +6,7 @@ from typing import Iterable, List, Tuple, Union
 
 import numpy as np
 
-from cyclops.process.constants import EMPTY_STRING
+from cyclops.data.constants import EMPTY_STRING
 
 
 def fill_missing_with_nan(string: str) -> Union[float, str]:

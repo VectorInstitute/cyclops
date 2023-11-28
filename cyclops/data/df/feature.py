@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from cyclops.process.aggregate import Aggregator
-from cyclops.process.constants import (
+from cyclops.data.aggregate import Aggregator
+from cyclops.data.constants import (
     BINARY,
     CATEGORICAL_INDICATOR,
     FEATURE_INDICATOR_ATTR,
@@ -22,12 +22,12 @@ from cyclops.process.constants import (
     NUMERIC,
     ORDINAL,
 )
-from cyclops.process.feature.handle_types import infer_types, normalize_data, to_types
-from cyclops.process.feature.normalize import GroupbyNormalizer
-from cyclops.process.feature.split import split_idx
-from cyclops.process.feature.vectorized import Vectorized
-from cyclops.process.util import has_columns, has_range_index, to_range_index
-from cyclops.utils.common import to_list, to_list_optional
+from cyclops.data.df.handle_types import infer_types, normalize_data, to_types
+from cyclops.data.df.normalize import GroupbyNormalizer
+from cyclops.data.df.split import split_idx
+from cyclops.data.df.vectorized import Vectorized
+from cyclops.data.utils import has_columns, has_range_index, to_range_index
+from cyclops.utils.common import to_list
 from cyclops.utils.file import save_dataframe
 from cyclops.utils.log import setup_logging
 
@@ -337,7 +337,8 @@ class Features:
         return [name for name, ftype in self.types.items() if ftype == type_]
 
     def split_by_values(
-        self, value_splits: List[np.typing.NDArray[Any]]
+        self,
+        value_splits: List[np.typing.NDArray[Any]],
     ) -> Tuple["Features", ...]:
         """Split the data into multiple datasets by values.
 
@@ -474,12 +475,10 @@ class Features:
         if len(invalid) > 0:
             raise ValueError(f"Unrecognized features: {', '.join(invalid)}")
         for col, new_type in new_types.items():
-            if col in self.meta:
-                # Do not allow converting to categorical indicators inplace
-                if inplace and new_type == CATEGORICAL_INDICATOR:
-                    raise ValueError(
-                        f"Cannot convert {col} to binary categorical indicators.",
-                    )
+            if col in self.meta and inplace and new_type == CATEGORICAL_INDICATOR:
+                raise ValueError(
+                    f"Cannot convert {col} to binary categorical indicators.",
+                )
         data, meta = to_types(data, new_types)
         if inplace:
             # Append any new indicator features
@@ -698,53 +697,6 @@ class Features:
 
         """
         return save_dataframe(self.data, save_path, file_format=file_format)
-
-    def slice(
-        self,
-        slice_map: Optional[Dict[str, Union[Any, List[Any]]]] = None,
-        slice_query: Optional[str] = None,
-        replace: bool = False,
-    ) -> Any:
-        """Slice the data across column(s), given values.
-
-        Parameters
-        ----------
-        slice_map: Dict, optional
-            Dictionary with column name(s) as keys, and value or list of values
-            to filter on as values.
-        slice_query: str, optional
-            A string to specify conditions that uses the Pandas DataFrame query API.
-            If specified along with slice_map, the slice_map is applied first.
-        replace: bool, optional
-            If set to True, the data is replaced with the sliced data, and the
-            the values (by column) of the sliced dataset are returned.
-
-        Returns
-        -------
-        np.ndarray
-            Array of the values of the by column, in the sliced dataset.
-
-        """
-        sliced_indices = []
-        if not slice_map:
-            slice_map = {}
-        for slice_col, slice_vals in slice_map.items():
-            sliced_indices.append(
-                self.data[self.data[slice_col].isin(to_list(slice_vals))][
-                    self.by_[0]
-                ].values,
-            )
-        if sliced_indices:
-            intersect_indices = set.intersection(*map(set, sliced_indices))
-            sliced_data = self.data[self.data[self.by_[0]].isin(intersect_indices)]
-        else:
-            sliced_data = self.data
-        if slice_query:
-            sliced_data = sliced_data.query(slice_query)
-        if replace:
-            self.data = sliced_data
-
-        return sliced_data[self.by_[0]].values
 
 
 class TabularFeatures(Features):

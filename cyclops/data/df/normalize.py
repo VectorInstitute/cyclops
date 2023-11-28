@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-from cyclops.process.constants import MIN_MAX, STANDARD
-from cyclops.process.util import has_columns, has_range_index
+from cyclops.data.constants import MIN_MAX, STANDARD
+from cyclops.data.utils import has_columns, has_range_index
 from cyclops.utils.common import to_list_optional
 from cyclops.utils.index import index_axis
 
@@ -492,7 +492,9 @@ class VectorizedNormalizer:
         return data
 
     def transform(
-        self, data: np.typing.NDArray[Any], index_map: Dict[str, int]
+        self,
+        data: np.typing.NDArray[Any],
+        index_map: Dict[str, int],
     ) -> np.typing.NDArray[Any]:
         """Normalize the data.
 
@@ -515,7 +517,9 @@ class VectorizedNormalizer:
         return self._transform_by_method(data, index_map, "transform")
 
     def inverse_transform(
-        self, data: np.typing.NDArray[Any], index_map: Dict[str, int]
+        self,
+        data: np.typing.NDArray[Any],
+        index_map: Dict[str, int],
     ) -> np.typing.NDArray[Any]:
         """Inversely normalize the data.
 

@@ -6,7 +6,7 @@ from typing import Dict, Optional, Tuple
 
 import pandas as pd
 
-from cyclops.process.constants import DIAGNOSIS_TRAJECTORY, EMPTY_STRING, TRAJECTORIES
+from cyclops.data.constants import DIAGNOSIS_TRAJECTORY, EMPTY_STRING, TRAJECTORIES
 from cyclops.utils.log import setup_logging
 
 
@@ -81,7 +81,9 @@ def get_numeric(code: str) -> str:
 
 
 def get_icd_category(
-    code: str, trajectories: Dict[str, Tuple[str, str]], raise_err: bool = False
+    code: str,
+    trajectories: Dict[str, Tuple[str, str]],
+    raise_err: bool = False,
 ) -> str:
     """Get ICD10 category.
 

@@ -1,7 +1,7 @@
 """Test functions that map diagnoses codes to ICD trajectories (features/target)."""
 
-from cyclops.process.constants import EMPTY_STRING
-from cyclops.process.diagnoses import (
+from cyclops.data.constants import EMPTY_STRING
+from cyclops.data.diagnoses import (
     get_alphabet,
     get_icd_category,
     get_numeric,

@@ -311,10 +311,10 @@ def intersect_datasets(
 
     # Intersect on these unique values
     for i, data in enumerate(datas):
-        data = data[data[on_col].isin(intersect)]
+        data_ = data[data[on_col].isin(intersect)]
         if sort:
-            data = data.sort_values(on_col)
-        datas[i] = data
+            data_ = data_.sort_values(on_col)
+        datas[i] = data_
 
     return tuple(datas)
 
@@ -359,10 +359,10 @@ def split_datasets_by_idx(
             # Reshape idx to have same number of dimensions as the data
             shape = [1] * len(data.shape)
             shape[axes_list[i]] = len(idx)
-            idx = idx.reshape(shape)
+            idx_ = idx.reshape(shape)
 
             # Sample new dataset split
-            splits[-1].append(np.take_along_axis(data, idx, axis=axes_list[i]))
+            splits[-1].append(np.take_along_axis(data, idx_, axis=axes_list[i]))
         splits[-1] = tuple(splits[-1])
 
     if len(splits) == 1:

@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from pandas import Timestamp
 
-from cyclops.process.aggregate import (
+from cyclops.data.aggregate import (
     AGGFUNCS,
     RESTRICT_TIMESTAMP,
     START_TIMESTEP,
@@ -17,7 +17,7 @@ from cyclops.process.aggregate import (
     WINDOW_STOP_TIMESTAMP,
     Aggregator,
 )
-from cyclops.process.constants import MEAN, MEDIAN
+from cyclops.data.constants import MEAN, MEDIAN
 
 
 DATE1 = datetime(2022, 11, 3, hour=13)

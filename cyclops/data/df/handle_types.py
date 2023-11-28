@@ -11,7 +11,7 @@ from pandas.api.types import (
     is_string_dtype,
 )
 
-from cyclops.process.constants import (
+from cyclops.data.constants import (
     BINARY,
     CATEGORICAL_INDICATOR,
     FEATURE_INDICATOR_ATTR,
@@ -693,9 +693,6 @@ def _to_categorical_indicators(
     """
     series = data[col]
     unique = get_unique(series, unique=unique)
-
-    # series = series.fillna(MISSING_CATEGORY)
-
     dummies = pd.get_dummies(series, prefix=series.name)
 
     meta = {}
@@ -754,10 +751,9 @@ def convertible_to_type(
     elif type_ == CATEGORICAL_INDICATOR:
         convertible = _convertible_to_categorical_indicators(series, unique=unique)
 
-    else:
+    elif valid_feature_type(type_, raise_error=True):
         # Check first if the type is valid, if so, then it isn't supported here.
-        if valid_feature_type(type_, raise_error=True):
-            raise ValueError("Supported type has no corresponding datatype.")
+        raise ValueError("Supported type has no corresponding datatype.")
 
     if raise_error and not convertible:
         raise ValueError(f"Cannot convert series {series.name} to type {type_}.")
@@ -832,9 +828,6 @@ def normalize_data(data: pd.DataFrame, features: List[str]) -> pd.DataFrame:
         if is_string_dtype(data[col]):
             data[col] = data[col].astype(str)
             data[col] = data[col].replace("None", np.nan)
-            # NAN_SUBSTITUTION_VALUE
-            # data[col] = data[col].str.encode('utf-8').astype('|S')
-            # .astype('|S')
 
     return data
 
@@ -885,11 +878,10 @@ def _to_type(
     elif new_type == NUMERIC:
         series, meta = _to_numeric(data[col], unique=unique)
 
-    else:
+    elif valid_feature_type(new_type, raise_error=True):
         # Check if an incorrect type was passed, otherwise
         # say that it isn't supported.
-        if valid_feature_type(new_type, raise_error=True):
-            raise ValueError(f"Cannot convert to type {new_type}.")
+        raise ValueError(f"Cannot convert to type {new_type}.")
 
     data[col] = series
     meta = {series.name: meta}

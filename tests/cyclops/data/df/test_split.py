@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.process.feature.split import (
+from cyclops.data.df.split import (
     fractions_to_split,
     idxs_to_splits,
     intersect_datasets,
