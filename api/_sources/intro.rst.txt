@@ -43,13 +43,85 @@ Installing cyclops using pip
 
    python3 -m pip install pycyclops
 
-The base cyclops installation doesn’t include modelling packages.
+``cyclops`` has many optional dependencies that are used for specific
+functionality. For example, the
+`monai <https://github.com/Project-MONAI/MONAI>`__ library is used for
+loading DICOM images to create datasets. All optional dependencies can
+be installed with ``pycyclops[all]``, and specific sets of dependencies
+are listed in the sections below.
 
-To install additional dependencies for using models,
-
-.. code:: bash
-
-   python3 -m pip install 'pycyclops[models]'
++-----------------------------+--------------------------+--------------+
+| Dependency                  | pip extra                | Notes        |
++=============================+==========================+==============+
+| xgboost                     | xgboost                  | Allows use   |
+|                             |                          | of           |
+|                             |                          | `XGBoos      |
+|                             |                          | t <https://x |
+|                             |                          | gboost.readt |
+|                             |                          | hedocs.io/en |
+|                             |                          | /stable/>`__ |
+|                             |                          | model        |
++-----------------------------+--------------------------+--------------+
+| torch                       | torch                    | Allows use   |
+|                             |                          | of           |
+|                             |                          | `PyTorch <   |
+|                             |                          | https://pyto |
+|                             |                          | rch.org/>`__ |
+|                             |                          | models       |
++-----------------------------+--------------------------+--------------+
+| torchvision                 | torchvision              | Allows use   |
+|                             |                          | of           |
+|                             |                          | `T           |
+|                             |                          | orchvision < |
+|                             |                          | https://pyto |
+|                             |                          | rch.org/visi |
+|                             |                          | on/stable/in |
+|                             |                          | dex.html>`__ |
+|                             |                          | library      |
++-----------------------------+--------------------------+--------------+
+| torchxrayvision             | torchxrayvision          | Uses         |
+|                             |                          | `torchxr     |
+|                             |                          | ayvision <ht |
+|                             |                          | tps://mlmed. |
+|                             |                          | org/torchxra |
+|                             |                          | yvision/>`__ |
+|                             |                          | library      |
++-----------------------------+--------------------------+--------------+
+| monai                       | monai                    | Uses         |
+|                             |                          | `m           |
+|                             |                          | onai <https: |
+|                             |                          | //github.com |
+|                             |                          | /Project-MON |
+|                             |                          | AI/MONAI>`__ |
+|                             |                          | to load and  |
+|                             |                          | transform    |
+|                             |                          | images       |
++-----------------------------+--------------------------+--------------+
+| alibi                       | alibi                    | Uses         |
+|                             |                          | `alibi <http |
+|                             |                          | s://docs.sel |
+|                             |                          | don.io/proje |
+|                             |                          | cts/alibi/en |
+|                             |                          | /stable/>`__ |
+|                             |                          | for          |
+|                             |                          | additional   |
+|                             |                          | ex           |
+|                             |                          | plainability |
+|                             |                          | f            |
+|                             |                          | unctionality |
++-----------------------------+--------------------------+--------------+
+| alibi-detect                | alibi-detect             | Uses         |
+|                             |                          | `a           |
+|                             |                          | libi-detect  |
+|                             |                          | <https://doc |
+|                             |                          | s.seldon.io/ |
+|                             |                          | projects/ali |
+|                             |                          | bi-detect/en |
+|                             |                          | /stable/>`__ |
+|                             |                          | for dataset  |
+|                             |                          | shift        |
+|                             |                          | detection    |
++-----------------------------+--------------------------+--------------+
 
 🧑🏿‍💻 Developing
 =======================
