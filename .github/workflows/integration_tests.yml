@@ -54,7 +54,6 @@ jobs:
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with test,dev --all-extras
-          pip install cupy-cuda12x
           env MPICC=/opt/openmpi-4.1.5/bin/mpicc python -m pip install git+https://github.com/mpi4py/mpi4py
           coverage run -m pytest -m integration_test && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
