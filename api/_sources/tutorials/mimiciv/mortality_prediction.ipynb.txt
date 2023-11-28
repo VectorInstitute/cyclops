@@ -1234,6 +1234,7 @@
     "            0,\n",
     "            1,\n",
     "        )\n",
+    "        metric.tests[0].passed = bool(metric.value >= 0.7)\n",
     "    report_path = report.export(\n",
     "        output_filename=\"mortality_report_periodic.html\",\n",
     "        synthetic_timestamp=synthetic_timestamps[i + 1],\n",
