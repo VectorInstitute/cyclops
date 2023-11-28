@@ -2,36 +2,108 @@
 
 import os
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import sklearn
-import torch
-from alibi_detect.cd import (
-    ChiSquareDrift,
-    ClassifierDrift,
-    ContextMMDDrift,
-    FETDrift,
-    KSDrift,
-    LearnedKernelDrift,
-    LSDDDrift,
-    MMDDrift,
-    SpotTheDiffDrift,
-    TabularDrift,
-)
-from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
 from datasets import Dataset, DatasetDict, concatenate_datasets
 from scipy.special import expit as sigmoid
 from scipy.special import softmax
 from sklearn.base import BaseEstimator
-from torch import nn
-from torch.utils.data import Dataset as TorchDataset
 
 from cyclops.data.transforms import Lambdad
 from cyclops.data.utils import apply_transforms
 from cyclops.models.catalog import wrap_model
 from cyclops.monitor.utils import DetectronModule, DummyCriterion, get_args
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import torch
+    from alibi_detect.cd import (
+        ChiSquareDrift,
+        ClassifierDrift,
+        ContextMMDDrift,
+        FETDrift,
+        KSDrift,
+        LearnedKernelDrift,
+        LSDDDrift,
+        MMDDrift,
+        SpotTheDiffDrift,
+        TabularDrift,
+    )
+    from alibi_detect.utils.pytorch.kernels import DeepKernel, GaussianRBF
+    from torch import nn
+    from torch.utils.data import Dataset as TorchDataset
+else:
+    torch = import_optional_module("torch", error="warn")
+    nn = import_optional_module("torch.nn", error="warn")
+    TorchDataset = import_optional_module(
+        "torch.utils.data",
+        attribute="Dataset",
+        error="warn",
+    )
+    ChiSquareDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="ChiSquareDrift",
+        error="warn",
+    )
+    ClassifierDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="ClassifierDrift",
+        error="warn",
+    )
+    ContextMMDDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="ContextMMDDrift",
+        error="warn",
+    )
+    FETDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="FETDrift",
+        error="warn",
+    )
+    KSDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="KSDrift",
+        error="warn",
+    )
+    LearnedKernelDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="LearnedKernelDrift",
+        error="warn",
+    )
+    LSDDDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="LSDDDrift",
+        error="warn",
+    )
+    MMDDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="MMDDrift",
+        error="warn",
+    )
+    SpotTheDiffDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="SpotTheDiffDrift",
+        error="warn",
+    )
+    TabularDrift = import_optional_module(
+        "alibi_detect.cd",
+        attribute="TabularDrift",
+        error="warn",
+    )
+    DeepKernel = import_optional_module(
+        "alibi_detect.utils.pytorch.kernels",
+        attribute="DeepKernel",
+        error="warn",
+    )
+    GaussianRBF = import_optional_module(
+        "alibi_detect.utils.pytorch.kernels",
+        attribute="GaussianRBF",
+        error="warn",
+    )
 
 
 class TSTester:

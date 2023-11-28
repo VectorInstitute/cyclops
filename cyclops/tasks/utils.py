@@ -1,14 +1,22 @@
 """Tasks utility functions."""
 
-from typing import Any, Callable, Dict, List, Sequence, Union, get_args
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Sequence, Union, get_args
 
 import PIL
-from torchvision.transforms import PILToTensor
 
 from cyclops.models.catalog import _model_names_mapping, create_model, list_models
 from cyclops.models.wrappers import WrappedModel
+from cyclops.utils.optional import import_optional_module
 
 
+if TYPE_CHECKING:
+    from torchvision.transforms import PILToTensor
+else:
+    PILToTensor = import_optional_module(
+        "torchvision.transforms",
+        attribute="PILToTensor",
+        error="warn",
+    )
 CXR_TARGET = [
     "Atelectasis",
     "Consolidation",

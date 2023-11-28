@@ -15,7 +15,6 @@ from typing import (
     Union,
 )
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from datasets import Dataset, DatasetDict
@@ -27,10 +26,13 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset as TorchDataset
 
 from cyclops.models.data import PTDataset
-from cyclops.models.utils import (
+from cyclops.models.torch_utils import (
+    DefaultCriterion,
     LossMeter,
     get_device,
     get_module,
+)
+from cyclops.models.utils import (
     get_split,
     is_pytorch_instance,
     is_pytorch_model,
@@ -38,7 +40,6 @@ from cyclops.models.utils import (
 from cyclops.models.wrappers.base import ModelWrapper
 from cyclops.models.wrappers.utils import (
     DatasetColumn,
-    DefaultCriterion,
     check_is_fitted,
     set_random_seed,
     to_numpy,
@@ -1390,9 +1391,4 @@ class PTModel(ModelWrapper):
 
     def plot_losses(self) -> None:
         """Plot train and validation losses per epoch."""
-        plt.plot(self.train_loss_.losses, label="Training loss")
-        plt.plot(self.val_loss_.losses, label="Validation loss")
-        plt.legend()
-        plt.title("Losses")
-        plt.show()
-        plt.close()
+        pass

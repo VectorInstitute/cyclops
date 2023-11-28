@@ -5,7 +5,7 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
-from cyclops.models.utils import get_device
+from cyclops.models.torch_utils import get_device
 from cyclops.models.wrappers import WrappedModel
 from cyclops.tasks.utils import prepare_models
 from cyclops.utils.log import setup_logging

@@ -2,7 +2,7 @@
 
 import logging
 from functools import partial
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,6 @@ from datasets import Dataset, DatasetDict, config
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import Pipeline
-from torchvision.transforms import Compose
 
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
@@ -29,6 +28,17 @@ from cyclops.models.wrappers.utils import to_numpy
 from cyclops.tasks.base import BaseTask
 from cyclops.tasks.utils import apply_image_transforms
 from cyclops.utils.log import setup_logging
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    from torchvision.transforms import Compose
+else:
+    Compose = import_optional_module(
+        "torchvision.transforms",
+        attribute="Compose",
+        error="warn",
+    )
 
 
 LOGGER = logging.getLogger(__name__)

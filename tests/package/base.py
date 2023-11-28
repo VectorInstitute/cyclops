@@ -3,6 +3,8 @@
 import numpy as np
 import pytest
 
+from cyclops.models import create_model
+
 
 def test_import_cyclops():
     """Test import of cyclops."""
@@ -10,16 +12,25 @@ def test_import_cyclops():
 
     assert cyclops.__name__ == "cyclops"
 
-    from cyclops import data
+    import cyclops.data
 
-    assert data.__name__ == "cyclops.data"
+    assert cyclops.data.__name__ == "cyclops.data"
 
-    with pytest.raises(ImportError):
-        import cyclops.evaluate
-    with pytest.raises(ImportError):
-        import cyclops.models
-    with pytest.raises(ImportError):
-        import cyclops.monitor
+    import cyclops.process
+
+    assert cyclops.process.__name__ == "cyclops.process"
+
+    import cyclops.evaluate
+
+    assert cyclops.evaluate.__name__ == "cyclops.evaluate"
+
+    import cyclops.models
+
+    assert cyclops.models.__name__ == "cyclops.models"
+
+    import cyclops.monitor
+
+    assert cyclops.monitor.__name__ == "cyclops.monitor"
 
 
 def test_medical_image_feature_without_monai():
@@ -44,3 +55,32 @@ def test_medical_image_feature_without_monai():
         match="The MONAI library is required to use the `MedicalImage` feature.*",
     ):
         feat.decode_example(dummy_val)
+
+
+def test_model_catalog_without_xgboost():
+    """Test that the ModelCatalog raises an error without XGBoost installed."""
+    with pytest.raises(
+        RuntimeError,
+        match="The XGBoost library is required to use the `XGBClassifier` model.*",
+    ):
+        create_model("xgb_classifier")
+
+
+def test_model_catalog_without_torchxrayvision():
+    """Test that the ModelCatalog raises an error without torchxrayvision installed."""
+    with pytest.raises(
+        RuntimeError,
+        match="The torchxrayvision library is required to use the `densenet` or `resnet` model.*",
+    ):
+        create_model("densenet")
+        create_model("resnet")
+
+
+def test_model_catalog_without_pytorch():
+    """Test that the ModelCatalog raises an error without PyTorch installed."""
+    with pytest.raises(
+        RuntimeError,
+        match="The PyTorch library is required to use the `mlp_pt`, `gru`, `lstm` or `rnn` models.*",
+    ):
+        create_model("gru")
+        create_model("lstm")

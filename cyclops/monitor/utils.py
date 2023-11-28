@@ -9,22 +9,49 @@ from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
-from typing import Any, Dict, Generator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import torch
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
-from torch import nn
-from torch.optim import Optimizer
-from torch.utils.data import DataLoader, TensorDataset
-from torch.utils.data import Dataset as TorchDataset
 
 from cyclops.models.neural_nets.gru import GRUModel
 from cyclops.models.neural_nets.lstm import LSTMModel
 from cyclops.models.neural_nets.rnn import RNNModel
-from cyclops.models.wrappers import SKModel  # type: ignore
+from cyclops.models.wrappers import SKModel
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import torch
+    from torch import nn
+    from torch.optim import Optimizer
+    from torch.utils.data import DataLoader, TensorDataset
+    from torch.utils.data import Dataset as TorchDataset
+else:
+    torch = import_optional_module("torch", error="warn")
+    nn = import_optional_module("torch.nn", error="warn")
+    Optimizer = import_optional_module(
+        "torch.optim",
+        attribute="Optimizer",
+        error="warn",
+    )
+    DataLoader = import_optional_module(
+        "torch.utils.data",
+        attribute="DataLoader",
+        error="warn",
+    )
+    TensorDataset = import_optional_module(
+        "torch.utils.data",
+        attribute="TensorDataset",
+        error="warn",
+    )
+    TorchDataset = import_optional_module(
+        "torch.utils.data",
+        attribute="Dataset",
+        error="warn",
+    )
 
 
 def print_metrics_binary(

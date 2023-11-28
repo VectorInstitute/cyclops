@@ -1,14 +1,22 @@
 """Unit tests for Reductor module."""
+
 import pytest
 from synthetic_datasets import (
     synthetic_gemini_dataset,
     synthetic_generic_dataset,
     synthetic_nih_dataset,
 )
-from torchxrayvision.models import DenseNet
 
 from cyclops.models import LSTMModel
 from cyclops.monitor import Reductor
+from cyclops.utils.optional import import_optional_module
+
+
+DenseNet = import_optional_module(
+    "torchxrayvision.models",
+    attribute="DenseNet",
+    error="raise",
+)
 
 
 @pytest.fixture(name="generic_dataset")

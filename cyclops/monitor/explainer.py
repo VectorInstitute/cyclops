@@ -6,9 +6,18 @@ most significant features in the drift detection.
 
 """
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-import shap
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import shap
+else:
+    shap = import_optional_module(
+        "shap",
+        error="warn",
+    )
 
 
 class Explainer:

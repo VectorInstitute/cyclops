@@ -1,23 +1,37 @@
 """Reductor Module."""
 
 from functools import partial
-from typing import Any, Callable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
 import numpy as np
-import torch
-import torchxrayvision as xrv
 from datasets import Dataset, DatasetDict
 from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import Isomap
 from sklearn.mixture import GaussianMixture
 from sklearn.random_projection import SparseRandomProjection
-from torch import nn
-from torch.utils.data import Dataset as TorchDataset
-from torchvision.transforms import Compose
 
 from cyclops.data.utils import apply_transforms
 from cyclops.models.catalog import SKModel, wrap_model
+from cyclops.utils.optional import import_optional_module
+
+
+if TYPE_CHECKING:
+    import torch
+    import torchxrayvision as xrv
+    from torch import nn
+    from torch.utils.data import Dataset as TorchDataset
+    from torchvision.transforms import Compose
+else:
+    torch = import_optional_module("torch", error="warn")
+    nn = import_optional_module("torch.nn", error="warn")
+    TorchDataset = import_optional_module("torch.utils.data.Dataset", error="warn")
+    Compose = import_optional_module(
+        "torchvision.transforms",
+        attribute="Compose",
+        error="warn",
+    )
+    xrv = import_optional_module("torchxrayvision", error="warn")
 
 
 class Reductor:

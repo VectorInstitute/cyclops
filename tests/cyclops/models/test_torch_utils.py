@@ -2,7 +2,7 @@
 
 import pytest
 
-from cyclops.models.utils import LossMeter, get_module
+from cyclops.models.torch_utils import LossMeter, get_module
 
 
 def test_get_module():
