@@ -16,10 +16,6 @@ def test_import_cyclops():
 
     assert cyclops.data.__name__ == "cyclops.data"
 
-    import cyclops.process
-
-    assert cyclops.process.__name__ == "cyclops.process"
-
     import cyclops.evaluate
 
     assert cyclops.evaluate.__name__ == "cyclops.evaluate"
