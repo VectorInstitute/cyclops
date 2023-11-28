@@ -50,7 +50,7 @@ def get_unique(
 
     """
     if unique is None:
-        return values.unique()  # type: ignore
+        return np.array(values.unique())  # type: ignore
 
     return unique
 

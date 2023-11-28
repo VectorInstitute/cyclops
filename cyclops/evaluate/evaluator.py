@@ -3,11 +3,10 @@
 import logging
 import warnings
 from dataclasses import asdict
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union, get_args
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from datasets import Dataset, DatasetDict, config, load_dataset
 from datasets.splits import Split
-from sklearn.compose import ColumnTransformer
 
 from cyclops.data.slicer import SliceSpec
 from cyclops.data.utils import (
@@ -18,8 +17,7 @@ from cyclops.data.utils import (
 from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.fairness.evaluator import evaluate_fairness
 from cyclops.evaluate.metrics.metric import Metric, MetricCollection
-from cyclops.evaluate.utils import choose_split
-from cyclops.models.wrappers import WrappedModel
+from cyclops.evaluate.utils import _format_column_names, choose_split
 from cyclops.utils.log import setup_logging
 
 
@@ -31,13 +29,8 @@ def evaluate(
     dataset: Union[str, Dataset, DatasetDict],
     metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
     target_columns: Union[str, List[str]],
-    feature_columns: Optional[Union[str, List[str]]] = None,
-    prediction_column_prefix: str = "predictions",
-    remove_columns: Optional[Union[str, List[str]]] = None,
-    models: Optional[
-        Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
-    ] = None,
-    transforms: Optional[Union[Callable[..., Any], ColumnTransformer]] = None,
+    prediction_columns: Union[str, List[str]],
+    ignore_columns: Optional[Union[str, List[str]]] = None,
     slice_spec: Optional[SliceSpec] = None,
     split: Optional[Union[str, Split]] = None,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
@@ -57,30 +50,19 @@ def evaluate(
     metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection]
         The metrics to compute.
     target_columns : Union[str, List[str]]
-        The name of the column(s) containing the target values.
-    feature_columns : Union[str, List[str]], optional
-        The name of the column(s) containing the feature values. This must be provided
-        if `models` is not None.
-    prediction_column_prefix : str, optional
-        The prefix of the column(s) containing the predictions. If `models` is not
-        None, the predictions will be added to the dataset and the column names will
-        be `{prediction_column_prefix}.{model_name}`. If `models` is None, the
-        predictions will be read from the dataset and the column names must start
-        with `prediction_column_prefix`.
-    remove_columns : Union[str, List[str]], optional
-        The name of the column(s) to remove from the dataset before filtering
-        and computing metrics. This is useful if the dataset contains columns
-        that are not needed for computing metrics but may be expensive to
-        keep in memory (e.g. image columns).
-    models : Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]]
-        The model(s) to evaluate. If a `Sequence` of `WrappedModel`, each model will
-        be evaluated on the entire dataset and the model class name will be used as
-        the model name. If a `Dict` of `WrappedModel`, each model will be evaluated
-        on the entire dataset and the keys will be used as the model names.
-    transforms : Callable, optional
-        A function that transforms the dataset before doing inference. This is
-        useful if the dataset needs to be transformed before being passed to
-        the model.
+        The name of the column(s) containing the target values. A string value
+        indicates a single column. A list of strings indicates a multi-label
+        task - the target values will be the union of the columns.
+    prediction_columns : Union[str, List[str]]
+        The names of the prediction columns used to compute metrics. If a string, it
+        should be the name of a column in the dataset. If a list, it should be a list
+        of column names in the dataset. Lists allow for evaluating multiple models
+        on the same dataset.
+    ignore_columns : Union[str, List[str]], optional
+        The name of the column(s) to ignore while filtering the dataset and computing
+        metrics. This is useful if the dataset contains columns that are not needed
+        for computing metrics but may be expensive to keep in memory
+        (e.g. image columns).
     slice_spec : SliceSpec, optional
         The slice specification to use for computing metrics. If None, no slices
         will be computed - the metrics will be computed on the entire dataset.
@@ -123,84 +105,33 @@ def evaluate(
     ------
     ValueError
         - If `dataset` is a `DatasetDict` and `split` is None.
-        - If `models` is None and `dataset` does not have a column that starts
-          with `prediction_column_prefix`.
-        - If `models` is not None and `feature_columns` is None.
-        - If multiple models are provided and only one set of results is found
-          after computing metrics.
 
     """
     dataset = _load_data(dataset, split, **(load_dataset_kwargs or {}))
-
-    column_names: List[str] = dataset.column_names
-    check_required_columns(
-        column_names,
-        target_columns,
-        feature_columns,
-        remove_columns,
-    )
-
     metrics = _prepare_metrics(metrics)
 
-    if models is None and not any(
-        col.startswith(prediction_column_prefix) for col in column_names
-    ):
-        raise ValueError(
-            "Got `model=None` but `dataset` does not have a column that "
-            f"starts with `{prediction_column_prefix}`. Please specify a "
-            f"model or add a column that starts with `{prediction_column_prefix}` "
-            "to the dataset.",
-        )
-
-    if models is not None:
-        if feature_columns is None:
-            raise ValueError(
-                "Got `models` but `feature_columns` is None. Please specify "
-                "`feature_columns` argument.",
-            )
-        models = _prepare_models(models)
-        for model_name, model in models.items():
-            dataset = model.predict_proba(
-                dataset,
-                feature_columns=feature_columns,
-                prediction_column_prefix=prediction_column_prefix,
-                model_name=model_name,
-                transforms=transforms,
-                only_predictions=False,
-            )
-
-    # compute metrics for each model
-    results = {}
+    check_required_columns(
+        dataset.column_names,
+        target_columns,
+        prediction_columns,
+        ignore_columns,
+    )
 
     if slice_spec is None:
         slice_spec = SliceSpec()
 
     metric_results = _compute_metrics(
-        dataset,
-        metrics,
-        slice_spec,
+        dataset=dataset,
+        metrics=metrics,
+        slice_spec=slice_spec,
         target_columns=target_columns,
-        prediction_column_prefix=prediction_column_prefix,
-        remove_columns=remove_columns,
+        prediction_columns=prediction_columns,
+        ignore_columns=ignore_columns,
         batch_size=batch_size,
         raise_on_empty_slice=raise_on_empty_slice,
     )
-    if "default" in metric_results:
-        if models is not None and len(models) > 1:
-            raise ValueError(
-                "Got multiple models but only one set of predictions. "
-                "Please make sure that the predictions for each model "
-                f"starts with `{prediction_column_prefix}` followed by "
-                "the model name. For example, if the model name is "
-                "`my_model`, the predictions should be in a column "
-                f"called `{prediction_column_prefix}.my_model`.",
-            )
-        if models is not None:  # only one model; replace "default" with model name
-            model_name = list(models.keys())[0]
-            metric_results[model_name] = metric_results.pop("default")
-        else:  # no models; don't name the results
-            metric_results = metric_results.pop("default")
 
+    results = {}
     results.update(metric_results)
 
     if fairness_config is not None:
@@ -209,13 +140,9 @@ def evaluate(
 
         fairness_config.dataset = dataset
         fairness_config.target_columns = target_columns
-        fairness_config.prediction_columns = [
-            col
-            for col in dataset.column_names
-            if col.startswith(prediction_column_prefix)
-        ]
+        fairness_config.prediction_columns = prediction_columns
         fairness_config.batch_size = batch_size
-        fairness_config.remove_columns = remove_columns
+        fairness_config.remove_columns = ignore_columns
 
         fairness_results = evaluate_fairness(**asdict(fairness_config))
         results["fairness"] = fairness_results
@@ -294,47 +221,19 @@ def _prepare_metrics(
     )
 
 
-def _prepare_models(
-    model: Union[WrappedModel, Sequence[WrappedModel], Dict[str, WrappedModel]],
-) -> Dict[str, WrappedModel]:
-    """Prepare models for evaluation."""
-    if isinstance(model, get_args(WrappedModel)):
-        model_name: str = model.model_.__class__.__name__
-        return {model_name: model}
-    if isinstance(model, (list, tuple)):
-        assert all(isinstance(m, get_args(WrappedModel)) for m in model)
-        return {m.getattr("model_").__class__.__name__: m for m in model}
-    if isinstance(model, dict):
-        assert all(isinstance(m, get_args(WrappedModel)) for m in model.values())
-        return model
-
-    raise TypeError(
-        f"Invalid type for `model`: {type(model)}. "
-        "Expected one of: WrappedModel, Sequence[WrappedModel], "
-        "Dict[str, WrappedModel].",
-    )
-
-
 def _compute_metrics(
     dataset: Dataset,
     metrics: MetricCollection,
     slice_spec: SliceSpec,
     target_columns: Union[str, List[str]],
-    prediction_column_prefix: str = "predictions",
-    remove_columns: Optional[Union[str, List[str]]] = None,
+    prediction_columns: Union[str, List[str]],
+    ignore_columns: Optional[Union[str, List[str]]] = None,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
     raise_on_empty_slice: bool = False,
 ) -> Dict[str, Dict[str, Any]]:
     """Compute metrics for a dataset."""
-    if isinstance(target_columns, str):
-        target_columns = [target_columns]
-
-    # get the predictions (there could be multiple)
-    # any column starting with `prediction_column_prefix` is considered a
-    # prediction column, for a single model
-    prediction_columns = [
-        col for col in dataset.column_names if col.startswith(prediction_column_prefix)
-    ]
+    target_columns = _format_column_names(target_columns)
+    prediction_columns = _format_column_names(prediction_columns)
 
     # temporarily stop decoding features to save memory
     set_decode(dataset, False, exclude=target_columns + prediction_columns)
@@ -345,9 +244,8 @@ def _compute_metrics(
         output_all_columns=True,
     ):
         results: Dict[str, Dict[str, Any]] = {}
-
         for slice_name, slice_fn in slice_spec.slices():
-            sliced_dataset = dataset.remove_columns(remove_columns or []).filter(
+            sliced_dataset = dataset.remove_columns(ignore_columns or []).filter(
                 slice_fn,
                 batched=True,
                 batch_size=batch_size,
@@ -400,13 +298,7 @@ def _compute_metrics(
                     metric_output = metrics.compute()
                     metrics.reset_state()
 
-                # get the model name from the prediction column name
-                # model name is everything after the first `prediction_column_prefix.`
-                model_name: str = "default"
-                pred_col_split = prediction_column.split(".", 1)
-                if len(pred_col_split) == 2:
-                    model_name = pred_col_split[1]
-
+                model_name: str = "model_for_%s" % prediction_column
                 results.setdefault(model_name, {})
                 results[model_name][slice_name] = metric_output
 

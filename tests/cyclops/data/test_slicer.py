@@ -10,6 +10,7 @@ import pytest
 from cycquery import OMOPQuerier
 from datasets import Dataset
 from datasets.splits import Split
+from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
 
 from cyclops.data.slicer import (
     SliceSpec,
@@ -184,19 +185,9 @@ def test_filter_range(
         max_value,
     )
 
-    # If the column is not numeric or datetime, we expect a ValueError.
-    col_dtype = (
-        pd.Series(
-            table[column_name],
-            dtype="datetime64[ns]" if value_is_datetime else None,
-        )
-        .to_numpy()
-        .dtype
-    )
-
-    if not (
-        np.issubdtype(col_dtype, np.number) or np.issubdtype(col_dtype, np.datetime64)
-    ):
+    # If the column is not numeric or datetime, we expect a TypeError.
+    col_dtype = table[column_name].dtype
+    if not (is_numeric_dtype(col_dtype) or is_datetime64_any_dtype(col_dtype)):
         with pytest.raises(TypeError):
             filtered_ds = get_filtered_dataset(table=table, filter_func=filter_func)
         return
@@ -344,8 +335,11 @@ def test_filter_string_contains(
     else:
         result &= pd.notnull(col)
 
-    expected = table[result][column_name]
-    assert np.array_equal(examples, expected)
+    expected = table[result][column_name].reset_index(drop=True)
+    pd.testing.assert_series_equal(
+        pd.Series(examples, dtype=expected.dtype, name=column_name),
+        expected,
+    )
 
 
 @pytest.mark.integration_test()

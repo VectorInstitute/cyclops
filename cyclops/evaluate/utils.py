@@ -60,3 +60,33 @@ def choose_split(
     raise ValueError(
         "No dataset split defined! Pass an explicit value to the `split` kwarg.",
     )
+
+
+def _format_column_names(column_names: Union[str, List[str]]) -> List[str]:
+    """Format the column names to list of strings if not already a list.
+
+    Parameters
+    ----------
+    column_names : Union[str, List[str]]
+        The column names to format.
+
+    Returns
+    -------
+    List[str]
+        The formatted column names.
+
+    Raises
+    ------
+    TypeError
+        If any of the column names are not strings or list of strings.
+
+    """
+    if isinstance(column_names, str):
+        return [column_names]
+    if isinstance(column_names, list):
+        return column_names
+
+    raise TypeError(
+        f"Expected column name {column_names} to be a string or "
+        f"list of strings, but got {type(column_names)}.",
+    )
