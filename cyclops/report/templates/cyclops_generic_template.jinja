@@ -432,7 +432,7 @@
         background-color: #f3f4f6;
         border-radius: 5px;
         box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
-        display: none;
+        {# display: none; #}
       }
 
       .subcard_overview {
@@ -1663,6 +1663,12 @@
 
   function setCollapseButton() {
     const collapsible = document.getElementsByClassName("collapsible");
+
+    const subcards = document.getElementsByClassName("subcard");
+    // set subcards to display: none for all subcards
+    for (let j = 0; j < subcards.length; j++) {
+      subcards[j].style.display = 'none';
+    }
 
     for (let i = 0; i < collapsible.length; i++) {
       collapsible[i].addEventListener("click", function() {
