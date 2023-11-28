@@ -264,7 +264,7 @@ report.log_plotly_figure(
 
 
 results_flat = {}
-for slice_, metrics in nih_eval_results_age["densenet"].items():
+for slice_, metrics in nih_eval_results_age["model_for_predictions.densenet"].items():
     for name, metric in metrics.items():
         results_flat[f"{slice_}/{name}"] = metric.mean()
         for itr, m in enumerate(metric):
@@ -272,7 +272,9 @@ for slice_, metrics in nih_eval_results_age["densenet"].items():
                 results_flat[f"pathology:{pathologies[itr]}/{name}"] = m
             else:
                 results_flat[f"{slice_}&pathology:{pathologies[itr]}/{name}"] = m
-for slice_, metrics in nih_eval_results_gender["densenet"].items():
+for slice_, metrics in nih_eval_results_gender[
+    "model_for_predictions.densenet"
+].items():
     for name, metric in metrics.items():
         results_flat[f"{slice_}/{name}"] = metric.mean()
         for itr, m in enumerate(metric):

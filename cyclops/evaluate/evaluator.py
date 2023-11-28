@@ -130,9 +130,6 @@ def evaluate(
         batch_size=batch_size,
         raise_on_empty_slice=raise_on_empty_slice,
     )
-    # if there is only one top-level key, remove it
-    if len(metric_results) == 1:
-        metric_results = metric_results[list(metric_results.keys())[0]]
 
     results = {}
     results.update(metric_results)
