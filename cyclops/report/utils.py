@@ -650,6 +650,27 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
             },
         )
 
+    # find metric cards that are not in current metrics
+    if last_metric_cards is not None:
+        for last_metric_card in last_metric_cards:
+            current_metric_match = None
+            for current_metric in current_metrics:
+                if (
+                    current_metric.type == last_metric_card.type
+                    and current_metric.slice == last_metric_card.slice
+                ):
+                    current_metric_match = current_metric
+
+            if current_metric_match is None:
+                all_metrics.append(
+                    {
+                        "type": last_metric_card.type,
+                        "slice": last_metric_card.slice,
+                        "current_metric": None,
+                        "last_metric_card": last_metric_card,
+                    },
+                )
+
     # create dict to populate metrics cards
     metric_cards = []
     metrics = []
@@ -688,9 +709,30 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
         if isinstance(metric["current_metric"], PerformanceMetric):
             tooltips.append(metric["current_metric"].description)
 
-        if metric["last_metric_card"] and isinstance(
-            metric["last_metric_card"],
-            MetricCard,
+        if (
+            metric["current_metric"] is None
+            and metric["last_metric_card"]
+            and isinstance(
+                metric["last_metric_card"],
+                MetricCard,
+            )
+        ):
+            history = metric["last_metric_card"].history
+            history.append(np.nan)
+            metric["last_metric_card"].value = np.nan
+            timestamps = metric["last_metric_card"].timestamps
+            if timestamps is not None:
+                timestamps.append(timestamp)
+            metric["last_metric_card"].timestamps = timestamps
+            metric_cards.append(metric["last_metric_card"])
+
+        elif (
+            metric["current_metric"] is not None
+            and metric["last_metric_card"]
+            and isinstance(
+                metric["last_metric_card"],
+                MetricCard,
+            )
         ):
             history = metric["last_metric_card"].history
             if (isinstance(metric["current_metric"], PerformanceMetric)) and (
