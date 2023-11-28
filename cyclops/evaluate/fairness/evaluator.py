@@ -30,6 +30,7 @@ from cyclops.evaluate.metrics.utils import (
     _check_thresholds,
     _get_value_if_singleton_array,
 )
+from cyclops.evaluate.utils import _format_column_names
 from cyclops.utils.log import setup_logging
 
 
@@ -42,7 +43,7 @@ def evaluate_fairness(
     dataset: Dataset,
     groups: Union[str, List[str]],
     target_columns: Union[str, List[str]],
-    prediction_columns: Union[str, List[str]] = "predictions",
+    prediction_columns: Union[str, List[str]],
     group_values: Optional[Dict[str, Any]] = None,
     group_bins: Optional[Dict[str, Union[int, List[Any]]]] = None,
     group_base_values: Optional[Dict[str, Any]] = None,
@@ -77,7 +78,7 @@ def evaluate_fairness(
         The target or targets columns used to compute metrics. If a string, it should
         be the name of a column in the dataset. If a list, it should be a list of
         column names in the dataset. Lists will be treated as multilabel targets.
-    prediction_columns : Union[str, List[str]], default="predictions"
+    prediction_columns : Union[str, List[str]]
         The names of the prediction columns used to compute metrics. If a string, it
         should be the name of a column in the dataset. If a list, it should be a list
         of column names in the dataset. Lists allow for evaluating multiple models
@@ -408,36 +409,6 @@ def _format_metrics(
     raise TypeError(
         f"Expected `metrics` to be of type `str`, `Metric`, `MetricCollection`, or "
         f"`Callable`, but got {type(metrics)}.",
-    )
-
-
-def _format_column_names(column_names: Union[str, List[str]]) -> List[str]:
-    """Format the column names to list of strings if not already a list.
-
-    Parameters
-    ----------
-    column_names : Union[str, List[str]]
-        The column names to format.
-
-    Returns
-    -------
-    List[str]
-        The formatted column names.
-
-    Raises
-    ------
-    TypeError
-        If any of the column names are not strings or list of strings.
-
-    """
-    if isinstance(column_names, str):
-        return [column_names]
-    if isinstance(column_names, list):
-        return column_names
-
-    raise TypeError(
-        f"Expected column name {column_names} to be a string or "
-        f"list of strings, but got {type(column_names)}.",
     )
 
 

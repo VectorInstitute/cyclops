@@ -166,10 +166,9 @@ slice_spec = SliceSpec(spec_list=slices_sex)
 nih_eval_results_gender = evaluator.evaluate(
     dataset=nih_ds,
     metrics=[ppv, npv, sensitivity, specificity],
-    feature_columns="image",
     target_columns=pathologies,
-    prediction_column_prefix="predictions",
-    remove_columns="image",
+    prediction_columns="predictions.densenet",
+    ignore_columns="image",
     slice_spec=slice_spec,
 )
 
@@ -210,10 +209,9 @@ slice_spec = SliceSpec(spec_list=slices_age)
 nih_eval_results_age = evaluator.evaluate(
     dataset=nih_ds,
     metrics=[ppv, npv, sensitivity, specificity],
-    feature_columns="image",
     target_columns=pathologies,
-    prediction_column_prefix="predictions",
-    remove_columns="image",
+    prediction_columns="predictions.densenet",
+    ignore_columns="image",
     slice_spec=slice_spec,
 )
 
@@ -266,7 +264,7 @@ report.log_plotly_figure(
 
 
 results_flat = {}
-for slice_, metrics in nih_eval_results_age["densenet"].items():
+for slice_, metrics in nih_eval_results_age["model_for_predictions.densenet"].items():
     for name, metric in metrics.items():
         results_flat[f"{slice_}/{name}"] = metric.mean()
         for itr, m in enumerate(metric):
@@ -274,7 +272,9 @@ for slice_, metrics in nih_eval_results_age["densenet"].items():
                 results_flat[f"pathology:{pathologies[itr]}/{name}"] = m
             else:
                 results_flat[f"{slice_}&pathology:{pathologies[itr]}/{name}"] = m
-for slice_, metrics in nih_eval_results_gender["densenet"].items():
+for slice_, metrics in nih_eval_results_gender[
+    "model_for_predictions.densenet"
+].items():
     for name, metric in metrics.items():
         results_flat[f"{slice_}/{name}"] = metric.mean()
         for itr, m in enumerate(metric):
