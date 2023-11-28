@@ -38,15 +38,18 @@ else:
         error="warn",
     )
     DataLoader = import_optional_module(
-        "torch.utils.data.DataLoader",
+        "torch.utils.data",
+        attribute="DataLoader",
         error="warn",
     )
     TensorDataset = import_optional_module(
-        "torch.utils.data.TensorDataset",
+        "torch.utils.data",
+        attribute="TensorDataset",
         error="warn",
     )
     TorchDataset = import_optional_module(
-        "torch.utils.data.Dataset",
+        "torch.utils.data",
+        attribute="Dataset",
         error="warn",
     )
 
