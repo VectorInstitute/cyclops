@@ -37,5 +37,5 @@ jobs:
         run: |
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          python3 -m poetry install --with test --all-extras
+          poetry install --with test --all-extras
           pre-commit run --all-files
