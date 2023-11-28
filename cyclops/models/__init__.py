@@ -57,6 +57,6 @@ if GRUModel is not None:
 if LSTMModel is not None:
     register_model("lstm", model_type="temporal")(LSTMModel)
 if MLPModel is not None:
-    register_model("mlp", model_type="static")(MLPModel)
+    register_model("mlp_pt", model_type="static")(MLPModel)
 if RNNModel is not None:
     register_model("rnn", model_type="temporal")(RNNModel)

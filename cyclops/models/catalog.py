@@ -44,12 +44,12 @@ _xgboost_unavailable_message = (
         or using `python3 -m pip install xgboost`."
 )
 _torchxrayvision_unavailable_message = (
-    "The torchxrayvision library is required to use the `DenseNet` or `ResNet` model. "
+    "The torchxrayvision library is required to use the `densenet` or `resnet` model. "
     "Please install it as an extra using `python3 -m pip install 'pycyclops[torchxrayvision]'`\
         or using `python3 -m pip install torchxrayvision`."
 )
 _torch_unavailable_message = (
-    "The PyTorch library is required to use the `DenseNet` or `ResNet` model. "
+    "The PyTorch library is required to use the `mlp_pt`, `gru`, `lstm` or `rnn` models. "
     "Please install it as an extra using `python3 -m pip install 'pycyclops[torch]'`\
         or using `python3 -m pip install torch`."
 )
