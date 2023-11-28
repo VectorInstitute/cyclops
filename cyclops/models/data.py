@@ -9,9 +9,15 @@ from cyclops.utils.optional import import_optional_module
 
 if TYPE_CHECKING:
     import torch
+    from torch import Tensor
     from torch.utils.data import Dataset
 else:
     torch = import_optional_module("torch", error="warn")
+    Tensor = import_optional_module(
+        "torch",
+        attribute="Tensor",
+        error="warn",
+    )
     Dataset = import_optional_module(
         "torch.utils.data",
         attribute="Dataset",
@@ -34,8 +40,8 @@ class PTDataset(Dataset):
 
     def __init__(
         self,
-        X: Union[np.ndarray, torch.Tensor],
-        y: Optional[Union[np.ndarray, torch.Tensor]] = None,
+        X: Union[np.ndarray, Tensor],
+        y: Optional[Union[np.ndarray, Tensor]] = None,
     ) -> None:
         self.X = X
         self.y = y

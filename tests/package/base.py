@@ -70,7 +70,7 @@ def test_model_catalog_without_torchxrayvision():
     """Test that the ModelCatalog raises an error without torchxrayvision installed."""
     with pytest.raises(
         RuntimeError,
-        match="The torchxrayvision library is required to use the `DenseNet` or `ResNet` model.*",
+        match="The torchxrayvision library is required to use the `densenet` or `resnet` model.*",
     ):
         create_model("densenet")
         create_model("resnet")
@@ -80,7 +80,7 @@ def test_model_catalog_without_pytorch():
     """Test that the ModelCatalog raises an error without PyTorch installed."""
     with pytest.raises(
         RuntimeError,
-        match="The PyTorch library is required to use the `DenseNet` or `ResNet` model.*",
+        match="The PyTorch library is required to use the `mlp_pt`, `gru`, `lstm` or `rnn` models.*",
     ):
         create_model("gru")
         create_model("lstm")

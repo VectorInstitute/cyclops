@@ -6156,13 +6156,13 @@ rtd = ["ipython", "myst-nb", "sphinx", "sphinx-book-theme", "sphinx-examples"]
 
 [[package]]
 name = "sphinx-rtd-theme"
-version = "2.0.0rc4"
+version = "2.0.0"
 description = "Read the Docs theme for Sphinx"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "sphinx_rtd_theme-2.0.0rc4-py2.py3-none-any.whl", hash = "sha256:61c6be03b2d59685579ccaab8888cff408d3d1228993326f7251af512721d3f5"},
-    {file = "sphinx_rtd_theme-2.0.0rc4.tar.gz", hash = "sha256:7be4807c0a19ed7461838f061bb0a462c12daf44ae11657ce3f24521f01aa2de"},
+    {file = "sphinx_rtd_theme-2.0.0-py2.py3-none-any.whl", hash = "sha256:ec93d0856dc280cf3aee9a4c9807c60e027c7f7b461b77aeffed682e68f0e586"},
+    {file = "sphinx_rtd_theme-2.0.0.tar.gz", hash = "sha256:bd5d7b80622406762073a04ef8fadc5f9151261563d47027de09910ce03afe6b"},
 ]
 
 [package.dependencies]
@@ -7635,10 +7635,11 @@ alibi = ["alibi", "llvmlite"]
 alibi-detect = ["alibi-detect", "llvmlite", "torch"]
 monai = ["monai", "torch"]
 torch = ["torch"]
+torchvision = ["torchvision"]
 torchxrayvision = ["torch", "torchxrayvision"]
 xgboost = ["xgboost"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.11"
-content-hash = "0f0c6a3fcfc8c21ce6ad8b18cff00168bca8d66313b98e491b43250a250a8454"
+content-hash = "4f473798f7936b714fba045cf9a60a40c6ed48938395b016bc3062312762f119"

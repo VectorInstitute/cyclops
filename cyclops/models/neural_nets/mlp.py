@@ -4,7 +4,7 @@ import math
 from typing import TYPE_CHECKING, Tuple, Union
 
 from cyclops.models.catalog import register_model
-from cyclops.models.utils import get_module
+from cyclops.models.torch_utils import get_module
 from cyclops.utils.optional import import_optional_module
 
 

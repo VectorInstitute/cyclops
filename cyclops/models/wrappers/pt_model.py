@@ -16,14 +16,23 @@ from typing import (
 )
 
 import numpy as np
+import torch
 from datasets import Dataset, DatasetDict
 from datasets.combine import concatenate_datasets
+from torch import nn
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset as TorchDataset
 
 from cyclops.models.data import PTDataset
-from cyclops.models.utils import (
+from cyclops.models.torch_utils import (
+    DefaultCriterion,
     LossMeter,
     get_device,
     get_module,
+)
+from cyclops.models.utils import (
     get_split,
     is_pytorch_instance,
     is_pytorch_model,
@@ -31,7 +40,6 @@ from cyclops.models.utils import (
 from cyclops.models.wrappers.base import ModelWrapper
 from cyclops.models.wrappers.utils import (
     DatasetColumn,
-    DefaultCriterion,
     check_is_fitted,
     set_random_seed,
     to_numpy,
@@ -43,39 +51,11 @@ from cyclops.utils.optional import import_optional_module
 
 
 if TYPE_CHECKING:
-    import torch
     from monai.data.meta_tensor import MetaTensor
-    from torch import nn
-    from torch.optim import Optimizer
-    from torch.optim.lr_scheduler import _LRScheduler as TorchLRScheduler
-    from torch.utils.data import DataLoader
-    from torch.utils.data import Dataset as TorchDataset
 else:
     MetaTensor = import_optional_module(
         "monai.data.meta_tensor",
         attribute="MetaTensor",
-        error="warn",
-    )
-    torch = import_optional_module("torch", error="warn")
-    nn = import_optional_module("torch.nn", error="warn")
-    Optimizer = import_optional_module(
-        "torch.optim",
-        attribute="Optimizer",
-        error="warn",
-    )
-    TorchLRScheduler = import_optional_module(
-        "torch.optim.lr_scheduler",
-        attribute="_LRScheduler",
-        error="warn",
-    )
-    DataLoader = import_optional_module(
-        "torch.utils.data",
-        attribute="DataLoader",
-        error="warn",
-    )
-    TorchDataset = import_optional_module(
-        "torch.utils.data",
-        attribute="Dataset",
         error="warn",
     )
 

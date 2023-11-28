@@ -13,11 +13,6 @@ from cyclops.utils.optional import import_optional_module
 torch = import_optional_module("torch", error="warn")
 if torch is not None:
     from cyclops.models.neural_nets import GRUModel, LSTMModel, MLPModel, RNNModel
-else:
-    GRUModel = None
-    LSTMModel = None
-    MLPModel = None
-    RNNModel = None
 
 
 if TYPE_CHECKING:
@@ -52,11 +47,3 @@ if DenseNet is not None:
     register_model("densenet", model_type="image")(DenseNet)
 if ResNet is not None:
     register_model("resnet", model_type="image")(ResNet)
-if GRUModel is not None:
-    register_model("gru", model_type="temporal")(GRUModel)
-if LSTMModel is not None:
-    register_model("lstm", model_type="temporal")(LSTMModel)
-if MLPModel is not None:
-    register_model("mlp_pt", model_type="static")(MLPModel)
-if RNNModel is not None:
-    register_model("rnn", model_type="temporal")(RNNModel)

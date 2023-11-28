@@ -235,3 +235,69 @@ class DefaultCriterion(nn.Module):
     def forward(self, preds, labels):
         """Forward pass of the criterion."""
         return preds.mean()
+
+
+class LossMeter:
+    """Loss meter for PyTorch models."""
+
+    def __init__(self, name: str) -> None:
+        """Initialize loss meter.
+
+        Parameters
+        ----------
+        name : str
+            Loss name. Used for logging.
+
+        """
+        self.name = name
+        self.losses: List[float] = []
+
+    def reset(self) -> None:
+        """Reset the list of losses."""
+        self.losses.clear()
+
+    def add(self, val: float) -> None:
+        """Add to the list of losses.
+
+        Parameters
+        ----------
+        val : float
+            Loss value.
+
+        """
+        self.losses.append(val)
+
+    def mean(self) -> float:
+        """Get the mean of the loss values in the list.
+
+        Returns
+        -------
+        float
+            Mean values.
+
+        """
+        if not self.losses:
+            return 0
+        return np.mean(self.losses)
+
+    def pop(self) -> float:
+        """Get the last element of the list.
+
+        Returns
+        -------
+        float
+            Loss value.
+
+        """
+        return self.losses[-1]
+
+    def sum(self) -> float:  # noqa: A003
+        """Get the summation of all loss values.
+
+        Returns
+        -------
+        float
+            Sum value.
+
+        """
+        return sum(self.losses)

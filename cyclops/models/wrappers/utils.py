@@ -16,6 +16,8 @@ from cyclops.utils.optional import import_optional_module
 
 if TYPE_CHECKING:
     import torch
+    from torch import Tensor as TorchTensor
+    from torch import device as torch_device
     from torch import nn
     from torch.nn.utils.rnn import PackedSequence
 else:
@@ -26,13 +28,23 @@ else:
         attribute="PackedSequence",
         error="warn",
     )
+    torch_device = import_optional_module(
+        "torch",
+        attribute="device",
+        error="warn",
+    )
+    TorchTensor = import_optional_module(
+        "torch",
+        attribute="Tensor",
+        error="warn",
+    )
 
 
 def to_tensor(
     X,
-    device: Union[str, torch.device] = "cpu",
+    device: Union[str, torch_device] = "cpu",
     concatenate_features: bool = True,
-) -> Union[torch.Tensor, Sequence, Mapping]:
+) -> Union[TorchTensor, Sequence, Mapping]:
     """Convert the input to a torch tensor.
 
     Parameters
@@ -53,7 +65,7 @@ def to_tensor(
         If ``X`` is not a numpy array, torch tensor, dictionary, list, or tuple.
 
     """
-    if isinstance(X, (torch.Tensor, PackedSequence)):
+    if isinstance(X, (TorchTensor, PackedSequence)):
         return X.to(device)
     if np.isscalar(X):
         return torch.as_tensor(X, device=device)
@@ -326,17 +338,3 @@ class DatasetColumn(list):
     def __all__(self):
         """Get the whole column."""
         return self.dataset[self.key]
-
-
-class DefaultCriterion(nn.Module):
-    """Default criterion for the wrapper.
-
-    Returns the mean value of the model logits.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, preds, labels):
-        """Forward pass of the criterion."""
-        return preds.mean()

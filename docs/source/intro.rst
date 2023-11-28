@@ -69,6 +69,16 @@ are listed in the sections below.
 |                             |                          | rch.org/>`__ |
 |                             |                          | models       |
 +-----------------------------+--------------------------+--------------+
+| torchvision                 | torchvision              | Allows use   |
+|                             |                          | of           |
+|                             |                          | `T           |
+|                             |                          | orchvision < |
+|                             |                          | https://pyto |
+|                             |                          | rch.org/visi |
+|                             |                          | on/stable/in |
+|                             |                          | dex.html>`__ |
+|                             |                          | library      |
++-----------------------------+--------------------------+--------------+
 | torchxrayvision             | torchxrayvision          | Uses         |
 |                             |                          | `torchxr     |
 |                             |                          | ayvision <ht |
@@ -86,6 +96,31 @@ are listed in the sections below.
 |                             |                          | to load and  |
 |                             |                          | transform    |
 |                             |                          | images       |
++-----------------------------+--------------------------+--------------+
+| alibi                       | alibi                    | Uses         |
+|                             |                          | `alibi <http |
+|                             |                          | s://docs.sel |
+|                             |                          | don.io/proje |
+|                             |                          | cts/alibi/en |
+|                             |                          | /stable/>`__ |
+|                             |                          | for          |
+|                             |                          | additional   |
+|                             |                          | ex           |
+|                             |                          | plainability |
+|                             |                          | f            |
+|                             |                          | unctionality |
++-----------------------------+--------------------------+--------------+
+| alibi-detect                | alibi-detect             | Uses         |
+|                             |                          | `a           |
+|                             |                          | libi-detect  |
+|                             |                          | <https://doc |
+|                             |                          | s.seldon.io/ |
+|                             |                          | projects/ali |
+|                             |                          | bi-detect/en |
+|                             |                          | /stable/>`__ |
+|                             |                          | for dataset  |
+|                             |                          | shift        |
+|                             |                          | detection    |
 +-----------------------------+--------------------------+--------------+
 
 🧑🏿‍💻 Developing
