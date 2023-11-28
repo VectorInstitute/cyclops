@@ -1658,7 +1658,7 @@
 
     for (let i = 0; i < collapsible.length; i++) {
       collapsible[i].addEventListener("click", function() {
-        let arrow = collapsible[i]
+        let arrow = collapsible[i];
 
         if (arrow.classList.contains('down-arrow')) {
           arrow.classList.add('right-arrow');
@@ -1667,7 +1667,7 @@
           arrow.classList.add('down-arrow');
           arrow.classList.remove('right-arrow');
         }
-        
+
         let card = this.closest('.card');
         let subcards = card.getElementsByClassName('subcard');
 
@@ -1677,7 +1677,6 @@
 
         let collapsible_bar = card.getElementsByClassName("collapsible-bar")[0];
         collapsible_bar.style.display = collapsible_bar.style.display === 'block' ? 'none' : 'block'
-
       });
     }
   }
