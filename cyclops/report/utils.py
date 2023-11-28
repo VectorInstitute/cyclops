@@ -649,6 +649,23 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
                 "last_metric_card": last_metric_card_match,
             },
         )
+    # find metric cards that are not in current metrics
+    if last_metric_cards is not None:
+        for last_metric_card in last_metric_cards:
+            if last_metric_card.type not in [
+                metric["type"] for metric in all_metrics
+            ] and last_metric_card.slice not in [
+                metric["slice"] for metric in all_metrics
+                ]:
+                print(last_metric_card)
+                all_metrics.append(
+                    {
+                        "type": last_metric_card.type,
+                        "slice": last_metric_card.slice,
+                        "current_metric": None,
+                        "last_metric_card": last_metric_card,
+                    },
+                )
 
     # create dict to populate metrics cards
     metric_cards = []
@@ -687,6 +704,17 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
         metrics.append(name)
         if isinstance(metric["current_metric"], PerformanceMetric):
             tooltips.append(metric["current_metric"].description)
+
+        if metric["current_metric"] is None and metric["last_metric_card"] is not None:
+            history = metric["last_metric_card"].history
+            history.append(np.nan)
+            metric["last_metric_card"].value = np.nan
+            timestamps = metric["last_metric_card"].timestamps
+            if timestamps is not None:
+                timestamps.append(timestamp)
+            metric["last_metric_card"].timestamps = timestamps
+            # print(metric["last_metric_card"])
+            metric_cards.append(metric["last_metric_card"])
 
         if metric["last_metric_card"] and isinstance(
             metric["last_metric_card"],
