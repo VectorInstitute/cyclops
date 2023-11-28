@@ -132,8 +132,8 @@
 </div>
 {% endmacro %}
 
-{% macro render_metric_card(card, idx)%}
-<div class="subcard">
+{% macro render_metric_card(card, idx, class)%}
+<div class="{{class}}">
   <div>
    <span style="font-size: 18px; font-weight:bold;">
       <div class="tooltip">
@@ -177,7 +177,7 @@
 <h3 style="color: gray;  font-weight:normal;">A quick glance of your most important metrics.</h3>
 {% for metric_card in comp.metric_cards.collection%}
   {% if metric_card.slice == 'overall' %}
-    {{ render_metric_card(metric_card, loop.index-1) }}
+    {{ render_metric_card(metric_card, loop.index-1, "subcard_overview") }}
   {% endif %}
 {% endfor %}
 </div>
@@ -187,7 +187,6 @@
 <div class="card" id={{name}} style="display: block; flex-basis: 100%">
   <h3 style="color: black; font-weight:normal;">How is your model doing over time?</h3><br>
   <h3 style="color: gray;  font-weight:normal;">See how your model is performing over several metrics and subgroups over time.</h3>
-  {# <div class="subcard" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 10px; margin-bottom: 20px;"> #}
   <div style="display: flex; align-items: center; justify-content: center; padding: 10px; margin-bottom: 20px;">
     <h4 style="padding-right: 10px;">Multi-plot Selection:</h4>
     <div class="radio-buttons" id="plot-selection">
@@ -198,7 +197,7 @@
     </div>
   </div>
   <div class="column" style="float: left;">
-    <div class="subcard" style="padding:10px; margin-bottom:20px; max-width:500px;">
+    <div class="subcard_overview" style="padding:10px; margin-bottom:20px; max-width:500px;">
       <h4>Metrics</h4>
       <div class="radio-buttons" id="slice-selection">
           <input type="radio" id="{{comp.metric_cards.metrics[0]}}" name="metric" value="{{comp.metric_cards.metrics[0]}}" checked>
@@ -245,7 +244,7 @@
       </div>
     </div>
     {% for slice, values in comp.metric_cards.slices|zip(comp.metric_cards.values) %}
-      <div class="subcard" style="padding:10px; margin-bottom:10px; max-width:500px;">
+      <div class="subcard_overview" style="padding:10px; margin-bottom:10px; max-width:500px;">
         <h4>{{slice|regex_replace('(?<!^)(?=[A-Z])', ' ')|title}}</h4>
         <div class="radio-buttons" id="slice-selection">
           <input type="radio" id="overall_{{slice}}" name="{{slice}}" value="overall_{{slice}}" checked>
@@ -258,7 +257,7 @@
       </div>
     {% endfor %}
   </div>
-  <div class="subcard" style="margin:auto; float:right;">
+  <div class="subcard_overview" style="margin:auto; float:right;">
     <div id="plot"></div>
   </div>
 </div>
@@ -335,7 +334,7 @@
     {% elif header == "QuantitativeAnalysis"%}
       {% for metric_card in model_card.overview.metric_cards.collection %}
         {% if metric_card.slice == 'overall' %}
-          {{ render_metric_card(metric_card) }}
+          {{ render_metric_card(metric_card, loop.index-1, "subcard") }}
         {% endif %}
       {% endfor %}
       {% if section is hasattr "graphics"%}
@@ -434,6 +433,15 @@
         border-radius: 5px;
         box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
         display: none;
+      }
+
+      .subcard_overview {
+        padding: 30px;
+        border: 1px solid #DADCE0;
+        margin: 10px;
+        background-color: #f3f4f6;
+        border-radius: 5px;
+        box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
       }
 
       ul li {
