@@ -21,7 +21,7 @@ from omegaconf import OmegaConf
 from sklearn.base import BaseEstimator
 
 from cyclops.models.utils import is_pytorch_model, is_sklearn_model
-from cyclops.models.wrappers import PTModel, SKModel, WrappedModel
+from cyclops.models.wrappers import SKModel, WrappedModel
 from cyclops.utils.file import join
 from cyclops.utils.log import setup_logging
 from cyclops.utils.optional import import_optional_module
@@ -30,8 +30,10 @@ from cyclops.utils.optional import import_optional_module
 CONFIG_ROOT = join(os.path.dirname(__file__), "configs")
 if TYPE_CHECKING:
     import torch
+    from torch.nn import Module
 else:
     torch = import_optional_module("torch", error="warn")
+    Module = import_optional_module("torch.nn", attribute="Module", error="warn")
 
 
 LOGGER = logging.getLogger(__name__)
@@ -109,10 +111,10 @@ def register_model(
             raise NotImplementedError(f"Model type {model_type} is not supported.")
 
         # infer model library
-        if is_pytorch_model(model_obj):
-            _pt_model_keys.add(name)
-        elif is_sklearn_model(model_obj):
+        if is_sklearn_model(model_obj):
             _sk_model_keys.add(name)
+        elif is_pytorch_model(model_obj):
+            _pt_model_keys.add(name)
         else:
             raise NotImplementedError(
                 "Model library is not supported. Only PyTorch and scikit-learn "
@@ -163,7 +165,7 @@ def list_models(
     return model_list
 
 
-def wrap_model(model: Union[torch.nn.Module, BaseEstimator], **kwargs) -> WrappedModel:
+def wrap_model(model: Union[Module, BaseEstimator], **kwargs) -> WrappedModel:
     """Wrap a model with SKModel or PTModel.
 
     Parameters
@@ -185,10 +187,12 @@ def wrap_model(model: Union[torch.nn.Module, BaseEstimator], **kwargs) -> Wrappe
 
     """
     if is_pytorch_model(model):
+        from cyclops.models.wrappers import PTModel
+
         return PTModel(model, **kwargs)
     if is_sklearn_model(model):
         return SKModel(model, **kwargs)
-    raise TypeError("``model`` must be a pyTorch or sklearn model")
+    raise TypeError("``model`` must be a PyTorch or sklearn model")
 
 
 def create_model(
@@ -220,6 +224,8 @@ def create_model(
             raise RuntimeError(_xgboost_unavailable_message)
         if model_name in ["densenet", "resnet"]:
             raise RuntimeError(_torchxrayvision_unavailable_message)
+        if model_name in ["gru", "lstm", "mlp", "rnn"]:
+            raise RuntimeError(_torch_unavailable_message)
         similar_keys_list: List[str] = get_close_matches(
             model_name,
             _model_catalog.keys(),

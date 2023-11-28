@@ -350,8 +350,10 @@ class BinaryTabularClassificationTask(BaseTask):
             metrics=metrics_collection,
             target_columns=self.task_target,
             slice_spec=slice_spec,
-            prediction_column_prefix=prediction_column_prefix,
-            remove_columns=remove_columns,
+            prediction_columns=[
+                f"{prediction_column_prefix}.{model_name}" for model_name in model_names
+            ],
+            ignore_columns=remove_columns,
             split=splits_mapping["test"],
             batch_size=batch_size,
             fairness_config=fairness_config,
@@ -543,8 +545,10 @@ class MultilabelImageClassificationTask(BaseTask):
             metrics=metrics_collection,
             slice_spec=slice_spec,
             target_columns=self.task_target,
-            prediction_column_prefix=prediction_column_prefix,
-            remove_columns=remove_columns,
+            prediction_columns=[
+                f"{prediction_column_prefix}.{model_name}" for model_name in model_names
+            ],
+            ignore_columns=remove_columns,
             split=splits_mapping["test"],
             batch_size=batch_size,
             fairness_config=fairness_config,

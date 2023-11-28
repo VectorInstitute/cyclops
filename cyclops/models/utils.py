@@ -14,14 +14,7 @@ from cyclops.utils.optional import import_optional_module
 if TYPE_CHECKING:
     import torch
 else:
-    torch = import_optional_module("torch", error="warn")
-_torch_unavailable_message = (
-    "The PyTorch library is required to use the `DenseNet` or `ResNet` model. "
-    "Please install it as an extra using `python3 -m pip install 'pycyclops[torch]'`\
-        or using `python3 -m pip install torch`."
-)
-if torch is None:
-    raise RuntimeError(_torch_unavailable_message)
+    torch = import_optional_module("torch")
 
 
 def _get_class_members(

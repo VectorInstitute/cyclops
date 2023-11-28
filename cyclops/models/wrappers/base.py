@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 
-import cyclops.models.wrappers.utils as wrapper_utils
+from cyclops.models.wrappers.utils import get_params, set_params
 
 
 class ModelWrapper(ABC):
@@ -281,7 +281,7 @@ class ModelWrapper(ABC):
             Parameter names mapped to their values.
 
         """
-        return wrapper_utils.get_params(self)
+        return get_params(self)
 
     def set_params(self, **params):
         """Set the parameters of this wrapper.
@@ -296,4 +296,4 @@ class ModelWrapper(ABC):
         self
 
         """
-        wrapper_utils.set_params(self, **params)
+        set_params(self, **params)

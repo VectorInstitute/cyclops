@@ -160,22 +160,18 @@ def check_required_columns(
         If a required column is not present in the dataset.
 
     """
-    required_columns_ = []
-    for required_column in required_columns:
-        if required_column is None:
-            continue
-        if isinstance(required_column, str):
-            required_columns_.append(required_column)
-        else:
-            required_columns_.extend(required_column)
-
-    for column in required_columns_:
-        if column is not None and column not in dataset_column_names:
-            raise ValueError(
-                f"Column {column} is not present in the dataset. Please "
-                "specify a valid column. The following columns are present "
-                f"in the dataset: {dataset_column_names}.",
-            )
+    required_columns_ = [
+        column
+        for column in required_columns
+        if column is not None
+        for column in (column if isinstance(column, list) else [column])
+        if column is not None
+    ]
+    missing_columns = set(required_columns_) - set(dataset_column_names)
+    if missing_columns:
+        raise ValueError(
+            f"Dataset is missing the following required columns: {missing_columns}.",
+        )
 
 
 def feature_is_numeric(feature: FEATURE_TYPES) -> bool:

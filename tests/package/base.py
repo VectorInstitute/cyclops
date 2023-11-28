@@ -79,8 +79,8 @@ def test_model_catalog_without_torchxrayvision():
 def test_model_catalog_without_pytorch():
     """Test that the ModelCatalog raises an error without PyTorch installed."""
     with pytest.raises(
-        ModuleNotFoundError,
-        match="Missing optional dependency 'torch'.*",
+        RuntimeError,
+        match="The PyTorch library is required to use the `DenseNet` or `ResNet` model.*",
     ):
         create_model("gru")
         create_model("lstm")

@@ -7,8 +7,17 @@ from sklearn.linear_model import LogisticRegression, SGDClassifier, SGDRegressor
 from sklearn.neural_network import MLPClassifier
 
 from cyclops.models.catalog import create_model, list_models, register_model, wrap_model
-from cyclops.models.neural_nets import GRUModel, LSTMModel, MLPModel, RNNModel
 from cyclops.utils.optional import import_optional_module
+
+
+torch = import_optional_module("torch", error="warn")
+if torch is not None:
+    from cyclops.models.neural_nets import GRUModel, LSTMModel, MLPModel, RNNModel
+else:
+    GRUModel = None
+    LSTMModel = None
+    MLPModel = None
+    RNNModel = None
 
 
 if TYPE_CHECKING:
