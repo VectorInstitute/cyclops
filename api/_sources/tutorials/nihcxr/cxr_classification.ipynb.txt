@@ -294,10 +294,9 @@
     "nih_eval_results_gender = evaluator.evaluate(\n",
     "    dataset=nih_ds,\n",
     "    metrics=[ppv, npv, sensitivity, specificity],\n",
-    "    feature_columns=\"image\",\n",
     "    target_columns=pathologies,\n",
-    "    prediction_column_prefix=\"predictions\",\n",
-    "    remove_columns=\"image\",\n",
+    "    prediction_columns=\"predictions.densenet\",\n",
+    "    ignore_columns=\"image\",\n",
     "    slice_spec=slice_spec,\n",
     ")"
    ]
@@ -354,10 +353,9 @@
     "nih_eval_results_age = evaluator.evaluate(\n",
     "    dataset=nih_ds,\n",
     "    metrics=[ppv, npv, sensitivity, specificity],\n",
-    "    feature_columns=\"image\",\n",
     "    target_columns=pathologies,\n",
-    "    prediction_column_prefix=\"predictions\",\n",
-    "    remove_columns=\"image\",\n",
+    "    prediction_columns=\"predictions.densenet\",\n",
+    "    ignore_columns=\"image\",\n",
     "    slice_spec=slice_spec,\n",
     ")"
    ]
@@ -459,7 +457,7 @@
    "outputs": [],
    "source": [
     "results_flat = {}\n",
-    "for slice_, metrics in nih_eval_results_age[\"densenet\"].items():\n",
+    "for slice_, metrics in nih_eval_results_age[\"model_for_predictions.densenet\"].items():\n",
     "    for name, metric in metrics.items():\n",
     "        results_flat[f\"{slice_}/{name}\"] = metric.mean()\n",
     "        for itr, m in enumerate(metric):\n",
@@ -467,7 +465,9 @@
     "                results_flat[f\"pathology:{pathologies[itr]}/{name}\"] = m\n",
     "            else:\n",
     "                results_flat[f\"{slice_}&pathology:{pathologies[itr]}/{name}\"] = m\n",
-    "for slice_, metrics in nih_eval_results_gender[\"densenet\"].items():\n",
+    "for slice_, metrics in nih_eval_results_gender[\n",
+    "    \"model_for_predictions.densenet\"\n",
+    "].items():\n",
     "    for name, metric in metrics.items():\n",
     "        results_flat[f\"{slice_}/{name}\"] = metric.mean()\n",
     "        for itr, m in enumerate(metric):\n",

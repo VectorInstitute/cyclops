@@ -1092,12 +1092,12 @@
    },
    "outputs": [],
    "source": [
+    "model_name = f\"model_for_preds.{model_name}\"\n",
     "results_flat = flatten_results_dict(\n",
     "    results=results,\n",
     "    remove_metrics=[\"BinaryROCCurve\", \"BinaryPrecisionRecallCurve\"],\n",
     "    model_name=model_name,\n",
-    ")\n",
-    "print(results_flat)"
+    ")"
    ]
   },
   {
