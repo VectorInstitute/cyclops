@@ -319,7 +319,8 @@
 {% if section is not empty%}
   {% set header = section.__class__.__name__ %}
     <div class="card" id={{name}}>
-    <h2>{{ header|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
+    <h2 class="collapsible">{{ header|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
+    <hr class="collapsible-bar">
     {% if header == "Datasets" %}
       {% for dataset in section.data %}
           {{ render_objects(dataset) }}
@@ -432,6 +433,7 @@
         background-color: #f3f4f6;
         border-radius: 5px;
         box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
+        display: none;
       }
 
       ul li {
@@ -798,6 +800,28 @@
         color: #0073e4;
       }
 
+      .collapsible::before {
+        content: "▶";
+        margin-right: 1%;
+      }
+
+      .collapsible.down-arrow::before {
+        content: "▼";
+      }
+
+      .collapsible.right-arrow::before {
+        content: "▶";
+      }
+      .collapsible {
+        cursor: pointer;
+        border: none;
+        outline: none;
+      }
+      .collapsible-bar {
+        width: 100%;
+        color: #214d87;
+        display: none;
+      }
 
     </style>
     <script>{{ plotlyjs|safe }}</script>
@@ -1628,5 +1652,37 @@
   }
   // Initial update when the page loads
   updatePlot();
+
+  function setCollapseButton() {
+    const collapsible = document.getElementsByClassName("collapsible");
+
+    for (let i = 0; i < collapsible.length; i++) {
+      collapsible[i].addEventListener("click", function() {
+        let arrow = collapsible[i]
+
+        if (arrow.classList.contains('down-arrow')) {
+          arrow.classList.add('right-arrow');
+          arrow.classList.remove('down-arrow');
+        } else {
+          arrow.classList.add('down-arrow');
+          arrow.classList.remove('right-arrow');
+        }
+
+        {# arrow.innerHTML === "▼" ? arrow.innerHTML = "▶" : arrow.innerHTML = "▼"; #}
+
+        let card = this.closest('.card');
+        let subcards = card.getElementsByClassName('subcard');
+
+        for (let j = 0; j < subcards.length; j++) {
+          subcards[j].style.display = subcards[j].style.display === 'block' ? 'none' : 'block';
+        }
+
+        let collapsible_bar = card.getElementsByClassName("collapsible-bar")[0];
+        collapsible_bar.style.display = collapsible_bar.style.display === 'block' ? 'none' : 'block'
+
+      });
+    }
+  }
+  document.addEventListener('DOMContentLoaded', setCollapseButton);
 
 </script>
