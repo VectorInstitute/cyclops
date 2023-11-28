@@ -45,10 +45,10 @@ DICOM images to create datasets. All optional dependencies can be installed with
 | xgboost          | xgboost         | Allows use of [XGBoost](https://xgboost.readthedocs.io/en/stable/) model                                     |
 | torch            | torch           | Allows use of [PyTorch](https://pytorch.org/) models                                                         |
 | torchvision      | torchvision     | Allows use of [Torchvision](https://pytorch.org/vision/stable/index.html) library                            |
-| torchxrayvision  | torchxrayvision | Uses [torchxrayvision](https://mlmed.org/torchxrayvision/) library                                           |
-| monai            | monai           | Uses [monai](https://github.com/Project-MONAI/MONAI) to load and transform images                            |
-| alibi            | alibi           | Uses [alibi](https://docs.seldon.io/projects/alibi/en/stable/) for additional explainability functionality   |
-| alibi-detect     | alibi-detect    | Uses [alibi-detect](https://docs.seldon.io/projects/alibi-detect/en/stable/) for dataset shift detection     |
+| torchxrayvision  | torchxrayvision | Uses [TorchXRayVision](https://mlmed.org/torchxrayvision/) library                                           |
+| monai            | monai           | Uses [MONAI](https://github.com/Project-MONAI/MONAI) to load and transform images                            |
+| alibi            | alibi           | Uses [Alibi](https://docs.seldon.io/projects/alibi/en/stable/) for additional explainability functionality   |
+| alibi-detect     | alibi-detect    | Uses [Alibi Detect](https://docs.seldon.io/projects/alibi-detect/en/stable/) for dataset shift detection     |
 
 
 ## 🧑🏿‍💻 Developing
