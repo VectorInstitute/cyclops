@@ -29,6 +29,8 @@ class TestBinaryTabularClassificationTask(TestCase):
 
     def test_init(self):
         """Test initialization of BinaryTabularClassificationTask."""
+        assert self.test_task.task_type == "binary"
+        assert self.test_task.data_type == "tabular"
         models_list = self.test_task.list_models()
         assert models_list == [self.model_name]
 
@@ -74,6 +76,8 @@ class TestMultilabelImageClassificationTask(TestCase):
 
     def test_init(self):
         """Test initialization of MultilabelImageClassificationTask."""
+        assert self.test_task.task_type == "multilabel"
+        assert self.test_task.data_type == "image"
         models_list = self.test_task.list_models()
         assert models_list == [self.model_name]
 
