@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.process.constants import MIN_MAX, STANDARD
-from cyclops.process.feature.normalize import (
+from cyclops.data.constants import MIN_MAX, STANDARD
+from cyclops.data.df.normalize import (
     GroupbyNormalizer,
     SklearnNormalizer,
     VectorizedNormalizer,

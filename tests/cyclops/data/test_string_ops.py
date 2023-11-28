@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from cyclops.process.constants import EMPTY_STRING
-from cyclops.process.string_ops import (
+from cyclops.data.constants import EMPTY_STRING
+from cyclops.data.string_ops import (
     compute_range_avg,
     convert_to_numeric,
     count_occurrences,

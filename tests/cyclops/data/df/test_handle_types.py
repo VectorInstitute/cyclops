@@ -3,8 +3,8 @@
 import pandas as pd
 import pytest
 
-from cyclops.process.constants import BINARY, NUMERIC, ORDINAL, STRING
-from cyclops.process.feature.handle_types import (
+from cyclops.data.constants import BINARY, NUMERIC, ORDINAL, STRING
+from cyclops.data.df.handle_types import (
     collect_indicators,
     convertible_to_type,
     get_unique,

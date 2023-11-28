@@ -7,11 +7,11 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from cyclops.process.clean import dropna_rows
-from cyclops.process.constants import ALL, FIRST, LAST, MEAN, MEDIAN
-from cyclops.process.feature.vectorized import Vectorized
-from cyclops.process.impute import AggregatedImputer, numpy_2d_ffill
-from cyclops.process.util import has_columns, is_timestamp_series
+from cyclops.data.clean import dropna_rows
+from cyclops.data.constants import ALL, FIRST, LAST, MEAN, MEDIAN
+from cyclops.data.df.vectorized import Vectorized
+from cyclops.data.impute import AggregatedImputer, numpy_2d_ffill
+from cyclops.data.utils import has_columns, is_timestamp_series
 from cyclops.utils.common import to_list, to_list_optional
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
@@ -459,9 +459,7 @@ class Aggregator:
         ).apply(self._compute_timestep)
         # Aggregate
         has_inter_imputer = True
-        if self.imputer is None:
-            has_inter_imputer = False
-        elif self.imputer.inter is None:
+        if self.imputer is None or self.imputer.intra is None:
             has_inter_imputer = False
         if self.agg_meta_for is None and not has_inter_imputer:
             # EFFICIENT - Can perform if no imputation or metadata calculation is done

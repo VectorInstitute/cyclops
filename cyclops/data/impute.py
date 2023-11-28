@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from cyclops.process.constants import (
+from cyclops.data.constants import (
     BFILL,
     DROP,
     EXTRA,
@@ -19,7 +19,7 @@ from cyclops.process.constants import (
     MEDIAN,
     MODE,
 )
-from cyclops.process.util import has_columns
+from cyclops.data.utils import has_columns
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 
@@ -111,7 +111,8 @@ def np_ffill_bfill(arr: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.f
 
 
 def np_fill_null_num(
-    arr: np.typing.NDArray[np.float64], num: float
+    arr: np.typing.NDArray[np.float64],
+    num: float,
 ) -> np.typing.NDArray[np.float64]:
     """Fill null values with a number.
 
@@ -285,7 +286,8 @@ class SeriesImputer:
         self.limit_area = limit_area
 
     def _process_imputefunc(
-        self, imputefunc: Union[str, Callable[..., Any]]
+        self,
+        imputefunc: Union[str, Callable[..., Any]],
     ) -> Callable[..., Any]:
         """Process imputation function.
 

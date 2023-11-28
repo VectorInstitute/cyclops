@@ -8,9 +8,9 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
-from cyclops.process.feature.normalize import VectorizedNormalizer
-from cyclops.process.feature.split import split_idx
-from cyclops.process.impute import np_fill_null_num
+from cyclops.data.df.normalize import VectorizedNormalizer
+from cyclops.data.df.split import split_idx
+from cyclops.data.impute import np_fill_null_num
 from cyclops.utils.common import list_swap
 from cyclops.utils.file import save_array
 from cyclops.utils.index import take_indices_over_axis
@@ -193,19 +193,19 @@ class Vectorized:
             if not isinstance(index, list) and not isinstance(index, np.ndarray):
                 raise ValueError("Indexes must be a list of list or numpy.ndarray.")
 
-            index = np.array(index)
-            if len(index) != data.shape[i]:
+            index_ = np.array(index)
+            if len(index_) != data.shape[i]:
                 raise ValueError(
                     (
-                        f"Axis {i} index has {len(index)} elements, "
+                        f"Axis {i} index has {len(index_)} elements, "
                         f"but the axis itself has length {data.shape[i]}."
                     ),
                 )
-            if len(np.unique(index)) != len(index):
+            if len(np.unique(index_)) != len(index_):
                 raise ValueError(
                     "Each index must have no duplicate values to uniquely identify.",
                 )
-            indexes[i] = index  # type: ignore
+            indexes[i] = index_  # type: ignore
         self.data: np.typing.NDArray[Any] = data
         self.indexes: List[np.typing.NDArray[Any]] = indexes  # type: ignore
         self.index_maps: List[Dict[Any, int]] = [
@@ -808,8 +808,7 @@ class Vectorized:
         data_axis: Union[str, int],
         impute_fn: Callable[[np.typing.ArrayLike], np.typing.ArrayLike],
     ) -> None:
-        """Impute values with forward fill and/or backward fill and fill null values \
-        with feature mean.
+        """Impute missing values with forward/backward fill with feature mean.
 
         Parameters
         ----------
@@ -828,7 +827,7 @@ class Vectorized:
             index_exp = vec_index_exp[:, :, i]
             data_slice = self.data[index_exp]
             mean = np.nanmean(data_slice)
-            func = lambda x: np_fill_null_num(x, mean)  # noqa: E731
+            func = lambda x: np_fill_null_num(x, mean)  # noqa: E731,B023
             self.impute_over_axis(impute_axis, func, index_exp=index_exp)
 
     def concat_over_axis(

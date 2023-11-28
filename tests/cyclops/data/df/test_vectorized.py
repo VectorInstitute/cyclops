@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from cyclops.process.constants import STANDARD
-from cyclops.process.feature.vectorized import (
+from cyclops.data.constants import STANDARD
+from cyclops.data.df.vectorized import (
     Vectorized,
     intersect_vectorized,
     split_vectorized,

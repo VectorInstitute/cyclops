@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.process.util import (
+from cyclops.data.utils import (
     create_indicator_variables,
     gather_columns,
     has_columns,

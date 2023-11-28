@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cyclops.process.constants import (
+from cyclops.data.constants import (
     BFILL,
     DROP,
     EXTRA,
@@ -18,7 +18,7 @@ from cyclops.process.constants import (
     MEDIAN,
     MODE,
 )
-from cyclops.process.impute import (
+from cyclops.data.impute import (
     SeriesImputer,
     TabularImputer,
     compute_inter_range,

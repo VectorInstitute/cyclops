@@ -192,7 +192,6 @@ select = [
 fixable = ["A", "B", "COM", "C4", "RET", "SIM", "ICN", "Q", "RSE", "D", "E", "F", "I", "W", "N", "ERA", "PL"]
 line-length = 88
 exclude = [
-    "cyclops/process",
     "use_cases",
     "nbs",
 ]

@@ -5,11 +5,11 @@ from typing import List, Optional, Union
 
 import pandas as pd
 
-from cyclops.process.constants import (
+from cyclops.data.constants import (
     NEGATIVE_RESULT_TERMS,
     POSITIVE_RESULT_TERMS,
 )
-from cyclops.process.string_ops import (
+from cyclops.data.string_ops import (
     fill_missing_with_nan,
     fix_inequalities,
     none_to_empty_string,
@@ -18,7 +18,7 @@ from cyclops.process.string_ops import (
     strip_whitespace,
     to_lower,
 )
-from cyclops.process.util import log_df_counts
+from cyclops.data.utils import log_df_counts
 from cyclops.utils.log import setup_logging
 from cyclops.utils.profile import time_function
 

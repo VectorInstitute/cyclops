@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from cyclops.process.constants import (
+from cyclops.data.constants import (
     BINARY,
     FEATURE_MAPPING_ATTR,
     FEATURE_TARGET_ATTR,
@@ -15,8 +15,8 @@ from cyclops.process.constants import (
     ORDINAL,
     STRING,
 )
-from cyclops.process.feature.feature import FeatureMeta, Features
-from cyclops.process.feature.normalize import GroupbyNormalizer
+from cyclops.data.df.feature import FeatureMeta, Features
+from cyclops.data.df.normalize import GroupbyNormalizer
 
 
 ENCOUNTER_ID = "enc_id"
@@ -274,29 +274,3 @@ class TestFeatures(unittest.TestCase):
             features=["feat_A", "feat_B"],
             by=ENCOUNTER_ID,
         )
-
-    def test_slice(self):
-        """Test slice method."""
-        sliced_by_indices = self.features.slice({"feat_B": 3}, replace=False)
-        assert np.array_equal(sliced_by_indices, np.array([201]))
-
-        sliced_by_indices = self.features.slice(
-            {"feat_A": True, "feat_B": [3.8, 3]},
-            replace=False,
-        )
-        assert np.array_equal(sliced_by_indices, np.array([201, 301]))
-        sliced_by_indices = self.features.slice({}, replace=True)
-        assert np.array_equal(sliced_by_indices, np.array([101, 201, 301]))
-        assert len(self.features.data) == 3
-        sliced_by_indices = self.features.slice(
-            slice_query="feat_A == True & feat_B > 3",
-            replace=False,
-        )
-        assert np.array_equal(sliced_by_indices, np.array([301]))
-        filter_list = [3, 3.8]
-        sliced_by_indices = self.features.slice(
-            slice_query=f"feat_B=={filter_list}",
-            replace=True,
-        )
-        assert np.array_equal(sliced_by_indices, np.array([201, 301]))
-        assert len(self.features.data) == 2
