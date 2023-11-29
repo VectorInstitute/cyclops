@@ -105,7 +105,7 @@ Now, you can navigate to the notebook's ``Kernel`` tab and set it as
 
 ## 🎓 Citation
 
-Reference to cite when you use CyclOps in a project or a research paper:
+Reference to cite when you use `cyclops` in a project or a research paper:
 
 ```
 @article {Krishnan2022.12.02.22283021,
