@@ -14,6 +14,7 @@ from sklearn.base import BaseEstimator as SKBaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, PredefinedSplit, RandomizedSearchCV
+from sklearn.pipeline import Pipeline
 
 from cyclops.data.utils import is_out_of_core
 from cyclops.models.utils import get_split, is_sklearn_class, is_sklearn_instance
@@ -304,17 +305,27 @@ class SKModel:
                         [X[feature] for feature in feature_columns],
                         axis=1,
                     ).squeeze()
-
-                    if transforms is not None and not is_callable_transform:
-                        try:
-                            X_train = transforms.transform(X_train)
-                        except NotFittedError:
-                            X_train = transforms.fit_transform(X_train)
-
                     y_train = np.stack(
                         [X[target] for target in target_columns],
                         axis=1,
                     ).squeeze()
+
+                    if transforms is not None and not is_callable_transform:
+                        try:
+                            X_train = transforms.transform(X_train)
+                        except (NotFittedError, AttributeError) as error:
+                            if isinstance(error, AttributeError) and isinstance(
+                                transforms,
+                                Pipeline,
+                            ):
+                                # Used for ImbalancedLearn transformer
+                                X_train = transforms[0:-1].fit_transform(X_train)
+                                X_train, y_train = transforms[-1].fit_resample(
+                                    X_train,
+                                    y_train,
+                                )
+                            else:
+                                X_train = transforms.fit_transform(X_train)
 
                     if issparse(X_train):
                         X_train = X_train.toarray()
