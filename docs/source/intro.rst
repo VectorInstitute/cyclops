@@ -1,36 +1,22 @@
-.. figure::
-   https://github.com/VectorInstitute/cyclops/blob/main/docs/source/theme/static/cyclops_logo-dark.png?raw=true
+.. figure:: https://github.com/VectorInstitute/cyclops/blob/main/docs/source/theme/static/cyclops_logo-dark.png?raw=true
    :alt: cyclops Logo
 
 --------------
 
-|PyPI| |PyPI - Python Version| |code checks| |integration tests| |docs|
-|codecov| |docker| |license|
+|PyPI| |PyPI - Python Version| |code checks| |integration tests| |docs| |codecov| |docker| |license|
 
-``cyclops`` is a toolkit for facilitating research and deployment of ML
-models for healthcare. It provides a few high-level APIs namely:
+``cyclops`` is a toolkit for facilitating research and deployment of ML models for healthcare. It provides a few high-level APIs namely:
 
--  ``data`` - Create datasets for training, inference and evaluation. We
-   use the popular 🤗
-   `datasets <https://github.com/huggingface/datasets>`__ to efficiently
-   load and slice different modalities of data
--  ``models`` - Use common model implementations using
-   `scikit-learn <https://scikit-learn.org/stable/>`__ and
-   `PyTorch <https://pytorch.org/>`__
--  ``tasks`` - Use common ML task formulations such as binary
-   classification or multi-label classification on tabular, time-series
-   and image data
+-  ``data`` - Create datasets for training, inference and evaluation. We use the popular 🤗 `datasets <https://github.com/huggingface/datasets>`__ to efficiently load and slice different modalities of data
+-  ``models`` - Use common model implementations using `scikit-learn <https://scikit-learn.org/stable/>`__ and `PyTorch <https://pytorch.org/>`__
+-  ``tasks`` - Use common ML task formulations such as binary classification or multi-label classification on tabular, time-series and image data
 -  ``evaluate`` - Evaluate models on clinical prediction tasks
 -  ``monitor`` - Detect dataset shift relevant for clinical use cases
--  ``report`` - Create `model report
-   cards <https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html>`__
-   for clinical ML models
+-  ``report`` - Create `model report cards <https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html>`__ for clinical ML models
 
-``cyclops`` also provides example end-to-end use case implementations on
-clinical datasets such as
+``cyclops`` also provides example end-to-end use case implementations on clinical datasets such as
 
--  `NIH chest
-   x-ray <https://www.nih.gov/news-events/news-releases/nih-clinical-center-provides-one-largest-publicly-available-chest-x-ray-datasets-scientific-community>`__
+-  `NIH chest x-ray <https://www.nih.gov/news-events/news-releases/nih-clinical-center-provides-one-largest-publicly-available-chest-x-ray-datasets-scientific-community>`__
 -  `MIMIC-IV <https://physionet.org/content/mimiciv/2.0/>`__
 
 🐣 Getting Started
@@ -43,84 +29,25 @@ Installing cyclops using pip
 
    python3 -m pip install pycyclops
 
-``cyclops`` has many optional dependencies that are used for specific
-functionality. For example, the
-`monai <https://github.com/Project-MONAI/MONAI>`__ library is used for
-loading DICOM images to create datasets. All optional dependencies can
-be installed with ``pycyclops[all]``, and specific sets of dependencies
-are listed in the sections below.
+``cyclops`` has many optional dependencies that are used for specific functionality. For example, the `monai <https://github.com/Project-MONAI/MONAI>`__ library is used for loading DICOM images to create datasets. All optional dependencies can be installed with ``pycyclops[all]``, and specific sets of dependencies are listed in the sections below.
 
-+-----------------------------+--------------------------+--------------+
-| Dependency                  | pip extra                | Notes        |
-+=============================+==========================+==============+
-| xgboost                     | xgboost                  | Allows use   |
-|                             |                          | of           |
-|                             |                          | `XGBoos      |
-|                             |                          | t <https://x |
-|                             |                          | gboost.readt |
-|                             |                          | hedocs.io/en |
-|                             |                          | /stable/>`__ |
-|                             |                          | model        |
-+-----------------------------+--------------------------+--------------+
-| torch                       | torch                    | Allows use   |
-|                             |                          | of           |
-|                             |                          | `PyTorch <   |
-|                             |                          | https://pyto |
-|                             |                          | rch.org/>`__ |
-|                             |                          | models       |
-+-----------------------------+--------------------------+--------------+
-| torchvision                 | torchvision              | Allows use   |
-|                             |                          | of           |
-|                             |                          | `T           |
-|                             |                          | orchvision < |
-|                             |                          | https://pyto |
-|                             |                          | rch.org/visi |
-|                             |                          | on/stable/in |
-|                             |                          | dex.html>`__ |
-|                             |                          | library      |
-+-----------------------------+--------------------------+--------------+
-| torchxrayvision             | torchxrayvision          | Uses         |
-|                             |                          | `TorchXR     |
-|                             |                          | ayVision <ht |
-|                             |                          | tps://mlmed. |
-|                             |                          | org/torchxra |
-|                             |                          | yvision/>`__ |
-|                             |                          | library      |
-+-----------------------------+--------------------------+--------------+
-| monai                       | monai                    | Uses         |
-|                             |                          | `M           |
-|                             |                          | ONAI <https: |
-|                             |                          | //github.com |
-|                             |                          | /Project-MON |
-|                             |                          | AI/MONAI>`__ |
-|                             |                          | to load and  |
-|                             |                          | transform    |
-|                             |                          | images       |
-+-----------------------------+--------------------------+--------------+
-| alibi                       | alibi                    | Uses         |
-|                             |                          | `Alibi <http |
-|                             |                          | s://docs.sel |
-|                             |                          | don.io/proje |
-|                             |                          | cts/alibi/en |
-|                             |                          | /stable/>`__ |
-|                             |                          | for          |
-|                             |                          | additional   |
-|                             |                          | ex           |
-|                             |                          | plainability |
-|                             |                          | f            |
-|                             |                          | unctionality |
-+-----------------------------+--------------------------+--------------+
-| alibi-detect                | alibi-detect             | Uses `Alibi  |
-|                             |                          | Detect       |
-|                             |                          | <https://doc |
-|                             |                          | s.seldon.io/ |
-|                             |                          | projects/ali |
-|                             |                          | bi-detect/en |
-|                             |                          | /stable/>`__ |
-|                             |                          | for dataset  |
-|                             |                          | shift        |
-|                             |                          | detection    |
-+-----------------------------+--------------------------+--------------+
++-----------------------------+--------------------------+---------------------------------------------------------------------------------------------------------------+
+| Dependency                  | pip extra                | Notes                                                                                                         |
++=============================+==========================+===============================================================================================================+
+| xgboost                     | xgboost                  | Allows use of `XGBoost <https://xgboost.readthedocs.io/en/stable/>`__ model                                   |
++-----------------------------+--------------------------+---------------------------------------------------------------------------------------------------------------+
+| torch                       | torch                    | Allows use of `PyTorch <https://pytorch.org/>`__ models                                                       |
++-----------------------------+--------------------------+---------------------------------------------------------------------------------------------------------------+
+| torchvision                 | torchvision              | Allows use of `Torchvision <https://pytorch.org/vision/stable/index.html>`__ library                          |
++-----------------------------+--------------------------+---------------------------------------------------------------------------------------------------------------+
+| torchxrayvision             | torchxrayvision          | Uses `TorchXRayVision <https://mlmed.org/torchxrayvision/>`__ library                                         |
++-----------------------------+--------------------------+---------------------------------------------------------------------------------------------------------------+
+| monai                       | monai                    | Uses `MONAI <https://github.com/Project-MONAI/MONAI>`__ to load and transform images                          |
++-----------------------------+--------------------------+---------------------------------------------------------------------------------------------------------------+
+| alibi                       | alibi                    | Uses `Alibi <https://docs.seldon.io/projects/alibi/en/stable/>`__ for additional explainability functionality |
++-----------------------------+--------------------------+---------------------------------------------------------------------------------------------------------------+
+| alibi-detect                | alibi-detect             | Uses `Alibi Detect <https://docs.seldon.io/projects/alibi-detect/en/stable/>`__ for dataset shift detection   |
++-----------------------------+--------------------------+---------------------------------------------------------------------------------------------------------------+
 
 🧑🏿‍💻 Developing
 =======================
@@ -128,25 +55,20 @@ are listed in the sections below.
 Using poetry
 ------------
 
-The development environment can be set up using
-`poetry <https://python-poetry.org/docs/#installation>`__. Hence, make
-sure it is installed and then run:
+The development environment can be set up using `poetry <https://python-poetry.org/docs/#installation>`__. Hence, make sure it is installed and then run:
 
 .. code:: bash
 
    python3 -m poetry install
    source $(poetry env info --path)/bin/activate
 
-In order to install dependencies for testing (codestyle, unit tests,
-integration tests), run:
+In order to install dependencies for testing (codestyle, unit tests, integration tests), run:
 
 .. code:: bash
 
    python3 -m poetry install --with test
 
-API documentation is built using
-`Sphinx <https://www.sphinx-doc.org/en/master/>`__ and can be locally
-built by:
+API documentation is built using `Sphinx <https://www.sphinx-doc.org/en/master/>`__ and can be locally built by:
 
 .. code:: bash
 
@@ -157,9 +79,7 @@ built by:
 Contributing
 ------------
 
-Contributing to cyclops is welcomed. See
-`Contributing <https://vectorinstitute.github.io/cyclops/api/intro.html>`__
-for guidelines.
+Contributing to cyclops is welcomed. See `Contributing <https://vectorinstitute.github.io/cyclops/api/intro.html>`__ for guidelines.
 
 📚 `Documentation <https://vectorinstitute.github.io/cyclops/>`__
 =================================================================
@@ -167,22 +87,18 @@ for guidelines.
 📓 Notebooks
 ============
 
-To use jupyter notebooks, the python virtual environment can be
-installed and used inside an IPython kernel. After activating the
-virtual environment, run:
+To use jupyter notebooks, the python virtual environment can be installed and used inside an IPython kernel. After activating the virtual environment, run:
 
 .. code:: bash
 
    python3 -m ipykernel install --user --name <name_of_kernel>
 
-Now, you can navigate to the notebook’s ``Kernel`` tab and set it as
-``<name_of_kernel>``.
+Now, you can navigate to the notebook’s ``Kernel`` tab and set it as ``<name_of_kernel>``.
 
 🎓 Citation
 ===========
 
-Reference to cite when you use ``cyclops`` in a project or a research
-paper:
+Reference to cite when you use ``cyclops`` in a project or a research paper:
 
 ::
 
