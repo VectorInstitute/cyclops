@@ -36,6 +36,7 @@
     "from cycquery import MIMICIVQuerier\n",
     "from datasets import Dataset\n",
     "from datasets.features import ClassLabel\n",
+    "from imblearn.over_sampling import SMOTE\n",
     "from sklearn.compose import ColumnTransformer\n",
     "from sklearn.impute import SimpleImputer\n",
     "from sklearn.pipeline import Pipeline\n",
@@ -584,7 +585,12 @@
     "        ),\n",
     "    ],\n",
     "    remainder=\"passthrough\",\n",
-    ")"
+    ")\n",
+    "preprocessor_pipeline = [\n",
+    "    (\"preprocessor\", preprocessor),\n",
+    "    (\"oversampling\", SMOTE(random_state=RANDOM_SEED)),\n",
+    "]\n",
+    "preprocessor_pipeline = Pipeline(preprocessor_pipeline)"
    ]
   },
   {
@@ -692,7 +698,7 @@
     "mortality_task.train(\n",
     "    dataset[\"train\"],\n",
     "    model_name=model_name,\n",
-    "    transforms=preprocessor,\n",
+    "    transforms=preprocessor_pipeline,\n",
     "    best_model_params=best_model_params,\n",
     ")"
    ]

@@ -177,32 +177,19 @@
 <img alt="cyclops Logo" src="https://github.com/VectorInstitute/cyclops/blob/main/docs/source/theme/static/cyclops_logo-dark.png?raw=true" />
 </figure>
 <hr class="docutils" />
-<p><a class="reference external" href="https://pypi.org/project/pycyclops"><img alt="PyPI" src="https://img.shields.io/pypi/v/pycyclops" /></a> <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/pycyclops" /> <a class="reference external" href="https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml"><img alt="code checks" src="https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg" /></a> <a class="reference external" href="https://github.com/VectorInstitute/cyclops/actions/workflows/integration_tests.yml"><img alt="integration tests" src="https://github.com/VectorInstitute/cyclops/actions/workflows/integration_tests.yml/badge.svg" /></a> <a class="reference external" href="https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml"><img alt="docs" src="https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg" /></a>
-<a class="reference external" href="https://codecov.io/gh/VectorInstitute/cyclops"><img alt="codecov" src="https://codecov.io/gh/VectorInstitute/cyclops/branch/main/graph/badge.svg" /></a> <a class="reference external" href="https://hub.docker.com/r/vectorinstitute/cyclops"><img alt="docker" src="https://github.com/VectorInstitute/cyclops/actions/workflows/docker.yml/badge.svg" /></a> <a class="reference external" href="https://github.com/VectorInstitute/cyclops/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/github/license/VectorInstitute/cyclops.svg" /></a></p>
-<p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> is a toolkit for facilitating research and deployment of ML
-models for healthcare. It provides a few high-level APIs namely:</p>
+<p><a class="reference external" href="https://pypi.org/project/pycyclops"><img alt="PyPI" src="https://img.shields.io/pypi/v/pycyclops" /></a> <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/pycyclops" /> <a class="reference external" href="https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml"><img alt="code checks" src="https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg" /></a> <a class="reference external" href="https://github.com/VectorInstitute/cyclops/actions/workflows/integration_tests.yml"><img alt="integration tests" src="https://github.com/VectorInstitute/cyclops/actions/workflows/integration_tests.yml/badge.svg" /></a> <a class="reference external" href="https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml"><img alt="docs" src="https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg" /></a> <a class="reference external" href="https://codecov.io/gh/VectorInstitute/cyclops"><img alt="codecov" src="https://codecov.io/gh/VectorInstitute/cyclops/branch/main/graph/badge.svg" /></a> <a class="reference external" href="https://hub.docker.com/r/vectorinstitute/cyclops"><img alt="docker" src="https://github.com/VectorInstitute/cyclops/actions/workflows/docker.yml/badge.svg" /></a> <a class="reference external" href="https://github.com/VectorInstitute/cyclops/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/github/license/VectorInstitute/cyclops.svg" /></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> is a toolkit for facilitating research and deployment of ML models for healthcare. It provides a few high-level APIs namely:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> - Create datasets for training, inference and evaluation. We
-use the popular 🤗
-<a class="reference external" href="https://github.com/huggingface/datasets">datasets</a> to efficiently
-load and slice different modalities of data</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code> - Use common model implementations using
-<a class="reference external" href="https://scikit-learn.org/stable/">scikit-learn</a> and
-<a class="reference external" href="https://pytorch.org/">PyTorch</a></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tasks</span></code> - Use common ML task formulations such as binary
-classification or multi-label classification on tabular, time-series
-and image data</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> - Create datasets for training, inference and evaluation. We use the popular 🤗 <a class="reference external" href="https://github.com/huggingface/datasets">datasets</a> to efficiently load and slice different modalities of data</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code> - Use common model implementations using <a class="reference external" href="https://scikit-learn.org/stable/">scikit-learn</a> and <a class="reference external" href="https://pytorch.org/">PyTorch</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tasks</span></code> - Use common ML task formulations such as binary classification or multi-label classification on tabular, time-series and image data</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code> - Evaluate models on clinical prediction tasks</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">monitor</span></code> - Detect dataset shift relevant for clinical use cases</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">report</span></code> - Create <a class="reference external" href="https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html">model report
-cards</a>
-for clinical ML models</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">report</span></code> - Create <a class="reference external" href="https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html">model report cards</a> for clinical ML models</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> also provides example end-to-end use case implementations on
-clinical datasets such as</p>
+<p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> also provides example end-to-end use case implementations on clinical datasets such as</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://www.nih.gov/news-events/news-releases/nih-clinical-center-provides-one-largest-publicly-available-chest-x-ray-datasets-scientific-community">NIH chest
-x-ray</a></p></li>
+<li><p><a class="reference external" href="https://www.nih.gov/news-events/news-releases/nih-clinical-center-provides-one-largest-publicly-available-chest-x-ray-datasets-scientific-community">NIH chest x-ray</a></p></li>
 <li><p><a class="reference external" href="https://physionet.org/content/mimiciv/2.0/">MIMIC-IV</a></p></li>
 </ul>
 <section id="getting-started">
@@ -212,12 +199,7 @@ x-ray</a></p></li>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pycyclops
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> has many optional dependencies that are used for specific
-functionality. For example, the
-<a class="reference external" href="https://github.com/Project-MONAI/MONAI">monai</a> library is used for
-loading DICOM images to create datasets. All optional dependencies can
-be installed with <code class="docutils literal notranslate"><span class="pre">pycyclops[all]</span></code>, and specific sets of dependencies
-are listed in the sections below.</p>
+<p><code class="docutils literal notranslate"><span class="pre">cyclops</span></code> has many optional dependencies that are used for specific functionality. For example, the <a class="reference external" href="https://github.com/Project-MONAI/MONAI">monai</a> library is used for loading DICOM images to create datasets. All optional dependencies can be installed with <code class="docutils literal notranslate"><span class="pre">pycyclops[all]</span></code>, and specific sets of dependencies are listed in the sections below.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Dependency</p></th>
@@ -228,67 +210,31 @@ are listed in the sections below.</p>
 <tbody>
 <tr class="row-even"><td><p>xgboost</p></td>
 <td><p>xgboost</p></td>
-<td><p>Allows use
-of
-<a class="reference external" href="https://xgboost.readthedocs.io/en/stable/">XGBoos
-t</a>
-model</p></td>
+<td><p>Allows use of <a class="reference external" href="https://xgboost.readthedocs.io/en/stable/">XGBoost</a> model</p></td>
 </tr>
 <tr class="row-odd"><td><p>torch</p></td>
 <td><p>torch</p></td>
-<td><p>Allows use
-of
-<a href="#id1"><span class="problematic" id="id2">`PyTorch &lt;
-https://pyto
-rch.org/&gt;`__</span></a>
-models</p></td>
+<td><p>Allows use of <a class="reference external" href="https://pytorch.org/">PyTorch</a> models</p></td>
 </tr>
 <tr class="row-even"><td><p>torchvision</p></td>
 <td><p>torchvision</p></td>
-<td><p>Allows use
-of
-<a href="#id1"><span class="problematic" id="id3">`T
-orchvision &lt;
-https://pyto
-rch.org/visi
-on/stable/in
-dex.html&gt;`__</span></a>
-library</p></td>
+<td><p>Allows use of <a class="reference external" href="https://pytorch.org/vision/stable/index.html">Torchvision</a> library</p></td>
 </tr>
 <tr class="row-odd"><td><p>torchxrayvision</p></td>
 <td><p>torchxrayvision</p></td>
-<td><p>Uses
-<a class="reference external" href="https://mlmed.org/torchxrayvision/">TorchXR
-ayVision</a>
-library</p></td>
+<td><p>Uses <a class="reference external" href="https://mlmed.org/torchxrayvision/">TorchXRayVision</a> library</p></td>
 </tr>
 <tr class="row-even"><td><p>monai</p></td>
 <td><p>monai</p></td>
-<td><p>Uses
-<a class="reference external" href="https://github.com/Project-MONAI/MONAI">M
-ONAI</a>
-to load and
-transform
-images</p></td>
+<td><p>Uses <a class="reference external" href="https://github.com/Project-MONAI/MONAI">MONAI</a> to load and transform images</p></td>
 </tr>
 <tr class="row-odd"><td><p>alibi</p></td>
 <td><p>alibi</p></td>
-<td><p>Uses
-<a class="reference external" href="https://docs.seldon.io/projects/alibi/en/stable/">Alibi</a>
-for
-additional
-ex
-plainability
-f
-unctionality</p></td>
+<td><p>Uses <a class="reference external" href="https://docs.seldon.io/projects/alibi/en/stable/">Alibi</a> for additional explainability functionality</p></td>
 </tr>
 <tr class="row-even"><td><p>alibi-detect</p></td>
 <td><p>alibi-detect</p></td>
-<td><p>Uses <a class="reference external" href="https://docs.seldon.io/projects/alibi-detect/en/stable/">Alibi
-Detect</a>
-for dataset
-shift
-detection</p></td>
+<td><p>Uses <a class="reference external" href="https://docs.seldon.io/projects/alibi-detect/en/stable/">Alibi Detect</a> for dataset shift detection</p></td>
 </tr>
 </tbody>
 </table>
@@ -298,21 +244,16 @@ detection</p></td>
 <h1>🧑🏿‍💻 Developing<a class="headerlink" href="#developing" title="Link to this heading"></a></h1>
 <section id="using-poetry">
 <h2>Using poetry<a class="headerlink" href="#using-poetry" title="Link to this heading"></a></h2>
-<p>The development environment can be set up using
-<a class="reference external" href="https://python-poetry.org/docs/#installation">poetry</a>. Hence, make
-sure it is installed and then run:</p>
+<p>The development environment can be set up using <a class="reference external" href="https://python-poetry.org/docs/#installation">poetry</a>. Hence, make sure it is installed and then run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>poetry<span class="w"> </span>install
 <span class="nb">source</span><span class="w"> </span><span class="k">$(</span>poetry<span class="w"> </span>env<span class="w"> </span>info<span class="w"> </span>--path<span class="k">)</span>/bin/activate
 </pre></div>
 </div>
-<p>In order to install dependencies for testing (codestyle, unit tests,
-integration tests), run:</p>
+<p>In order to install dependencies for testing (codestyle, unit tests, integration tests), run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span><span class="nb">test</span>
 </pre></div>
 </div>
-<p>API documentation is built using
-<a class="reference external" href="https://www.sphinx-doc.org/en/master/">Sphinx</a> and can be locally
-built by:</p>
+<p>API documentation is built using <a class="reference external" href="https://www.sphinx-doc.org/en/master/">Sphinx</a> and can be locally built by:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>docs
 <span class="nb">cd</span><span class="w"> </span>docs
 make<span class="w"> </span>html<span class="w"> </span><span class="nv">SPHINXOPTS</span><span class="o">=</span><span class="s2">&quot;-D nbsphinx_allow_errors=True&quot;</span>
@@ -321,9 +262,7 @@ make<span class="w"> </span>html<span class="w"> </span><span class="nv">SPHINXO
 </section>
 <section id="contributing">
 <h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading"></a></h2>
-<p>Contributing to cyclops is welcomed. See
-<a class="reference external" href="https://vectorinstitute.github.io/cyclops/api/intro.html">Contributing</a>
-for guidelines.</p>
+<p>Contributing to cyclops is welcomed. See <a class="reference external" href="https://vectorinstitute.github.io/cyclops/api/intro.html">Contributing</a> for guidelines.</p>
 </section>
 </section>
 <section id="documentation">
@@ -331,19 +270,15 @@ for guidelines.</p>
 </section>
 <section id="notebooks">
 <h1>📓 Notebooks<a class="headerlink" href="#notebooks" title="Link to this heading"></a></h1>
-<p>To use jupyter notebooks, the python virtual environment can be
-installed and used inside an IPython kernel. After activating the
-virtual environment, run:</p>
+<p>To use jupyter notebooks, the python virtual environment can be installed and used inside an IPython kernel. After activating the virtual environment, run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>ipykernel<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--name<span class="w"> </span>&lt;name_of_kernel&gt;
 </pre></div>
 </div>
-<p>Now, you can navigate to the notebook’s <code class="docutils literal notranslate"><span class="pre">Kernel</span></code> tab and set it as
-<code class="docutils literal notranslate"><span class="pre">&lt;name_of_kernel&gt;</span></code>.</p>
+<p>Now, you can navigate to the notebook’s <code class="docutils literal notranslate"><span class="pre">Kernel</span></code> tab and set it as <code class="docutils literal notranslate"><span class="pre">&lt;name_of_kernel&gt;</span></code>.</p>
 </section>
 <section id="citation">
 <h1>🎓 Citation<a class="headerlink" href="#citation" title="Link to this heading"></a></h1>
-<p>Reference to cite when you use <code class="docutils literal notranslate"><span class="pre">cyclops</span></code> in a project or a research
-paper:</p>
+<p>Reference to cite when you use <code class="docutils literal notranslate"><span class="pre">cyclops</span></code> in a project or a research paper:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@article</span> <span class="p">{</span><span class="n">Krishnan2022</span><span class="mf">.12.02.22283021</span><span class="p">,</span>
     <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Krishnan</span><span class="p">,</span> <span class="n">Amrit</span> <span class="ow">and</span> <span class="n">Subasri</span><span class="p">,</span> <span class="n">Vallijah</span> <span class="ow">and</span> <span class="n">McKeen</span><span class="p">,</span> <span class="n">Kaden</span> <span class="ow">and</span> <span class="n">Kore</span><span class="p">,</span> <span class="n">Ali</span> <span class="ow">and</span> <span class="n">Ogidi</span><span class="p">,</span> <span class="n">Franklin</span> <span class="ow">and</span> <span class="n">Alinoori</span><span class="p">,</span> <span class="n">Mahshid</span> <span class="ow">and</span> <span class="n">Lalani</span><span class="p">,</span> <span class="n">Nadim</span> <span class="ow">and</span> <span class="n">Dhalla</span><span class="p">,</span> <span class="n">Azra</span> <span class="ow">and</span> <span class="n">Verma</span><span class="p">,</span> <span class="n">Amol</span> <span class="ow">and</span> <span class="n">Razak</span><span class="p">,</span> <span class="n">Fahad</span> <span class="ow">and</span> <span class="n">Pandya</span><span class="p">,</span> <span class="n">Deval</span> <span class="ow">and</span> <span class="n">Dolatabadi</span><span class="p">,</span> <span class="n">Elham</span><span class="p">},</span>
     <span class="n">title</span> <span class="o">=</span> <span class="p">{</span><span class="n">CyclOps</span><span class="p">:</span> <span class="n">Cyclical</span> <span class="n">development</span> <span class="n">towards</span> <span class="n">operationalizing</span> <span class="n">ML</span> <span class="n">models</span> <span class="k">for</span> <span class="n">health</span><span class="p">},</span>
