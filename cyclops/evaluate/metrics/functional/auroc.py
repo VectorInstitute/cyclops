@@ -183,7 +183,7 @@ def binary_auroc(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_auroc
+    >>> from cyclops.evaluate.metrics.functional import binary_auroc
     >>> target = [1, 0, 0, 1]
     >>> preds = [0.1, 0.9, 0.4, 0.6]
     >>> binary_auroc(target, preds, thresholds=5)
@@ -308,7 +308,7 @@ def multiclass_auroc(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_auroc
+    >>> from cyclops.evaluate.metrics.functional import multiclass_auroc
     >>> target = [1, 0, 2, 0]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05],
     ...         [0.05, 0.05, 0.9], [0.9, 0.05, 0.05]]
@@ -450,7 +450,7 @@ def multilabel_auroc(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_auroc
+    >>> from cyclops.evaluate.metrics.functional import multilabel_auroc
     >>> target = [[0, 1, 0], [0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.9], [0.8, 0.2, 0.3]]
     >>> multilabel_auroc(target, preds, num_labels=3, thresholds=5,
@@ -542,14 +542,14 @@ def auroc(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import auroc
+    >>> from cyclops.evaluate.metrics.functional import auroc
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.35, 0.4, 0.8]
     >>> auroc(target, preds, task="binary")
     0.75
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import auroc
+    >>> from cyclops.evaluate.metrics.functional import auroc
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2],
     ...          [0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2]]
@@ -557,7 +557,7 @@ def auroc(
     array([0.5, 1. , 0.5])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import auroc
+    >>> from cyclops.evaluate.metrics.functional import auroc
     >>> target = [[0, 1], [1, 1], [0, 0], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2], [0.4, 0.6], [0.2, 0.8]]
     >>> auroc(target, preds, task="multilabel", num_labels=2, average=None)

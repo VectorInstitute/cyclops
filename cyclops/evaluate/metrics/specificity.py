@@ -33,7 +33,7 @@ class BinarySpecificity(BinaryStatScores, registry_key="binary_specificity"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinarySpecificity
+    >>> from cyclops.evaluate.metrics import BinarySpecificity
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
     >>> metric = BinarySpecificity()
@@ -105,7 +105,7 @@ class MulticlassSpecificity(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassSpecificity
+    >>> from cyclops.evaluate.metrics import MulticlassSpecificity
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]
@@ -184,7 +184,7 @@ class MultilabelSpecificity(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelSpecificity
+    >>> from cyclops.evaluate.metrics import MultilabelSpecificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
@@ -280,7 +280,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import Specificity
+    >>> from cyclops.evaluate.metrics import Specificity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.9, 0.05, 0.05, 0.35, 0.05]
     >>> metric = Specificity(task="binary")
@@ -295,7 +295,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     0.0
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import Specificity
+    >>> from cyclops.evaluate.metrics import Specificity
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]
@@ -312,7 +312,7 @@ class Specificity(Metric, registry_key="specificity", force_register=True):
     array([0.8, 0.5, 0.8])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import Specificity
+    >>> from cyclops.evaluate.metrics import Specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.2, 0.75], [0.35, 0.5, 0.15]]
     >>> metric = Specificity(task="multilabel", num_labels=3)

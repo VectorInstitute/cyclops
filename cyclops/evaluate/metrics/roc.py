@@ -34,7 +34,7 @@ class BinaryROCCurve(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryROCCurve
+    >>> from cyclops.evaluate.metrics import BinaryROCCurve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> metric = BinaryROCCurve()
@@ -100,7 +100,7 @@ class MulticlassROCCurve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassROCCurve
+    >>> from cyclops.evaluate.metrics import MulticlassROCCurve
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1],
     ...         [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
@@ -179,7 +179,7 @@ class MultilabelROCCurve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelROCCurve
+    >>> from cyclops.evaluate.metrics import MultilabelROCCurve
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]
     >>> metric = MultilabelROCCurve(num_labels=3, thresholds=4)
@@ -267,7 +267,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import ROCCurve
+    >>> from cyclops.evaluate.metrics import ROCCurve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> metric = ROCCurve(task="binary", thresholds=None)
@@ -286,7 +286,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import ROCCurve
+    >>> from cyclops.evaluate.metrics import ROCCurve
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]
     >>> metric = ROCCurve(task="multiclass", num_classes=3, thresholds=4)
@@ -314,7 +314,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import ROCCurve
+    >>> from cyclops.evaluate.metrics import ROCCurve
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]
     >>> metric = ROCCurve(task="multilabel", num_labels=3, thresholds=4)

@@ -123,7 +123,7 @@ class BinaryStatScores(_AbstractScores, registry_key="binary_stat_scores"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryStatScores
+    >>> from cyclops.evaluate.metrics import BinaryStatScores
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
     >>> metric = BinaryStatScores(threshold=0.5, pos_label=1)
@@ -198,7 +198,7 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassStatScores
+    >>> from cyclops.evaluate.metrics import MulticlassStatScores
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 2, 1, 2, 0]
     >>> metric = MulticlassStatScores(num_classes=3, classwise=True)
@@ -304,7 +304,7 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelStatScores
+    >>> from cyclops.evaluate.metrics import MultilabelStatScores
     >>> target = [[0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
     >>> metric = MultilabelStatScores(num_labels=3, labelwise=True)
@@ -414,7 +414,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import StatScores
+    >>> from cyclops.evaluate.metrics import StatScores
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
     >>> metric = StatScores(task="binary", threshold=0.5, pos_label=1)
@@ -430,7 +430,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     array([4, 2, 5, 1, 5])
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import StatScores
+    >>> from cyclops.evaluate.metrics import StatScores
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 2, 1, 2, 0]
     >>> metric = StatScores(task="multiclass", num_classes=3, classwise=True)
@@ -464,7 +464,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
             [1, 2, 3, 4, 5]])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import StatScores
+    >>> from cyclops.evaluate.metrics import StatScores
     >>> target = [[0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
     >>> metric = StatScores(task="multilabel", num_labels=3, labelwise=True)

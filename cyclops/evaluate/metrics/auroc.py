@@ -36,7 +36,7 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryAUROC
+    >>> from cyclops.evaluate.metrics import BinaryAUROC
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> metric = BinaryAUROC()
@@ -106,7 +106,7 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassAUROC
+    >>> from cyclops.evaluate.metrics import MulticlassAUROC
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06],
     ...         [0.05, 0.01, 0.94], [0.9, 0.05, 0.05]]
@@ -180,7 +180,7 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_a
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelAUROC
+    >>> from cyclops.evaluate.metrics import MultilabelAUROC
     >>> target = [[0, 1], [1, 1], [1, 0]]
     >>> preds = [[0.9, 0.05], [0.05, 0.89], [0.05, 0.01]]
     >>> metric = MultilabelAUROC(num_labels=2)
@@ -261,7 +261,7 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import BinaryAUROC
+    >>> from cyclops.evaluate.metrics import BinaryAUROC
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> metric = BinaryAUROC()
@@ -276,7 +276,7 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     0.6111111111111112
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import MulticlassAUROC
+    >>> from cyclops.evaluate.metrics import MulticlassAUROC
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06],
     ...         [0.05, 0.01, 0.94], [0.9, 0.05, 0.05]]
@@ -293,7 +293,7 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     array([0.5       , 0.22222222, 0.        ])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import MultilabelAUROC
+    >>> from cyclops.evaluate.metrics import MultilabelAUROC
     >>> target = [[0, 1], [1, 1], [1, 0]]
     >>> preds = [[0.9, 0.05], [0.05, 0.89], [0.05, 0.01]]
     >>> metric = MultilabelAUROC(num_labels=2)

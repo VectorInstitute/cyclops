@@ -25,7 +25,7 @@ class BinarySensitivity(BinaryRecall, registry_key="binary_sensitivity"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinarySensitivity
+    >>> from cyclops.evaluate.metrics import BinarySensitivity
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 0]
     >>> metric = Sensitivity()
@@ -86,7 +86,7 @@ class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivi
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassSensitivity
+    >>> from cyclops.evaluate.metrics import MulticlassSensitivity
     >>> target = [0, 1, 2, 0]
     >>> preds = [2, 0, 2, 1]
     >>> metric = MulticlassSensitivity(num_classes=3)
@@ -156,7 +156,7 @@ class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivi
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelSensitivity
+    >>> from cyclops.evaluate.metrics import MultilabelSensitivity
     >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
     >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
     >>> metric = MultilabelSensitivity(num_labels=4)
@@ -235,7 +235,7 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import Sensitivity
+    >>> from cyclops.evaluate.metrics import Sensitivity
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> metric = Sensitivity(task="binary")
@@ -251,7 +251,7 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     0.5
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import Sensitivity
+    >>> from cyclops.evaluate.metrics import Sensitivity
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
     >>> metric = Sensitivity(task="multiclass", num_classes=3)
@@ -275,7 +275,7 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     array([0.66666667, 0.        , 0.        ])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import Sensitivity
+    >>> from cyclops.evaluate.metrics import Sensitivity
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
     >>> metric = Sensitivity(task="multilabel", num_labels=2)

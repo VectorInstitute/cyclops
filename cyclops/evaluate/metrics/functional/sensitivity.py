@@ -46,7 +46,7 @@ def binary_sensitivity(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_sensitivity
+    >>> from cyclops.evaluate.metrics.functional import binary_sensitivity
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 0]
     >>> binary_sensitivity(target, preds)
@@ -113,7 +113,7 @@ def multiclass_sensitivity(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_sensitivity
+    >>> from cyclops.evaluate.metrics.functional import multiclass_sensitivity
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.4, 0.1, 0.5], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6],
     ...     [0.5, 0.3, 0.2], [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
@@ -190,7 +190,7 @@ def multilabel_sensitivity(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_sensitivity
+    >>> from cyclops.evaluate.metrics.functional import multilabel_sensitivity
     >>> target = [1, 1, 2, 0, 2, 2]
     >>> preds = [1, 2, 2, 0, 2, 0]
     >>> multilabel_sensitivity(target, preds, num_classes=3)
@@ -275,21 +275,21 @@ def sensitivity(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import sensitivity
+    >>> from cyclops.evaluate.metrics.functional import sensitivity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.4, 0.2, 0.0, 0.6, 0.9]
     >>> sensitivity(target, preds, task="binary")
     0.3333333333333333
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import sensitivity
+    >>> from cyclops.evaluate.metrics.functional import sensitivity
     >>> target = [1, 1, 2, 0, 2, 2]
     >>> preds = [1, 2, 2, 0, 2, 0]
     >>> sensitivity(target, preds, task="multiclass", num_classes=3)
     array([1.        , 0.5       , 0.66666667])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import sensitivity
+    >>> from cyclops.evaluate.metrics.functional import sensitivity
     >>> target = [[1, 0, 1], [0, 1, 0]]
     >>> preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]
     >>> sensitivity(target, preds, task="multilabel", num_labels=3)

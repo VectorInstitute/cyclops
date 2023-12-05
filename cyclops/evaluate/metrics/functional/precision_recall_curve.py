@@ -311,7 +311,7 @@ def binary_precision_recall_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import (
+    >>> from cyclops.evaluate.metrics.functional import (
     ...     binary_precision_recall_curve
     ... )
     >>> target = [0, 0, 1, 1]
@@ -617,7 +617,7 @@ def multiclass_precision_recall_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import (
+    >>> from cyclops.evaluate.metrics.functional import (
     ...     multiclass_precision_recall_curve
     ... )
     >>> target = [0, 1, 2, 2]
@@ -914,7 +914,7 @@ def multilabel_precision_recall_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import (
+    >>> from cyclops.evaluate.metrics.functional import (
     ...     multilabel_precision_recall_curve)
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]
@@ -1021,7 +1021,7 @@ def precision_recall_curve(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
+    >>> from cyclops.evaluate.metrics.functional import precision_recall_curve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> precision, recall, thresholds = precision_recall_curve(target, preds,
@@ -1034,7 +1034,7 @@ def precision_recall_curve(
     array([0.35, 0.4 , 0.8 ])
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
+    >>> from cyclops.evaluate.metrics.functional import precision_recall_curve
     >>> target = [0, 1, 2, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2], [0.3, 0.4, 0.3]]
     >>> precision, recall, thresholds = precision_recall_curve(
@@ -1049,7 +1049,7 @@ def precision_recall_curve(
     [array([0.1, 0.3, 0.5]), array([0.95]), array([0.2, 0.3])]
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
+    >>> from cyclops.evaluate.metrics.functional import precision_recall_curve
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]
     >>> precision, recall, thresholds = precision_recall_curve(target, preds,

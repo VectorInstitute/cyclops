@@ -37,7 +37,7 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryPrecisionRecallCurve
+    >>> from cyclops.evaluate.metrics import BinaryPrecisionRecallCurve
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> metric = BinaryPrecisionRecallCurve(thresholds=3)
@@ -178,7 +178,7 @@ class MulticlassPrecisionRecallCurve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassPrecisionRecallCurve
+    >>> from cyclops.evaluate.metrics import MulticlassPrecisionRecallCurve
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0.],
     ...          [0.5, 0.3, 0.2], [0.2, 0.5, 0.3]]
@@ -342,7 +342,7 @@ class MultilabelPrecisionRecallCurve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelPrecisionRecallCurve
+    >>> from cyclops.evaluate.metrics import MultilabelPrecisionRecallCurve
     >>> target = [[0, 1], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
     >>> metric = MultilabelPrecisionRecallCurve(num_labels=2, thresholds=3)
@@ -507,7 +507,7 @@ class PrecisionRecallCurve(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
+    >>> from cyclops.evaluate.metrics import PrecisionRecallCurve
     >>> target = [1, 1, 1, 0]
     >>> preds = [0.6, 0.2, 0.3, 0.8]
     >>> metric = PrecisionRecallCurve(task="binary", thresholds=None)
@@ -527,7 +527,7 @@ class PrecisionRecallCurve(
     array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
+    >>> from cyclops.evaluate.metrics import PrecisionRecallCurve
     >>> target = [0, 1, 2, 2]
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1],
     ...         [0.2, 0.2, 0.6], [0.2, 0.2, 0.6]]
@@ -559,7 +559,7 @@ class PrecisionRecallCurve(
     array([0. , 0.5, 1. ]))
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import PrecisionRecallCurve
+    >>> from cyclops.evaluate.metrics import PrecisionRecallCurve
     >>> target = [[0, 1], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
     >>> metric = PrecisionRecallCurve(task="multilabel", num_labels=2,

@@ -40,8 +40,8 @@ repos:
     hooks:
     - id: nbstripout
       name: nbstripout
-      language: python
-      entry: nbstripout
+      language: system
+      entry: python3 -m nbstripout
       exclude: ^docs/source/tutorials/gemini/.*\.ipynb$
 
   - repo: https://github.com/nbQA-dev/nbQA
@@ -53,9 +53,17 @@ repos:
 
   - repo: local
     hooks:
+    - id: doctest
+      name: doctest
+      entry: python3 -m doctest
+      files: "cyclops/evaluate/"
+      language: system
+
+  - repo: local
+    hooks:
     - id: pytest
       name: pytest
-      entry: pytest -m "not integration_test"
+      entry: python3 -m pytest -m "not integration_test"
       language: system
       pass_filenames: false
       always_run: true
