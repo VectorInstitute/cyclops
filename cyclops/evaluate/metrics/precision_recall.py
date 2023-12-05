@@ -107,7 +107,7 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
     >>> preds = [0, 2, 1, 0]
     >>> metric = MulticlassPrecision(num_classes=3, average=None)
     >>> metric(target, preds)
-    array([1. , 0. , 0.])
+    array([1., 0., 0.])
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
@@ -303,7 +303,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
     >>> preds = [0, 2, 1, 0]
     >>> metric = Precision(task="multiclass", num_classes=3)
     >>> metric(target, preds)
-    array([1. , 0. , 0.])
+    array([1., 0., 0.])
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
@@ -407,7 +407,7 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
     >>> from cyclops.evaluate.metrics import BinaryRecall
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 0]
-    >>> metric = Recall()
+    >>> metric = BinaryRecall()
     >>> metric(target, preds)
     0.5
     >>> metric.reset_state()
@@ -559,7 +559,7 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
     >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
     >>> metric = MultilabelRecall(num_labels=4)
     >>> metric(target, preds)
-    array([0., 1., 1. , 0. ])
+    array([0., 1., 1., 0.])
     >>> metric.reset_state()
     >>> target = [[[0, 1, 0, 1], [0, 0, 1, 1]], [[0, 1, 0, 1], [0, 0, 1, 1]]]
     >>> preds = [[[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
@@ -651,7 +651,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> preds = [0, 1, 1, 1]
     >>> metric = Recall(task="binary")
     >>> metric(target, preds)
-    1.
+    1.0
     >>> metric.reset_state()
     >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
     >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
@@ -666,7 +666,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> preds = [0, 2, 1, 0]
     >>> metric = Recall(task="multiclass", num_classes=3)
     >>> metric(target, preds)
-    array([1. , 0. , 0.])
+    array([1., 0., 0.])
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [

@@ -191,10 +191,16 @@ def multilabel_sensitivity(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.functional import multilabel_sensitivity
-    >>> target = [1, 1, 2, 0, 2, 2]
-    >>> preds = [1, 2, 2, 0, 2, 0]
-    >>> multilabel_sensitivity(target, preds, num_classes=3)
-    array([1.        , 0.5       , 0.66666667])
+    >>> target = [[1, 0, 1],
+    ...           [0, 0, 0],
+    ...           [0, 1, 1],
+    ...           [1, 1, 1]]
+    >>> preds = [[0.75, 0.05, 0.35],
+    ...          [0.45, 0.75, 0.05],
+    ...          [0.05, 0.55, 0.75],
+    ...          [0.05, 0.65, 0.05]]
+    >>> multilabel_sensitivity(target, preds, num_labels=3)
+    array([0.5       , 1.        , 0.33333333])
 
     """
     return multilabel_recall(

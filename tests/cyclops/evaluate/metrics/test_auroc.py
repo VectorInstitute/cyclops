@@ -50,7 +50,7 @@ class TestBinaryAUROC(MetricTester):
             metric_args={"task": "binary", "max_fpr": max_fpr},
         )
 
-    def test_binary_auroc_classl(self, inputs, max_fpr) -> None:
+    def test_binary_auroc_class(self, inputs, max_fpr) -> None:
         """Test class for computing binary AUROC."""
         target, preds = inputs
 

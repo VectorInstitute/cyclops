@@ -49,9 +49,7 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([0.5       , 0.66666667, 0.        ]),
-    array([1. , 0.5, 0. ]),
-    array([0. , 0.5, 1. ]))
+    (array([0.5       , 0.66666667, 0.        ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
 
     """
 
@@ -185,12 +183,10 @@ class MulticlassPrecisionRecallCurve(
     >>> metric = MulticlassPrecisionRecallCurve(num_classes=3, thresholds=3)
     >>> metric(target, preds)
     (array([[0.5       , 0.        , 0.        , 1.        ],
-            [0.25      , 0.33333333, 0.        , 1.        ],
-            [0.25      , 0.        , 0.        , 1.        ]]),
-    array([[1., 0., 0., 0.],
-            [1., 1., 0., 0.],
-            [1., 0., 0., 0.]]),
-    array([0. , 0.5, 1. ]))
+           [0.25      , 0.33333333, 0.        , 1.        ],
+           [0.25      , 0.        , 0.        , 1.        ]]), array([[1., 0., 0., 0.],
+           [1., 1., 0., 0.],
+           [1., 0., 0., 0.]]), array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [1, 2, 0, 1]]
     >>> preds = [
@@ -201,12 +197,10 @@ class MulticlassPrecisionRecallCurve(
     ...     metric.update_state(t, p)
     >>> metric.compute()
     (array([[0.375, 0.5  , 0.   , 1.   ],
-            [0.375, 0.4  , 0.   , 1.   ],
-            [0.25 , 0.   , 0.   , 1.   ]]),
-        array([[1.        , 0.33333333, 0.        , 0.        ],
-            [1.        , 0.66666667, 0.        , 0.        ],
-            [1.        , 0.        , 0.        , 0.        ]]),
-        array([0. , 0.5, 1. ]))
+           [0.375, 0.4  , 0.   , 1.   ],
+           [0.25 , 0.   , 0.   , 1.   ]]), array([[1.        , 0.33333333, 0.        , 0.        ],
+           [1.        , 0.66666667, 0.        , 0.        ],
+           [1.        , 0.        , 0.        , 0.        ]]), array([0. , 0.5, 1. ]))
 
     """
 
@@ -348,10 +342,8 @@ class MultilabelPrecisionRecallCurve(
     >>> metric = MultilabelPrecisionRecallCurve(num_labels=2, thresholds=3)
     >>> metric(target, preds)
     (array([[0.5, 1. , 0. , 1. ],
-            [0.5, 1. , 0. , 1. ]]),
-    array([[1., 1., 0., 0.],
-            [1., 1., 0., 0.]]),
-    array([0. , 0.5, 1. ]))
+           [0.5, 1. , 0. , 1. ]]), array([[1., 1., 0., 0.],
+           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[[0, 1], [1, 0]], [[1, 0], [0, 1]]]
     >>> preds = [[[0.1, 0.9], [0.8, 0.2]], [[0.2, 0.8], [0.7, 0.3]]]
@@ -359,10 +351,8 @@ class MultilabelPrecisionRecallCurve(
     ...     metric.update_state(t, p)
     >>> metric.compute()
     (array([[0.5, 0.5, 0. , 1. ],
-            [0.5, 0.5, 0. , 1. ]]),
-    array([[1. , 0.5, 0. , 0. ],
-            [1. , 0.5, 0. , 0. ]]),
-    array([0. , 0.5, 1. ]))
+           [0.5, 0.5, 0. , 1. ]]), array([[1. , 0.5, 0. , 0. ],
+           [1. , 0.5, 0. , 0. ]]), array([0. , 0.5, 1. ]))
 
     """
 
@@ -479,6 +469,7 @@ class MultilabelPrecisionRecallCurve(
         super().__setattr__(name, value)
 
 
+# ruff: noqa: W505
 class PrecisionRecallCurve(
     Metric,
     registry_key="precision_recall_curve",
@@ -512,9 +503,7 @@ class PrecisionRecallCurve(
     >>> preds = [0.6, 0.2, 0.3, 0.8]
     >>> metric = PrecisionRecallCurve(task="binary", thresholds=None)
     >>> metric(target, preds)
-    (array([0.75      , 0.66666667, 0.5       , 0.        , 1.        ]),
-    array([1.        , 0.66666667, 0.33333333, 0.        , 0.        ]),
-    array([0.2, 0.3, 0.6, 0.8]))
+    (array([0.75      , 0.66666667, 0.5       , 0.        , 1.        ]), array([1.        , 0.66666667, 0.33333333, 0.        , 0.        ]), array([0.2, 0.3, 0.6, 0.8]))
     >>> metric.reset_state()
     >>> target = [[1, 0, 1, 1], [0, 0, 0, 1]]
     >>> preds = [[0.5, 0.4, 0.1, 0.3], [0.9, 0.6, 0.45, 0.8]]
@@ -522,9 +511,7 @@ class PrecisionRecallCurve(
     ...     metric.update_state(t, p)
     >>> metric.compute()
     (array([0.5       , 0.42857143, 0.33333333, 0.4       , 0.5       ,
-        0.33333333, 0.5       , 0.        , 1.        ]),
-    array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]),
-    array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))
+           0.33333333, 0.5       , 0.        , 1.        ]), array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]), array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))
 
     >>> # (multiclass)
     >>> from cyclops.evaluate.metrics import PrecisionRecallCurve
@@ -535,12 +522,10 @@ class PrecisionRecallCurve(
     ...     thresholds=3)
     >>> metric(target, preds)
     (array([[0.25, 0.  , 0.  , 1.  ],
-            [0.25, 0.5 , 0.  , 1.  ],
-            [0.5 , 1.  , 0.  , 1.  ]]),
-    array([[1., 0., 0., 0.],
-            [1., 1., 0., 0.],
-            [1., 1., 0., 0.]]),
-    array([0. , 0.5, 1. ]))
+           [0.25, 0.5 , 0.  , 1.  ],
+           [0.5 , 1.  , 0.  , 1.  ]]), array([[1., 0., 0., 0.],
+           [1., 1., 0., 0.],
+           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 2], [1, 2, 0, 1]]
     >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1],
@@ -551,12 +536,10 @@ class PrecisionRecallCurve(
     ...     metric.update_state(t, p)
     >>> metric.compute()
     (array([[0.25 , 0.   , 0.   , 1.   ],
-            [0.375, 0.5  , 0.   , 1.   ],
-            [0.375, 0.5  , 0.   , 1.   ]]),
-    array([[1.        , 0.        , 0.        , 0.        ],
-            [1.        , 0.66666667, 0.        , 0.        ],
-            [1.        , 0.66666667, 0.        , 0.        ]]),
-    array([0. , 0.5, 1. ]))
+           [0.375, 0.5  , 0.   , 1.   ],
+           [0.375, 0.5  , 0.   , 1.   ]]), array([[1.        , 0.        , 0.        , 0.        ],
+           [1.        , 0.66666667, 0.        , 0.        ],
+           [1.        , 0.66666667, 0.        , 0.        ]]), array([0. , 0.5, 1. ]))
 
     >>> # (multilabel)
     >>> from cyclops.evaluate.metrics import PrecisionRecallCurve
@@ -566,10 +549,8 @@ class PrecisionRecallCurve(
     ...     thresholds=3)
     >>> metric(target, preds)
     (array([[0.5, 1. , 0. , 1. ],
-            [0.5, 1. , 0. , 1. ]]),
-    array([[1., 1., 0., 0.],
-            [1., 1., 0., 0.]]),
-    array([0. , 0.5, 1. ]))
+           [0.5, 1. , 0. , 1. ]]), array([[1., 1., 0., 0.],
+           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[[0, 1], [1, 0]], [[1, 0], [0, 1]]]
     >>> preds = [[[0.1, 0.9], [0.8, 0.2]],
@@ -578,10 +559,8 @@ class PrecisionRecallCurve(
     ...     metric.update_state(t, p)
     >>> metric.compute()
     (array([[0.5, 0.5, 0. , 1. ],
-            [0.5, 0.5, 0. , 1. ]]),
-    array([[1. , 0.5, 0. , 0. ],
-            [1. , 0.5, 0. , 0. ]]),
-    array([0. , 0.5, 1. ]))
+           [0.5, 0.5, 0. , 1. ]]), array([[1. , 0.5, 0. , 0. ],
+           [1. , 0.5, 0. , 0. ]]), array([0. , 0.5, 1. ]))
 
     """
 

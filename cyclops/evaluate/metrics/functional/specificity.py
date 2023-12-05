@@ -286,7 +286,7 @@ def multilabel_specificity(
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
     >>> multilabel_specificity(target, preds, num_labels=3)
-    array([0.5, 0., 0.5])
+    array([0.5, 0. , 0.5])
 
     """
     _check_average_arg(average)
@@ -393,7 +393,7 @@ def specificity(
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
     >>> specificity(target, preds, task="multiclass", num_classes=3)
-    array([0.5, 0., 0.5])
+    array([1.        , 0.66666667, 1.        ])
 
     >>> # (multilabel)
     >>> from cyclops.evaluate.metrics.functional import specificity
@@ -401,7 +401,7 @@ def specificity(
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
     >>> specificity(target, preds, task="multilabel", num_labels=3)
-    array([0.5, 0., 0.5])
+    array([0.5, 0. , 0.5])
 
     """
     if task == "binary":

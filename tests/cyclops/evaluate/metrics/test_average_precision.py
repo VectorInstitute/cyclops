@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from sklearn.metrics import average_precision_score as sk_average_precision_score
 
+from cyclops.evaluate.metrics.average_precision import AveragePrecision
 from cyclops.evaluate.metrics.functional import (
     average_precision as cyclops_average_precision,
 )
@@ -42,6 +43,18 @@ class TestBinaryAveragePrecision(MetricTester):
             target=target,
             preds=preds,
             metric_functional=cyclops_average_precision,
+            sk_metric=_sk_binary_average_precision,
+            metric_args={"task": "binary"},
+        )
+
+    def test_binary_average_precision_class(self, inputs):
+        """Test class for computing binary average precision."""
+        target, preds = inputs
+
+        self.run_class_test(
+            target=target,
+            preds=preds,
+            metric_class=AveragePrecision,
             sk_metric=_sk_binary_average_precision,
             metric_args={"task": "binary"},
         )

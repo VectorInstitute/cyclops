@@ -520,8 +520,8 @@ def multiclass_stat_scores(
     >>> preds = [0, 2, 1, 2, 0]
     >>> multiclass_stat_scores(target, preds, num_classes=3)
     array([[1, 1, 3, 0, 1],
-            [0, 1, 3, 1, 1],
-            [1, 1, 1, 2, 3]])
+           [0, 1, 3, 1, 1],
+           [1, 1, 1, 2, 3]])
 
     """
     target, preds = _multiclass_stat_scores_format(
@@ -711,9 +711,7 @@ def multilabel_stat_scores(
     >>> target = [[0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
     >>> multilabel_stat_scores(target, preds, num_labels=3)
-    array([[1, 0, 1, 0, 1],
-            [1, 0, 1, 0, 1],
-            [2, 0, 0, 0, 2]])
+    array([4, 0, 2, 0, 4])
 
     """
     _binary_stat_scores_args_check(threshold=threshold, pos_label=1)
@@ -794,7 +792,7 @@ def stat_scores(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluate.metrics.functional import tat_scores
+    >>> from cyclops.evaluate.metrics.functional import stat_scores
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
     >>> stat_scores(target, preds, task="binary")
@@ -806,17 +804,15 @@ def stat_scores(
     >>> preds = [0, 2, 1, 2, 0]
     >>> stat_scores(target, preds, task="multiclass", num_classes=3)
     array([[1, 1, 3, 0, 1],
-            [0, 1, 3, 1, 1],
-            [1, 1, 1, 2, 3]])
+           [0, 1, 3, 1, 1],
+           [1, 1, 1, 2, 3]])
 
     >>> # (multilabel)
     >>> from cyclops.evaluate.metrics.functional import stat_scores
     >>> target = [[0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]
     >>> stat_scores(target, preds, task="multilabel", num_labels=3)
-    array([[1, 0, 1, 0, 1],
-            [1, 0, 1, 0, 1],
-            [2, 0, 0, 0, 2]])
+    array([4, 0, 2, 0, 4])
 
     """
     if task == "binary":

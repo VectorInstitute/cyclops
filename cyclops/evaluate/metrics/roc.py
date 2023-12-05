@@ -305,13 +305,11 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0. , 0. , 0. , 1. ],
-            [0. , 0. , 0. , 0. ],
-            [0. , 0.5, 0.5, 1. ]]),
-    array([[0., 0., 0., 1.],
-            [0., 1., 1., 1.],
-            [0., 0., 0., 0.]]),
-    array([1.        , 0.66666667, 0.33333333, 0.        ]))
+    (array([[0., 0., 0., 0.],
+           [0., 0., 0., 0.],
+           [0., 0., 0., 0.]]), array([[0., 0., 0., 0.],
+           [0., 0., 0., 0.],
+           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
     >>> # (multilabel)
     >>> from cyclops.evaluate.metrics import ROCCurve
@@ -320,12 +318,10 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     >>> metric = ROCCurve(task="multilabel", num_labels=3, thresholds=4)
     >>> metric(target, preds)
     (array([[0. , 0. , 0. , 1. ],
-            [0. , 0. , 0. , 0. ],
-            [0. , 0.5, 0.5, 1. ]]),
-    array([[0., 0., 0., 1.],
-            [0., 1., 1., 1.],
-            [0., 0., 0., 0.]]),
-    array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0. , 0. , 0. , 0. ],
+           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],
+           [0., 1., 1., 1.],
+           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
     >>> metric.reset_state()
     >>> target = [[[1, 1, 0], [0, 1, 0]], [[1, 1, 0], [0, 1, 0]]]
     >>> preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]],
@@ -334,12 +330,10 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     ...     metric.update_state(t, p)
     >>> metric.compute()
     (array([[0. , 0. , 0. , 1. ],
-            [0. , 0. , 0. , 0. ],
-            [0. , 0.5, 0.5, 1. ]]),
-    array([[0., 0., 0., 1.],
-            [0., 1., 1., 1.],
-            [0., 0., 0., 0.]]),
-    array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0. , 0. , 0. , 0. ],
+           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],
+           [0., 1., 1., 1.],
+           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
     """
 

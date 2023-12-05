@@ -130,13 +130,20 @@ def average_precision(
         The number of top predictions to consider for multilabel classification.
     num_labels : int
         The number of labels for multilabel classification.
-    average : {"micro", "macro", "weighted", None}
-        The type of averaging to perform for multiclass classification. If None,
-        will return the average precision for each class.
-    zero_division : {"warn", 0, 1}
-        The value to return when there is a zero division error. If "warn", will
-        return 0 and print a warning. If 0, will return 0 and not print a warning.
-        If 1, will return 1.
+    average : Literal["micro", "macro", "weighted", None], default=None
+        If None, return the specificity for each class, otherwise return the
+        average specificity. Average options are:
+
+        - ``micro``: Calculate metrics globally by counting the total
+            true positives, false negatives, false positives and true negatives.
+        - ``macro``: Calculate metrics for each label, and find their
+            unweighted mean. This does not take label imbalance into account.
+        - ``weighted``: Calculate metrics for each label, and find their
+            average, weighted by support (the number of true instances for
+            each label).
+    zero_division : Literal["warn", 0, 1], default="warn"
+        Sets the value to return when there is a zero division. If set to ``warn``,
+        this acts as 0, but warnings are also raised.
 
     Returns
     -------
@@ -152,8 +159,11 @@ def average_precision(
     if task == "binary":
         return binary_average_precision(target, preds, thresholds, pos_label)
     if task == "multiclass":
-        raise NotImplementedError
+        NotImplementedError("Multiclass average precision is not implemented.")
     if task == "multilabel":
-        raise NotImplementedError
+        NotImplementedError("Multilabel average precision is not implemented.")
 
-    raise ValueError(f"Invalid task type: {task}")
+    raise ValueError(
+        "Expected argument `task` to be either 'binary', 'multiclass' or "
+        f"'multilabel', but got {task}",
+    )
