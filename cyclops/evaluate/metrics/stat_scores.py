@@ -199,37 +199,23 @@ class MulticlassStatScores(_AbstractScores, registry_key="multiclass_stat_scores
     Examples
     --------
     >>> from cyclops.evaluate.metrics import MulticlassStatScores
-    >>> target = [0, 1, 2, 2, 2]
-    >>> preds = [0, 2, 1, 2, 0]
-    >>> metric = MulticlassStatScores(num_classes=3, classwise=True)
+    >>> target = [2, 1, 0, 0]
+    >>> preds = [2, 1, 0, 1]
+    >>> metric = MulticlassStatScores(num_classes=3)
     >>> metric(target=target, preds=preds)
-    array([[1, 1, 3, 0, 1],
-            [0, 1, 3, 1, 1],
-            [1, 1, 1, 2, 3]])
-    >>> metric.reset_state()
-    >>> target = [[2, 0, 2, 2, 1], [1, 1, 0, 2, 2]]
-    >>> preds = [
-    ...         [
-    ...             [0.1, 0.2, 0.6],
-    ...             [0.6, 0.1, 0.2],
-    ...             [0.2, 0.6, 0.1],
-    ...             [0.2, 0.6, 0.1],
-    ...             [0.6, 0.2, 0.1],
-    ...         ],
-    ...         [
-    ...             [0.05, 0.1, 0.6],
-    ...             [0.1, 0.05, 0.6],
-    ...             [0.6, 0.1, 0.05],
-    ...             [0.1, 0.6, 0.05],
-    ...             [0.1, 0.6, 0.05],
-    ...         ],
-    ...     ]
+    array([[1, 0, 2, 1, 2],
+           [1, 1, 2, 0, 1],
+           [1, 0, 3, 0, 1]])
+    >>> preds = [[0.16, 0.26, 0.58],
+    ...          [0.22, 0.61, 0.17],
+    ...          [0.71, 0.09, 0.20],
+    ...          [0.05, 0.82, 0.13]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(target=t, preds=p)
     >>> metric.compute()
-    array([[2, 1, 7, 0, 2],
-            [0, 4, 3, 3, 3],
-            [1, 2, 3, 4, 5]])
+    array([[ 8,  1,  5,  2, 10],
+           [ 4,  2,  9,  1,  5],
+           [ 1,  0, 15,  0,  1]])
 
     """
 
@@ -310,8 +296,8 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
     >>> metric = MultilabelStatScores(num_labels=3, labelwise=True)
     >>> metric(target=target, preds=preds)
     array([[1, 0, 1, 0, 1],
-            [1, 0, 1, 0, 1],
-            [2, 0, 0, 0, 2]])
+           [1, 0, 1, 0, 1],
+           [2, 0, 0, 0, 2]])
     >>> metric.reset_state()
     >>> target = [[[0, 1, 1], [1, 0, 1]], [[0, 0, 1], [1, 1, 1]]]
     >>> preds = [[[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]],
@@ -320,8 +306,8 @@ class MultilabelStatScores(_AbstractScores, registry_key="multilabel_stat_scores
     ...     metric.update_state(target=t, preds=p)
     >>> metric.compute()
     array([[2, 0, 2, 0, 2],
-            [1, 1, 1, 1, 2],
-            [4, 0, 0, 0, 4]])
+           [1, 1, 1, 1, 2],
+           [4, 0, 0, 0, 4]])
 
     """
 
@@ -425,7 +411,7 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     >>> target = [[1, 1, 0, 1, 0, 0], [0, 0, 1, 1, 0, 0]]
     >>> preds = [[0.9, 0.8, 0.3, 0.4, 0.5, 0.2], [0.2, 0.3, 0.6, 0.9, 0.4, 0.8]]
     >>> for t, p in zip(target, preds):
-    ...     metric(target=t, preds=p)
+    ...     metric.update_state(target=t, preds=p)
     >>> metric.compute()
     array([4, 2, 5, 1, 5])
 
@@ -434,34 +420,35 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 2, 1, 2, 0]
     >>> metric = StatScores(task="multiclass", num_classes=3, classwise=True)
-    >>> metric.update(target=target, preds=preds)
+    >>> metric.update_state(target=target, preds=preds)
+    >>> metric.compute()
     array([[1, 1, 3, 0, 1],
-            [0, 1, 3, 1, 1],
-            [1, 1, 1, 2, 3]])
+           [0, 1, 3, 1, 1],
+           [1, 1, 1, 2, 3]])
     >>> metric.reset_state()
     >>> target = [[2, 0, 2, 2, 1], [1, 1, 0, 2, 2]]
     >>> preds = [
     ...         [
-    ...             [0.1, 0.2, 0.6],
-    ...             [0.6, 0.1, 0.2],
-    ...             [0.2, 0.6, 0.1],
-    ...             [0.2, 0.6, 0.1],
-    ...             [0.6, 0.2, 0.1],
+    ...             [0.1, 0.2, 0.7],
+    ...             [0.7, 0.1, 0.2],
+    ...             [0.2, 0.7, 0.1],
+    ...             [0.2, 0.7, 0.1],
+    ...             [0.7, 0.2, 0.1],
     ...         ],
     ...         [
-    ...             [0.05, 0.1, 0.6],
-    ...             [0.1, 0.05, 0.6],
-    ...             [0.6, 0.1, 0.05],
-    ...             [0.1, 0.6, 0.05],
-    ...             [0.1, 0.6, 0.05],
+    ...             [0.05, 0.15, 0.8],
+    ...             [0.15, 0.05, 0.8],
+    ...             [0.8, 0.15, 0.05],
+    ...             [0.25, 0.7, 0.05],
+    ...             [0.15, 0.7, 0.15],
     ...         ],
     ...     ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(target=t, preds=p)
     >>> metric.compute()
     array([[2, 1, 7, 0, 2],
-            [0, 4, 3, 3, 3],
-            [1, 2, 3, 4, 5]])
+           [0, 4, 3, 3, 3],
+           [1, 2, 3, 4, 5]])
 
     >>> # (multilabel)
     >>> from cyclops.evaluate.metrics import StatScores
@@ -470,8 +457,8 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     >>> metric = StatScores(task="multilabel", num_labels=3, labelwise=True)
     >>> metric(target=target, preds=preds)
     array([[1, 0, 1, 0, 1],
-            [1, 0, 1, 0, 1],
-            [2, 0, 0, 0, 2]])
+           [1, 0, 1, 0, 1],
+           [2, 0, 0, 0, 2]])
     >>> metric.reset_state()
     >>> target = [[[0, 1, 1], [1, 0, 1]], [[0, 0, 1], [1, 1, 1]]]
     >>> preds = [[[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]],
@@ -480,8 +467,8 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
     ...     metric.update_state(target=t, preds=p)
     >>> metric.compute()
     array([[2, 0, 2, 0, 2],
-            [1, 1, 1, 1, 2],
-            [4, 0, 0, 0, 4]])
+           [1, 1, 1, 1, 2],
+           [4, 0, 0, 0, 4]])
 
     """
 
