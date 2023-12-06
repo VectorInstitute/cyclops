@@ -9,7 +9,7 @@ import pytest
 import torch
 from scipy.special import log_softmax
 
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 from ..conftest import BATCH_SIZE, EXTRA_DIM, NUM_BATCHES, NUM_CLASSES, NUM_LABELS
 

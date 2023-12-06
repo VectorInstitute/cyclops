@@ -20,7 +20,7 @@ from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
 )
 from cyclops.evaluate.metrics.experimental.metric import Metric
 from cyclops.evaluate.metrics.experimental.utils.ops import dim_zero_cat
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
 class _AbstractConfusionMatrix(Metric):

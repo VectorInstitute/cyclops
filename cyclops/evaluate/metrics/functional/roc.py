@@ -502,7 +502,6 @@ def multilabel_roc_curve(
     return _multilabel_roc_compute(state, num_labels, thresholds)
 
 
-# ruff: noqa: W505
 def roc_curve(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
@@ -623,7 +622,7 @@ def roc_curve(
     >>> thresholds
     [array([1. , 0.9, 0.8, 0.2]), array([1. , 0.8, 0.7, 0.3])]
 
-    """
+    """  # noqa: W505
     _check_thresholds(thresholds)
     if task == "binary":
         return binary_roc_curve(target, preds, thresholds, pos_label=pos_label)

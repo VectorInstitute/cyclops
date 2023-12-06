@@ -3,7 +3,7 @@ import logging
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Any, List, Optional
 
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.utils.log import setup_logging
 
 

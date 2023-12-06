@@ -8,7 +8,7 @@ from cyclops.evaluate.metrics.experimental.distributed_backends.base import (
     DistributedBackend,
 )
 from cyclops.evaluate.metrics.experimental.utils.ops import flatten
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.utils.optional import import_optional_module
 
 

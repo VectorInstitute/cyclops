@@ -16,7 +16,7 @@ import array_api_compat as apc
 from array_api_compat.common._helpers import _is_numpy_array, _is_torch_array
 from numpy.core.multiarray import normalize_axis_index  # type: ignore
 
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.metrics.experimental.utils.validation import (
     _get_int_dtypes,
     is_floating_point,

@@ -956,7 +956,6 @@ def multilabel_precision_recall_curve(
     )
 
 
-# ruff: noqa: W505
 def precision_recall_curve(
     target: npt.ArrayLike,
     preds: npt.ArrayLike,
@@ -1060,7 +1059,7 @@ def precision_recall_curve(
     >>> thresholds
     [array([0.05, 0.1 ]), array([0.9 , 0.95]), array([0.35, 0.8 ])]
 
-    """
+    """  # noqa: W505
     if task == "binary":
         return binary_precision_recall_curve(
             target,

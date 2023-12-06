@@ -3,7 +3,7 @@ from typing import Any, List, Literal
 
 import array_api_compat as apc
 
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
 def is_floating_point(array: Array) -> bool:
