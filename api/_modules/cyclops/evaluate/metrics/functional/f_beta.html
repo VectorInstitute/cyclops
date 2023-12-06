@@ -322,7 +322,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import binary_fbeta_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import binary_fbeta_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 0, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0, 1, 1, 1]</span>
 <span class="sd">    &gt;&gt;&gt; binary_fbeta_score(target, preds, beta=0.5)</span>
@@ -414,7 +414,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multiclass_fbeta_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multiclass_fbeta_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0, 2, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; multiclass_fbeta_score(target, preds, beta=0.5, num_classes=3)</span>
@@ -508,7 +508,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multilabel_fbeta_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multilabel_fbeta_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1], [1, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9], [0.8, 0.2]]</span>
 <span class="sd">    &gt;&gt;&gt; multilabel_fbeta_score(target, preds, beta=0.5, num_labels=2)</span>
@@ -615,21 +615,21 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    (binary)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import fbeta_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import fbeta_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.8, 0.4, 0.3]</span>
 <span class="sd">    &gt;&gt;&gt; fbeta_score(target, preds, beta=0.5, task=&quot;binary&quot;)</span>
 <span class="sd">    0.8333333333333334</span>
 
 <span class="sd">    (multiclass)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import fbeta_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import fbeta_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 2]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [1 2, 2, 0]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [1, 2, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; fbeta_score(target, preds, beta=0.5, task=&quot;multiclass&quot;, num_classes=3)</span>
-<span class="sd">    array([0.83333333, 0.        , 0.55555556])</span>
+<span class="sd">    array([0. , 0. , 0.5])</span>
 
 <span class="sd">    (multilabel)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import fbeta_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import fbeta_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1], [1, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9], [0.8, 0.2]]</span>
 <span class="sd">    &gt;&gt;&gt; fbeta_score(target, preds, beta=0.5, task=&quot;multilabel&quot;, num_labels=2)</span>
@@ -713,7 +713,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import binary_f1_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import binary_f1_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.8, 0.4, 0.3]</span>
 <span class="sd">    &gt;&gt;&gt; binary_f1_score(target, preds)</span>
@@ -780,7 +780,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multiclass_f1_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multiclass_f1_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [1, 1, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; multiclass_f1_score(target, preds, num_classes=3)</span>
@@ -849,7 +849,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multilabel_f1_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multilabel_f1_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 1], [1, 0, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]</span>
 <span class="sd">    &gt;&gt;&gt; multilabel_f1_score(target, preds, num_labels=3)</span>
@@ -933,21 +933,21 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; # (binary)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import f1_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import f1_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 0, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.9, 0.8, 0.2]</span>
 <span class="sd">    &gt;&gt;&gt; f1_score(target, preds, task=&quot;binary&quot;)</span>
 <span class="sd">    0.5</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import f1_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import f1_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; f1_score(target, preds, task=&quot;multiclass&quot;, num_classes=3)</span>
-<span class="sd">    array([0.66666667, 0.8       , 0.        ])</span>
+<span class="sd">    array([0.66666667, 0.66666667, 1.        ])</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import f1_score</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import f1_score</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 1], [1, 0, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]</span>
 <span class="sd">    &gt;&gt;&gt; f1_score(target, preds, task=&quot;multilabel&quot;, num_labels=3)</span>

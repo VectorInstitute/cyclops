@@ -203,25 +203,21 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import BinaryROCCurve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import BinaryROCCurve</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 0, 1, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.4, 0.35, 0.8]</span>
 <span class="sd">    &gt;&gt;&gt; metric = BinaryROCCurve()</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
-<span class="sd">    (array([0. , 0. , 0.5, 0.5, 1. ]),</span>
-<span class="sd">    array([0. , 0.5, 0.5, 1. , 1. ]),</span>
-<span class="sd">    array([1.  , 0.8 , 0.4 , 0.35, 0.1 ]))</span>
+<span class="sd">    (array([0. , 0. , 0.5, 0.5, 1. ]), array([0. , 0.5, 0.5, 1. , 1. ]), array([1.  , 0.8 , 0.4 , 0.35, 0.1 ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0, 0], [0, 0, 1, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.2, 0.3, 0.4], [0.6, 0.5, 0.4, 0.3]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([0.  , 0.25, 0.5 , 0.75, 1.  , 1.  , 1.  ]),</span>
-<span class="sd">    array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]),</span>
-<span class="sd">    array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))</span>
+<span class="sd">    (array([0.  , 0.25, 0.5 , 0.75, 1.  , 1.  , 1.  ]), array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]), array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: W505</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ROC Curve&quot;</span>
 
@@ -275,19 +271,17 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import MulticlassROCCurve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import MulticlassROCCurve</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1],</span>
 <span class="sd">    ...         [0.2, 0.2, 0.6], [0.9, 0.1, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MulticlassROCCurve(num_classes=3, thresholds=4)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    (array([[0.        , 0.        , 0.        , 1.        ],</span>
-<span class="sd">            [0.        , 0.33333333, 0.33333333, 1.        ],</span>
-<span class="sd">            [0.        , 0.        , 0.        , 1.        ]]),</span>
-<span class="sd">    array([[0. , 0.5, 0.5, 1. ],</span>
-<span class="sd">            [0. , 1. , 1. , 1. ],</span>
-<span class="sd">            [0. , 0. , 1. , 1. ]]),</span>
-<span class="sd">    array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
+<span class="sd">           [0.        , 0.33333333, 0.33333333, 1.        ],</span>
+<span class="sd">           [0.        , 0.        , 0.        , 1.        ]]), array([[0. , 0.5, 0.5, 1. ],</span>
+<span class="sd">           [0. , 1. , 1. , 1. ],</span>
+<span class="sd">           [0. , 0. , 1. , 1. ]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0, 0], [0, 0, 1, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.2, 0.7], [0.5, 0.4, 0.1],</span>
@@ -298,14 +292,12 @@
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
 <span class="sd">    (array([[0.  , 0.25, 0.5 , 1.  ],</span>
-<span class="sd">            [0.  , 0.  , 0.25, 1.  ],</span>
-<span class="sd">            [0.  , 0.25, 0.5 , 1.  ]]),</span>
-<span class="sd">    array([[0.  , 0.25, 0.5 , 1.  ],</span>
-<span class="sd">            [0.  , 0.  , 0.25, 1.  ],</span>
-<span class="sd">            [0.  , 0.  , 0.  , 0.  ]]),</span>
-<span class="sd">    array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
+<span class="sd">           [0.  , 0.  , 0.25, 1.  ],</span>
+<span class="sd">           [0.  , 0.25, 0.5 , 1.  ]]), array([[0.  , 0.25, 0.5 , 1.  ],</span>
+<span class="sd">           [0.  , 0.  , 0.25, 1.  ],</span>
+<span class="sd">           [0.  , 0.  , 0.  , 0.  ]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: W505</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ROC Curve&quot;</span>
 
@@ -360,18 +352,16 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import MultilabelROCCurve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import MultilabelROCCurve</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0], [0, 1, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MultilabelROCCurve(num_labels=3, thresholds=4)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    (array([[0. , 0. , 0. , 1. ],</span>
-<span class="sd">            [0. , 0. , 0. , 0. ],</span>
-<span class="sd">            [0. , 0.5, 0.5, 1. ]]),</span>
-<span class="sd">    array([[0., 0., 0., 1.],</span>
-<span class="sd">            [0., 1., 1., 1.],</span>
-<span class="sd">            [0., 0., 0., 0.]]),</span>
-<span class="sd">    array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
+<span class="sd">           [0. , 0. , 0. , 0. ],</span>
+<span class="sd">           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],</span>
+<span class="sd">           [0., 1., 1., 1.],</span>
+<span class="sd">           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[[1, 1, 0], [0, 1, 0]], [[1, 1, 0], [0, 1, 0]]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]],</span>
@@ -380,12 +370,10 @@
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
 <span class="sd">    (array([[0. , 0. , 0. , 1. ],</span>
-<span class="sd">            [0. , 0. , 0. , 0. ],</span>
-<span class="sd">            [0. , 0.5, 0.5, 1. ]]),</span>
-<span class="sd">    array([[0., 0., 0., 1.],</span>
-<span class="sd">            [0., 1., 1., 1.],</span>
-<span class="sd">            [0., 0., 0., 0.]]),</span>
-<span class="sd">    array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
+<span class="sd">           [0. , 0. , 0. , 0. ],</span>
+<span class="sd">           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],</span>
+<span class="sd">           [0., 1., 1., 1.],</span>
+<span class="sd">           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -454,65 +442,54 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; # (binary)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import ROCCurve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import ROCCurve</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 0, 1, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.4, 0.35, 0.8]</span>
 <span class="sd">    &gt;&gt;&gt; metric = ROCCurve(task=&quot;binary&quot;, thresholds=None)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
-<span class="sd">    (array([0. , 0. , 0.5, 0.5, 1. ]),</span>
-<span class="sd">    array([0. , 0.5, 0.5, 1. , 1. ]),</span>
-<span class="sd">    array([1.  , 0.8 , 0.4 , 0.35, 0.1 ]))</span>
+<span class="sd">    (array([0. , 0. , 0.5, 0.5, 1. ]), array([0. , 0.5, 0.5, 1. , 1. ]), array([1.  , 0.8 , 0.4 , 0.35, 0.1 ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0, 0], [0, 0, 1, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.2, 0.3, 0.4], [0.6, 0.5, 0.4, 0.3]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([0.  , 0.25, 0.5 , 0.75, 1.  , 1.  , 1.  ]),</span>
-<span class="sd">    array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]),</span>
-<span class="sd">    array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))</span>
+<span class="sd">    (array([0.  , 0.25, 0.5 , 0.75, 1.  , 1.  , 1.  ]), array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]), array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import ROCCurve</span>
-<span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0], [0, 1, 0]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import ROCCurve</span>
+<span class="sd">    &gt;&gt;&gt; target = [1, 2, 0]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = ROCCurve(task=&quot;multiclass&quot;, num_classes=3, thresholds=4)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    (array([[0. , 0. , 0. , 1. ],</span>
-<span class="sd">            [0. , 0. , 0. , 0. ],</span>
-<span class="sd">            [0. , 0.5, 0.5, 1. ]]),</span>
-<span class="sd">    array([[0., 0., 0., 1.],</span>
-<span class="sd">            [0., 1., 1., 1.],</span>
-<span class="sd">            [0., 0., 0., 0.]]),</span>
-<span class="sd">    array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
+<span class="sd">           [0. , 0.5, 0.5, 1. ],</span>
+<span class="sd">           [0. , 0. , 0.5, 1. ]]), array([[0., 0., 0., 1.],</span>
+<span class="sd">           [0., 1., 1., 1.],</span>
+<span class="sd">           [0., 0., 0., 1.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
-<span class="sd">    &gt;&gt;&gt; target = [[[1, 1, 0], [0, 1, 0]], [[1, 1, 0], [0, 1, 0]]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]],</span>
-<span class="sd">    ...         [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]]</span>
+<span class="sd">    &gt;&gt;&gt; target = [1, 2]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[[0.05, 0.75, 0.2]], [[0.1, 0.8, 0.1]]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([[0. , 0. , 0. , 1. ],</span>
-<span class="sd">            [0. , 0. , 0. , 0. ],</span>
-<span class="sd">            [0. , 0.5, 0.5, 1. ]]),</span>
-<span class="sd">    array([[0., 0., 0., 1.],</span>
-<span class="sd">            [0., 1., 1., 1.],</span>
-<span class="sd">            [0., 0., 0., 0.]]),</span>
-<span class="sd">    array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
+<span class="sd">    (array([[0., 0., 0., 1.],</span>
+<span class="sd">           [0., 1., 1., 1.],</span>
+<span class="sd">           [0., 0., 0., 1.]]), array([[0., 0., 0., 0.],</span>
+<span class="sd">           [0., 1., 1., 1.],</span>
+<span class="sd">           [0., 0., 0., 1.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import ROCCurve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import ROCCurve</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0], [0, 1, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = ROCCurve(task=&quot;multilabel&quot;, num_labels=3, thresholds=4)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    (array([[0. , 0. , 0. , 1. ],</span>
-<span class="sd">            [0. , 0. , 0. , 0. ],</span>
-<span class="sd">            [0. , 0.5, 0.5, 1. ]]),</span>
-<span class="sd">    array([[0., 0., 0., 1.],</span>
-<span class="sd">            [0., 1., 1., 1.],</span>
-<span class="sd">            [0., 0., 0., 0.]]),</span>
-<span class="sd">    array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
+<span class="sd">           [0. , 0. , 0. , 0. ],</span>
+<span class="sd">           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],</span>
+<span class="sd">           [0., 1., 1., 1.],</span>
+<span class="sd">           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[[1, 1, 0], [0, 1, 0]], [[1, 1, 0], [0, 1, 0]]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]],</span>
@@ -521,14 +498,12 @@
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
 <span class="sd">    (array([[0. , 0. , 0. , 1. ],</span>
-<span class="sd">            [0. , 0. , 0. , 0. ],</span>
-<span class="sd">            [0. , 0.5, 0.5, 1. ]]),</span>
-<span class="sd">    array([[0., 0., 0., 1.],</span>
-<span class="sd">            [0., 1., 1., 1.],</span>
-<span class="sd">            [0., 0., 0., 0.]]),</span>
-<span class="sd">    array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
+<span class="sd">           [0. , 0. , 0. , 0. ],</span>
+<span class="sd">           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],</span>
+<span class="sd">           [0., 1., 1., 1.],</span>
+<span class="sd">           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: W505</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ROC Curve&quot;</span>
 

@@ -344,7 +344,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import binary_roc_curve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import binary_roc_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [1, 0, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.9, 0.2, 0.8, 0.3]</span>
 <span class="sd">    &gt;&gt;&gt; fpr, tpr, thresholds = binary_roc_curve(target, preds, thresholds=5)</span>
@@ -487,7 +487,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multiclass_roc_curve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multiclass_roc_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [1, 0, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05],</span>
 <span class="sd">    ...         [0.05, 0.05, 0.9], [0.9, 0.05, 0.05]]</span>
@@ -496,12 +496,12 @@
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; fpr</span>
 <span class="sd">    array([[0.        , 0.5       , 0.5       , 0.5       , 1.        ],</span>
-<span class="sd">    [0.        , 0.33333333, 0.33333333, 0.33333333, 1.        ],</span>
-<span class="sd">    [0.        , 0.        , 0.        , 0.        , 1.        ]])</span>
+<span class="sd">           [0.        , 0.33333333, 0.33333333, 0.33333333, 1.        ],</span>
+<span class="sd">           [0.        , 0.        , 0.        , 0.        , 1.        ]])</span>
 <span class="sd">    &gt;&gt;&gt; tpr</span>
 <span class="sd">    array([[0. , 0.5, 0.5, 0.5, 1. ],</span>
-<span class="sd">    [0. , 0. , 0. , 0. , 1. ],</span>
-<span class="sd">    [0. , 1. , 1. , 1. , 1. ]])</span>
+<span class="sd">           [0. , 0. , 0. , 0. , 1. ],</span>
+<span class="sd">           [0. , 1. , 1. , 1. , 1. ]])</span>
 <span class="sd">    &gt;&gt;&gt; thresholds</span>
 <span class="sd">    array([1.  , 0.75, 0.5 , 0.25, 0.  ])</span>
 
@@ -641,7 +641,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multilabel_roc_curve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multilabel_roc_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 0], [0, 1, 1], [1, 0, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.9], [0.8, 0.2, 0.3]]</span>
 <span class="sd">    &gt;&gt;&gt; fpr, tpr, thresholds = multilabel_roc_curve(target, preds, num_labels=3,</span>
@@ -649,12 +649,12 @@
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; fpr</span>
 <span class="sd">    array([[0., 0., 0., 0., 1.],</span>
-<span class="sd">    [0., 0., 0., 0., 1.],</span>
-<span class="sd">    [0., 1., 1., 1., 1.]])</span>
+<span class="sd">           [0., 0., 0., 0., 1.],</span>
+<span class="sd">           [0., 1., 1., 1., 1.]])</span>
 <span class="sd">    &gt;&gt;&gt; tpr</span>
 <span class="sd">    array([[0. , 1. , 1. , 1. , 1. ],</span>
-<span class="sd">    [0. , 0.5, 0.5, 0.5, 1. ],</span>
-<span class="sd">    [0. , 0.5, 0.5, 1. , 1. ]])</span>
+<span class="sd">           [0. , 0.5, 0.5, 0.5, 1. ],</span>
+<span class="sd">           [0. , 0.5, 0.5, 1. , 1. ]])</span>
 <span class="sd">    &gt;&gt;&gt; thresholds</span>
 <span class="sd">    array([1.  , 0.75, 0.5 , 0.25, 0.  ])</span>
 
@@ -761,7 +761,7 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; # (binary)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import roc_curve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import roc_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 0, 1, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.4, 0.35, 0.8]</span>
 <span class="sd">    &gt;&gt;&gt; fpr, tpr, thresholds = roc_curve(target, preds, task=&#39;binary&#39;)</span>
@@ -773,25 +773,21 @@
 <span class="sd">    array([1.  , 0.8 , 0.4 , 0.35, 0.1 ])</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import roc_curve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import roc_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06], [0.02, 0.03, 0.95]]</span>
 <span class="sd">    &gt;&gt;&gt; fpr, tpr, thresholds = roc_curve(target, preds, task=&#39;multiclass&#39;,</span>
 <span class="sd">    ...     num_classes=3</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; fpr</span>
-<span class="sd">    [array([0. , 0. , 0.5, 1. ]),</span>
-<span class="sd">    array([0. , 0. , 0.5, 1. ]),</span>
-<span class="sd">    array([0. , 0. , 0.5, 1. ])]</span>
+<span class="sd">    [array([0. , 0. , 0.5, 1. ]), array([0. , 0. , 0.5, 1. ]), array([0. , 0. , 0.5, 1. ])]</span>
 <span class="sd">    &gt;&gt;&gt; tpr</span>
 <span class="sd">    [array([0., 1., 1., 1.]), array([0., 1., 1., 1.]), array([0., 1., 1., 1.])]</span>
 <span class="sd">    &gt;&gt;&gt; thresholds</span>
-<span class="sd">    [array([1.  , 0.9 , 0.05, 0.02]),</span>
-<span class="sd">    array([1.  , 0.89, 0.05, 0.03]),</span>
-<span class="sd">    array([1.  , 0.95, 0.06, 0.05])]</span>
+<span class="sd">    [array([1.  , 0.9 , 0.05, 0.02]), array([1.  , 0.89, 0.05, 0.03]), array([1.  , 0.95, 0.06, 0.05])]</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import roc_curve</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import roc_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1], [0, 1], [1, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.8], [0.2, 0.7], [0.8, 0.3]]</span>
 <span class="sd">    &gt;&gt;&gt; fpr, tpr, thresholds = roc_curve(target, preds, task=&#39;multilabel&#39;,</span>
@@ -804,7 +800,7 @@
 <span class="sd">    &gt;&gt;&gt; thresholds</span>
 <span class="sd">    [array([1. , 0.9, 0.8, 0.2]), array([1. , 0.8, 0.7, 0.3])]</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: W505</span>
     <span class="n">_check_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">binary_roc_curve</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="n">pos_label</span><span class="p">)</span>

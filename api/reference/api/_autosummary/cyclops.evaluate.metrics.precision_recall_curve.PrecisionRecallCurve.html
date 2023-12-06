@@ -223,14 +223,12 @@ determined by the sunique values in <code class="docutils literal notranslate"><
 </dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (binary)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluation.metrics</span> <span class="kn">import</span> <span class="n">PrecisionRecallCurve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">PrecisionRecallCurve</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span> <span class="o">=</span> <span class="n">PrecisionRecallCurve</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">)</span>
-<span class="go">(array([0.75      , 0.66666667, 0.5       , 0.        , 1.        ]),</span>
-<span class="go">array([1.        , 0.66666667, 0.33333333, 0.        , 0.        ]),</span>
-<span class="go">array([0.2, 0.3, 0.6, 0.8]))</span>
+<span class="go">(array([0.75      , 0.66666667, 0.5       , 0.        , 1.        ]), array([1.        , 0.66666667, 0.33333333, 0.        , 0.        ]), array([0.2, 0.3, 0.6, 0.8]))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]]</span>
@@ -238,13 +236,11 @@ determined by the sunique values in <code class="docutils literal notranslate"><
 <span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
 <span class="go">(array([0.5       , 0.42857143, 0.33333333, 0.4       , 0.5       ,</span>
-<span class="go">    0.33333333, 0.5       , 0.        , 1.        ]),</span>
-<span class="go">array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]),</span>
-<span class="go">array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))</span>
+<span class="go">       0.33333333, 0.5       , 0.        , 1.        ]), array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]), array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (multiclass)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluation.metrics</span> <span class="kn">import</span> <span class="n">PrecisionRecallCurve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">PrecisionRecallCurve</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
 <span class="gp">... </span>        <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]]</span>
@@ -252,12 +248,10 @@ determined by the sunique values in <code class="docutils literal notranslate"><
 <span class="gp">... </span>    <span class="n">thresholds</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">)</span>
 <span class="go">(array([[0.25, 0.  , 0.  , 1.  ],</span>
-<span class="go">        [0.25, 0.5 , 0.  , 1.  ],</span>
-<span class="go">        [0.5 , 1.  , 0.  , 1.  ]]),</span>
-<span class="go">array([[1., 0., 0., 0.],</span>
-<span class="go">        [1., 1., 0., 0.],</span>
-<span class="go">        [1., 1., 0., 0.]]),</span>
-<span class="go">array([0. , 0.5, 1. ]))</span>
+<span class="go">       [0.25, 0.5 , 0.  , 1.  ],</span>
+<span class="go">       [0.5 , 1.  , 0.  , 1.  ]]), array([[1., 0., 0., 0.],</span>
+<span class="go">       [1., 1., 0., 0.],</span>
+<span class="go">       [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
@@ -268,26 +262,22 @@ determined by the sunique values in <code class="docutils literal notranslate"><
 <span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
 <span class="go">(array([[0.25 , 0.   , 0.   , 1.   ],</span>
-<span class="go">        [0.375, 0.5  , 0.   , 1.   ],</span>
-<span class="go">        [0.375, 0.5  , 0.   , 1.   ]]),</span>
-<span class="go">array([[1.        , 0.        , 0.        , 0.        ],</span>
-<span class="go">        [1.        , 0.66666667, 0.        , 0.        ],</span>
-<span class="go">        [1.        , 0.66666667, 0.        , 0.        ]]),</span>
-<span class="go">array([0. , 0.5, 1. ]))</span>
+<span class="go">       [0.375, 0.5  , 0.   , 1.   ],</span>
+<span class="go">       [0.375, 0.5  , 0.   , 1.   ]]), array([[1.        , 0.        , 0.        , 0.        ],</span>
+<span class="go">       [1.        , 0.66666667, 0.        , 0.        ],</span>
+<span class="go">       [1.        , 0.66666667, 0.        , 0.        ]]), array([0. , 0.5, 1. ]))</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (multilabel)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluation.metrics</span> <span class="kn">import</span> <span class="n">PrecisionRecallCurve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">PrecisionRecallCurve</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span> <span class="o">=</span> <span class="n">PrecisionRecallCurve</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;multilabel&quot;</span><span class="p">,</span> <span class="n">num_labels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">thresholds</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">)</span>
 <span class="go">(array([[0.5, 1. , 0. , 1. ],</span>
-<span class="go">        [0.5, 1. , 0. , 1. ]]),</span>
-<span class="go">array([[1., 1., 0., 0.],</span>
-<span class="go">        [1., 1., 0., 0.]]),</span>
-<span class="go">array([0. , 0.5, 1. ]))</span>
+<span class="go">       [0.5, 1. , 0. , 1. ]]), array([[1., 1., 0., 0.],</span>
+<span class="go">       [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]],</span>
@@ -296,10 +286,8 @@ determined by the sunique values in <code class="docutils literal notranslate"><
 <span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
 <span class="go">(array([[0.5, 0.5, 0. , 1. ],</span>
-<span class="go">        [0.5, 0.5, 0. , 1. ]]),</span>
-<span class="go">array([[1. , 0.5, 0. , 0. ],</span>
-<span class="go">        [1. , 0.5, 0. , 0. ]]),</span>
-<span class="go">array([0. , 0.5, 1. ]))</span>
+<span class="go">       [0.5, 0.5, 0. , 1. ]]), array([[1. , 0.5, 0. , 0. ],</span>
+<span class="go">       [1. , 0.5, 0. , 0. ]]), array([0. , 0.5, 1. ]))</span>
 </pre></div>
 </div>
 <p>Initialize the metric.</p>

@@ -37,6 +37,7 @@
     "from datasets import Dataset\n",
     "from datasets.features import ClassLabel\n",
     "from imblearn.over_sampling import SMOTE\n",
+    "from imblearn.pipeline import Pipeline as ImbPipeline\n",
     "from sklearn.compose import ColumnTransformer\n",
     "from sklearn.impute import SimpleImputer\n",
     "from sklearn.pipeline import Pipeline\n",
@@ -590,7 +591,7 @@
     "    (\"preprocessor\", preprocessor),\n",
     "    (\"oversampling\", SMOTE(random_state=RANDOM_SEED)),\n",
     "]\n",
-    "preprocessor_pipeline = Pipeline(preprocessor_pipeline)"
+    "preprocessor_pipeline = ImbPipeline(preprocessor_pipeline)"
    ]
   },
   {

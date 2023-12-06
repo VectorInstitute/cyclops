@@ -292,7 +292,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import BinaryStatScores</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import BinaryStatScores</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0, 1, 0, 0]</span>
 <span class="sd">    &gt;&gt;&gt; metric = BinaryStatScores(threshold=0.5, pos_label=1)</span>
@@ -379,38 +379,24 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import MulticlassStatScores</span>
-<span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 2, 2]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [0, 2, 1, 2, 0]</span>
-<span class="sd">    &gt;&gt;&gt; metric = MulticlassStatScores(num_classes=3, classwise=True)</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import MulticlassStatScores</span>
+<span class="sd">    &gt;&gt;&gt; target = [2, 1, 0, 0]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [2, 1, 0, 1]</span>
+<span class="sd">    &gt;&gt;&gt; metric = MulticlassStatScores(num_classes=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target=target, preds=preds)</span>
-<span class="sd">    array([[1, 1, 3, 0, 1],</span>
-<span class="sd">            [0, 1, 3, 1, 1],</span>
-<span class="sd">            [1, 1, 1, 2, 3]])</span>
-<span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
-<span class="sd">    &gt;&gt;&gt; target = [[2, 0, 2, 2, 1], [1, 1, 0, 2, 2]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [</span>
-<span class="sd">    ...         [</span>
-<span class="sd">    ...             [0.1, 0.2, 0.6],</span>
-<span class="sd">    ...             [0.6, 0.1, 0.2],</span>
-<span class="sd">    ...             [0.2, 0.6, 0.1],</span>
-<span class="sd">    ...             [0.2, 0.6, 0.1],</span>
-<span class="sd">    ...             [0.6, 0.2, 0.1],</span>
-<span class="sd">    ...         ],</span>
-<span class="sd">    ...         [</span>
-<span class="sd">    ...             [0.05, 0.1, 0.6],</span>
-<span class="sd">    ...             [0.1, 0.05, 0.6],</span>
-<span class="sd">    ...             [0.6, 0.1, 0.05],</span>
-<span class="sd">    ...             [0.1, 0.6, 0.05],</span>
-<span class="sd">    ...             [0.1, 0.6, 0.05],</span>
-<span class="sd">    ...         ],</span>
-<span class="sd">    ...     ]</span>
+<span class="sd">    array([[1, 0, 2, 1, 2],</span>
+<span class="sd">           [1, 1, 2, 0, 1],</span>
+<span class="sd">           [1, 0, 3, 0, 1]])</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[0.16, 0.26, 0.58],</span>
+<span class="sd">    ...          [0.22, 0.61, 0.17],</span>
+<span class="sd">    ...          [0.71, 0.09, 0.20],</span>
+<span class="sd">    ...          [0.05, 0.82, 0.13]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    array([[2, 1, 7, 0, 2],</span>
-<span class="sd">            [0, 4, 3, 3, 3],</span>
-<span class="sd">            [1, 2, 3, 4, 5]])</span>
+<span class="sd">    array([[ 8,  1,  5,  2, 10],</span>
+<span class="sd">           [ 4,  2,  9,  1,  5],</span>
+<span class="sd">           [ 1,  0, 15,  0,  1]])</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -497,14 +483,14 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import MultilabelStatScores</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import MultilabelStatScores</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 1], [1, 0, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MultilabelStatScores(num_labels=3, labelwise=True)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target=target, preds=preds)</span>
 <span class="sd">    array([[1, 0, 1, 0, 1],</span>
-<span class="sd">            [1, 0, 1, 0, 1],</span>
-<span class="sd">            [2, 0, 0, 0, 2]])</span>
+<span class="sd">           [1, 0, 1, 0, 1],</span>
+<span class="sd">           [2, 0, 0, 0, 2]])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[[0, 1, 1], [1, 0, 1]], [[0, 0, 1], [1, 1, 1]]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]],</span>
@@ -513,8 +499,8 @@
 <span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
 <span class="sd">    array([[2, 0, 2, 0, 2],</span>
-<span class="sd">            [1, 1, 1, 1, 2],</span>
-<span class="sd">            [4, 0, 0, 0, 4]])</span>
+<span class="sd">           [1, 1, 1, 1, 2],</span>
+<span class="sd">           [4, 0, 0, 0, 4]])</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -619,7 +605,7 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; # (binary)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import StatScores</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import StatScores</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0, 1, 0, 0]</span>
 <span class="sd">    &gt;&gt;&gt; metric = StatScores(task=&quot;binary&quot;, threshold=0.5, pos_label=1)</span>
@@ -630,53 +616,54 @@
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0, 1, 0, 0], [0, 0, 1, 1, 0, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.8, 0.3, 0.4, 0.5, 0.2], [0.2, 0.3, 0.6, 0.9, 0.4, 0.8]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
-<span class="sd">    ...     metric(target=t, preds=p)</span>
+<span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
 <span class="sd">    array([4, 2, 5, 1, 5])</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import StatScores</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import StatScores</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 2, 2]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0, 2, 1, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; metric = StatScores(task=&quot;multiclass&quot;, num_classes=3, classwise=True)</span>
-<span class="sd">    &gt;&gt;&gt; metric.update(target=target, preds=preds)</span>
+<span class="sd">    &gt;&gt;&gt; metric.update_state(target=target, preds=preds)</span>
+<span class="sd">    &gt;&gt;&gt; metric.compute()</span>
 <span class="sd">    array([[1, 1, 3, 0, 1],</span>
-<span class="sd">            [0, 1, 3, 1, 1],</span>
-<span class="sd">            [1, 1, 1, 2, 3]])</span>
+<span class="sd">           [0, 1, 3, 1, 1],</span>
+<span class="sd">           [1, 1, 1, 2, 3]])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[2, 0, 2, 2, 1], [1, 1, 0, 2, 2]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [</span>
 <span class="sd">    ...         [</span>
-<span class="sd">    ...             [0.1, 0.2, 0.6],</span>
-<span class="sd">    ...             [0.6, 0.1, 0.2],</span>
-<span class="sd">    ...             [0.2, 0.6, 0.1],</span>
-<span class="sd">    ...             [0.2, 0.6, 0.1],</span>
-<span class="sd">    ...             [0.6, 0.2, 0.1],</span>
+<span class="sd">    ...             [0.1, 0.2, 0.7],</span>
+<span class="sd">    ...             [0.7, 0.1, 0.2],</span>
+<span class="sd">    ...             [0.2, 0.7, 0.1],</span>
+<span class="sd">    ...             [0.2, 0.7, 0.1],</span>
+<span class="sd">    ...             [0.7, 0.2, 0.1],</span>
 <span class="sd">    ...         ],</span>
 <span class="sd">    ...         [</span>
-<span class="sd">    ...             [0.05, 0.1, 0.6],</span>
-<span class="sd">    ...             [0.1, 0.05, 0.6],</span>
-<span class="sd">    ...             [0.6, 0.1, 0.05],</span>
-<span class="sd">    ...             [0.1, 0.6, 0.05],</span>
-<span class="sd">    ...             [0.1, 0.6, 0.05],</span>
+<span class="sd">    ...             [0.05, 0.15, 0.8],</span>
+<span class="sd">    ...             [0.15, 0.05, 0.8],</span>
+<span class="sd">    ...             [0.8, 0.15, 0.05],</span>
+<span class="sd">    ...             [0.25, 0.7, 0.05],</span>
+<span class="sd">    ...             [0.15, 0.7, 0.15],</span>
 <span class="sd">    ...         ],</span>
 <span class="sd">    ...     ]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
 <span class="sd">    array([[2, 1, 7, 0, 2],</span>
-<span class="sd">            [0, 4, 3, 3, 3],</span>
-<span class="sd">            [1, 2, 3, 4, 5]])</span>
+<span class="sd">           [0, 4, 3, 3, 3],</span>
+<span class="sd">           [1, 2, 3, 4, 5]])</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics import StatScores</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import StatScores</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 1], [1, 0, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = StatScores(task=&quot;multilabel&quot;, num_labels=3, labelwise=True)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target=target, preds=preds)</span>
 <span class="sd">    array([[1, 0, 1, 0, 1],</span>
-<span class="sd">            [1, 0, 1, 0, 1],</span>
-<span class="sd">            [2, 0, 0, 0, 2]])</span>
+<span class="sd">           [1, 0, 1, 0, 1],</span>
+<span class="sd">           [2, 0, 0, 0, 2]])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[[0, 1, 1], [1, 0, 1]], [[0, 0, 1], [1, 1, 1]]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]],</span>
@@ -685,8 +672,8 @@
 <span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
 <span class="sd">    array([[2, 0, 2, 0, 2],</span>
-<span class="sd">            [1, 1, 1, 1, 2],</span>
-<span class="sd">            [4, 0, 0, 0, 4]])</span>
+<span class="sd">           [1, 1, 1, 1, 2],</span>
+<span class="sd">           [4, 0, 0, 0, 4]])</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 

@@ -292,13 +292,13 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import binary_precision</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import binary_precision</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 0, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0, 1, 1, 1]</span>
 <span class="sd">    &gt;&gt;&gt; binary_precision(target, preds)</span>
 <span class="sd">    0.6666666666666666</span>
-<span class="sd">    &gt;&gt;&gt; target = [[0, 1, 0, 1], [0, 0, 1, 1]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]</span>
+<span class="sd">    &gt;&gt;&gt; target = [0, 1, 0, 1, 0, 1]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [0.11, 0.22, 0.84, 0.73, 0.33, 0.92]</span>
 <span class="sd">    &gt;&gt;&gt; binary_precision(target, preds)</span>
 <span class="sd">    0.6666666666666666</span>
 
@@ -380,7 +380,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multiclass_precision</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multiclass_precision</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0, 2, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; multiclass_precision(target, preds, num_classes=3)</span>
@@ -470,11 +470,11 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multilabel_precision</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multilabel_precision</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1], [1, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9], [0.2, 0.8]]</span>
 <span class="sd">    &gt;&gt;&gt; multilabel_precision(target, preds, num_labels=2)</span>
-<span class="sd">    array([0., 1. ])</span>
+<span class="sd">    array([0., 1.])</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_check_average_arg</span><span class="p">(</span><span class="n">average</span><span class="p">)</span>
@@ -568,14 +568,14 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; # (binary)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import precision</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import precision</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.9, 0.8, 0.3]</span>
 <span class="sd">    &gt;&gt;&gt; precision(target, preds, task=&quot;binary&quot;)</span>
-<span class="sd">    1.</span>
+<span class="sd">    1.0</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import precision</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import precision</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0, 1, 2]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1],</span>
 <span class="sd">    ...         [0.5, 0.3, 0.2],  [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]</span>
@@ -584,7 +584,7 @@
 <span class="sd">    0.8333333333333334</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import precision</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import precision</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1], [1, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9], [0.2, 0.8]]</span>
 <span class="sd">    &gt;&gt;&gt; precision(target, preds, task=&quot;multilabel&quot;, num_labels=2,</span>
@@ -665,7 +665,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import binary_recall</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import binary_recall</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 0, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0, 1, 1, 0]</span>
 <span class="sd">    &gt;&gt;&gt; binary_recall(target, preds)</span>
@@ -747,7 +747,7 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multiclass_recall</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multiclass_recall</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0, 1, 2]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.4, 0.1, 0.5], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6],</span>
 <span class="sd">    ...     [0.5, 0.3, 0.2], [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]</span>
@@ -838,11 +838,11 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import multilabel_recall</span>
-<span class="sd">    &gt;&gt;&gt; target = [1, 1, 2, 0, 2, 2]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [1, 2, 2, 0, 2, 0]</span>
-<span class="sd">    &gt;&gt;&gt; multilabel_recall(target, preds, num_classes=3)</span>
-<span class="sd">    array([1.        , 0.5       , 0.66666667])</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multilabel_recall</span>
+<span class="sd">    &gt;&gt;&gt; target = [[0, 1, 0], [1, 0, 1]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[0, 0, 1], [1, 0, 1]]</span>
+<span class="sd">    &gt;&gt;&gt; multilabel_recall(target, preds, num_labels=3)</span>
+<span class="sd">    array([1., 0., 1.])</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_check_average_arg</span><span class="p">(</span><span class="n">average</span><span class="p">)</span>
@@ -936,21 +936,21 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; # (binary)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import recall</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import recall</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 1, 0, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.4, 0.2, 0.0, 0.6, 0.9]</span>
 <span class="sd">    &gt;&gt;&gt; recall(target, preds, task=&quot;binary&quot;)</span>
 <span class="sd">    0.3333333333333333</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import recall</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import recall</span>
 <span class="sd">    &gt;&gt;&gt; target = [1, 1, 2, 0, 2, 2]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [1, 2, 2, 0, 2, 0]</span>
 <span class="sd">    &gt;&gt;&gt; recall(target, preds, task=&quot;multiclass&quot;, num_classes=3)</span>
 <span class="sd">    array([1.        , 0.5       , 0.66666667])</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluation.metrics.functional import recall</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import recall</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 0, 1], [0, 1, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]</span>
 <span class="sd">    &gt;&gt;&gt; recall(target, preds, task=&quot;multilabel&quot;, num_labels=3)</span>
