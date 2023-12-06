@@ -32,7 +32,7 @@ class BinaryAccuracy(BinaryStatScores, registry_key="binary_accuracy"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryAccuracy
+    >>> from cyclops.evaluate.metrics import BinaryAccuracy
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> metric = BinaryAccuracy()
@@ -100,7 +100,7 @@ class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassAccuracy
+    >>> from cyclops.evaluate.metrics import MulticlassAccuracy
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 0, 2, 2, 1]
     >>> metric = MulticlassAccuracy(num_classes=3)
@@ -176,7 +176,7 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelAccuracy
+    >>> from cyclops.evaluate.metrics import MultilabelAccuracy
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]
     >>> metric = MultilabelAccuracy(num_labels=3)
@@ -268,7 +268,7 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import Accuracy
+    >>> from cyclops.evaluate.metrics import Accuracy
     >>> target = [0, 0, 1, 1]
     >>> preds = [0, 1, 1, 1]
     >>> metric = Accuracy(task="binary")
@@ -283,7 +283,7 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     0.5
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import Accuracy
+    >>> from cyclops.evaluate.metrics import Accuracy
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 0, 2, 2, 1]
     >>> metric = Accuracy(task="multiclass", num_classes=3)
@@ -299,7 +299,7 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     array([0., 1., 0.])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import Accuracy
+    >>> from cyclops.evaluate.metrics import Accuracy
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]
     >>> metric = Accuracy(task="multilabel", num_labels=3)

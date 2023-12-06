@@ -311,7 +311,7 @@ def binary_precision_recall_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import (
+    >>> from cyclops.evaluate.metrics.functional import (
     ...     binary_precision_recall_curve
     ... )
     >>> target = [0, 0, 1, 1]
@@ -320,11 +320,11 @@ def binary_precision_recall_curve(
     ...     preds, thresholds=5
     ... )
     >>> precision
-    array([0.5, 0.66666667, 1., 1., 0.]
+    array([0.5       , 0.66666667, 1.        , 1.        , 0.        ])
     >>> recall
-    array([1., 1., 0.5, 0.5, 0.])
+    array([1. , 1. , 0.5, 0.5, 0. ])
     >>> thresholds
-    array([0.1, 0.25 , 0.5, 0.75 , 1.])
+    array([0.  , 0.25, 0.5 , 0.75, 1.  ])
 
     """
     _check_thresholds(thresholds)
@@ -617,7 +617,7 @@ def multiclass_precision_recall_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import (
+    >>> from cyclops.evaluate.metrics.functional import (
     ...     multiclass_precision_recall_curve
     ... )
     >>> target = [0, 1, 2, 2]
@@ -626,12 +626,12 @@ def multiclass_precision_recall_curve(
     ...     preds, num_classes=3, thresholds=5)
     >>> precision
     array([[0.25, 0.  , 0.  , 0.  , 0.  , 1.  ],
-    [0.25, 0.25, 0.5 , 1.  , 0.  , 1.  ],
-    [0.5 , 0.5 , 0.  , 0.  , 0.  , 1.  ]])
+           [0.25, 0.25, 0.5 , 1.  , 0.  , 1.  ],
+           [0.5 , 0.5 , 0.  , 0.  , 0.  , 1.  ]])
     >>> recall
     array([[1. , 0. , 0. , 0. , 0. , 0. ],
-    [1. , 1. , 1. , 1. , 0. , 0. ],
-    [1. , 0.5, 0. , 0. , 0. , 0. ]])
+           [1. , 1. , 1. , 1. , 0. , 0. ],
+           [1. , 0.5, 0. , 0. , 0. , 0. ]])
     >>> thresholds
     array([0.  , 0.25, 0.5 , 0.75, 1.  ])
 
@@ -914,7 +914,7 @@ def multilabel_precision_recall_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import (
+    >>> from cyclops.evaluate.metrics.functional import (
     ...     multilabel_precision_recall_curve)
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]
@@ -922,12 +922,12 @@ def multilabel_precision_recall_curve(
     ...     target, preds, num_labels=3, thresholds=5)
     >>> precision
     array([[0.5, 0. , 0. , 0. , 0. , 1. ],
-    [1. , 1. , 1. , 1. , 0. , 1. ],
-    [0. , 0. , 0. , 0. , 0. , 1. ]])
+           [1. , 1. , 1. , 1. , 0. , 1. ],
+           [0. , 0. , 0. , 0. , 0. , 1. ]])
     >>> recall
     array([[1., 0., 0., 0., 0., 0.],
-    [1., 1., 1., 1., 0., 0.],
-    [0., 0., 0., 0., 0., 0.]])
+           [1., 1., 1., 1., 0., 0.],
+           [0., 0., 0., 0., 0., 0.]])
     >>> thresholds
     array([0.  , 0.25, 0.5 , 0.75, 1.  ])
 
@@ -1021,47 +1021,45 @@ def precision_recall_curve(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
+    >>> from cyclops.evaluate.metrics.functional import precision_recall_curve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> precision, recall, thresholds = precision_recall_curve(target, preds,
     ...     "binary")
     >>> precision
-    array([0.66666667, 0.5, 1., 1.])
+    array([0.5       , 0.66666667, 0.5       , 1.        , 1.        ])
     >>> recall
-    array([1. , 0.5, 0.5, 0. ])
+    array([1. , 1. , 0.5, 0.5, 0. ])
     >>> thresholds
-    array([0.35, 0.4 , 0.8 ])
+    array([0.1 , 0.35, 0.4 , 0.8 ])
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
+    >>> from cyclops.evaluate.metrics.functional import precision_recall_curve
     >>> target = [0, 1, 2, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2], [0.3, 0.4, 0.3]]
     >>> precision, recall, thresholds = precision_recall_curve(
     ...     target, preds, task="multiclass", num_classes=3)
-    >>> precision
-    [array([0.33333333, 0.        , 0.        , 1.        ]),
-    array([1., 1.]),
-    array([0.66666667, 0.5       , 1.        ])]
-    >>> recall
-    [array([1., 0., 0., 0.]), array([1., 0.]), array([1. , 0.5, 0. ])]
+    >>> [prec.tolist() for prec in precision]
+    [[0.25, 0.3333333333333333, 0.0, 0.0, 1.0], [0.25, 0.3333333333333333, 0.5, 1.0, 1.0], [0.5, 0.6666666666666666, 0.5, 1.0]]
+    >>> [rec.tolist() for rec in recall]
+    [[1.0, 1.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0, 0.0], [1.0, 1.0, 0.5, 0.0]]
     >>> thresholds
-    [array([0.1, 0.3, 0.5]), array([0.95]), array([0.2, 0.3])]
+    [array([0.05, 0.1 , 0.3 , 0.5 ]), array([0.3 , 0.4 , 0.6 , 0.95]), array([0. , 0.2, 0.3])]
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import precision_recall_curve
+    >>> from cyclops.evaluate.metrics.functional import precision_recall_curve
     >>> target = [[1, 1, 0], [0, 1, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]
     >>> precision, recall, thresholds = precision_recall_curve(target, preds,
     ...     "multilabel", num_labels=3)
     >>> precision
-    [array([1., 1.]), array([1., 1., 1.]), array([0., 1.])]
+    [array([0.5, 1. , 1. ]), array([1., 1., 1.]), array([0., 0., 1.])]
     >>> recall
-    [array([1., 0.]), array([1. , 0.5, 0. ]), array([0., 0.])]
+    [array([1., 1., 0.]), array([1. , 0.5, 0. ]), array([0., 0., 0.])]
     >>> thresholds
-    [array([0.1]), array([0.9 , 0.95]), array([0.8])]
+    [array([0.05, 0.1 ]), array([0.9 , 0.95]), array([0.35, 0.8 ])]
 
-    """
+    """  # noqa: W505
     if task == "binary":
         return binary_precision_recall_curve(
             target,

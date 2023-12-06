@@ -33,7 +33,7 @@ class BinaryFbetaScore(BinaryStatScores, registry_key="binary_fbeta_score"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryFbetaScore
+    >>> from cyclops.evaluate.metrics import BinaryFbetaScore
     >>> target = [0, 1, 1, 0]
     >>> preds = [0, 1, 0, 0]
     >>> metric = BinaryFbetaScore(beta=0.5)
@@ -110,7 +110,7 @@ class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassFbetaScore
+    >>> from cyclops.evaluate.metrics import MulticlassFbetaScore
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
     >>> metric = MulticlassFbetaScore(beta=0.5, num_classes=3)
@@ -201,7 +201,7 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelFbetaScore
+    >>> from cyclops.evaluate.metrics import MultilabelFbetaScore
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
     >>> metric = MultilabelFbetaScore(beta=0.5, num_labels=2)
@@ -297,7 +297,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import FbetaScore
+    >>> from cyclops.evaluate.metrics import FbetaScore
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
     >>> metric = FbetaScore(beta=0.5, task="binary")
@@ -312,7 +312,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     0.9090909090909091
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import FbetaScore
+    >>> from cyclops.evaluate.metrics import FbetaScore
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.1, 0.8, 0.1], [0.1, 0.1, 0.8], [0.1, 0.1, 0.8], [0.8, 0.1, 0.1]]
     >>> metric = FbetaScore(beta=0.5, task="multiclass", num_classes=3)
@@ -328,7 +328,7 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     array([0.83333333, 0.5       , 0.        ])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import FbetaScore
+    >>> from cyclops.evaluate.metrics import FbetaScore
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
     >>> metric = FbetaScore(beta=0.5, task="multilabel", num_labels=2)
@@ -410,7 +410,7 @@ class BinaryF1Score(BinaryFbetaScore, registry_key="binary_f1_score"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryF1Score
+    >>> from cyclops.evaluate.metrics import BinaryF1Score
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
     >>> metric = BinaryF1Score()
@@ -472,7 +472,7 @@ class MulticlassF1Score(MulticlassFbetaScore, registry_key="multiclass_f1_score"
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassF1Score
+    >>> from cyclops.evaluate.metrics import MulticlassF1Score
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.95, 0.05, 0]]
     >>> metric = MulticlassF1Score(num_classes=3)
@@ -538,7 +538,7 @@ class MultilabelF1Score(MultilabelFbetaScore, registry_key="multilabel_f1_score"
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelF1Score
+    >>> from cyclops.evaluate.metrics import MultilabelF1Score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
     >>> metric = MultilabelF1Score(num_labels=3)
@@ -617,7 +617,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import F1Score
+    >>> from cyclops.evaluate.metrics import F1Score
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
     >>> metric = F1Score(task="binary")
@@ -632,7 +632,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     0.8
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import F1Score
+    >>> from cyclops.evaluate.metrics import F1Score
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.95, 0.05, 0]]
     >>> metric = F1Score(task="multiclass", num_classes=3)
@@ -648,7 +648,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     array([0.        , 0.85714286, 0.        ])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import F1Score
+    >>> from cyclops.evaluate.metrics import F1Score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
     >>> metric = F1Score(task="multilabel", num_labels=3)

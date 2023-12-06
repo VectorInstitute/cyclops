@@ -20,7 +20,7 @@ from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
 )
 from cyclops.evaluate.metrics.experimental.metric import Metric
 from cyclops.evaluate.metrics.experimental.utils.ops import dim_zero_cat
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
 class _AbstractConfusionMatrix(Metric):
@@ -112,7 +112,7 @@ class BinaryConfusionMatrix(
     >>> metric = BinaryConfusionMatrix()
     >>> metric(target, preds)
     Array([[2, 1],
-           [1, 2]], dtype=int32)
+           [1, 2]], dtype=int64)
     >>> target = np.asarray([[[0, 1], [1, 0], [0, 1]], [[1, 1], [0, 0], [1, 0]]])
     >>> preds = np.asarray([[[0.59, 0.91], [0.91, 0.99], [0.63, 0.04]],
     ...                     [[0.38, 0.04], [0.86, 0.780], [0.45, 0.37]]])
@@ -303,10 +303,10 @@ class MultilabelConfusionMatrix(
     >>> metric(target, preds)
     Array([[[1, 0],
             [0, 1]],
-
+    <BLANKLINE>
            [[1, 0],
             [1, 0]],
-
+    <BLANKLINE>
            [[0, 1],
             [0, 1]]], dtype=int64)
     >>> target = np.asarray([[0, 1, 0], [1, 0, 1]])
@@ -315,10 +315,10 @@ class MultilabelConfusionMatrix(
     >>> metric(target, preds)
     Array([[[1, 0],
             [0, 1]],
-
+    <BLANKLINE>
            [[1, 0],
             [1, 0]],
-
+    <BLANKLINE>
            [[0, 1],
             [0, 1]]], dtype=int64)
 

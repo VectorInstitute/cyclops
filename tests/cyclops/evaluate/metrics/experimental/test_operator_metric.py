@@ -4,7 +4,7 @@ import numpy.array_api as anp
 import pytest
 
 from cyclops.evaluate.metrics.experimental.metric import Metric, OperatorMetric
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
 class DummyMetric(Metric):

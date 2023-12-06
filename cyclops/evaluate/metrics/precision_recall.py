@@ -32,7 +32,7 @@ class BinaryPrecision(BinaryStatScores, registry_key="binary_precision"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryPrecision
+    >>> from cyclops.evaluate.metrics import BinaryPrecision
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> metric = BinaryPrecision()
@@ -102,12 +102,12 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassPrecision
+    >>> from cyclops.evaluate.metrics import MulticlassPrecision
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
     >>> metric = MulticlassPrecision(num_classes=3, average=None)
     >>> metric(target, preds)
-    array([1. , 0. , 0.])
+    array([1., 0., 0.])
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
@@ -186,7 +186,7 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelPrecision
+    >>> from cyclops.evaluate.metrics import MultilabelPrecision
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
     >>> metric = MultilabelPrecision(num_labels=2, average=None)
@@ -283,7 +283,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
     Examples
     --------
     (binary)
-    >>> from cyclops.evaluation.metrics import Precision
+    >>> from cyclops.evaluate.metrics import Precision
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> metric = Precision(task="binary")
@@ -298,12 +298,12 @@ class Precision(Metric, registry_key="precision", force_register=True):
     0.6666666666666666
 
     (multiclass)
-    >>> from cyclops.evaluation.metrics import Precision
+    >>> from cyclops.evaluate.metrics import Precision
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
     >>> metric = Precision(task="multiclass", num_classes=3)
     >>> metric(target, preds)
-    array([1. , 0. , 0.])
+    array([1., 0., 0.])
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
@@ -322,7 +322,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
     array([1., 0., 0.])
 
     (multilabel)
-    >>> from cyclops.evaluation.metrics import Precision
+    >>> from cyclops.evaluate.metrics import Precision
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
     >>> metric = Precision(task="multilabel", num_labels=2)
@@ -404,10 +404,10 @@ class BinaryRecall(BinaryStatScores, registry_key="binary_recall"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import BinaryRecall
+    >>> from cyclops.evaluate.metrics import BinaryRecall
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 0]
-    >>> metric = Recall()
+    >>> metric = BinaryRecall()
     >>> metric(target, preds)
     0.5
     >>> metric.reset_state()
@@ -475,7 +475,7 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MulticlassRecall
+    >>> from cyclops.evaluate.metrics import MulticlassRecall
     >>> target = [0, 1, 2, 0]
     >>> preds = [2, 0, 2, 1]
     >>> metric = MulticlassRecall(num_classes=3)
@@ -554,12 +554,12 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics import MultilabelRecall
+    >>> from cyclops.evaluate.metrics import MultilabelRecall
     >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
     >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
     >>> metric = MultilabelRecall(num_labels=4)
     >>> metric(target, preds)
-    array([0., 1., 1. , 0. ])
+    array([0., 1., 1., 0.])
     >>> metric.reset_state()
     >>> target = [[[0, 1, 0, 1], [0, 0, 1, 1]], [[0, 1, 0, 1], [0, 0, 1, 1]]]
     >>> preds = [[[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
@@ -646,12 +646,12 @@ class Recall(Metric, registry_key="recall", force_register=True):
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics import Recall
+    >>> from cyclops.evaluate.metrics import Recall
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> metric = Recall(task="binary")
     >>> metric(target, preds)
-    1.
+    1.0
     >>> metric.reset_state()
     >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
     >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
@@ -661,12 +661,12 @@ class Recall(Metric, registry_key="recall", force_register=True):
     0.5
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics import Recall
+    >>> from cyclops.evaluate.metrics import Recall
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
     >>> metric = Recall(task="multiclass", num_classes=3)
     >>> metric(target, preds)
-    array([1. , 0. , 0.])
+    array([1., 0., 0.])
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
@@ -685,7 +685,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     array([0.66666667, 0.        , 0.        ])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics import Recall
+    >>> from cyclops.evaluate.metrics import Recall
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
     >>> metric = Recall(task="multilabel", num_labels=2)

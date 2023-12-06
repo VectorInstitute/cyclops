@@ -153,7 +153,7 @@ def binary_fbeta_score(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_fbeta_score
+    >>> from cyclops.evaluate.metrics.functional import binary_fbeta_score
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> binary_fbeta_score(target, preds, beta=0.5)
@@ -242,7 +242,7 @@ def multiclass_fbeta_score(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_fbeta_score
+    >>> from cyclops.evaluate.metrics.functional import multiclass_fbeta_score
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
     >>> multiclass_fbeta_score(target, preds, beta=0.5, num_classes=3)
@@ -333,7 +333,7 @@ def multilabel_fbeta_score(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_fbeta_score
+    >>> from cyclops.evaluate.metrics.functional import multilabel_fbeta_score
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
     >>> multilabel_fbeta_score(target, preds, beta=0.5, num_labels=2)
@@ -437,21 +437,21 @@ def fbeta_score(
     Examples
     --------
     (binary)
-    >>> from cyclops.evaluation.metrics.functional import fbeta_score
+    >>> from cyclops.evaluate.metrics.functional import fbeta_score
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
     >>> fbeta_score(target, preds, beta=0.5, task="binary")
     0.8333333333333334
 
     (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import fbeta_score
+    >>> from cyclops.evaluate.metrics.functional import fbeta_score
     >>> target = [0, 1, 2, 2]
-    >>> preds = [1 2, 2, 0]
+    >>> preds = [1, 2, 2, 0]
     >>> fbeta_score(target, preds, beta=0.5, task="multiclass", num_classes=3)
-    array([0.83333333, 0.        , 0.55555556])
+    array([0. , 0. , 0.5])
 
     (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import fbeta_score
+    >>> from cyclops.evaluate.metrics.functional import fbeta_score
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
     >>> fbeta_score(target, preds, beta=0.5, task="multilabel", num_labels=2)
@@ -532,7 +532,7 @@ def binary_f1_score(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_f1_score
+    >>> from cyclops.evaluate.metrics.functional import binary_f1_score
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.8, 0.4, 0.3]
     >>> binary_f1_score(target, preds)
@@ -596,7 +596,7 @@ def multiclass_f1_score(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_f1_score
+    >>> from cyclops.evaluate.metrics.functional import multiclass_f1_score
     >>> target = [0, 1, 2, 0]
     >>> preds = [1, 1, 1, 0]
     >>> multiclass_f1_score(target, preds, num_classes=3)
@@ -662,7 +662,7 @@ def multilabel_f1_score(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_f1_score
+    >>> from cyclops.evaluate.metrics.functional import multilabel_f1_score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
     >>> multilabel_f1_score(target, preds, num_labels=3)
@@ -743,21 +743,21 @@ def f1_score(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import f1_score
+    >>> from cyclops.evaluate.metrics.functional import f1_score
     >>> target = [0, 1, 0, 1]
     >>> preds = [0.1, 0.9, 0.8, 0.2]
     >>> f1_score(target, preds, task="binary")
     0.5
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import f1_score
+    >>> from cyclops.evaluate.metrics.functional import f1_score
     >>> target = [0, 1, 2, 0]
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
     >>> f1_score(target, preds, task="multiclass", num_classes=3)
-    array([0.66666667, 0.8       , 0.        ])
+    array([0.66666667, 0.66666667, 1.        ])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import f1_score
+    >>> from cyclops.evaluate.metrics.functional import f1_score
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.2]]
     >>> f1_score(target, preds, task="multilabel", num_labels=3)

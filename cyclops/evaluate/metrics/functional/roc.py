@@ -175,7 +175,7 @@ def binary_roc_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_roc_curve
+    >>> from cyclops.evaluate.metrics.functional import binary_roc_curve
     >>> target = [1, 0, 1, 0]
     >>> preds = [0.9, 0.2, 0.8, 0.3]
     >>> fpr, tpr, thresholds = binary_roc_curve(target, preds, thresholds=5)
@@ -315,7 +315,7 @@ def multiclass_roc_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_roc_curve
+    >>> from cyclops.evaluate.metrics.functional import multiclass_roc_curve
     >>> target = [1, 0, 2, 0]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05],
     ...         [0.05, 0.05, 0.9], [0.9, 0.05, 0.05]]
@@ -324,12 +324,12 @@ def multiclass_roc_curve(
     ... )
     >>> fpr
     array([[0.        , 0.5       , 0.5       , 0.5       , 1.        ],
-    [0.        , 0.33333333, 0.33333333, 0.33333333, 1.        ],
-    [0.        , 0.        , 0.        , 0.        , 1.        ]])
+           [0.        , 0.33333333, 0.33333333, 0.33333333, 1.        ],
+           [0.        , 0.        , 0.        , 0.        , 1.        ]])
     >>> tpr
     array([[0. , 0.5, 0.5, 0.5, 1. ],
-    [0. , 0. , 0. , 0. , 1. ],
-    [0. , 1. , 1. , 1. , 1. ]])
+           [0. , 0. , 0. , 0. , 1. ],
+           [0. , 1. , 1. , 1. , 1. ]])
     >>> thresholds
     array([1.  , 0.75, 0.5 , 0.25, 0.  ])
 
@@ -466,7 +466,7 @@ def multilabel_roc_curve(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_roc_curve
+    >>> from cyclops.evaluate.metrics.functional import multilabel_roc_curve
     >>> target = [[0, 1, 0], [0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.9], [0.8, 0.2, 0.3]]
     >>> fpr, tpr, thresholds = multilabel_roc_curve(target, preds, num_labels=3,
@@ -474,12 +474,12 @@ def multilabel_roc_curve(
     ... )
     >>> fpr
     array([[0., 0., 0., 0., 1.],
-    [0., 0., 0., 0., 1.],
-    [0., 1., 1., 1., 1.]])
+           [0., 0., 0., 0., 1.],
+           [0., 1., 1., 1., 1.]])
     >>> tpr
     array([[0. , 1. , 1. , 1. , 1. ],
-    [0. , 0.5, 0.5, 0.5, 1. ],
-    [0. , 0.5, 0.5, 1. , 1. ]])
+           [0. , 0.5, 0.5, 0.5, 1. ],
+           [0. , 0.5, 0.5, 1. , 1. ]])
     >>> thresholds
     array([1.  , 0.75, 0.5 , 0.25, 0.  ])
 
@@ -583,7 +583,7 @@ def roc_curve(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import roc_curve
+    >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> fpr, tpr, thresholds = roc_curve(target, preds, task='binary')
@@ -595,25 +595,21 @@ def roc_curve(
     array([1.  , 0.8 , 0.4 , 0.35, 0.1 ])
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import roc_curve
+    >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06], [0.02, 0.03, 0.95]]
     >>> fpr, tpr, thresholds = roc_curve(target, preds, task='multiclass',
     ...     num_classes=3
     ... )
     >>> fpr
-    [array([0. , 0. , 0.5, 1. ]),
-    array([0. , 0. , 0.5, 1. ]),
-    array([0. , 0. , 0.5, 1. ])]
+    [array([0. , 0. , 0.5, 1. ]), array([0. , 0. , 0.5, 1. ]), array([0. , 0. , 0.5, 1. ])]
     >>> tpr
     [array([0., 1., 1., 1.]), array([0., 1., 1., 1.]), array([0., 1., 1., 1.])]
     >>> thresholds
-    [array([1.  , 0.9 , 0.05, 0.02]),
-    array([1.  , 0.89, 0.05, 0.03]),
-    array([1.  , 0.95, 0.06, 0.05])]
+    [array([1.  , 0.9 , 0.05, 0.02]), array([1.  , 0.89, 0.05, 0.03]), array([1.  , 0.95, 0.06, 0.05])]
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import roc_curve
+    >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [[1, 1], [0, 1], [1, 0]]
     >>> preds = [[0.9, 0.8], [0.2, 0.7], [0.8, 0.3]]
     >>> fpr, tpr, thresholds = roc_curve(target, preds, task='multilabel',
@@ -626,7 +622,7 @@ def roc_curve(
     >>> thresholds
     [array([1. , 0.9, 0.8, 0.2]), array([1. , 0.8, 0.7, 0.3])]
 
-    """
+    """  # noqa: W505
     _check_thresholds(thresholds)
     if task == "binary":
         return binary_roc_curve(target, preds, thresholds, pos_label=pos_label)

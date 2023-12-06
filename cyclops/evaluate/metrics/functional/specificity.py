@@ -126,7 +126,7 @@ def binary_specificity(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_specificity
+    >>> from cyclops.evaluate.metrics.functional import binary_specificity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.1, 0.9, 0.8, 0.5, 0.4]
     >>> binary_specificity(target, preds)
@@ -201,7 +201,7 @@ def multiclass_specificity(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_specificity
+    >>> from cyclops.evaluate.metrics.functional import multiclass_specificity
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]
@@ -281,12 +281,12 @@ def multilabel_specificity(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_specificity
+    >>> from cyclops.evaluate.metrics.functional import multilabel_specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
     >>> multilabel_specificity(target, preds, num_labels=3)
-    array([0.5, 0., 0.5])
+    array([0.5, 0. , 0.5])
 
     """
     _check_average_arg(average)
@@ -381,27 +381,27 @@ def specificity(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import specificity
+    >>> from cyclops.evaluate.metrics.functional import specificity
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.9, 0.05, 0.05, 0.35, 0.05]
     >>> specificity(target, preds, task="binary")
     0.5
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import specificity
+    >>> from cyclops.evaluate.metrics.functional import specificity
     >>> target = [0, 1, 2, 0, 1]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
     >>> specificity(target, preds, task="multiclass", num_classes=3)
-    array([0.5, 0., 0.5])
+    array([1.        , 0.66666667, 1.        ])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import specificity
+    >>> from cyclops.evaluate.metrics.functional import specificity
     >>> target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],
     ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]
     >>> specificity(target, preds, task="multilabel", num_labels=3)
-    array([0.5, 0., 0.5])
+    array([0.5, 0. , 0.5])
 
     """
     if task == "binary":

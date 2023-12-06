@@ -140,7 +140,7 @@ def binary_accuracy(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_accuracy
+    >>> from cyclops.evaluate.metrics.functional import binary_accuracy
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> binary_accuracy(target, preds)
@@ -222,7 +222,7 @@ def multiclass_accuracy(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_accuracy
+    >>> from cyclops.evaluate.metrics.functional import multiclass_accuracy
     >>> target = [0, 1, 2, 2, 2]
     >>> preds = [0, 0, 2, 2, 1]
     >>> multiclass_accuracy(target, preds, num_classes=3)
@@ -314,7 +314,7 @@ def multilabel_accuracy(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_accuracy
+    >>> from cyclops.evaluate.metrics.functional import multilabel_accuracy
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]
     >>> multilabel_accuracy(target, preds, num_labels=3, average=None)
@@ -418,7 +418,7 @@ def accuracy(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import accuracy
+    >>> from cyclops.evaluate.metrics.functional import accuracy
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> accuracy(target, preds, task="binary")
@@ -433,7 +433,7 @@ def accuracy(
     >>> # (multilabel)
     >>> target = [[0, 1, 1], [1, 0, 0]]
     >>> preds = [[0, 1, 0], [1, 0, 1]]
-    >>> accuracy(target, preds, task="multilabel", num_labels=3, average="mcro")
+    >>> accuracy(target, preds, task="multilabel", num_labels=3, average="micro")
     0.6666666666666666
 
     """

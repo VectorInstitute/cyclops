@@ -1,4 +1,5 @@
 """Utilities for array-API compatibility."""
+
 from typing import TYPE_CHECKING, Any, Optional, Protocol, Union
 
 import numpy.typing as npt

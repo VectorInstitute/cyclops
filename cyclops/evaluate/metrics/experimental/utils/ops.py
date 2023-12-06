@@ -16,7 +16,7 @@ import array_api_compat as apc
 from array_api_compat.common._helpers import _is_numpy_array, _is_torch_array
 from numpy.core.multiarray import normalize_axis_index  # type: ignore
 
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.metrics.experimental.utils.validation import (
     _get_int_dtypes,
     is_floating_point,
@@ -125,7 +125,7 @@ def bincount(
     >>> bincount(x, weights=np.asarray([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]))
     Array([0.5, 1. , 1.5], dtype=float64)
     >>> bincount(x, minlength=5)
-    Array([1, 2, 3, 0, 0], dtype=int32)
+    Array([1, 2, 3, 0, 0], dtype=int64)
 
     """
     xp = apc.array_namespace(array)
@@ -637,7 +637,7 @@ def to_int(array: Array) -> Array:
     >>> from cyclops.evaluate.metrics.experimental.utils.ops import to_int
     >>> x = np.asarray([1.1, 2.0, 3.0])
     >>> to_int(x)
-    Array([1, 2, 3], dtype=int32)
+    Array([1, 2, 3], dtype=int64)
 
     """
     xp = apc.array_namespace(array)
