@@ -91,7 +91,7 @@ class MPI4Py(DistributedBackend, registry_key="mpi4py"):
 
         # gather data from all processes to all processes, accounting for uneven shapes
         comm.Allgatherv(
-            flatten(arr),
+            flatten(arr),  # type: ignore[arg-type]
             [gathered_data, (all_sizes, displacements)],
         )
 

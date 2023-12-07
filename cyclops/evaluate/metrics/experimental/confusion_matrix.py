@@ -1,19 +1,20 @@
 """Confusion matrix."""
-from typing import Any, List, Optional, Tuple, Union
+from types import ModuleType
+from typing import Any, Optional, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
     _binary_confusion_matrix_compute,
-    _binary_confusion_matrix_format_inputs,
+    _binary_confusion_matrix_format_arrays,
     _binary_confusion_matrix_update_state,
     _binary_confusion_matrix_validate_args,
     _binary_confusion_matrix_validate_arrays,
     _multiclass_confusion_matrix_compute,
-    _multiclass_confusion_matrix_format_inputs,
+    _multiclass_confusion_matrix_format_arrays,
     _multiclass_confusion_matrix_update_state,
     _multiclass_confusion_matrix_validate_args,
     _multiclass_confusion_matrix_validate_arrays,
     _multilabel_confusion_matrix_compute,
-    _multilabel_confusion_matrix_format_inputs,
+    _multilabel_confusion_matrix_format_arrays,
     _multilabel_confusion_matrix_update_state,
     _multilabel_confusion_matrix_validate_args,
     _multilabel_confusion_matrix_validate_arrays,
@@ -27,11 +28,6 @@ class _AbstractConfusionMatrix(Metric):
     """Base class defining the common interface for confusion matrix classes."""
 
     name: str = "Confusion Matrix"
-
-    tp: Union[Array, List[Array]]
-    fp: Union[Array, List[Array]]
-    tn: Union[Array, List[Array]]
-    fn: Union[Array, List[Array]]
 
     def _create_state(self, size: int = 1) -> None:
         """Create the state variables.
@@ -53,28 +49,37 @@ class _AbstractConfusionMatrix(Metric):
             )
         dist_reduce_fn = "sum"
 
-        def default(xp: Any) -> Array:
-            return xp.zeros(shape=size, dtype=xp.int64)
+        def default(xp: ModuleType) -> Array:
+            return xp.zeros(shape=size, dtype=xp.int64, device=self.device)  # type: ignore[no-any-return]
 
         self.add_state_default_factory("tp", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
         self.add_state_default_factory("fp", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
         self.add_state_default_factory("tn", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
         self.add_state_default_factory("fn", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
 
-    def _update_stat_scores(self, tp: Array, fp: Array, tn: Array, fn: Array) -> None:
+    def _update_stat_scores(
+        self,
+        *,
+        tn: Array,
+        fp: Array,
+        fn: Array,
+        tp: Array,
+    ) -> None:
         """Update the stat scores."""
-        self.tp += tp
-        self.fp += fp
-        self.tn += tn
-        self.fn += fn
+        self.tp += tp  # type: ignore
+        self.fp += fp  # type: ignore
+        self.tn += tn  # type: ignore
+        self.fn += fn  # type: ignore
 
-    def _final_state(self) -> Tuple[Array, Array, Array, Array]:
+    def _final_state(
+        self,
+    ) -> Tuple[Array, Array, Array, Array]:
         """Return the final state variables."""
-        tp = dim_zero_cat(self.tp)
-        fp = dim_zero_cat(self.fp)
-        tn = dim_zero_cat(self.tn)
-        fn = dim_zero_cat(self.fn)
-        return tp, fp, tn, fn
+        tp = dim_zero_cat(self.tp)  # type: ignore
+        fp = dim_zero_cat(self.fp)  # type: ignore
+        tn = dim_zero_cat(self.tn)  # type: ignore
+        fn = dim_zero_cat(self.fn)  # type: ignore
+        return tn, fp, fn, tp
 
 
 class BinaryConfusionMatrix(
@@ -99,22 +104,22 @@ class BinaryConfusionMatrix(
 
     Examples
     --------
-    >>> import numpy.array_api as np
+    >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import BinaryConfusionMatrix
-    >>> target = np.asarray([0, 1, 0, 1, 0, 1])
-    >>> preds = np.asarray([0, 0, 1, 1, 0, 1])
+    >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
+    >>> preds = anp.asarray([0, 0, 1, 1, 0, 1])
     >>> metric = BinaryConfusionMatrix()
     >>> metric(target, preds)
     Array([[2, 1],
            [1, 2]], dtype=int64)
-    >>> target = np.asarray([0, 1, 0, 1, 0, 1])
-    >>> preds = np.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
+    >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
+    >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> metric = BinaryConfusionMatrix()
     >>> metric(target, preds)
     Array([[2, 1],
            [1, 2]], dtype=int32)
-    >>> target = np.asarray([[[0, 1], [1, 0], [0, 1]], [[1, 1], [0, 0], [1, 0]]])
-    >>> preds = np.asarray([[[0.59, 0.91], [0.91, 0.99], [0.63, 0.04]],
+    >>> target = anp.asarray([[[0, 1], [1, 0], [0, 1]], [[1, 1], [0, 0], [1, 0]]])
+    >>> preds = anp.asarray([[[0.59, 0.91], [0.91, 0.99], [0.63, 0.04]],
     ...                     [[0.38, 0.04], [0.86, 0.780], [0.45, 0.37]]])
 
     """
@@ -143,24 +148,25 @@ class BinaryConfusionMatrix(
 
     def _update_state(self, target: Array, preds: Array) -> None:
         """Update the state variables."""
-        _binary_confusion_matrix_validate_arrays(
+        xp = _binary_confusion_matrix_validate_arrays(
             target,
             preds,
             ignore_index=self.ignore_index,
         )
-        target, preds = _binary_confusion_matrix_format_inputs(
+        target, preds = _binary_confusion_matrix_format_arrays(
             target,
             preds,
             threshold=self.threshold,
             ignore_index=self.ignore_index,
+            xp=xp,
         )
 
-        tn, fp, fn, tp = _binary_confusion_matrix_update_state(target, preds)
-        self._update_stat_scores(tp, fp, tn, fn)
+        tn, fp, fn, tp = _binary_confusion_matrix_update_state(target, preds, xp=xp)
+        self._update_stat_scores(tn=tn, fp=fp, fn=fn, tp=tp)
 
     def _compute_metric(self) -> Array:
         """Compute the confusion matrix."""
-        tp, fp, tn, fn = self._final_state()
+        tn, fp, fn, tp = self._final_state()
         return _binary_confusion_matrix_compute(
             tp=tp,
             fp=fp,
@@ -189,17 +195,17 @@ class MulticlassConfusionMatrix(Metric, registry_key="multiclass_confusion_matri
 
     Examples
     --------
-    >>> import numpy.array_api as np
+    >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import MulticlassConfusionMatrix
-    >>> target = np.asarray([2, 1, 0, 0])
-    >>> preds = np.asarray([2, 1, 0, 1])
+    >>> target = anp.asarray([2, 1, 0, 0])
+    >>> preds = anp.asarray([2, 1, 0, 1])
     >>> metric = MulticlassConfusionMatrix(num_classes=3)
     >>> metric(target, preds)
     Array([[1, 1, 0],
            [0, 1, 0],
            [0, 0, 1]], dtype=int64)
-    >>> target = np.asarray([2, 1, 0, 0])
-    >>> preds = np.asarray([[0.16, 0.26, 0.58],
+    >>> target = anp.asarray([2, 1, 0, 0])
+    >>> preds = anp.asarray([[0.16, 0.26, 0.58],
     ...                     [0.22, 0.61, 0.17],
     ...                     [0.71, 0.09, 0.20],
     ...                     [0.05, 0.82, 0.13]])
@@ -212,7 +218,6 @@ class MulticlassConfusionMatrix(Metric, registry_key="multiclass_confusion_matri
     """
 
     name: str = "Confusion Matrix"
-    confmat: Array
 
     def __init__(
         self,
@@ -234,39 +239,39 @@ class MulticlassConfusionMatrix(Metric, registry_key="multiclass_confusion_matri
         self.normalize = normalize
         self.ignore_index = ignore_index
 
-        dist_reduce_fn = "sum"
-
-        def default(xp: Any) -> Array:
-            return xp.zeros((num_classes,) * 2, dtype=xp.int64)
-
-        self.add_state_default_factory("confmat", default, dist_reduce_fn=dist_reduce_fn)  # type: ignore
+        self.add_state_default_factory(
+            "confmat",
+            lambda xp: xp.zeros((num_classes,) * 2, dtype=xp.int64, device=self.device),  # type: ignore
+            dist_reduce_fn="sum",
+        )
 
     def _update_state(self, target: Array, preds: Array) -> None:
         """Update the state variable."""
-        _multiclass_confusion_matrix_validate_arrays(
+        xp = _multiclass_confusion_matrix_validate_arrays(
             target,
             preds,
             self.num_classes,
             ignore_index=self.ignore_index,
         )
-        target, preds = _multiclass_confusion_matrix_format_inputs(
+        target, preds = _multiclass_confusion_matrix_format_arrays(
             target,
             preds,
             ignore_index=self.ignore_index,
+            xp=xp,
         )
         confmat = _multiclass_confusion_matrix_update_state(
             target,
             preds,
             self.num_classes,
+            xp=xp,
         )
 
-        self.confmat += confmat
+        self.confmat += confmat  # type: ignore
 
     def _compute_metric(self) -> Array:
         """Compute the confusion matrix."""
-        confmat = self.confmat
         return _multiclass_confusion_matrix_compute(
-            confmat,
+            self.confmat,  # type: ignore
             normalize=self.normalize,
         )
 
@@ -295,10 +300,10 @@ class MultilabelConfusionMatrix(
 
     Examples
     --------
-    >>> import numpy.array_api as np
+    >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import MultilabelConfusionMatrix
-    >>> target = np.asarray([[0, 1, 0], [1, 0, 1]])
-    >>> preds = np.asarray([[0, 0, 1], [1, 0, 1]])
+    >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
+    >>> preds = anp.asarray([[0, 0, 1], [1, 0, 1]])
     >>> metric = MultilabelConfusionMatrix(num_labels=3)
     >>> metric(target, preds)
     Array([[[1, 0],
@@ -309,8 +314,8 @@ class MultilabelConfusionMatrix(
 
            [[0, 1],
             [0, 1]]], dtype=int64)
-    >>> target = np.asarray([[0, 1, 0], [1, 0, 1]])
-    >>> preds = np.asarray([[0.11, 0.22, 0.84], [0.73, 0.33, 0.92]])
+    >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
+    >>> preds = anp.asarray([[0.11, 0.22, 0.84], [0.73, 0.33, 0.92]])
     >>> metric = MultilabelConfusionMatrix(num_labels=3)
     >>> metric(target, preds)
     Array([[[1, 0],
@@ -351,24 +356,25 @@ class MultilabelConfusionMatrix(
 
     def _update_state(self, target: Array, preds: Array) -> None:
         """Update the state variables."""
-        _multilabel_confusion_matrix_validate_arrays(
+        xp = _multilabel_confusion_matrix_validate_arrays(
             target,
             preds,
             self.num_labels,
             ignore_index=self.ignore_index,
         )
-        target, preds = _multilabel_confusion_matrix_format_inputs(
+        target, preds = _multilabel_confusion_matrix_format_arrays(
             target,
             preds,
             threshold=self.threshold,
             ignore_index=self.ignore_index,
+            xp=xp,
         )
-        tn, fp, fn, tp = _multilabel_confusion_matrix_update_state(target, preds)
-        self._update_stat_scores(tp, fp, tn, fn)
+        tn, fp, fn, tp = _multilabel_confusion_matrix_update_state(target, preds, xp=xp)
+        self._update_stat_scores(tn=tn, fp=fp, fn=fn, tp=tp)
 
     def _compute_metric(self) -> Array:
         """Compute the confusion matrix."""
-        tp, fp, tn, fn = self._final_state()
+        tn, fp, fn, tp = self._final_state()
         return _multilabel_confusion_matrix_compute(
             tp=tp,
             fp=fp,

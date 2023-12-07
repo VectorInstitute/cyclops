@@ -1,5 +1,7 @@
 """Functions for computing the confusion matrix for classification tasks."""
-from typing import Any, Literal, Optional, Tuple, Union
+# mypy: disable-error-code="no-any-return"
+from types import ModuleType
+from typing import Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
 
@@ -21,41 +23,11 @@ from cyclops.evaluate.metrics.experimental.utils.validation import (
 )
 
 
-def _common_confusion_matrix_args_validate(
-    normalize: Optional[str] = None,
-    ignore_index: Optional[Union[int, Tuple[int]]] = None,
-) -> None:
-    """Validate the arguments of the confusion matrix functions."""
-    allowed_normalize = ("true", "pred", "all", "none", None)
-    if normalize not in allowed_normalize:
-        raise ValueError(
-            f"Expected argument `normalize` to be one of {allowed_normalize}, "
-            f"but got {normalize}",
-        )
-    if ignore_index is not None and not (
-        isinstance(ignore_index, int)
-        or (
-            isinstance(ignore_index, tuple)
-            and all(isinstance(i, int) for i in ignore_index)
-        )
-    ):
-        raise ValueError(
-            "Expected argument `ignore_index` to either be `None`, an integer, "
-            "or a tuple of integers (for multiclass and multilabel inputs) but "
-            f"got {ignore_index}",
-        )
-    if isinstance(ignore_index, tuple) and min(ignore_index) < 0:
-        raise ValueError(
-            "Expected argument `ignore_index` to be a tuple of non-negative "
-            f"integers but got {ignore_index}",
-        )
-
-
 def _normalize_confusion_matrix(
     confmat: Array,
     normalize: Optional[str] = None,
     *,
-    xp: Any,
+    xp: ModuleType,
 ) -> Array:
     """Normalize the confusion matrix."""
     if normalize in ["true", "pred", "all"]:
@@ -82,17 +54,26 @@ def _binary_confusion_matrix_validate_args(
             "Expected argument `threshold` to be a float in the [0,1] range, "
             f"but got {threshold}.",
         )
-    _common_confusion_matrix_args_validate(
-        normalize=normalize,
-        ignore_index=ignore_index,
-    )
+
+    allowed_normalize = ("true", "pred", "all", "none", None)
+    if normalize not in allowed_normalize:
+        raise ValueError(
+            f"Expected argument `normalize` to be one of {allowed_normalize}, "
+            f"but got {normalize}",
+        )
+
+    if ignore_index is not None and not isinstance(ignore_index, int):
+        raise ValueError(
+            "Expected argument `ignore_index` to either be `None`, an integer, "
+            f" but got {ignore_index}",
+        )
 
 
 def _binary_confusion_matrix_validate_arrays(
     target: Array,
     preds: Array,
     ignore_index: Optional[int] = None,
-) -> None:
+) -> ModuleType:
     """Validate the inputs of the `binary_confusion_matrix` method."""
     _basic_input_array_checks(target, preds)
     _check_same_shape(target, preds)
@@ -124,16 +105,18 @@ def _binary_confusion_matrix_validate_arrays(
                 f"But found the following values: {unique_values}",
             )
 
+    return xp
 
-def _binary_confusion_matrix_format_inputs(
+
+def _binary_confusion_matrix_format_arrays(
     target: Array,
     preds: Array,
     threshold: float,
     ignore_index: Optional[int],
+    *,
+    xp: ModuleType,
 ) -> Tuple[Array, Array]:
     """Format the input arrays of the `binary_confusion_matrix` method."""
-    xp = apc.array_namespace(target, preds)
-
     preds = flatten(preds)
     target = flatten(target)
 
@@ -146,7 +129,12 @@ def _binary_confusion_matrix_format_inputs(
         # so we convert the boolean array to an integer array first.
         if not xp.all(to_int((preds >= 0)) * to_int((preds <= 1))):  # preds are logits
             preds = sigmoid(preds)  # convert to probabilities with sigmoid
-        preds = to_int(preds > threshold)
+        preds_device = apc.device(preds)
+        preds = xp.where(
+            preds > threshold,
+            xp.asarray(1, dtype=xp.int32, device=preds_device),
+            xp.asarray(0, dtype=xp.int32, device=preds_device),
+        )
 
     return target, preds
 
@@ -154,10 +142,10 @@ def _binary_confusion_matrix_format_inputs(
 def _binary_confusion_matrix_update_state(
     target: Array,
     preds: Array,
+    *,
+    xp: ModuleType,
 ) -> Tuple[Array, Array, Array, Array]:
     """Compute stat scores for the given `target` and `preds` arrays."""
-    xp = apc.array_namespace(target, preds)
-
     # NOTE: in the 2021.12 version of the array API standard, the `sum` method
     # only supports numeric types, so we have to cast the boolean arrays to integers.
     # Also, the `squeeze` method in the array API standard does not support `axis=None`
@@ -198,11 +186,17 @@ def binary_confusion_matrix(
     Parameters
     ----------
     target : Array
-        The target array with shape `(N, ...)`, where `N` is the number of samples.
+        An array object that is compatible with the Python array API standard
+        and contains the ground truth labels. The expected shape of the array
+        is `(N, ...)`, where `N` is the number of samples.
     preds : Array
-        The prediction array with shape `(N, ...)`, where `N` is the number of samples.
+        An array object that is compatible with the Python array API standard and
+        contains the predictions of a binary classifier. the expected shape of the
+        array is `(N, ...)` where `N` is the number of samples. If `preds` contains
+        floating point values that are not in the range `[0, 1]`, a sigmoid function
+        will be applied to each value before thresholding.
     threshold : float, default=0.5
-        The threshold to use for binarizing the predictions.
+        The threshold to use when converting probabilities to binary predictions.
     normalize : str, optional, default=None
         Normalization mode.
         If `None` or `'none'`, return the number of correctly classified samples
@@ -241,15 +235,15 @@ def binary_confusion_matrix(
 
     Examples
     --------
-    >>> import numpy.array_api as np
+    >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental.functional import binary_confusion_matrix
-    >>> target = np.asarray([0, 1, 0, 1, 0, 1])
-    >>> preds = np.asarray([0, 0, 1, 1, 0, 1])
+    >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
+    >>> preds = anp.asarray([0, 0, 1, 1, 0, 1])
     >>> binary_confusion_matrix(target, preds)
     Array([[2, 1],
            [1, 2]], dtype=int64)
-    >>> target = np.asarray([0, 1, 0, 1, 0, 1])
-    >>> preds = np.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
+    >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
+    >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> binary_confusion_matrix(target, preds)
     Array([[2, 1],
            [1, 2]], dtype=int32)
@@ -260,15 +254,16 @@ def binary_confusion_matrix(
         normalize=normalize,
         ignore_index=ignore_index,
     )
-    _binary_confusion_matrix_validate_arrays(target, preds, ignore_index)
+    xp = _binary_confusion_matrix_validate_arrays(target, preds, ignore_index)
 
-    target, preds = _binary_confusion_matrix_format_inputs(
+    target, preds = _binary_confusion_matrix_format_arrays(
         target,
         preds,
         threshold,
         ignore_index,
+        xp=xp,
     )
-    tn, fp, fn, tp = _binary_confusion_matrix_update_state(target, preds)
+    tn, fp, fn, tp = _binary_confusion_matrix_update_state(target, preds, xp=xp)
 
     return _binary_confusion_matrix_compute(tn, fp, fn, tp, normalize=normalize)
 
@@ -284,10 +279,25 @@ def _multiclass_confusion_matrix_validate_args(
             "Expected argument `num_classes` to be an integer larger than 1, "
             f"but got {num_classes}.",
         )
-    _common_confusion_matrix_args_validate(
-        normalize=normalize,
-        ignore_index=ignore_index,
-    )
+
+    allowed_normalize = ("true", "pred", "all", "none", None)
+    if normalize not in allowed_normalize:
+        raise ValueError(
+            f"Expected argument `normalize` to be one of {allowed_normalize}, "
+            f"but got {normalize}",
+        )
+
+    if ignore_index is not None and not (
+        isinstance(ignore_index, int)
+        or (
+            isinstance(ignore_index, tuple)
+            and all(isinstance(i, int) for i in ignore_index)
+        )
+    ):
+        raise ValueError(
+            "Expected argument `ignore_index` to either be `None`, an integer, "
+            f"or a tuple of integers got {ignore_index}",
+        )
 
 
 def _multiclass_confusion_matrix_validate_arrays(
@@ -295,10 +305,9 @@ def _multiclass_confusion_matrix_validate_arrays(
     preds: Array,
     num_classes: int,
     ignore_index: Optional[Union[int, Tuple[int]]] = None,
-) -> None:
+) -> ModuleType:
     """Validate the inputs of the `multiclass_confusion_matrix` method."""
     _basic_input_array_checks(target, preds)
-
     xp = apc.array_namespace(target, preds)
 
     if preds.ndim == target.ndim + 1:
@@ -335,14 +344,19 @@ def _multiclass_confusion_matrix_validate_arrays(
         )
 
     num_unique_values = apc.size(xp.unique_values(target))
+    num_allowed_extra_values = 0
+    if ignore_index is not None:
+        num_allowed_extra_values = (
+            1 if isinstance(ignore_index, int) else len(ignore_index)
+        )
     check = num_unique_values is None or (
         num_unique_values > num_classes
         if ignore_index is None
-        else num_unique_values > num_classes + 1
+        else num_unique_values > num_classes + num_allowed_extra_values
     )
     if check:
         raise RuntimeError(
-            f"Expected only {num_classes if ignore_index is None else num_classes + 1} "
+            f"Expected only {num_classes if ignore_index is None else num_classes + num_allowed_extra_values} "
             f"values in `target` but found {num_unique_values} values.",
         )
 
@@ -355,14 +369,17 @@ def _multiclass_confusion_matrix_validate_arrays(
                 f"{num_unique_values} values.",
             )
 
+    return xp
 
-def _multiclass_confusion_matrix_format_inputs(
+
+def _multiclass_confusion_matrix_format_arrays(
     target: Array,
     preds: Array,
     ignore_index: Optional[Union[int, Tuple[int]]] = None,
+    *,
+    xp: ModuleType,
 ) -> Tuple[Array, Array]:
     """Format the input arrays of the `multiclass_confusion_matrix` method."""
-    xp = apc.array_namespace(target, preds)
     if preds.ndim == target.ndim + 1:
         axis = 1 if preds.ndim > 1 else 0
         preds = xp.argmax(preds, axis=axis)
@@ -379,10 +396,10 @@ def _multiclass_confusion_matrix_update_state(
     target: Array,
     preds: Array,
     num_classes: int,
+    *,
+    xp: ModuleType,
 ) -> Array:
     """Compute the confusion matrix for the given `target` and `preds` arrays."""
-    xp = apc.array_namespace(target, preds)
-
     unique_mapping = to_int(target) * num_classes + to_int(preds)
     bins = bincount(unique_mapping, minlength=num_classes**2)
 
@@ -466,16 +483,16 @@ def multiclass_confusion_matrix(
 
     Examples
     --------
-    >>> import numpy.array_api as np
+    >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental.functional import multiclass_confusion_matrix
-    >>> target = np.asarray([2, 1, 0, 0])
-    >>> preds = np.asarray([2, 1, 0, 1])
+    >>> target = anp.asarray([2, 1, 0, 0])
+    >>> preds = anp.asarray([2, 1, 0, 1])
     >>> multiclass_confusion_matrix(target, preds, num_classes=3)
     Array([[1, 1, 0],
            [0, 1, 0],
            [0, 0, 1]], dtype=int64)
-    >>> target = np.asarray([2, 1, 0, 0])
-    >>> preds = np.asarray([[0.16, 0.26, 0.58],
+    >>> target = anp.asarray([2, 1, 0, 0])
+    >>> preds = anp.asarray([[0.16, 0.26, 0.58],
     ...                     [0.22, 0.61, 0.17],
     ...                     [0.71, 0.09, 0.20],
     ...                     [0.05, 0.82, 0.13]])
@@ -490,19 +507,25 @@ def multiclass_confusion_matrix(
         normalize=normalize,
         ignore_index=ignore_index,
     )
-    _multiclass_confusion_matrix_validate_arrays(
+    xp = _multiclass_confusion_matrix_validate_arrays(
         target,
         preds,
         num_classes,
         ignore_index=ignore_index,
     )
 
-    target, preds = _multiclass_confusion_matrix_format_inputs(
+    target, preds = _multiclass_confusion_matrix_format_arrays(
         target,
         preds,
         ignore_index=ignore_index,
+        xp=xp,
     )
-    confmat = _multiclass_confusion_matrix_update_state(target, preds, num_classes)
+    confmat = _multiclass_confusion_matrix_update_state(
+        target,
+        preds,
+        num_classes,
+        xp=xp,
+    )
 
     return _multiclass_confusion_matrix_compute(confmat, normalize)
 
@@ -519,6 +542,7 @@ def _multilabel_confusion_matrix_validate_args(
             "Expected argument `num_labels` to be an integer larger than 1, "
             f"but got {num_labels}.",
         )
+
     _binary_confusion_matrix_validate_args(
         threshold=threshold,
         normalize=normalize,
@@ -531,7 +555,7 @@ def _multilabel_confusion_matrix_validate_arrays(
     preds: Array,
     num_labels: int,
     ignore_index: Optional[int] = None,
-) -> None:
+) -> ModuleType:
     """Validate the input arrays of the `multilabel_confusion_matrix` method."""
     _basic_input_array_checks(target, preds)
     _check_same_shape(target, preds)
@@ -569,16 +593,18 @@ def _multilabel_confusion_matrix_validate_arrays(
                 f"{unique_values}",
             )
 
+    return xp
 
-def _multilabel_confusion_matrix_format_inputs(
+
+def _multilabel_confusion_matrix_format_arrays(
     target: Array,
     preds: Array,
     threshold: float = 0.5,
     ignore_index: Optional[int] = None,
+    *,
+    xp: ModuleType,
 ) -> Tuple[Array, Array]:
     """Format the input arrays of the `multilabel_confusion_matrix` method."""
-    xp = apc.array_namespace(target, preds)
-
     if is_floating_point(preds):
         # NOTE: in the array API standard the `__mul__` operator is only defined
         # for numeric arrays (including float and int scalars) so we convert the
@@ -601,10 +627,10 @@ def _multilabel_confusion_matrix_format_inputs(
 def _multilabel_confusion_matrix_update_state(
     target: Array,
     preds: Array,
+    *,
+    xp: ModuleType,
 ) -> Tuple[Array, Array, Array, Array]:
     """Compute the statistics for the given `target` and `preds` arrays."""
-    xp = apc.array_namespace(target, preds)
-
     sum_axis = (0, -1)
     tp = squeeze_all(xp.sum(to_int((target == preds) & (target == 1)), axis=sum_axis))
     fn = squeeze_all(xp.sum(to_int((target != preds) & (target == 1)), axis=sum_axis))
@@ -700,10 +726,10 @@ def multilabel_confusion_matrix(
 
     Examples
     --------
-    >>> import numpy.array_api as np
+    >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental.functional import multilabel_confusion_matrix
-    >>> target = np.asarray([[0, 1, 0], [1, 0, 1]])
-    >>> preds = np.asarray([[0, 0, 1], [1, 0, 1]])
+    >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
+    >>> preds = anp.asarray([[0, 0, 1], [1, 0, 1]])
     >>> multilabel_confusion_matrix(target, preds, num_labels=3)
     Array([[[1, 0],
             [0, 1]],
@@ -713,8 +739,8 @@ def multilabel_confusion_matrix(
 
            [[0, 1],
             [0, 1]]], dtype=int64)
-    >>> target = np.asarray([[0, 1, 0], [1, 0, 1]])
-    >>> preds = np.asarray([[0.11, 0.22, 0.84], [0.73, 0.33, 0.92]])
+    >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
+    >>> preds = anp.asarray([[0.11, 0.22, 0.84], [0.73, 0.33, 0.92]])
     >>> multilabel_confusion_matrix(target, preds, num_labels=3)
     Array([[[1, 0],
             [0, 1]],
@@ -732,20 +758,21 @@ def multilabel_confusion_matrix(
         normalize=normalize,
         ignore_index=ignore_index,
     )
-    _multilabel_confusion_matrix_validate_arrays(
+    xp = _multilabel_confusion_matrix_validate_arrays(
         target,
         preds,
         num_labels,
         ignore_index=ignore_index,
     )
 
-    target, preds = _multilabel_confusion_matrix_format_inputs(
+    target, preds = _multilabel_confusion_matrix_format_arrays(
         target,
         preds,
         threshold=threshold,
         ignore_index=ignore_index,
+        xp=xp,
     )
-    tn, fp, fn, tp = _multilabel_confusion_matrix_update_state(target, preds)
+    tn, fp, fn, tp = _multilabel_confusion_matrix_update_state(target, preds, xp=xp)
 
     return _multilabel_confusion_matrix_compute(
         tn,
