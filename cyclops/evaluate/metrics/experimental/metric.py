@@ -38,14 +38,14 @@ setup_logging(print_level="WARN", logger=LOGGER)
 
 _METRIC_REGISTRY = {}
 
-TState = Union[Array, List[Array]]
+State = Union[Array, List[Array]]
 
 
 @runtime_checkable
 class StateFactory(Protocol):
     """Protocol for a function that creates a metric state."""
 
-    def __call__(self, xp: Optional[ModuleType] = None) -> TState:
+    def __call__(self, xp: Optional[ModuleType] = None) -> State:
         """Create a metric state."""
         ...
 
@@ -61,11 +61,11 @@ class Metric(ABC):
         self._update_count: int = 0
         self._computed: Any = None
         self._default_factories: Dict[str, StateFactory] = {}
-        self._defaults: Dict[str, TState] = {}
+        self._defaults: Dict[str, State] = {}
         self._reductions: Dict[str, Union[str, Callable[..., Any], None]] = {}
 
         self._is_synced = False
-        self._cache: Optional[Dict[str, TState]] = None
+        self._cache: Optional[Dict[str, State]] = None
 
     def __init_subclass__(
         cls: Any,
@@ -86,7 +86,8 @@ class Metric(ABC):
 
         if registry_key is not None and not isinstance(registry_key, str):
             raise TypeError(
-                f"Expected `registry_key` to be a string, but got {type(registry_key)}.",
+                "Expected `registry_key` to be `None` or a string, but got "
+                f"{type(registry_key)}.",
             )
 
         is_abstract_cls = inspect.isabstract(cls)
@@ -103,7 +104,7 @@ class Metric(ABC):
         return self._device
 
     @property
-    def state_vars(self) -> Dict[str, TState]:
+    def state_vars(self) -> Dict[str, State]:
         """Return the state variables of the metric as a dictionary."""
         return {attr: getattr(self, attr) for attr in self._defaults}
 
