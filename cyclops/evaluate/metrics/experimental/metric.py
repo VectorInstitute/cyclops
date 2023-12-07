@@ -4,6 +4,7 @@ import logging
 import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from types import ModuleType
 from typing import (
     Any,
     Callable,
@@ -37,14 +38,14 @@ setup_logging(print_level="WARN", logger=LOGGER)
 
 _METRIC_REGISTRY = {}
 
-TState = Union[Array, List[Array]]
+State = Union[Array, List[Array]]
 
 
 @runtime_checkable
 class StateFactory(Protocol):
     """Protocol for a function that creates a metric state."""
 
-    def __call__(self, xp: Optional[Any] = None) -> TState:
+    def __call__(self, xp: Optional[ModuleType] = None) -> State:
         """Create a metric state."""
         ...
 
@@ -60,11 +61,11 @@ class Metric(ABC):
         self._update_count: int = 0
         self._computed: Any = None
         self._default_factories: Dict[str, StateFactory] = {}
-        self._defaults: Dict[str, TState] = {}
+        self._defaults: Dict[str, State] = {}
         self._reductions: Dict[str, Union[str, Callable[..., Any], None]] = {}
 
         self._is_synced = False
-        self._cache: Optional[Dict[str, TState]] = None
+        self._cache: Optional[Dict[str, State]] = None
 
     def __init_subclass__(
         cls: Any,
@@ -74,7 +75,7 @@ class Metric(ABC):
         """Add subclass to the metric registry."""
         super().__init_subclass__()
 
-        if registry_key is None and not force_register:
+        if registry_key is None and force_register:
             warnings.warn(
                 "A registry key must be provided when `force_register` is True. "
                 "The registration will be skipped.",
@@ -85,7 +86,8 @@ class Metric(ABC):
 
         if registry_key is not None and not isinstance(registry_key, str):
             raise TypeError(
-                f"Expected `registry_key` to be a string, but got {type(registry_key)}.",
+                "Expected `registry_key` to be `None` or a string, but got "
+                f"{type(registry_key)}.",
             )
 
         is_abstract_cls = inspect.isabstract(cls)
@@ -102,7 +104,7 @@ class Metric(ABC):
         return self._device
 
     @property
-    def state_vars(self) -> Dict[str, TState]:
+    def state_vars(self) -> Dict[str, State]:
         """Return the state variables of the metric as a dictionary."""
         return {attr: getattr(self, attr) for attr in self._defaults}
 
@@ -148,7 +150,7 @@ class Metric(ABC):
 
             setattr(self, name, value)
             self._defaults[name] = (
-                clone(value) if apc.is_array_api_obj(value) else deepcopy(value)
+                clone(value) if apc.is_array_api_obj(value) else deepcopy(value)  # type: ignore[arg-type]
             )
 
     def add_state_default_factory(
@@ -410,7 +412,7 @@ class Metric(ABC):
                 setattr(
                     self,
                     state_name,
-                    apc.to_device(clone(default_value), self.device),
+                    apc.to_device(clone(default_value), self.device),  # type: ignore[arg-type]
                 )
             elif isinstance(default_value, list):
                 setattr(
@@ -508,11 +510,17 @@ class Metric(ABC):
         """Compute the bitwise AND of a metric and another object."""
         return OperatorMetric("__and__", self, other)
 
-    def __eq__(self, other: Union[bool, float, int, "Metric", Array]) -> Array:
+    def __eq__(  # type: ignore[override]
+        self,
+        other: Union[bool, float, int, "Metric", Array],  # type: ignore[override]
+    ) -> Array:
         """Compare the metric to another object for equality."""
-        return OperatorMetric("__eq__", self, other)
+        return OperatorMetric("__eq__", self, other)  # type: ignore[return-value]
 
-    def __floordiv__(self, other: Union[int, float, "Metric", Array]) -> "Metric":
+    def __floordiv__(
+        self,
+        other: Union[int, float, "Metric", Array],
+    ) -> "Metric":
         """Compute the floor division of a metric and another object."""
         return OperatorMetric("__floordiv__", self, other)
 
@@ -548,9 +556,12 @@ class Metric(ABC):
         """Multiply two metrics, a metric and a scalar or a metric and an array."""
         return OperatorMetric("__mul__", self, other)
 
-    def __ne__(self, other: Union[bool, float, int, "Metric", Array]) -> Array:
+    def __ne__(  # type: ignore[override]
+        self,
+        other: Union[bool, float, int, "Metric", Array],  # type: ignore[override]
+    ) -> Array:
         """Compute the truth value of `self` != `other`."""
-        return OperatorMetric("__ne__", self, other)
+        return OperatorMetric("__ne__", self, other)  # type: ignore[return-value]
 
     def __neg__(self) -> "Metric":
         """Negate every element of the metric result."""
@@ -572,7 +583,10 @@ class Metric(ABC):
         """Subtract two metrics, a metric and a scalar or a metric and an array."""
         return OperatorMetric("__sub__", self, other)
 
-    def __truediv__(self, other: Union[int, float, "Metric", Array]) -> "Metric":
+    def __truediv__(
+        self,
+        other: Union[int, float, "Metric", Array],
+    ) -> "Metric":
         """Divide two metrics, a metric and a scalar or a metric and an array."""
         return OperatorMetric("__truediv__", self, other)
 

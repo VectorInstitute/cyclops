@@ -186,7 +186,6 @@ def _multiclass_confusion_matrix_reference(
     ignore_index=None,
 ) -> torch.Tensor:
     """Return the reference multiclass confusion matrix."""
-    print(preds, target)
     if preds.ndim == 1 and is_floating_point(preds):
         xp = apc.array_namespace(preds)
         preds = xp.argmax(preds, axis=0)

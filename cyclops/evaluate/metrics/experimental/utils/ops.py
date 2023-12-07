@@ -1,5 +1,5 @@
 """Utility functions for performing operations on array-API-compatible objects."""
-import warnings
+# mypy: disable-error-code="no-any-return"
 from collections import OrderedDict, defaultdict
 from typing import (
     Any,
@@ -10,11 +10,12 @@ from typing import (
     Sequence,
     Tuple,
     Union,
+    cast,
 )
 
 import array_api_compat as apc
+import numpy as np
 from array_api_compat.common._helpers import _is_numpy_array, _is_torch_array
-from numpy.core.multiarray import normalize_axis_index  # type: ignore
 
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.metrics.experimental.utils.validation import (
@@ -206,7 +207,7 @@ def clone(array: Array) -> Array:
 def dim_zero_cat(x: Union[Array, List[Array], Tuple[Array]]) -> Array:
     """Concatenation along the zero dimension."""
     if apc.is_array_api_obj(x) or not x:  # covers empty list/tuple
-        return x
+        return cast(Array, x)
 
     if not isinstance(x, (list, tuple)):
         raise TypeError(
@@ -257,7 +258,7 @@ def dim_zero_sum(x: Array) -> Array:
     return xp.sum(x, axis=0)
 
 
-def flatten(array: Array) -> Array:
+def flatten(array: Array, copy: bool = True) -> Array:
     """Flatten an array.
 
     Parameters
@@ -269,6 +270,8 @@ def flatten(array: Array) -> Array:
     -------
     Array
         The flattened array.
+    copy : bool, optional, default=True
+        Whether to copy the input array.
 
     Notes
     -----
@@ -284,12 +287,13 @@ def flatten(array: Array) -> Array:
     (1, 2, 3)
     >>> flatten(x).shape
     (6,)
+
     """
     xp = apc.array_namespace(array)
     return xp.asarray(
         xp.reshape(array, shape=(-1,)),
         device=apc.device(array),
-        copy=True,
+        copy=copy if copy else None,
     )
 
 
@@ -463,14 +467,17 @@ def remove_ignore_index(
     if isinstance(ignore_index, int):
         mask = target == ignore_index
     else:
-        mask = xp.zeros_like(target, dtype=xp.bool, device=apc.device(target))
+        mask = xp.zeros_like(target, dtype=xp.bool)
         for index in ignore_index:
             mask = xp.logical_or(mask, target == index)
 
     return clone(target[~mask]), clone(preds[~mask])
 
 
-def safe_divide(numerator: Array, denominator: Array) -> Array:
+def safe_divide(
+    numerator: Array,
+    denominator: Array,
+) -> Array:
     """Divide two arrays and return zero if denominator is zero.
 
     Parameters
@@ -498,6 +505,7 @@ def safe_divide(numerator: Array, denominator: Array) -> Array:
     >>> y = np.asarray([1.1, 0.0, 3.0])
     >>> safe_divide(x, y)
     Array([1., 0., 1.], dtype=float64)
+
     """
     xp = apc.array_namespace(numerator, denominator)
 
@@ -698,14 +706,18 @@ def _select_topk(  # noqa: PLR0912
            [1, 1, 0]], dtype=int32)
     """
     xp = apc.array_namespace(scores)
-    if top_k <= 0:
-        raise ValueError("top_k must be positive")
+
     if axis >= scores.ndim:
-        raise ValueError("axis must be less than scores.ndim")
+        raise ValueError(f"`axis={axis}` must be less than `scores.ndim={scores.ndim}`")
+    if top_k <= 0:
+        raise ValueError(f"`top_k` must be a positive integer, got {top_k}")
     if scores.ndim == 0 and top_k != 1:
-        raise ValueError("top_k must be 1 for 0-dim scores")
+        raise ValueError("`top_k` must be 1 for 0-dim scores, got {top_k}")
     if top_k > scores.shape[axis]:
-        raise ValueError("top_k must be less than or equal to scores.shape[axis]")
+        raise ValueError(
+            f"`top_k={top_k}` must be less than or equal to "
+            f"`scores.shape[axis]={scores.shape[axis]}`",
+        )
 
     if top_k == 1:  # more efficient than argsort for top_k=1
         topk_indices = xp.argmax(scores, axis=axis, keepdims=True)
@@ -715,53 +727,25 @@ def _select_topk(  # noqa: PLR0912
         slice_indices[axis] = slice(None, top_k)
         topk_indices = topk_indices[tuple(slice_indices)]
 
-    zeros = xp.zeros_like(scores, dtype=xp.int32, device=apc.device(scores))
+    zeros = xp.zeros_like(scores, dtype=xp.int32)
 
     if _is_torch_array(scores):
         return zeros.scatter(axis, topk_indices, 1)
     if _is_numpy_array(scores):
-        return xp.put_along_axis(zeros, topk_indices, 1, axis)
+        xp.put_along_axis(zeros, topk_indices, 1, axis)
+        return zeros
 
-    axis = normalize_axis_index(axis, scores.ndim)
+    result = np.zeros(scores.shape, dtype=np.int32)
+    topk_indices = np.from_dlpack(apc.to_device(topk_indices, "cpu"))
+    np.put_along_axis(result, topk_indices, 1, axis)
 
-    # --- begin code copied from numpy ---
-    # from https://github.com/numpy/numpy/blob/v1.26.0/numpy/lib/shape_base.py#L27
-    shape_ones = (1,) * topk_indices.ndim
-    dest_dims = list(range(axis)) + [None] + list(range(axis + 1, topk_indices.ndim))
-
-    # build a fancy index, consisting of orthogonal aranges, with the
-    # requested index inserted at the right location
-    fancy_index = []
-    for dim, n in zip(dest_dims, scores.shape):
-        if dim is None:
-            fancy_index.append(topk_indices)
-        else:
-            ind_shape = shape_ones[:dim] + (-1,) + shape_ones[dim + 1 :]
-            fancy_index.append(xp.reshape(xp.arange(n), shape=(ind_shape)))
-    # --- end of code copied from numpy ---
-
-    indices = xp.broadcast_arrays(*fancy_index)
-    indices = xp.stack(indices, axis=-1)
-    indices = xp.reshape(indices, shape=(-1, indices.shape[-1]))
-
-    try:  # advanced indexing
-        zeros[tuple(indices.T)] = 1
-    except IndexError:
-        warnings.warn(
-            "The `select_topk` method is slow and memory-intensive for the array "
-            f"namespace '{xp.__name__}' and will be deprecated in a future release."
-            "Consider writing a custom implementation for your array namespace "
-            "using operations that are more efficient for your array namespace.",
-            category=UserWarning,
-            stacklevel=1,
-        )
-        for idx in range(indices.shape[0]):
-            zeros[tuple(indices[idx, ...])] = 1
-
-    return zeros
+    return xp.asarray(result, device=apc.device(scores))
 
 
-def _to_one_hot(array: Array, num_classes: Optional[int] = None) -> Array:
+def _to_one_hot(
+    array: Array,
+    num_classes: Optional[int] = None,
+) -> Array:
     """Convert an array of integer labels to a one-hot encoded array.
 
     Parameters
@@ -784,26 +768,25 @@ def _to_one_hot(array: Array, num_classes: Optional[int] = None) -> Array:
 
     """
     xp = apc.array_namespace(array)
+
+    input_shape = array.shape
     if array.dtype not in _get_int_dtypes(namespace=xp):
         array = to_int(array)
-    input_shape = array.shape
     array = flatten(array)
 
+    arr_device = apc.device(array)
+    n = array.shape[0]
     if num_classes is None:
         unique_values = xp.unique_values(array)
         num_classes = int(apc.size(unique_values))
 
-    device = apc.device(array)
-
+    categorical = xp.zeros((n, num_classes), dtype=xp.int64, device=arr_device)
     try:  # advanced indexing
-        return xp.eye(num_classes, dtype=xp.int64, device=device)[array]
+        categorical[xp.arange(n, device=arr_device), array] = 1
     except IndexError:
-        n = array.shape[0]
-        categorical = xp.zeros((n, num_classes), dtype=xp.int64, device=device)
-
-        indices = xp.stack((xp.arange(n, device=device), array), axis=-1)
+        indices = xp.stack([xp.arange(n, device=arr_device), array], axis=-1)
         for idx in range(indices.shape[0]):
             categorical[tuple(indices[idx, ...])] = 1
-        output_shape = input_shape + (num_classes,)
 
-        return xp.reshape(categorical, output_shape)
+    output_shape = input_shape + (num_classes,)
+    return xp.reshape(categorical, output_shape)
