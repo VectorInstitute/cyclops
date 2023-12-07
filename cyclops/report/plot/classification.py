@@ -132,7 +132,7 @@ class ClassificationPlotter(Plotter):
                 assert isinstance(
                     auroc,
                     float,
-                ), "aurocs must be a float for binary tasks"
+                ), "AUROCs must be a float for binary tasks"
                 name = f"Model (AUC = {auroc:.2f})"
             else:
                 name = "Model"
@@ -153,7 +153,7 @@ class ClassificationPlotter(Plotter):
                 if auroc is not None:
                     assert (
                         len(auroc) == self.class_num  # type: ignore[arg-type]
-                    ), "Aurocs must be of length class_num for \
+                    ), "AUROCs must be of length class_num for \
                         multiclass/multilabel tasks"
                     name = f"{self.class_names[i]} (AUC = {auroc[i]:.2f})"  # type: ignore[index] # noqa: E501
                 else:
@@ -228,7 +228,7 @@ class ClassificationPlotter(Plotter):
                     assert isinstance(
                         aurocs[slice_name],
                         float,
-                    ), "Aurocs must be a float for binary tasks"
+                    ), "AUROCs must be a float for binary tasks"
                     name = f"{slice_name} (AUC = {aurocs[slice_name]:.2f})"
                 else:
                     name = slice_name
@@ -246,13 +246,13 @@ class ClassificationPlotter(Plotter):
             for slice_name, slice_curve in roc_curves.items():
                 assert (
                     len(slice_curve[0]) == len(slice_curve[1]) == self.class_num
-                ), f"Fprs and tprs must be of length class_num for \
+                ), f"FPRs and TPRs must be of length class_num for \
                     multiclass/multilabel tasks in slice {slice_name}"
                 for i in range(self.class_num):
                     if aurocs and slice_name in aurocs:
                         assert (
                             len(aurocs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501
-                        ), "Aurocs must be of length class_num for \
+                        ), "AUROCs must be of length class_num for \
                             multiclass/multilabel tasks"
                         name = f"{slice_name}, {self.class_names[i]} \
                             (AUC = {aurocs[i]:.2f})"  # type: ignore[index]
@@ -324,8 +324,8 @@ class ClassificationPlotter(Plotter):
             The figure object.
 
         """
-        recalls = precision_recall_curve[0]
-        precisions = precision_recall_curve[1]
+        recalls = precision_recall_curve[1]
+        precisions = precision_recall_curve[0]
 
         if self.task_type == "binary":
             trace = line_plot(
@@ -365,6 +365,9 @@ class ClassificationPlotter(Plotter):
     def precision_recall_curve_comparison(
         self,
         precision_recall_curves: Dict[str, Tuple[npt.NDArray[np.float_], ...]],
+        auprcs: Optional[
+            Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
+        ] = None,
         title: Optional[str] = "Precision-Recall Curve Comparison",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
@@ -377,6 +380,8 @@ class ClassificationPlotter(Plotter):
             Dictionary of precision-recall curves, where the key is \
                 the group or subpopulation name and the value is a tuple \
                 of (recalls, precisions, thresholds)
+        auprcs : Dict[str, Union[float, list, np.ndarray]], optional
+            AUPRCs for each subpopulation or group specified by name, by default None
         layout : Optional[go.Layout], optional
             Customized figure layout, by default None
         title: str, optional
@@ -393,11 +398,18 @@ class ClassificationPlotter(Plotter):
         trace = []
         if self.task_type == "binary":
             for slice_name, slice_curve in precision_recall_curves.items():
-                name = f"{slice_name}"
+                if auprcs and slice_name in auprcs:
+                    assert isinstance(
+                        auprcs[slice_name],
+                        float,
+                    ), "AUPRCs must be a float for binary tasks"
+                    name = f"{slice_name} (AUC = {auprcs[slice_name]:.2f})"
+                else:
+                    name = f"{slice_name}"
                 trace.append(
                     line_plot(
-                        x=slice_curve[0],
-                        y=slice_curve[1],
+                        x=slice_curve[1],
+                        y=slice_curve[0],
                         trace_name=name,
                         **plot_kwargs,
                     ),
@@ -409,11 +421,19 @@ class ClassificationPlotter(Plotter):
                 ), f"Recalls and precisions must be of length class_num for \
                     multiclass/multilabel tasks in slice {slice_name}"
                 for i in range(self.class_num):
-                    name = f"{slice_name}: {self.class_names[i]}"
+                    if auprcs and slice_name in auprcs:
+                        assert (
+                            len(auprcs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501
+                        ), "AUPRCs must be of length class_num for \
+                            multiclass/multilabel tasks"
+                        name = f"{slice_name}, {self.class_names[i]} \
+                            (AUC = {auprcs[i]:.2f})"
+                    else:
+                        name = f"{slice_name}: {self.class_names[i]}"
                     trace.append(
                         line_plot(
-                            x=slice_curve[0][i],
-                            y=slice_curve[1][i],
+                            x=slice_curve[1][i],
+                            y=slice_curve[0][i],
                             trace_name=name,
                             **plot_kwargs,
                         ),
