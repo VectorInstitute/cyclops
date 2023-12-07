@@ -9,3 +9,11 @@ from cyclops.evaluate.metrics.experimental.confusion_matrix import (
     MulticlassConfusionMatrix,
     MultilabelConfusionMatrix,
 )
+from cyclops.evaluate.metrics.experimental.precision_recall import (
+    BinaryPrecision,
+    BinaryRecall,
+    MulticlassPrecision,
+    MulticlassRecall,
+    MultilabelPrecision,
+    MultilabelRecall,
+)

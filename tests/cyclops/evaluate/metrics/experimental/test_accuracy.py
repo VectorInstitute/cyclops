@@ -1,4 +1,4 @@
-"""Test confusion matrix metrics."""
+"""Test accuracy metrics."""
 from functools import partial
 from typing import Literal, Optional
 
@@ -37,7 +37,7 @@ from .testers import MetricTester, _inject_ignore_index
 
 
 def _binary_accuracy_reference(target, preds, threshold, ignore_index) -> torch.Tensor:
-    """Return the reference binary confusion matrix."""
+    """Return the reference binary accuracy score."""
     return tm_binary_accuracy(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
@@ -352,7 +352,7 @@ class TestMultilabelAccuracy(MetricTester):
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
     @pytest.mark.parametrize("average", [None, "micro", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_confusion_matrix_with_numpy_array_api_arrays(
+    def test_multilabel_accuracy_with_numpy_array_api_arrays(
         self,
         inputs,
         average,
