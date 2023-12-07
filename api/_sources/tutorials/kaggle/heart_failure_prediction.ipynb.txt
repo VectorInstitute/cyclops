@@ -299,7 +299,7 @@
    "source": [
     "class_counts = df[\"outcome\"].value_counts()\n",
     "class_ratio = class_counts[0] / class_counts[1]\n",
-    "print(class_ratio)"
+    "print(class_ratio, class_counts)"
    ]
   },
   {
@@ -714,6 +714,7 @@
     "    \"recall\",\n",
     "    \"f1_score\",\n",
     "    \"auroc\",\n",
+    "    \"average_precision\",\n",
     "    \"roc_curve\",\n",
     "    \"precision_recall_curve\",\n",
     "]\n",
@@ -895,7 +896,7 @@
     "    results=results_female,\n",
     "    model_name=model_name,\n",
     ")\n",
-    "\n",
+    "# ruff: noqa: W505\n",
     "for name, metric in results_female_flat.items():\n",
     "    split, name = name.split(\"/\")  # noqa: PLW2901\n",
     "    descriptions = {\n",
@@ -903,6 +904,7 @@
     "        \"BinaryRecall\": \"The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.\",\n",
     "        \"BinaryAccuracy\": \"The proportion of all instances that are correctly predicted.\",\n",
     "        \"BinaryAUROC\": \"The area under the receiver operating characteristic curve (AUROC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryAveragePrecision\": \"The area under the precision-recall curve (AUPRC) is a measure of the performance of a binary classification model.\",\n",
     "        \"BinaryF1Score\": \"The harmonic mean of precision and recall.\",\n",
     "    }\n",
     "    report.log_quantitative_analysis(\n",
@@ -922,6 +924,7 @@
     "        \"BinaryRecall\": \"The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.\",\n",
     "        \"BinaryAccuracy\": \"The proportion of all instances that are correctly predicted.\",\n",
     "        \"BinaryAUROC\": \"The area under the receiver operating characteristic curve (AUROC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryAveragePrecision\": \"The area under the precision-recall curve (AUPRC) is a measure of the performance of a binary classification model.\",\n",
     "        \"BinaryF1Score\": \"The harmonic mean of precision and recall.\",\n",
     "    }\n",
     "    report.log_quantitative_analysis(\n",
@@ -984,6 +987,43 @@
     "    section_name=\"quantitative analysis\",\n",
     ")\n",
     "roc_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# extracting the precision-recall curves and average precision results for all the slices\n",
+    "pr_curves = {\n",
+    "    slice_name: slice_results[\"BinaryPrecisionRecallCurve\"]\n",
+    "    for slice_name, slice_results in results[model_name].items()\n",
+    "}\n",
+    "average_precisions = {\n",
+    "    slice_name: slice_results[\"BinaryAveragePrecision\"]\n",
+    "    for slice_name, slice_results in results[model_name].items()\n",
+    "}\n",
+    "pr_curves.keys()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plotting the precision-recall curves for all the slices\n",
+    "pr_plot = plotter.precision_recall_curve_comparison(\n",
+    "    pr_curves,\n",
+    "    auprcs=average_precisions,\n",
+    ")\n",
+    "report.log_plotly_figure(\n",
+    "    fig=pr_plot,\n",
+    "    caption=\"Precision-Recall Curve Comparison\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "pr_plot.show()"
    ]
   },
   {
