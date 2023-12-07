@@ -12,6 +12,10 @@ from cyclops.evaluate.metrics.functional.auroc import (
     multiclass_auroc,
     multilabel_auroc,
 )
+from cyclops.evaluate.metrics.functional.average_precision import (  # noqa: F401
+    average_precision,
+    binary_average_precision,
+)
 from cyclops.evaluate.metrics.functional.f_beta import (  # noqa: F401
     binary_f1_score,
     binary_fbeta_score,

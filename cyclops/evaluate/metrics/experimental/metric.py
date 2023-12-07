@@ -29,7 +29,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     dim_zero_sum,
     flatten_seq,
 )
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.utils.log import setup_logging
 
 

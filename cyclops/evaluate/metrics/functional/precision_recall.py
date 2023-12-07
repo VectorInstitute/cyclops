@@ -123,13 +123,13 @@ def binary_precision(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_precision
+    >>> from cyclops.evaluate.metrics.functional import binary_precision
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 1]
     >>> binary_precision(target, preds)
     0.6666666666666666
-    >>> target = [[0, 1, 0, 1], [0, 0, 1, 1]]
-    >>> preds = [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]
+    >>> target = [0, 1, 0, 1, 0, 1]
+    >>> preds = [0.11, 0.22, 0.84, 0.73, 0.33, 0.92]
     >>> binary_precision(target, preds)
     0.6666666666666666
 
@@ -208,7 +208,7 @@ def multiclass_precision(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_precision
+    >>> from cyclops.evaluate.metrics.functional import multiclass_precision
     >>> target = [0, 1, 2, 0]
     >>> preds = [0, 2, 1, 0]
     >>> multiclass_precision(target, preds, num_classes=3)
@@ -295,11 +295,11 @@ def multilabel_precision(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_precision
+    >>> from cyclops.evaluate.metrics.functional import multilabel_precision
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
     >>> multilabel_precision(target, preds, num_labels=2)
-    array([0., 1. ])
+    array([0., 1.])
 
     """
     _check_average_arg(average)
@@ -390,14 +390,14 @@ def precision(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import precision
+    >>> from cyclops.evaluate.metrics.functional import precision
     >>> target = [0, 1, 1, 0]
     >>> preds = [0.1, 0.9, 0.8, 0.3]
     >>> precision(target, preds, task="binary")
-    1.
+    1.0
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import precision
+    >>> from cyclops.evaluate.metrics.functional import precision
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1],
     ...         [0.5, 0.3, 0.2],  [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
@@ -406,7 +406,7 @@ def precision(
     0.8333333333333334
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import precision
+    >>> from cyclops.evaluate.metrics.functional import precision
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
     >>> precision(target, preds, task="multilabel", num_labels=2,
@@ -484,7 +484,7 @@ def binary_recall(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import binary_recall
+    >>> from cyclops.evaluate.metrics.functional import binary_recall
     >>> target = [0, 1, 0, 1]
     >>> preds = [0, 1, 1, 0]
     >>> binary_recall(target, preds)
@@ -563,7 +563,7 @@ def multiclass_recall(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multiclass_recall
+    >>> from cyclops.evaluate.metrics.functional import multiclass_recall
     >>> target = [0, 1, 2, 0, 1, 2]
     >>> preds = [[0.4, 0.1, 0.5], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6],
     ...     [0.5, 0.3, 0.2], [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
@@ -651,11 +651,11 @@ def multilabel_recall(
 
     Examples
     --------
-    >>> from cyclops.evaluation.metrics.functional import multilabel_recall
-    >>> target = [1, 1, 2, 0, 2, 2]
-    >>> preds = [1, 2, 2, 0, 2, 0]
-    >>> multilabel_recall(target, preds, num_classes=3)
-    array([1.        , 0.5       , 0.66666667])
+    >>> from cyclops.evaluate.metrics.functional import multilabel_recall
+    >>> target = [[0, 1, 0], [1, 0, 1]]
+    >>> preds = [[0, 0, 1], [1, 0, 1]]
+    >>> multilabel_recall(target, preds, num_labels=3)
+    array([1., 0., 1.])
 
     """
     _check_average_arg(average)
@@ -746,21 +746,21 @@ def recall(
     Examples
     --------
     >>> # (binary)
-    >>> from cyclops.evaluation.metrics.functional import recall
+    >>> from cyclops.evaluate.metrics.functional import recall
     >>> target = [0, 1, 1, 0, 1]
     >>> preds = [0.4, 0.2, 0.0, 0.6, 0.9]
     >>> recall(target, preds, task="binary")
     0.3333333333333333
 
     >>> # (multiclass)
-    >>> from cyclops.evaluation.metrics.functional import recall
+    >>> from cyclops.evaluate.metrics.functional import recall
     >>> target = [1, 1, 2, 0, 2, 2]
     >>> preds = [1, 2, 2, 0, 2, 0]
     >>> recall(target, preds, task="multiclass", num_classes=3)
     array([1.        , 0.5       , 0.66666667])
 
     >>> # (multilabel)
-    >>> from cyclops.evaluation.metrics.functional import recall
+    >>> from cyclops.evaluate.metrics.functional import recall
     >>> target = [[1, 0, 1], [0, 1, 0]]
     >>> preds = [[0.4, 0.2, 0.0], [0.6, 0.9, 0.1]]
     >>> recall(target, preds, task="multilabel", num_labels=3)

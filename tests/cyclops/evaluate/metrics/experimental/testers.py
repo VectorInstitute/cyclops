@@ -7,7 +7,7 @@ import numpy as np
 
 from cyclops.evaluate.metrics.experimental.metric import Metric
 from cyclops.evaluate.metrics.experimental.utils.ops import clone, flatten
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
 def _assert_allclose(

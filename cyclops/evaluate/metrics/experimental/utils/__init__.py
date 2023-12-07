@@ -17,7 +17,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     squeeze_all,
     to_int,
 )
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.metrics.experimental.utils.validation import (
     is_floating_point,
     is_numeric,

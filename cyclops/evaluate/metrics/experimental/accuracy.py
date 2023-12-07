@@ -22,7 +22,7 @@ from cyclops.evaluate.metrics.experimental.functional.accuracy import (
     _accuracy_compute,
     _binary_accuracy_compute,
 )
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
 class BinaryAccuracy(_AbstractConfusionMatrix, registry_key="binary_accuracy"):
@@ -281,7 +281,7 @@ class MultilabelAccuracy(_AbstractConfusionMatrix, registry_key="multilabel_accu
     >>> preds = anp.asarray([[0, 1, 0], [1, 0, 1]])
     >>> metric = MultilabelAccuracy(num_labels=3)
     >>> metric(target, preds)
-    Array(0.66666667, dtype=float32)
+    Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
     >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],

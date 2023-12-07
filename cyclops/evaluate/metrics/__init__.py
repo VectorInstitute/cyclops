@@ -12,6 +12,9 @@ from cyclops.evaluate.metrics.auroc import (
     MulticlassAUROC,
     MultilabelAUROC,
 )
+from cyclops.evaluate.metrics.average_precision import (
+    BinaryAveragePrecision,
+)
 from cyclops.evaluate.metrics.f_beta import (
     BinaryF1Score,  # noqa: F401
     BinaryFbetaScore,

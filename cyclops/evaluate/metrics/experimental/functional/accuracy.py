@@ -22,7 +22,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     safe_divide,
     squeeze_all,
 )
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
 def _binary_accuracy_compute(
@@ -183,7 +183,7 @@ def _accuracy_score_average(
             weights[tp + fp + fn == 0] = 0.0
 
     weights = xp.astype(weights, xp.float32)
-    return xp.sum(
+    return xp.sum(  # type: ignore[no-any-return]
         safe_divide(
             weights * score,
             xp.sum(weights, axis=-1, dtype=score.dtype, keepdims=True),
@@ -298,11 +298,11 @@ def multiclass_accuracy(
     >>> multiclass_accuracy(target, preds, num_classes=3)
     Array(0.75, dtype=float32)
     >>> multiclass_accuracy(target, preds, num_classes=3, top_k=2)
-    Array(1.0, dtype=float32)
+    Array(1., dtype=float32)
     >>> multiclass_accuracy(target, preds, num_classes=3, average=None)
     Array([0.5, 1. , 1. ], dtype=float32)
     >>> multiclass_accuracy(target, preds, num_classes=3, average='macro')
-    Array(0.83333333, dtype=float64)
+    Array(0.8333334, dtype=float32)
     >>> multiclass_accuracy(target, preds, num_classes=3, average='weighted')
     Array(0.75, dtype=float32)
     >>> multiclass_accuracy(target, preds, num_classes=3, average=None, ignore_index=0)

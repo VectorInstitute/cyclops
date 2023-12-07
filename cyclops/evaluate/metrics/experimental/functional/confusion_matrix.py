@@ -15,7 +15,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     squeeze_all,
     to_int,
 )
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.metrics.experimental.utils.validation import (
     _basic_input_array_checks,
     _check_same_shape,
@@ -246,7 +246,7 @@ def binary_confusion_matrix(
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> binary_confusion_matrix(target, preds)
     Array([[2, 1],
-           [1, 2]], dtype=int32)
+           [1, 2]], dtype=int64)
 
     """  # noqa: W505
     _binary_confusion_matrix_validate_args(
@@ -733,10 +733,10 @@ def multilabel_confusion_matrix(
     >>> multilabel_confusion_matrix(target, preds, num_labels=3)
     Array([[[1, 0],
             [0, 1]],
-
+    <BLANKLINE>
            [[1, 0],
             [1, 0]],
-
+    <BLANKLINE>
            [[0, 1],
             [0, 1]]], dtype=int64)
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
@@ -744,10 +744,10 @@ def multilabel_confusion_matrix(
     >>> multilabel_confusion_matrix(target, preds, num_labels=3)
     Array([[[1, 0],
             [0, 1]],
-
+    <BLANKLINE>
            [[1, 0],
             [1, 0]],
-
+    <BLANKLINE>
            [[0, 1],
             [0, 1]]], dtype=int64)
 

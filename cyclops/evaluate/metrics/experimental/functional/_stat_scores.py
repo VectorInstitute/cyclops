@@ -21,7 +21,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     squeeze_all,
     to_int,
 )
-from cyclops.evaluate.metrics.experimental.utils.typing import Array
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.metrics.experimental.utils.validation import (
     _basic_input_array_checks,
     _check_same_shape,
@@ -353,7 +353,7 @@ def _multiclass_stat_scores_update_state(
             tp = xp.sum(to_int(preds == target))
             fp = xp.sum(to_int(preds != target))
             fn = xp.sum(to_int(preds != target))
-            tn = num_classes * apc.size(preds) - (fp + fn + tp)  # type: ignore
+            tn = num_classes * apc.size(preds) - (fp + fn + tp)
         else:
             unique_mapping = to_int(target) * num_classes + to_int(preds)
             bins = bincount(unique_mapping, minlength=num_classes**2)

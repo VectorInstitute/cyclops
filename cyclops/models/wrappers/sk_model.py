@@ -11,7 +11,7 @@ from datasets.combine import concatenate_datasets
 from numpy.typing import ArrayLike
 from scipy.sparse import issparse
 from sklearn.base import BaseEstimator as SKBaseEstimator
-from sklearn.compose import ColumnTransformer
+from sklearn.base import TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, PredefinedSplit, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
@@ -108,7 +108,7 @@ class SKModel:
         y: Optional[ArrayLike] = None,
         feature_columns: Optional[Union[str, List[str]]] = None,
         target_columns: Optional[Union[str, List[str]]] = None,
-        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
+        transforms: Optional[Union[Pipeline, TransformerMixin, Callable]] = None,
         metric: Optional[Union[str, Callable, Sequence, Dict]] = None,
         method: Literal["grid", "random"] = "grid",
         splits_mapping: dict = None,
@@ -131,7 +131,7 @@ class SKModel:
         target_columns : Optional[Union[str, List[str]]], optional
             List of target columns in the dataset. This is required when the input is \
                 a Hugging Face Dataset, by default None
-        transforms : Optional[Union[ColumnTransformer, Callable]], optional
+        transforms : Optional[Union[Pipeline, TransformerMixin, Callable]], optional
             The transformation to be applied to the data before prediction, \
                 This is used when the input is a Hugging Face Dataset, \
                 by default None
@@ -311,21 +311,16 @@ class SKModel:
                     ).squeeze()
 
                     if transforms is not None and not is_callable_transform:
-                        try:
-                            X_train = transforms.transform(X_train)
-                        except (NotFittedError, AttributeError) as error:
-                            if isinstance(error, AttributeError) and isinstance(
-                                transforms,
-                                Pipeline,
-                            ):
-                                # Used for ImbalancedLearn transformer
-                                X_train = transforms[0:-1].fit_transform(X_train)
-                                X_train, y_train = transforms[-1].fit_resample(
-                                    X_train,
-                                    y_train,
-                                )
-                            else:
-                                X_train = transforms.fit_transform(X_train)
+                        if isinstance(transforms, Pipeline):
+                            transforms.steps.append(("clf", clf))
+                            clf = transforms
+                        else:
+                            clf = Pipeline(
+                                [
+                                    ("transform", transforms),
+                                    ("clf", clf),
+                                ],
+                            )
 
                     if issparse(X_train):
                         X_train = X_train.toarray()
@@ -341,10 +336,10 @@ class SKModel:
                 )
             clf.fit(X, y)
 
-        for key, value in clf.best_params_.items():
+        for key, value in clf["clf"].best_params_.items():
             LOGGER.info("Best %s: %s", key, value)
 
-        self.model_ = clf.best_estimator_
+        self.model_ = clf["clf"].best_estimator_
 
         return self
 
@@ -354,7 +349,7 @@ class SKModel:
         y: Optional[ArrayLike] = None,
         feature_columns: Optional[Union[str, List[str]]] = None,
         target_columns: Optional[Union[str, List[str]]] = None,
-        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
+        transforms: Optional[Union[Pipeline, TransformerMixin, Callable]] = None,
         classes: Optional[np.ndarray] = None,
         splits_mapping: dict = None,
         **kwargs,
@@ -374,7 +369,7 @@ class SKModel:
         target_columns : Optional[Union[str, List[str]]], optional
             List of target columns in the dataset. This is required when \
                 the input is a Hugging Face Dataset, by default None
-        transforms : Optional[Union[ColumnTransformer, Callable]], optional
+        transforms : Optional[Union[Pipeline, TransformerMixin, Callable]], optional
             The transformation to be applied to the data before prediction, \
                 This is used when the input is a Hugging Face Dataset, \
                 by default None
@@ -504,7 +499,7 @@ class SKModel:
         y: Optional[ArrayLike] = None,
         feature_columns: Optional[Union[str, List[str]]] = None,
         target_columns: Optional[Union[str, List[str]]] = None,
-        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
+        transforms: Optional[Union[Pipeline, TransformerMixin, Callable]] = None,
         splits_mapping: dict = None,
         dim_reduction: bool = False,
         **fit_params,
@@ -524,7 +519,7 @@ class SKModel:
         target_columns : Optional[Union[str, List[str]]], optional
             List of target columns in the dataset. This is required when \
                 the input is a Hugging Face Dataset, by default None
-        transforms : Optional[Union[ColumnTransformer, Callable]], optional
+        transforms : Optional[Union[Pipeline, TransformerMixin, Callable]], optional
             The transformation to be applied to the data before prediction,
                 This is used when the input is a Hugging Face Dataset, \
                 by default None
@@ -643,7 +638,7 @@ class SKModel:
         feature_columns: Optional[Union[str, List[str]]] = None,
         prediction_column_prefix: str = "predictions",
         model_name: Optional[str] = None,
-        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
+        transforms: Optional[Union[Pipeline, TransformerMixin, Callable]] = None,
         only_predictions: bool = False,
         splits_mapping: dict = None,
     ) -> Union[Dataset, DatasetColumn, np.ndarray]:
@@ -767,7 +762,7 @@ class SKModel:
         feature_columns: Optional[Union[str, List[str]]] = None,
         prediction_column_prefix: str = "predictions",
         model_name: Optional[str] = None,
-        transforms: Optional[Union[ColumnTransformer, Callable]] = None,
+        transforms: Optional[Union[Pipeline, TransformerMixin, Callable]] = None,
         only_predictions: bool = False,
         splits_mapping: dict = None,
         dim_reduction: bool = False,
