@@ -1,4 +1,9 @@
 """Functional metrics for evaluating model performance."""
+from cyclops.evaluate.metrics.experimental.functional.accuracy import (
+    binary_accuracy,
+    multiclass_accuracy,
+    multilabel_accuracy,
+)
 from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
     binary_confusion_matrix,
     multiclass_confusion_matrix,
