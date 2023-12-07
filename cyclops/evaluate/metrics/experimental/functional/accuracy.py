@@ -1,5 +1,4 @@
 """Functions for computing the accuracy score for classification tasks."""
-from types import ModuleType
 from typing import Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
@@ -19,6 +18,7 @@ from cyclops.evaluate.metrics.experimental.functional._stat_scores import (
     _multilabel_stat_scores_validate_arrays,
 )
 from cyclops.evaluate.metrics.experimental.utils.ops import (
+    _adjust_weight_apply_average,
     safe_divide,
     squeeze_all,
 )
@@ -151,7 +151,7 @@ def _accuracy_compute(
         else safe_divide(numerator=tp, denominator=tp + fn)
     )
 
-    return _accuracy_score_average(
+    return _adjust_weight_apply_average(
         score,
         average=average,
         is_multilabel=is_multilabel,
@@ -159,37 +159,6 @@ def _accuracy_compute(
         fp=fp,
         fn=fn,
         xp=xp,
-    )
-
-
-def _accuracy_score_average(
-    score: Array,
-    average: Optional[Literal["macro", "weighted", "none"]],
-    is_multilabel: bool,
-    *,
-    tp: Array,
-    fp: Array,
-    fn: Array,
-    xp: ModuleType,
-) -> Array:
-    """Apply the specified averaging method to the accuracy scores."""
-    if average is None or average == "none":
-        return score
-    if average == "weighted":
-        weights = tp + fn
-    else:  # average == "macro"
-        weights = xp.ones_like(score)
-        if not is_multilabel:
-            weights[tp + fp + fn == 0] = 0.0
-
-    weights = xp.astype(weights, xp.float32)
-    return xp.sum(  # type: ignore[no-any-return]
-        safe_divide(
-            weights * score,
-            xp.sum(weights, axis=-1, dtype=score.dtype, keepdims=True),
-        ),
-        axis=-1,
-        dtype=score.dtype,
     )
 
 
@@ -401,6 +370,11 @@ def multilabel_accuracy(
             and return the scores as an array.
     ignore_index : int, optional, default=None
         Specifies value in `target` that is ignored when computing the accuracy score.
+
+    Returns
+    -------
+    Array
+        An array API compatible object containing the accuracy score(s).
 
     Raises
     ------

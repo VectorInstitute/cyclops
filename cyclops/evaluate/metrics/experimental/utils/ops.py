@@ -1,10 +1,12 @@
 """Utility functions for performing operations on array-API-compatible objects."""
 # mypy: disable-error-code="no-any-return"
 from collections import OrderedDict, defaultdict
+from types import ModuleType
 from typing import (
     Any,
     Callable,
     List,
+    Literal,
     Mapping,
     Optional,
     Sequence,
@@ -650,6 +652,37 @@ def to_int(array: Array) -> Array:
     """
     xp = apc.array_namespace(array)
     return xp.astype(array, xp.int64, copy=False)
+
+
+def _adjust_weight_apply_average(
+    score: Array,
+    average: Optional[Literal["macro", "weighted", "none"]],
+    is_multilabel: bool,
+    *,
+    tp: Array,
+    fp: Array,
+    fn: Array,
+    xp: ModuleType,
+) -> Array:
+    """Apply the specified averaging method to the accuracy scores."""
+    if average is None or average == "none":
+        return score
+    if average == "weighted":
+        weights = tp + fn
+    else:  # average == "macro"
+        weights = xp.ones_like(score)
+        if not is_multilabel:
+            weights[tp + fp + fn == 0] = 0.0
+
+    weights = xp.astype(weights, xp.float32)
+    return xp.sum(  # type: ignore[no-any-return]
+        safe_divide(
+            weights * score,
+            xp.sum(weights, axis=-1, dtype=score.dtype, keepdims=True),
+        ),
+        axis=-1,
+        dtype=score.dtype,
+    )
 
 
 def _select_topk(  # noqa: PLR0912
