@@ -326,7 +326,7 @@
       {% endfor %}
       {# Display global plots from GraphicsCollection in Datasets, temporary fix #}
       {% if section is hasattr "graphics" %}
-        <div class="subcard" style="min-width:1400px;">
+        <div class="subcard" style="flex-basis:100%;">
           <h3>{{ "Graphics" }}</h3>
           {{ render_if_exist_list(section.graphics) }}
         </div>
@@ -339,7 +339,7 @@
       {% endfor %}
       {% if section is hasattr "graphics"%}
         {% if section.graphics is not none%}
-          <div class="subcard" style="min-width:1400px;">
+          <div class="subcard" style="flex-basis:100%;">
             <h3>{{ "Graphics" }}</h3>
             {{ render_if_exist_list(section.graphics) }}
           </div>
@@ -432,7 +432,6 @@
         background-color: #f3f4f6;
         border-radius: 5px;
         box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
-        {# display: none; #}
       }
 
       .subcard_overview {
@@ -450,9 +449,6 @@
       }
 
       .img-item {
-        min-width: 1024px;
-        width: 100%;
-        height: auto;
         flex-basis: 100%;
         margin-top: 10px;
         margin-bottom: 10px;
@@ -607,6 +603,13 @@
         margin-left: 250px;
         margin-right: 25px;
         transition: margin-left 0.2s ease-in-out;
+      }
+
+      // use media query to change adjust width of container
+      @media only screen and (max-width: 1024px) {
+        #container {
+          margin-left: 0px;
+        }
       }
 
       #model_info_card {
@@ -1261,7 +1264,6 @@
 
       // create title for plot: Current {metric name} is trending {trend_keyword} and is {passed_keyword} the threshold.
       // get number of nulls in selections, if 9 then plot title, else don't plot title
-      console.log(selections)
       var nulls = 0;
       for (let i = 0; i < selections.length; i++) {
         if (selections[i] === null) {
@@ -1352,7 +1354,8 @@
       },
       // set height and width of plot to extra-wide to fit the plot
       height: 500,
-      width: 900,
+      // get size of window and set width of plot to size of window
+      width: parent.innerWidth - 1000,
     }
     Plotly.newPlot(plot, traces, layout, {displayModeBar: false});
   }
@@ -1645,9 +1648,9 @@
         t: 50,
         pad: 4
       },
-      // set height and width of plot to extra-wide to fit the plot
+      // set height and width of plot to width of card minus 500px
       height: 500,
-      width: 900,
+      width: parent.innerWidth - 1000,
     }
     Plotly.newPlot(plot, traces, layout, {displayModeBar: false});
   }
@@ -1655,6 +1658,8 @@
   for (let input of inputs_all) {
     input.addEventListener('change', updatePlot);
   }
+  // Add event listener to update plot when window is resized
+  window.addEventListener('resize', updatePlot);
   for (let selection of plot_selection) {
     selection.addEventListener('change', updatePlotSelection);
   }
@@ -1695,5 +1700,22 @@
     }
   }
   document.addEventListener('DOMContentLoaded', setCollapseButton);
+
+  // create a function to resize any plotly plot inside a "img-item" class and add event listener to window resize for any change
+  function resizePlotlyPlot() {
+    const img_items = document.getElementsByClassName("img-item");
+
+    for (let i = 0; i < img_items.length; i++) {
+      // if it contains a div, get script from given div and resize plot
+      if (img_items[i].getElementsByTagName("div").length > 0) {
+        var plot = img_items[i].getElementsByTagName("div")[0];
+        var plot_container = plot.getElementsByClassName('plot-container')[0];
+        plot_container.style.width = parent.innerWidth-1000+"px";
+        console.log(plot_container.style.width);
+      }
+    }
+  }
+  resizePlotlyPlot();
+  window.addEventListener('resize', resizePlotlyPlot);
 
 </script>
