@@ -1,4 +1,5 @@
 """mpi4py backend for synchronizing array-API-compatible objects."""
+# mypy: disable-error-code="no-any-return,arg-type"
 import os
 from typing import TYPE_CHECKING, List
 
@@ -16,7 +17,6 @@ if TYPE_CHECKING:
     from mpi4py import MPI
 else:
     MPI = import_optional_module("mpi4py.MPI", error="warn")
-# mypy: disable-error-code="no-any-return"
 
 
 class MPI4Py(DistributedBackend, registry_key="mpi4py"):

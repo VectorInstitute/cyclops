@@ -91,7 +91,7 @@ def test_aggregate_events(
         timestep_size=1,
         agg_meta_for=EVENT_VALUE,
     )
-    res = aggregator(data)
+    res = aggregator.fit_transform(data)
 
     assert res.index.names == [ENCOUNTER_ID, EVENT_NAME, TIMESTEP]
     assert res.loc[(2, "eventA", 1)][EVENT_VALUE] == 19
@@ -116,8 +116,8 @@ def test_aggregate_window_duration(
         timestep_size=1,
         window_duration=12,
     )
+    res = aggregator.fit_transform(data)
 
-    res = aggregator(data)
     res = res.reset_index()
     assert (res[TIMESTEP] < 2).all()
 
@@ -134,13 +134,10 @@ def test_aggregate_start_stop_windows(
         time_by=ENCOUNTER_ID,
         agg_by=[ENCOUNTER_ID, EVENT_NAME],
         timestep_size=1,
-    )
-
-    res = aggregator(
-        data,
         window_start_time=window_start_time,
         window_stop_time=window_stop_time,
     )
+    res = aggregator.fit_transform(data)
 
     assert res.loc[(2, "eventA", 0)][START_TIMESTEP] == DATE2
 
@@ -154,9 +151,10 @@ def test_aggregate_start_stop_windows(
         agg_by=[ENCOUNTER_ID, EVENT_NAME],
         timestep_size=1,
         window_duration=10,
+        window_stop_time=window_stop_time,
     )
     try:
-        res = aggregator(data, window_stop_time=window_stop_time)
+        res = aggregator.fit_transform(data)
         raise ValueError(
             """Should have raised an error that window_duration cannot be set when
             window_stop_time is specified.""",
@@ -190,7 +188,9 @@ def test_aggregate_strings(
             window_duration=20,
         )
 
-        assert aggregator_str(data).equals(aggregator_fn(data))
+        assert aggregator_str.fit_transform(data).equals(
+            aggregator_fn.fit_transform(data),
+        )
 
     with contextlib.suppress(ValueError):
         aggregator_str = Aggregator(
@@ -223,7 +223,7 @@ def test_aggregate_multiple(
         window_duration=20,
     )
 
-    res = aggregator(data)
+    res = aggregator.fit_transform(data)
 
     res = res.reset_index()
     assert res["event_value2"].equals(res[EVENT_VALUE] * 2)
@@ -318,7 +318,7 @@ def test_vectorization(
         window_duration=15,
     )
 
-    aggregated = aggregator(data)
+    aggregated = aggregator.fit_transform(data)
 
     vectorized_obj = aggregator.vectorize(aggregated)
     vectorized, indexes = vectorized_obj.data, vectorized_obj.indexes

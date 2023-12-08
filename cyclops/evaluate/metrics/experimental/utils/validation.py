@@ -56,7 +56,10 @@ def is_numeric(*arrays: Array) -> bool:
     return all(array.dtype in numeric_dtypes for array in arrays)
 
 
-def _basic_input_array_checks(target: Array, preds: Array) -> None:
+def _basic_input_array_checks(
+    target: Array,
+    preds: Array,
+) -> None:
     """Perform basic validation of `target` and `preds`."""
     if not apc.is_array_api_obj(target):
         raise ValueError(

@@ -35,10 +35,10 @@ def _assert_allclose(
             _assert_allclose(cyc_res, ref_res, atol=atol)
     elif isinstance(cyclops_result, dict):
         if key is None:
-            raise KeyError("Provide Key for Dict based metric results.")
+            raise KeyError("Provide a key for dict-based metric results.")
         _assert_allclose(cyclops_result[key], ref_result, atol=atol)
     else:
-        raise ValueError("Unknown format for comparison")
+        raise ValueError("Unknown format for comparison.")
 
 
 def _assert_array(cyclops_result: Any, key: Optional[str] = None) -> None:
@@ -347,7 +347,7 @@ def _inject_ignore_index(array, ignore_index):
 
         if any(class_not_in):
             missing_class = int(np.where(class_not_in)[0][0])
-            mask = xp.zeros_like(batch, dtype=xp.bool, device=apc.device(batch))
+            mask = xp.zeros_like(batch, dtype=xp.bool)
             for idx in ignore_index:
                 mask = xp.logical_or(mask, batch == idx)
             ignored_idx = np.where(mask)[0]

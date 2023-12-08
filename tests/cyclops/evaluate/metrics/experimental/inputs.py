@@ -34,9 +34,9 @@ set_random_seed(1)
 
 # binary
 # NOTE: the test will loop over the first dimension of the input
-_binary_labels_0d = np.random.randint(0, 2, size=(NUM_BATCHES))
-_binary_preds_0d = np.random.randint(0, 2, size=(NUM_BATCHES))
-_binary_probs_0d = np.random.rand(NUM_BATCHES)
+_binary_labels_0d = np.random.randint(0, 2, size=(NUM_BATCHES, 1))
+_binary_preds_0d = np.random.randint(0, 2, size=(NUM_BATCHES, 1))
+_binary_probs_0d = np.random.rand(NUM_BATCHES, 1)
 _binary_labels_1d = np.random.randint(0, 2, size=(NUM_BATCHES, BATCH_SIZE))
 _binary_preds_1d = np.random.randint(0, 2, size=(NUM_BATCHES, BATCH_SIZE))
 _binary_probs_1d = np.random.rand(NUM_BATCHES, BATCH_SIZE)
@@ -61,21 +61,21 @@ def _binary_cases(*, xp: Any):
                 target=xp.asarray(_binary_labels_0d),
                 preds=xp.asarray(_binary_preds_0d),
             ),
-            id="input[0d-labels]",
+            id="input[single-element-labels]",
         ),
         pytest.param(
             InputSpec(
                 target=xp.asarray(_binary_labels_0d),
                 preds=xp.asarray(_binary_probs_0d),
             ),
-            id="input[0d-probs]",
+            id="input[single-element-probs]",
         ),
         pytest.param(
             InputSpec(
                 target=xp.asarray(_binary_labels_0d),
                 preds=xp.asarray(_inv_sigmoid(_binary_probs_0d)),
             ),
-            id="input[0d-logits]",
+            id="input[single-element-logits]",
         ),
         pytest.param(
             InputSpec(
@@ -144,9 +144,9 @@ def _multiclass_with_missing_class(
 
 
 # multiclass
-_multiclass_labels_0d = np.random.randint(0, NUM_CLASSES, size=(NUM_BATCHES))
-_multiclass_preds_0d = np.random.randint(0, NUM_CLASSES, size=(NUM_BATCHES))
-_multiclass_probs_0d = np.random.rand(NUM_BATCHES, NUM_CLASSES)
+_multiclass_labels_0d = np.random.randint(0, NUM_CLASSES, size=(NUM_BATCHES, 1))
+_multiclass_preds_0d = np.random.randint(0, NUM_CLASSES, size=(NUM_BATCHES, 1))
+_multiclass_probs_0d = np.random.rand(NUM_BATCHES, 1, NUM_CLASSES)
 _multiclass_labels_1d = np.random.randint(
     0,
     NUM_CLASSES,
@@ -180,21 +180,21 @@ def _multiclass_cases(*, xp: Any):
                 target=xp.asarray(_multiclass_labels_0d),
                 preds=xp.asarray(_multiclass_preds_0d),
             ),
-            id="input[0d-labels]",
+            id="input[single-element-labels]",
         ),
         pytest.param(
             InputSpec(
                 target=xp.asarray(_multiclass_labels_0d),
                 preds=xp.asarray(_multiclass_probs_0d),
             ),
-            id="input[0d-probs]",
+            id="input[single-element-probs]",
         ),
         pytest.param(
             InputSpec(
                 target=xp.asarray(_multiclass_labels_0d),
                 preds=xp.asarray(log_softmax(_multiclass_probs_0d, axis=-1)),
             ),
-            id="input[0d-logits]",
+            id="input[single-element-logits]",
         ),
         pytest.param(
             InputSpec(
