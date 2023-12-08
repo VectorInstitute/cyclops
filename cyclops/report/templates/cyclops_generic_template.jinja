@@ -257,8 +257,8 @@
       </div>
     {% endfor %}
   </div>
-  <div class="subcard_overview" style="margin:auto; float:right;">
-    <div id="plot"></div>
+  <div class="subcard_overview" style="margin:auto; float:right; min-width:600px;">
+    <div id="plot" style=" flex-basis: 100%;"></div>
   </div>
 </div>
 {% endmacro %}
@@ -1326,6 +1326,9 @@
       };
       traces.push(threshold_trace);
     }
+    if (parent.innerWidth > 1545) {
+        var width = parent.innerWidth-1000;
+      }
     var layout = {
       title: {
         text: plot_title,
@@ -1355,7 +1358,7 @@
       // set height and width of plot to extra-wide to fit the plot
       height: 500,
       // get size of window and set width of plot to size of window
-      width: parent.innerWidth - 1000,
+      width: width,
     }
     Plotly.newPlot(plot, traces, layout, {displayModeBar: false});
   }
@@ -1622,6 +1625,9 @@
       };
       traces.push(threshold_trace);
     }
+    if (parent.innerWidth > 1545) {
+        var width = parent.innerWidth-1000;
+      }
     var layout = {
       title: {
         text: plot_title,
@@ -1650,7 +1656,7 @@
       },
       // set height and width of plot to width of card minus 500px
       height: 500,
-      width: parent.innerWidth - 1000,
+      width: width,
     }
     Plotly.newPlot(plot, traces, layout, {displayModeBar: false});
   }
@@ -1710,8 +1716,7 @@
       if (img_items[i].getElementsByTagName("div").length > 0) {
         var plot = img_items[i].getElementsByTagName("div")[0];
         var plot_container = plot.getElementsByClassName('plot-container')[0];
-        plot_container.style.width = parent.innerWidth-1000+"px";
-        console.log(plot_container.style.width);
+        plot_container.style.width = parent.innerWidth-500+"px";
       }
     }
   }
