@@ -1,9 +1,8 @@
 """Classes for computing precision and recall scores for classification tasks."""
-
-from cyclops.evaluate.metrics.experimental.accuracy import (
-    BinaryAccuracy,
-    MulticlassAccuracy,
-    MultilabelAccuracy,
+from cyclops.evaluate.metrics.experimental._stat_scores import (
+    _AbstractBinaryStatScores,
+    _AbstractMulticlassStatScores,
+    _AbstractMultilabelStatScores,
 )
 from cyclops.evaluate.metrics.experimental.functional.precision_recall import (
     _binary_precision_recall_compute,
@@ -12,7 +11,7 @@ from cyclops.evaluate.metrics.experimental.functional.precision_recall import (
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
-class BinaryPrecision(BinaryAccuracy, registry_key="binary_precision"):
+class BinaryPrecision(_AbstractBinaryStatScores, registry_key="binary_precision"):
     """The proportion of positive predictions that are classified correctly.
 
     Parameters
@@ -51,7 +50,10 @@ class BinaryPrecision(BinaryAccuracy, registry_key="binary_precision"):
         return _binary_precision_recall_compute("precision", tp=tp, fp=fp, fn=fn)
 
 
-class MulticlassPrecision(MulticlassAccuracy, registry_key="multiclass_precision"):
+class MulticlassPrecision(
+    _AbstractMulticlassStatScores,
+    registry_key="multiclass_precision",
+):
     """The proportion of predicted classes that match the target classes.
 
     Parameters
@@ -114,7 +116,10 @@ class MulticlassPrecision(MulticlassAccuracy, registry_key="multiclass_precision
         )
 
 
-class MultilabelPrecision(MultilabelAccuracy, registry_key="multilabel_precision"):
+class MultilabelPrecision(
+    _AbstractMultilabelStatScores,
+    registry_key="multilabel_precision",
+):
     """The proportion of positive predictions that are classified correctly.
 
     Parameters
@@ -179,7 +184,7 @@ class MultilabelPrecision(MultilabelAccuracy, registry_key="multilabel_precision
         )
 
 
-class BinaryRecall(BinaryAccuracy, registry_key="binary_recall"):
+class BinaryRecall(_AbstractBinaryStatScores, registry_key="binary_recall"):
     """The proportion of positive predictions that are classified correctly.
 
     Parameters
@@ -218,7 +223,7 @@ class BinaryRecall(BinaryAccuracy, registry_key="binary_recall"):
         return _binary_precision_recall_compute("recall", tp=tp, fp=fp, fn=fn)
 
 
-class MulticlassRecall(MulticlassAccuracy, registry_key="multiclass_recall"):
+class MulticlassRecall(_AbstractMulticlassStatScores, registry_key="multiclass_recall"):
     """The proportion of predicted classes that match the target classes.
 
     Parameters
@@ -281,7 +286,7 @@ class MulticlassRecall(MulticlassAccuracy, registry_key="multiclass_recall"):
         )
 
 
-class MultilabelRecall(MultilabelAccuracy, registry_key="multilabel_recall"):
+class MultilabelRecall(_AbstractMultilabelStatScores, registry_key="multilabel_recall"):
     """The proportion of positive predictions that are classified correctly.
 
     Parameters
