@@ -36,8 +36,6 @@ def _adjust_dim(inp: npt.NDArray[Any]) -> npt.NDArray[Any]:
     """Adjust the dimension of the input."""
     if inp.ndim == 0:
         inp = np.expand_dims(inp, axis=0)
-    if inp.ndim == 2 and inp.shape[1] == 1:
-        inp = np.squeeze(inp, axis=-1)
 
     return inp
 
