@@ -110,7 +110,7 @@ class SliceSpec:
     ...         {
     ...             "feature_1": {"value": "value_1"},
     ...             "feature_2": {
-    ...                 "min_value": "2020-01-01", keep_nulls: False,
+    ...                 "min_value": "2020-01-01", "keep_nulls": False,
     ...             },
     ...             "feature_3": {"year": ["2000", "2010", "2020"]},
     ...         },
@@ -119,8 +119,22 @@ class SliceSpec:
     >>> for slice_name, slice_func in slice_spec.slices():
     ...     print(slice_name)
     ...     # do something with slice_func here (e.g. dataset.filter(slice_func))
+    feature_1:non_null
+    feature_2:non_null&feature_3:non_null
+    feature_1:value_1
+    feature_1:value_1, value_2
+    !(feature_1:value_1)
+    feature_1:[2020-01-01 - 2020-12-31]
+    feature_1:(5 - 60)
+    feature_1:year=[2020, 2021, 2022]
+    feature_1:month=[6, 7, 8]
+    feature_1:month=6, day=1
+    feature_1:contains value_1
+    feature_1:contains ['value_1', 'value_2']
+    feature_1:value_1&feature_2:[2020-01-01 - inf]&feature_3:year=['2000', '2010', '2020']
+    overall
 
-    """
+    """  # noqa: W505
 
     spec_list: List[Dict[str, Dict[str, Any]]] = field(
         default_factory=lambda: [{}],

@@ -43,7 +43,7 @@ class Reductor:
     Examples
     --------
     >>> # (Data is loaded from memory)
-    >>> from drift_detection.reductor import Reductor
+    >>> from cyclops.monitor.reductor import Reductor
     >>> from sklearn.datasets import load_diabetes
     >>> X, y = load_diabetes(return_X_y=True)
     >>> reductor = Reductor("pca")
