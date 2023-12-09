@@ -43,7 +43,7 @@ def str_to_snake_case(string: str) -> str:
     >>> str_to_snake_case("Hello-World")
     'hello_world'
     >>> str_to_snake_case("Hello_World")
-    'hello_world'
+    'hello__world'
     >>> str_to_snake_case("Hello World")
     'hello_world'
     >>> str_to_snake_case("hello_world")

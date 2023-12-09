@@ -202,7 +202,7 @@ class ModelCardReport:
 
         Examples
         --------
-        >>> from cylops.report import ModelCardReport
+        >>> from cyclops.report import ModelCardReport
         >>> report = ModelCardReport()
         >>> report.log_descriptor(
         ...     name="tradeoff",
