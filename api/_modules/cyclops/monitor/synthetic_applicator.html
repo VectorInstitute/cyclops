@@ -183,14 +183,14 @@
 <span class="k">class</span> <span class="nc">SyntheticShiftApplicator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The SyntheticShiftApplicator class is used induce synthetic dataset shift.</span>
 
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from drift_detection.experimenter import Experimenter</span>
-<span class="sd">    &gt;&gt;&gt; from sklearn.datasets import load_diabetes</span>
-<span class="sd">    &gt;&gt;&gt; X, y = load_diabetes(return_X_y=True)</span>
-<span class="sd">    &gt;&gt;&gt; X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)</span>
-<span class="sd">    &gt;&gt;&gt; applicator = SyntheticShiftApplicator(shift_type=&quot;gn_shift&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; X_shift = applicator.apply_shift(X_train, noise_amt=0.1, delta=0.1)</span>
+<span class="sd">    # Examples</span>
+<span class="sd">    # --------</span>
+<span class="sd">    # &gt;&gt;&gt; from sklearn.datasets import load_diabetes</span>
+<span class="sd">    # &gt;&gt;&gt; X, y = load_diabetes(return_X_y=True)</span>
+<span class="sd">    # &gt;&gt;&gt; dataset = Dataset.from_dict({&quot;X&quot;: X, &quot;y&quot;: y})</span>
+<span class="sd">    # &gt;&gt;&gt; dataset = dataset.train_test_split(test_size=0.5, seed=42)</span>
+<span class="sd">    # &gt;&gt;&gt; applicator = SyntheticShiftApplicator(shift_type=&quot;gn_shift&quot;)</span>
+<span class="sd">    # &gt;&gt;&gt; X_shift = applicator.apply_shift(dataset[&quot;test&quot;])</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

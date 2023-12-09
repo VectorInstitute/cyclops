@@ -279,7 +279,7 @@
 <span class="sd">    ...         {</span>
 <span class="sd">    ...             &quot;feature_1&quot;: {&quot;value&quot;: &quot;value_1&quot;},</span>
 <span class="sd">    ...             &quot;feature_2&quot;: {</span>
-<span class="sd">    ...                 &quot;min_value&quot;: &quot;2020-01-01&quot;, keep_nulls: False,</span>
+<span class="sd">    ...                 &quot;min_value&quot;: &quot;2020-01-01&quot;, &quot;keep_nulls&quot;: False,</span>
 <span class="sd">    ...             },</span>
 <span class="sd">    ...             &quot;feature_3&quot;: {&quot;year&quot;: [&quot;2000&quot;, &quot;2010&quot;, &quot;2020&quot;]},</span>
 <span class="sd">    ...         },</span>
@@ -288,8 +288,22 @@
 <span class="sd">    &gt;&gt;&gt; for slice_name, slice_func in slice_spec.slices():</span>
 <span class="sd">    ...     print(slice_name)</span>
 <span class="sd">    ...     # do something with slice_func here (e.g. dataset.filter(slice_func))</span>
+<span class="sd">    feature_1:non_null</span>
+<span class="sd">    feature_2:non_null&amp;feature_3:non_null</span>
+<span class="sd">    feature_1:value_1</span>
+<span class="sd">    feature_1:value_1, value_2</span>
+<span class="sd">    !(feature_1:value_1)</span>
+<span class="sd">    feature_1:[2020-01-01 - 2020-12-31]</span>
+<span class="sd">    feature_1:(5 - 60)</span>
+<span class="sd">    feature_1:year=[2020, 2021, 2022]</span>
+<span class="sd">    feature_1:month=[6, 7, 8]</span>
+<span class="sd">    feature_1:month=6, day=1</span>
+<span class="sd">    feature_1:contains value_1</span>
+<span class="sd">    feature_1:contains [&#39;value_1&#39;, &#39;value_2&#39;]</span>
+<span class="sd">    feature_1:value_1&amp;feature_2:[2020-01-01 - inf]&amp;feature_3:year=[&#39;2000&#39;, &#39;2010&#39;, &#39;2020&#39;]</span>
+<span class="sd">    overall</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: W505</span>
 
     <span class="n">spec_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[{}],</span>
