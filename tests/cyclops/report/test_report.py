@@ -66,3 +66,103 @@ class TestModelCardReport(TestCase):
             descriptor[0].description
             == "This model was trained on data collected from a potentially biased source."
         )
+
+    def test_log_user_with_description_to_considerations_section(self):
+        """Test log_user with description to considerations section."""
+        self.model_card_report.log_user(description="This is a user description")
+        assert len(self.model_card_report._model_card.considerations.users) == 1
+        assert (
+            self.model_card_report._model_card.considerations.users[0].description
+            == "This is a user description"
+        )
+
+    def test_log_performance_metric(self):
+        """Test log_performance_metric."""
+        self.model_card_report.log_quantitative_analysis(
+            analysis_type="performance",
+            name="accuracy",
+            value=0.85,
+            metric_slice="test",
+            decision_threshold=0.8,
+            description="Accuracy of the model on the test set",
+            pass_fail_thresholds=[0.9, 0.85, 0.8],
+            pass_fail_threshold_fns=[lambda x, t: x >= t for _ in range(3)],
+        )
+        assert (
+            self.model_card_report._model_card.quantitative_analysis.performance_metrics[
+                0
+            ].type
+            == "accuracy"
+        )
+        assert (
+            self.model_card_report._model_card.quantitative_analysis.performance_metrics[
+                0
+            ].value
+            == 0.85
+        )
+        assert (
+            self.model_card_report._model_card.quantitative_analysis.performance_metrics[
+                0
+            ].slice
+            == "test"
+        )
+        assert (
+            self.model_card_report._model_card.quantitative_analysis.performance_metrics[
+                0
+            ].decision_threshold
+            == 0.8
+        )
+        assert (
+            self.model_card_report._model_card.quantitative_analysis.performance_metrics[
+                0
+            ].description
+            == "Accuracy of the model on the test set"
+        )
+        assert (
+            len(
+                self.model_card_report._model_card.quantitative_analysis.performance_metrics[
+                    0
+                ].tests,
+            )
+            == 3
+        )
+
+    def test_log_quantitative_analysis_performance(self):
+        """Test log_quantitative_analysis (performance)."""
+        self.model_card_report.log_quantitative_analysis(
+            analysis_type="performance",
+            name="accuracy",
+            value=0.85,
+        )
+        assert (
+            self.model_card_report._model_card.quantitative_analysis.performance_metrics[
+                0
+            ].type
+            == "accuracy"
+        )
+        assert (
+            self.model_card_report._model_card.quantitative_analysis.performance_metrics[
+                0
+            ].value
+            == 0.85
+        )
+
+    def test_log_quantitative_analysis_fairness(self):
+        """Test log_quantitative_analysis (fairness)."""
+        self.model_card_report.log_quantitative_analysis(
+            analysis_type="fairness",
+            name="disparate_impact",
+            value=0.9,
+        )
+        assert (
+            self.model_card_report._model_card.fairness_analysis.fairness_reports[
+                0
+            ].type
+            == "disparate_impact"
+        )
+        assert (
+            self.model_card_report._model_card.fairness_analysis.fairness_reports[
+                0
+            ].value
+            == 0.9
+        )
