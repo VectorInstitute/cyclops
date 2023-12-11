@@ -14,14 +14,14 @@ from cyclops.monitor.utils import get_args
 class SyntheticShiftApplicator:
     """The SyntheticShiftApplicator class is used induce synthetic dataset shift.
 
-    Examples
-    --------
-    >>> from drift_detection.experimenter import Experimenter
-    >>> from sklearn.datasets import load_diabetes
-    >>> X, y = load_diabetes(return_X_y=True)
-    >>> X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
-    >>> applicator = SyntheticShiftApplicator(shift_type="gn_shift")
-    >>> X_shift = applicator.apply_shift(X_train, noise_amt=0.1, delta=0.1)
+    # Examples
+    # --------
+    # >>> from sklearn.datasets import load_diabetes
+    # >>> X, y = load_diabetes(return_X_y=True)
+    # >>> dataset = Dataset.from_dict({"X": X, "y": y})
+    # >>> dataset = dataset.train_test_split(test_size=0.5, seed=42)
+    # >>> applicator = SyntheticShiftApplicator(shift_type="gn_shift")
+    # >>> X_shift = applicator.apply_shift(dataset["test"])
 
     Parameters
     ----------

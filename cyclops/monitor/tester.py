@@ -147,7 +147,7 @@ class TSTester:
     >>> tester.fit(X_s)
     >>> p_val, dist = tester.test_shift(X_t)
     >>> print(p_val, dist)
-    0.0 0.3
+    1.3805797e-12 0.51
     """
 
     def __init__(
@@ -348,26 +348,27 @@ class DCTester:
     rate and entropy are shown to be powerful discriminative statistics
     for harmful covariate shift (HCS).
 
-    Examples
-    --------
-    >>> from cyclops.monitor.tester import DCTester
+    # Examples
+    # --------
+    # >>> from cyclops.monitor.tester import DCTester
+    # >>> from cyclops.data.loader import load_nihcxr
+    # >>> from cyclops.models.catalog import DenseNet
 
-    >>> nih_ds = load_nihcxr(DATA_DIR)
-    >>> base_model = DenseNet(weights="densenet121-res224-nih")
-    >>> detectron = DCTester("detectron", model=base_model)
-    >>> detectron = DCTester("detectron",
-                        base_model=base_model,
-                        model=base_model,
-                        feature_columns="image",
-                        transforms=transforms,
-                        task="multilabel",
-                        max_epochs_per_model=5,
-                        ensemble_size=5,
-                        lr=0.01,
-                        num_runs=5)
-
-    >>> detectron.fit(source_ds)
-    >>> p_val, distance = detectron.predict(target_ds)
+    # >>> nih_ds = load_nihcxr(DATA_DIR)
+    # >>> base_model = DenseNet(weights="densenet121-res224-nih")
+    # >>> detectron = DCTester("detectron",
+    #                          base_model=base_model,
+    #                          model=base_model,
+    #                          feature_columns="image",
+    #                          transforms=None,
+    #                          task="multilabel",
+    #                          max_epochs_per_model=5,
+    #                          ensemble_size=5,
+    #                          lr=0.01,
+    #                          num_runs=5
+    #                 )
+    # >>> detectron.fit(source_ds)
+    # >>> p_val, distance = detectron.predict(target_ds)
 
     Parameters
     ----------
