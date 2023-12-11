@@ -161,8 +161,8 @@
           <span style="font-size: 40px; color: gray;">&#9472;</span>
         {% endif %}
       </span>
-      <span style="display: inline-block; line-height:1;">
-        <span style="font-size: 14px">{{card.threshold}}<br>minimum<br>threshold</span>
+      <span style="display: inline-block; line-height:1; margin-bottom: 10px;">
+        <span style="font-size: 14px;">{{card.threshold}}<br>minimum<br>threshold</span>
       </span>
       <div id="model-card-plot-{{idx}}">
       </div>
@@ -605,13 +605,6 @@
         transition: margin-left 0.2s ease-in-out;
       }
 
-      // use media query to change adjust width of container
-      @media only screen and (max-width: 1024px) {
-        #container {
-          margin-left: 0px;
-        }
-      }
-
       #model_info_card {
         width: 100%;
         background-color: #0073e4;
@@ -937,15 +930,21 @@
           plot_bgcolor: "rgba(0,0,0,0)",
           xaxis: {
             zeroline: false,
-            showticklabels: false,
-            showgrid: false
+            showticklabels: true,
+            showgrid: false,
+            tickformat: '%b\n %Y'
           },
           yaxis: {
-            gridcolor: "#ffffff"
+            gridcolor: "#ffffff",
+            zeroline: false,
+            showticklabels: true,
+            showgrid: true,
+            range: [-0.10, 1.10],
           },
-          margin: { l: 0, r: 0, t: 0, b: 0 },
-          height: 125,
-          width: 250
+          margin: { l: 30, r: 0, t: 0, b: 30 },
+          padding: { l: 0, r: 0, t: 0, b: 0 },
+          height: 150,
+          width: 300
         }
       };
       if (history.length > 0) {
@@ -1341,13 +1340,26 @@
       plot_bgcolor: 'rgba(0,0,0,0)',
       xaxis: {
         zeroline: false,
-        showticklabels: false,
+        showticklabels: true,
         showgrid: false,
+        tickformat: '%b\n %Y'
       },
       yaxis: {
         gridcolor: '#ffffff',
+        zeroline: false,
+        showticklabels: true,
+        showgrid: true,
+        range: [-0.10, 1.10],
       },
       showlegend: showlegend,
+      // show legend at top
+      legend: {
+        orientation: "h",
+        yanchor: "top",
+        y: 1.1,
+        xanchor: "left",
+        x: 0.1
+      },
       margin: {
         l: 50,
         r: 50,
@@ -1640,13 +1652,26 @@
       plot_bgcolor: 'rgba(0,0,0,0)',
       xaxis: {
         zeroline: false,
-        showticklabels: false,
+        showticklabels: true,
         showgrid: false,
+        tickformat: '%b\n %Y'
       },
       yaxis: {
         gridcolor: '#ffffff',
+        zeroline: false,
+        showticklabels: true,
+        showgrid: true,
+        range: [-0.10, 1.10],
       },
       showlegend: showlegend,
+      // show legend at top
+      legend: {
+        orientation: "h",
+        yanchor: "top",
+        y: 1.1,
+        xanchor: "left",
+        x: 0.1
+      },
       margin: {
         l: 50,
         r: 50,
