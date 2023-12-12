@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import pytest
 from datasets import Dataset
-
 from datasets.features import (
     Array2D,
     Array3D,
@@ -16,26 +15,23 @@ from datasets.features import (
 )
 
 from cyclops.data.utils import (
+    check_required_columns,
     create_indicator_variables,
+    feature_is_datetime,
+    feature_is_numeric,
     gather_columns,
+    get_columns_as_numpy_array,
     has_columns,
     has_range_index,
     is_timestamp_series,
     to_range_index,
-    feature_is_numeric,
-    feature_is_datetime,
-    check_required_columns,
-    get_columns_as_numpy_array,
 )
 
 
 def test_get_columns_as_numpy_array():
     """Test get_columns_as_numpy_array fn."""
     # Mock dataset creation
-    data = {
-        "column1": [1, 2, 3],
-        "column2": [4, 5, 6]
-    }
+    data = {"column1": [1, 2, 3], "column2": [4, 5, 6]}
     mock_dataset = Dataset.from_dict(data)
 
     # Scenario 1: Valid Dataset object with single column
@@ -93,7 +89,8 @@ def test_check_required_columns():
 def test_feature_is_numeric():
     """Test feature_is_numeric fn."""
     numeric_features = [
-        Value("int32"), Value("float64"),
+        Value("int32"),
+        Value("float64"),
         Array2D(shape=(10, 10), dtype="int32"),
         Array3D(shape=(10, 10, 10), dtype="float64"),
         Array4D(shape=(10, 10, 10, 10), dtype="int32"),
@@ -102,14 +99,18 @@ def test_feature_is_numeric():
         Value("bool"),
     ]
     for feature in numeric_features:
-        assert feature_is_numeric(feature) == True, f"Failed for {type(feature)} with dtype {feature.dtype}"
+        assert feature_is_numeric(
+            feature,
+        ), f"Failed for {type(feature)} with dtype {feature.dtype}"
 
     non_numeric_features = [
         Value("string"),
         Array2D(shape=(10, 10), dtype="string"),
     ]
     for feature in non_numeric_features:
-        assert feature_is_numeric(feature) == False, f"Failed for {type(feature)} with dtype {feature.dtype}"
+        assert not feature_is_numeric(
+            feature,
+        ), f"Failed for {type(feature)} with dtype {feature.dtype}"
 
     invalid_features = [None, 123, "invalid", [1, 2, 3], {"key": "value"}]
     for feature in invalid_features:
@@ -125,7 +126,9 @@ def test_feature_is_datetime():
         Sequence([Value("timestamp[ns]")]),
     ]
     for feature in datetime_features:
-        assert feature_is_datetime(feature) == True, f"Failed for {type(feature)} with dtype {feature.dtype}"
+        assert feature_is_datetime(
+            feature,
+        ), f"Failed for {type(feature)} with dtype {feature.dtype}"
 
     non_datetime_features = [
         Value("string"),
@@ -134,8 +137,10 @@ def test_feature_is_datetime():
         Array2D(shape=(10, 10), dtype="int32"),
     ]
     for feature in non_datetime_features:
-        assert feature_is_datetime(feature) == False, f"Failed for {type(feature)} with dtype {feature.dtype}"
-    
+        assert not feature_is_datetime(
+            feature,
+        ), f"Failed for {type(feature)} with dtype {feature.dtype}"
+
     invalid_features = [None, 123, "invalid", [1, 2, 3], {"key": "value"}]
     for feature in invalid_features:
         with pytest.raises(AttributeError):
