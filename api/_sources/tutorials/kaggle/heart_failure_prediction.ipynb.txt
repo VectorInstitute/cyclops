@@ -1130,17 +1130,6 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "### Performance over time\n",
-    "\n",
-    "We can monitor the change of performance metrics over time by leveraging historical reports. This involves using the `get_metrics_trends` function to gather prior metrics and merge them with recent results. We can specify which metrics and slices we wish to observe. Once the data is collected, we generate the plot using the `metrics_trends` method from the plotter, which can then be integrated into the report.\n",
-    "\n",
-    "Please note, for the purpose of this tutorial, we will create three dummy reports to demonstrate the process of plotting these metric trends."
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
     "## Report Generation\n",
     "\n",
     "Before generating the model card, let us document some of the details of the model and some considerations involved in developing and using the model.\n",
