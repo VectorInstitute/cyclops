@@ -137,7 +137,7 @@
   <div>
    <span style="font-size: 18px; font-weight:bold;">
       <div class="tooltip">
-      {{ card.name }}
+      {{ card.name|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ') }}
         <div class="tooltiptext">
           {{ card.tooltip }}
         <div class="arrow-up"></div>
@@ -184,7 +184,7 @@
 {% endmacro %}
 
 {% macro render_perf_over_time(name, comp)%}
-<div class="card" id={{name}} style="display: block; flex-basis: 100%">
+<div class="card" id={{name}} style="display: block;">
   <h3 style="color: black; font-weight:normal;">How is your model doing over time?</h3><br>
   <h3 style="color: gray;  font-weight:normal;">See how your model is performing over several metrics and subgroups over time.</h3>
   <div style="display: flex; align-items: center; justify-content: center; padding: 10px; margin-bottom: 20px;">
@@ -197,7 +197,7 @@
     </div>
   </div>
   <div class="column" style="float: left;">
-    <div class="subcard_overview" style="padding:10px; margin-bottom:20px; max-width:500px;">
+    <div class="subcard_overview" style="padding:10px; margin-bottom:20px; width:15vw;">
       <h4>Metrics</h4>
       <div class="radio-buttons" id="slice-selection">
           <input type="radio" id="{{comp.metric_cards.metrics[0]}}" name="metric" value="{{comp.metric_cards.metrics[0]}}" checked>
@@ -212,7 +212,7 @@
             </div>
           {% else %}
             <div class="tooltip">
-              <label for="{{comp.metric_cards.metrics[0]}}">{{comp.metric_cards.metrics[0]}}</label>
+              <label for="{{comp.metric_cards.metrics[0]}}">{{comp.metric_cards.metrics[0]|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ')}}</label>
               <div class="tooltiptext">
                 {{ comp.metric_cards.tooltips[0] }}
                 <div class="arrow-up"></div>
@@ -233,7 +233,7 @@
             </div>
           {% else %}
             <div class="tooltip">
-              <label for="{{metric}}">{{metric}}</label>
+              <label for="{{metric}}">{{metric|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ')}}</label>
               <div class="tooltiptext">
                 {{ tooltip }}
                 <div class="arrow-up"></div>
@@ -244,21 +244,26 @@
       </div>
     </div>
     {% for slice, values in comp.metric_cards.slices|zip(comp.metric_cards.values) %}
-      <div class="subcard_overview" style="padding:10px; margin-bottom:10px; max-width:500px;">
-        <h4>{{slice|regex_replace('(?<!^)(?=[A-Z])', ' ')|title}}</h4>
+      <div class="subcard_overview" style="padding:10px; margin-bottom:10px; width:15vw;">
+        <h4>{{slice|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ')}}</h4>
         <div class="radio-buttons" id="slice-selection">
           <input type="radio" id="overall_{{slice}}" name="{{slice}}" value="overall_{{slice}}" checked>
           <label for="overall_{{slice}}">All</label>
           {% for value in values %}
             <input type="radio" id="{{value}}" name="{{slice}}" value="{{value}}">
-            <label for="{{value}}">{{value|regex_replace('_+', ' ')|title}}</label>
+            {% if value|regex_search("\((.*?)\)")|length != 0 %}
+              {% set acronym = value|regex_search("\((.*?)\)") %}
+              <label for="{{value}}">{{acronym[0]}}</label>
+            {% else %}
+              <label for="{{value}}">{{value|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ')}}</label>
+            {% endif %}
           {% endfor %}
         </div>
       </div>
     {% endfor %}
   </div>
-  <div class="subcard_overview" style="margin:auto; float:right; min-width:600px;">
-    <div id="plot" style=" flex-basis: 100%;"></div>
+  <div class="subcard_overview" style="margin: 0px; margin-left:25px; float:left; min-width:500px; max-width:100%;">
+    <div id="plot"></div>
   </div>
 </div>
 {% endmacro %}
@@ -401,6 +406,7 @@
 
       body {
         font-family: Arial, Helvetica, sans-serif;
+        min-width: 1150px;
       }
 
       h2 {
@@ -412,7 +418,6 @@
         color: #0073e4;
         flex-basis: 100%;
       }
-
       .card {
         display: flex;
         flex-wrap: wrap;
@@ -721,7 +726,7 @@
 
       .radio-buttons {
         display: flex;
-        row-gap: 10px;
+        row-gap: 15px;
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: left;
@@ -744,6 +749,7 @@
         transition: background-color 0.3s ease;
         background-color: #ffffff;
         border: 2px solid #DADCE0;
+        white-space: nowrap;
       }
 
       .radio-buttons label:not(:first-child):not(:last-child) {
@@ -845,6 +851,15 @@
   </body>
 </html>
 <script>
+  function multipleStringLines(title) {
+      if (title.length > 50) { // check if greater than threshold!
+                  let y_axis = title.split(' ');    //break into words
+                  let interval = title.split(' ').length / 2;     //2-lines
+                  return y_axis.slice(0, interval).join(' ') + '<br>' + y_axis.slice(interval, y_axis.length).join(' ');
+      }
+      return title;
+  }
+
   function isInView(element) {
     // return true if element is in view
     var rect     = element.getBoundingClientRect(),
@@ -1272,6 +1287,7 @@
       }
       if (nulls === 10) {
         var plot_title = "Current " + name + " is trending " + trend_keyword + " and is " + passed_keyword + " the threshold.";
+        var plot_title = multipleStringLines(plot_title);
         var showlegend = false;
       }
       else {
@@ -1326,9 +1342,7 @@
       };
       traces.push(threshold_trace);
     }
-    if (parent.innerWidth > 1545) {
-        var width = parent.innerWidth-1000;
-      }
+    var width = Math.max(parent.innerWidth - 900, 500);
     var layout = {
       title: {
         text: plot_title,
@@ -1584,6 +1598,7 @@
       }
       if (nulls === 10) {
         var plot_title = "Current " + name + " is trending " + trend_keyword + " and is " + passed_keyword + " the threshold.";
+        var plot_title = multipleStringLines(plot_title);
         var showlegend = false;
       }
       else {
@@ -1638,9 +1653,7 @@
       };
       traces.push(threshold_trace);
     }
-    if (parent.innerWidth > 1545) {
-        var width = parent.innerWidth-1000;
-      }
+    var width = Math.max(parent.innerWidth - 900, 500);
     var layout = {
       title: {
         text: plot_title,
@@ -1710,7 +1723,6 @@
     for (let i = 0; i < collapsible.length; i++) {
       collapsible[i].addEventListener("click", function() {
         let arrow = collapsible[i];
-
         if (arrow.classList.contains('down-arrow')) {
           arrow.classList.add('right-arrow');
           arrow.classList.remove('down-arrow');
@@ -1728,25 +1740,24 @@
 
         let collapsible_bar = card.getElementsByClassName("collapsible-bar")[0];
         collapsible_bar.style.display = collapsible_bar.style.display === 'block' ? 'none' : 'block';
+        refreshPlotlyPlots();
       });
     }
   }
   document.addEventListener('DOMContentLoaded', setCollapseButton);
 
-  // create a function to resize any plotly plot inside a "img-item" class and add event listener to window resize for any change
-  function resizePlotlyPlot() {
+  // function to refresh plotly plots
+  function refreshPlotlyPlots() {
     const img_items = document.getElementsByClassName("img-item");
-
     for (let i = 0; i < img_items.length; i++) {
-      // if it contains a div, get script from given div and resize plot
       if (img_items[i].getElementsByTagName("div").length > 0) {
-        var plot = img_items[i].getElementsByTagName("div")[0];
-        var plot_container = plot.getElementsByClassName('plot-container')[0];
-        plot_container.style.width = parent.innerWidth-500+"px";
+        id = img_items[i].getElementsByClassName("plotly-graph-div")[0].id;
+        var gd = document.getElementById(id);
+        data = gd.data;
+        layout = gd.layout;
+        Plotly.update(id, data, layout);
       }
     }
   }
-  resizePlotlyPlot();
-  window.addEventListener('resize', resizePlotlyPlot);
 
 </script>
