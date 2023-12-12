@@ -270,15 +270,15 @@
 
 {% macro render_overview(name, comp) %}
 {{ render_perf(name, comp) }}
-{% set val = {'history': false} %}
+{# {% set val = {'history': false} %}
 {% for metric_card in comp.metric_cards.collection%}
     {% if metric_card.history|length > 1 %}
       {% set _ = val.update({'history':true}) %}
     {% endif %}
 {% endfor %}
-{% if val['history'] %}
-  {{ render_perf_over_time(name, comp) }}
-{% endif %}
+{% if val['history'] %} #}
+{{ render_perf_over_time(name, comp) }}
+{# {% endif %} #}
 {% endmacro %}
 
 {% macro render_objects(section)%}
