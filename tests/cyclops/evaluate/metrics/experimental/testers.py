@@ -279,7 +279,7 @@ class MetricTester:
 class DummyMetric(Metric):
     """Dummy metric for testing core components."""
 
-    name = "Dummy"
+    name: str = "Dummy"
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -301,7 +301,7 @@ class DummyMetric(Metric):
 class DummyListStateMetric(Metric):
     """Dummy metric with list state for testing core components."""
 
-    name = "DummyListState"
+    name: str = "DummyListState"
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
