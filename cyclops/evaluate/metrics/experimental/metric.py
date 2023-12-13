@@ -488,6 +488,19 @@ class Metric(ABC):
                     lambda x: apc.to_device(clone(x), self.device),
                 )
                 setattr(obj_copy, k, _defaults_)
+            elif isinstance(v, (list, tuple)):
+                seq_var = apply_to_array_collection(
+                    v,
+                    lambda x: apc.to_device(clone(x), self.device),
+                )
+                setattr(
+                    obj_copy,
+                    k,
+                    [
+                        deepcopy(arr, memo) if not apc.is_array_api_obj(arr) else arr
+                        for arr in seq_var
+                    ],
+                )
             elif apc.is_array_api_obj(v):
                 setattr(obj_copy, k, apc.to_device(clone(v), self.device))
             else:

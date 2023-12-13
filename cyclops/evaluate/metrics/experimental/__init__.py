@@ -17,6 +17,7 @@ from cyclops.evaluate.metrics.experimental.f_score import (
     MultilabelF1Score,
     MultilabelFBetaScore,
 )
+from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
 from cyclops.evaluate.metrics.experimental.precision_recall import (
     BinaryPrecision,
     BinaryRecall,
