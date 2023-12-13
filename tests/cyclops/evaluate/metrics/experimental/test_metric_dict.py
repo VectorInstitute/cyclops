@@ -180,6 +180,25 @@ def test_invalid_inputs():
     ):
         MetricDict(DummyMetric(), postfix=5)
 
+    with pytest.warns(
+        UserWarning,
+        match="Found object in `metrics` that is not `Metric` or `TorchMetric`. "
+        "This object will be ignored: not_a_metric",
+    ):
+        MetricDict((DummyMetric(), "not_a_metric"))
+    with pytest.warns(
+        UserWarning,
+        match="Found object in `other_metrics` that is not `Metric` or `TorchMetric`. "
+        "This object will be ignored: not_a_metric",
+    ):
+        MetricDict(DummyMetric(), DummyListStateMetric(), "not_a_metric")
+    with pytest.warns(
+        UserWarning,
+        match="Found object in `kwargs` that is not `Metric` or `TorchMetric`. "
+        "This object will be ignored: 5",
+    ):
+        MetricDict(dummy=DummyMetric(), not_a_metric=5)
+
 
 def test_metric_dict_computation():
     """Test that using `MetricDict` works the same as using the individual metrics."""
