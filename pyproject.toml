@@ -98,7 +98,7 @@ black = "^22.1.0"
 pytest-cov = "^3.0.0"
 codecov = "^2.1.13"
 nbstripout = "^0.6.1"
-mypy = "^1.0.0"
+mypy = "^1.7.0"
 ruff = "^0.1.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 cycquery = "^0.1.2" # used for integration test
@@ -148,6 +148,7 @@ alibi = ["llvmlite", "alibi"]
 alibi-detect = ["torch", "llvmlite", "alibi-detect"]
 
 [tool.mypy]
+plugins = ["numpy.typing.mypy_plugin"]
 ignore_missing_imports = true
 install_types = true
 pretty = true

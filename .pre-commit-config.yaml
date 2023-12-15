@@ -28,7 +28,7 @@ repos:
       types_or: [python, jupyter]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.6.1
+    rev: v1.7.1
     hooks:
     - id: mypy
       entry: python3 -m mypy --config-file pyproject.toml

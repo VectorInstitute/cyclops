@@ -5,7 +5,53 @@ import pytest
 import torch
 from datasets import Dataset
 
-from cyclops.models.wrappers.utils import DatasetColumn, to_numpy, to_tensor
+from cyclops.models.wrappers.utils import (
+    DatasetColumn,
+    get_params,
+    set_params,
+    to_numpy,
+    to_tensor,
+)
+
+
+def test_set_params():
+    """Test set_params function."""
+
+    class ExampleClass:
+        """Example class for testing."""
+
+        def __init__(self, param1, param2, param3):
+            """Initialize the class."""
+            self.param1 = param1
+            self.param2 = param2
+            self.param3 = param3
+
+    params = {"param1": 10, "param2": "hello", "param3": True}
+    example_class = ExampleClass(1, "world", False)
+    set_params(example_class, **params)
+    assert example_class.param1 == 10
+    assert example_class.param2 == "hello"
+    assert example_class.param3 is True
+
+
+def test_get_params():
+    """Test get_params function."""
+
+    class ExampleClass:
+        """Example class for testing."""
+
+        def __init__(self, param1, param2, param3):
+            """Initialize the class."""
+            self.param1 = param1
+            self.param2 = param2
+            self.param3 = param3
+
+    result = get_params(ExampleClass(10, "hello", True))
+    assert isinstance(result, dict)
+    assert len(result) == 3
+    assert result["param1"] == 10
+    assert result["param2"] == "hello"
+    assert result["param3"] is True
 
 
 @pytest.mark.integration_test()
