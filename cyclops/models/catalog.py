@@ -224,7 +224,7 @@ def create_model(
             raise RuntimeError(_xgboost_unavailable_message)
         if model_name in ["densenet", "resnet"]:
             raise RuntimeError(_torchxrayvision_unavailable_message)
-        if model_name in ["gru", "lstm", "mlp", "rnn"]:
+        if model_name in ["gru", "lstm", "mlp_pt", "rnn"]:
             raise RuntimeError(_torch_unavailable_message)
         similar_keys_list: List[str] = get_close_matches(
             model_name,

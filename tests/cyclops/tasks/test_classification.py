@@ -19,7 +19,7 @@ class TestBinaryTabularClassificationTask(TestCase):
 
     def setUp(self):
         """Set up for testing."""
-        self.model_name = "mlp"
+        self.model_name = "mlp_classifier"
         self.model = create_model(self.model_name)
         self.test_task = BinaryTabularClassificationTask(
             {self.model_name: self.model},
