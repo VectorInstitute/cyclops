@@ -336,10 +336,11 @@ class SKModel:
                 )
             clf.fit(X, y)
 
-        for key, value in clf["clf"].best_params_.items():
+        if hasattr(clf, "clf"):
+            clf = clf["clf"]
+        for key, value in clf.best_params_.items():
             LOGGER.info("Best %s: %s", key, value)
-
-        self.model_ = clf["clf"].best_estimator_
+        self.model_ = clf.best_estimator_
 
         return self
 
