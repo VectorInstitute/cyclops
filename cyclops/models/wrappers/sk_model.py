@@ -336,7 +336,7 @@ class SKModel:
                 )
             clf.fit(X, y)
 
-        if hasattr(clf, "clf"):
+        if isinstance(clf, Pipeline):
             clf = clf["clf"]
         for key, value in clf.best_params_.items():
             LOGGER.info("Best %s: %s", key, value)

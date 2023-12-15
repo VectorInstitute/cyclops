@@ -146,6 +146,7 @@ monai = ["torch", "monai"]
 xgboost = ["xgboost"]
 alibi = ["llvmlite", "alibi"]
 alibi-detect = ["torch", "llvmlite", "alibi-detect"]
+all = ["torch", "torchvision", "torchxrayvision", "llvmlite", "monai", "xgboost", "alibi", "alibi-detect"]
 
 [tool.mypy]
 plugins = ["numpy.typing.mypy_plugin"]

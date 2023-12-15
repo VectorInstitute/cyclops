@@ -7680,6 +7680,7 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [extras]
 alibi = ["alibi", "llvmlite"]
 alibi-detect = ["alibi-detect", "llvmlite", "torch"]
+all = ["alibi", "alibi-detect", "llvmlite", "monai", "torch", "torchvision", "torchxrayvision", "xgboost"]
 monai = ["monai", "torch"]
 torch = ["torch"]
 torchvision = ["torchvision"]
@@ -7689,4 +7690,4 @@ xgboost = ["xgboost"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.11"
-content-hash = "8dff204e1c0db171ed9dea7ab309f537ccd9e37661c6156442b5fa93a64a865e"
+content-hash = "55bb00dc12663f86ea56628e1ce0a5715bc5783b3fceda56af8d9d0b58cac0a7"
