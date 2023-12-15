@@ -187,7 +187,7 @@ class SKModel:
         if isinstance(X, (Dataset, DatasetDict)):
             if feature_columns is None:
                 raise ValueError(
-                    "Missing target columns 'target_columns'. Please provide \
+                    "Missing target columns 'feature_columns'. Please provide \
                     the name of feature columns when using a \
                     Hugging Face dataset as the input.",
                 )
