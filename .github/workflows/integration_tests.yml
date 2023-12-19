@@ -51,9 +51,10 @@ jobs:
           python-version: '3.10'
       - name: Install dependencies and check code
         run: |
+          ompi_info
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          env MPICC=/opt/openmpi-4.1.5/bin/mpicc python -m pip install git+https://github.com/mpi4py/mpi4py
+          env MPICC=/opt/openmpi-4.1.5/bin/mpicc python3 -m pip install git+https://github.com/mpi4py/mpi4py
           poetry install --with test,dev --all-extras
           coverage run -m pytest -m integration_test && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
