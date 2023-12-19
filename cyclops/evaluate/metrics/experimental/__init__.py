@@ -19,10 +19,19 @@ from cyclops.evaluate.metrics.experimental.f_score import (
 )
 from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
 from cyclops.evaluate.metrics.experimental.precision_recall import (
+    BinaryPPV,
     BinaryPrecision,
     BinaryRecall,
+    BinarySensitivity,
+    BinaryTPR,
+    MulticlassPPV,
     MulticlassPrecision,
     MulticlassRecall,
+    MulticlassSensitivity,
+    MulticlassTPR,
+    MultilabelPPV,
     MultilabelPrecision,
     MultilabelRecall,
+    MultilabelSensitivity,
+    MultilabelTPR,
 )

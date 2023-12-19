@@ -828,3 +828,15 @@ def multilabel_recall(
         fp=fp,
         fn=fn,
     )
+
+
+# Aliases
+binary_ppv = binary_precision
+multiclass_ppv = multiclass_precision
+multilabel_ppv = multilabel_precision
+binary_sensitivity = binary_recall
+multiclass_sensitivity = multiclass_recall
+multilabel_sensitivity = multilabel_recall
+binary_tpr = binary_recall
+multiclass_tpr = multiclass_recall
+multilabel_tpr = multilabel_recall
