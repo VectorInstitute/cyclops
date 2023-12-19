@@ -18,6 +18,11 @@ from cyclops.evaluate.metrics.experimental.f_score import (
     MultilabelFBetaScore,
 )
 from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
+from cyclops.evaluate.metrics.experimental.negative_predictive_value import (
+    BinaryNPV,
+    MulticlassNPV,
+    MultilabelNPV,
+)
 from cyclops.evaluate.metrics.experimental.precision_recall import (
     BinaryPrecision,
     BinaryRecall,
