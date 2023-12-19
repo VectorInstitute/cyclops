@@ -17,6 +17,11 @@ from cyclops.evaluate.metrics.experimental.functional.f_score import (
     multilabel_f1_score,
     multilabel_fbeta_score,
 )
+from cyclops.evaluate.metrics.experimental.functional.negative_predictive_value import (
+    binary_npv,
+    multiclass_npv,
+    multilabel_npv,
+)
 from cyclops.evaluate.metrics.experimental.functional.precision_recall import (
     binary_ppv,
     binary_precision,

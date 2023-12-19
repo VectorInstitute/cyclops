@@ -1,4 +1,4 @@
-"""Methods for computing specificity scores for classification tasks."""
+"""Methods for computing the negative predictive value for classification tasks."""
 from typing import Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
@@ -24,7 +24,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
-def _specificity_compute(
+def _negative_predictive_value_compute(
     average: Literal["micro", "macro", "weighted", "none"],
     is_multilabel: bool,
     *,
@@ -36,10 +36,10 @@ def _specificity_compute(
     xp = apc.array_namespace(tp, fp, tn)
     if average == "micro":
         tn = xp.sum(tn, axis=0)
-        fp = xp.sum(fp, axis=0)
-        return safe_divide(tn, tn + fp)
+        fn = xp.sum(fn, axis=0)
+        return safe_divide(tn, tn + fn)
 
-    score = safe_divide(tn, tn + fp)
+    score = safe_divide(tn, tn + fn)
     return _adjust_weight_apply_average(
         score,
         average,
@@ -51,17 +51,17 @@ def _specificity_compute(
     )
 
 
-def _binary_specificity_compute(*, fp: Array, tn: Array) -> Array:
-    return squeeze_all(safe_divide(tn, tn + fp))
+def _binary_negative_predictive_value_compute(*, fn: Array, tn: Array) -> Array:
+    return squeeze_all(safe_divide(tn, tn + fn))
 
 
-def binary_specificity(
+def binary_npv(
     target: Array,
     preds: Array,
     threshold: float = 0.5,
     ignore_index: Optional[int] = None,
 ) -> Array:
-    """Measure how well a binary classifier identifies negative samples.
+    """Measure the proportion of negative predictions that are true negative.
 
     Parameters
     ----------
@@ -76,14 +76,14 @@ def binary_specificity(
         floating point values that are not in the range `[0, 1]`, a sigmoid function
         will be applied to each value before thresholding.
     ignore_index : int, optional, default=None
-        Specifies a target class that is ignored when computing the specificity score.
-        Ignoring a target class means that the corresponding predictions do not
-        contribute to the specificity score.
+        Specifies a target class that is ignored when computing the negative predictive
+        value. Ignoring a target class means that the corresponding predictions do not
+        contribute to the negative predictive value.
 
     Returns
     -------
     Array
-        An array API compatible object containing the specificity score.
+        An array API compatible object containing the negative predictive value.
 
     Raises
     ------
@@ -108,20 +108,20 @@ def binary_specificity(
 
     Examples
     --------
-    >>> from cyclops.evaluate.metrics.experimental.functional import binary_specificity
+    >>> from cyclops.evaluate.metrics.experimental.functional import binary_npv
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([1, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([1, 0, 1, 1, 0, 1])
-    >>> binary_specificity(target, preds)
+    >>> binary_npv(target, preds)
     Array(0.5, dtype=float32)
-    >>> binary_specificity(target, preds, ignore_index=0)
+    >>> binary_npv(target, preds, ignore_index=0)
     Array(0., dtype=float32)
     >>> target = anp.asarray([1, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([0.61, 0.22, 0.84, 0.73, 0.33, 0.92])
-    >>> binary_specificity(target, preds)
+    >>> binary_npv(target, preds)
     Array(0.5, dtype=float32)
-    >>> binary_specificity(target, preds, threshold=0.8)
-    Array(0.5, dtype=float32)
+    >>> binary_npv(target, preds, threshold=0.8)
+    Array(0.25, dtype=float32)
 
     """
     _binary_stat_scores_validate_args(
@@ -140,11 +140,11 @@ def binary_specificity(
         ignore_index=ignore_index,
         xp=xp,
     )
-    tn, fp, _, _ = _binary_stat_scores_update_state(target, preds, xp=xp)
-    return _binary_specificity_compute(fp=fp, tn=tn)
+    tn, _, fn, _ = _binary_stat_scores_update_state(target, preds, xp=xp)
+    return _binary_negative_predictive_value_compute(fn=fn, tn=tn)
 
 
-def multiclass_specificity(
+def multiclass_npv(
     target: Array,
     preds: Array,
     num_classes: int,
@@ -152,7 +152,7 @@ def multiclass_specificity(
     average: Optional[Literal["micro", "macro", "weighted", "none"]] = "micro",
     ignore_index: Optional[Union[int, Tuple[int]]] = None,
 ) -> Array:
-    """Measure how well a classifier identifies negative samples.
+    """Measure the proportion of negative predictions that are true negative.
 
     Parameters
     ----------
@@ -171,31 +171,32 @@ def multiclass_specificity(
         The number of classes in the classification task.
     top_k : int, default=1
         The number of highest probability or logit score predictions to consider
-        when computing the specificity score. By default, only the top prediction is
-        considered. This parameter is ignored if `preds` contains integer values.
+        when computing the negative predictive value. By default, only the top
+        prediction is considered. This parameter is ignored if `preds` contains
+        integer values.
     average : {'micro', 'macro', 'weighted', 'none'}, optional, default='micro'
-        Specifies the type of averaging to apply to the specificity scores. Should
-        be one of the following:
-        - `'micro'`: Compute the specificity score globally by considering all
+        Specifies the type of averaging to apply to the negative predictive values.
+        Should be one of the following:
+        - `'micro'`: Compute the negative predictive value globally by considering all
             predictions and all targets.
-        - `'macro'`: Compute the specificity score for each class individually and
-            then take the unweighted mean of the specificity scores.
-        - `'weighted'`: Compute the specificity score for each class individually
-            and then take the mean of the specificity scores weighted by the support
-            (the number of true positives + the number of false negatives) for each
-            class.
-        - `'none'` or `None`: Compute the specificity score for each class individually
-            and return the scores as an array.
+        - `'macro'`: Compute the negative predictive value for each class individually
+            and then take the unweighted mean of the negative predictive values.
+        - `'weighted'`: Compute the negative predictive value for each class
+            individually and then take the mean of the negative predictive values
+            weighted by the support (the number of true positives + the number of
+            false negatives) for each class.
+        - `'none'` or `None`: Compute the negative predictive value for each class
+            individually and return the scores as an array.
     ignore_index : int or tuple of int, optional, default=None
-        Specifies a target class that is ignored when computing the specificity score.
-        Ignoring a target class means that the corresponding predictions do not
-        contribute to the specificity score.
+        Specifies a target class that is ignored when computing the negative
+        predictive value. Ignoring a target class means that the corresponding
+        predictions do not contribute to the negative predictive value.
 
 
     Returns
     -------
     Array
-        An array API compatible object containing the specificity score(s).
+        An array API compatible object containing the negative predictive value(s).
 
     Raises
     ------
@@ -238,33 +239,33 @@ def multiclass_specificity(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multiclass_specificity
+    ...    multiclass_npv
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([2, 1, 0, 0])
     >>> preds = anp.asarray([2, 1, 0, 1])
-    >>> multiclass_specificity(target, preds, num_classes=3)
+    >>> multiclass_npv(target, preds, num_classes=3)
     Array(0.875, dtype=float32)
     >>> target = anp.asarray([2, 1, 0, 0])
     >>> preds = anp.asarray(
     ...     [[0.1, 0.1, 0.8], [0.2, 0.7, 0.1], [0.9, 0.1, 0.0], [0.4, 0.6, 0.0]],
     ... )
-    >>> multiclass_specificity(target, preds, num_classes=3)
+    >>> multiclass_npv(target, preds, num_classes=3)
     Array(0.875, dtype=float32)
-    >>> multiclass_specificity(target, preds, num_classes=3, top_k=2)
-    Array(0.5, dtype=float32)
-    >>> multiclass_specificity(target, preds, num_classes=3, average=None)
-    Array([1.       , 0.6666667, 1.       ], dtype=float32)
-    >>> multiclass_specificity(target, preds, num_classes=3, average="macro")
-    Array(0.88888896, dtype=float32)
-    >>> multiclass_specificity(target, preds, num_classes=3, average="weighted")
-    Array(0.9166667, dtype=float32)
-    >>> multiclass_specificity(target, preds, num_classes=3, ignore_index=0)
+    >>> multiclass_npv(target, preds, num_classes=3, top_k=2)
     Array(1., dtype=float32)
-    >>> multiclass_specificity(
+    >>> multiclass_npv(target, preds, num_classes=3, average=None)
+    Array([0.6666667, 1.       , 1.       ], dtype=float32)
+    >>> multiclass_npv(target, preds, num_classes=3, average="macro")
+    Array(0.88888896, dtype=float32)
+    >>> multiclass_npv(target, preds, num_classes=3, average="weighted")
+    Array(0.8333334, dtype=float32)
+    >>> multiclass_npv(target, preds, num_classes=3, ignore_index=0)
+    Array(1., dtype=float32)
+    >>> multiclass_npv(
     ...     target, preds, num_classes=3, average=None, ignore_index=(1, 2),
     ... )
-    Array([0. , 0.5, 1. ], dtype=float32)
+    Array([0., 1., 1.], dtype=float32)
 
     """
     _multiclass_stat_scores_validate_args(
@@ -296,7 +297,7 @@ def multiclass_specificity(
         ignore_index=ignore_index,
         xp=xp,
     )
-    return _specificity_compute(
+    return _negative_predictive_value_compute(
         average,  # type: ignore[arg-type]
         is_multilabel=False,
         tp=tp,
@@ -306,7 +307,7 @@ def multiclass_specificity(
     )
 
 
-def multilabel_specificity(
+def multilabel_npv(
     target: Array,
     preds: Array,
     num_labels: int,
@@ -315,7 +316,7 @@ def multilabel_specificity(
     average: Optional[Literal["micro", "macro", "weighted", "none"]] = "macro",
     ignore_index: Optional[int] = None,
 ) -> Array:
-    """Measure how well a classifier identifies negative samples.
+    """Measure the proportion of negative predictions that are true negative.
 
     Parameters
     ----------
@@ -341,21 +342,21 @@ def multilabel_specificity(
         highest probability prediction is considered. This parameter is ignored
         if `preds` does not contain floating point values.
     average : {'micro', 'macro', 'weighted', 'none'}, optional, default='macro'
-        Specifies the type of averaging to apply to the specificity scores. Should
-        be one of the following:
-        - `'micro'`: Compute the specificity score globally by considering all
+        Specifies the type of averaging to apply to the negative predictive values.
+        Should be one of the following:
+        - `'micro'`: Compute the negative predictive value globally by considering all
             predictions and all targets.
-        - `'macro'`: Compute the specificity score for each label individually and then
-            take the unweighted mean of the specificity scores.
-        - `'weighted'`: Compute the specificity score for each label individually
-            and then take the mean of the specificity scores weighted by the support
-            (the number of true positives + the number of false negatives) for each
-            label.
-        - `'none'` or `None`: Compute the specificity score for each label individually
-            and return the scores as an array.
+        - `'macro'`: Compute the negative predictive value for each label individually
+            and then take the unweighted mean of the negative predictive values.
+        - `'weighted'`: Compute the negative predictive value for each label
+            individually and then take the mean of the negative predictive values
+            weighted by the support (the number of true positives + the number of false
+            negatives) for each label.
+        - `'none'` or `None`: Compute the negative predictive value for each label
+            individually and return the scores as an array.
     ignore_index : int, optional, default=None
-        Specifies value in `target` that is ignored when computing the specificity
-        score.
+        Specifies value in `target` that is ignored when computing the negative
+        predictive value.
 
     Raises
     ------
@@ -391,28 +392,28 @@ def multilabel_specificity(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multilabel_specificity
+    ...    multilabel_npv
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
     >>> preds = anp.asarray([[0, 0, 1], [1, 0, 1]])
-    >>> multilabel_specificity(target, preds, num_labels=3)
-    Array(0.6666667, dtype=float32)
+    >>> multilabel_npv(target, preds, num_labels=3)
+    Array(0.5, dtype=float32)
     >>> target = anp.asarray([[1, 0, 1, 0], [1, 1, 0, 1]])
     >>> preds = anp.asarray([[0.11, 0.58, 0.22, 0.84], [0.73, 0.47, 0.33, 0.92]])
-    >>> multilabel_specificity(target, preds, num_labels=4)
+    >>> multilabel_npv(target, preds, num_labels=4)
+    Array(0.125, dtype=float32)
+    >>> multilabel_npv(target, preds, num_labels=4, top_k=2)
+    Array(0.125, dtype=float32)
+    >>> multilabel_npv(target, preds, num_labels=4, threshold=0.7)
     Array(0.25, dtype=float32)
-    >>> multilabel_specificity(target, preds, num_labels=4, top_k=2)
+    >>> multilabel_npv(target, preds, num_labels=4, average=None)
+    Array([0. , 0. , 0.5, 0. ], dtype=float32)
+    >>> multilabel_npv(target, preds, num_labels=4, average="micro")
     Array(0.25, dtype=float32)
-    >>> multilabel_specificity(target, preds, num_labels=4, threshold=0.7)
-    Array(0.5, dtype=float32)
-    >>> multilabel_specificity(target, preds, num_labels=4, average=None)
-    Array([0., 0., 1., 0.], dtype=float32)
-    >>> multilabel_specificity(target, preds, num_labels=4, average="micro")
-    Array(0.33333334, dtype=float32)
-    >>> multilabel_specificity(target, preds, num_labels=4, average="weighted")
-    Array(0.2, dtype=float32)
-    >>> multilabel_specificity(
+    >>> multilabel_npv(target, preds, num_labels=4, average="weighted")
+    Array(0.1, dtype=float32)
+    >>> multilabel_npv(
     ...    target, preds, num_labels=4, average=None, ignore_index=1,
     ... )
     Array([0., 0., 1., 0.], dtype=float32)
@@ -433,7 +434,7 @@ def multilabel_specificity(
         xp=xp,
     )
     tn, fp, fn, tp = _multilabel_stat_scores_update_state(target, preds, xp=xp)
-    return _specificity_compute(
+    return _negative_predictive_value_compute(
         average,  # type: ignore[arg-type]
         is_multilabel=True,
         tp=tp,
