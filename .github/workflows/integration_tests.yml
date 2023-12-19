@@ -51,8 +51,7 @@ jobs:
           ompi_info
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          poetry install --with test,dev --all-extras
-          env MPICC=/opt/openmpi-4.1.5/bin/mpicc python -m pip install git+https://github.com/mpi4py/mpi4py
+          env MPICC=/opt/openmpi-4.1.5/bin/mpicc poetry install --with docs,dev,test --all-extras
           coverage run -m pytest -m integration_test && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v1.0.36

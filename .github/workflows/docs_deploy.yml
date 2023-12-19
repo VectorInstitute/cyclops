@@ -33,9 +33,12 @@ jobs:
           python-version: '3.10'
           cache: 'poetry'
       - run: |
+          export PATH=/opt/openmpi-4.1.5/bin:$PATH
+          export LD_LIBRARY_PATH=/opt/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
+          ompi_info
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          poetry install --with docs,test,dev --all-extras
+          env MPICC=/opt/openmpi-4.1.5/bin/mpicc poetry install --with test,dev --all-extras
           # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
           cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
