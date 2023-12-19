@@ -25,3 +25,8 @@ from cyclops.evaluate.metrics.experimental.functional.precision_recall import (
     multilabel_precision,
     multilabel_recall,
 )
+from cyclops.evaluate.metrics.experimental.functional.specificity import (
+    binary_specificity,
+    multiclass_specificity,
+    multilabel_specificity,
+)
