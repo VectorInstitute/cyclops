@@ -178,7 +178,7 @@ class MultilabelFbetaScore(MultilabelStatScores, registry_key="multilabel_fbeta_
     num_labels : int
         Number of labels for the task.
     threshold : float, default=0.5
-        Threshold for deciding the positive class if predicitions are logits
+        Threshold for deciding the positive class if predictions are logits
         or probability scores. Logits will be converted to probabilities using
         the sigmoid function.
     top_k : int, optional

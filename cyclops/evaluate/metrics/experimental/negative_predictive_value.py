@@ -12,7 +12,7 @@ from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
 class BinaryNPV(_AbstractBinaryStatScores, registry_key="binary_npv"):
-    """The proportion of predictive negatives that are true negatives.
+    """The proportion of negative predictions that are true negatives.
 
     Parameters
     ----------
@@ -54,7 +54,7 @@ class MulticlassNPV(
     _AbstractMulticlassStatScores,
     registry_key="multiclass_npv",
 ):
-    """The proportion of predictive negatives that are true negatives.
+    """The proportion of negative predictions that are true negatives.
 
     Parameters
     ----------
@@ -122,7 +122,7 @@ class MultilabelNPV(
     _AbstractMultilabelStatScores,
     registry_key="multilabel_npv",
 ):
-    """The proportion of actual negatives that are correctly identified.
+    """The proportion of negative predictions that are true negatives.
 
     Parameters
     ----------

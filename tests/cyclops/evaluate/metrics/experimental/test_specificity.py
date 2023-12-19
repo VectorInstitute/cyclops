@@ -1,4 +1,4 @@
-"""Test specificity recall metrics."""
+"""Test specificity."""
 from functools import partial
 from typing import Literal, Optional
 

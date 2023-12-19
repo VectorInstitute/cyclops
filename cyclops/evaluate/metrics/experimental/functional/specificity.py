@@ -315,7 +315,7 @@ def multilabel_specificity(
     average: Optional[Literal["micro", "macro", "weighted", "none"]] = "macro",
     ignore_index: Optional[int] = None,
 ) -> Array:
-    """Measure the proportion of positive predictions that are true positive.
+    """Measure how well a classifier identifies negative samples.
 
     Parameters
     ----------
