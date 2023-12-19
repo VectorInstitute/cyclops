@@ -441,3 +441,9 @@ def multilabel_specificity(
         tn=tn,
         fn=fn,
     )
+
+
+# Aliases
+binary_tnr = binary_specificity
+multiclass_tnr = multiclass_specificity
+multilabel_tnr = multilabel_specificity

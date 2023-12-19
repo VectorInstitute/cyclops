@@ -38,6 +38,9 @@ from cyclops.evaluate.metrics.experimental.functional.precision_recall import (
 )
 from cyclops.evaluate.metrics.experimental.functional.specificity import (
     binary_specificity,
+    binary_tnr,
     multiclass_specificity,
+    multiclass_tnr,
     multilabel_specificity,
+    multilabel_tnr,
 )
