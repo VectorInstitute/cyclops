@@ -18,12 +18,18 @@ from cyclops.evaluate.metrics.experimental.functional.f_score import (
     multilabel_fbeta_score,
 )
 from cyclops.evaluate.metrics.experimental.functional.precision_recall import (
+    binary_ppv,
     binary_precision,
     binary_recall,
+    binary_tpr,
+    multiclass_ppv,
     multiclass_precision,
     multiclass_recall,
+    multiclass_tpr,
+    multilabel_ppv,
     multilabel_precision,
     multilabel_recall,
+    multilabel_tpr,
 )
 from cyclops.evaluate.metrics.experimental.functional.specificity import (
     binary_specificity,
