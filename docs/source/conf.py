@@ -60,9 +60,11 @@ copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
 
 html_theme_options = {
-    "collapse_navigation": False,
-    "includehidden": True,
-    "show_navbar_depth": 2,
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 4,
+    'includehidden': True,
+    'titles_only': False
 }
 
 intersphinx_mapping = {
