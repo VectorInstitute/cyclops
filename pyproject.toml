@@ -40,6 +40,7 @@ xgboost = { version = "^1.5.2", optional = true }
 alibi = { version = "^0.9.4", optional = true, extras = ["shap"] }
 alibi-detect = { version = "^0.11.0", optional = true, extras = ["torch"] }
 llvmlite = { version = "^0.40.0", optional = true }
+sphinx-book-theme = "^1.1.0"
 
 [tool.poetry.group.xgboost]
 optional = true

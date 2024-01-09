@@ -59,6 +59,14 @@ autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
 
+html_theme_options = {
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 4,
+    'includehidden': True,
+    'titles_only': False
+}
+
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.9/", None),
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
@@ -84,7 +92,7 @@ source_suffix = [".rst", ".md"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "theme"
+html_theme = "sphinx_book_theme"
 html_theme_path = ["."]
 
 # Add any paths that contain custom static files (such as style sheets) here,
