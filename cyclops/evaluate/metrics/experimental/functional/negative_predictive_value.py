@@ -87,7 +87,7 @@ def binary_npv(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -200,7 +200,7 @@ def multiclass_npv(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -360,7 +360,7 @@ def multilabel_npv(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError

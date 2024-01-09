@@ -68,7 +68,7 @@ def binary_accuracy(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -216,7 +216,7 @@ def multiclass_accuracy(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -378,7 +378,7 @@ def multilabel_accuracy(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError

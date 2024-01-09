@@ -62,13 +62,13 @@ def _basic_input_array_checks(
 ) -> None:
     """Perform basic validation of `target` and `preds`."""
     if not apc.is_array_api_obj(target):
-        raise ValueError(
+        raise TypeError(
             "Expected `target` to be an array-API-compatible object, but got "
             f"{type(target)}.",
         )
 
     if not apc.is_array_api_obj(preds):
-        raise ValueError(
+        raise TypeError(
             "Expected `preds` to be an array-API-compatible object, but got "
             f"{type(preds)}.",
         )

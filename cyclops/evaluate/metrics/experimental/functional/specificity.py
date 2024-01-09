@@ -87,7 +87,7 @@ def binary_specificity(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -199,7 +199,7 @@ def multiclass_specificity(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -359,7 +359,7 @@ def multilabel_specificity(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
