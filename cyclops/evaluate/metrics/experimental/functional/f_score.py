@@ -144,7 +144,7 @@ def binary_fbeta_score(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -276,7 +276,7 @@ def multiclass_fbeta_score(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -468,7 +468,7 @@ def multilabel_fbeta_score(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -593,7 +593,7 @@ def binary_f1_score(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -692,7 +692,7 @@ def multiclass_f1_score(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -824,7 +824,7 @@ def multilabel_f1_score(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError

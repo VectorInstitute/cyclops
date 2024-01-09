@@ -194,7 +194,7 @@ def test_add_state_default_factory_invalid_input():
 
     with pytest.raises(
         ValueError,
-        match="Argument `name` must be a valid python identifier. Got `h6!`.",
+        match="Argument `name` must be a valid Python identifier. Got `h6!`.",
     ):
         metric.add_state_default_factory("h6!", list)  # type: ignore
 

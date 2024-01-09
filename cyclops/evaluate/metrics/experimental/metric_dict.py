@@ -49,7 +49,7 @@ class ArrayEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         """Return a JSON-serializable representation of the object.
 
-        Objects conforming to the array API standard are converted to python lists
+        Objects conforming to the array API standard are converted to Python lists
         via numpy. Arrays are moved to the CPU before converting to numpy.
         """
         if apc.is_array_api_obj(obj):

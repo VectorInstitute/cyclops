@@ -95,7 +95,7 @@ def binary_precision(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -206,7 +206,7 @@ def multiclass_precision(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -364,7 +364,7 @@ def multilabel_precision(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -478,7 +478,7 @@ def binary_recall(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -589,7 +589,7 @@ def multiclass_recall(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError
@@ -750,7 +750,7 @@ def multilabel_recall(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the arrays `target` and `preds` are not compatible with the Python
         array API standard.
     ValueError

@@ -139,7 +139,7 @@ def test_metrics_floordiv(second_operand, expected_result):
     """Test that `floordiv` operator works and returns an operator metric."""
     first_metric = DummyMetric(
         anp.asarray(
-            5,  # python scalars can only be promoted with floating-point arrays
+            5,  # Python scalars can only be promoted with floating-point arrays
             dtype=anp.float32 if isinstance(second_operand, float) else None,
         ),
     )
@@ -164,7 +164,7 @@ def test_metrics_ge(second_operand, expected_result):
     """Test that `ge` operator works and returns an operator metric."""
     first_metric = DummyMetric(
         anp.asarray(
-            5,  # python scalars can only be promoted with floating-point arrays
+            5,  # Python scalars can only be promoted with floating-point arrays
             dtype=anp.float32 if isinstance(second_operand, float) else None,
         ),
     )
@@ -189,7 +189,7 @@ def test_metrics_gt(second_operand, expected_result):
     """Test that `gt` operator works and returns an operator metric."""
     first_metric = DummyMetric(
         anp.asarray(
-            5,  # python scalars can only be promoted with floating-point arrays
+            5,  # Python scalars can only be promoted with floating-point arrays
             dtype=anp.float32 if isinstance(second_operand, float) else None,
         ),
     )
@@ -224,7 +224,7 @@ def test_metrics_le(second_operand, expected_result):
     """Test that `le` operator works and returns an operator metric."""
     first_metric = DummyMetric(
         anp.asarray(
-            5,  # python scalars can only be promoted with floating-point arrays
+            5,  # Python scalars can only be promoted with floating-point arrays
             dtype=anp.float32 if isinstance(second_operand, float) else None,
         ),
     )
@@ -249,7 +249,7 @@ def test_metrics_lt(second_operand, expected_result):
     """Test that `lt` operator works and returns an operator metric."""
     first_metric = DummyMetric(
         anp.asarray(
-            5,  # python scalars can only be promoted with floating-point arrays
+            5,  # Python scalars can only be promoted with floating-point arrays
             dtype=anp.float32 if isinstance(second_operand, float) else None,
         ),
     )
@@ -292,7 +292,7 @@ def test_metrics_mod(second_operand, expected_result):
     """Test that `mod` operator works and returns an operator metric."""
     first_metric = DummyMetric(
         anp.asarray(
-            5,  # python scalars can only be promoted with floating-point arrays
+            5,  # Python scalars can only be promoted with floating-point arrays
             dtype=anp.float32 if isinstance(second_operand, float) else None,
         ),
     )
@@ -317,7 +317,7 @@ def test_metrics_mul(second_operand, expected_result):
     """Test that `mul` operator works and returns an operator metric."""
     first_metric = DummyMetric(
         anp.asarray(
-            2,  # python scalars can only be promoted with floating-point arrays
+            2,  # Python scalars can only be promoted with floating-point arrays
             dtype=anp.float32 if isinstance(second_operand, float) else None,
         ),
     )
@@ -350,7 +350,7 @@ def test_metrics_ne(second_operand, expected_result):
     """Test that `!=` operator works and returns an operator metric."""
     first_metric = DummyMetric(
         anp.asarray(
-            2,  # python scalars can only be promoted with floating-point arrays
+            2,  # Python scalars can only be promoted with floating-point arrays
             dtype=anp.float32 if isinstance(second_operand, float) else None,
         ),
     )

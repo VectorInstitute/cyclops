@@ -280,7 +280,7 @@ def set_params(cls, **params):
 
 
 def set_random_seed(seed: int, deterministic: bool = False) -> None:
-    """Set a random seed for python, numpy and PyTorch globally.
+    """Set a random seed for Python, numpy and PyTorch globally.
 
     Parameters
     ----------
