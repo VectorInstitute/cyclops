@@ -89,6 +89,8 @@ guidelines.
 
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
 
+If you need to build the documentations locally, make sure to install ``Pandoc`` in addition to ``docs`` poetry group.
+
 
 ## 📓 Notebooks
 

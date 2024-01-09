@@ -76,6 +76,9 @@ API documentation is built using `Sphinx <https://www.sphinx-doc.org/en/master/>
    cd docs
    make html SPHINXOPTS="-D nbsphinx_allow_errors=True"
 
+
+If you need to build the documentations locally, make sure to install ``Pandoc`` in addition to ``docs`` poetry group.
+
 Contributing
 ------------
 
