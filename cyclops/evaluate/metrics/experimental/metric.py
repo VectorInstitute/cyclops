@@ -180,7 +180,7 @@ class Metric(ABC):
         """
         if not name.isidentifier():
             raise ValueError(
-                f"Argument `name` must be a valid python identifier. Got `{name}`.",
+                f"Argument `name` must be a valid Python identifier. Got `{name}`.",
             )
         if not callable(default_factory):
             raise TypeError(
@@ -286,11 +286,12 @@ class Metric(ABC):
                     "not yet be defined.",
                 )
             xp = apc.get_namespace(*arrays)
-            self._add_states(xp)
 
             # move state variables to device of first array
             device = apc.device(arrays[0])
             self.to_device(device)
+
+            self._add_states(xp)
 
         self._computed = None
         self._update_count += 1

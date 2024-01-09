@@ -141,12 +141,12 @@ class BaseModelCardSection(BaseModel):
         Raises
         ------
         ValueError
-            If the field name is not a valid python identifier.
+            If the field name is not a valid Python identifier.
 
         """
         if not name.isidentifier() or keyword.iskeyword(name):
             raise ValueError(
-                f"Expected `field_name` to be a valid python identifier."
+                f"Expected `field_name` to be a valid Python identifier."
                 f" Got {name} instead.",
             )
 

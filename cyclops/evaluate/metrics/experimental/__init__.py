@@ -1,4 +1,4 @@
-"""Metrics for arrays that conform to the python array API standard."""
+"""Metrics for arrays that conform to the Python array API standard."""
 from cyclops.evaluate.metrics.experimental.accuracy import (
     BinaryAccuracy,
     MulticlassAccuracy,
