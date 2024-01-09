@@ -10,3 +10,11 @@ Welcome to cyclops's documentation!
    contributing
    tutorials
    api
+
+.. toctree::
+   :maxdepth: 2
+   :name: guide
+   :caption: User Guide
+   :glob:
+
+   pages/evaluate/metrics/*
