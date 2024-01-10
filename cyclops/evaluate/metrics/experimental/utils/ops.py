@@ -685,6 +685,76 @@ def _adjust_weight_apply_average(
     )
 
 
+def _array_indexing(arr: Array, idx: Array) -> Array:
+    try:
+        return arr[idx]
+    except IndexError:
+        xp = apc.array_namespace(arr, idx)
+        np_idx = np.from_dlpack(apc.to_device(idx, "cpu"))
+        np_arr = np.from_dlpack(apc.to_device(arr, "cpu"))[np_idx]
+        return xp.asarray(np_arr, dtype=arr.dtype, device=apc.device(arr))
+
+
+def _cumsum(x: Array, axis: Optional[int], dtype: Optional[Any] = None) -> Array:
+    xp = apc.array_namespace(x)
+    if hasattr(xp, "cumsum"):
+        return xp.cumsum(x, axis, dtype=dtype)
+
+    if axis is None:
+        x = flatten(x)
+        axis = 0
+
+    if axis < 0 or axis >= x.ndim:
+        raise ValueError("Invalid axis value")
+
+    if dtype is None:
+        dtype = x.dtype
+
+    if axis < 0:
+        axis += x.ndim
+
+    if int(apc.size(x) or 0) == 0:
+        return x
+
+    result = xp.empty_like(x, dtype=dtype, device=apc.device(x))
+
+    # create slice object with `axis` at the appropriate position
+    curr_indices = [slice(None)] * x.ndim
+    prev_indices = [slice(None)] * x.ndim
+
+    curr_indices[axis] = 0  # type: ignore[call-overload]
+    result[tuple(curr_indices)] = x[tuple(curr_indices)]
+    for i in range(1, x.shape[axis]):
+        prev_indices[axis] = i - 1  # type: ignore[call-overload]
+        curr_indices[axis] = i  # type: ignore[call-overload]
+        result[tuple(curr_indices)] = (
+            result[tuple(prev_indices)] + x[tuple(curr_indices)]
+        )
+
+    return result
+
+
+def _interp(x: Array, xcoords: Array, ycoords: Array) -> Array:
+    """Perform linear interpolation for 1D arrays."""
+    xp = apc.array_namespace(x, xcoords, ycoords)
+    if hasattr(xp, "interp"):
+        return xp.interp(x, xcoords, ycoords)
+
+    m = safe_divide(ycoords[1:] - ycoords[:-1], xcoords[1:] - xcoords[:-1])
+    b = ycoords[:-1] - (m * xcoords[:-1])
+
+    indices = xp.sum(x[:, None] >= xcoords[None, :], 1) - 1
+    _min_val = xp.asarray(0, dtype=xp.float32, device=apc.device(x))
+    _max_val = xp.asarray(
+        m.shape[0] if m.ndim > 0 else 1 - 1,
+        dtype=xp.float32,
+        device=apc.device(x),
+    )
+    indices = xp.min(xp.max(indices, _min_val), _max_val)
+
+    return _array_indexing(m, indices) * x + _array_indexing(b, indices)
+
+
 def _select_topk(  # noqa: PLR0912
     scores: Array,
     top_k: int = 1,

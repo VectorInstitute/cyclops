@@ -40,6 +40,11 @@ from cyclops.evaluate.metrics.experimental.precision_recall import (
     MultilabelSensitivity,
     MultilabelTPR,
 )
+from cyclops.evaluate.metrics.experimental.precision_recall_curve import (
+    BinaryPrecisionRecallCurve,
+    MulticlassPrecisionRecallCurve,
+    MultilabelPrecisionRecallCurve,
+)
 from cyclops.evaluate.metrics.experimental.specificity import (
     BinarySpecificity,
     BinaryTNR,
