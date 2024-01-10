@@ -41,6 +41,11 @@ from cyclops.evaluate.metrics.experimental.functional.precision_recall_curve imp
     multiclass_precision_recall_curve,
     multilabel_precision_recall_curve,
 )
+from cyclops.evaluate.metrics.experimental.functional.roc import (
+    binary_roc,
+    multiclass_roc,
+    multilabel_roc,
+)
 from cyclops.evaluate.metrics.experimental.functional.specificity import (
     binary_specificity,
     binary_tnr,
