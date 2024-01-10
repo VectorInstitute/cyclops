@@ -65,6 +65,20 @@ def _binary_cases(*, xp: Any):
         ),
         pytest.param(
             InputSpec(
+                target=xp.asarray(_binary_labels_1d),
+                preds=xp.asarray(_binary_preds_1d),
+            ),
+            id="input[1d-labels]",
+        ),
+        pytest.param(
+            InputSpec(
+                target=xp.asarray(_binary_labels_multidim),
+                preds=xp.asarray(_binary_preds_multidim),
+            ),
+            id="input[multidim-labels]",
+        ),
+        pytest.param(
+            InputSpec(
                 target=xp.asarray(_binary_labels_0d),
                 preds=xp.asarray(_binary_probs_0d),
             ),
@@ -80,13 +94,6 @@ def _binary_cases(*, xp: Any):
         pytest.param(
             InputSpec(
                 target=xp.asarray(_binary_labels_1d),
-                preds=xp.asarray(_binary_preds_1d),
-            ),
-            id="input[1d-labels]",
-        ),
-        pytest.param(
-            InputSpec(
-                target=xp.asarray(_binary_labels_1d),
                 preds=xp.asarray(_binary_probs_1d),
             ),
             id="input[1d-probs]",
@@ -96,14 +103,7 @@ def _binary_cases(*, xp: Any):
                 target=xp.asarray(_binary_labels_1d),
                 preds=xp.asarray(_inv_sigmoid(_binary_probs_1d)),
             ),
-            id="input[1d-probs]",
-        ),
-        pytest.param(
-            InputSpec(
-                target=xp.asarray(_binary_labels_multidim),
-                preds=xp.asarray(_binary_preds_multidim),
-            ),
-            id="input[multidim-labels]",
+            id="input[1d-logits]",
         ),
         pytest.param(
             InputSpec(
@@ -117,7 +117,7 @@ def _binary_cases(*, xp: Any):
                 target=xp.asarray(_binary_labels_multidim),
                 preds=xp.asarray(_inv_sigmoid(_binary_probs_multidim)),
             ),
-            id="input[multidim-probs]",
+            id="input[multidim-logits]",
         ),
     )
 
@@ -184,38 +184,10 @@ def _multiclass_cases(*, xp: Any):
         ),
         pytest.param(
             InputSpec(
-                target=xp.asarray(_multiclass_labels_0d),
-                preds=xp.asarray(_multiclass_probs_0d),
-            ),
-            id="input[single-element-probs]",
-        ),
-        pytest.param(
-            InputSpec(
-                target=xp.asarray(_multiclass_labels_0d),
-                preds=xp.asarray(log_softmax(_multiclass_probs_0d, axis=-1)),
-            ),
-            id="input[single-element-logits]",
-        ),
-        pytest.param(
-            InputSpec(
                 target=xp.asarray(_multiclass_labels_1d),
                 preds=xp.asarray(_multiclass_preds_1d),
             ),
             id="input[1d-labels]",
-        ),
-        pytest.param(
-            InputSpec(
-                target=xp.asarray(_multiclass_labels_1d),
-                preds=xp.asarray(_multiclass_probs_1d),
-            ),
-            id="input[1d-probs]",
-        ),
-        pytest.param(
-            InputSpec(
-                target=xp.asarray(_multiclass_labels_1d),
-                preds=xp.asarray(log_softmax(_multiclass_probs_1d, axis=-1)),
-            ),
-            id="input[1d-logits]",
         ),
         pytest.param(
             InputSpec(
@@ -240,6 +212,34 @@ def _multiclass_cases(*, xp: Any):
                 preds=xp.asarray(_multiclass_preds_multidim),
             ),
             id="input[multidim-labels]",
+        ),
+        pytest.param(
+            InputSpec(
+                target=xp.asarray(_multiclass_labels_0d),
+                preds=xp.asarray(_multiclass_probs_0d),
+            ),
+            id="input[single-element-probs]",
+        ),
+        pytest.param(
+            InputSpec(
+                target=xp.asarray(_multiclass_labels_0d),
+                preds=xp.asarray(log_softmax(_multiclass_probs_0d, axis=-1)),
+            ),
+            id="input[single-element-logits]",
+        ),
+        pytest.param(
+            InputSpec(
+                target=xp.asarray(_multiclass_labels_1d),
+                preds=xp.asarray(_multiclass_probs_1d),
+            ),
+            id="input[1d-probs]",
+        ),
+        pytest.param(
+            InputSpec(
+                target=xp.asarray(_multiclass_labels_1d),
+                preds=xp.asarray(log_softmax(_multiclass_probs_1d, axis=-1)),
+            ),
+            id="input[1d-logits]",
         ),
         pytest.param(
             InputSpec(
@@ -295,6 +295,13 @@ def _multilabel_cases(*, xp: Any):
         ),
         pytest.param(
             InputSpec(
+                target=xp.asarray(_multilabel_labels_multidim),
+                preds=xp.asarray(_multilabel_preds_multidim),
+            ),
+            id="input[multidim-labels]",
+        ),
+        pytest.param(
+            InputSpec(
                 target=xp.asarray(_multilabel_labels),
                 preds=xp.asarray(_multilabel_probs),
             ),
@@ -306,13 +313,6 @@ def _multilabel_cases(*, xp: Any):
                 preds=xp.asarray(_inv_sigmoid(_multilabel_probs)),
             ),
             id="input[2d-logits]",
-        ),
-        pytest.param(
-            InputSpec(
-                target=xp.asarray(_multilabel_labels_multidim),
-                preds=xp.asarray(_multilabel_preds_multidim),
-            ),
-            id="input[multidim-labels]",
         ),
         pytest.param(
             InputSpec(
