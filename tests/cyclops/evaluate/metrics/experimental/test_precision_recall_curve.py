@@ -101,7 +101,7 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp)[3:])
     @pytest.mark.parametrize("thresholds", _thresholds_for_prc(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_precision_recall_cuvrve_class_with_numpy_array_api_arrays(
+    def test_binary_precision_recall_curve_class_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
