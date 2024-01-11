@@ -21,7 +21,7 @@ class BinaryROC(BinaryPrecisionRecallCurve):
     Parameters
     ----------
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the roc curve. Can be one of the following:
+        The thresholds to use for computing the ROC curve. Can be one of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
           [0, 1].
@@ -70,7 +70,7 @@ class MulticlassROC(MulticlassPrecisionRecallCurve):
     num_classes : int
         The number of classes in the classification problem.
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the roc curve. Can be one
+        The thresholds to use for computing the ROC curve. Can be one
         of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
@@ -79,16 +79,16 @@ class MulticlassROC(MulticlassPrecisionRecallCurve):
         - `Array`: use the values in the Array as bins for the thresholds. The
           array must be 1D.
     average : {"macro", "micro", "none"}, optional, default=None
-        The type of averaging to use for computing the roc curve. Can
-        be one of the following:
+        The type of averaging to use for computing the ROC curve. Can be one of
+        the following:
         - `"macro"`: interpolates the curves from each class at a combined set of
           thresholds and then average over the classwise interpolated curves.
         - `"micro"`: one-hot encodes the targets and flattens the predictions,
           considering all classes jointly as a binary problem.
         - `"none"`: do not average over the classwise curves.
     ignore_index : int or Tuple[int], optional, default=None
-        The value(s) in `target` that should be ignored when computing the
-        roc curve. If `None`, all values in `target` are used.
+        The value(s) in `target` that should be ignored when computing the ROC curve.
+        If `None`, all values in `target` are used.
 
     Examples
     --------
@@ -153,8 +153,7 @@ class MultilabelROC(MultilabelPrecisionRecallCurve):
     num_labels : int
         The number of labels in the multilabel classification problem.
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the roc curve. Can be one
-        of the following:
+        The thresholds to use for computing the ROC curve. Can be one of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
           [0, 1].

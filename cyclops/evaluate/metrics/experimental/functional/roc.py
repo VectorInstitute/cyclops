@@ -107,8 +107,7 @@ def binary_roc(
         `preds` contains floating point values that are not in the range `[0, 1]`,
         a sigmoid function will be applied to each value before thresholding.
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the roc curve. Can be one
-        of the following:
+        The thresholds to use for computing the ROC curve. Can be one of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
           [0, 1].
@@ -116,20 +115,20 @@ def binary_roc(
         - `Array`: use the values in the Array as bins for the thresholds. The
           array must be 1D.
     ignore_index : int, optional, default=None
-        The value in `target` that should be ignored when computing the precision
-        and recall. If `None`, all values in `target` are used.
+        The value in `target` that should be ignored when computing the ROC curve.
+        If `None`, all values in `target` are used.
 
     Returns
     -------
     fpr : Array
-        The precision values for all unique thresholds. The shape of the array is
+        The false positive rates for all unique thresholds. The shape of the array is
         `(num_thresholds + 1,)`.
     tpr : Array
-        The recall values for all unique thresholds. The shape of the array is
+        The true positive rates for all unique thresholds. The shape of the array is
         `(num_thresholds + 1,)`.
     thresholds : Array
-        The thresholds used for computing the roc curve values, in
-        ascending order. The shape of the array is `(num_thresholds,)`.
+        The thresholds used for computing the ROC curve values, in descending order.
+        The shape of the array is `(num_thresholds,)`.
 
     Raises
     ------
@@ -296,8 +295,7 @@ def multiclass_roc(
     num_classes : int
         The number of classes in the classification problem.
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the roc curve. Can be one
-        of the following:
+        The thresholds to use for computing the ROC curve. Can be one of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
           [0, 1].
@@ -305,34 +303,34 @@ def multiclass_roc(
         - `Array`: use the values in the Array as bins for the thresholds. The
           array must be 1D.
     average : {"macro", "micro", "none"}, optional, default=None
-        The type of averaging to use for computing the roc curve. Can
-        be one of the following:
+        The type of averaging to use for computing the ROC curve. Can be one of
+        the following:
         - `"macro"`: interpolates the curves from each class at a combined set of
           thresholds and then average over the classwise interpolated curves.
         - `"micro"`: one-hot encodes the targets and flattens the predictions,
           considering all classes jointly as a binary problem.
         - `"none"`: do not average over the classwise curves.
     ignore_index : int or Tuple[int], optional, default=None
-        The value(s) in `target` that should be ignored when computing the
-        roc curve. If `None`, all values in `target` are used.
+        The value(s) in `target` that should be ignored when computing the ROC curve.
+        If `None`, all values in `target` are used.
 
     Returns
     -------
     fpr : Array or List[Array]
-        The precision values for all unique thresholds. If `thresholds` is `"none"`
+        The false positive rates for all unique thresholds. If `thresholds` is `"none"`
         or `None`, a list for each class is returned with 1-D Arrays of shape
         `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
         `(num_thresholds + 1, num_classes)` is returned.
     tpr : Array or List[Array]
-        The recall values for all unique thresholds. If `thresholds` is `"none"`
+        The true positive rates for all unique thresholds. If `thresholds` is `"none"`
         or `None`, a list for each class is returned with 1-D Arrays of shape
         `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
         `(num_thresholds + 1, num_classes)` is returned.
     thresholds : Array or List[Array]
-        The thresholds used for computing the roc curve values, in
-        ascending order. If `thresholds` is `"none"` or `None`, a list for each
-        class is returned with 1-D Arrays of shape `(num_thresholds,)`. Otherwise,
-        a 1-D Array of shape `(num_thresholds,)` is returned.
+        The thresholds used for computing the ROC curve values, in descending order.
+        If `thresholds` is `"none"` or `None`, a list for each class is returned
+        with 1-D Arrays of shape `(num_thresholds,)`. Otherwise, a 1-D Array of
+        shape `(num_thresholds,)` is returned.
 
     Raises
     ------
@@ -513,8 +511,7 @@ def multilabel_roc(
     num_labels : int
         The number of labels in the multilabel classification problem.
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the roc curve. Can be one
-        of the following:
+        The thresholds to use for computing the ROC curve. Can be one of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
           [0, 1].
@@ -522,24 +519,24 @@ def multilabel_roc(
         - `Array`: use the values in the Array as bins for the thresholds. The
           array must be 1D.
     ignore_index : int, optional, default=None
-        The value in `target` that should be ignored when computing the precision
-        and recall. If `None`, all values in `target` are used.
+        The value in `target` that should be ignored when computing the ROC curve.
+        If `None`, all values in `target` are used.
 
     Returns
     -------
     fpr : Array or List[Array]
-        The precision values for all unique thresholds. If `thresholds` is `None`,
+        The false positive rates for all unique thresholds. If `thresholds` is `None`,
         a list for each label is returned with 1-D Arrays of shape
         `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
         `(num_thresholds + 1, num_labels)` is returned.
     tpr : Array or List[Array]
-        The recall values for all unique thresholds. If `thresholds` is `None`,
+        The true positive rates for all unique thresholds. If `thresholds` is `None`,
         a list for each label is returned with 1-D Arrays of shape
         `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
         `(num_thresholds + 1, num_labels)` is returned.
     thresholds : Array or List[Array]
-        The thresholds used for computing the roc curve values, in
-        ascending order. If `thresholds` is `None`, a list for each label is
+        The thresholds used for computing the ROC curve values, in
+        descending order. If `thresholds` is `None`, a list for each label is
         returned with 1-D Arrays of shape `(num_thresholds,)`. Otherwise, a 1-D
         Array of shape `(num_thresholds,)` is returned.
 
