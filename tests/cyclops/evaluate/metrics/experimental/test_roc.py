@@ -1,4 +1,4 @@
-"""Test precision-recall curve metric."""
+"""Test roc curve metric."""
 from functools import partial
 from types import ModuleType
 from typing import List, Tuple, Union
@@ -9,24 +9,24 @@ import numpy.array_api as anp
 import pytest
 import torch.utils.dlpack
 from torchmetrics.functional.classification import (
-    binary_precision_recall_curve as tm_binary_precision_recall_curve,
+    binary_roc as tm_binary_roc,
 )
 from torchmetrics.functional.classification import (
-    multiclass_precision_recall_curve as tm_multiclass_precision_recall_curve,
+    multiclass_roc as tm_multiclass_roc,
 )
 from torchmetrics.functional.classification import (
-    multilabel_precision_recall_curve as tm_multilabel_precision_recall_curve,
+    multilabel_roc as tm_multilabel_roc,
 )
 
-from cyclops.evaluate.metrics.experimental.functional.precision_recall_curve import (
-    binary_precision_recall_curve,
-    multiclass_precision_recall_curve,
-    multilabel_precision_recall_curve,
+from cyclops.evaluate.metrics.experimental.functional.roc import (
+    binary_roc,
+    multiclass_roc,
+    multilabel_roc,
 )
-from cyclops.evaluate.metrics.experimental.precision_recall_curve import (
-    BinaryPrecisionRecallCurve,
-    MulticlassPrecisionRecallCurve,
-    MultilabelPrecisionRecallCurve,
+from cyclops.evaluate.metrics.experimental.roc import (
+    BinaryROC,
+    MulticlassROC,
+    MultilabelROC,
 )
 from cyclops.evaluate.metrics.experimental.utils.ops import to_int
 from cyclops.evaluate.metrics.experimental.utils.validation import is_floating_point
@@ -36,20 +36,20 @@ from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 from .testers import MetricTester, _inject_ignore_index
 
 
-def _thresholds_for_prc(*, xp: ModuleType) -> list:
-    """Return thresholds for precision-recall curve."""
+def _thresholds_for_roc(*, xp: ModuleType) -> list:
+    """Return thresholds for roc curve."""
     thresh_list = [0.0, 0.3, 0.5, 0.7, 0.9, 1.0]
     return [None, 5, thresh_list, xp.asarray(thresh_list)]
 
 
-def _binary_precision_recall_curve_reference(
+def _binary_roc_reference(
     target,
     preds,
     thresholds,
     ignore_index,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Return the reference binary precision-recall curve."""
-    return tm_binary_precision_recall_curve(
+    """Return the reference binary roc curve."""
+    return tm_binary_roc(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         thresholds=torch.utils.dlpack.from_dlpack(thresholds)
@@ -59,19 +59,19 @@ def _binary_precision_recall_curve_reference(
     )
 
 
-class TestBinaryPrecisionRecallCurve(MetricTester):
-    """Test binary precision-recall curve function and class."""
+class TestBinaryROC(MetricTester):
+    """Test binary roc curve function and class."""
 
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp)[3:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_prc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_precision_recall_curve_function_with_numpy_array_api_arrays(
+    def test_binary_roc_function_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test function for binary precision-recall curve using array_api arrays."""
+        """Test function for binary roc curve using array_api arrays."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -86,28 +86,28 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=binary_precision_recall_curve,
+            metric_function=binary_roc,
             metric_args={
                 "thresholds": thresholds,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_precision_recall_curve_reference,
+                _binary_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
         )
 
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp)[3:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_prc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_precision_recall_curve_class_with_numpy_array_api_arrays(
+    def test_binary_roc_class_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test class for binary precision-recall curve using array_api arrays."""
+        """Test class for binary roc curve using array_api arrays."""
         target, preds = inputs
 
         if (
@@ -133,13 +133,13 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=BinaryPrecisionRecallCurve,
+            metric_class=BinaryROC,
             metric_args={
                 "thresholds": thresholds,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_precision_recall_curve_reference,
+                _binary_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
@@ -149,16 +149,16 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
     @pytest.mark.parametrize("inputs", _binary_cases(xp=array_api_compat.torch)[3:])
     @pytest.mark.parametrize(
         "thresholds",
-        _thresholds_for_prc(xp=array_api_compat.torch),
+        _thresholds_for_roc(xp=array_api_compat.torch),
     )
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_precision_recall_curve_with_torch_tensors(
+    def test_binary_roc_with_torch_tensors(
         self,
         inputs,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test binary precision-recall curve class with torch tensors."""
+        """Test binary roc curve class with torch tensors."""
         target, preds = inputs
 
         if (
@@ -188,13 +188,13 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=BinaryPrecisionRecallCurve,
+            metric_class=BinaryROC,
             metric_args={
                 "thresholds": thresholds,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_precision_recall_curve_reference,
+                _binary_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
@@ -203,7 +203,7 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
         )
 
 
-def _multiclass_precision_recall_curve_reference(
+def _multiclass_roc_reference(
     target,
     preds,
     num_classes=NUM_CLASSES,
@@ -213,12 +213,12 @@ def _multiclass_precision_recall_curve_reference(
     Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
     Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]],
 ]:
-    """Return the reference multiclass precision-recall curve."""
+    """Return the reference multiclass roc curve."""
     if preds.ndim == 1 and is_floating_point(preds):
         xp = apc.array_namespace(preds)
         preds = xp.argmax(preds, axis=0)
 
-    return tm_multiclass_precision_recall_curve(
+    return tm_multiclass_roc(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_classes,
@@ -229,21 +229,21 @@ def _multiclass_precision_recall_curve_reference(
     )
 
 
-class TestMulticlassPrecisionRecallCurve(MetricTester):
-    """Test multiclass precision-recall curve function and class."""
+class TestMulticlassROC(MetricTester):
+    """Test multiclass roc curve function and class."""
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp)[4:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_prc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
     @pytest.mark.parametrize("average", [None, "none"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multiclass_precision_recall_curve_with_numpy_array_api_arrays(
+    def test_multiclass_roc_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
         average,
         ignore_index,
     ) -> None:
-        """Test function for multiclass precision-recall curve."""
+        """Test function for multiclass roc curve."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -258,7 +258,7 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=multiclass_precision_recall_curve,
+            metric_function=multiclass_roc,
             metric_args={
                 "num_classes": NUM_CLASSES,
                 "thresholds": thresholds,
@@ -266,24 +266,24 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _multiclass_precision_recall_curve_reference,
+                _multiclass_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
         )
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp)[4:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_prc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
     @pytest.mark.parametrize("average", [None, "none"])
     @pytest.mark.parametrize("ignore_index", [None, 1, -1])
-    def test_multiclass_precision_recall_curve_class_with_numpy_array_api_arrays(
+    def test_multiclass_roc_class_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
         average,
         ignore_index,
     ) -> None:
-        """Test class for multiclass precision-recall curve."""
+        """Test class for multiclass roc curve."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -298,9 +298,9 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MulticlassPrecisionRecallCurve,
+            metric_class=MulticlassROC,
             reference_metric=partial(
-                _multiclass_precision_recall_curve_reference,
+                _multiclass_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
@@ -316,18 +316,18 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=array_api_compat.torch)[4:])
     @pytest.mark.parametrize(
         "thresholds",
-        _thresholds_for_prc(xp=array_api_compat.torch),
+        _thresholds_for_roc(xp=array_api_compat.torch),
     )
     @pytest.mark.parametrize("average", [None, "none"])
     @pytest.mark.parametrize("ignore_index", [None, 1, -1])
-    def test_multiclass_precision_recall_curve_class_with_torch_tensors(
+    def test_multiclass_roc_class_with_torch_tensors(
         self,
         inputs,
         thresholds,
         average,
         ignore_index,
     ) -> None:
-        """Test class for multiclass precision-recall curve."""
+        """Test class for multiclass roc curve."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -346,9 +346,9 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MulticlassPrecisionRecallCurve,
+            metric_class=MulticlassROC,
             reference_metric=partial(
-                _multiclass_precision_recall_curve_reference,
+                _multiclass_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
@@ -363,7 +363,7 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         )
 
 
-def _multilabel_precision_recall_curve_reference(
+def _multilabel_roc_reference(
     preds,
     target,
     num_labels=NUM_LABELS,
@@ -373,8 +373,8 @@ def _multilabel_precision_recall_curve_reference(
     Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
     Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]],
 ]:
-    """Return the reference multilabel precision-recall curve."""
-    return tm_multilabel_precision_recall_curve(
+    """Return the reference multilabel roc curve."""
+    return tm_multilabel_roc(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_labels,
@@ -385,19 +385,19 @@ def _multilabel_precision_recall_curve_reference(
     )
 
 
-class TestMultilabelPrecisionRecallCurve(MetricTester):
-    """Test multilabel precision-recall curve function and class."""
+class TestMultilabelROC(MetricTester):
+    """Test multilabel roc curve function and class."""
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp)[2:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_prc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_precision_recall_curve_with_numpy_array_api_arrays(
+    def test_multilabel_roc_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test function for multilabel precision-recall curve."""
+        """Test function for multilabel roc curve."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -406,9 +406,9 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=multilabel_precision_recall_curve,
+            metric_function=multilabel_roc,
             reference_metric=partial(
-                _multilabel_precision_recall_curve_reference,
+                _multilabel_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
@@ -420,15 +420,15 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
         )
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp)[2:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_prc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_precision_recall_curve_class_with_numpy_array_api_arrays(
+    def test_multilabel_roc_class_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test class for multilabel precision-recall curve."""
+        """Test class for multilabel roc curve."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -437,9 +437,9 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MultilabelPrecisionRecallCurve,
+            metric_class=MultilabelROC,
             reference_metric=partial(
-                _multilabel_precision_recall_curve_reference,
+                _multilabel_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
@@ -454,16 +454,16 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=array_api_compat.torch)[2:])
     @pytest.mark.parametrize(
         "thresholds",
-        _thresholds_for_prc(xp=array_api_compat.torch),
+        _thresholds_for_roc(xp=array_api_compat.torch),
     )
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_precision_recall_curve_class_with_torch_tensors(
+    def test_multilabel_roc_class_with_torch_tensors(
         self,
         inputs,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test class for multilabel precision-recall curve."""
+        """Test class for multilabel roc curve."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -476,9 +476,9 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MultilabelPrecisionRecallCurve,
+            metric_class=MultilabelROC,
             reference_metric=partial(
-                _multilabel_precision_recall_curve_reference,
+                _multilabel_roc_reference,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
