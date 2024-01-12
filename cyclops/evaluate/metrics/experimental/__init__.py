@@ -4,6 +4,11 @@ from cyclops.evaluate.metrics.experimental.accuracy import (
     MulticlassAccuracy,
     MultilabelAccuracy,
 )
+from cyclops.evaluate.metrics.experimental.auroc import (
+    BinaryAUROC,
+    MulticlassAUROC,
+    MultilabelAUROC,
+)
 from cyclops.evaluate.metrics.experimental.confusion_matrix import (
     BinaryConfusionMatrix,
     MulticlassConfusionMatrix,

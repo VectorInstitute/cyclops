@@ -158,8 +158,8 @@ def _format_thresholds(
 def _binary_precision_recall_curve_format_arrays(
     target: Array,
     preds: Array,
-    thresholds: Optional[Union[int, List[float], Array]],
-    ignore_index: Optional[int],
+    thresholds: Optional[Union[int, List[float], Array]] = None,
+    ignore_index: Optional[int] = None,
     *,
     xp: ModuleType,
 ) -> Tuple[Array, Array, Optional[Array]]:
@@ -449,8 +449,8 @@ def binary_precision_recall_curve(
 def _multiclass_precision_recall_curve_validate_args(
     num_classes: int,
     thresholds: Optional[Union[int, List[float], Array]] = None,
-    ignore_index: Optional[Union[int, Tuple[int]]] = None,
     average: Optional[Literal["macro", "micro", "none"]] = None,
+    ignore_index: Optional[Union[int, Tuple[int]]] = None,
 ) -> None:
     """Validate the arguments for the `multiclass_precision_recall_curve` function."""
     _validate_thresholds(thresholds)
@@ -482,7 +482,7 @@ def _multiclass_precision_recall_curve_validate_arrays(
     target: Array,
     preds: Array,
     num_classes: int,
-    ignore_index: Optional[Union[int, Tuple[int]]],
+    ignore_index: Optional[Union[int, Tuple[int]]] = None,
 ) -> ModuleType:
     """Validate the arrays for the `multiclass_precision_recall_curve` function."""
     _basic_input_array_checks(target, preds)
@@ -537,8 +537,8 @@ def _multiclass_precision_recall_curve_format_arrays(
     preds: Array,
     num_classes: int,
     thresholds: Optional[Union[int, List[float], Array]],
-    ignore_index: Optional[Union[int, Tuple[int]]],
-    average: Optional[Literal["macro", "micro", "none"]],
+    ignore_index: Optional[Union[int, Tuple[int]]] = None,
+    average: Optional[Literal["macro", "micro", "none"]] = None,
     *,
     xp: ModuleType,
 ) -> Tuple[Array, Array, Optional[Array]]:
@@ -828,15 +828,15 @@ def multiclass_precision_recall_curve(
     """  # noqa: W505
     _multiclass_precision_recall_curve_validate_args(
         num_classes,
-        thresholds,
-        ignore_index,
-        average,
+        thresholds=thresholds,
+        average=average,
+        ignore_index=ignore_index,
     )
     xp = _multiclass_precision_recall_curve_validate_arrays(
         target,
         preds,
         num_classes,
-        ignore_index,
+        ignore_index=ignore_index,
     )
     target, preds, thresholds = _multiclass_precision_recall_curve_format_arrays(
         target,
