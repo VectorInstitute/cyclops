@@ -196,14 +196,14 @@ def binary_roc(
     xp = _binary_precision_recall_curve_validate_arrays(
         target,
         preds,
-        thresholds,
-        ignore_index,
+        thresholds=thresholds,
+        ignore_index=ignore_index,
     )
     target, preds, thresholds = _binary_precision_recall_curve_format_arrays(
         target,
         preds,
-        thresholds,
-        ignore_index,
+        thresholds=thresholds,
+        ignore_index=ignore_index,
         xp=xp,
     )
     state = _binary_precision_recall_curve_update(target, preds, thresholds, xp=xp)
@@ -214,7 +214,7 @@ def _multiclass_roc_compute(
     state: Union[Array, Tuple[Array, Array]],
     num_classes: int,
     thresholds: Optional[Array],
-    average: Optional[Literal["macro", "micro", "none"]],
+    average: Optional[Literal["macro", "micro", "none"]] = None,
 ) -> Union[Tuple[Array, Array, Array], Tuple[List[Array], List[Array], List[Array]]]:
     """Compute the multiclass ROC curve."""
     if average == "micro":
@@ -417,9 +417,9 @@ def multiclass_roc(
     """  # noqa: W505
     _multiclass_precision_recall_curve_validate_args(
         num_classes,
-        thresholds,
-        ignore_index,
-        average,
+        thresholds=thresholds,
+        average=average,
+        ignore_index=ignore_index,
     )
     xp = _multiclass_precision_recall_curve_validate_arrays(
         target,
