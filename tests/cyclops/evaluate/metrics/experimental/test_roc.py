@@ -1,6 +1,5 @@
 """Test roc curve metric."""
 from functools import partial
-from types import ModuleType
 from typing import List, Tuple, Union
 
 import array_api_compat as apc
@@ -32,14 +31,8 @@ from cyclops.evaluate.metrics.experimental.utils.ops import to_int
 from cyclops.evaluate.metrics.experimental.utils.validation import is_floating_point
 
 from ..conftest import NUM_CLASSES, NUM_LABELS
-from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
+from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases, _thresholds
 from .testers import MetricTester, _inject_ignore_index
-
-
-def _thresholds_for_roc(*, xp: ModuleType) -> list:
-    """Return thresholds for roc curve."""
-    thresh_list = [0.0, 0.3, 0.5, 0.7, 0.9, 1.0]
-    return [None, 5, thresh_list, xp.asarray(thresh_list)]
 
 
 def _binary_roc_reference(
@@ -63,7 +56,7 @@ class TestBinaryROC(MetricTester):
     """Test binary roc curve function and class."""
 
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp)[3:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_binary_roc_function_with_numpy_array_api_arrays(
         self,
@@ -99,7 +92,7 @@ class TestBinaryROC(MetricTester):
         )
 
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp)[3:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_binary_roc_class_with_numpy_array_api_arrays(
         self,
@@ -149,7 +142,7 @@ class TestBinaryROC(MetricTester):
     @pytest.mark.parametrize("inputs", _binary_cases(xp=array_api_compat.torch)[3:])
     @pytest.mark.parametrize(
         "thresholds",
-        _thresholds_for_roc(xp=array_api_compat.torch),
+        _thresholds(xp=array_api_compat.torch),
     )
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_binary_roc_with_torch_tensors(
@@ -233,7 +226,7 @@ class TestMulticlassROC(MetricTester):
     """Test multiclass roc curve function and class."""
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp)[4:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
     @pytest.mark.parametrize("average", [None, "none"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multiclass_roc_with_numpy_array_api_arrays(
@@ -273,7 +266,7 @@ class TestMulticlassROC(MetricTester):
         )
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp)[4:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
     @pytest.mark.parametrize("average", [None, "none"])
     @pytest.mark.parametrize("ignore_index", [None, 1, -1])
     def test_multiclass_roc_class_with_numpy_array_api_arrays(
@@ -316,7 +309,7 @@ class TestMulticlassROC(MetricTester):
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=array_api_compat.torch)[4:])
     @pytest.mark.parametrize(
         "thresholds",
-        _thresholds_for_roc(xp=array_api_compat.torch),
+        _thresholds(xp=array_api_compat.torch),
     )
     @pytest.mark.parametrize("average", [None, "none"])
     @pytest.mark.parametrize("ignore_index", [None, 1, -1])
@@ -389,7 +382,7 @@ class TestMultilabelROC(MetricTester):
     """Test multilabel roc curve function and class."""
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp)[2:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_roc_with_numpy_array_api_arrays(
         self,
@@ -420,7 +413,7 @@ class TestMultilabelROC(MetricTester):
         )
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp)[2:])
-    @pytest.mark.parametrize("thresholds", _thresholds_for_roc(xp=anp))
+    @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_roc_class_with_numpy_array_api_arrays(
         self,
@@ -454,7 +447,7 @@ class TestMultilabelROC(MetricTester):
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=array_api_compat.torch)[2:])
     @pytest.mark.parametrize(
         "thresholds",
-        _thresholds_for_roc(xp=array_api_compat.torch),
+        _thresholds(xp=array_api_compat.torch),
     )
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_roc_class_with_torch_tensors(
