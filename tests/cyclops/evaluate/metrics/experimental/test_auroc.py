@@ -1,6 +1,5 @@
-"""Test precision-recall curve metric."""
+"""Test AUROC metric."""
 from functools import partial
-from typing import List, Tuple, Union
 
 import array_api_compat as apc
 import array_api_compat.torch
@@ -8,24 +7,24 @@ import numpy.array_api as anp
 import pytest
 import torch.utils.dlpack
 from torchmetrics.functional.classification import (
-    binary_precision_recall_curve as tm_binary_precision_recall_curve,
+    binary_auroc as tm_binary_auroc,
 )
 from torchmetrics.functional.classification import (
-    multiclass_precision_recall_curve as tm_multiclass_precision_recall_curve,
+    multiclass_auroc as tm_multiclass_auroc,
 )
 from torchmetrics.functional.classification import (
-    multilabel_precision_recall_curve as tm_multilabel_precision_recall_curve,
+    multilabel_auroc as tm_multilabel_auroc,
 )
 
-from cyclops.evaluate.metrics.experimental.functional.precision_recall_curve import (
-    binary_precision_recall_curve,
-    multiclass_precision_recall_curve,
-    multilabel_precision_recall_curve,
+from cyclops.evaluate.metrics.experimental.auroc import (
+    BinaryAUROC,
+    MulticlassAUROC,
+    MultilabelAUROC,
 )
-from cyclops.evaluate.metrics.experimental.precision_recall_curve import (
-    BinaryPrecisionRecallCurve,
-    MulticlassPrecisionRecallCurve,
-    MultilabelPrecisionRecallCurve,
+from cyclops.evaluate.metrics.experimental.functional.auroc import (
+    binary_auroc,
+    multiclass_auroc,
+    multilabel_auroc,
 )
 from cyclops.evaluate.metrics.experimental.utils.ops import to_int
 from cyclops.evaluate.metrics.experimental.utils.validation import is_floating_point
@@ -35,16 +34,18 @@ from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases, _thresh
 from .testers import MetricTester, _inject_ignore_index
 
 
-def _binary_precision_recall_curve_reference(
+def _binary_auroc_reference(
     target,
     preds,
+    max_fpr,
     thresholds,
     ignore_index,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Return the reference binary precision-recall curve."""
-    return tm_binary_precision_recall_curve(
+) -> torch.Tensor:
+    """Return the reference binary AUROC."""
+    return tm_binary_auroc(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
+        max_fpr=max_fpr,
         thresholds=torch.utils.dlpack.from_dlpack(thresholds)
         if apc.is_array_api_obj(thresholds)
         else thresholds,
@@ -52,19 +53,23 @@ def _binary_precision_recall_curve_reference(
     )
 
 
-class TestBinaryPrecisionRecallCurve(MetricTester):
-    """Test binary precision-recall curve function and class."""
+class TestBinaryAUROC(MetricTester):
+    """Test binary AUROC function and class."""
+
+    atol = 1e-7
 
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp)[3:])
+    @pytest.mark.parametrize("max_fpr", [None, 0.5])
     @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_precision_recall_curve_function_with_numpy_array_api_arrays(
+    def test_binary_auroc_function_with_numpy_array_api_arrays(
         self,
         inputs,
+        max_fpr,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test function for binary precision-recall curve using array_api arrays."""
+        """Test function for binary AUROC using array_api arrays."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -79,28 +84,32 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=binary_precision_recall_curve,
+            metric_function=binary_auroc,
             metric_args={
+                "max_fpr": max_fpr,
                 "thresholds": thresholds,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_precision_recall_curve_reference,
+                _binary_auroc_reference,
+                max_fpr=max_fpr,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
         )
 
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp)[3:])
+    @pytest.mark.parametrize("max_fpr", [None, 0.5])
     @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_precision_recall_curve_class_with_numpy_array_api_arrays(
+    def test_binary_auroc_class_with_numpy_array_api_arrays(
         self,
         inputs,
+        max_fpr,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test class for binary precision-recall curve using array_api arrays."""
+        """Test class for binary AUROC using array_api arrays."""
         target, preds = inputs
 
         if (
@@ -126,13 +135,15 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=BinaryPrecisionRecallCurve,
+            metric_class=BinaryAUROC,
             metric_args={
+                "max_fpr": max_fpr,
                 "thresholds": thresholds,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_precision_recall_curve_reference,
+                _binary_auroc_reference,
+                max_fpr=max_fpr,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
@@ -140,18 +151,20 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
     @pytest.mark.parametrize("inputs", _binary_cases(xp=array_api_compat.torch)[3:])
+    @pytest.mark.parametrize("max_fpr", [None, 0.5])
     @pytest.mark.parametrize(
         "thresholds",
         _thresholds(xp=array_api_compat.torch),
     )
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_precision_recall_curve_with_torch_tensors(
+    def test_binary_auroc_with_torch_tensors(
         self,
         inputs,
+        max_fpr,
         thresholds,
         ignore_index,
     ) -> None:
-        """Test binary precision-recall curve class with torch tensors."""
+        """Test binary AUROC class with torch tensors."""
         target, preds = inputs
 
         if (
@@ -181,13 +194,15 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=BinaryPrecisionRecallCurve,
+            metric_class=BinaryAUROC,
             metric_args={
+                "max_fpr": max_fpr,
                 "thresholds": thresholds,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_precision_recall_curve_reference,
+                _binary_auroc_reference,
+                max_fpr=max_fpr,
                 thresholds=thresholds,
                 ignore_index=ignore_index,
             ),
@@ -196,47 +211,48 @@ class TestBinaryPrecisionRecallCurve(MetricTester):
         )
 
 
-def _multiclass_precision_recall_curve_reference(
+def _multiclass_auroc_reference(
     target,
     preds,
     num_classes=NUM_CLASSES,
     thresholds=None,
+    average="macro",
     ignore_index=None,
-) -> Union[
-    Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
-    Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]],
-]:
-    """Return the reference multiclass precision-recall curve."""
+) -> torch.Tensor:
+    """Return the reference multiclass AUROC."""
     if preds.ndim == 1 and is_floating_point(preds):
         xp = apc.array_namespace(preds)
         preds = xp.argmax(preds, axis=0)
 
-    return tm_multiclass_precision_recall_curve(
+    return tm_multiclass_auroc(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_classes,
         thresholds=torch.utils.dlpack.from_dlpack(thresholds)
         if apc.is_array_api_obj(thresholds)
         else thresholds,
+        average=average,
         ignore_index=ignore_index,
     )
 
 
-class TestMulticlassPrecisionRecallCurve(MetricTester):
-    """Test multiclass precision-recall curve function and class."""
+class TestMulticlassAUROC(MetricTester):
+    """Test multiclass AUROC function and class."""
+
+    atol = 2e-7
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp)[4:])
     @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
-    @pytest.mark.parametrize("average", [None, "none"])
+    @pytest.mark.parametrize("average", [None, "none", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multiclass_precision_recall_curve_with_numpy_array_api_arrays(
+    def test_multiclass_auroc_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
         average,
         ignore_index,
     ) -> None:
-        """Test function for multiclass precision-recall curve."""
+        """Test function for multiclass AUROC."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -251,7 +267,7 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=multiclass_precision_recall_curve,
+            metric_function=multiclass_auroc,
             metric_args={
                 "num_classes": NUM_CLASSES,
                 "thresholds": thresholds,
@@ -259,24 +275,25 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _multiclass_precision_recall_curve_reference,
+                _multiclass_auroc_reference,
                 thresholds=thresholds,
+                average=average,
                 ignore_index=ignore_index,
             ),
         )
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp)[4:])
     @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
-    @pytest.mark.parametrize("average", [None, "none"])
+    @pytest.mark.parametrize("average", [None, "none", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 1, -1])
-    def test_multiclass_precision_recall_curve_class_with_numpy_array_api_arrays(
+    def test_multiclass_auroc_class_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
         average,
         ignore_index,
     ) -> None:
-        """Test class for multiclass precision-recall curve."""
+        """Test class for multiclass AUROC."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -291,10 +308,11 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MulticlassPrecisionRecallCurve,
+            metric_class=MulticlassAUROC,
             reference_metric=partial(
-                _multiclass_precision_recall_curve_reference,
+                _multiclass_auroc_reference,
                 thresholds=thresholds,
+                average=average,
                 ignore_index=ignore_index,
             ),
             metric_args={
@@ -311,16 +329,16 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         "thresholds",
         _thresholds(xp=array_api_compat.torch),
     )
-    @pytest.mark.parametrize("average", [None, "none"])
+    @pytest.mark.parametrize("average", [None, "none", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 1, -1])
-    def test_multiclass_precision_recall_curve_class_with_torch_tensors(
+    def test_multiclass_auroc_class_with_torch_tensors(
         self,
         inputs,
         thresholds,
         average,
         ignore_index,
     ) -> None:
-        """Test class for multiclass precision-recall curve."""
+        """Test class for multiclass AUROC."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -339,10 +357,11 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MulticlassPrecisionRecallCurve,
+            metric_class=MulticlassAUROC,
             reference_metric=partial(
-                _multiclass_precision_recall_curve_reference,
+                _multiclass_auroc_reference,
                 thresholds=thresholds,
+                average=average,
                 ignore_index=ignore_index,
             ),
             metric_args={
@@ -356,41 +375,44 @@ class TestMulticlassPrecisionRecallCurve(MetricTester):
         )
 
 
-def _multilabel_precision_recall_curve_reference(
+def _multilabel_auroc_reference(
     preds,
     target,
     num_labels=NUM_LABELS,
     thresholds=None,
+    average="macro",
     ignore_index=None,
-) -> Union[
-    Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
-    Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]],
-]:
-    """Return the reference multilabel precision-recall curve."""
-    return tm_multilabel_precision_recall_curve(
+) -> torch.Tensor:
+    """Return the reference multilabel AUROC."""
+    return tm_multilabel_auroc(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_labels,
         thresholds=torch.utils.dlpack.from_dlpack(thresholds)
         if apc.is_array_api_obj(thresholds)
         else thresholds,
+        average=average,
         ignore_index=ignore_index,
     )
 
 
-class TestMultilabelPrecisionRecallCurve(MetricTester):
-    """Test multilabel precision-recall curve function and class."""
+class TestMultilabelAUROC(MetricTester):
+    """Test multilabel AUROC function and class."""
+
+    atol = 2e-7
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp)[2:])
     @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
+    @pytest.mark.parametrize("average", [None, "none", "micro", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_precision_recall_curve_with_numpy_array_api_arrays(
+    def test_multilabel_auroc_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
+        average,
         ignore_index,
     ) -> None:
-        """Test function for multilabel precision-recall curve."""
+        """Test function for multilabel AUROC."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -399,29 +421,33 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=multilabel_precision_recall_curve,
+            metric_function=multilabel_auroc,
             reference_metric=partial(
-                _multilabel_precision_recall_curve_reference,
+                _multilabel_auroc_reference,
                 thresholds=thresholds,
+                average=average,
                 ignore_index=ignore_index,
             ),
             metric_args={
-                "thresholds": thresholds,
                 "num_labels": NUM_LABELS,
+                "thresholds": thresholds,
+                "average": average,
                 "ignore_index": ignore_index,
             },
         )
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp)[2:])
     @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))
+    @pytest.mark.parametrize("average", [None, "none", "micro", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_precision_recall_curve_class_with_numpy_array_api_arrays(
+    def test_multilabel_auroc_class_with_numpy_array_api_arrays(
         self,
         inputs,
         thresholds,
+        average,
         ignore_index,
     ) -> None:
-        """Test class for multilabel precision-recall curve."""
+        """Test class for multilabel AUROC."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -430,15 +456,17 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MultilabelPrecisionRecallCurve,
+            metric_class=MultilabelAUROC,
             reference_metric=partial(
-                _multilabel_precision_recall_curve_reference,
+                _multilabel_auroc_reference,
                 thresholds=thresholds,
+                average=average,
                 ignore_index=ignore_index,
             ),
             metric_args={
-                "thresholds": thresholds,
                 "num_labels": NUM_LABELS,
+                "thresholds": thresholds,
+                "average": average,
                 "ignore_index": ignore_index,
             },
         )
@@ -449,14 +477,16 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
         "thresholds",
         _thresholds(xp=array_api_compat.torch),
     )
+    @pytest.mark.parametrize("average", [None, "none", "micro", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_precision_recall_curve_class_with_torch_tensors(
+    def test_multilabel_auroc_class_with_torch_tensors(
         self,
         inputs,
         thresholds,
+        average,
         ignore_index,
     ) -> None:
-        """Test class for multilabel precision-recall curve."""
+        """Test class for multilabel AUROC."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -469,15 +499,17 @@ class TestMultilabelPrecisionRecallCurve(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MultilabelPrecisionRecallCurve,
+            metric_class=MultilabelAUROC,
             reference_metric=partial(
-                _multilabel_precision_recall_curve_reference,
+                _multilabel_auroc_reference,
                 thresholds=thresholds,
+                average=average,
                 ignore_index=ignore_index,
             ),
             metric_args={
-                "thresholds": thresholds,
                 "num_labels": NUM_LABELS,
+                "thresholds": thresholds,
+                "average": average,
                 "ignore_index": ignore_index,
             },
             device=device,

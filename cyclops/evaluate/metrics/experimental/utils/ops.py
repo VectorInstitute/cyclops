@@ -695,7 +695,72 @@ def _array_indexing(arr: Array, idx: Array) -> Array:
         return xp.asarray(np_arr, dtype=arr.dtype, device=apc.device(arr))
 
 
-def _cumsum(x: Array, axis: Optional[int], dtype: Optional[Any] = None) -> Array:
+def _auc_compute(
+    x: Array,
+    y: Array,
+    direction: Optional[float] = None,
+    axis: int = -1,
+    reorder: bool = False,
+) -> Array:
+    """Compute the area under the curve using the trapezoidal rule.
+
+    Adapted from: https://github.com/Lightning-AI/torchmetrics/blob/fd2e332b66df1b484728efedad9d430c7efae990/src/torchmetrics/utilities/compute.py#L99-L115
+
+    Parameters
+    ----------
+    x : Array
+        The x-coordinates of the curve.
+    y : Array
+        The y-coordinates of the curve.
+    direction : float, optional, default=None
+        The direction of the curve. If None, the direction will be inferred from the
+        values in `x`.
+    axis : int, optional, default=-1
+        The axis along which to compute the area under the curve.
+    reorder : bool, optional, default=False
+        Whether to sort the arrays `x` and `y` by `x` before computing the area under
+        the curve.
+    """
+    xp = apc.array_namespace(x, y)
+    if reorder:
+        x, x_idx = xp.sort(x, stable=True)
+        y = _array_indexing(y, x_idx)
+
+    if direction is None:
+        dx = x[1:] - x[:-1]
+        if xp.any(dx < 0):
+            if xp.all(dx <= 0):
+                direction = -1.0
+            else:
+                raise ValueError(
+                    "The array `x` is neither increasing or decreasing. "
+                    "Try setting the reorder argument to `True`.",
+                )
+        else:
+            direction = 1.0
+
+    return xp.astype(_trapz(y, x, axis=axis) * direction, xp.float32)
+
+
+def _cumsum(x: Array, axis: Optional[int] = None, dtype: Optional[Any] = None) -> Array:
+    """Compute the cumulative sum of an array along a given axis.
+
+    Parameters
+    ----------
+    x : Array
+        The input array.
+    axis : int, optional, default=None
+        The axis along which to compute the cumulative sum. If None, the input array
+        will be flattened before computing the cumulative sum.
+    dtype : Any, optional, default=None
+        The data type of the output array. If None, the data type of the input array
+        will be used.
+
+    Returns
+    -------
+    Array
+        An array containing the cumulative sum of the input array along the given axis.
+    """
     xp = apc.array_namespace(x)
     if hasattr(xp, "cumsum"):
         return xp.cumsum(x, axis, dtype=dtype)
@@ -734,23 +799,147 @@ def _cumsum(x: Array, axis: Optional[int], dtype: Optional[Any] = None) -> Array
     return result
 
 
+def _diff(
+    a: Array,
+    n: int = 1,
+    axis: int = -1,
+    prepend: Optional[Array] = None,
+    append: Optional[Array] = None,
+) -> Array:
+    """Calculate the n-th discrete difference along the given axis.
+
+    Adapted from: https://github.com/numpy/numpy/blob/v1.26.0/numpy/lib/function_base.py#L1324-L1454
+
+    Parameters
+    ----------
+    a : Array
+        Input array.
+    n : int, optional, default=1
+        The number of times values are differenced. If zero, the input is returned
+        as-is.
+    axis : int, optional, default=-1
+        The axis along which the difference is taken, default is the last axis.
+    prepend : Array, optional, default=None
+        Values to prepend to `a` along `axis` prior to performing the difference.
+    append : Array, optional, default=None
+        Values to append to `a` along `axis` after performing the difference.
+
+    Returns
+    -------
+    Array
+        The n-th differences. The shape of the output is the same as `a` except along
+        `axis` where the dimension is smaller by `n`. The type of the output is the
+        same as the type of the difference between any two elements of `a`. This is
+        the same type as `a` in most cases.
+    """
+    xp = apc.array_namespace(a)
+
+    if prepend is not None and not apc.is_array_api_obj(prepend):
+        raise TypeError(
+            "Expected argument `prepend` to be an object that is compatible with the "
+            f"Python array API standard. Got {type(prepend)} instead.",
+        )
+    if append is not None and not apc.is_array_api_obj(append):
+        raise TypeError(
+            "Expected argument `append` to be an object that is compatible with the "
+            f"Python array API standard. Got {type(append)} instead.",
+        )
+
+    if n == 0:
+        return a
+    if n < 0:
+        raise ValueError("order must be non-negative but got " + repr(n))
+
+    nd = a.ndim
+    if nd == 0:
+        raise ValueError("diff requires input that is at least one dimensional")
+
+    combined = []
+    if prepend is not None:
+        if prepend.ndim == 0:
+            shape = list(a.shape)
+            shape[axis] = 1
+            prepend = xp.broadcast_to(prepend, tuple(shape))
+        combined.append(prepend)
+
+    combined.append(a)
+
+    if append is not None:
+        if append.ndim == 0:
+            shape = list(a.shape)
+            shape[axis] = 1
+            append = xp.broadcast_to(append, tuple(shape))
+        combined.append(append)
+
+    if len(combined) > 1:
+        a = xp.concat(combined, axis)
+
+    slice1 = [slice(None)] * nd
+    slice2 = [slice(None)] * nd
+    slice1[axis] = slice(1, None)
+    slice2[axis] = slice(None, -1)
+    slice1 = tuple(slice1)  # type: ignore[assignment]
+    slice2 = tuple(slice2)  # type: ignore[assignment]
+
+    op = xp.not_equal if a.dtype == xp.bool else xp.subtract
+    for _ in range(n):
+        a = op(a[slice1], a[slice2])
+
+    return a
+
+
 def _interp(x: Array, xcoords: Array, ycoords: Array) -> Array:
-    """Perform linear interpolation for 1D arrays."""
+    """Perform linear interpolation for 1D arrays.
+
+    Parameters
+    ----------
+    x : Array
+        The 1D array of points on which to interpolate.
+    xcoords : Array
+        The 1D array of x-coordinates containing known data points.
+    ycoords : Array
+        The 1D array of y-coordinates containing known data points.
+
+    Returns
+    -------
+    Array
+        The interpolated values.
+    """
     xp = apc.array_namespace(x, xcoords, ycoords)
     if hasattr(xp, "interp"):
         return xp.interp(x, xcoords, ycoords)
 
+    if _is_torch_array(x):
+        weight = (x - xcoords[0]) / (xcoords[-1] - xcoords[0])
+        return xp.lerp(ycoords[0], ycoords[-1], weight)
+
+    if xcoords.ndim != 1 or ycoords.ndim != 1:
+        raise ValueError(
+            "Expected `xcoords` and `ycoords` to be 1D arrays. "
+            f"Got xcoords.ndim={xcoords.ndim} and ycoords.ndim={ycoords.ndim}.",
+        )
+    if xcoords.shape[0] != ycoords.shape[0]:
+        raise ValueError(
+            "Expected `xcoords` and `ycoords` to have the same shape along axis 0. "
+            f"Got xcoords.shape={xcoords.shape} and ycoords.shape={ycoords.shape}.",
+        )
+
     m = safe_divide(ycoords[1:] - ycoords[:-1], xcoords[1:] - xcoords[:-1])
     b = ycoords[:-1] - (m * xcoords[:-1])
 
-    indices = xp.sum(x[:, None] >= xcoords[None, :], 1) - 1
-    _min_val = xp.asarray(0, dtype=xp.float32, device=apc.device(x))
+    # create slices to work for any ndim of x and xcoords
+    indices = (
+        xp.sum(xp.astype(x[..., None] >= xcoords[None, ...], xp.int32), axis=1) - 1
+    )
+    _min_val = xp.asarray(0, dtype=xp.int32, device=apc.device(x))
     _max_val = xp.asarray(
         m.shape[0] if m.ndim > 0 else 1 - 1,
-        dtype=xp.float32,
+        dtype=xp.int32,
         device=apc.device(x),
     )
-    indices = xp.min(xp.max(indices, _min_val), _max_val)
+    # clamp indices to _min_val and _max_val
+    indices = xp.where(indices < _min_val, _min_val, indices)
+    indices = xp.where(indices > _max_val, _max_val, indices)
 
     return _array_indexing(m, indices) * x + _array_indexing(b, indices)
 
@@ -845,6 +1034,53 @@ def _select_topk(  # noqa: PLR0912
     return xp.asarray(result, device=apc.device(scores))
 
 
+def _searchsorted(
+    a: Array,
+    v: Array,
+    side: str = "left",
+    sorter: Optional[Array] = None,
+) -> Array:
+    """Find indices where elements of `v` should be inserted to maintain order.
+
+    Parameters
+    ----------
+    a : Array
+        Input array. Must be sorted in ascending order if `sorter` is `None`.
+    v : Array
+        Values to insert into `a`.
+    side : {'left', 'right'}, optional, default='left'
+        If 'left', the index of the first suitable location found is given.
+        If 'right', return the last such index. If there is no suitable index,
+        return either 0 or `N` (where N is the length of `a`).
+    sorter : Array, optional, default=None
+        An optional array of integer indices that sort array `a` into ascending order.
+        This is typically the result of `argsort`.
+
+    Returns
+    -------
+    Array
+        Array of insertion points with the same shape as `v`.
+
+    Warnings
+    --------
+    This method uses `numpy.from_dlpack` to convert the input arrays to NumPy arrays
+    and then uses `numpy.searchsorted` to perform the search. This may result in
+    unexpected behavior for some array namespaces.
+
+    """
+    xp = apc.array_namespace(a, v)
+    if hasattr(xp, "searchsorted"):
+        return xp.searchsorted(a, v, side=side, sorter=sorter)
+
+    np_a = np.from_dlpack(apc.to_device(a, "cpu"))
+    np_v = np.from_dlpack(apc.to_device(v, "cpu"))
+    np_sorter = (
+        np.from_dlpack(apc.to_device(sorter, "cpu")) if sorter is not None else None
+    )
+    np_result = np.searchsorted(np_a, np_v, side=side, sorter=np_sorter)  # type: ignore[call-overload]
+    return xp.asarray(np_result, dtype=xp.int32, device=apc.device(a))
+
+
 def _to_one_hot(
     array: Array,
     num_classes: Optional[int] = None,
@@ -893,3 +1129,62 @@ def _to_one_hot(
 
     output_shape = input_shape + (num_classes,)
     return xp.reshape(categorical, output_shape)
+
+
+def _trapz(
+    y: Array,
+    x: Optional[Array] = None,
+    dx: float = 1.0,
+    axis: int = -1,
+) -> Array:
+    """Integrate along the given axis using the composite trapezoidal rule.
+
+    Adapted from: https://github.com/cupy/cupy/blob/v12.3.0/cupy/_math/sumprod.py#L580-L626
+
+    Parameters
+    ----------
+    y : Array
+        Input array to integrate.
+    x : Array, optional, default=None
+        Sample points over which to integrate. If `x` is None, the sample points are
+        assumed to be evenly spaced `dx` apart.
+    dx : float, optional, default=1.0
+        Spacing between sample points when `x` is None.
+    axis : int, optional, default=-1
+        Axis along which to integrate.
+
+    Returns
+    -------
+    Array
+        Definite integral as approximated by trapezoidal rule.
+    """
+    xp = apc.array_namespace(y)
+
+    if not apc.is_array_api_obj(y):
+        raise TypeError(
+            "The type for `y` should be compatible with the Python array API standard.",
+        )
+
+    if x is None:
+        d = dx
+    else:
+        if not apc.is_array_api_obj(x):
+            raise TypeError(
+                "The type for `x` should be compatible with the Python array API standard.",
+            )
+        if x.ndim == 1:
+            d = _diff(x)  # type: ignore[assignment]
+            # reshape to correct shape
+            shape = [1] * y.ndim
+            shape[axis] = d.shape[0]  # type: ignore[attr-defined]
+            d = xp.reshape(d, shape)
+        else:
+            d = _diff(x, axis=axis)  # type: ignore[assignment]
+
+    nd = y.ndim
+    slice1 = [slice(None)] * nd
+    slice2 = [slice(None)] * nd
+    slice1[axis] = slice(1, None)
+    slice2[axis] = slice(None, -1)
+    product = d * (y[tuple(slice1)] + y[tuple(slice2)]) / 2.0
+    return xp.sum(product, dtype=xp.float32, axis=axis)

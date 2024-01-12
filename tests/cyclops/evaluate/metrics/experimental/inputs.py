@@ -1,6 +1,7 @@
 """Input data for tests of metrics in cyclops/evaluate/metrics/experimental."""
 import random
 from collections import namedtuple
+from types import ModuleType
 from typing import Any
 
 import array_api_compat as apc
@@ -31,6 +32,13 @@ def _inv_sigmoid(arr: Array) -> Array:
 
 
 set_random_seed(1)
+
+
+def _thresholds(*, xp: ModuleType) -> list:
+    """Return thresholds for AUROC."""
+    thresh_list = [0.0, 0.3, 0.5, 0.7, 0.9, 1.0]
+    return [None, 5, thresh_list, xp.asarray(thresh_list)]
+
 
 # binary
 # NOTE: the test will loop over the first dimension of the input
