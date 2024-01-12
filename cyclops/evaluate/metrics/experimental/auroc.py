@@ -69,7 +69,7 @@ class BinaryAUROC(BinaryPrecisionRecallCurve):
         )
         self.max_fpr = max_fpr
 
-    def _compute_metric(self) -> Array:
+    def _compute_metric(self) -> Array:  # type: ignore[override]
         """Compute the AUROC.""" ""
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]
@@ -155,7 +155,7 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve):
         )
         self.average = average  # type: ignore[assignment]
 
-    def _compute_metric(self) -> Array:
+    def _compute_metric(self) -> Array:  # type: ignore[override]
         """Compute the AUROC."""
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]
@@ -242,7 +242,7 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve):
         )
         self.average = average
 
-    def _compute_metric(self) -> Array:
+    def _compute_metric(self) -> Array:  # type: ignore[override]
         """Compute the AUROC."""
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]
