@@ -22,14 +22,14 @@ MultilabelAccuracy
 Functional Interface
 ____________________
 
-BinaryAccuracy
+binary_accuracy
 ^^^^^^^^^^^^^^
 .. autofunction:: cyclops.evaluate.metrics.experimental.functional.accuracy.binary_accuracy
 
-MulticlassAccuracy
+multiclass_accuracy
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: cyclops.evaluate.metrics.experimental.functional.accuracy.multiclass_accuracy
 
-MultilabelAccuracy
+multilabel_accuracy
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: cyclops.evaluate.metrics.experimental.functional.accuracy.multilabel_accuracy
