@@ -49,7 +49,7 @@ def _weighted_mean_absolute_percentage_error_compute(
         xp.asarray(epsilon, dtype=sum_scale.dtype, device=apc.device(sum_scale)),
         sum_scale,
     )
-    return sum_abs_error / clamped_sum_scale
+    return sum_abs_error / clamped_sum_scale  # type: ignore[no-any-return]
 
 
 def weighted_mean_absolute_percentage_error(

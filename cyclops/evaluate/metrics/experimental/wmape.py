@@ -41,7 +41,7 @@ class WeightedMeanAbsolutePercentageError(Metric):
         self.epsilon = epsilon
 
         def default_factory(*, xp: ModuleType) -> Array:
-            return xp.asarray(0.0, dtype=xp.float32, device=self.device)
+            return xp.asarray(0.0, dtype=xp.float32, device=self.device)  # type: ignore[no-any-return]
 
         self.add_state_default_factory(
             "sum_abs_error",

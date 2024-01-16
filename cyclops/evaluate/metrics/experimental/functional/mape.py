@@ -74,7 +74,7 @@ def _mean_absolute_percentage_error_compute(
         The mean absolute percentage error.
 
     """
-    return sum_abs_per_error / num_obs
+    return sum_abs_per_error / num_obs  # type: ignore[no-any-return]
 
 
 def mean_absolute_percentage_error(target: Array, preds: Array) -> Array:

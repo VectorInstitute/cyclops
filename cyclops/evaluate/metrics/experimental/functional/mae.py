@@ -44,7 +44,7 @@ def _mean_absolute_error_compute(
         The mean absolute error.
 
     """
-    return sum_abs_error / num_obs
+    return sum_abs_error / num_obs  # type: ignore[no-any-return]
 
 
 def mean_absolute_error(target: Array, preds: Array) -> Array:
