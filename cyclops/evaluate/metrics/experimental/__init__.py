@@ -22,7 +22,10 @@ from cyclops.evaluate.metrics.experimental.f_score import (
     MultilabelF1Score,
     MultilabelFBetaScore,
 )
+from cyclops.evaluate.metrics.experimental.mae import MeanAbsoluteError
+from cyclops.evaluate.metrics.experimental.mape import MeanAbsolutePercentageError
 from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
+from cyclops.evaluate.metrics.experimental.mse import MeanSquaredError
 from cyclops.evaluate.metrics.experimental.negative_predictive_value import (
     BinaryNPV,
     MulticlassNPV,
@@ -55,6 +58,9 @@ from cyclops.evaluate.metrics.experimental.roc import (
     MulticlassROC,
     MultilabelROC,
 )
+from cyclops.evaluate.metrics.experimental.smape import (
+    SymmetricMeanAbsolutePercentageError,
+)
 from cyclops.evaluate.metrics.experimental.specificity import (
     BinarySpecificity,
     BinaryTNR,
@@ -62,4 +68,7 @@ from cyclops.evaluate.metrics.experimental.specificity import (
     MulticlassTNR,
     MultilabelSpecificity,
     MultilabelTNR,
+)
+from cyclops.evaluate.metrics.experimental.wmape import (
+    WeightedMeanAbsolutePercentageError,
 )

@@ -337,3 +337,23 @@ def _multilabel_cases(*, xp: Any):
             id="input[multidim-logits]",
         ),
     )
+
+
+def _regression_cases(*, xp: Any):
+    """Return regression input cases for the given array namespace."""
+    return (
+        pytest.param(
+            InputSpec(
+                target=xp.asarray(np.random.rand(NUM_BATCHES, BATCH_SIZE)),
+                preds=xp.asarray(np.random.rand(NUM_BATCHES, BATCH_SIZE)),
+            ),
+            id="input[single-targets]",
+        ),
+        pytest.param(
+            InputSpec(
+                target=xp.asarray(np.random.rand(NUM_BATCHES, BATCH_SIZE, NUM_LABELS)),
+                preds=xp.asarray(np.random.rand(NUM_BATCHES, BATCH_SIZE, NUM_LABELS)),
+            ),
+            id="input[multi-targets]",
+        ),
+    )
