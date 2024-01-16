@@ -27,6 +27,12 @@ def _mean_absolute_percentage_error_update(
         Specifies the lower bound for target values. Any target value below epsilon
         is set to epsilon (avoids division by zero errors).
 
+    Returns
+    -------
+    Tuple[Array, int]
+        Sum of absolute value of percentage errors over all observations and number
+        of observations.
+
     """
     _basic_input_array_checks(target, preds)
     _check_same_shape(target, preds)

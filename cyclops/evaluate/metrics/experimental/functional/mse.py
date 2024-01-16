@@ -27,6 +27,11 @@ def _mean_squared_error_update(
     num_outputs : int
         Number of outputs in multioutput setting.
 
+    Returns
+    -------
+    Tuple[Array, int]
+        Sum of square of errors over all observations and number of observations.
+
     """
     _basic_input_array_checks(target, preds)
     _check_same_shape(target, preds)
