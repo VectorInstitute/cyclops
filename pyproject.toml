@@ -103,7 +103,7 @@ mypy = "^1.7.0"
 ruff = "^0.1.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 cycquery = "^0.1.2" # used for integration test
-torchmetrics = {version = "^1.2.0", extras = ["classification"]}
+torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
 
 [tool.poetry.group.docs]
 optional = true
@@ -133,7 +133,7 @@ jupyter = "^1.0.0"
 jupyterlab = "^3.4.2"
 ipympl = "^0.9.3"
 ipywidgets = "^8.0.6"
-torchmetrics = {version = "^1.2.0", extras = ["classification"]}
+torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
 cupy = "^12.2.0"
 mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 lightning = "^2.1.0"
