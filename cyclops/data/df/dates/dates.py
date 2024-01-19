@@ -1,19 +1,17 @@
-from typing import List, Optional, Union
-import warnings
-
+"""Utilities for working with dates in pandas DataFrames."""
 import datetime
+import warnings
 from datetime import timedelta
-
-from dateutil import parser as du_parser
-from dateutil.parser import ParserError
-
-# import datefinder
+from typing import Any, List, Optional, Union
 
 import numpy as np
 import pandas as pd
+from dateutil import parser as du_parser
+from dateutil.parser import ParserError
 
-from fecg.utils.pandas.pandas import check_cols
-from fecg.utils.pandas.type import is_datetime_series, is_str_series
+from cyclops.data.df.series_validation import is_datetime_series, is_str_series
+from cyclops.data.df.utils import check_cols
+
 
 # Datetime component names
 DATE_COMPONENTS = ["year", "month", "day"]
@@ -27,8 +25,7 @@ DU_TO_PD_DT = f"{DU_DT}_to_{PD_DT}"
 
 
 def datetime_to_unix(series: pd.Series) -> pd.Series:
-    """
-    Convert a datetime series to UNIX timestamps.
+    """Convert a datetime series to UNIX timestamps.
 
     Parameters
     ----------
@@ -46,8 +43,7 @@ def datetime_to_unix(series: pd.Series) -> pd.Series:
 
 
 def unix_to_datetime(series: pd.Series) -> pd.Series:
-    """
-    Convert a series of UNIX timestamps to datetime.
+    """Convert a series of UNIX timestamps to datetime.
 
     Parameters
     ----------
@@ -63,8 +59,7 @@ def unix_to_datetime(series: pd.Series) -> pd.Series:
 
 
 def round_date(dates: pd.Series) -> pd.Series:
-    """
-    Round datetimes to the nearest day.
+    """Round datetimes to the nearest day.
 
     Parameters
     ----------
@@ -78,15 +73,14 @@ def round_date(dates: pd.Series) -> pd.Series:
     """
     is_datetime_series(dates, raise_err=True)
 
-    return dates.dt.round('1d')
+    return dates.dt.round("1d")
 
 
 def has_time(
     dates: pd.Series,
     raise_err_on_time: bool = False,
 ) -> pd.Series:
-    """
-    Checks whether any datetimes have a time component.
+    """Check whether any datetimes have a time component.
 
     Parameters
     ----------
@@ -95,15 +89,15 @@ def has_time(
     raise_err : bool, default False
         If True, raise an error if any date has a time component.
 
-    Raises
-    ------
-    ValueError
-        If any date has a time component and `raise_err` is True.
-
     Returns
     -------
     bool
         Whether any dates have a time component.
+
+    Raises
+    ------
+    ValueError
+        If any date has a time component and `raise_err` is True.
     """
     # Round datetime values
     rounded = round_date(dates)
@@ -120,9 +114,8 @@ def has_time(
 
 
 # DEPRECIATED IN CONTRAST TO `analyze_dates`???
-def invalid_date(dates: pd.Series, **to_datetime_kwargs) -> pd.Series:
-    """
-    Given a Series of dates, return a boolean Series of whether the dates are invalid.
+def invalid_date(dates: pd.Series, **to_datetime_kwargs: Any) -> pd.Series:
+    """Return a boolean Series of whether a given series of dates are invalid.
 
     Parameters
     ----------
@@ -146,14 +139,14 @@ def invalid_date(dates: pd.Series, **to_datetime_kwargs) -> pd.Series:
     if "errors" in to_datetime_kwargs:
         raise ValueError("Cannot specify 'errors' in to_datetime_kwargs.")
 
-    return pd.isna(pd.to_datetime(dates, errors='coerce', **to_datetime_kwargs))
+    return pd.isna(pd.to_datetime(dates, errors="coerce", **to_datetime_kwargs))
 
 
 def filter_date_deltas(
     dates: pd.DataFrame,
-    delta_cutoff: Union[str, timedelta] = None,
-    left_delta_cutoff: Union[str, timedelta] = None,
-    right_delta_cutoff: Union[str, timedelta] = None,
+    delta_cutoff: Optional[Union[str, timedelta]] = None,
+    left_delta_cutoff: Optional[Union[str, timedelta]] = None,
+    right_delta_cutoff: Optional[Union[str, timedelta]] = None,
 ) -> pd.DataFrame:
     """
     Filter DataFrame based on date delta conditions.
@@ -162,11 +155,11 @@ def filter_date_deltas(
     ----------
     dates : pandas.DataFrame
         DataFrame containing 'delta' column.
-    delta_cutoff : timedelta, optional
+    delta_cutoff : timedelta, optional, default=None
         Maximum delta value allowed.
-    left_delta_cutoff : timedelta, optional
+    left_delta_cutoff : timedelta, optional, default=None
         Minimum delta value allowed.
-    right_delta_cutoff : timedelta, optional
+    right_delta_cutoff : timedelta, optional, default=None
         Maximum delta value allowed.
 
     Returns
@@ -177,29 +170,29 @@ def filter_date_deltas(
     Raises
     ------
     ValueError
-        When delta_cutoff specified along with left_delta_cutoff or right_delta_cutoff.
+        When `delta_cutoff` specified along with `left_delta_cutoff` or
+        `right_delta_cutoff`.
     """
     if delta_cutoff is not None:
         if left_delta_cutoff is not None or right_delta_cutoff is not None:
             raise ValueError(
                 "Cannot specify left_delta_cutoff or right_delta_cutoff when "
-                "delta_cutoff is specified."
+                "delta_cutoff is specified.",
             )
 
-        return dates[abs(dates['delta']) <= pd.to_timedelta(delta_cutoff)]
+        return dates[abs(dates["delta"]) <= pd.to_timedelta(delta_cutoff)]
 
     if left_delta_cutoff is not None:
-        dates = dates[dates['delta'] >= pd.to_timedelta(left_delta_cutoff)]
+        dates = dates[dates["delta"] >= pd.to_timedelta(left_delta_cutoff)]
 
     if right_delta_cutoff is not None:
-        dates = dates[dates['delta'] <= pd.to_timedelta(right_delta_cutoff)]
+        dates = dates[dates["delta"] <= pd.to_timedelta(right_delta_cutoff)]
 
     return dates
 
 
 class DatePairHandler:
-    """
-    Handler to create and manipulate pairs based on dates and IDs.
+    """Handler to create and manipulate pairs based on dates and IDs.
 
     Attributes
     ----------
@@ -213,15 +206,17 @@ class DatePairHandler:
         The paired data coming from the data_x and data_y columns. Computed and stored
         based on `date_pairs` when the `paired_data` method is first called.
     """
+
     def __init__(
         self,
         data_x: pd.DataFrame,
         data_y: pd.DataFrame,
-        delta_cutoff: Union[str, timedelta] = None,
-        left_delta_cutoff: Union[str, timedelta] = None,
-        right_delta_cutoff: Union[str, timedelta] = None,
+        delta_cutoff: Optional[Union[str, timedelta]] = None,
+        left_delta_cutoff: Optional[Union[str, timedelta]] = None,
+        right_delta_cutoff: Optional[Union[str, timedelta]] = None,
         keep_closest_to: Optional[str] = None,
-    ):
+    ) -> None:
+        """Initialize an instance of `DatePairHandler`."""
         assert data_x.index.name == "id"
         assert data_y.index.name == "id"
         assert "idx_x" not in data_x.columns
@@ -232,7 +227,11 @@ class DatePairHandler:
         data_x["idx_x"] = np.arange(len(data_x))
         data_y["idx_y"] = np.arange(len(data_y))
 
-        date_pairs = data_x[["date", "idx_x"]].merge(data_y[["date", "idx_y"]], on='id', how='inner')
+        date_pairs = data_x[["date", "idx_x"]].merge(
+            data_y[["date", "idx_y"]],
+            on="id",
+            how="inner",
+        )
 
         if keep_closest_to is not None:
             assert keep_closest_to in ["date_x", "date_y"]
@@ -249,13 +248,19 @@ class DatePairHandler:
 
         if keep_closest_to is not None:
             date_pairs = date_pairs.reset_index()
-            min_deltas = date_pairs.groupby(["id", keep_closest_to]).agg({
-                "abs_delta": "min",
-            }).reset_index()
+            min_deltas = (
+                date_pairs.groupby(["id", keep_closest_to])
+                .agg(
+                    {
+                        "abs_delta": "min",
+                    },
+                )
+                .reset_index()
+            )
             date_pairs = date_pairs.merge(
                 min_deltas,
                 on=["id", keep_closest_to, "abs_delta"],
-                how='inner',
+                how="inner",
             )
 
         self.data_x = data_x
@@ -265,8 +270,7 @@ class DatePairHandler:
 
     @property
     def paired_data(self) -> pd.DataFrame:
-        """
-        Get paired data based on the date pairs.
+        """Get paired data based on the date pairs.
 
         Returns
         -------
@@ -274,17 +278,26 @@ class DatePairHandler:
             Paired data based on the date pairs.
         """
         if self._paired_data is None:
-            self._paired_data = pd.concat([
-                self.data_x.set_index("idx_x").loc[self.date_pairs["idx_x"]].reset_index(),
-                self.data_y.set_index("idx_y").loc[self.date_pairs["idx_y"]].reset_index(),
-            ], axis=1)
+            self._paired_data = pd.concat(
+                [
+                    self.data_x.set_index("idx_x")
+                    .loc[self.date_pairs["idx_x"]]
+                    .reset_index(),
+                    self.data_y.set_index("idx_y")
+                    .loc[self.date_pairs["idx_y"]]
+                    .reset_index(),
+                ],
+                axis=1,
+            )
 
         return self._paired_data
 
 
-def du_parse_date(date: str, **parse_kwargs) -> Union[datetime.datetime, float]:
-    """
-    Parse a date string using dateutil's parser.
+def dateutil_parse_date(
+    date: str,
+    **parse_kwargs: Any,
+) -> Union[datetime.datetime, float]:
+    """Parse a date string using dateutil's parser.
 
     Parameters
     ----------
@@ -307,15 +320,14 @@ def du_parse_date(date: str, **parse_kwargs) -> Union[datetime.datetime, float]:
         return np.nan
 
 
-def extract_du_components(
+def extract_dateutil_components(
     du_series: pd.Series,
     components: Optional[List[str]] = None,
 ) -> pd.DataFrame:
-    """
-    Extract datetime components from dates parsed from dateutil (du).
+    """Extract datetime components from dates parsed from `dateutil` (du).
 
-    Useful for Series full of datetimes that cannot be converted using 
-    `pandas.to_datetime` without possibly losing dates to errors like 
+    Useful for Series full of datetimes that cannot be converted using
+    `pandas.to_datetime` without possibly losing dates to errors like
     `OutOfBoundsDatetime`.
 
     Parameters
@@ -330,7 +342,11 @@ def extract_du_components(
     pd.DataFrame
         DataFrame containing the extracted datetime components.
     """
-    def extract_components(datetime, components):
+
+    def extract_components(
+        datetime: datetime.datetime,
+        components: List[str],
+    ) -> np.ndarray:
         if pd.isna(datetime):
             return np.full(len(components), np.nan)
         return np.array([getattr(datetime, comp) for comp in components])
@@ -348,8 +364,7 @@ def datetime_components(
     texts: pd.Series,
     components: Optional[List[str]] = None,
 ) -> pd.DataFrame:
-    """
-    Extract separate datetime components (NaN when missing) using dateutil.
+    """Extract separate datetime components (NaN when missing) using dateutil.
 
     Useful because functionalities like `pandas.to_datetime` will return
     NaT if a full date is not present (e.g., missing a year).
@@ -367,23 +382,29 @@ def datetime_components(
         DataFrame containing the extracted datetime components and the parsed date.
     """
     # Extract dates with different values across all components
-    du = texts.apply(du_parse_date)
+    du = texts.apply(dateutil_parse_date)
     du.rename(DU_DT, inplace=True)
 
-    du2 = texts.apply(du_parse_date, default=datetime.datetime(1, 2, 2, 2, 2, 2, 2))
+    du2 = texts.apply(
+        dateutil_parse_date,
+        default=datetime.datetime(1, 2, 2, 2, 2, 2, 2),
+    )
     du2.rename("du2", inplace=True)
 
     # Where they are equal is not default, where they aren't is default (i.e., missing)
     components = components or DT_COMPONENTS
-    equal = pd.concat([
-        extract_du_components(du, components=components),
-        extract_du_components(du2, components=components).add_suffix('_2'),
-    ], axis=1)
+    equal = pd.concat(
+        [
+            extract_dateutil_components(du, components=components),
+            extract_dateutil_components(du2, components=components).add_suffix("_2"),
+        ],
+        axis=1,
+    )
 
-    for i, comp in enumerate(components):
+    for _, comp in enumerate(components):
         # If a value is missing (different for different default components),
         # then replace it with NaN
-        equal[comp][equal[comp] != equal[f'{comp}_2']] = np.nan
+        equal[comp][equal[comp] != equal[f"{comp}_2"]] = np.nan
 
     return pd.concat([du, equal[components]], axis=1)
 
@@ -393,8 +414,7 @@ def analyzed_dates_differ(
     warn: bool = False,
     raise_err: bool = False,
 ) -> pd.Series:
-    """
-    Check where the analyzed `dateutil` and `pd.to_datetime` dates differ.
+    """Check where the analyzed `dateutil` and `pd.to_datetime` dates differ.
 
     Parameters
     ----------
@@ -408,7 +428,7 @@ def analyzed_dates_differ(
     Returns
     -------
     pd.Series
-        Boolean series indicating where the dates from `pd.to_datetime` and 
+        Boolean series indicating where the dates from `pd.to_datetime` and
         `dateutil` do not match.
 
     Raises
@@ -421,8 +441,9 @@ def analyzed_dates_differ(
 
     # If the dates parsed from pd and du aren't the same date (and didn't
     # both fail to parse), then flag that something funky might be going on
-    matching = (analyzed[PD_DT] == analyzed[DU_DT]) | \
-        (analyzed[[PD_DT, DU_DT]].isna().sum(axis=1) == 2)
+    matching = (analyzed[PD_DT] == analyzed[DU_DT]) | (
+        analyzed[[PD_DT, DU_DT]].isna().sum(axis=1) == 2
+    )
 
     if not matching.all():
         msg = (
@@ -434,7 +455,7 @@ def analyzed_dates_differ(
             raise ValueError(msg)
 
         if warn:
-            warnings.warn(msg)
+            warnings.warn(msg, UserWarning, stacklevel=2)
 
     return ~matching
 
@@ -444,8 +465,7 @@ def analyzed_dates_failed_to_convert(
     warn: bool = False,
     raise_err: bool = False,
 ) -> pd.Series:
-    """
-    Check whether any `dateutil` dates which failed to convert using `pd.to_datetime`.
+    """Check if any `dateutil` dates failed to convert using `pd.to_datetime`.
 
     One common failure is due to a `pandas.errors.OutOfBoundsDatetime`.
 
@@ -483,7 +503,7 @@ def analyzed_dates_failed_to_convert(
             raise ValueError(msg)
 
         if warn:
-            warnings.warn(msg)
+            warnings.warn(msg, UserWarning, stacklevel=2)
 
     return failed
 
@@ -493,8 +513,7 @@ def analyze_dates(
     components: Optional[List[str]] = None,
     warn: bool = True,
 ) -> pd.DataFrame:
-    """
-    Analyze a series of dates and extract datetime components.
+    """Analyze a series of dates and extract datetime components.
 
     Parameters
     ----------
@@ -515,13 +534,20 @@ def analyze_dates(
     texts.rename("text", inplace=True)
     dates = texts.to_frame()
 
-    dates[PD_DT] = pd.to_datetime(dates["text"], infer_datetime_format=True, errors="coerce")
+    dates[PD_DT] = pd.to_datetime(
+        dates["text"],
+        infer_datetime_format=True,
+        errors="coerce",
+    )
 
     components = components or DT_COMPONENTS
-    dates = pd.concat([
-        dates,
-        datetime_components(dates["text"], components=components),
-    ], axis=1)
+    dates = pd.concat(
+        [
+            dates,
+            datetime_components(dates["text"], components=components),
+        ],
+        axis=1,
+    )
 
     # Drop a component column if the whole column is NaN - it is likely never specified
     dates.drop(
@@ -547,8 +573,7 @@ def components_to_datetime(
     comps: pd.DataFrame,
     default_time: Optional[datetime.time] = None,
 ) -> pd.Series:
-    """
-    Converts a DataFrame of datetime components into a datetime series.
+    """Convert a DataFrame of datetime components into a datetime series.
 
     Useful for combining separate date and time texts.
 
@@ -582,12 +607,12 @@ def components_to_datetime(
     check_cols(comps, DT_COMPONENTS, raise_err_on_unexpected=True)
     avail_time_comps = set(comps.columns).intersection(set(TIME_COMPONENTS))
 
-    if not (comps.dtypes.unique().astype(str) == 'Int64').all():
+    if not (comps.dtypes.unique().astype(str) == "Int64").all():
         raise ValueError("Components must have type 'Int64'.")
 
     # Handle default times
     default_time = default_time or datetime.time(0)
-    TIME_COMPONENTS
+
     for time_comp in TIME_COMPONENTS:
         time_comp_value = getattr(default_time, time_comp)
 
@@ -616,8 +641,7 @@ def combine_date_and_time_components(
     date_comps: pd.DataFrame,
     time_comps: pd.DataFrame,
 ) -> pd.DataFrame:
-    """
-    Combine date components from one DataFrame and time components from another.
+    """Combine date components from one DataFrame and time components from another.
 
     Parameters
     ----------
@@ -634,6 +658,10 @@ def combine_date_and_time_components(
 
     Examples
     --------
+    >>> from cyclops.data.df.dates import (
+    ...     analyze_dates,
+    ...     combine_date_and_time_components,
+    ... )
     >>> date_comps = analyze_dates(meta["AcquisitionDate"])
     >>> time_comps = analyze_dates(meta["AcquisitionTime"])
     >>> comps = combine_date_and_time_components(
@@ -645,7 +673,7 @@ def combine_date_and_time_components(
     """
     if not date_comps.index.equals(date_comps.index):
         raise ValueError(
-            "Indexes of `date_comps` and `time_comps` must be the same."
+            "Indexes of `date_comps` and `time_comps` must be the same.",
         )
 
     unexpected_cols_date, _, _ = check_cols(date_comps, DATE_COMPONENTS)
@@ -657,5 +685,5 @@ def combine_date_and_time_components(
     return pd.concat([date_comps, time_comps], axis=1)
 
 
-#def find_dates(text):
+# def find_dates(text):
 #    matches = datefinder.find_dates(text, source=True, index=True)

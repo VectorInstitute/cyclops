@@ -1,31 +1,32 @@
-from typing import Dict, Hashable, List, Optional
+"""Reconcile issues with dates in a DataFrame."""
+import datetime
 import warnings
 from copy import deepcopy
-from dataclasses import dataclass, field
-
-import datetime
+from dataclasses import dataclass
 from datetime import timedelta
+from typing import Dict, Hashable, List, Optional
 
 import numpy as np
 import pandas as pd
-
 from sklearn.cluster import DBSCAN
 
-from fecg.utils.common import to_list_optional
-from fecg.utils.dates.dates import datetime_to_unix, has_time
-from fecg.utils.pairs import (
+from cyclops.data.df.dates.dates import datetime_to_unix, has_time
+from cyclops.data.df.pairs import (
     get_pairs,
     pairs_to_groups,
     split_pairs,
 )
-from fecg.utils.pandas.groupby import groupby_agg_mode
-from fecg.utils.pandas.join import reset_index_merge
-from fecg.utils.pandas.index import (
+from cyclops.data.df.series_validation import is_datetime_series
+from cyclops.data.df.utils import (
+    check_cols,
+    combine_nonoverlapping,
+    groupby_agg_mode,
     index_structure_equal,
     is_multiindex,
+    or_conditions,
+    reset_index_merge,
 )
-from fecg.utils.pandas.pandas import check_cols, combine_nonoverlapping, or_conditions
-from fecg.utils.pandas.type import is_datetime_series
+from cyclops.utils.common import to_list_optional
 
 
 def cluster_date_group(dates, dbscan):
@@ -87,9 +88,11 @@ def cluster_analysis(unres_hard, clusters):
     # so ignore groups with several clusters of same size
     clusters_of_max_size_vcs = clusters_of_max_size.index.value_counts()
 
-    clusters_of_max_size = clusters_of_max_size[~clusters_of_max_size.index.isin(
-        clusters_of_max_size_vcs.index[clusters_of_max_size_vcs > 1]
-    )]
+    clusters_of_max_size = clusters_of_max_size[
+        ~clusters_of_max_size.index.isin(
+            clusters_of_max_size_vcs.index[clusters_of_max_size_vcs > 1],
+        )
+    ]
 
     # Get the is_max_size column into clusters
     clusters = reset_index_merge(
@@ -107,22 +110,25 @@ def cluster_analysis(unres_hard, clusters):
     # Get the hard dates in the largest clusters
     clusters_largest_hard = clusters_largest[~clusters_largest["approx"]]
 
-#     # === Resolve: largest_cluster_hard_mode
-#     single_modes = groupby_agg_mode(
-#         unres_hard["date"].groupby(level=0),
-#         single_modes_only=True,
-#     )
+    #     # === Resolve: largest_cluster_hard_mode
+    #     single_modes = groupby_agg_mode(
+    #         unres_hard["date"].groupby(level=0),
+    #         single_modes_only=True,
+    #     )
 
-#     largest_hard_is_mode = clusters_largest_hard.index.isin(single_modes.index)
-#     largest_cluster_hard_mode = clusters_largest_hard[largest_hard_is_mode]["date"]
+    #     largest_hard_is_mode = clusters_largest_hard.index.isin(single_modes.index)
+    #     largest_cluster_hard_mode = clusters_largest_hard[largest_hard_is_mode]["date"]
 
-#     # Continue without the resolved ones
-#     clusters_largest_hard = clusters_largest_hard[~largest_hard_is_mode]
+    #     # Continue without the resolved ones
+    #     clusters_largest_hard = clusters_largest_hard[~largest_hard_is_mode]
 
     # === Resolve: largest_cluster_hard_mean ===
     # Take the average of these largest cluster hard dates
-    largest_cluster_hard_mean = clusters_largest_hard.reset_index(
-    ).groupby(index_col + ["cluster"])["date"].agg("mean")
+    largest_cluster_hard_mean = (
+        clusters_largest_hard.reset_index()
+        .groupby(index_col + ["cluster"])["date"]
+        .agg("mean")
+    )
     largest_cluster_hard_mean.index = largest_cluster_hard_mean.index.droplevel(1)
 
     # === Resolve: largest_cluster_approx_mean ===
@@ -145,8 +151,14 @@ def analyze_typos(dates_hard):
     index_col = dates_hard.index.names
 
     # Get all unique hard dates for each group
-    dates_hard_unique = dates_hard["date"].reset_index().value_counts(
-    ).reset_index().drop(0, axis=1).set_index(index_col)["date"]
+    dates_hard_unique = (
+        dates_hard["date"]
+        .reset_index()
+        .value_counts()
+        .reset_index()
+        .drop(0, axis=1)
+        .set_index(index_col)["date"]
+    )
 
     # Ignore any groups which only have one unique hard date
     dates_hard_unique_vcs = dates_hard_unique.index.value_counts()
@@ -156,19 +168,23 @@ def analyze_typos(dates_hard):
     dates_hard_unique = dates_hard_unique.loc[dates_hard_unique_vcs.index]
 
     def date_to_char(dates):
-        chars = dates.astype(str).str.split('', expand=True)
+        chars = dates.astype(str).str.split("", expand=True)
         chars.drop(columns=[0, 5, 8, 11], inplace=True)
-        chars.rename({
-            1: 'y1',
-            2: 'y2',
-            3: 'y3',
-            4: 'y4',
-            6: 'm1',
-            7: 'm2',
-            9: 'd1',
-            10: 'd2',
-        }, axis=1, inplace=True)
-        chars = chars.astype('uint8')
+        chars.rename(
+            {
+                1: "y1",
+                2: "y2",
+                3: "y3",
+                4: "y4",
+                6: "m1",
+                7: "m2",
+                9: "d1",
+                10: "d2",
+            },
+            axis=1,
+            inplace=True,
+        )
+        chars = chars.astype("uint8")
 
         return chars
 
@@ -198,15 +214,23 @@ def analyze_typos(dates_hard):
 
     # Incorporate date info
     # Recover the dates from the characters
-    date_x = pairs_x.astype(str).agg(''.join, axis=1)
-    date_x = date_x.str.slice(stop=4) + \
-        "-" + date_x.str.slice(start=4, stop=6) + \
-        "-" + date_x.str.slice(start=6)
+    date_x = pairs_x.astype(str).agg("".join, axis=1)
+    date_x = (
+        date_x.str.slice(stop=4)
+        + "-"
+        + date_x.str.slice(start=4, stop=6)
+        + "-"
+        + date_x.str.slice(start=6)
+    )
 
-    date_y = pairs_y.astype(str).agg(''.join, axis=1)
-    date_y = date_y.str.slice(stop=4) + \
-        "-" + date_y.str.slice(start=4, stop=6) + \
-        "-" + date_y.str.slice(start=6)
+    date_y = pairs_y.astype(str).agg("".join, axis=1)
+    date_y = (
+        date_y.str.slice(stop=4)
+        + "-"
+        + date_y.str.slice(start=4, stop=6)
+        + "-"
+        + date_y.str.slice(start=6)
+    )
     pairs["date_x"] = pd.to_datetime(date_x)
     pairs["date_y"] = pd.to_datetime(date_y)
     pairs["year"] = pairs["date_x"].dt.year == pairs["date_y"].dt.year
@@ -214,16 +238,16 @@ def analyze_typos(dates_hard):
     pairs["day"] = pairs["date_x"].dt.day == pairs["date_y"].dt.day
 
     # Check if gotten the day/month transposed
-    pairs["dm_transpose"] = (pairs["date_x"].dt.day == pairs["date_y"].dt.month) & (pairs["date_x"].dt.month == pairs["date_y"].dt.day)
+    pairs["dm_transpose"] = (pairs["date_x"].dt.day == pairs["date_y"].dt.month) & (
+        pairs["date_x"].dt.month == pairs["date_y"].dt.day
+    )
 
     # Logic for determining whether a typo or not
     certain_conds = [
         # Only one different character
         (pairs["n_diff"] == 1),
-
         # Two different characters with at least one adjacent
         ((pairs["n_diff"] == 2) & (pairs["n_adj"] >= 1)),
-
         # Day and month are transposed, but correct year
         (pairs["dm_transpose"] & pairs["year"]),
     ]
@@ -234,9 +258,16 @@ def analyze_typos(dates_hard):
     # Create typo groups from pairs of possible typos
     typo_pairs = pairs[pairs["typo_certain"] | pairs["typo_possible"]]
 
-    typo_groups = typo_pairs[["date_x", "date_y"]].astype(str).groupby(level=0).apply(
-        pairs_to_groups
-    ).reset_index().set_index(index_col + ["group"])["level_1"]
+    typo_groups = (
+        typo_pairs[["date_x", "date_y"]]
+        .astype(str)
+        .groupby(level=0)
+        .apply(
+            pairs_to_groups,
+        )
+        .reset_index()
+        .set_index(index_col + ["group"])["level_1"]
+    )
     typo_groups.rename("date", inplace=True)
 
     # Convert typos to characters
@@ -252,7 +283,12 @@ def analyze_typos(dates_hard):
 
     # Compile the most popular character options seen in each typo group
     typo_value_options = typo_group_chars.groupby(level=[0, 1]).agg(
-        dict(zip(typo_group_chars.columns, [mode_scalar_or_list]*len(typo_group_chars.columns)))
+        dict(
+            zip(
+                typo_group_chars.columns,
+                [mode_scalar_or_list] * len(typo_group_chars.columns),
+            ),
+        ),
     )
 
     """
@@ -265,7 +301,7 @@ def analyze_typos(dates_hard):
     - Trade off between accuracy and just having nulls instead - date accuracy importance is use case specific
 
     As we go down the line of columns, disagreements become less and less important
-    That means we could take a mean of two disagreeing days, but not years, or 
+    That means we could take a mean of two disagreeing days, but not years, or
     thousands of years
     """
 
@@ -323,6 +359,7 @@ class DateReconciler:
     Approx dates take on supporting roles, e.g., is a given hard date near to many
     supporting approx dates, or can be used as a backup with no hard dates available.
     """
+
     def __init__(
         self,
         sources: Dict[Hashable, pd.Series],
@@ -349,13 +386,13 @@ class DateReconciler:
         # Handle approximate date sources
         if approx_sources is not None and approx_near_thresh is None:
             raise ValueError(
-                "Must specify `approx_near_thresh` if `approx_sources` specified."
+                "Must specify `approx_near_thresh` if `approx_sources` specified.",
             )
         approx_sources = to_list_optional(approx_sources, none_to_empty=True)
 
         if not set(approx_sources).issubset(set(sources.keys())):
             raise ValueError(
-                "`approx_sources` must be a subset of the `sources` keys."
+                "`approx_sources` must be a subset of the `sources` keys.",
             )
 
         self.dates = self._preproc_sources(sources, approx_sources, once_per_source)
@@ -363,7 +400,6 @@ class DateReconciler:
 
         self.approx_sources = approx_sources
         self.approx_near_thresh = approx_near_thresh
-
 
     def _preproc_sources(self, sources, approx_sources, once_per_source):
         # Preprocess the sources/dates
@@ -400,9 +436,13 @@ class DateReconciler:
 
             if once_per_source:
                 index_col = date.index.names
-                date = date.reset_index().drop_duplicates(
-                    keep="first",
-                ).set_index(index_col)["date"]
+                date = (
+                    date.reset_index()
+                    .drop_duplicates(
+                        keep="first",
+                    )
+                    .set_index(index_col)["date"]
+                )
 
             date = date.to_frame()
             date["source"] = source
@@ -417,11 +457,10 @@ class DateReconciler:
 
         if not (dates["date"].dt.time == datetime.time(0)).all():
             warnings.warn(
-                "Dates with times are not supported. Converting to date only."
+                "Dates with times are not supported. Converting to date only.",
             )
 
         return dates
-
 
     def _combined_resolved(self, groups, groups_resolved):
         resolved = []
@@ -432,7 +471,6 @@ class DateReconciler:
             resolved.append(dates)
 
         return combine_nonoverlapping(resolved)
-
 
     def __call__(self):
         dates = self.dates.copy()
@@ -469,23 +507,16 @@ class DateReconciler:
         unres_approx = unres_approx[unres_approx["date_score"] != 0]
 
         groups_resolved = {}
+
         def resolve(resolved, reason):
             nonlocal groups_resolved, unres, unres_hard, unres_approx, unres_groups
 
             groups_resolved[reason] = resolved
 
-            unres = unres[
-                ~unres.index.isin(resolved.index)
-            ]
-            unres_hard = unres_hard[
-                ~unres_hard.index.isin(resolved.index)
-            ]
-            unres_approx = unres_approx[
-                ~unres_approx.index.isin(resolved.index)
-            ]
-            unres_groups = unres_groups[
-                ~unres_groups.index.isin(resolved.index)
-            ]
+            unres = unres[~unres.index.isin(resolved.index)]
+            unres_hard = unres_hard[~unres_hard.index.isin(resolved.index)]
+            unres_approx = unres_approx[~unres_approx.index.isin(resolved.index)]
+            unres_groups = unres_groups[~unres_groups.index.isin(resolved.index)]
 
         # === Resolve: one_entry ===
         one_entry = unres[
@@ -526,15 +557,17 @@ class DateReconciler:
         )
         resolve(hard_single_mode, "hard_single_mode")
 
-
         # === Cluster resolutions ===
         clusters = get_date_clusters(
             unres[["date", "approx"]],
             self.approx_near_thresh,
         )
 
-        clusters_largest, largest_cluster_hard_mean, largest_cluster_approx_mean = \
-            cluster_analysis(unres_hard, clusters)
+        (
+            clusters_largest,
+            largest_cluster_hard_mean,
+            largest_cluster_approx_mean,
+        ) = cluster_analysis(unres_hard, clusters)
 
         resolve(largest_cluster_hard_mean, "largest_cluster_hard_mean")
         resolve(largest_cluster_approx_mean, "largest_cluster_approx_mean")

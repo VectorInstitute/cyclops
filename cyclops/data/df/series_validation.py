@@ -1,6 +1,5 @@
-from typing import Any, Union
-
-import numpy as np
+"""Functions for validating Pandas Series."""
+from typing import Any
 
 import pandas as pd
 from pandas.api.types import (
@@ -13,12 +12,11 @@ from pandas.api.types import (
 
 
 def is_series(data: Any, raise_err: bool = False) -> bool:
-    """
-    Check if the input is a Pandas Series.
+    """Check if the input is a Pandas Series.
 
     Parameters
     ----------
-    data : any
+    data : Any
         The input data to check.
     raise_err : bool, default False
         Whether to raise an error if the data is not a Series.
@@ -43,12 +41,11 @@ def is_series(data: Any, raise_err: bool = False) -> bool:
 
 
 def is_bool_series(data: Any, raise_err: bool = False) -> bool:
-    """
-    Check if the input is a Pandas boolean series.
+    """Check if the input is a Pandas boolean series.
 
     Parameters
     ----------
-    data : any
+    data : Any
         The input data to check.
     raise_err : bool, default False
         Whether to raise an error if the data is not a boolean Series.
@@ -80,12 +77,11 @@ def is_int_series(
     raise_err: bool = False,
     raise_err_with_nullable: bool = False,
 ) -> bool:
-    """
-    Check if the input is a Pandas integer series.
+    """Check if the input is a Pandas integer series.
 
     Parameters
     ----------
-    data : any
+    data : Any
         The input data to check.
     raise_err : bool, default False
         Whether to raise an error if the data is not an integer Series.
@@ -113,7 +109,7 @@ def is_int_series(
         raise ValueError(
             "Pandas series must have an integer type. Consider applying "
             "`series.astype('Int64')`, where Int64 is a nullable integer data type "
-            "which enables the use of null values with an integer dtype."
+            "which enables the use of null values with an integer dtype.",
         )
 
     if raise_err:
@@ -123,12 +119,11 @@ def is_int_series(
 
 
 def is_float_series(data: Any, raise_err: bool = False) -> bool:
-    """
-    Check if the input is a Pandas float series.
+    """Check if the input is a Pandas float series.
 
     Parameters
     ----------
-    data : any
+    data : Any
         The input data to check.
     raise_err : bool, default False
         Whether to raise an error if the data is not a float Series.
@@ -156,12 +151,11 @@ def is_float_series(data: Any, raise_err: bool = False) -> bool:
 
 
 def is_str_series(data: Any, raise_err: bool = False) -> bool:
-    """
-    Check if the input is a Pandas string series.
+    """Check if the input is a Pandas string series.
 
     Parameters
     ----------
-    data : any
+    data : Any
         The input data to check.
     raise_err : bool, default False
         Whether to raise an error if the data is not a string Series.
@@ -189,12 +183,11 @@ def is_str_series(data: Any, raise_err: bool = False) -> bool:
 
 
 def is_datetime_series(data: Any, raise_err: bool = False) -> bool:
-    """
-    Check if the input is a Pandas datetime series.
+    """Check if the input is a Pandas datetime series.
 
     Parameters
     ----------
-    data : any
+    data : Any
         The input data to check.
     raise_err : bool, default False
         Whether to raise an error if the data is not a datetime Series.

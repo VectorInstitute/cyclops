@@ -1,11 +1,11 @@
+"""Functions for working with pairs of values in DataFrames."""
 from typing import Tuple, Union
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 
-import networkx as nx
-
-from fecg.utils.pandas.type import to_frame_if_series
+from cyclops.data.df.series_validation import to_frame_if_series
 
 
 def get_pairs(
@@ -13,8 +13,7 @@ def get_pairs(
     self_match: bool = False,
     combinations: bool = True,
 ) -> pd.DataFrame:
-    """
-    Perform a self-cross to generate pairs.
+    """Perform a self-cross to generate pairs.
 
     Parameters
     ----------
@@ -36,7 +35,7 @@ def get_pairs(
     example, if evaluating the pairs using a commutative function, where argument order
     does not affect the result, we would want to take only the pair combinations.
     """
-    pairs = to_frame_if_series(data).merge(data, how='cross')
+    pairs = to_frame_if_series(data).merge(data, how="cross")
 
     if combinations or not self_match:
         length = len(data)
@@ -44,10 +43,7 @@ def get_pairs(
         idx1 = np.tile(np.arange(length), length)
 
         if combinations:
-            if self_match:
-                pairs = pairs[idx0 <= idx1]
-            else:
-                pairs = pairs[idx0 < idx1]
+            pairs = pairs[idx0 <= idx1] if self_match else pairs[idx0 < idx1]
         else:
             pairs = pairs[idx0 != idx1]
 
@@ -55,8 +51,7 @@ def get_pairs(
 
 
 def split_pairs(pairs: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Split x and y pair columns into two separate DataFrames.
+    """Split x and y pair columns into two separate DataFrames.
 
     Parameters
     ----------
@@ -70,7 +65,7 @@ def split_pairs(pairs: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     pandas.DataFrame
         A DataFrame of pairs which had the "_y" columns. Suffix now removed.
     """
-    half_len = (len(pairs.columns)//2)
+    half_len = len(pairs.columns) // 2
 
     pairs_x = pairs.iloc[:, :half_len]
     pairs_y = pairs.iloc[:, half_len:]
@@ -84,8 +79,7 @@ def split_pairs(pairs: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def pairs_to_groups(pairs: pd.DataFrame) -> pd.DataFrame:
-    """
-    Convert pairs of values in a DataFrame to groups of connected values.
+    """Convert pairs of values in a DataFrame to groups of connected values.
 
     Given a DataFrame with two columns representing pairs of values, this function
     constructs a graph where each value is a node and each pair is an edge. It then
@@ -124,6 +118,4 @@ def pairs_to_groups(pairs: pd.DataFrame) -> pd.DataFrame:
 
     # Convert connected components into a groups series
     groups = components.explode()
-    groups = pd.Series(groups.index, index=groups.values, name="group")
-
-    return groups
+    return pd.Series(groups.index, index=groups.values, name="group")
