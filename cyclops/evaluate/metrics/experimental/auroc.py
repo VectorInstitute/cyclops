@@ -1,5 +1,5 @@
 """Classes for computing the area under the ROC curve."""
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Any, List, Literal, Optional, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental.functional.auroc import (
     _binary_auroc_compute,
@@ -37,6 +37,8 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the AUROC.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments that are common to all metrics.
 
     Examples
     --------
@@ -59,9 +61,10 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
         max_fpr: Optional[float] = None,
         thresholds: Optional[Union[int, List[float], Array]] = None,
         ignore_index: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize the BinaryAUROC metric."""
-        super().__init__(thresholds=thresholds, ignore_index=ignore_index)
+        super().__init__(thresholds=thresholds, ignore_index=ignore_index, **kwargs)
         _binary_auroc_validate_args(
             max_fpr=max_fpr,
             thresholds=thresholds,
@@ -105,6 +108,8 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
     ignore_index : int or Tuple[int], optional, default=None
         The value(s) in `target` that should be ignored when computing the AUROC.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments that are common to all metrics.
 
     Examples
     --------
@@ -140,12 +145,14 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
         thresholds: Optional[Union[int, List[float], Array]] = None,
         average: Optional[Literal["macro", "weighted", "none"]] = "macro",
         ignore_index: Optional[Union[int, Tuple[int]]] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize the MulticlassAUROC metric."""
         super().__init__(
             num_classes,
             thresholds=thresholds,
             ignore_index=ignore_index,
+            **kwargs,
         )
         _multiclass_auroc_validate_args(
             num_classes=num_classes,
@@ -173,6 +180,8 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
 class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_auroc"):
     """Area under the Receiver Operating Characteristic (ROC) curve.
 
+    Parameters
+    ----------
     num_labels : int
         The number of labels in the multilabel classification problem.
     thresholds : Union[int, List[float], Array], optional, default=None
@@ -195,6 +204,8 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_a
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the AUROC.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments that are common to all metrics.
 
     Examples
     --------
@@ -227,12 +238,14 @@ class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_a
         thresholds: Optional[Union[int, List[float], Array]] = None,
         average: Optional[Literal["micro", "macro", "weighted", "none"]] = "macro",
         ignore_index: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize the MultilabelAUROC metric."""
         super().__init__(
             num_labels,
             thresholds=thresholds,
             ignore_index=ignore_index,
+            **kwargs,
         )
         _multilabel_auroc_validate_args(
             num_labels=num_labels,

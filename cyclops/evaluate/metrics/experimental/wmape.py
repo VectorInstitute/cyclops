@@ -1,5 +1,6 @@
 """Weighted Mean Absolute Percentage Error metric."""
 from types import ModuleType
+from typing import Any
 
 from cyclops.evaluate.metrics.experimental.functional.wmape import (
     _weighted_mean_absolute_percentage_error_compute,
@@ -17,6 +18,8 @@ class WeightedMeanAbsolutePercentageError(Metric):
     epsilon : float, optional, default=1.17e-6
         Specifies the lower bound for target values. Any target value below epsilon
         is set to epsilon (avoids division by zero errors).
+    **kwargs : Any
+        Keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
@@ -34,8 +37,8 @@ class WeightedMeanAbsolutePercentageError(Metric):
 
     name: str = "Weighted Mean Absolute Percentage Error"
 
-    def __init__(self, epsilon: float = 1.17e-6) -> None:
-        super().__init__()
+    def __init__(self, epsilon: float = 1.17e-6, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         if not isinstance(epsilon, float):
             raise TypeError(f"Expected `epsilon` to be a float. Got {type(epsilon)}")
         self.epsilon = epsilon

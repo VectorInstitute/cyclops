@@ -31,6 +31,8 @@ class BinaryROC(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"):
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the ROC curve.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -92,6 +94,8 @@ class MulticlassROC(
     ignore_index : int or Tuple[int], optional, default=None
         The value(s) in `target` that should be ignored when computing the ROC curve.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -169,6 +173,8 @@ class MultilabelROC(
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the ROC Curve.
         If `None`, all values in `target` are used.
+    **kwargs
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------

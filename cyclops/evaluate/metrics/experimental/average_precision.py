@@ -18,14 +18,20 @@ class BinaryAveragePrecision(
 
     Parameters
     ----------
-    thresholds : int or list of floats or numpy.ndarray of floats, default=None
-        Thresholds used for computing the precision and recall scores.
-        If int, then the number of thresholds to use.
-        If list or numpy.ndarray, then the thresholds to use.
-        If None, then the thresholds are automatically determined by the
-        unique values in ``preds``.
-    pos_label : int
-        The label of the positive class.
+    thresholds : Union[int, List[float], Array], optional, default=None
+        The thresholds to use for computing the precision and recall. Can be one
+        of the following:
+        - `None`: use all unique values in `preds` as thresholds.
+        - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
+          [0, 1].
+        - `List[float]`: use the values in the list as bins for the thresholds.
+        - `Array`: use the values in the Array as bins for the thresholds. The
+          array must be 1D.
+    ignore_index : int, optional, default=None
+        The value in `target` that should be ignored when computing the precision
+        and recall. If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
