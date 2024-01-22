@@ -736,8 +736,15 @@ def _compute_metrics(  # noqa: C901, PLR0912
         if threshold is not None:
             # set the threshold for each metric in the collection
             for name, metric in metrics.items():
-                if hasattr(metric, "threshold"):
+                if isinstance(metric, Metric) and hasattr(metric, "threshold"):
                     metric.threshold = threshold
+                elif isinstance(metric, OperatorMetric):
+                    if hasattr(metric.metric_a, "threshold") and hasattr(
+                        metric.metric_b,
+                        "threshold",
+                    ):
+                        metric.metric_a.threshold = threshold
+                        metric.metric_b.threshold = threshold
                 else:
                     LOGGER.warning(
                         "Metric %s does not have a threshold attribute. "

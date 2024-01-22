@@ -345,6 +345,20 @@ class BinaryTabularClassificationTask(BaseTask):
                 only_predictions=False,
                 splits_mapping=splits_mapping,
             )
+
+            # select the probability scores of the positive class since metrics
+            # expect a single column of probabilities
+            dataset = dataset.map(
+                lambda examples: {
+                    f"{prediction_column_prefix}.{model_name}": np.array(examples)[
+                        :,
+                        1,
+                    ].tolist(),
+                },
+                batched=True,
+                batch_size=batch_size,
+                input_columns=f"{prediction_column_prefix}.{model_name}",
+            )
         results = evaluate(
             dataset=dataset,
             metrics=metrics_collection,

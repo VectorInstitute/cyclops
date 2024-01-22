@@ -227,7 +227,7 @@ class ClassificationPlotter(Plotter):
                 if aurocs and slice_name in aurocs:
                     assert isinstance(
                         aurocs[slice_name],
-                        float,
+                        (float, np.floating),
                     ), "AUROCs must be a float for binary tasks"
                     name = f"{slice_name} (AUC = {aurocs[slice_name]:.2f})"
                 else:
@@ -483,8 +483,10 @@ class ClassificationPlotter(Plotter):
         """
         if self.task_type == "binary":
             assert all(
-                not isinstance(value, (list, np.ndarray)) for value in metrics.values()
-            ), ("Metrics must not be of type list or np.ndarray for" "binary tasks")
+                not isinstance(value, list)
+                and not (isinstance(value, np.ndarray) and value.ndim > 0)
+                for value in metrics.values()
+            ), "Metrics must not be of type list or np.ndarray for binary tasks"
             trace = bar_plot(
                 x=list(metrics.keys()),  # type: ignore[arg-type]
                 y=list(metrics.values()),  # type: ignore[arg-type]
@@ -807,10 +809,11 @@ class ClassificationPlotter(Plotter):
                 metric_names = list(metrics.keys())
                 metric_values = list(metrics.values())
                 assert all(
-                    not isinstance(value, (list, np.ndarray))
+                    not isinstance(value, list)
+                    and not (isinstance(value, np.ndarray) and value.ndim > 0)
                     for value in metrics.values()
                 ), (
-                    "Generic metrics must not be of type list or np.ndarray for"
+                    "Generic metrics must not be of type list or np.ndarray for "
                     "binary tasks"
                 )
                 trace.append(
@@ -926,7 +929,8 @@ class ClassificationPlotter(Plotter):
                 metric_names = list(metrics.keys())
                 metric_values = list(metrics.values())
                 assert all(
-                    not isinstance(value, (list, np.ndarray))
+                    not isinstance(value, list)
+                    and not (isinstance(value, np.ndarray) and value.ndim > 0)
                     for value in metrics.values()
                 ), (
                     "Generic metrics must not be of type list or np.ndarray for"

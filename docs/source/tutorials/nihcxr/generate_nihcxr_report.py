@@ -90,29 +90,33 @@ slices_sex = [
     {"Patient Gender": {"value": "F"}},
 ]
 
-
+num_labels = len(pathologies)
 ppv = create_metric(
     metric_name="multilabel_ppv",
     experimental=True,
-    num_labels=len(pathologies),
+    num_labels=num_labels,
+    average=None,
 )
 
 npv = create_metric(
     metric_name="multilabel_npv",
     experimental=True,
-    num_labels=len(pathologies),
+    num_labels=num_labels,
+    average=None,
 )
 
 specificity = create_metric(
     metric_name="multilabel_specificity",
     experimental=True,
-    num_labels=len(pathologies),
+    num_labels=num_labels,
+    average=None,
 )
 
 sensitivity = create_metric(
     metric_name="multilabel_sensitivity",
     experimental=True,
-    num_labels=len(pathologies),
+    num_labels=num_labels,
+    average=None,
 )
 # create the slice functions
 slice_spec = SliceSpec(spec_list=slices_sex)
@@ -240,15 +244,15 @@ for slice_, metrics in nih_eval_results_gender[
 for name, metric in results_flat.items():
     split, name = name.split("/")  # noqa: PLW2901
     descriptions = {
-        "MultilabelPositivePredictiveValue": "The proportion of correctly predicted positive instances among all instances predicted as positive. Also known as precision.",
-        "MultilabelNegativePredictiveValue": "The proportion of correctly predicted negative instances among all instances predicted as negative.",
+        "MultilabelPPV": "The proportion of correctly predicted positive instances among all instances predicted as positive. Also known as precision.",
+        "MultilabelNPV": "The proportion of correctly predicted negative instances among all instances predicted as negative.",
         "MultilabelSensitivity": "The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.",
         "MultilabelSpecificity": "The proportion of actual negative instances that are correctly predicted.",
     }
     report.log_quantitative_analysis(
         "performance",
         name=name,
-        value=metric,
+        value=metric.tolist() if isinstance(metric, np.generic) else metric,
         description=descriptions[name],
         metric_slice=split,
         pass_fail_thresholds=0.7,

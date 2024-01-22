@@ -18,7 +18,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import dim_zero_cat
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
-class BinaryAUROC(BinaryPrecisionRecallCurve):
+class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
     """Area under the Receiver Operating Characteristic (ROC) curve.
 
     Parameters
@@ -79,7 +79,7 @@ class BinaryAUROC(BinaryPrecisionRecallCurve):
         return _binary_auroc_compute(state, thresholds=self.thresholds, max_fpr=self.max_fpr)  # type: ignore
 
 
-class MulticlassAUROC(MulticlassPrecisionRecallCurve):
+class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_auroc"):
     """Area under the Receiver Operating Characteristic (ROC) curve.
 
     Parameters
@@ -170,7 +170,7 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve):
         )
 
 
-class MultilabelAUROC(MultilabelPrecisionRecallCurve):
+class MultilabelAUROC(MultilabelPrecisionRecallCurve, registry_key="multilabel_auroc"):
     """Area under the Receiver Operating Characteristic (ROC) curve.
 
     num_labels : int

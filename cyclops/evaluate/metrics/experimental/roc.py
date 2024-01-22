@@ -15,7 +15,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import dim_zero_cat
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
-class BinaryROC(BinaryPrecisionRecallCurve):
+class BinaryROC(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"):
     """The receiver operating characteristic (ROC) curve.
 
     Parameters
@@ -62,7 +62,10 @@ class BinaryROC(BinaryPrecisionRecallCurve):
         return _binary_roc_compute(state, self.thresholds)  # type: ignore[arg-type]
 
 
-class MulticlassROC(MulticlassPrecisionRecallCurve):
+class MulticlassROC(
+    MulticlassPrecisionRecallCurve,
+    registry_key="multiclass_roc_curve",
+):
     """The reciever operator characteristics (ROC) curve.
 
     Parameters
@@ -145,7 +148,10 @@ class MulticlassROC(MulticlassPrecisionRecallCurve):
         )
 
 
-class MultilabelROC(MultilabelPrecisionRecallCurve):
+class MultilabelROC(
+    MultilabelPrecisionRecallCurve,
+    registry_key="multilabel_roc_curve",
+):
     """The reciever operator characteristics (ROC) curve.
 
     Parameters
