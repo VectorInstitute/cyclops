@@ -9,6 +9,9 @@ from cyclops.evaluate.metrics.experimental.functional.auroc import (
     multiclass_auroc,
     multilabel_auroc,
 )
+from cyclops.evaluate.metrics.experimental.functional.average_precision import (
+    binary_average_precision,
+)
 from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
     binary_confusion_matrix,
     multiclass_confusion_matrix,
