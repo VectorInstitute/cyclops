@@ -1,5 +1,4 @@
 """Fairness evaluator."""
-
 import inspect
 import itertools
 import logging
@@ -7,8 +6,8 @@ import warnings
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Union
 
+import array_api_compat.numpy
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 from datasets import Dataset, config
 from datasets.features import Features
@@ -21,15 +20,14 @@ from cyclops.data.utils import (
     get_columns_as_numpy_array,
     set_decode,
 )
-from cyclops.evaluate.metrics.factory import create_metric
-from cyclops.evaluate.metrics.functional.precision_recall_curve import (
+from cyclops.evaluate.metrics.experimental.functional.precision_recall_curve import (
     _format_thresholds,
+    _validate_thresholds,
 )
-from cyclops.evaluate.metrics.metric import Metric, MetricCollection, OperatorMetric
-from cyclops.evaluate.metrics.utils import (
-    _check_thresholds,
-    _get_value_if_singleton_array,
-)
+from cyclops.evaluate.metrics.experimental.metric import Metric, OperatorMetric
+from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
+from cyclops.evaluate.metrics.experimental.utils.types import Array
+from cyclops.evaluate.metrics.factory import create_metric
 from cyclops.evaluate.utils import _format_column_names
 from cyclops.utils.log import setup_logging
 
@@ -39,7 +37,7 @@ setup_logging(print_level="WARN", logger=LOGGER)
 
 
 def evaluate_fairness(
-    metrics: Union[str, Callable[..., Any], Metric, MetricCollection],
+    metrics: Union[str, Callable[..., Any], Metric, MetricDict],
     dataset: Dataset,
     groups: Union[str, List[str]],
     target_columns: Union[str, List[str]],
@@ -62,7 +60,7 @@ def evaluate_fairness(
 
     Parameters
     ----------
-    metrics : Union[str, Callable[..., Any], Metric, MetricCollection]
+    metrics : Union[str, Callable[..., Any], Metric, MetricDict]
         The metric or metrics to compute. If a string, it should be the name of a
         metric provided by CyclOps. If a callable, it should be a function that
         takes target, prediction, and optionally threshold/thresholds as arguments
@@ -147,18 +145,14 @@ def evaluate_fairness(
         raise TypeError(
             "Expected `dataset` to be of type `Dataset`, but got " f"{type(dataset)}.",
         )
+    _validate_thresholds(thresholds)
 
-    _check_thresholds(thresholds)
-    fmt_thresholds: npt.NDArray[np.float_] = _format_thresholds(  # type: ignore
-        thresholds,
-    )
-
-    metrics_: Union[Callable[..., Any], MetricCollection] = _format_metrics(
+    metrics_: Union[Callable[..., Any], MetricDict] = _format_metrics(
         metrics,
         metric_name,
         **(metric_kwargs or {}),
     )
-
+    fmt_thresholds = _format_thresholds(thresholds, xp=array_api_compat.numpy)
     fmt_groups: List[str] = _format_column_names(groups)
     fmt_target_columns: List[str] = _format_column_names(target_columns)
     fmt_prediction_columns: List[str] = _format_column_names(prediction_columns)
@@ -361,15 +355,15 @@ def warn_too_many_unique_values(
 
 
 def _format_metrics(
-    metrics: Union[str, Callable[..., Any], Metric, MetricCollection],
+    metrics: Union[str, Callable[..., Any], Metric, MetricDict],
     metric_name: Optional[str] = None,
     **metric_kwargs: Any,
-) -> Union[Callable[..., Any], Metric, MetricCollection]:
+) -> Union[Callable[..., Any], Metric, MetricDict]:
     """Format the metrics argument.
 
     Parameters
     ----------
-    metrics : Union[str, Callable[..., Any], Metric, MetricCollection]
+    metrics : Union[str, Callable[..., Any], Metric, MetricDict]
         The metrics to use for computing the metric results.
     metric_name : str, optional, default=None
         The name of the metric. This is only used if `metrics` is a callable.
@@ -379,23 +373,23 @@ def _format_metrics(
 
     Returns
     -------
-    Union[Callable[..., Any], Metric, MetricCollection]
+    Union[Callable[..., Any], Metric, MetricDict]
         The formatted metrics.
 
     Raises
     ------
     TypeError
-        If `metrics` is not of type `str`, `Callable`, `Metric`, or `MetricCollection`.
+        If `metrics` is not of type `str`, `Callable`, `Metric`, or `MetricDict`.
 
     """
     if isinstance(metrics, str):
-        metrics = create_metric(metric_name=metrics, **metric_kwargs)
+        metrics = create_metric(metric_name=metrics, experimental=True, **metric_kwargs)
     if isinstance(metrics, Metric):
         if metric_name is not None and isinstance(metrics, OperatorMetric):
             # single metric created from arithmetic operation, with given name
-            return MetricCollection({metric_name: metrics})
-        return MetricCollection(metrics)
-    if isinstance(metrics, MetricCollection):
+            return MetricDict({metric_name: metrics})
+        return MetricDict(metrics)
+    if isinstance(metrics, MetricDict):
         return metrics
     if callable(metrics):
         if metric_name is None:
@@ -407,7 +401,7 @@ def _format_metrics(
         return metrics
 
     raise TypeError(
-        f"Expected `metrics` to be of type `str`, `Metric`, `MetricCollection`, or "
+        f"Expected `metrics` to be of type `str`, `Metric`, `MetricDict`, or "
         f"`Callable`, but got {type(metrics)}.",
     )
 
@@ -701,7 +695,7 @@ def _get_slice_spec(
 
 
 def _compute_metrics(  # noqa: C901, PLR0912
-    metrics: Union[Callable[..., Any], MetricCollection],
+    metrics: Union[Callable[..., Any], MetricDict],
     dataset: Dataset,
     target_columns: List[str],
     prediction_column: str,
@@ -713,7 +707,7 @@ def _compute_metrics(  # noqa: C901, PLR0912
 
     Parameters
     ----------
-    metrics : Union[Callable, MetricCollection]
+    metrics : Union[Callable, MetricDict]
         The metrics to compute.
     dataset : Dataset
         The dataset to compute the metrics on.
@@ -738,7 +732,7 @@ def _compute_metrics(  # noqa: C901, PLR0912
         "Encountered empty dataset while computing metrics. "
         "The metric values will be set to `None`."
     )
-    if isinstance(metrics, MetricCollection):
+    if isinstance(metrics, MetricDict):
         if threshold is not None:
             # set the threshold for each metric in the collection
             for name, metric in metrics.items():
@@ -754,7 +748,7 @@ def _compute_metrics(  # noqa: C901, PLR0912
         if len(dataset) == 0:
             warnings.warn(empty_dataset_msg, RuntimeWarning, stacklevel=1)
             results: Dict[str, Any] = {
-                metric_name: float("NaN") for metric_name in metrics
+                metric_name: float("NaN") for metric_name in metrics  # type: ignore[attr-defined]
             }
         elif (
             batch_size is None or batch_size <= 0
@@ -779,11 +773,11 @@ def _compute_metrics(  # noqa: C901, PLR0912
                     columns=prediction_column,
                 )
 
-                metrics.update_state(targets, predictions)
+                metrics.update(targets, predictions)
 
             results = metrics.compute()
 
-        metrics.reset_state()
+        metrics.reset()
 
         return results
     if callable(metrics):
@@ -817,26 +811,26 @@ def _compute_metrics(  # noqa: C901, PLR0912
         return {metric_name.title(): output}
 
     raise TypeError(
-        "The `metrics` argument must be a string, a Metric, a MetricCollection, "
+        "The `metrics` argument must be a string, a Metric, a MetricDict, "
         f"or a callable. Got {type(metrics)}.",
     )
 
 
 def _get_metric_results_for_prediction_and_slice(
-    metrics: Union[Callable[..., Any], MetricCollection],
+    metrics: Union[Callable[..., Any], MetricDict],
     dataset: Dataset,
     target_columns: List[str],
     prediction_column: str,
     slice_name: str,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
     metric_name: Optional[str] = None,
-    thresholds: Optional[npt.NDArray[np.float_]] = None,
+    thresholds: Optional[Array] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Compute metrics for a slice of a dataset.
 
     Parameters
     ----------
-    metrics : Union[Callable, MetricCollection]
+    metrics : Union[Callable, MetricDict]
         The metrics to compute.
     dataset : Dataset
         The dataset to compute the metrics on.
@@ -850,7 +844,7 @@ def _get_metric_results_for_prediction_and_slice(
         The batch size to use for the computation.
     metric_name : Optional[str]
         The name of the metric to compute.
-    thresholds : Optional[List[float]]
+    thresholds : Optional[Array]
         The thresholds to use for the metrics.
 
     Returns
@@ -873,7 +867,7 @@ def _get_metric_results_for_prediction_and_slice(
         return {slice_name: metric_output}
 
     results: Dict[str, Dict[str, Any]] = {}
-    for threshold in thresholds:
+    for threshold in thresholds:  # type: ignore[attr-defined]
         metric_output = _compute_metrics(
             metrics=metrics,
             dataset=dataset,
@@ -969,11 +963,7 @@ def _compute_parity_metrics(
                     )
 
                 parity_results[key].setdefault(slice_name, {}).update(
-                    {
-                        parity_metric_name: _get_value_if_singleton_array(
-                            parity_metric_value,
-                        ),
-                    },
+                    {parity_metric_name: parity_metric_value},
                 )
 
     return parity_results
