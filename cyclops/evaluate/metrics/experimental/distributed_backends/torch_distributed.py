@@ -95,3 +95,7 @@ class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
             slice_param = [slice(dim_size) for dim_size in item_size]
             gathered_data[idx] = gathered_data[idx][slice_param]
         return gathered_data
+
+
+if __name__ == "__main__":  # prevent execution of module on import
+    pass
