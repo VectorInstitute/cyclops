@@ -744,7 +744,7 @@ def _compute_metrics(  # noqa: C901, PLR0912
                         "threshold",
                     ):
                         metric.metric_a.threshold = threshold
-                        metric.metric_b.threshold = threshold
+                        metric.metric_b.threshold = threshold  # type: ignore[union-attr]
                 else:
                     LOGGER.warning(
                         "Metric %s does not have a threshold attribute. "

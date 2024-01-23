@@ -73,7 +73,7 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
         self.max_fpr = max_fpr
 
     def _compute_metric(self) -> Array:  # type: ignore[override]
-        """Compute the AUROC.""" ""
+        """Compute the AUROC."""
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]
             if self.thresholds is None

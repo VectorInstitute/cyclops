@@ -348,9 +348,11 @@ class BinaryTabularClassificationTask(BaseTask):
 
             # select the probability scores of the positive class since metrics
             # expect a single column of probabilities
-            dataset = dataset.map(
+            dataset = dataset.map(  # type: ignore[union-attr]
                 lambda examples: {
-                    f"{prediction_column_prefix}.{model_name}": np.array(examples)[
+                    f"{prediction_column_prefix}.{model_name}": np.array(  # noqa: B023
+                        examples,
+                    )[
                         :,
                         1,
                     ].tolist(),

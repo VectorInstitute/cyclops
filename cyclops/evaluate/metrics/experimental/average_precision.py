@@ -43,18 +43,18 @@ class BinaryAveragePrecision(
     >>> metric(target, preds)
     Array(0.75, dtype=float32)
     >>> metric.reset()
-    >>> target = anp.asarray([[0, 1, 0, 1], [1, 1, 0, 0]])
-    >>> preds = anp.asarray([[0.1, 0.4, 0.35, 0.8], [0.6, 0.3, 0.1, 0.7]])
+    >>> target = [[0, 1, 0, 1], [1, 1, 0, 0]]
+    >>> preds = [[0.1, 0.4, 0.35, 0.8], [0.6, 0.3, 0.1, 0.7]]
     >>> for t, p in zip(target, preds):
-    ...     metric.update(t, p)
+    ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
-    Array(0.5833333333333333, dtype=float32)
+    Array(0.5833334, dtype=float32)
 
     """
 
     name: str = "Average Precision"
 
-    def _compute_metric(self) -> Array:
+    def _compute_metric(self) -> Array:  # type: ignore[override]
         """Compute the metric."""
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]

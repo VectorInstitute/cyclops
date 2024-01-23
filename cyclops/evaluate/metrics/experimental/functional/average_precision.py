@@ -50,7 +50,7 @@ def _binary_average_precision_compute(
         pos_label,
     )
     xp = apc.array_namespace(precision, recall)
-    return -xp.sum(_diff(recall) * precision[:-1])  # type: ignore
+    return -xp.sum(_diff(recall) * precision[:-1], dtype=xp.float32)  # type: ignore
 
 
 def binary_average_precision(
@@ -128,13 +128,13 @@ def binary_average_precision(
     Examples
     --------
     >>> import numpy.array_api as anp
-    >>> from cyclops.evaluate.metrics..experimental.functional import (
+    >>> from cyclops.evaluate.metrics.experimental.functional import (
     ...     binary_average_precision
     ... )
     >>> target = anp.asarray([0, 1, 1, 0])
     >>> preds = anp.asarray([0, 0.5, 0.7, 0.8])
     >>> binary_average_precision(target, preds, thresholds=None)
-    Array(0.5833333333333333, dtype=float32)
+    Array(0.5833334, dtype=float32)
 
     """
     _binary_precision_recall_curve_validate_args(thresholds, ignore_index)
