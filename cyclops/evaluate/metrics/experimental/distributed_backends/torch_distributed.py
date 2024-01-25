@@ -10,8 +10,10 @@ from cyclops.utils.optional import import_optional_module
 if TYPE_CHECKING:
     import torch
     import torch.distributed as torch_dist
+    from torch import Tensor
 else:
     torch = import_optional_module("torch", error="warn")
+    Tensor = import_optional_module("torch", attribute="Tensor", error="warn")
     torch_dist = import_optional_module("torch.distributed", error="warn")
 
 
@@ -47,13 +49,13 @@ class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
         """Return the world size of the current process group."""
         return torch_dist.get_world_size()
 
-    def _simple_all_gather(self, data: torch.Tensor) -> List[torch.Tensor]:
+    def _simple_all_gather(self, data: Tensor) -> List[Tensor]:
         """Gather tensors of the same shape from all processes."""
         gathered_data = [torch.zeros_like(data) for _ in range(self.world_size)]
         torch_dist.all_gather(gathered_data, data)  # type: ignore[no-untyped-call]
         return gathered_data
 
-    def all_gather(self, data: torch.Tensor) -> List[torch.Tensor]:  # type: ignore[override]
+    def all_gather(self, data: Tensor) -> List[Tensor]:  # type: ignore[override]
         """Gather Arrays from current proccess and return as a list.
 
         Parameters
