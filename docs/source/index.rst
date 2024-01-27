@@ -9,12 +9,7 @@ Welcome to cyclops's documentation!
    intro
    contributing
    tutorials
+   user_guide
    api
 
-.. toctree::
-   :maxdepth: 2
-   :name: guide
-   :caption: User Guide
-   :glob:
-
-   pages/evaluate/metrics/*
+   
