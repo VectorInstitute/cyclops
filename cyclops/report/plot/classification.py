@@ -131,7 +131,7 @@ class ClassificationPlotter(Plotter):
             if auroc is not None:
                 assert isinstance(
                     auroc,
-                    float,
+                    (float, np.floating),
                 ), "AUROCs must be a float for binary tasks"
                 name = f"Model (AUC = {auroc:.2f})"
             else:
@@ -401,7 +401,7 @@ class ClassificationPlotter(Plotter):
                 if auprcs and slice_name in auprcs:
                     assert isinstance(
                         auprcs[slice_name],
-                        float,
+                        (float, np.floating),
                     ), "AUPRCs must be a float for binary tasks"
                     name = f"{slice_name} (AUC = {auprcs[slice_name]:.2f})"
                 else:
@@ -707,7 +707,8 @@ class ClassificationPlotter(Plotter):
             for slice_name, metrics in slice_metrics.items():
                 metric_names = list(metrics.keys())
                 assert all(
-                    not isinstance(value, (list, np.ndarray))
+                    not isinstance(value, list)
+                    and not (isinstance(value, np.ndarray) and value.ndim > 0)
                     for value in metrics.values()
                 ), (
                     "Generic metrics must not be of type list or np.ndarray for"
@@ -727,7 +728,9 @@ class ClassificationPlotter(Plotter):
                 radial_data: List[float] = []
                 theta_data: List[float] = []
                 for metric_name, metric_values in metrics.items():
-                    if isinstance(metric_values, (list, np.ndarray)):
+                    if isinstance(metric_values, list) or (
+                        isinstance(metric_values, np.ndarray) and metric_values.ndim > 0
+                    ):
                         assert (
                             len(metric_values) == self.class_num
                         ), "Metric values must be of length class_num for \
@@ -738,7 +741,7 @@ class ClassificationPlotter(Plotter):
                             for i in range(self.class_num)
                         ]
                         theta_data.extend(theta)  # type: ignore[arg-type]
-                    elif isinstance(metric_values, float):
+                    elif isinstance(metric_values, (float, np.floating)):
                         radial_data.append(metric_values)
                         theta_data.append(metric_name)  # type: ignore[arg-type]
                     else:
@@ -859,7 +862,10 @@ class ClassificationPlotter(Plotter):
                 metric_names = list(metrics.keys())
                 for num in range(self.class_num):
                     for metric_name in metric_names:
-                        if isinstance(metrics[metric_name], (list, np.ndarray)):
+                        if isinstance(metrics[metric_name], list) or (
+                            isinstance(metrics[metric_name], np.ndarray)
+                            and metrics[metric_name].ndim > 0
+                        ):
                             metric_values = metrics[metric_name][num]  # type: ignore
                         else:
                             metric_values = metrics[metric_name]  # type: ignore
