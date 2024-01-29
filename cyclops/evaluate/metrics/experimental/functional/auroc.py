@@ -1,5 +1,6 @@
 """Functions for computing the area under the ROC curve (AUROC)."""
 import warnings
+from types import ModuleType
 from typing import List, Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
@@ -194,6 +195,8 @@ def _reduce_auroc(
     tpr: Union[Array, List[Array]],
     average: Optional[Literal["macro", "weighted", "none"]] = None,
     weights: Optional[Array] = None,
+    *,
+    xp: ModuleType,
 ) -> Array:
     """Compute the area under the ROC curve and apply `average` method.
 
@@ -225,7 +228,6 @@ def _reduce_auroc(
         If the AUROC for one or more classes is `nan` and ``average`` is not ``none``.
 
     """
-    xp = apc.array_namespace((fpr[0], tpr[0]) if isinstance(fpr, list) else (fpr, tpr))
     if apc.is_array_api_obj(fpr) and apc.is_array_api_obj(tpr):
         res = _auc_compute(fpr, tpr, 1.0, axis=1)  # type: ignore
     else:
@@ -288,6 +290,7 @@ def _multiclass_auroc_compute(
         weights=xp.astype(bincount(state[0], minlength=num_classes), xp.float32)
         if thresholds is None
         else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        xp=xp,
     )
 
 
@@ -492,6 +495,7 @@ def _multilabel_auroc_compute(
         )
         if thresholds is None
         else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        xp=xp,
     )
 
 
