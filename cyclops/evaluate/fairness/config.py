@@ -5,14 +5,15 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from datasets import Dataset, config
 
-from cyclops.evaluate.metrics.metric import Metric, MetricCollection
+from cyclops.evaluate.metrics.experimental.metric import Metric
+from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
 
 
 @dataclass
 class FairnessConfig:
     """Configuration for fairness metrics."""
 
-    metrics: Union[str, Callable[..., Any], Metric, MetricCollection]
+    metrics: Union[str, Callable[..., Any], Metric, MetricDict]
     dataset: Dataset
     groups: Union[str, List[str]]
     target_columns: Union[str, List[str]]

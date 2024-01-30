@@ -3,10 +3,9 @@
 # get args from command line
 import argparse
 from functools import partial
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
-import numpy.typing as npt
 import plotly.express as px
 from torchvision.transforms import Compose
 from torchxrayvision.models import DenseNet
@@ -20,7 +19,6 @@ from cyclops.data.transforms import Lambdad, Resized
 from cyclops.data.utils import apply_transforms
 from cyclops.evaluate import evaluator
 from cyclops.evaluate.metrics.factory import create_metric
-from cyclops.evaluate.metrics.stat_scores import MultilabelStatScores
 from cyclops.models.wrappers import PTModel  # type: ignore[attr-defined]
 from cyclops.report import ModelCardReport  # type: ignore[attr-defined]
 
@@ -92,80 +90,40 @@ slices_sex = [
     {"Patient Gender": {"value": "F"}},
 ]
 
+num_labels = len(pathologies)
+ppv = create_metric(
+    metric_name="multilabel_ppv",
+    experimental=True,
+    num_labels=num_labels,
+    average=None,
+)
 
-class MultilabelPositivePredictiveValue(
-    MultilabelStatScores,
-    registry_key="positive_predictive_value",
-):
-    """Compute the recall score for multilabel classification tasks."""
-
-    def __init__(
-        self,
-        num_labels: int,
-        threshold: float = 0.5,
-        top_k: Optional[int] = None,
-    ) -> None:
-        """Initialize the metric."""
-        super().__init__(
-            num_labels=num_labels,
-            threshold=threshold,
-            top_k=top_k,
-            labelwise=True,
-        )
-
-    def compute(self) -> npt.NDArray[np.int_]:
-        """Compute the recall score from the state."""
-        tp, fp, tn, fn = self._final_state()
-        return tp / (tp + fp)  # type: ignore[return-value]
-
-
-class MultilabelNegativePredictiveValue(
-    MultilabelStatScores,
-    registry_key="negative_predictive_value",
-):
-    """Compute the recall score for multilabel classification tasks."""
-
-    def __init__(
-        self,
-        num_labels: int,
-        threshold: float = 0.5,
-        top_k: Optional[int] = None,
-    ) -> None:
-        """Initialize the metric."""
-        super().__init__(
-            num_labels=num_labels,
-            threshold=threshold,
-            top_k=top_k,
-            labelwise=True,
-        )
-
-    def compute(self) -> npt.NDArray[np.int_]:
-        """Compute the recall score from the state."""
-        tp, fp, tn, fn = self._final_state()
-        return tn / (tn + fn)  # type: ignore[return-value]
-
-
-ppv = MultilabelPositivePredictiveValue(num_labels=len(pathologies))
-
-npv = MultilabelNegativePredictiveValue(num_labels=len(pathologies))
+npv = create_metric(
+    metric_name="multilabel_npv",
+    experimental=True,
+    num_labels=num_labels,
+    average=None,
+)
 
 specificity = create_metric(
-    metric_name="specificity",
-    task="multilabel",
-    num_labels=len(pathologies),
+    metric_name="multilabel_specificity",
+    experimental=True,
+    num_labels=num_labels,
+    average=None,
 )
 
 sensitivity = create_metric(
-    metric_name="sensitivity",
-    task="multilabel",
-    num_labels=len(pathologies),
+    metric_name="multilabel_sensitivity",
+    experimental=True,
+    num_labels=num_labels,
+    average=None,
 )
 # create the slice functions
 slice_spec = SliceSpec(spec_list=slices_sex)
 
 nih_eval_results_gender = evaluator.evaluate(
     dataset=nih_ds,
-    metrics=[ppv, npv, sensitivity, specificity],
+    metrics=[ppv, npv, sensitivity, specificity],  # type: ignore[list-item]
     target_columns=pathologies,
     prediction_columns="predictions.densenet",
     ignore_columns="image",
@@ -208,7 +166,7 @@ slice_spec = SliceSpec(spec_list=slices_age)
 
 nih_eval_results_age = evaluator.evaluate(
     dataset=nih_ds,
-    metrics=[ppv, npv, sensitivity, specificity],
+    metrics=[ppv, npv, sensitivity, specificity],  # type: ignore[list-item]
     target_columns=pathologies,
     prediction_columns="predictions.densenet",
     ignore_columns="image",
@@ -286,15 +244,15 @@ for slice_, metrics in nih_eval_results_gender[
 for name, metric in results_flat.items():
     split, name = name.split("/")  # noqa: PLW2901
     descriptions = {
-        "MultilabelPositivePredictiveValue": "The proportion of correctly predicted positive instances among all instances predicted as positive. Also known as precision.",
-        "MultilabelNegativePredictiveValue": "The proportion of correctly predicted negative instances among all instances predicted as negative.",
+        "MultilabelPPV": "The proportion of correctly predicted positive instances among all instances predicted as positive. Also known as precision.",
+        "MultilabelNPV": "The proportion of correctly predicted negative instances among all instances predicted as negative.",
         "MultilabelSensitivity": "The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.",
         "MultilabelSpecificity": "The proportion of actual negative instances that are correctly predicted.",
     }
     report.log_quantitative_analysis(
         "performance",
         name=name,
-        value=metric,
+        value=metric.tolist() if isinstance(metric, np.generic) else metric,
         description=descriptions[name],
         metric_slice=split,
         pass_fail_thresholds=0.7,

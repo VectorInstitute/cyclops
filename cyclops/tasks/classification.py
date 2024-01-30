@@ -14,8 +14,8 @@ from sklearn.pipeline import Pipeline
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.fairness.config import FairnessConfig
+from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
 from cyclops.evaluate.metrics.factory import create_metric
-from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import (
     _img_model_keys,
     _model_names_mapping,
@@ -261,7 +261,7 @@ class BinaryTabularClassificationTask(BaseTask):
     def evaluate(
         self,
         dataset: Union[Dataset, DatasetDict],
-        metrics: Union[List[str], MetricCollection],
+        metrics: Union[List[str], MetricDict],
         model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[ColumnTransformer] = None,
         prediction_column_prefix: str = "predictions",
@@ -278,7 +278,7 @@ class BinaryTabularClassificationTask(BaseTask):
         ----------
         dataset : Union[Dataset, DatasetDict]
             HuggingFace dataset.
-        metrics : Union[List[str], MetricCollection]
+        metrics : Union[List[str], MetricDict]
             Metrics to be evaluated.
         model_names : Union[str, List[str]], optional
             Model names to be evaluated, if not specified all fitted models \
@@ -315,9 +315,9 @@ class BinaryTabularClassificationTask(BaseTask):
         if splits_mapping is None:
             splits_mapping = {"test": "test"}
         if isinstance(metrics, list) and len(metrics):
-            metrics_collection = MetricCollection(
+            metrics_collection = MetricDict(
                 [
-                    create_metric(
+                    create_metric(  # type: ignore[misc]
                         m,
                         task=self.task_type,
                         num_labels=len(self.task_features),
@@ -325,7 +325,7 @@ class BinaryTabularClassificationTask(BaseTask):
                     for m in metrics
                 ],
             )
-        elif isinstance(metrics, MetricCollection):
+        elif isinstance(metrics, MetricDict):
             metrics_collection = metrics
         if isinstance(model_names, str):
             model_names = [model_names]
@@ -344,6 +344,22 @@ class BinaryTabularClassificationTask(BaseTask):
                 prediction_column_prefix=prediction_column_prefix,
                 only_predictions=False,
                 splits_mapping=splits_mapping,
+            )
+
+            # select the probability scores of the positive class since metrics
+            # expect a single column of probabilities
+            dataset = dataset.map(  # type: ignore[union-attr]
+                lambda examples: {
+                    f"{prediction_column_prefix}.{model_name}": np.array(  # noqa: B023
+                        examples,
+                    )[
+                        :,
+                        1,
+                    ].tolist(),
+                },
+                batched=True,
+                batch_size=batch_size,
+                input_columns=f"{prediction_column_prefix}.{model_name}",
             )
         results = evaluate(
             dataset=dataset,
@@ -448,7 +464,7 @@ class MultilabelImageClassificationTask(BaseTask):
     def evaluate(
         self,
         dataset: Union[Dataset, DatasetDict],
-        metrics: Union[List[str], MetricCollection],
+        metrics: Union[List[str], MetricDict],
         model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Compose] = None,
         prediction_column_prefix: str = "predictions",
@@ -465,7 +481,7 @@ class MultilabelImageClassificationTask(BaseTask):
         ----------
         dataset : Union[Dataset, DatasetDict]
             HuggingFace dataset.
-        metrics : Union[List[str], MetricCollection]
+        metrics : Union[List[str], MetricDict]
             Metrics to be evaluated.
         model_names : Union[str, List[str]], optional
             Model names to be evaluated, required if more than one model exists, \
@@ -515,9 +531,9 @@ class MultilabelImageClassificationTask(BaseTask):
 
             dataset = dataset.map(add_missing_labels)
         if isinstance(metrics, list) and len(metrics):
-            metrics_collection = MetricCollection(
+            metrics_collection = MetricDict(
                 [
-                    create_metric(
+                    create_metric(  # type: ignore[misc]
                         m,
                         task=self.task_type,
                         num_labels=len(self.task_target),
@@ -525,7 +541,7 @@ class MultilabelImageClassificationTask(BaseTask):
                     for m in metrics
                 ],
             )
-        elif isinstance(metrics, MetricCollection):
+        elif isinstance(metrics, MetricDict):
             metrics_collection = metrics
         if isinstance(model_names, str):
             model_names = [model_names]

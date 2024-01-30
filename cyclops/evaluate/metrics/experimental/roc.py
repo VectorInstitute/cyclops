@@ -15,7 +15,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import dim_zero_cat
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
-class BinaryROC(BinaryPrecisionRecallCurve):
+class BinaryROC(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"):
     """The receiver operating characteristic (ROC) curve.
 
     Parameters
@@ -31,6 +31,8 @@ class BinaryROC(BinaryPrecisionRecallCurve):
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the ROC curve.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -62,7 +64,10 @@ class BinaryROC(BinaryPrecisionRecallCurve):
         return _binary_roc_compute(state, self.thresholds)  # type: ignore[arg-type]
 
 
-class MulticlassROC(MulticlassPrecisionRecallCurve):
+class MulticlassROC(
+    MulticlassPrecisionRecallCurve,
+    registry_key="multiclass_roc_curve",
+):
     """The reciever operator characteristics (ROC) curve.
 
     Parameters
@@ -89,6 +94,8 @@ class MulticlassROC(MulticlassPrecisionRecallCurve):
     ignore_index : int or Tuple[int], optional, default=None
         The value(s) in `target` that should be ignored when computing the ROC curve.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -145,7 +152,10 @@ class MulticlassROC(MulticlassPrecisionRecallCurve):
         )
 
 
-class MultilabelROC(MultilabelPrecisionRecallCurve):
+class MultilabelROC(
+    MultilabelPrecisionRecallCurve,
+    registry_key="multilabel_roc_curve",
+):
     """The reciever operator characteristics (ROC) curve.
 
     Parameters
@@ -163,6 +173,8 @@ class MultilabelROC(MultilabelPrecisionRecallCurve):
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the ROC Curve.
         If `None`, all values in `target` are used.
+    **kwargs
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------

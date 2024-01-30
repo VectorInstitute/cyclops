@@ -1,4 +1,4 @@
-"""Functions for computing the area under the ROC curve (AUROC)."""
+"""Functions for computing average precision (AUPRC) for classification tasks."""
 import warnings
 from types import ModuleType
 from typing import List, Literal, Optional, Tuple, Union
@@ -6,28 +6,24 @@ from typing import List, Literal, Optional, Tuple, Union
 import array_api_compat as apc
 
 from cyclops.evaluate.metrics.experimental.functional.precision_recall_curve import (
+    _binary_precision_recall_curve_compute,
     _binary_precision_recall_curve_format_arrays,
     _binary_precision_recall_curve_update,
     _binary_precision_recall_curve_validate_args,
     _binary_precision_recall_curve_validate_arrays,
+    _multiclass_precision_recall_curve_compute,
     _multiclass_precision_recall_curve_format_arrays,
     _multiclass_precision_recall_curve_update,
     _multiclass_precision_recall_curve_validate_args,
     _multiclass_precision_recall_curve_validate_arrays,
+    _multilabel_precision_recall_curve_compute,
     _multilabel_precision_recall_curve_format_arrays,
     _multilabel_precision_recall_curve_update,
     _multilabel_precision_recall_curve_validate_args,
     _multilabel_precision_recall_curve_validate_arrays,
 )
-from cyclops.evaluate.metrics.experimental.functional.roc import (
-    _binary_roc_compute,
-    _multiclass_roc_compute,
-    _multilabel_roc_compute,
-)
 from cyclops.evaluate.metrics.experimental.utils.ops import (
-    _auc_compute,
-    _interp,
-    _searchsorted,
+    _diff,
     bincount,
     flatten,
     remove_ignore_index,
@@ -36,59 +32,56 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
-def _binary_auroc_validate_args(
-    max_fpr: Optional[float] = None,
-    thresholds: Optional[Union[int, List[float], Array]] = None,
-    ignore_index: Optional[int] = None,
-) -> None:
-    """Validate arguments for binary AUROC computation."""
-    _binary_precision_recall_curve_validate_args(thresholds, ignore_index)
-    if max_fpr is not None and not isinstance(max_fpr, float) and 0 < max_fpr <= 1:
-        raise ValueError(
-            f"Argument `max_fpr` should be a float in range (0, 1], but got: {max_fpr}",
-        )
-
-
-def _binary_auroc_compute(
-    state: Union[Array, Tuple[Array, Array]],
+def _binary_average_precision_compute(
+    state: Union[Tuple[Array, Array], Array],
     thresholds: Optional[Array],
-    max_fpr: Optional[float] = None,
     pos_label: int = 1,
 ) -> Array:
-    """Compute the area under the ROC curve for binary classification tasks."""
-    fpr, tpr, _ = _binary_roc_compute(state, thresholds, pos_label)
-    xp = apc.array_namespace(state)
-    if max_fpr is None or max_fpr == 1 or xp.sum(fpr) == 0 or xp.sum(tpr) == 0:
-        return _auc_compute(fpr, tpr, 1.0)
+    """Compute average precision for binary classification task.
 
-    _device = apc.device(fpr) if apc.is_array_api_obj(fpr) else apc.device(fpr[0])
-    max_area = xp.asarray(max_fpr, dtype=xp.float32, device=_device)
+    Parameters
+    ----------
+    state : Array or Tuple[Array, Array]
+        State from which the precision-recall curve can be computed. Can be
+        either a tuple of (target, preds) or a multi-threshold confusion matrix.
+    thresholds : Array, optional
+        Thresholds used for computing the precision and recall scores. If not None,
+        must be a 1D numpy array of floats in the [0, 1] range and monotonically
+        increasing.
+    pos_label : int, optional, default=1
+        The label of the positive class.
 
-    # Add a single point at max_fpr and interpolate its tpr value
-    stop = _searchsorted(fpr, max_area, side="right")
-    x_interp = xp.asarray([fpr[stop - 1], fpr[stop]], dtype=xp.float32, device=_device)
-    y_interp = xp.asarray([tpr[stop - 1], tpr[stop]], dtype=xp.float32, device=_device)
-    interp_tpr = _interp(max_area, x_interp, y_interp)
-    tpr = xp.concat([tpr[:stop], xp.reshape(interp_tpr, (1,))])
-    fpr = xp.concat([fpr[:stop], xp.reshape(max_area, (1,))])
+    Returns
+    -------
+    Array
+        The average precision score.
 
-    # Compute partial AUC
-    partial_auc = _auc_compute(fpr, tpr, 1.0)
+    Raises
+    ------
+    ValueError
+        If ``thresholds`` is None.
 
-    # McClish correction: standardize result to be 0.5 if non-discriminant and 1
-    # if maximal
-    min_area = 0.5 * max_area**2
-    return 0.5 * (1 + (partial_auc - min_area) / (max_area - min_area))  # type: ignore[no-any-return]
+    """
+    precision, recall, _ = _binary_precision_recall_curve_compute(
+        state,
+        thresholds,
+        pos_label,
+    )
+    xp = apc.array_namespace(precision, recall)
+    return -xp.sum(_diff(recall) * precision[:-1], dtype=xp.float32)  # type: ignore
 
 
-def binary_auroc(
+def binary_average_precision(
     target: Array,
     preds: Array,
-    max_fpr: Optional[float] = None,
     thresholds: Optional[Union[int, List[float], Array]] = None,
     ignore_index: Optional[int] = None,
 ) -> Array:
-    """Compute the area under the ROC curve for binary classification tasks.
+    """Compute average precision score for binary classification task.
+
+    The average precision score summarizes a precision-recall curve as the weighted
+    mean of precisions achieved at each threshold, with the increase in recall from
+    the previous threshold used as the weight.
 
     Parameters
     ----------
@@ -102,11 +95,9 @@ def binary_auroc(
         shape of the array is `(N, ...)` where `N` is the number of samples. If
         `preds` contains floating point values that are not in the range `[0, 1]`,
         a sigmoid function will be applied to each value before thresholding.
-    max_fpr : float, optional, default=None
-        If not `None`, computes the maximum area under the curve up to the given
-        false positive rate value. Must be a float in the range (0, 1].
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the ROC curve. Can be one of the following:
+        The thresholds to use for computing the average precision. Can be one
+        of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
           [0, 1].
@@ -114,13 +105,13 @@ def binary_auroc(
         - `Array`: use the values in the Array as bins for the thresholds. The
           array must be 1D.
     ignore_index : int, optional, default=None
-        The value in `target` that should be ignored when computing the AUROC.
-        If `None`, all values in `target` are used.
+        The value in `target` that should be ignored when computing the average
+        precision. If `None`, all values in `target` are used.
 
     Returns
     -------
     Array
-        The area under the ROC curve.
+        The average precision score.
 
     Raises
     ------
@@ -137,8 +128,6 @@ def binary_auroc(
         [0, 1] or the array is not one-dimensional.
     ValueError
         If `ignore_index` is not `None` or an integer.
-    ValueError
-        If `max_fpr` is not `None` and not a float in the range (0, 1].
     TypeError
         If `target` and `preds` are not compatible with the Python array API standard.
     ValueError
@@ -160,24 +149,22 @@ def binary_auroc(
 
     Examples
     --------
-    >>> from cyclops.evaluate.metrics.experimental.functional import binary_auroc
     >>> import numpy.array_api as anp
-    >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
-    >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
-    >>> binary_auroc(target, preds, thresholds=None)
-    Array(0.6666667, dtype=float32)
-    >>> binary_auroc(target, preds, thresholds=5)
-    Array(0.5555556, dtype=float32)
-    >>> binary_auroc(target, preds, max_fpr=0.2)
-    Array(0.6296296, dtype=float32)
+    >>> from cyclops.evaluate.metrics.experimental.functional import (
+    ...     binary_average_precision
+    ... )
+    >>> target = anp.asarray([0, 1, 1, 0])
+    >>> preds = anp.asarray([0, 0.5, 0.7, 0.8])
+    >>> binary_average_precision(target, preds, thresholds=None)
+    Array(0.5833334, dtype=float32)
 
     """
-    _binary_auroc_validate_args(max_fpr, thresholds, ignore_index)
+    _binary_precision_recall_curve_validate_args(thresholds, ignore_index)
     xp = _binary_precision_recall_curve_validate_arrays(
         target,
         preds,
-        thresholds=thresholds,
-        ignore_index=ignore_index,
+        thresholds,
+        ignore_index,
     )
     target, preds, thresholds = _binary_precision_recall_curve_format_arrays(
         target,
@@ -186,115 +173,136 @@ def binary_auroc(
         ignore_index=ignore_index,
         xp=xp,
     )
-    state = _binary_precision_recall_curve_update(target, preds, thresholds, xp=xp)
-    return _binary_auroc_compute(state, thresholds=thresholds, max_fpr=max_fpr)
+    state = _binary_precision_recall_curve_update(
+        target,
+        preds,
+        thresholds=thresholds,
+        xp=xp,
+    )
+    return _binary_average_precision_compute(state, thresholds, pos_label=1)
 
 
-def _reduce_auroc(
-    fpr: Union[Array, List[Array]],
-    tpr: Union[Array, List[Array]],
-    average: Optional[Literal["macro", "weighted", "none"]] = None,
+def _reduce_average_precision(
+    precision: Union[Array, List[Array]],
+    recall: Union[Array, List[Array]],
+    average: Optional[Literal["macro", "weighted", "none"]] = "macro",
     weights: Optional[Array] = None,
     *,
     xp: ModuleType,
 ) -> Array:
-    """Compute the area under the ROC curve and apply `average` method.
+    """Reduce the precision-recall curve to a single average precision score.
+
+    Applies the specified `average` after computing the average precision score
+    for each class/label.
 
     Parameters
     ----------
-    fpr : Array or list of Array
-        False positive rate.
-    tpr : Array or list of Array
-        True positive rate.
-    average : {"macro", "weighted", "none"}, default=None
-        If not None, apply the method to compute the average area under the ROC curve.
+    precision : Array or List[Array]
+        The precision values for each class/label, computed at different thresholds.
+    recall : Array or List[Array]
+        The recall values for each class/label, computed at different thresholds.
+    average : {"macro", "weighted", "none"}, optional, default="macro"
+        The type of averaging to use for computing the average precision score. Can
+        be one of the following:
+        - `"macro"`: computes the average precision score for each class/label and
+          average over the scores.
+        - `"weighted"`: computes the average of the precision score for each
+          class/label and average over the classwise/labelwise scores using
+          `weights` as weights.
+        - `"none"`: do not average over the classwise/labelwise scores.
     weights : Array, optional, default=None
-        Sample weights.
+        The weights to use for computing the weighted average precision score.
+    xp : ModuleType
+        The array API module to use for computations.
 
     Returns
     -------
     Array
-        Area under the ROC curve.
+        The average precision score.
 
     Raises
     ------
     ValueError
-        If ``average`` is not one of ``macro`` or ``weighted`` or if
-        ``average`` is ``weighted`` and ``weights`` is None.
-
-    Warns
-    -----
-    UserWarning
-        If the AUROC for one or more classes is `nan` and ``average`` is not ``none``.
-
+        If `average` is not `"macro"`, `"weighted"` or `"none"` or `None` or
+        average is `"weighted"` and `weights` is `None`.
     """
-    if apc.is_array_api_obj(fpr) and apc.is_array_api_obj(tpr):
-        res = _auc_compute(fpr, tpr, 1.0, axis=1)  # type: ignore
+    if apc.is_array_api_obj(precision) and apc.is_array_api_obj(recall):
+        avg_prec = -xp.sum(
+            (recall[:, 1:] - recall[:, :-1]) * precision[:, :-1],  # type: ignore
+            axis=1,
+            dtype=xp.float32,
+        )
     else:
-        res = xp.stack(
-            [_auc_compute(x, y, 1.0) for x, y in zip(fpr, tpr)],  # type: ignore
+        avg_prec = xp.stack(
+            [
+                -xp.sum((rec[1:] - rec[:-1]) * prec[:-1], dtype=xp.float32)
+                for prec, rec in zip(precision, recall)  # type: ignore[arg-type]
+            ],
         )
     if average is None or average == "none":
-        return res
-
-    if xp.any(xp.isnan(res)):
+        return avg_prec  # type: ignore[no-any-return]
+    if xp.any(xp.isnan(avg_prec)):
         warnings.warn(
-            "The AUROC for one or more classes was `nan`. Ignoring these classes "
-            f"in {average}-average",
+            f"Average precision score for one or more classes was `nan`. Ignoring these classes in {average}-average",
             UserWarning,
             stacklevel=1,
         )
-    idx = ~xp.isnan(res)
+    idx = ~xp.isnan(avg_prec)
     if average == "macro":
-        return xp.mean(res[idx])  # type: ignore[no-any-return]
+        return xp.mean(avg_prec[idx])  # type: ignore[no-any-return]
     if average == "weighted" and weights is not None:
         weights = safe_divide(weights[idx], xp.sum(weights[idx]))
-        return xp.sum((res[idx] * weights))  # type: ignore[no-any-return]
+        return xp.sum(avg_prec[idx] * weights, dtype=xp.float32)  # type: ignore[no-any-return]
     raise ValueError(
         "Received an incompatible combinations of inputs to make reduction.",
     )
 
 
-def _multiclass_auroc_validate_args(
+def _multiclass_average_precision_validate_args(
     num_classes: int,
     thresholds: Optional[Union[int, List[float], Array]] = None,
     average: Optional[Literal["macro", "weighted", "none"]] = "macro",
     ignore_index: Optional[Union[int, Tuple[int]]] = None,
 ) -> None:
-    """Validate arguments for multiclass AUROC computation."""
+    """Validate the arguments for the `multiclass_average_precision` function."""
     _multiclass_precision_recall_curve_validate_args(
         num_classes,
         thresholds=thresholds,
         ignore_index=ignore_index,
     )
-    allowed_average = ("macro", "weighted", "none", None)
-    if average not in allowed_average:
+    allowed_averages = ["macro", "weighted", "none"]
+    if average is not None and average not in allowed_averages:
         raise ValueError(
-            f"Expected argument `average` to be one of {allowed_average} but got {average}",
+            f"Expected `average` to be one of {allowed_averages}, got {average}.",
         )
 
 
-def _multiclass_auroc_compute(
-    state: Union[Array, Tuple[Array, Array]],
+def _multiclass_average_precision_compute(
+    state: Union[Tuple[Array, Array], Array],
     num_classes: int,
-    thresholds: Optional[Array] = None,
+    thresholds: Optional[Array],
     average: Optional[Literal["macro", "weighted", "none"]] = "macro",
 ) -> Array:
-    """Compute the area under the ROC curve for multiclass classification tasks."""
-    fpr, tpr, _ = _multiclass_roc_compute(state, num_classes, thresholds=thresholds)
+    """Compute the average precision score for multiclass classification task."""
+    precision, recall, _ = _multiclass_precision_recall_curve_compute(
+        state,
+        num_classes,
+        thresholds=thresholds,
+        average=None,
+    )
     xp = apc.array_namespace(state)
-    return _reduce_auroc(
-        fpr,
-        tpr,
+    return _reduce_average_precision(
+        precision,
+        recall,
         average=average,
         weights=xp.astype(bincount(state[0], minlength=num_classes), xp.float32)
         if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        else xp.sum(state[0, ...][:, 1, :], axis=-1, dtype=xp.float32),  # type: ignore
         xp=xp,
     )
 
 
-def multiclass_auroc(
+def multiclass_average_precision(
     target: Array,
     preds: Array,
     num_classes: int,
@@ -302,7 +310,11 @@ def multiclass_auroc(
     average: Optional[Literal["macro", "weighted", "none"]] = "macro",
     ignore_index: Optional[Union[int, Tuple[int]]] = None,
 ) -> Array:
-    """Compute the area under the ROC curve for multiclass classification tasks.
+    """Compute the average precision score for multiclass classification task.
+
+    The average precision score summarizes a precision-recall curve as the weighted
+    mean of precisions achieved at each threshold, with the increase in recall from
+    the previous threshold used as the weight.
 
     Parameters
     ----------
@@ -321,7 +333,8 @@ def multiclass_auroc(
     num_classes : int
         The number of classes in the classification problem.
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the ROC curve. Can be one of the following:
+        The thresholds to use for computing the average precision score. Can be one
+        of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
           [0, 1].
@@ -329,21 +342,22 @@ def multiclass_auroc(
         - `Array`: use the values in the Array as bins for the thresholds. The
           array must be 1D.
     average : {"macro", "weighted", "none"}, optional, default="macro"
-        The type of averaging to use for computing the AUROC. Can be one of
-        the following:
-        - `"macro"`: interpolates the curves from each class at a combined set of
-          thresholds and then average over the classwise interpolated curves.
-        - `"weighted"`: average over the classwise curves weighted by the support
-          (the number of true instances for each class).
-        - `"none"`: do not average over the classwise curves.
+        The type of averaging to use for computing the average precision score. Can
+        be one of the following:
+        - `"macro"`: compute the average precision score for each class and average
+            over the classes.
+        - `"weighted"`: computes the average of the precision for each class and
+            average over the classwise scores using the support of each class as
+            weights.
+        - `"none"`: do not average over the classwise scores.
     ignore_index : int or Tuple[int], optional, default=None
-        The value(s) in `target` that should be ignored when computing the AUROC.
-        If `None`, all values in `target` are used.
+        The value(s) in `target` that should be ignored when computing the average
+        precision score. If `None`, all values in `target` are used.
 
     Returns
     -------
     Array
-        The area under the ROC curve.
+        The average precision score.
 
     Raises
     ------
@@ -388,7 +402,9 @@ def multiclass_auroc(
 
     Examples
     --------
-    >>> from cyclops.evaluate.metrics.experimental.functional import multiclass_auroc
+    >>> from cyclops.evaluate.metrics.experimental.functional import (
+    ...     multiclass_average_precision,
+    ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
@@ -398,15 +414,20 @@ def multiclass_auroc(
     ...     [0.11, 0.22, 0.67],
     ...     [0.84, 0.73, 0.12],
     ...     [0.33, 0.92, 0.44]])
-    >>> multiclass_auroc(target, preds, num_classes=3, thresholds=None)
-    Array(0.33333334, dtype=float32)
-    >>> multiclass_auroc(target, preds, num_classes=3, thresholds=5)
-    Array(0.33333334, dtype=float32)
-    >>> multiclass_auroc(target, preds, num_classes=3, average=None)
-    Array([0. , 0.5, 0.5], dtype=float32)
-
+    >>> multiclass_average_precision(
+    ...     target, preds, num_classes=3, thresholds=None, average=None,
+    ... )
+    Array([0.33333334, 0.5       , 0.5       ], dtype=float32)
+    >>> multiclass_average_precision(
+    ...    target, preds, num_classes=3, thresholds=None, average="macro",
+    ... )
+    Array(0.44444445, dtype=float32)
+    >>> multiclass_average_precision(
+    ...    target, preds, num_classes=3, thresholds=None, average="weighted",
+    ... )
+    Array(0.44444448, dtype=float32)
     """
-    _multiclass_auroc_validate_args(
+    _multiclass_average_precision_validate_args(
         num_classes,
         thresholds=thresholds,
         average=average,
@@ -433,7 +454,7 @@ def multiclass_auroc(
         thresholds=thresholds,
         xp=xp,
     )
-    return _multiclass_auroc_compute(
+    return _multiclass_average_precision_compute(
         state,
         num_classes,
         thresholds=thresholds,
@@ -441,65 +462,61 @@ def multiclass_auroc(
     )
 
 
-def _multilabel_auroc_validate_args(
+def _multilabel_average_precision_validate_args(
     num_labels: int,
     thresholds: Optional[Union[int, List[float], Array]] = None,
     average: Optional[Literal["micro", "macro", "weighted", "none"]] = "macro",
     ignore_index: Optional[int] = None,
 ) -> None:
-    """Validate arguments for multilabel AUROC computation."""
+    """Validate the arguments for the `multilabel_average_precision` function."""
     _multilabel_precision_recall_curve_validate_args(
         num_labels,
         thresholds=thresholds,
         ignore_index=ignore_index,
     )
-    allowed_average = ("micro", "macro", "weighted", "none", None)
-    if average not in allowed_average:
+    allowed_averages = ["micro", "macro", "weighted", "none"]
+    if average is not None and average not in allowed_averages:
         raise ValueError(
-            f"Expected argument `average` to be one of {allowed_average} but got {average}",
+            f"Expected `average` to be one of {allowed_averages}, got {average}.",
         )
 
 
-def _multilabel_auroc_compute(
-    state: Union[Array, Tuple[Array, Array]],
+def _multilabel_average_precision_compute(
+    state: Union[Tuple[Array, Array], Array],
     num_labels: int,
     thresholds: Optional[Array],
     average: Optional[Literal["micro", "macro", "weighted", "none"]] = "macro",
     ignore_index: Optional[int] = None,
 ) -> Array:
-    """Compute the area under the ROC curve for multilabel classification tasks."""
+    """Compute the average precision score for multilabel classification task."""
+    xp = apc.array_namespace(state)
     if average == "micro":
         if apc.is_array_api_obj(state) and thresholds is not None:
-            xp = apc.array_namespace(state)
-            return _binary_auroc_compute(
-                xp.sum(state, axis=1),
-                thresholds,
-                max_fpr=None,
-            )
-
-        target = flatten(state[0])
-        preds = flatten(state[1])
-        if ignore_index is not None:
+            state = xp.sum(state, axis=1)
+        else:
+            target, preds = flatten(state[0]), flatten(state[1])
             target, preds = remove_ignore_index(target, preds, ignore_index)
-        return _binary_auroc_compute((target, preds), thresholds, max_fpr=None)
+            state = (target, preds)
+        return _binary_average_precision_compute(state, thresholds)
 
-    fpr, tpr, _ = _multilabel_roc_compute(state, num_labels, thresholds, ignore_index)
-    xp = apc.array_namespace(state)
-    return _reduce_auroc(
-        fpr,
-        tpr,
-        average,
-        weights=xp.astype(
-            xp.sum(xp.astype(state[0] == 1, xp.int32), axis=0),
-            xp.float32,
-        )
+    precision, recall, _ = _multilabel_precision_recall_curve_compute(
+        state,
+        num_labels,
+        thresholds=thresholds,
+        ignore_index=ignore_index,
+    )
+    return _reduce_average_precision(
+        precision,
+        recall,
+        average=average,
+        weights=xp.sum(xp.astype(state[0] == 1, xp.int32), axis=0, dtype=xp.float32)
         if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore
         xp=xp,
     )
 
 
-def multilabel_auroc(
+def multilabel_average_precision(
     target: Array,
     preds: Array,
     num_labels: int,
@@ -507,7 +524,11 @@ def multilabel_auroc(
     average: Optional[Literal["micro", "macro", "weighted", "none"]] = "macro",
     ignore_index: Optional[int] = None,
 ) -> Array:
-    """Compute the area under the ROC curve for multilabel classification tasks.
+    """Compute the average precision score for multilabel classification task.
+
+    The average precision score summarizes a precision-recall curve as the weighted
+    mean of precisions achieved at each threshold, with the increase in recall from
+    the previous threshold used as the weight.
 
     Parameters
     ----------
@@ -524,7 +545,8 @@ def multilabel_auroc(
     num_labels : int
         The number of labels in the multilabel classification problem.
     thresholds : Union[int, List[float], Array], optional, default=None
-        The thresholds to use for computing the ROC curve. Can be one of the following:
+        The thresholds to use for computing the average precision score. Can be one
+        of the following:
         - `None`: use all unique values in `preds` as thresholds.
         - `int`: use `int` (larger than 1) uniformly spaced thresholds in the range
           [0, 1].
@@ -532,22 +554,24 @@ def multilabel_auroc(
         - `Array`: use the values in the Array as bins for the thresholds. The
           array must be 1D.
     average : {"micro", "macro", "weighted", "none"}, optional, default="macro"
-        The type of averaging to use for computing the AUROC. Can be one of
-        the following:
-        - `"micro"`: compute the AUROC globally by considering each element of the
-            label indicator matrix as a label.
-        - `"macro"`: compute the AUROC for each label and average them.
-        - `"weighted"`: compute the AUROC for each label and average them weighted
-            by the support (the number of true instances for each label).
-        - `"none"`: do not average over the labelwise AUROC.
+        The type of averaging to use for computing the average precision score. Can
+        be one of the following:
+        - `"micro"`: computes the average precision score globally by summing over
+            the average precision scores for each label.
+        - `"macro"`: compute the average precision score for each label and average
+            over the labels.
+        - `"weighted"`: computes the average of the precision for each label and
+            average over the labelwise scores using the support of each label as
+            weights.
+        - `"none"`: do not average over the labelwise scores.
     ignore_index : int, optional, default=None
-        The value in `target` that should be ignored when computing the AUROC.
-        If `None`, all values in `target` are used.
+        The value in `target` that should be ignored when computing the average
+        precision score. If `None`, all values in `target` are used.
 
     Returns
     -------
     Array
-        The area under the ROC curve.
+        The average precision score.
 
     Raises
     ------
@@ -567,7 +591,7 @@ def multilabel_auroc(
     ValueError
         If `num_labels` is not an integer larger than 1.
     ValueError
-        If `average` is not `"micro"`, `"macro"`, `"none"` or `None`.
+        If `average` is not `"micro"`, `"macro"`, `"weighted"`, `"none"` or `None`.
     TypeError
         If `target` and `preds` are not compatible with the Python array API standard.
     ValueError
@@ -591,21 +615,32 @@ def multilabel_auroc(
 
     Examples
     --------
-    >>> from cyclops.evaluate.metrics.experimental.functional import multilabel_auroc
+    >>> from cyclops.evaluate.metrics.experimental.functional import (
+    ...     multilabel_average_precision,
+    ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([[0, 1, 0], [1, 1, 0], [0, 0, 1]])
     >>> preds = anp.asarray(
     ...     [[0.11, 0.22, 0.67], [0.84, 0.73, 0.12], [0.33, 0.92, 0.44]],
     ... )
-    >>> multilabel_auroc(target, preds, num_labels=3, thresholds=None)
-    Array(0.5, dtype=float32)
-    >>> multilabel_auroc(target, preds, num_labels=3, thresholds=5)
-    Array(0.5, dtype=float32)
-    >>> multilabel_auroc(target, preds, num_labels=3, average=None)
-    Array([1. , 0. , 0.5], dtype=float32)
-
+    >>> multilabel_average_precision(
+    ...     target, preds, num_labels=3, thresholds=None, average=None,
+    ... )
+    Array([1.       , 0.5833334, 0.5      ], dtype=float32)
+    >>> multilabel_average_precision(
+    ...     target, preds, num_labels=3, thresholds=None, average="micro",
+    ... )
+    Array(0.58452386, dtype=float32)
+    >>> multilabel_average_precision(
+    ...     target, preds, num_labels=3, thresholds=None, average="macro",
+    ... )
+    Array(0.6944445, dtype=float32)
+    >>> multilabel_average_precision(
+    ...     target, preds, num_labels=3, thresholds=None, average="weighted",
+    ... )
+    Array(0.6666667, dtype=float32)
     """
-    _multilabel_auroc_validate_args(
+    _multilabel_average_precision_validate_args(
         num_labels,
         thresholds=thresholds,
         average=average,
@@ -633,7 +668,7 @@ def multilabel_auroc(
         thresholds=thresholds,
         xp=xp,
     )
-    return _multilabel_auroc_compute(
+    return _multilabel_average_precision_compute(
         state,
         num_labels,
         thresholds=thresholds,

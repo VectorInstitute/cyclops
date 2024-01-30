@@ -1,6 +1,6 @@
 """Classes for computing the precision-recall curve."""
 from types import ModuleType
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Any, List, Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
 
@@ -43,6 +43,8 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the precision
         and recall. If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
@@ -69,9 +71,10 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
         self,
         thresholds: Optional[Union[int, List[float], Array]] = None,
         ignore_index: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize a `BinaryPrecisionRecallCurve` instance."""
-        super().__init__()
+        super().__init__(**kwargs)
         _binary_precision_recall_curve_validate_args(thresholds, ignore_index)
         self.ignore_index = ignore_index
         self.thresholds = thresholds
@@ -173,6 +176,8 @@ class MulticlassPrecisionRecallCurve(
     ignore_index : int or Tuple[int], optional, default=None
         The value(s) in `target` that should be ignored when computing the
         precision and recall. If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
@@ -219,9 +224,10 @@ class MulticlassPrecisionRecallCurve(
         thresholds: Optional[Union[int, List[float], Array]] = None,
         average: Optional[Literal["macro", "micro", "none"]] = None,
         ignore_index: Optional[Union[int, Tuple[int]]] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize a `MulticlassPrecisionRecallCurve` instance."""
-        super().__init__()
+        super().__init__(**kwargs)
         _multiclass_precision_recall_curve_validate_args(
             num_classes,
             thresholds=thresholds,
@@ -345,6 +351,8 @@ class MultilabelPrecisionRecallCurve(
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the precision
         and recall. If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
@@ -385,9 +393,10 @@ class MultilabelPrecisionRecallCurve(
         num_labels: int,
         thresholds: Optional[Union[int, List[float], Array]] = None,
         ignore_index: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize a `MultilabelPrecisionRecallCurve` instance."""
-        super().__init__()
+        super().__init__(**kwargs)
         _multilabel_precision_recall_curve_validate_args(
             num_labels,
             thresholds=thresholds,

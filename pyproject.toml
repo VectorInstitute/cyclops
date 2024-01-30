@@ -40,6 +40,7 @@ xgboost = { version = "^1.5.2", optional = true }
 alibi = { version = "^0.9.4", optional = true, extras = ["shap"] }
 alibi-detect = { version = "^0.11.0", optional = true, extras = ["torch"] }
 llvmlite = { version = "^0.40.0", optional = true }
+nbsphinx = "^0.9.3"
 
 [tool.poetry.group.xgboost]
 optional = true
@@ -116,7 +117,7 @@ sphinx-autodoc-typehints = "^1.24.0"
 myst-parser = "^2.0.0"
 sphinx-copybutton = "^0.5.0"
 sphinx-autoapi = "^2.0.0"
-nbsphinx = "^0.8.11"
+nbsphinx = "^0.9.3"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
 kaggle = "^1.5.13"

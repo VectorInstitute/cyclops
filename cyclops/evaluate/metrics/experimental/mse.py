@@ -1,4 +1,6 @@
 """Mean Squared Error metric."""
+from typing import Any
+
 from cyclops.evaluate.metrics.experimental.functional.mse import (
     _mean_squared_error_compute,
     _mean_squared_error_update,
@@ -17,6 +19,8 @@ class MeanSquaredError(Metric):
         to `False`, returns the root mean squared error.
     num_outputs : int, optional, default=1
         Number of outputs in multioutput setting.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
@@ -43,8 +47,13 @@ class MeanSquaredError(Metric):
 
     name: str = "Mean Squared Error"
 
-    def __init__(self, squared: bool = True, num_outputs: int = 1) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        squared: bool = True,
+        num_outputs: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
         if not isinstance(squared, bool):
             raise TypeError(f"Expected `squared` to be a boolean. Got {type(squared)}")
         if not isinstance(num_outputs, int) and num_outputs > 0:
