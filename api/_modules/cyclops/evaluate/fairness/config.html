@@ -172,7 +172,8 @@
 
 <span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">config</span>
 
-<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.metric</span> <span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric</span> <span class="kn">import</span> <span class="n">Metric</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric_dict</span> <span class="kn">import</span> <span class="n">MetricDict</span>
 
 
 <div class="viewcode-block" id="FairnessConfig">
@@ -181,7 +182,7 @@
 <span class="k">class</span> <span class="nc">FairnessConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for fairness metrics.&quot;&quot;&quot;</span>
 
-    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span><span class="p">]</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricDict</span><span class="p">]</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span>
     <span class="n">groups</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
     <span class="n">target_columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>

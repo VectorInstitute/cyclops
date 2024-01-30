@@ -44,7 +44,8 @@
     "from cyclops.data.df.feature import TabularFeatures\n",
     "from cyclops.data.slicer import SliceSpec\n",
     "from cyclops.evaluate.fairness import FairnessConfig  # noqa: E402\n",
-    "from cyclops.evaluate.metrics import MetricCollection, create_metric\n",
+    "from cyclops.evaluate.metrics import create_metric\n",
+    "from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict\n",
     "from cyclops.models.catalog import create_model\n",
     "from cyclops.report import ModelCardReport\n",
     "from cyclops.report.plot.classification import ClassificationPlotter\n",
@@ -697,7 +698,7 @@
     "\n",
     "Evaluation is done using various evaluation metrics that provide different perspectives on the model's predictive abilities i.e. standard performance metrics and fairness metrics.\n",
     "\n",
-    "The standard performance metrics can be created using the `MetricCollection` object."
+    "The standard performance metrics can be created using the `MetricDict` object."
    ]
   },
   {
@@ -709,17 +710,19 @@
    "outputs": [],
    "source": [
     "metric_names = [\n",
-    "    \"accuracy\",\n",
-    "    \"precision\",\n",
-    "    \"recall\",\n",
-    "    \"f1_score\",\n",
-    "    \"auroc\",\n",
-    "    \"average_precision\",\n",
-    "    \"roc_curve\",\n",
-    "    \"precision_recall_curve\",\n",
+    "    \"binary_accuracy\",\n",
+    "    \"binary_precision\",\n",
+    "    \"binary_recall\",\n",
+    "    \"binary_f1_score\",\n",
+    "    \"binary_auroc\",\n",
+    "    \"binary_average_precision\",\n",
+    "    \"binary_roc_curve\",\n",
+    "    \"binary_precision_recall_curve\",\n",
     "]\n",
-    "metrics = [create_metric(metric_name, task=\"binary\") for metric_name in metric_names]\n",
-    "metric_collection = MetricCollection(metrics)"
+    "metrics = [\n",
+    "    create_metric(metric_name, experimental=True) for metric_name in metric_names\n",
+    "]\n",
+    "metric_collection = MetricDict(metrics)"
    ]
   },
   {
@@ -762,7 +765,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "A `MetricCollection` can also be defined for the fairness metrics."
+    "A `MetricDict` can also be defined for the fairness metrics."
    ]
   },
   {
@@ -773,21 +776,15 @@
    },
    "outputs": [],
    "source": [
-    "specificity = create_metric(\n",
-    "    metric_name=\"specificity\",\n",
-    "    task=\"binary\",\n",
-    ")\n",
-    "sensitivity = create_metric(\n",
-    "    metric_name=\"sensitivity\",\n",
-    "    task=\"binary\",\n",
-    ")\n",
+    "specificity = create_metric(metric_name=\"binary_specificity\", experimental=True)\n",
+    "sensitivity = create_metric(metric_name=\"binary_sensitivity\", experimental=True)\n",
     "\n",
-    "fpr = 1 - specificity\n",
-    "fnr = 1 - sensitivity\n",
+    "fpr = -specificity + 1\n",
+    "fnr = -sensitivity + 1\n",
     "\n",
     "ber = (fpr + fnr) / 2\n",
     "\n",
-    "fairness_metric_collection = MetricCollection(\n",
+    "fairness_metric_collection = MetricDict(\n",
     "    {\n",
     "        \"Sensitivity\": sensitivity,\n",
     "        \"Specificity\": specificity,\n",
@@ -858,8 +855,13 @@
    "source": [
     "results_female, _ = heart_failure_prediction_task.evaluate(\n",
     "    dataset=dataset[\"test\"],\n",
-    "    metrics=MetricCollection(\n",
-    "        {\"BinaryAccuracy\": create_metric(metric_name=\"accuracy\", task=\"binary\")},\n",
+    "    metrics=MetricDict(\n",
+    "        {\n",
+    "            \"BinaryAccuracy\": create_metric(\n",
+    "                metric_name=\"binary_accuracy\",\n",
+    "                experimental=True,\n",
+    "            ),\n",
+    "        },\n",
     "    ),\n",
     "    model_names=model_name,\n",
     "    transforms=preprocessor,\n",
@@ -889,7 +891,7 @@
     "model_name = f\"model_for_preds.{model_name}\"\n",
     "results_flat = flatten_results_dict(\n",
     "    results=results,\n",
-    "    remove_metrics=[\"BinaryROCCurve\", \"BinaryPrecisionRecallCurve\"],\n",
+    "    remove_metrics=[\"BinaryROC\", \"BinaryPrecisionRecallCurve\"],\n",
     "    model_name=model_name,\n",
     ")\n",
     "results_female_flat = flatten_results_dict(\n",
@@ -910,7 +912,7 @@
     "    report.log_quantitative_analysis(\n",
     "        \"performance\",\n",
     "        name=name,\n",
-    "        value=metric,\n",
+    "        value=metric.tolist(),\n",
     "        description=descriptions[name],\n",
     "        metric_slice=split,\n",
     "        pass_fail_thresholds=0.7,\n",
@@ -930,7 +932,7 @@
     "    report.log_quantitative_analysis(\n",
     "        \"performance\",\n",
     "        name=name,\n",
-    "        value=metric,\n",
+    "        value=metric.tolist(),\n",
     "        description=descriptions[name],\n",
     "        metric_slice=split,\n",
     "        pass_fail_thresholds=0.7,\n",
@@ -963,7 +965,7 @@
    "source": [
     "# extracting the ROC curves and AUROC results for all the slices\n",
     "roc_curves = {\n",
-    "    slice_name: slice_results[\"BinaryROCCurve\"]\n",
+    "    slice_name: slice_results[\"BinaryROC\"]\n",
     "    for slice_name, slice_results in results[model_name].items()\n",
     "}\n",
     "aurocs = {\n",
@@ -1036,7 +1038,7 @@
     "overall_performance = {\n",
     "    metric_name: metric_value\n",
     "    for metric_name, metric_value in results[model_name][\"overall\"].items()\n",
-    "    if metric_name not in [\"BinaryROCCurve\", \"BinaryPrecisionRecallCurve\"]\n",
+    "    if metric_name not in [\"BinaryROC\", \"BinaryPrecisionRecallCurve\"]\n",
     "}"
    ]
   },
@@ -1070,7 +1072,7 @@
     "    slice_name: {\n",
     "        metric_name: metric_value\n",
     "        for metric_name, metric_value in slice_results.items()\n",
-    "        if metric_name not in [\"BinaryROCCurve\", \"BinaryPrecisionRecallCurve\"]\n",
+    "        if metric_name not in [\"BinaryROC\", \"BinaryPrecisionRecallCurve\"]\n",
     "    }\n",
     "    for slice_name, slice_results in results[model_name].items()\n",
     "}"

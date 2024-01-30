@@ -166,7 +166,6 @@
              
   <h1>Source code for cyclops.evaluate.fairness.evaluator</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Fairness evaluator.&quot;&quot;&quot;</span>
-
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -174,8 +173,8 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span> <span class="nn">array_api_compat.numpy</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">config</span>
 <span class="kn">from</span> <span class="nn">datasets.features</span> <span class="kn">import</span> <span class="n">Features</span>
@@ -188,15 +187,14 @@
     <span class="n">get_columns_as_numpy_array</span><span class="p">,</span>
     <span class="n">set_decode</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.factory</span> <span class="kn">import</span> <span class="n">create_metric</span>
-<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.functional.precision_recall_curve</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.functional.precision_recall_curve</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_format_thresholds</span><span class="p">,</span>
+    <span class="n">_validate_thresholds</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.metric</span> <span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span><span class="p">,</span> <span class="n">OperatorMetric</span>
-<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_check_thresholds</span><span class="p">,</span>
-    <span class="n">_get_value_if_singleton_array</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric</span> <span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">OperatorMetric</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric_dict</span> <span class="kn">import</span> <span class="n">MetricDict</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.utils.types</span> <span class="kn">import</span> <span class="n">Array</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.factory</span> <span class="kn">import</span> <span class="n">create_metric</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.utils</span> <span class="kn">import</span> <span class="n">_format_column_names</span>
 <span class="kn">from</span> <span class="nn">cyclops.utils.log</span> <span class="kn">import</span> <span class="n">setup_logging</span>
 
@@ -208,7 +206,7 @@
 <div class="viewcode-block" id="evaluate_fairness">
 <a class="viewcode-back" href="../../../../reference/api/_autosummary/cyclops.evaluate.fairness.evaluator.evaluate_fairness.html#cyclops.evaluate.fairness.evaluator.evaluate_fairness">[docs]</a>
 <span class="k">def</span> <span class="nf">evaluate_fairness</span><span class="p">(</span>
-    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricDict</span><span class="p">],</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
     <span class="n">groups</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">target_columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
@@ -231,7 +229,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    metrics : Union[str, Callable[..., Any], Metric, MetricCollection]</span>
+<span class="sd">    metrics : Union[str, Callable[..., Any], Metric, MetricDict]</span>
 <span class="sd">        The metric or metrics to compute. If a string, it should be the name of a</span>
 <span class="sd">        metric provided by CyclOps. If a callable, it should be a function that</span>
 <span class="sd">        takes target, prediction, and optionally threshold/thresholds as arguments</span>
@@ -316,18 +314,14 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="s2">&quot;Expected `dataset` to be of type `Dataset`, but got &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="n">_validate_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
 
-    <span class="n">_check_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
-    <span class="n">fmt_thresholds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_thresholds</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-        <span class="n">thresholds</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">metrics_</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">MetricCollection</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_metrics</span><span class="p">(</span>
+    <span class="n">metrics_</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">MetricDict</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_metrics</span><span class="p">(</span>
         <span class="n">metrics</span><span class="p">,</span>
         <span class="n">metric_name</span><span class="p">,</span>
         <span class="o">**</span><span class="p">(</span><span class="n">metric_kwargs</span> <span class="ow">or</span> <span class="p">{}),</span>
     <span class="p">)</span>
-
+    <span class="n">fmt_thresholds</span> <span class="o">=</span> <span class="n">_format_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">,</span> <span class="n">xp</span><span class="o">=</span><span class="n">array_api_compat</span><span class="o">.</span><span class="n">numpy</span><span class="p">)</span>
     <span class="n">fmt_groups</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_column_names</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
     <span class="n">fmt_target_columns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_column_names</span><span class="p">(</span><span class="n">target_columns</span><span class="p">)</span>
     <span class="n">fmt_prediction_columns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_column_names</span><span class="p">(</span><span class="n">prediction_columns</span><span class="p">)</span>
@@ -534,15 +528,15 @@
 
 
 <span class="k">def</span> <span class="nf">_format_metrics</span><span class="p">(</span>
-    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricDict</span><span class="p">],</span>
     <span class="n">metric_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">metric_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricDict</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Format the metrics argument.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    metrics : Union[str, Callable[..., Any], Metric, MetricCollection]</span>
+<span class="sd">    metrics : Union[str, Callable[..., Any], Metric, MetricDict]</span>
 <span class="sd">        The metrics to use for computing the metric results.</span>
 <span class="sd">    metric_name : str, optional, default=None</span>
 <span class="sd">        The name of the metric. This is only used if `metrics` is a callable.</span>
@@ -552,23 +546,23 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Union[Callable[..., Any], Metric, MetricCollection]</span>
+<span class="sd">    Union[Callable[..., Any], Metric, MetricDict]</span>
 <span class="sd">        The formatted metrics.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    TypeError</span>
-<span class="sd">        If `metrics` is not of type `str`, `Callable`, `Metric`, or `MetricCollection`.</span>
+<span class="sd">        If `metrics` is not of type `str`, `Callable`, `Metric`, or `MetricDict`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">metrics</span> <span class="o">=</span> <span class="n">create_metric</span><span class="p">(</span><span class="n">metric_name</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span> <span class="o">**</span><span class="n">metric_kwargs</span><span class="p">)</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">create_metric</span><span class="p">(</span><span class="n">metric_name</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span> <span class="n">experimental</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">metric_kwargs</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">Metric</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">metric_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">OperatorMetric</span><span class="p">):</span>
             <span class="c1"># single metric created from arithmetic operation, with given name</span>
-            <span class="k">return</span> <span class="n">MetricCollection</span><span class="p">({</span><span class="n">metric_name</span><span class="p">:</span> <span class="n">metrics</span><span class="p">})</span>
-        <span class="k">return</span> <span class="n">MetricCollection</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricCollection</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">MetricDict</span><span class="p">({</span><span class="n">metric_name</span><span class="p">:</span> <span class="n">metrics</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">MetricDict</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricDict</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">metrics</span>
     <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">metric_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -580,7 +574,7 @@
         <span class="k">return</span> <span class="n">metrics</span>
 
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Expected `metrics` to be of type `str`, `Metric`, `MetricCollection`, or &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;Expected `metrics` to be of type `str`, `Metric`, `MetricDict`, or &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;`Callable`, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -874,7 +868,7 @@
 
 
 <span class="k">def</span> <span class="nf">_compute_metrics</span><span class="p">(</span>  <span class="c1"># noqa: C901, PLR0912</span>
-    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">MetricCollection</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">MetricDict</span><span class="p">],</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
     <span class="n">target_columns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">prediction_column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -886,7 +880,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    metrics : Union[Callable, MetricCollection]</span>
+<span class="sd">    metrics : Union[Callable, MetricDict]</span>
 <span class="sd">        The metrics to compute.</span>
 <span class="sd">    dataset : Dataset</span>
 <span class="sd">        The dataset to compute the metrics on.</span>
@@ -911,12 +905,19 @@
         <span class="s2">&quot;Encountered empty dataset while computing metrics. &quot;</span>
         <span class="s2">&quot;The metric values will be set to `None`.&quot;</span>
     <span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricCollection</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricDict</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># set the threshold for each metric in the collection</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">Metric</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">):</span>
                     <span class="n">metric</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">OperatorMetric</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">metric</span><span class="o">.</span><span class="n">metric_a</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span>
+                        <span class="n">metric</span><span class="o">.</span><span class="n">metric_b</span><span class="p">,</span>
+                        <span class="s2">&quot;threshold&quot;</span><span class="p">,</span>
+                    <span class="p">):</span>
+                        <span class="n">metric</span><span class="o">.</span><span class="n">metric_a</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+                        <span class="n">metric</span><span class="o">.</span><span class="n">metric_b</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>  <span class="c1"># type: ignore[union-attr]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                         <span class="s2">&quot;Metric </span><span class="si">%s</span><span class="s2"> does not have a threshold attribute. &quot;</span>
@@ -927,7 +928,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">empty_dataset_msg</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">metric_name</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;NaN&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">metrics</span>
+                <span class="n">metric_name</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;NaN&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">metrics</span>  <span class="c1"># type: ignore[attr-defined]</span>
             <span class="p">}</span>
         <span class="k">elif</span> <span class="p">(</span>
             <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">batch_size</span> <span class="o">&lt;=</span> <span class="mi">0</span>
@@ -952,11 +953,11 @@
                     <span class="n">columns</span><span class="o">=</span><span class="n">prediction_column</span><span class="p">,</span>
                 <span class="p">)</span>
 
-                <span class="n">metrics</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
 
             <span class="n">results</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
 
-        <span class="n">metrics</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+        <span class="n">metrics</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">results</span>
     <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
@@ -990,26 +991,26 @@
         <span class="k">return</span> <span class="p">{</span><span class="n">metric_name</span><span class="o">.</span><span class="n">title</span><span class="p">():</span> <span class="n">output</span><span class="p">}</span>
 
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-        <span class="s2">&quot;The `metrics` argument must be a string, a Metric, a MetricCollection, &quot;</span>
+        <span class="s2">&quot;The `metrics` argument must be a string, a Metric, a MetricDict, &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;or a callable. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_get_metric_results_for_prediction_and_slice</span><span class="p">(</span>
-    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">MetricCollection</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">MetricDict</span><span class="p">],</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
     <span class="n">target_columns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">prediction_column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">slice_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">DEFAULT_MAX_BATCH_SIZE</span><span class="p">,</span>
     <span class="n">metric_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Array</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute metrics for a slice of a dataset.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    metrics : Union[Callable, MetricCollection]</span>
+<span class="sd">    metrics : Union[Callable, MetricDict]</span>
 <span class="sd">        The metrics to compute.</span>
 <span class="sd">    dataset : Dataset</span>
 <span class="sd">        The dataset to compute the metrics on.</span>
@@ -1023,7 +1024,7 @@
 <span class="sd">        The batch size to use for the computation.</span>
 <span class="sd">    metric_name : Optional[str]</span>
 <span class="sd">        The name of the metric to compute.</span>
-<span class="sd">    thresholds : Optional[List[float]]</span>
+<span class="sd">    thresholds : Optional[Array]</span>
 <span class="sd">        The thresholds to use for the metrics.</span>
 
 <span class="sd">    Returns</span>
@@ -1046,7 +1047,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="n">slice_name</span><span class="p">:</span> <span class="n">metric_output</span><span class="p">}</span>
 
     <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">threshold</span> <span class="ow">in</span> <span class="n">thresholds</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">threshold</span> <span class="ow">in</span> <span class="n">thresholds</span><span class="p">:</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="n">metric_output</span> <span class="o">=</span> <span class="n">_compute_metrics</span><span class="p">(</span>
             <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
             <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
@@ -1142,11 +1143,7 @@
                     <span class="p">)</span>
 
                 <span class="n">parity_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">slice_name</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                    <span class="p">{</span>
-                        <span class="n">parity_metric_name</span><span class="p">:</span> <span class="n">_get_value_if_singleton_array</span><span class="p">(</span>
-                            <span class="n">parity_metric_value</span><span class="p">,</span>
-                        <span class="p">),</span>
-                    <span class="p">},</span>
+                    <span class="p">{</span><span class="n">parity_metric_name</span><span class="p">:</span> <span class="n">parity_metric_value</span><span class="p">},</span>
                 <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">parity_results</span>

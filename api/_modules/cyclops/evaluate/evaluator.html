@@ -166,7 +166,6 @@
              
   <h1>Source code for cyclops.evaluate.evaluator</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Evaluate one or more models on a dataset.&quot;&quot;&quot;</span>
-
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span>
@@ -183,7 +182,9 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.fairness.config</span> <span class="kn">import</span> <span class="n">FairnessConfig</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.fairness.evaluator</span> <span class="kn">import</span> <span class="n">evaluate_fairness</span>
-<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.metric</span> <span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric</span> <span class="kn">import</span> <span class="n">Metric</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric_dict</span> <span class="kn">import</span> <span class="n">MetricDict</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.utils.types</span> <span class="kn">import</span> <span class="n">Array</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.utils</span> <span class="kn">import</span> <span class="n">_format_column_names</span><span class="p">,</span> <span class="n">choose_split</span>
 <span class="kn">from</span> <span class="nn">cyclops.utils.log</span> <span class="kn">import</span> <span class="n">setup_logging</span>
 
@@ -196,7 +197,7 @@
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.evaluate.evaluator.evaluate.html#cyclops.evaluate.evaluator.evaluate">[docs]</a>
 <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">DatasetDict</span><span class="p">],</span>
-    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Metric</span><span class="p">],</span> <span class="n">MetricCollection</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Metric</span><span class="p">],</span> <span class="n">MetricDict</span><span class="p">],</span>
     <span class="n">target_columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">prediction_columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">ignore_columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -216,7 +217,7 @@
 <span class="sd">        The dataset to evaluate on. If a string, the dataset will be loaded</span>
 <span class="sd">        using `datasets.load_dataset`. If `DatasetDict`, the `split` argument</span>
 <span class="sd">        must be specified.</span>
-<span class="sd">    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection]</span>
+<span class="sd">    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricDict]</span>
 <span class="sd">        The metrics to compute.</span>
 <span class="sd">    target_columns : Union[str, List[str]]</span>
 <span class="sd">        The name of the column(s) containing the target values. A string value</span>
@@ -372,28 +373,28 @@
 
 
 <span class="k">def</span> <span class="nf">_prepare_metrics</span><span class="p">(</span>
-    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Metric</span><span class="p">],</span> <span class="n">MetricCollection</span><span class="p">],</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricCollection</span><span class="p">:</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Metric</span><span class="p">],</span> <span class="n">MetricDict</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricDict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepare metrics for evaluation.&quot;&quot;&quot;</span>
-    <span class="c1"># TODO: wrap in BootstrappedMetric if computing confidence intervals</span>
+    <span class="c1"># TODO [fcogidi]: wrap in BootstrappedMetric if computing confidence intervals</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="p">(</span><span class="n">Metric</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Dict</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
         <span class="n">metrics</span><span class="p">,</span>
-        <span class="n">MetricCollection</span><span class="p">,</span>
+        <span class="n">MetricDict</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="k">return</span> <span class="n">MetricCollection</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricCollection</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MetricDict</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricDict</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">metrics</span>
 
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Invalid type for `metrics`: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
         <span class="s2">&quot;Expected one of: Metric, Sequence[Metric], Dict[str, Metric], &quot;</span>
-        <span class="s2">&quot;MetricCollection.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;MetricDict.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_compute_metrics</span><span class="p">(</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
-    <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricCollection</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricDict</span><span class="p">,</span>
     <span class="n">slice_spec</span><span class="p">:</span> <span class="n">SliceSpec</span><span class="p">,</span>
     <span class="n">target_columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">prediction_columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
@@ -436,8 +437,8 @@
                         <span class="ne">RuntimeWarning</span><span class="p">,</span>
                         <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="p">)</span>
-                    <span class="n">metric_output</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="n">metric_name</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;NaN&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">metrics</span>
+                    <span class="n">metric_output</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Array</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">metric_name</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;NaN&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">metrics</span>  <span class="c1"># type: ignore[attr-defined,misc]</span>
                     <span class="p">}</span>
                 <span class="k">elif</span> <span class="p">(</span>
                     <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">batch_size</span> <span class="o">&lt;</span> <span class="mi">0</span>
@@ -463,10 +464,10 @@
                         <span class="p">)</span>
 
                         <span class="c1"># update the metric state</span>
-                        <span class="n">metrics</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
+                        <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
 
                     <span class="n">metric_output</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
-                    <span class="n">metrics</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+                    <span class="n">metrics</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
                 <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model_for_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">prediction_column</span>
                 <span class="n">results</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="p">{})</span>

@@ -168,20 +168,30 @@
 <span></span><span class="sd">&quot;&quot;&quot;Factory for creating metrics.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">difflib</span> <span class="kn">import</span> <span class="n">get_close_matches</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_METRIC_REGISTRY</span> <span class="k">as</span> <span class="n">_EXPERIMENTAL_METRIC_REGISTRY</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric</span> <span class="kn">import</span> <span class="n">Metric</span> <span class="k">as</span> <span class="n">ExperimentalMetric</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.metric</span> <span class="kn">import</span> <span class="n">_METRIC_REGISTRY</span><span class="p">,</span> <span class="n">Metric</span>
 
 
 <div class="viewcode-block" id="create_metric">
 <a class="viewcode-back" href="../../../../reference/api/_autosummary/cyclops.evaluate.metrics.factory.create_metric.html#cyclops.evaluate.metrics.factory.create_metric">[docs]</a>
-<span class="k">def</span> <span class="nf">create_metric</span><span class="p">(</span><span class="n">metric_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">create_metric</span><span class="p">(</span>
+    <span class="n">metric_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">experimental</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="n">ExperimentalMetric</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a metric instance from a name.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    metric_name : str</span>
 <span class="sd">        The name of the metric.</span>
+<span class="sd">    experimental : bool</span>
+<span class="sd">        Whether to use metrics from `cyclops.evaluate.metrics.experimental`.</span>
 <span class="sd">    **kwargs : Any</span>
 <span class="sd">        The keyword arguments to pass to the metric constructor.</span>
 
@@ -191,11 +201,20 @@
 <span class="sd">        The metric instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">metric_class</span> <span class="o">=</span> <span class="n">_METRIC_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metric_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">metric_class</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_METRIC_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metric_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">experimental</span>
+        <span class="k">else</span> <span class="n">_EXPERIMENTAL_METRIC_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metric_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">metric_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">registry_keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">_METRIC_REGISTRY</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">experimental</span>
+            <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">_EXPERIMENTAL_METRIC_REGISTRY</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># type: ignore[arg-type]</span>
+        <span class="p">)</span>
         <span class="n">similar_keys_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_close_matches</span><span class="p">(</span>
             <span class="n">metric_name</span><span class="p">,</span>
-            <span class="n">_METRIC_REGISTRY</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+            <span class="n">registry_keys</span><span class="p">,</span>
             <span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">similar_keys</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">similar_keys_list</span><span class="p">)</span>

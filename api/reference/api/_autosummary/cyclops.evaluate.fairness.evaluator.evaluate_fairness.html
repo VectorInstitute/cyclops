@@ -200,7 +200,7 @@ predictions and targets.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>metrics</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Callable</em><em>[</em><em>...</em><em>, </em><em>Any</em><em>]</em><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric" title="cyclops.evaluate.metrics.metric.Metric"><em>Metric</em></a><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection" title="cyclops.evaluate.metrics.metric.MetricCollection"><em>MetricCollection</em></a><em>]</em>) – The metric or metrics to compute. If a string, it should be the name of a
+<li><p><strong>metrics</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Callable</em><em>[</em><em>...</em><em>, </em><em>Any</em><em>]</em><em>, </em><a class="reference internal" href="cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric" title="cyclops.evaluate.metrics.metric.Metric"><em>Metric</em></a><em>, </em><em>MetricDict</em><em>]</em>) – The metric or metrics to compute. If a string, it should be the name of a
 metric provided by CyclOps. If a callable, it should be a function that
 takes target, prediction, and optionally threshold/thresholds as arguments
 and returns a dictionary of metric names and values.</p></li>
