@@ -11,5 +11,3 @@ Welcome to cyclops's documentation!
    tutorials
    user_guide
    api
-
-   
