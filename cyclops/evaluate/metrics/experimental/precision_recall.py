@@ -20,7 +20,7 @@ class BinaryPrecision(_AbstractBinaryStatScores, registry_key="binary_precision"
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -59,7 +59,7 @@ class BinaryPPV(BinaryPrecision, registry_key="binary_ppv"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -114,6 +114,8 @@ class MulticlassPrecision(
         Specifies a target class that is ignored when computing the precision score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the precision score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -179,6 +181,8 @@ class MulticlassPPV(MulticlassPrecision, registry_key="multiclass_ppv"):
         Specifies a target class that is ignored when computing the positive predictive
         value. Ignoring a target class means that the corresponding predictions do not
         contribute to the positive predictive value.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -235,6 +239,8 @@ class MultilabelPrecision(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the precision score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -301,6 +307,8 @@ class MultilabelPPV(MultilabelPrecision, registry_key="multilabel_ppv"):
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the positive predictive value.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -334,7 +342,7 @@ class BinaryRecall(_AbstractBinaryStatScores, registry_key="binary_recall"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -373,7 +381,7 @@ class BinarySensitivity(BinaryRecall, registry_key="binary_sensitivity"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -407,7 +415,7 @@ class BinaryTPR(BinaryRecall, registry_key="binary_tpr"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -459,6 +467,8 @@ class MulticlassRecall(_AbstractMulticlassStatScores, registry_key="multiclass_r
         Specifies a target class that is ignored when computing the recall score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the recall score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -523,6 +533,8 @@ class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivi
         Specifies a target class that is ignored when computing the sensitivity score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the sensitivity score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -575,6 +587,8 @@ class MulticlassTPR(MulticlassRecall, registry_key="multiclass_tpr"):
         Specifies a target class that is ignored when computing the true positive rate.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the true positive rate.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -628,6 +642,8 @@ class MultilabelRecall(_AbstractMultilabelStatScores, registry_key="multilabel_r
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the recall score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -694,6 +710,8 @@ class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivi
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the sensitivity score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -748,6 +766,8 @@ class MultilabelTPR(MultilabelRecall, registry_key="multilabel_tpr"):
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the true positive rate.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------

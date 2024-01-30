@@ -20,7 +20,7 @@ class BinaryNPV(_AbstractBinaryStatScores, registry_key="binary_npv"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -82,6 +82,8 @@ class MulticlassNPV(
         Specifies a target class that is ignored when computing the negative
         predictive value. Ignoring a target class means that the corresponding
         predictions do not contribute to the negative predictive value.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -151,6 +153,8 @@ class MultilabelNPV(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the negative predictive value.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------

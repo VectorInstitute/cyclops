@@ -1,5 +1,4 @@
 """Evaluate one or more models on a dataset."""
-
 import logging
 import warnings
 from dataclasses import asdict
@@ -16,7 +15,9 @@ from cyclops.data.utils import (
 )
 from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.fairness.evaluator import evaluate_fairness
-from cyclops.evaluate.metrics.metric import Metric, MetricCollection
+from cyclops.evaluate.metrics.experimental.metric import Metric
+from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
+from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.utils import _format_column_names, choose_split
 from cyclops.utils.log import setup_logging
 
@@ -27,7 +28,7 @@ setup_logging(print_level="WARN", logger=LOGGER)
 
 def evaluate(
     dataset: Union[str, Dataset, DatasetDict],
-    metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
+    metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricDict],
     target_columns: Union[str, List[str]],
     prediction_columns: Union[str, List[str]],
     ignore_columns: Optional[Union[str, List[str]]] = None,
@@ -47,7 +48,7 @@ def evaluate(
         The dataset to evaluate on. If a string, the dataset will be loaded
         using `datasets.load_dataset`. If `DatasetDict`, the `split` argument
         must be specified.
-    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection]
+    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricDict]
         The metrics to compute.
     target_columns : Union[str, List[str]]
         The name of the column(s) containing the target values. A string value
@@ -202,28 +203,28 @@ def _load_data(
 
 
 def _prepare_metrics(
-    metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
-) -> MetricCollection:
+    metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricDict],
+) -> MetricDict:
     """Prepare metrics for evaluation."""
-    # TODO: wrap in BootstrappedMetric if computing confidence intervals
+    # TODO [fcogidi]: wrap in BootstrappedMetric if computing confidence intervals
     if isinstance(metrics, (Metric, Sequence, Dict)) and not isinstance(
         metrics,
-        MetricCollection,
+        MetricDict,
     ):
-        return MetricCollection(metrics)
-    if isinstance(metrics, MetricCollection):
+        return MetricDict(metrics)  # type: ignore[arg-type]
+    if isinstance(metrics, MetricDict):
         return metrics
 
     raise TypeError(
         f"Invalid type for `metrics`: {type(metrics)}. "
         "Expected one of: Metric, Sequence[Metric], Dict[str, Metric], "
-        "MetricCollection.",
+        "MetricDict.",
     )
 
 
 def _compute_metrics(
     dataset: Dataset,
-    metrics: MetricCollection,
+    metrics: MetricDict,
     slice_spec: SliceSpec,
     target_columns: Union[str, List[str]],
     prediction_columns: Union[str, List[str]],
@@ -266,8 +267,8 @@ def _compute_metrics(
                         RuntimeWarning,
                         stacklevel=1,
                     )
-                    metric_output = {
-                        metric_name: float("NaN") for metric_name in metrics
+                    metric_output: Dict[str, Array] = {
+                        metric_name: float("NaN") for metric_name in metrics  # type: ignore[attr-defined,misc]
                     }
                 elif (
                     batch_size is None or batch_size < 0
@@ -293,10 +294,10 @@ def _compute_metrics(
                         )
 
                         # update the metric state
-                        metrics.update_state(targets, predictions)
+                        metrics.update(targets, predictions)
 
                     metric_output = metrics.compute()
-                    metrics.reset_state()
+                    metrics.reset()
 
                 model_name: str = "model_for_%s" % prediction_column
                 results.setdefault(model_name, {})

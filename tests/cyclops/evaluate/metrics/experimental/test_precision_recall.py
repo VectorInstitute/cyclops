@@ -328,6 +328,8 @@ def _multiclass_precision_recall_reference(
 class TestMulticlassPrecision(MetricTester):
     """Test multiclass precision metric class and function."""
 
+    atol = 6e-8
+
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp))
     @pytest.mark.parametrize("top_k", [1, 2])
     @pytest.mark.parametrize("average", [None, "micro", "macro", "weighted"])

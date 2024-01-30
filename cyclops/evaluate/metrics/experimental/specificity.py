@@ -20,7 +20,7 @@ class BinarySpecificity(_AbstractBinaryStatScores, registry_key="binary_specific
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -81,6 +81,8 @@ class MulticlassSpecificity(
         Specifies a target class that is ignored when computing the specificity score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the specificity score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -150,6 +152,8 @@ class MultilabelSpecificity(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the specificity score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -196,7 +200,7 @@ class BinaryTNR(BinarySpecificity, registry_key="binary_tnr"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -249,6 +253,8 @@ class MulticlassTNR(MulticlassSpecificity, registry_key="multiclass_tnr"):
         Specifies a target class that is ignored when computing the true negative rate.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the true negative rate.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -303,6 +309,8 @@ class MultilabelTNR(MultilabelSpecificity, registry_key="multilabel_tnr"):
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the true negative rate.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------

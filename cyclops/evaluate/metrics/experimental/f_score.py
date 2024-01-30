@@ -28,7 +28,7 @@ class BinaryFBetaScore(_AbstractBinaryStatScores, registry_key="binary_fbeta_sco
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -106,6 +106,8 @@ class MulticlassFBetaScore(
         Specifies a target class that is ignored when computing the F-beta score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the F-beta score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -203,6 +205,8 @@ class MultilabelFBetaScore(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the F-beta score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -277,7 +281,7 @@ class BinaryF1Score(BinaryFBetaScore, registry_key="binary_f1_score"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -341,6 +345,8 @@ class MulticlassF1Score(MulticlassFBetaScore, registry_key="multiclass_f1_score"
         Specifies a target class that is ignored when computing the F1 score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the F1 score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -413,6 +419,8 @@ class MultilabelF1Score(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the F1 score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
