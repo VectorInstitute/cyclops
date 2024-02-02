@@ -270,8 +270,8 @@ class TestMulticlassMCC(MetricTester):
 
 
 def _multilabel_mcc_reference(
-    preds,
     target,
+    preds,
     threshold,
     num_labels=NUM_LABELS,
     ignore_index=None,
