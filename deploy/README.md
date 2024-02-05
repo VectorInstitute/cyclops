@@ -13,7 +13,7 @@ poetry install --with deploy
    import torchxrayvision as xrv
 
 
-   model = xrv.models.DenseNet(weights="resnet50-res512-all").eval().cuda()
+   model = xrv.models.ResNet(weights="resnet50-res512-all").eval().cuda()
 
    dummy_input = (-1024 - 1024) * torch.rand(1, 1, 512, 512) + 1024
    dummy_input = dummy_input.cuda()
