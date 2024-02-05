@@ -30,7 +30,7 @@ triton_runner = bentoml.triton.Runner(  # type: ignore
     tritonserver_type="http",
     cli_args=[
         "--exit-on-error=true",  # exits if any error occurs during initialization
-        "--http-restricted-api=model-repository:api_key=admin",  # restrict access to load/unload APIs
+        "--http-restricted-api=model-repository:access-key=admin",  # restrict access to load/unload APIs
         "--model-control-mode=explicit",  # enable explicit model loading/unloading
         "--load-model=resnet50_res512_all",
     ],
@@ -93,20 +93,20 @@ async def model_config(input_model: dict[Literal["model_name"], str]) -> dict[st
 
 
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
-async def unload_model(input_model: str) -> dict[str, str]:
+async def unload_model(input_model: str, ctx: bentoml.Context) -> dict[str, str]:
     """Unload a model from memory."""
-    await triton_runner.unload_model(input_model)  # type: ignore
+    await triton_runner.unload_model(input_model, headers=ctx.request.headers)  # type: ignore
     return {"unloaded": input_model}
 
 
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
-async def load_model(input_model: str) -> dict[str, str]:
+async def load_model(input_model: str, ctx: bentoml.Context) -> dict[str, str]:
     """Load a model into memory."""
-    await triton_runner.load_model(input_model)  # type: ignore
+    await triton_runner.load_model(input_model, headers=ctx.request.headers)  # type: ignore
     return {"loaded": input_model}
 
 
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
-async def list_models(_: str) -> list[str]:
+async def list_models(_: str, ctx: bentoml.Context) -> list[str]:
     """Return a list of models available in the model repository."""
-    return await triton_runner.get_model_repository_index()  # type: ignore
+    return await triton_runner.get_model_repository_index(headers=ctx.request.headers)  # type: ignore
