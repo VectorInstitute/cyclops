@@ -1,0 +1,5 @@
+monitoring:
+  enabled: true
+  type: default
+  options:
+    output_dir: ./monitoring

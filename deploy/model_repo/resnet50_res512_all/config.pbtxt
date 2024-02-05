@@ -1,0 +1,38 @@
+backend: "pytorch"
+name: "resnet50_res512_all"
+max_batch_size: 32
+dynamic_batching {
+    max_queue_delay_microseconds: 100
+}
+input {
+ name: "INPUT__0"
+ data_type: TYPE_FP32
+ dims: 1
+ dims: 512
+ dims: 512
+}
+output {
+ name: "OUTPUT__0"
+ data_type: TYPE_FP32
+ dims: -1
+ dims: 18
+}
+instance_group [
+  {
+    count: 1
+    kind: KIND_GPU
+    gpus: [0]
+  }
+]
+model_warmup [{
+  name : "random sample"
+  batch_size: 1
+  inputs {
+    key: "INPUT__0"
+    value: {
+      data_type: TYPE_FP32
+      dims: [1, 512, 512]
+      random_data: true
+    }
+  }
+}]

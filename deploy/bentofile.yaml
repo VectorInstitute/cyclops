@@ -1,0 +1,12 @@
+service: service:svc
+include:
+  - /model_repo
+  - /*.py
+exclude:
+  - /__pycache__
+python:
+  packages:
+  - bentoml[triton]
+  - torchxrayvision==1.2.1
+docker:
+  base_image: nvcr.io/nvidia/tritonserver:24.01-py3
