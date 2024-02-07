@@ -1,9 +1,11 @@
 """Testers for metrics."""
+
 from functools import partial
 from typing import Any, Callable, Dict, Optional, Sequence, Type
 
 import array_api_compat as apc
 import numpy as np
+from array_api_compat.common._helpers import _is_torch_array
 
 from cyclops.evaluate.metrics.experimental.metric import Metric
 from cyclops.evaluate.metrics.experimental.utils.ops import clone, flatten
@@ -19,8 +21,15 @@ def _assert_allclose(
     """Recursively assert that two results are within a certain tolerance."""
     if apc.is_array_api_obj(cyclops_result) and apc.is_array_api_obj(ref_result):
         # move to cpu and convert to numpy
-        cyclops_result = np.from_dlpack(apc.to_device(cyclops_result, "cpu"))
-        ref_result = np.from_dlpack(apc.to_device(ref_result, "cpu"))
+        if _is_torch_array(cyclops_result):
+            cyclops_result = cyclops_result.cpu().numpy()
+        else:
+            cyclops_result = np.from_dlpack(apc.to_device(cyclops_result, "cpu"))
+
+        if _is_torch_array(ref_result):
+            ref_result = ref_result.cpu().numpy()
+        else:
+            ref_result = np.from_dlpack(apc.to_device(ref_result, "cpu"))
 
         np.testing.assert_allclose(
             cyclops_result,
