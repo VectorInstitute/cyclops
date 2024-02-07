@@ -24,12 +24,12 @@ on:
 
 jobs:
   run-code-check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
-      - uses: actions/setup-python@v4.7.1
+      - uses: actions/setup-python@v5.0.0
         with:
           python-version: '3.10'
           cache: 'poetry'
