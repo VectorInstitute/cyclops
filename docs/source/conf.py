@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.abspath("../../cyclops"))
 
 project = "cyclops"
 copyright = "2023, Vector AI Engineering"  # noqa: A001
-author = "Vector AI Engineering"
+# author = "Vector AI Engineering"
 
 
 # -- General configuration ---------------------------------------------------
@@ -93,10 +93,18 @@ source_suffix = [".rst", ".md"]
 # a list of builtin themes.
 #
 html_theme = "sphinx_book_theme"
-html_theme_path = ["."]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 html_css_files = ["css/cyclops.css"]
+html_logo = "_static/cyclops_logo-dark.png"
+html_favicon = "_static/favicon.ico"
+html_theme_options = {
+    "logo": {
+        "text": "cyclops documentation",
+        "image_light": "_static/cyclops_logo-dark.png",
+        "image_dark": "_static/cyclops_logo-dark.png",
+    }
+}
