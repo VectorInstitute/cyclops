@@ -9,5 +9,5 @@ Welcome to cyclops's documentation!
    intro
    contributing
    tutorials
-   user_guide
+   pages/evaluate/index
    api
