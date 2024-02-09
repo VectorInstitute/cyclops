@@ -21,7 +21,7 @@ repos:
     - id: black
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.1.7'
+    rev: 'v0.2.1'
     hooks:
     - id: ruff
       args: [--fix, --exit-non-zero-on-fix]
@@ -45,7 +45,7 @@ repos:
       exclude: ^docs/source/tutorials/gemini/.*\.ipynb$
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.0
+    rev: 1.7.1
     hooks:
     - id: nbqa-black
     - id: nbqa-ruff
