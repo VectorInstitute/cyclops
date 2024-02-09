@@ -58,7 +58,6 @@ set_type_checking_flag = True
 autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
-nbsphinx_execute = "never"
 
 html_theme_options = {
     "collapse_navigation": False,
