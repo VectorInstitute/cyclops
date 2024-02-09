@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.abspath("../../cyclops"))
 
 project = "cyclops"
 copyright = "2023, Vector AI Engineering"  # noqa: A001
-# author = "Vector AI Engineering"
+author = "Vector AI Engineering"
 
 
 # -- General configuration ---------------------------------------------------
@@ -58,6 +58,7 @@ set_type_checking_flag = True
 autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
+nbsphinx_execute = "never"
 
 html_theme_options = {
     "collapse_navigation": False,
@@ -102,9 +103,9 @@ html_css_files = ["css/cyclops.css"]
 html_logo = "_static/cyclops_logo-dark.png"
 html_favicon = "_static/favicon.ico"
 html_theme_options = {
-    "logo": {
+    "logo": {  # type: ignore
         "text": "cyclops documentation",
         "image_light": "_static/cyclops_logo-dark.png",
         "image_dark": "_static/cyclops_logo-dark.png",
-    }
+    },
 }
