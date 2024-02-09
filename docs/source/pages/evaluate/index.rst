@@ -2,8 +2,8 @@ Evaluation
 ^^^^^^^^^^
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :glob:
 
-    metrics/*
-    fairness/*
+    fairness_evaluator.rst
+    evaluator.rst
