@@ -3,4 +3,7 @@ User Guide
 
 .. toctree::
 
-   pages/evaluate/index
+   installation
+   evaluation
+   monitoring
+   model_report

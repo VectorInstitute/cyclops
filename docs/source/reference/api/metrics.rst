@@ -1,7 +1,3 @@
-.. role:: hidden
-    :class: hidden-section
-
-
 Evaluation Metrics
 ==================
 
@@ -9,4 +5,4 @@ Evaluation Metrics
     :maxdepth: 1
     :glob:
 
-    evaluate/*
+    metrics/*

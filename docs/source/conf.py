@@ -92,7 +92,7 @@ source_suffix = [".rst", ".md"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_book_theme"
+html_theme = "pydata_sphinx_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -103,7 +103,7 @@ html_logo = "_static/cyclops_logo-dark.png"
 html_favicon = "_static/favicon.ico"
 html_theme_options = {
     "logo": {  # type: ignore
-        "text": "cyclops documentation",
+        # "text": "cyclops documentation",
         "image_light": "_static/cyclops_logo-dark.png",
         "image_dark": "_static/cyclops_logo-dark.png",
     },
