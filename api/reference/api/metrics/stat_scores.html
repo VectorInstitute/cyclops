@@ -1,0 +1,1038 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>StatScores &#8212; cyclops  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=447bbcb8" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=ccdb6887"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api/metrics/stat_scores';</script>
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="cyclops.monitor" href="../cyclops.monitor.html" />
+    <link rel="prev" title="Specificity" href="specificity.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/cyclops_logo-dark.png" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="../../../_static/cyclops_logo-dark.png" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">cyclops documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../user_guide.html">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../monitoring.html">Monitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../model_report.html">Model Report</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials_use_cases.html">Example use cases</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/kaggle/heart_failure_prediction.html">Heart Failure Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/mimiciv/mortality_prediction.html">Mortality Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/synthea/los_prediction.html">Prolonged Length of Stay Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/nihcxr/cxr_classification.html">Chest X-Ray Disease Classification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developing.html">🧑🏿‍💻 Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../api.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cyclops.data.html">cyclops.data</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.html">cyclops.data.slicer</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.compound_filter.html">cyclops.data.slicer.compound_filter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.filter_datetime.html">cyclops.data.slicer.filter_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.filter_non_null.html">cyclops.data.slicer.filter_non_null</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.filter_range.html">cyclops.data.slicer.filter_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.filter_string_contains.html">cyclops.data.slicer.filter_string_contains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.filter_value.html">cyclops.data.slicer.filter_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.is_datetime.html">cyclops.data.slicer.is_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.overall.html">cyclops.data.slicer.overall</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.slicer.SliceSpec.html">cyclops.data.slicer.SliceSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../_autosummary/cyclops.data.features.medical_image.html">cyclops.data.features.medical_image</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.data.features.medical_image.MedicalImage.html">cyclops.data.features.medical_image.MedicalImage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cyclops.tasks.html">cyclops.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../_autosummary/cyclops.tasks.classification.html">cyclops.tasks.classification</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html">cyclops.tasks.classification.BinaryTabularClassificationTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html">cyclops.tasks.classification.MultilabelImageClassificationTask</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../evaluator.html">Evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fairness_evaluator.html">Fairness Evaluator</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../metrics.html">Evaluation Metrics</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="accuracy.html">Accuracy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auroc.html">AUROC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="average_precision.html">Average Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="f1score.html">F1-Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="f_beta.html">F-beta Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precision.html">Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precision_recall_curve.html">PrecisionRecallCurve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="recall.html">Recall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="roc.html">ROC Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sensitivity.html">Sensitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="specificity.html">Specificity</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">StatScores</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cyclops.monitor.html">cyclops.monitor</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../_autosummary/cyclops.monitor.clinical_applicator.html">cyclops.monitor.clinical_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html">cyclops.monitor.clinical_applicator.ClinicalShiftApplicator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../_autosummary/cyclops.monitor.synthetic_applicator.html">cyclops.monitor.synthetic_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.monitor.synthetic_applicator.binary_noise_shift.html">cyclops.monitor.synthetic_applicator.binary_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.monitor.synthetic_applicator.feature_association_shift.html">cyclops.monitor.synthetic_applicator.feature_association_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.monitor.synthetic_applicator.feature_swap_shift.html">cyclops.monitor.synthetic_applicator.feature_swap_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.monitor.synthetic_applicator.gaussian_noise_shift.html">cyclops.monitor.synthetic_applicator.gaussian_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.monitor.synthetic_applicator.knockout_shift.html">cyclops.monitor.synthetic_applicator.knockout_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.html">cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cyclops.report.html">cyclops.report</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../_autosummary/cyclops.report.report.html">cyclops.report.report</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/cyclops.report.report.ModelCardReport.html">cyclops.report.report.ModelCardReport</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/reference/api/metrics/stat_scores.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>StatScores</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-interface">Module Interface</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">StatScores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.StatScores"><code class="docutils literal notranslate"><span class="pre">StatScores</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binarystatscores">BinaryStatScores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.BinaryStatScores"><code class="docutils literal notranslate"><span class="pre">BinaryStatScores</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiclassstatscores">MulticlassStatScores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.MulticlassStatScores"><code class="docutils literal notranslate"><span class="pre">MulticlassStatScores</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multilabelstatscores">MultilabelStatScores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.MultilabelStatScores"><code class="docutils literal notranslate"><span class="pre">MultilabelStatScores</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functional-interface">Functional Interface</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stat-scores">stat_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.functional.stat_scores.stat_scores"><code class="docutils literal notranslate"><span class="pre">stat_scores()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-stat-scores">binary_stat_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.functional.stat_scores.binary_stat_scores"><code class="docutils literal notranslate"><span class="pre">binary_stat_scores()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiclass-stat-scores">multiclass_stat_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.functional.stat_scores.multiclass_stat_scores"><code class="docutils literal notranslate"><span class="pre">multiclass_stat_scores()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multilabel-stat-scores">multilabel_stat_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.functional.stat_scores.multilabel_stat_scores"><code class="docutils literal notranslate"><span class="pre">multilabel_stat_scores()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="statscores">
+<h1>StatScores<a class="headerlink" href="#statscores" title="Link to this heading">#</a></h1>
+<section id="module-interface">
+<h2>Module Interface<a class="headerlink" href="#module-interface" title="Link to this heading">#</a></h2>
+<section id="id1">
+<h3>StatScores<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="cyclops.evaluate.metrics.StatScores">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StatScores</span></span><a class="reference internal" href="../../../_modules/cyclops/evaluate/metrics/stat_scores.html#StatScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.evaluate.metrics.StatScores" title="Link to this definition">#</a></dt>
+<dd><p>Compute stat scores for binary, multiclass and multilabel problems.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<em>Literal</em><em>[</em><em>&quot;binary&quot;</em><em>, </em><em>&quot;multiclass&quot;</em><em>, </em><em>&quot;multilabel&quot;</em><em>]</em>) – The task type. Can be either <code class="docutils literal notranslate"><span class="pre">binary</span></code>, <code class="docutils literal notranslate"><span class="pre">multiclass</span></code> or <code class="docutils literal notranslate"><span class="pre">multilabel</span></code>.</p></li>
+<li><p><strong>pos_label</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>default=1</em>) – The positive label to report. Only used for binary tasks.</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=0.5</em>) – The threshold to use for binarizing the predictions if logits or
+probabilities are provided. If logits are provided, a sigmoid function
+is applied prior to binarization. Used for binary and multilabel tasks.</p></li>
+<li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of classes for the problem. Required for multiclass tasks.</p></li>
+<li><p><strong>classwise</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to return the stat scores for each class or sum over all
+classes. Only used for multiclass tasks.</p></li>
+<li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>default=None</em>) – If given, and predictions are probabilities/logits, the score will
+be computed only for the top k classes. Otherwise, <code class="docutils literal notranslate"><span class="pre">top_k</span></code> will be
+set to 1. Used for multiclass and multilabel tasks.</p></li>
+<li><p><strong>num_labels</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of labels. Only used for multilabel tasks.</p></li>
+<li><p><strong>labelwise</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=False</em>) – Whether to compute the stat scores labelwise. Only used for multilabel
+tasks.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (binary)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">StatScores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span> <span class="o">=</span> <span class="n">StatScores</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">preds</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="go">array([1, 0, 2, 1, 2])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="go">array([4, 2, 5, 1, 5])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (multiclass)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">StatScores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span> <span class="o">=</span> <span class="n">StatScores</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;multiclass&quot;</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">classwise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">preds</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="go">array([[1, 1, 3, 0, 1],</span>
+<span class="go">       [0, 1, 3, 1, 1],</span>
+<span class="go">       [1, 1, 1, 2, 3]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">[</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">],</span>
+<span class="gp">... </span>    <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="go">array([[2, 1, 7, 0, 2],</span>
+<span class="go">       [0, 4, 3, 3, 3],</span>
+<span class="go">       [1, 2, 3, 4, 5]])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (multilabel)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">StatScores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span> <span class="o">=</span> <span class="n">StatScores</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;multilabel&quot;</span><span class="p">,</span> <span class="n">num_labels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">labelwise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">preds</span><span class="p">)</span>
+<span class="go">array([[1, 0, 1, 0, 1],</span>
+<span class="go">       [1, 0, 1, 0, 1],</span>
+<span class="go">       [2, 0, 0, 0, 2]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]],</span>
+<span class="gp">... </span>        <span class="p">[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="go">array([[2, 0, 2, 0, 2],</span>
+<span class="go">       [1, 1, 1, 1, 2],</span>
+<span class="go">       [4, 0, 0, 0, 4]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="binarystatscores">
+<h3>BinaryStatScores<a class="headerlink" href="#binarystatscores" title="Link to this heading">#</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="cyclops.evaluate.metrics.BinaryStatScores">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BinaryStatScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/evaluate/metrics/stat_scores.html#BinaryStatScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.evaluate.metrics.BinaryStatScores" title="Link to this definition">#</a></dt>
+<dd><p>Compute binary stat scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_label</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>default=1</em>) – The label to use for the positive class.</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=0.5</em>) – The threshold to use for converting the predictions to binary
+values. Logits will be converted to probabilities using the sigmoid
+function.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">BinaryStatScores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span> <span class="o">=</span> <span class="n">BinaryStatScores</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">preds</span><span class="p">)</span>
+<span class="go">array([1, 0, 2, 1, 2])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="go">array([4, 2, 5, 1, 5])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="multiclassstatscores">
+<h3>MulticlassStatScores<a class="headerlink" href="#multiclassstatscores" title="Link to this heading">#</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="cyclops.evaluate.metrics.MulticlassStatScores">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MulticlassStatScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/evaluate/metrics/stat_scores.html#MulticlassStatScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.evaluate.metrics.MulticlassStatScores" title="Link to this definition">#</a></dt>
+<dd><p>Compute multiclass stat scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of classes for the problem.</p></li>
+<li><p><strong>top_k</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>]</em><em>, </em><em>default=None</em>) – If given, and predictions are probabilities/logits, the score will
+be computed only for the top k classes. Otherwise, <code class="docutils literal notranslate"><span class="pre">top_k</span></code> will be
+set to 1.</p></li>
+<li><p><strong>classwise</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to return the stat scores for each class or sum over all
+classes.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">MulticlassStatScores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span> <span class="o">=</span> <span class="n">MulticlassStatScores</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">preds</span><span class="p">)</span>
+<span class="go">array([[1, 0, 2, 1, 2],</span>
+<span class="go">       [1, 1, 2, 0, 1],</span>
+<span class="go">       [1, 0, 3, 0, 1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.16</span><span class="p">,</span> <span class="mf">0.26</span><span class="p">,</span> <span class="mf">0.58</span><span class="p">],</span>
+<span class="gp">... </span>         <span class="p">[</span><span class="mf">0.22</span><span class="p">,</span> <span class="mf">0.61</span><span class="p">,</span> <span class="mf">0.17</span><span class="p">],</span>
+<span class="gp">... </span>         <span class="p">[</span><span class="mf">0.71</span><span class="p">,</span> <span class="mf">0.09</span><span class="p">,</span> <span class="mf">0.20</span><span class="p">],</span>
+<span class="gp">... </span>         <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.82</span><span class="p">,</span> <span class="mf">0.13</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="go">array([[ 8,  1,  5,  2, 10],</span>
+<span class="go">       [ 4,  2,  9,  1,  5],</span>
+<span class="go">       [ 1,  0, 15,  0,  1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="multilabelstatscores">
+<h3>MultilabelStatScores<a class="headerlink" href="#multilabelstatscores" title="Link to this heading">#</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="cyclops.evaluate.metrics.MultilabelStatScores">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultilabelStatScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labelwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/evaluate/metrics/stat_scores.html#MultilabelStatScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.evaluate.metrics.MultilabelStatScores" title="Link to this definition">#</a></dt>
+<dd><p>Compute stat scores for multilabel problems.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=0.5</em>) – Threshold value for binarizing predictions that are probabilities or
+logits. A sigmoid function is applied if the predictions are logits.</p></li>
+<li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>default=None</em>) – If given, and predictions are probabilities/logits, the score will
+be computed only for the top k classes. Otherwise, <code class="docutils literal notranslate"><span class="pre">top_k</span></code> will be
+set to 1.</p></li>
+<li><p><strong>labelwise</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to return the stat scores for each label or sum over all labels.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics</span> <span class="kn">import</span> <span class="n">MultilabelStatScores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span> <span class="o">=</span> <span class="n">MultilabelStatScores</span><span class="p">(</span><span class="n">num_labels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">labelwise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">preds</span><span class="p">)</span>
+<span class="go">array([[1, 0, 1, 0, 1],</span>
+<span class="go">       [1, 0, 1, 0, 1],</span>
+<span class="go">       [2, 0, 0, 0, 2]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]],</span>
+<span class="gp">... </span>        <span class="p">[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">preds</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="go">array([[2, 0, 2, 0, 2],</span>
+<span class="go">       [1, 1, 1, 1, 2],</span>
+<span class="go">       [4, 0, 0, 0, 4]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+<section id="functional-interface">
+<h2>Functional Interface<a class="headerlink" href="#functional-interface" title="Link to this heading">#</a></h2>
+<section id="stat-scores">
+<h3>stat_scores<a class="headerlink" href="#stat-scores" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="cyclops.evaluate.metrics.functional.stat_scores.stat_scores">
+<span class="sig-name descname"><span class="pre">stat_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labelwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/evaluate/metrics/functional/stat_scores.html#stat_scores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.evaluate.metrics.functional.stat_scores.stat_scores" title="Link to this definition">#</a></dt>
+<dd><p>Compute stat scores for binary, multiclass or multilabel problems.</p>
+<p>This function acts as an entry point to the specialized functions for each
+task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<em>npt.ArrayLike</em>) – Ground truth.</p></li>
+<li><p><strong>preds</strong> (<em>npt.ArrayLike</em>) – Predictions.</p></li>
+<li><p><strong>task</strong> (<em>Literal</em><em>[</em><em>&quot;binary&quot;</em><em>, </em><em>&quot;multiclass&quot;</em><em>, </em><em>&quot;multilabel&quot;</em><em>]</em>) – The task type. Can be either <code class="docutils literal notranslate"><span class="pre">binary</span></code>, <code class="docutils literal notranslate"><span class="pre">multiclass</span></code> or
+<code class="docutils literal notranslate"><span class="pre">multilabel</span></code>.</p></li>
+<li><p><strong>pos_label</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>default=1</em>) – The positive label to report. Only used for binary tasks.</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=0.5</em>) – The threshold to use for binarizing the predictions if logits or
+probabilities are provided. If logits are provided, a sigmoid function
+is applied prior to binarization. Used for binary and multilabel tasks.</p></li>
+<li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of classes for the problem. Required for multiclass tasks.</p></li>
+<li><p><strong>classwise</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to return the stat scores for each class or sum over all
+classes. Only used for multiclass tasks.</p></li>
+<li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>default=None</em>) – The number of top predictions to consider when computing the statistics.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">top_k</span></code> is set to 1. Used for multiclass and multilabel
+tasks.</p></li>
+<li><p><strong>num_labels</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of labels. Only used for multilabel tasks.</p></li>
+<li><p><strong>labelwise</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=False</em>) – Whether to compute the stat scores labelwise. Only used for multilabel
+tasks.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>scores</strong> – The stat scores - true positives, false positives, true negatives,
+false negatives and support. For binary tasks, the shape is (5,).
+For multiclass tasks, the shape is (n_classes, 5) if <code class="docutils literal notranslate"><span class="pre">classwise</span></code> is
+True, otherwise (5,). For multilabel tasks, the shape is (n_labels, 5)
+if <code class="docutils literal notranslate"><span class="pre">labelwise</span></code> is True, otherwise (n_classes, 5).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (binary)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.functional</span> <span class="kn">import</span> <span class="n">stat_scores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stat_scores</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">)</span>
+<span class="go">array([1, 0, 2, 1, 2])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (multiclass)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.functional</span> <span class="kn">import</span> <span class="n">multiclass_stat_scores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stat_scores</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;multiclass&quot;</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">array([[1, 1, 3, 0, 1],</span>
+<span class="go">       [0, 1, 3, 1, 1],</span>
+<span class="go">       [1, 1, 1, 2, 3]])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (multilabel)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.functional</span> <span class="kn">import</span> <span class="n">stat_scores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stat_scores</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;multilabel&quot;</span><span class="p">,</span> <span class="n">num_labels</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">array([4, 0, 2, 0, 4])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="binary-stat-scores">
+<h3>binary_stat_scores<a class="headerlink" href="#binary-stat-scores" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="cyclops.evaluate.metrics.functional.stat_scores.binary_stat_scores">
+<span class="sig-name descname"><span class="pre">binary_stat_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/evaluate/metrics/functional/stat_scores.html#binary_stat_scores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.evaluate.metrics.functional.stat_scores.binary_stat_scores" title="Link to this definition">#</a></dt>
+<dd><p>Compute the stat scores for binary inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<em>npt.ArrayLike</em>) – Ground truth.</p></li>
+<li><p><strong>preds</strong> (<em>npt.ArrayLike</em>) – Predictions.</p></li>
+<li><p><strong>pos_label</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>default=1</em>) – The label to use for the positive class.</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=0.5</em>) – The threshold to use for converting the predictions to binary
+values. Logits will be converted to probabilities using the sigmoid
+function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The true positives, false positives, true negatives and false negatives
+and support in that order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – If the threshold is not in [0, 1] or if the pos_label is not 0 or 1.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.functional</span> <span class="kn">import</span> <span class="n">binary_stat_scores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binary_stat_scores</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">)</span>
+<span class="go">array([1, 0, 2, 1, 2])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="multiclass-stat-scores">
+<h3>multiclass_stat_scores<a class="headerlink" href="#multiclass-stat-scores" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="cyclops.evaluate.metrics.functional.stat_scores.multiclass_stat_scores">
+<span class="sig-name descname"><span class="pre">multiclass_stat_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/evaluate/metrics/functional/stat_scores.html#multiclass_stat_scores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.evaluate.metrics.functional.stat_scores.multiclass_stat_scores" title="Link to this definition">#</a></dt>
+<dd><p>Compute stat scores for multiclass targets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<em>npt.ArrayLike</em>) – The ground truth values.</p></li>
+<li><p><strong>preds</strong> (<em>npt.ArrayLike</em>) – The predictions. If determined to be in continuous format, will be
+converted to multiclass using the <code class="docutils literal notranslate"><span class="pre">top_k</span></code> parameter.</p></li>
+<li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of classes for the problem.</p></li>
+<li><p><strong>top_k</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>]</em><em>, </em><em>default=None</em>) – The number of top predictions to consider when computing the
+stat scores. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, it is assumed to be 1.</p></li>
+<li><p><strong>classwise</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to return the stat scores for each class or sum over all
+classes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The number of true positives, false positives, true negatives, false
+negatives and support. If <code class="docutils literal notranslate"><span class="pre">classwise</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, the shape is
+<code class="docutils literal notranslate"><span class="pre">(num_classes,</span> <span class="pre">5)</span></code>. Otherwise, the shape is <code class="docutils literal notranslate"><span class="pre">(5,)</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.nadarray</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.functional</span> <span class="kn">import</span> <span class="n">multiclass_stat_scores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multiclass_stat_scores</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">array([[1, 1, 3, 0, 1],</span>
+<span class="go">       [0, 1, 3, 1, 1],</span>
+<span class="go">       [1, 1, 1, 2, 3]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="multilabel-stat-scores">
+<h3>multilabel_stat_scores<a class="headerlink" href="#multilabel-stat-scores" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="cyclops.evaluate.metrics.functional.stat_scores.multilabel_stat_scores">
+<span class="sig-name descname"><span class="pre">multilabel_stat_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labelwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/evaluate/metrics/functional/stat_scores.html#multilabel_stat_scores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.evaluate.metrics.functional.stat_scores.multilabel_stat_scores" title="Link to this definition">#</a></dt>
+<dd><p>Compute the stat scores for multilabel inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<em>npt.ArrayLike</em>) – Ground truth.</p></li>
+<li><p><strong>preds</strong> (<em>npt.ArrayLike</em>) – Predictions.</p></li>
+<li><p><strong>num_labels</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of labels for the problem.</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=0.5</em>) – Threshold value for binarizing predictions that are probabilities or
+logits. A sigmoid function is applied if the predictions are logits.</p></li>
+<li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>default=None</em>) – The number of top predictions to consider when computing the statistics.</p></li>
+<li><p><strong>labelwise</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=False</em>) – Whether to return the stat scores for each label or sum over all labels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The number of true positives, false positives, true negatives and false
+negatives and the support. The shape of the array is <code class="docutils literal notranslate"><span class="pre">(5,</span> <span class="pre">num_labels)</span></code>
+if <code class="docutils literal notranslate"><span class="pre">labelwise=True</span></code> and <code class="docutils literal notranslate"><span class="pre">(5,)</span></code> otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">threshold</span></code> is not between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.functional</span> <span class="kn">import</span> <span class="n">multilabel_stat_scores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multilabel_stat_scores</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">num_labels</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">array([4, 0, 2, 0, 4])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="specificity.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Specificity</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../cyclops.monitor.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">cyclops.monitor</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-interface">Module Interface</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">StatScores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.StatScores"><code class="docutils literal notranslate"><span class="pre">StatScores</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binarystatscores">BinaryStatScores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.BinaryStatScores"><code class="docutils literal notranslate"><span class="pre">BinaryStatScores</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiclassstatscores">MulticlassStatScores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.MulticlassStatScores"><code class="docutils literal notranslate"><span class="pre">MulticlassStatScores</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multilabelstatscores">MultilabelStatScores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.MultilabelStatScores"><code class="docutils literal notranslate"><span class="pre">MultilabelStatScores</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functional-interface">Functional Interface</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stat-scores">stat_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.functional.stat_scores.stat_scores"><code class="docutils literal notranslate"><span class="pre">stat_scores()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-stat-scores">binary_stat_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.functional.stat_scores.binary_stat_scores"><code class="docutils literal notranslate"><span class="pre">binary_stat_scores()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiclass-stat-scores">multiclass_stat_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.functional.stat_scores.multiclass_stat_scores"><code class="docutils literal notranslate"><span class="pre">multiclass_stat_scores()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multilabel-stat-scores">multilabel_stat_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cyclops.evaluate.metrics.functional.stat_scores.multilabel_stat_scores"><code class="docutils literal notranslate"><span class="pre">multilabel_stat_scores()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Vector AI Engineering
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Vector AI Engineering.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+
+<div class="footer-container" style="text-align: center;">
+  <div class="footer-small-text">
+      <br> All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
+  </div>
+
+  <div class="footer-small-text">
+    This work is made possible due to the data obtained from the <a href="https://www.geminimedicine.ca/">GEMINI study</a>.
+  </div>
+
+  <hr/>
+
+  <div class="logo">
+    <a class="logo" href="https://vectorinstitute.ai/">
+      <span class="logo"></span>
+      <img alt="Logo of the Vector Institute" style="width:90px; max-width:90px;" src="../../../_static/logos/vector_logo.png" />
+    </a>
+    <a class="logo" href="https://www.geminimedicine.ca/">
+      <span class="logo"></span>
+      <img alt="Logo of GEMINI" style="width:90px; max-width:90px;" src="../../../_static/logos/gemini_logo.png" />
+    </a>
+  </div>
+</div>
+
+
+  </footer>
+  </body>
+</html>

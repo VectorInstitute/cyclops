@@ -1,6 +1,0 @@
-cyclops.evaluate.fairness.evaluator.evaluate\_fairness
-======================================================
-
-.. currentmodule:: cyclops.evaluate.fairness.evaluator
-
-.. autofunction:: evaluate_fairness

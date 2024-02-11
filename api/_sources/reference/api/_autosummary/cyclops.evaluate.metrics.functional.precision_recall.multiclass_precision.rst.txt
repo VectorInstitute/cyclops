@@ -1,6 +1,0 @@
-cyclops.evaluate.metrics.functional.precision\_recall.multiclass\_precision
-===========================================================================
-
-.. currentmodule:: cyclops.evaluate.metrics.functional.precision_recall
-
-.. autofunction:: multiclass_precision

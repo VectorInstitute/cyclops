@@ -1,6 +1,0 @@
-cyclops.evaluate.evaluator.evaluate
-===================================
-
-.. currentmodule:: cyclops.evaluate.evaluator
-
-.. autofunction:: evaluate

@@ -1,0 +1,1556 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cyclops.evaluate.metrics.functional.precision_recall_curve &#8212; cyclops  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../../../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/css/cyclops.css?v=447bbcb8" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../_static/copybutton.js?v=ccdb6887"></script>
+    <script src="../../../../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/cyclops/evaluate/metrics/functional/precision_recall_curve';</script>
+    <link rel="icon" href="../../../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../_static/cyclops_logo-dark.png" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="../../../../../_static/cyclops_logo-dark.png" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">cyclops documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../user_guide.html">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../monitoring.html">Monitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../model_report.html">Model Report</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../tutorials_use_cases.html">Example use cases</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../tutorials/kaggle/heart_failure_prediction.html">Heart Failure Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../tutorials/mimiciv/mortality_prediction.html">Mortality Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../tutorials/synthea/los_prediction.html">Prolonged Length of Stay Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../tutorials/nihcxr/cxr_classification.html">Chest X-Ray Disease Classification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../developing.html">🧑🏿‍💻 Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing.html">Contributing to cyclops</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../api.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../reference/api/cyclops.data.html">cyclops.data</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.html">cyclops.data.slicer</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.compound_filter.html">cyclops.data.slicer.compound_filter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.filter_datetime.html">cyclops.data.slicer.filter_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.filter_non_null.html">cyclops.data.slicer.filter_non_null</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.filter_range.html">cyclops.data.slicer.filter_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.filter_string_contains.html">cyclops.data.slicer.filter_string_contains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.filter_value.html">cyclops.data.slicer.filter_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.is_datetime.html">cyclops.data.slicer.is_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.overall.html">cyclops.data.slicer.overall</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html">cyclops.data.slicer.SliceSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.features.medical_image.html">cyclops.data.features.medical_image</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html">cyclops.data.features.medical_image.MedicalImage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../reference/api/cyclops.tasks.html">cyclops.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.tasks.classification.html">cyclops.tasks.classification</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html">cyclops.tasks.classification.BinaryTabularClassificationTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html">cyclops.tasks.classification.MultilabelImageClassificationTask</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../reference/api/evaluator.html">Evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../reference/api/fairness_evaluator.html">Fairness Evaluator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../reference/api/metrics.html">Evaluation Metrics</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/accuracy.html">Accuracy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/auroc.html">AUROC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/average_precision.html">Average Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/f1score.html">F1-Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/f_beta.html">F-beta Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/precision.html">Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/precision_recall_curve.html">PrecisionRecallCurve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/recall.html">Recall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/roc.html">ROC Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/sensitivity.html">Sensitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/specificity.html">Specificity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../reference/api/metrics/stat_scores.html">StatScores</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../reference/api/cyclops.monitor.html">cyclops.monitor</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.clinical_applicator.html">cyclops.monitor.clinical_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html">cyclops.monitor.clinical_applicator.ClinicalShiftApplicator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.html">cyclops.monitor.synthetic_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.binary_noise_shift.html">cyclops.monitor.synthetic_applicator.binary_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_association_shift.html">cyclops.monitor.synthetic_applicator.feature_association_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_swap_shift.html">cyclops.monitor.synthetic_applicator.feature_swap_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.gaussian_noise_shift.html">cyclops.monitor.synthetic_applicator.gaussian_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.knockout_shift.html">cyclops.monitor.synthetic_applicator.knockout_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.html">cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../../reference/api/cyclops.report.html">cyclops.report</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.report.report.html">cyclops.report.report</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html">cyclops.report.report.ModelCardReport</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for cyclops.evaluate.metrics.functional.precision_recall_curve</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Functions for computing the precision-recall curve for different input types.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics._ranking</span> <span class="kn">import</span> <span class="n">_binary_clf_curve</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">label_binarize</span>
+
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_check_thresholds</span><span class="p">,</span>
+    <span class="n">common_input_checks_and_format</span><span class="p">,</span>
+    <span class="n">sigmoid</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_format_thresholds</span><span class="p">(</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format thresholds to be a 1D numpy array of floats.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">thresholds</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">thresholds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">thresholds</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">thresholds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">thresholds</span>
+
+
+<span class="k">def</span> <span class="nf">_ovr_multi_threshold_confusion_matrix</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_thresholds</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute multi-threshold confusion matrix for one-vs-rest classification.&quot;&quot;&quot;</span>
+    <span class="n">pred_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">target_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">tp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">fp</span> <span class="o">=</span> <span class="n">pred_sum</span> <span class="o">-</span> <span class="n">tp</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">target_sum</span> <span class="o">-</span> <span class="n">tp</span>
+    <span class="n">tn</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">tp</span> <span class="o">-</span> <span class="n">fp</span> <span class="o">-</span> <span class="n">fn</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">tn</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_thresholds</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_precision_recall_curve_compute_from_confmat</span><span class="p">(</span>
+    <span class="n">confmat</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute precision-recall curve from a multi-threshold confusion matrix.&quot;&quot;&quot;</span>
+    <span class="n">tps</span> <span class="o">=</span> <span class="n">confmat</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">fps</span> <span class="o">=</span> <span class="n">confmat</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">fns</span> <span class="o">=</span> <span class="n">confmat</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="n">tps</span><span class="p">,</span>
+        <span class="n">tps</span> <span class="o">+</span> <span class="n">fps</span><span class="p">,</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">tps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">tps</span> <span class="o">+</span> <span class="n">fps</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">recall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="n">tps</span><span class="p">,</span>
+        <span class="n">tps</span> <span class="o">+</span> <span class="n">fns</span><span class="p">,</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">tps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">tps</span> <span class="o">+</span> <span class="n">fns</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">sort_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+    <span class="n">thresholds</span> <span class="o">=</span> <span class="n">thresholds</span><span class="p">[</span><span class="n">sort_idx</span><span class="p">]</span>
+    <span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span><span class="p">[</span><span class="n">sort_idx</span><span class="p">]</span>
+    <span class="n">recall</span> <span class="o">=</span> <span class="n">recall</span><span class="p">[</span><span class="n">sort_idx</span><span class="p">]</span>  <span class="c1"># in descending order</span>
+
+    <span class="k">return</span> <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span>
+
+
+<span class="k">def</span> <span class="nf">_binary_precision_recall_curve_format</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">pos_label</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check and format binary precision-recall curve input/data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : npt.ArrayLike</span>
+<span class="sd">        Ground truth (correct) target values.</span>
+<span class="sd">    preds : npt.ArrayLike</span>
+<span class="sd">        Estimated probabilities or non-thresholded output of decision function.</span>
+<span class="sd">        A sigmoid function is applied if ``preds`` are not in [0, 1].</span>
+<span class="sd">    pos_label : int</span>
+<span class="sd">        Label of the positive class.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    target : numpy.ndarray</span>
+<span class="sd">        Ground truth (correct) target values as a numpy array.</span>
+<span class="sd">    preds : numpy.ndarray</span>
+<span class="sd">        Estimated probabilities or non-thresholded output of decision function</span>
+<span class="sd">        as a numpy array.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``target`` is not binary, with only 1 and 0 as values; If ``target`` and</span>
+<span class="sd">        ``preds`` are not of the same shape; If ``preds`` is not continuous.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">type_target</span><span class="p">,</span> <span class="n">type_preds</span> <span class="o">=</span> <span class="n">common_input_checks_and_format</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pos_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Positive label must be 0 or 1, got </span><span class="si">{</span><span class="n">pos_label</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">type_preds</span> <span class="o">==</span> <span class="s2">&quot;continuous-multioutput&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">&quot;The argument `preds` must either be a 1D array or a 2D array with &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;exactly 2 columns, got an array with shape: </span><span class="si">{</span><span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span>
+            <span class="o">...</span><span class="p">,</span>
+            <span class="n">pos_label</span><span class="p">,</span>
+        <span class="p">]</span>  <span class="c1"># keep only the probabilities for the positive class</span>
+        <span class="n">type_preds</span> <span class="o">=</span> <span class="s2">&quot;continuous&quot;</span>
+
+    <span class="k">if</span> <span class="n">preds</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The arguments `preds` and `target` should have the same shape. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">type_target</span> <span class="o">!=</span> <span class="s2">&quot;binary&quot;</span> <span class="ow">or</span> <span class="n">type_preds</span> <span class="o">!=</span> <span class="s2">&quot;continuous&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `target` to be binary and `preds` to be an array of&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; floats with probability/logit scores, got </span><span class="si">{</span><span class="n">type_target</span><span class="si">}</span><span class="s2"> and&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">type_preds</span><span class="si">}</span><span class="s2"> respectively.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `target` to be an array of 0s and 1s, but got &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;array with values </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">target</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">preds</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">preds</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">)):</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">target</span><span class="p">,</span> <span class="n">preds</span>
+
+
+<span class="k">def</span> <span class="nf">_binary_precision_recall_curve_update</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the state from which the precision-recall curve can be computed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : numpy.ndarray</span>
+<span class="sd">        Binary target values.</span>
+<span class="sd">    preds : numpy.ndarray</span>
+<span class="sd">        Predicted probabilities.</span>
+<span class="sd">    thresholds : Optional[numpy.ndarray]</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (target, preds): Tuple[numpy.ndarray, numpy.ndarray]</span>
+<span class="sd">        Target and predicted probabilities, if ``thresholds`` is None.</span>
+<span class="sd">    confmat : numpy.ndarray</span>
+<span class="sd">        Multi-threshold confusion matrix, if ``thresholds`` is not None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">thresholds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">target</span><span class="p">,</span> <span class="n">preds</span>
+
+    <span class="c1"># compute multi-threshold confusion matrix</span>
+    <span class="n">len_t</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+    <span class="n">preds_t</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">thresholds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="n">tp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">target</span> <span class="o">==</span> <span class="n">preds_t</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">fp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">target</span> <span class="o">!=</span> <span class="n">preds_t</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">tn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">target</span> <span class="o">==</span> <span class="n">preds_t</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">target</span> <span class="o">!=</span> <span class="n">preds_t</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">confmat</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">tn</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">len_t</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">confmat</span>
+
+
+<span class="k">def</span> <span class="nf">_binary_precision_recall_curve_compute</span><span class="p">(</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="p">],</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="n">pos_label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute precision-recall curve from a state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    state : Tuple or numpy.ndarray</span>
+<span class="sd">        State from which the precision-recall curve can be computed. Can be</span>
+<span class="sd">        either a tuple of (target, preds) or a multi-threshold confusion matrix.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores. If not None,</span>
+<span class="sd">        must be a 1D numpy array of floats in the [0, 1] range and monotonically</span>
+<span class="sd">        increasing.</span>
+<span class="sd">    pos_label : int</span>
+<span class="sd">        The label of the positive class.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    precision : numpy.ndarray</span>
+<span class="sd">        Precision scores such that element i is the precision of predictions</span>
+<span class="sd">        with score &gt;= thresholds[i].</span>
+<span class="sd">    recall : numpy.ndarray</span>
+<span class="sd">        Recall scores in descending order.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``thresholds`` is None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_precision_recall_curve_compute_from_confmat</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="n">thresholds</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fps</span><span class="p">,</span> <span class="n">tps</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_binary_clf_curve</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">pos_label</span><span class="o">=</span><span class="n">pos_label</span><span class="p">,</span>
+            <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+            <span class="n">tps</span><span class="p">,</span>
+            <span class="n">tps</span> <span class="o">+</span> <span class="n">fps</span><span class="p">,</span>
+            <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">tps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">tps</span> <span class="o">+</span> <span class="n">fps</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">recall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+            <span class="n">tps</span><span class="p">,</span>
+            <span class="n">tps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">tps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="n">where</span><span class="o">=</span><span class="n">tps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># stop when full recall attained</span>
+        <span class="c1"># and reverse the outputs so recall is decreasing</span>
+        <span class="n">last_ind</span> <span class="o">=</span> <span class="n">tps</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">tps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">sliced</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">last_ind</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">precision</span><span class="p">[</span><span class="n">sliced</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">recall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">recall</span><span class="p">[</span><span class="n">sliced</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">thresholds</span> <span class="o">=</span> <span class="n">thresholds</span><span class="p">[</span><span class="n">sliced</span><span class="p">]</span>  <span class="c1"># type: ignore[index]</span>
+
+    <span class="k">return</span> <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span>
+
+
+<span class="k">def</span> <span class="nf">binary_precision_recall_curve</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pos_label</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute precision-recall curve for binary input.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : npt.ArrayLike</span>
+<span class="sd">        Binary target values.</span>
+<span class="sd">    preds : npt.ArrayLike</span>
+<span class="sd">        Predicted probabilities or output of a decision function. If ``preds``</span>
+<span class="sd">        are logits, they will be transformed to probabilities via the sigmoid</span>
+<span class="sd">        function.</span>
+<span class="sd">    thresholds : int or list of floats or numpy.ndarray of floats, default=None</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+<span class="sd">        If int, then the number of thresholds to use.</span>
+<span class="sd">        If list or numpy.ndarray, then the thresholds to use.</span>
+<span class="sd">        If None, then the thresholds are automatically determined by the</span>
+<span class="sd">        unique values in ``preds``.</span>
+<span class="sd">    pos_label : int</span>
+<span class="sd">        The label of the positive class.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    precision : numpy.ndarray</span>
+<span class="sd">        Precision scores such that element i is the precision of predictions</span>
+<span class="sd">        with score &gt;= thresholds[i].</span>
+<span class="sd">    recall : numpy.ndarray</span>
+<span class="sd">        Recall scores in descending order.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import (</span>
+<span class="sd">    ...     binary_precision_recall_curve</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; target = [0, 0, 1, 1]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.4, 0.35, 0.8]</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = binary_precision_recall_curve(target,</span>
+<span class="sd">    ...     preds, thresholds=5</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; precision</span>
+<span class="sd">    array([0.5       , 0.66666667, 1.        , 1.        , 0.        ])</span>
+<span class="sd">    &gt;&gt;&gt; recall</span>
+<span class="sd">    array([1. , 1. , 0.5, 0.5, 0. ])</span>
+<span class="sd">    &gt;&gt;&gt; thresholds</span>
+<span class="sd">    array([0.  , 0.25, 0.5 , 0.75, 1.  ])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+
+    <span class="n">target</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">_binary_precision_recall_curve_format</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">,</span>
+        <span class="n">pos_label</span><span class="o">=</span><span class="n">pos_label</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_format_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="n">_binary_precision_recall_curve_update</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_binary_precision_recall_curve_compute</span><span class="p">(</span>
+        <span class="n">state</span><span class="p">,</span>
+        <span class="n">thresholds</span><span class="p">,</span>
+        <span class="n">pos_label</span><span class="o">=</span><span class="n">pos_label</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_multiclass_precision_recall_curve_format</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check and format the input for the multiclass precision-recall curve.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : npt.ArrayLike</span>
+<span class="sd">        The target values.</span>
+<span class="sd">    preds : npt.ArrayLike</span>
+<span class="sd">        The predicted probabilities or output of a decision function. If</span>
+<span class="sd">        ``preds`` is not in the [0, 1] range, it will be transformed into this</span>
+<span class="sd">        range via the softmax function.</span>
+<span class="sd">    num_classes : int</span>
+<span class="sd">        Number of classes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    target : numpy.ndarray</span>
+<span class="sd">        The target values as a numpy array.</span>
+<span class="sd">    preds : numpy.ndarray</span>
+<span class="sd">        The predicted probabilities as a numpy array.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores as a numpy array.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``target`` is not a 1D array of integers or contains values outside the</span>
+<span class="sd">        range [0, num_classes) or does not have one more dimension than ``preds``;</span>
+<span class="sd">        if ``preds`` is not a 2D array of floats or does not have the same number</span>
+<span class="sd">        of classes as ``num_classes``; if ``preds and ``target`` do not have the</span>
+<span class="sd">        same number of samples.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">formatted</span> <span class="o">=</span> <span class="n">common_input_checks_and_format</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">)</span>
+    <span class="n">target_</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatted</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">preds_</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatted</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">type_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">formatted</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">type_preds</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">formatted</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">preds_</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="n">target_</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `preds` to have one more dimension than argument &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;`target`, but got </span><span class="si">{</span><span class="n">preds_</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">target_</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2"> respectively&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">type_target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span> <span class="s2">&quot;multiclass&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `target` to be an array of integers with &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;shape (N,) but got </span><span class="si">{</span><span class="n">type_target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">type_target</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">num_classes</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected `target` to be a multiclass target, but got a binary target&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">type_preds</span> <span class="o">!=</span> <span class="s2">&quot;continuous-multioutput&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `preds` to be `preds` to be an array of floats&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; with probability/logit scores but got </span><span class="si">{</span><span class="n">type_preds</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">preds_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_classes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `preds` to have the same number of classes as &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;argument `num_classes`, but got </span><span class="si">{</span><span class="n">preds_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">num_classes</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;respectively&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">preds_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">target_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `preds` to have the same number of samples as &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;argument `target`, but got </span><span class="si">{</span><span class="n">preds_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">target_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;respectively&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">num_implied_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">target_</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">num_implied_classes</span> <span class="o">&gt;</span> <span class="n">num_classes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Detected more unique values in `target` than `num_classes`. Expected only &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">num_classes</span><span class="si">}</span><span class="s2"> but found </span><span class="si">{</span><span class="n">num_implied_classes</span><span class="si">}</span><span class="s2"> in `target`.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">preds_</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">preds_</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">)):</span>
+        <span class="n">preds_</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">preds_</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># logit to probability</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">preds_</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;``preds`` need to be probabilities for multiclass problems&quot;</span>
+            <span class="s2">&quot; i.e. they should sum up to 1.0 over classes&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">target_</span><span class="p">,</span> <span class="n">preds_</span>
+
+
+<span class="k">def</span> <span class="nf">_multiclass_precision_recall_curve_update</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span>
+    <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the state of the multiclass precision-recall curve.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : numpy.ndarray</span>
+<span class="sd">        Binary target values.</span>
+<span class="sd">    preds : numpy.ndarray</span>
+<span class="sd">        Predicted probabilities.</span>
+<span class="sd">    num_classes : int</span>
+<span class="sd">        Number of classes.</span>
+<span class="sd">    thresholds : numpy.ndarray, default=None</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (target, preds) : Tuple[numpy.ndarray, numpy.ndarray]</span>
+<span class="sd">        The target and predicted probabilities, if ``thresholds`` is None.</span>
+<span class="sd">    state : numpy.ndarray</span>
+<span class="sd">        The state of the multiclass precision-recall curve,  if ``thresholds``</span>
+<span class="sd">        is not None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">thresholds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">target</span><span class="p">,</span> <span class="n">preds</span>
+
+    <span class="c1"># one-vs-all multi-threshold confusion matrix</span>
+    <span class="n">len_t</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+    <span class="n">preds_t</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">thresholds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="n">target_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+        <span class="n">label_binarize</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)),</span>
+        <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_ovr_multi_threshold_confusion_matrix</span><span class="p">(</span>
+        <span class="n">target_t</span><span class="p">,</span>
+        <span class="n">preds_t</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+        <span class="n">num_thresholds</span><span class="o">=</span><span class="n">len_t</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_multiclass_precision_recall_curve_compute</span><span class="p">(</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="p">],</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span>
+    <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="n">Tuple</span><span class="p">[</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the multiclass precision-recall curve.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    state : numpy.ndarray</span>
+<span class="sd">        The state of the multiclass precision-recall curve. If ``thresholds`` is</span>
+<span class="sd">        None, then ``state`` is a tuple of the target and predicted probabilities.</span>
+<span class="sd">        Otherwise, ``state`` is the one-vs-all multi-threshold confusion matrix.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+<span class="sd">    num_classes : int</span>
+<span class="sd">        Number of classes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    precision : numpy.ndarray or list of numpy.ndarray</span>
+<span class="sd">        Precision scores where element i is the precision score corresponding to the</span>
+<span class="sd">        threshold i. If state is a tuple of the target and predicted probabilities,</span>
+<span class="sd">        then precision is a list of arrays, where each array corresponds to the</span>
+<span class="sd">        precision scores for a class.</span>
+<span class="sd">    recall : numpy.ndarray or list of numpy.ndarray</span>
+<span class="sd">        Recall scores where element `i` is the recall score corresponding to the</span>
+<span class="sd">        threshold  `i`. If state is a tuple of the target and predicted probabilities,</span>
+<span class="sd">        then recall is a list of arrays, where each array corresponds to the recall</span>
+<span class="sd">        scores for a class.</span>
+<span class="sd">    thresholds : numpy.ndarray or list of numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_precision_recall_curve_compute_from_confmat</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="n">thresholds</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">precision</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">num_classes</span><span class="p">,</span> <span class="mi">1</span><span class="p">))))</span>
+        <span class="n">recall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">recall</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_classes</span><span class="p">,</span> <span class="mi">1</span><span class="p">))))</span>
+
+        <span class="k">return</span> <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span>
+
+    <span class="n">precision_list</span><span class="p">,</span> <span class="n">recall_list</span><span class="p">,</span> <span class="n">thresholds_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">):</span>
+        <span class="p">(</span>
+            <span class="n">precision_i</span><span class="p">,</span>
+            <span class="n">recall_i</span><span class="p">,</span>
+            <span class="n">thresholds_i</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">_binary_precision_recall_curve_compute</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]),</span>
+            <span class="n">thresholds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">pos_label</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">precision_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision_i</span><span class="p">)</span>
+        <span class="n">recall_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recall_i</span><span class="p">)</span>
+        <span class="n">thresholds_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thresholds_i</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">precision_list</span><span class="p">,</span> <span class="n">recall_list</span><span class="p">,</span> <span class="n">thresholds_list</span>
+
+
+<div class="viewcode-block" id="multiclass_precision_recall_curve">
+<a class="viewcode-back" href="../../../../../reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.functional.precision_recall_curve.multiclass_precision_recall_curve">[docs]</a>
+<span class="k">def</span> <span class="nf">multiclass_precision_recall_curve</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="n">Tuple</span><span class="p">[</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve for multiclass problems.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : ArrayLike</span>
+<span class="sd">        Ground truth (correct) target values.</span>
+<span class="sd">    preds : ArrayLike</span>
+<span class="sd">        Estimated probabilities or decision function. If ``preds`` is a logit, it</span>
+<span class="sd">        will be converted to a probability using the softmax function.</span>
+<span class="sd">    num_classes : int</span>
+<span class="sd">        The number of classes in the dataset.</span>
+<span class="sd">    thresholds : Union[int, List[float], numpy.ndarray], default=None</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+<span class="sd">        If int, then the number of thresholds to use.</span>
+<span class="sd">        If list or array, then the thresholds to use.</span>
+<span class="sd">        If None, then the thresholds are automatically determined by the</span>
+<span class="sd">        unique values in ``preds``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    precision : numpy.ndarray or list of numpy.ndarray</span>
+<span class="sd">        Precision scores where element i is the precision score corresponding</span>
+<span class="sd">        to the threshold i. If state is a tuple of the target and predicted</span>
+<span class="sd">        probabilities, then precision is a list of arrays, where each array</span>
+<span class="sd">        corresponds to the precision scores for a class.</span>
+<span class="sd">    recall : numpy.ndarray or list of numpy.ndarray</span>
+<span class="sd">        Recall scores where element i is the recall score corresponding to</span>
+<span class="sd">        the threshold i. If state is a tuple of the target and predicted</span>
+<span class="sd">        probabilities, then recall is a list of arrays, where each array</span>
+<span class="sd">        corresponds to the recall scores for a class.</span>
+<span class="sd">    thresholds : numpy.ndarray or list of numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import (</span>
+<span class="sd">    ...     multiclass_precision_recall_curve</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 2]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2], [0.3, 0.4, 0.3]]</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = multiclass_precision_recall_curve(target,</span>
+<span class="sd">    ...     preds, num_classes=3, thresholds=5)</span>
+<span class="sd">    &gt;&gt;&gt; precision</span>
+<span class="sd">    array([[0.25, 0.  , 0.  , 0.  , 0.  , 1.  ],</span>
+<span class="sd">           [0.25, 0.25, 0.5 , 1.  , 0.  , 1.  ],</span>
+<span class="sd">           [0.5 , 0.5 , 0.  , 0.  , 0.  , 1.  ]])</span>
+<span class="sd">    &gt;&gt;&gt; recall</span>
+<span class="sd">    array([[1. , 0. , 0. , 0. , 0. , 0. ],</span>
+<span class="sd">           [1. , 1. , 1. , 1. , 0. , 0. ],</span>
+<span class="sd">           [1. , 0.5, 0. , 0. , 0. , 0. ]])</span>
+<span class="sd">    &gt;&gt;&gt; thresholds</span>
+<span class="sd">    array([0.  , 0.25, 0.5 , 0.75, 1.  ])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+
+    <span class="n">target</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">_multiclass_precision_recall_curve_format</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_format_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="n">_multiclass_precision_recall_curve_update</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+        <span class="n">thresholds</span><span class="o">=</span><span class="n">thresholds</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_multiclass_precision_recall_curve_compute</span><span class="p">(</span>
+        <span class="n">state</span><span class="p">,</span>
+        <span class="n">thresholds</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
+        <span class="n">num_classes</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_multilabel_precision_recall_curve_format</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">num_labels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check and format the multilabel precision-recall curve input/data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : npt.ArrayLike</span>
+<span class="sd">        The target values.</span>
+<span class="sd">    preds : npt.ArrayLike</span>
+<span class="sd">        Predicted probabilities or output of a decision function. If the</span>
+<span class="sd">        values are not in [0, 1], then they are converted into probabilities</span>
+<span class="sd">        by applying the sigmoid function.</span>
+<span class="sd">    num_labels : int</span>
+<span class="sd">        The number of labels in the dataset.</span>
+<span class="sd">    thresholds : int, list of floats or numpy.ndarray of floats, default=None</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+<span class="sd">        If int, then the number of thresholds to use.</span>
+<span class="sd">        If list or array, then the thresholds to use.</span>
+<span class="sd">        If None, then the thresholds are automatically determined by the</span>
+<span class="sd">        unique values in ``preds``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    target : numpy.ndarray</span>
+<span class="sd">        The target values as a numpy array.</span>
+<span class="sd">    preds : numpy.ndarray</span>
+<span class="sd">        The predicted probabilities as a numpy array.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``target`` is not in multilabel-indicator format.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``preds`` does not contain float values.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``num_labels`` does not match up with the number of columns in ``preds``.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the number of columns in ``preds`` is not the same as the number of</span>
+<span class="sd">        columns in ``target``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">type_target</span><span class="p">,</span> <span class="n">type_preds</span> <span class="o">=</span> <span class="n">common_input_checks_and_format</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># allow single-sample inputs</span>
+    <span class="k">if</span> <span class="n">type_preds</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span> <span class="s2">&quot;binary&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">type_target</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">:</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">type_preds</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;continuous-multioutput&quot;</span>
+            <span class="k">if</span> <span class="n">type_preds</span> <span class="o">==</span> <span class="s2">&quot;continuous&quot;</span>
+            <span class="k">else</span> <span class="s2">&quot;multilabel-indicator&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">type_target</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">type_target</span> <span class="o">=</span> <span class="s2">&quot;multilabel-indicator&quot;</span>
+
+    <span class="c1"># validate input types</span>
+    <span class="k">if</span> <span class="n">type_target</span> <span class="o">!=</span> <span class="s2">&quot;multilabel-indicator&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `target` to be a multilabel indicator array, but got &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">type_target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">type_preds</span> <span class="o">!=</span> <span class="s2">&quot;continuous-multioutput&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected argument `preds` to be an array of floats with&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; probabilities/logit scores, but got </span><span class="si">{</span><span class="n">type_preds</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">num_labels</span> <span class="o">!=</span> <span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected `num_labels` to be equal to the number of columns in `preds`, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="n">num_labels</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Number of columns in `target` and `preds` must be the same.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">preds</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">preds</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">)):</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">target</span><span class="p">,</span> <span class="n">preds</span>
+
+
+<span class="k">def</span> <span class="nf">_multilabel_precision_recall_curve_update</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span>
+    <span class="n">num_labels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the multilabel precision-recall curve state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : numpy.ndarray</span>
+<span class="sd">        The target values.</span>
+<span class="sd">    preds : numpy.ndarray</span>
+<span class="sd">        Predicted probabilities or output of a decision function.</span>
+<span class="sd">    num_labels : int</span>
+<span class="sd">        The number of labels in the dataset.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (target, preds) : Tuple[numpy.ndarray, numpy.ndarray]</span>
+<span class="sd">        The target and predicted values, if ``thresholds`` is None.</span>
+<span class="sd">    state : numpy.ndarray</span>
+<span class="sd">        One-vs-rest multi-threshold confusion matrix, if ``thresholds`` is not None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">thresholds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">target</span><span class="p">,</span> <span class="n">preds</span>
+
+    <span class="c1"># one-vs-all multi-threshold confusion matrix</span>
+    <span class="n">len_t</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+    <span class="n">preds_t</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">thresholds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">)</span>
+
+    <span class="n">target_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_ovr_multi_threshold_confusion_matrix</span><span class="p">(</span><span class="n">target_t</span><span class="p">,</span> <span class="n">preds_t</span><span class="p">,</span> <span class="n">num_labels</span><span class="p">,</span> <span class="n">len_t</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_multilabel_precision_recall_curve_compute</span><span class="p">(</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="p">],</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span>
+    <span class="n">num_labels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="n">Tuple</span><span class="p">[</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve for multilabel data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    state : Tuple[numpy.ndarray, numpy.ndarray] or numpy.ndarray</span>
+<span class="sd">        The target and predicted values, if ``thresholds`` is None. Otherwise,</span>
+<span class="sd">        the one-vs-rest multi-threshold confusion matrix.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+<span class="sd">    num_labels : int</span>
+<span class="sd">        Number of labels.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    precision : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">        Precision values for each label.</span>
+<span class="sd">    recall : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">        Recall values for each label.</span>
+<span class="sd">    thresholds : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">        If ``thresholds`` is None, then thresholds is a list of arrays, one for</span>
+<span class="sd">        each label. Otherwise, thresholds is a single array with shape</span>
+<span class="sd">        (len(``thresholds``,).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_precision_recall_curve_compute_from_confmat</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="n">thresholds</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">precision</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">num_labels</span><span class="p">,</span> <span class="mi">1</span><span class="p">))))</span>
+        <span class="n">recall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">recall</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_labels</span><span class="p">,</span> <span class="mi">1</span><span class="p">))))</span>
+
+        <span class="k">return</span> <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span>
+
+    <span class="n">precision_list</span><span class="p">,</span> <span class="n">recall_list</span><span class="p">,</span> <span class="n">thresholds_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_labels</span><span class="p">):</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="p">(</span>
+            <span class="n">precision_i</span><span class="p">,</span>
+            <span class="n">recall_i</span><span class="p">,</span>
+            <span class="n">thresholds_i</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">_binary_precision_recall_curve_compute</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">),</span>
+            <span class="n">thresholds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">precision_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision_i</span><span class="p">)</span>
+        <span class="n">recall_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recall_i</span><span class="p">)</span>
+        <span class="n">thresholds_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thresholds_i</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">precision_list</span><span class="p">,</span> <span class="n">recall_list</span><span class="p">,</span> <span class="n">thresholds_list</span>
+
+
+<div class="viewcode-block" id="multilabel_precision_recall_curve">
+<a class="viewcode-back" href="../../../../../reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.functional.precision_recall_curve.multilabel_precision_recall_curve">[docs]</a>
+<span class="k">def</span> <span class="nf">multilabel_precision_recall_curve</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">num_labels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="n">Tuple</span><span class="p">[</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve for multilabel input.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : npt.ArrayLike</span>
+<span class="sd">        The target values.</span>
+<span class="sd">    preds : npt.ArrayLike</span>
+<span class="sd">        Predicted probabilities or output of a decision function. If the</span>
+<span class="sd">        values are not in [0, 1], then they are converted into that range</span>
+<span class="sd">        by applying the sigmoid function.</span>
+<span class="sd">    num_labels : int</span>
+<span class="sd">        The number of labels in the dataset.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+<span class="sd">        If int, then the number of thresholds to use.</span>
+<span class="sd">        If list of floats, then the thresholds to use.</span>
+<span class="sd">        If None, then the thresholds are computed automatically from the unique</span>
+<span class="sd">        values in ``preds``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    precision : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">        Precision values for each label. If ``thresholds`` is None, then</span>
+<span class="sd">        precision is a list of arrays, one for each label. Otherwise,</span>
+<span class="sd">        precision is a single array with shape</span>
+<span class="sd">        (``num_labels``, len(``thresholds``)).</span>
+<span class="sd">    recall : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">        Recall values for each label. If ``thresholds`` is None, then</span>
+<span class="sd">        recall is a list of arrays, one for each label. Otherwise,</span>
+<span class="sd">        recall is a single array with shape (``num_labels``, len(``thresholds``)).</span>
+<span class="sd">    thresholds : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">        If ``thresholds`` is None, then thresholds is a list of arrays, one for</span>
+<span class="sd">        each label. Otherwise, thresholds is a single array with shape</span>
+<span class="sd">        (len(``thresholds``,).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import (</span>
+<span class="sd">    ...     multilabel_precision_recall_curve)</span>
+<span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0], [0, 1, 0]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = multilabel_precision_recall_curve(</span>
+<span class="sd">    ...     target, preds, num_labels=3, thresholds=5)</span>
+<span class="sd">    &gt;&gt;&gt; precision</span>
+<span class="sd">    array([[0.5, 0. , 0. , 0. , 0. , 1. ],</span>
+<span class="sd">           [1. , 1. , 1. , 1. , 0. , 1. ],</span>
+<span class="sd">           [0. , 0. , 0. , 0. , 0. , 1. ]])</span>
+<span class="sd">    &gt;&gt;&gt; recall</span>
+<span class="sd">    array([[1., 0., 0., 0., 0., 0.],</span>
+<span class="sd">           [1., 1., 1., 1., 0., 0.],</span>
+<span class="sd">           [0., 0., 0., 0., 0., 0.]])</span>
+<span class="sd">    &gt;&gt;&gt; thresholds</span>
+<span class="sd">    array([0.  , 0.25, 0.5 , 0.75, 1.  ])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+
+    <span class="n">target</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">_multilabel_precision_recall_curve_format</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">,</span>
+        <span class="n">num_labels</span><span class="o">=</span><span class="n">num_labels</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_format_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="n">_multilabel_precision_recall_curve_update</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">,</span>
+        <span class="n">num_labels</span><span class="o">=</span><span class="n">num_labels</span><span class="p">,</span>
+        <span class="n">thresholds</span><span class="o">=</span><span class="n">thresholds</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_multilabel_precision_recall_curve_compute</span><span class="p">(</span>
+        <span class="n">state</span><span class="p">,</span>
+        <span class="n">thresholds</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
+        <span class="n">num_labels</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="precision_recall_curve">
+<a class="viewcode-back" href="../../../../../reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.functional.precision_recall_curve.precision_recall_curve">[docs]</a>
+<span class="k">def</span> <span class="nf">precision_recall_curve</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">task</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span> <span class="s2">&quot;multiclass&quot;</span><span class="p">,</span> <span class="s2">&quot;multilabel&quot;</span><span class="p">],</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pos_label</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">num_classes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="n">Tuple</span><span class="p">[</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+    <span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve for different tasks/input types.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : npt.ArrayLike</span>
+<span class="sd">        Ground truth (correct) target values.</span>
+<span class="sd">    preds : npt.ArrayLike</span>
+<span class="sd">        Estimated probabilities or non-thresholded output of decision function.</span>
+<span class="sd">    task : Literal[&quot;binary&quot;, &quot;multiclass&quot;, &quot;multilabel&quot;]</span>
+<span class="sd">        The task for which the precision-recall curve is computed.</span>
+<span class="sd">    thresholds : int or list of floats or numpy.ndarray of floats, default=None</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores. If int,</span>
+<span class="sd">        then the number of thresholds to use. If list or array, then the</span>
+<span class="sd">        thresholds to use. If None, then the thresholds are automatically</span>
+<span class="sd">        determined by the sunique values in ``preds``</span>
+<span class="sd">    pos_label : int, default=1</span>
+<span class="sd">        The label of the positive class.</span>
+<span class="sd">    num_classes : int, optional</span>
+<span class="sd">        The number of classes in the dataset. Required if ``task`` is ``&quot;multiclass&quot;``.</span>
+<span class="sd">    num_labels : int, optional</span>
+<span class="sd">        The number of labels in the dataset. Required if ``task`` is ``&quot;multilabel&quot;``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    precision : numpy.ndarray</span>
+<span class="sd">        The precision scores where ``precision[i]`` is the precision score for</span>
+<span class="sd">        ``scores &gt;= thresholds[i]``. If ``task`` is &#39;multiclass&#39; or &#39;multilaabel&#39;,</span>
+<span class="sd">        then ``precision`` is a list of numpy arrays, where ``precision[i]`` is the</span>
+<span class="sd">        precision scores for class or label ``i``.</span>
+<span class="sd">    recall : numpy.ndarray</span>
+<span class="sd">        The recall scores where ``recall[i]`` is the recall score for ``scores &gt;=</span>
+<span class="sd">        thresholds[i]``. If ``task`` is &#39;multiclass&#39; or &#39;multilaabel&#39;, then</span>
+<span class="sd">        ``recall`` is a list of numpy arrays, where ``recall[i]`` is the recall</span>
+<span class="sd">        scores for class or label ``i``.</span>
+<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``task`` is not one of &#39;binary&#39;, &#39;multiclass&#39; or &#39;multilabel&#39;.</span>
+<span class="sd">    AssertionError</span>
+<span class="sd">        If ``task`` is ``multiclass`` and ``num_classes`` is not provided.</span>
+<span class="sd">    AssertionError</span>
+<span class="sd">        If ``task`` is ``multilabel`` and ``num_labels`` is not provided.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; # (binary)</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import precision_recall_curve</span>
+<span class="sd">    &gt;&gt;&gt; target = [0, 0, 1, 1]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.4, 0.35, 0.8]</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = precision_recall_curve(target, preds,</span>
+<span class="sd">    ...     &quot;binary&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; precision</span>
+<span class="sd">    array([0.5       , 0.66666667, 0.5       , 1.        , 1.        ])</span>
+<span class="sd">    &gt;&gt;&gt; recall</span>
+<span class="sd">    array([1. , 1. , 0.5, 0.5, 0. ])</span>
+<span class="sd">    &gt;&gt;&gt; thresholds</span>
+<span class="sd">    array([0.1 , 0.35, 0.4 , 0.8 ])</span>
+
+<span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import precision_recall_curve</span>
+<span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 2]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2], [0.3, 0.4, 0.3]]</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = precision_recall_curve(</span>
+<span class="sd">    ...     target, preds, task=&quot;multiclass&quot;, num_classes=3)</span>
+<span class="sd">    &gt;&gt;&gt; [prec.tolist() for prec in precision]</span>
+<span class="sd">    [[0.25, 0.3333333333333333, 0.0, 0.0, 1.0], [0.25, 0.3333333333333333, 0.5, 1.0, 1.0], [0.5, 0.6666666666666666, 0.5, 1.0]]</span>
+<span class="sd">    &gt;&gt;&gt; [rec.tolist() for rec in recall]</span>
+<span class="sd">    [[1.0, 1.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0, 0.0], [1.0, 1.0, 0.5, 0.0]]</span>
+<span class="sd">    &gt;&gt;&gt; thresholds</span>
+<span class="sd">    [array([0.05, 0.1 , 0.3 , 0.5 ]), array([0.3 , 0.4 , 0.6 , 0.95]), array([0. , 0.2, 0.3])]</span>
+
+<span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import precision_recall_curve</span>
+<span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0], [0, 1, 0]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = precision_recall_curve(target, preds,</span>
+<span class="sd">    ...     &quot;multilabel&quot;, num_labels=3)</span>
+<span class="sd">    &gt;&gt;&gt; precision</span>
+<span class="sd">    [array([0.5, 1. , 1. ]), array([1., 1., 1.]), array([0., 0., 1.])]</span>
+<span class="sd">    &gt;&gt;&gt; recall</span>
+<span class="sd">    [array([1., 1., 0.]), array([1. , 0.5, 0. ]), array([0., 0., 0.])]</span>
+<span class="sd">    &gt;&gt;&gt; thresholds</span>
+<span class="sd">    [array([0.05, 0.1 ]), array([0.9 , 0.95]), array([0.35, 0.8 ])]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: W505</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">binary_precision_recall_curve</span><span class="p">(</span>
+            <span class="n">target</span><span class="p">,</span>
+            <span class="n">preds</span><span class="p">,</span>
+            <span class="n">thresholds</span><span class="o">=</span><span class="n">thresholds</span><span class="p">,</span>
+            <span class="n">pos_label</span><span class="o">=</span><span class="n">pos_label</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;multiclass&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">num_classes</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;Number of classes must be a positive integer.&quot;</span>
+
+        <span class="k">return</span> <span class="n">multiclass_precision_recall_curve</span><span class="p">(</span>
+            <span class="n">target</span><span class="p">,</span>
+            <span class="n">preds</span><span class="p">,</span>
+            <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+            <span class="n">thresholds</span><span class="o">=</span><span class="n">thresholds</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;multilabel&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">num_labels</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">num_labels</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;Number of labels must be a positive integer.&quot;</span>
+
+        <span class="k">return</span> <span class="n">multilabel_precision_recall_curve</span><span class="p">(</span>
+            <span class="n">target</span><span class="p">,</span>
+            <span class="n">preds</span><span class="p">,</span>
+            <span class="n">num_labels</span><span class="o">=</span><span class="n">num_labels</span><span class="p">,</span>
+            <span class="n">thresholds</span><span class="o">=</span><span class="n">thresholds</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s2">&quot;Expected argument `task` to be either &#39;binary&#39;, &#39;multiclass&#39; or &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;&#39;multilabel&#39;, but got </span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Vector AI Engineering
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Vector AI Engineering.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+
+<div class="footer-container" style="text-align: center;">
+  <div class="footer-small-text">
+      <br> All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
+  </div>
+
+  <div class="footer-small-text">
+    This work is made possible due to the data obtained from the <a href="https://www.geminimedicine.ca/">GEMINI study</a>.
+  </div>
+
+  <hr/>
+
+  <div class="logo">
+    <a class="logo" href="https://vectorinstitute.ai/">
+      <span class="logo"></span>
+      <img alt="Logo of the Vector Institute" style="width:90px; max-width:90px;" src="../../../../../_static/logos/vector_logo.png" />
+    </a>
+    <a class="logo" href="https://www.geminimedicine.ca/">
+      <span class="logo"></span>
+      <img alt="Logo of GEMINI" style="width:90px; max-width:90px;" src="../../../../../_static/logos/gemini_logo.png" />
+    </a>
+  </div>
+</div>
+
+
+  </footer>
+  </body>
+</html>

@@ -1,6 +1,0 @@
-cyclops.evaluate.fairness.evaluator.warn\_too\_many\_unique\_values
-===================================================================
-
-.. currentmodule:: cyclops.evaluate.fairness.evaluator
-
-.. autofunction:: warn_too_many_unique_values

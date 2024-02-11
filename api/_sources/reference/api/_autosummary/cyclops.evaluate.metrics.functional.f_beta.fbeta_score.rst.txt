@@ -1,6 +1,0 @@
-cyclops.evaluate.metrics.functional.f\_beta.fbeta\_score
-========================================================
-
-.. currentmodule:: cyclops.evaluate.metrics.functional.f_beta
-
-.. autofunction:: fbeta_score

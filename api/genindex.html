@@ -1,167 +1,357 @@
 
-
-
-
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; cyclops  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/cyclops.css?v=fc0e58c9" />
-      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
 
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; cyclops  documentation</title>
   
-    <link rel="shortcut icon" href="_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
-        <script src="_static/copybutton.js?v=ccdb6887"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
-    <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="#" />
-    <link rel="search" title="Search" href="search.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-  <!--
-    Lie about what theme we really are when some RTD-injected JS fetches the
-    full versions panel from the RTD API.  RTD's JS replaces the stub versions
-    panel in the Sphinx-generated HTML with the full versions panel it fetches
-    from the RTD API.  If the API thinks we're not sphinx_rtd_theme, it will
-    serve us the wrong HTML and the panel will float as a "badge" when it
-    shouldn't.  As a customized version of sphinx_rtd_theme, we really do want
-    the same HTML it gets.  See also the diagnoses in
-    <https://github.com/nextstrain/docs.nextstrain.org/issues/76>.
-
-    This bit of JS finds the data RTD injects into the page and modifies it
-    before the code that RTD injects runs and looks at the data.  RTD's
-    <script>s (in <head>) run before this JS, but they wait until the DOM is
-    ready to actually do any work.  This gives us a chance to modify the data
-    during DOM load before the RTD code actually uses it.
-
-      -trs, 27 Jan 2022
-  -->
-  <script>
-    (() => {
-      try {
-        console.log("Lying about the theme to RTD's JS so the versions panel works properly. 🙈");
-
-        /* Update global variable, which is used in the request to get the RTD
-         * "footer" that includes the versions panel.
-         */
-        if (window.READTHEDOCS_DATA)
-          window.READTHEDOCS_DATA.theme = "sphinx_rtd_theme";
-
-        /* Update stored JSON in case anything else deserializes it later.
-         * Comments in the RTD-injected HTML source claim the global variable
-         * above is deprecated.
-         */
-        var script = document.querySelector("#READTHEDOCS_DATA");
-        if (script)
-          script.innerHTML = JSON.stringify({ ...JSON.parse(script.innerHTML), theme: "sphinx_rtd_theme" });
-      }
-      catch (err) {
-        console.log("Lying about the theme to RTD's JS failed… oh well. 🤷", err);
-      }
-    })();
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
   </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search"  style="background: #efeeed" >
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/css/cyclops.css?v=447bbcb8" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=ccdb6887"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
 
-  <a href="https://vectorinstitute.github.io/cyclops/">
-    <img src="_static/cyclops_logo-dark.png" class="logo" alt="Logo"/>
-  </a>
-
-
-
-  <div class="subproject">
-    <a href="index.html" class="project-name" alt="Documentation Home">
-      cyclops
-    </a>
-
-    
-    
-    
-
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
   </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
 
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
 
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
 
+  
 
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/cyclops_logo-dark.png" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="_static/cyclops_logo-dark.png" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">cyclops documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
 
-
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">🐣 Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="intro.html#developing">🧑🏿‍💻 Developing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="intro.html#documentation">📚 Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="intro.html#notebooks">📓 Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="intro.html#citation">🎓 Citation</a></li>
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="user_guide.html">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="monitoring.html">Monitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_report.html">Model Report</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorials_use_cases.html">Example use cases</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/kaggle/heart_failure_prediction.html">Heart Failure Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/mimiciv/mortality_prediction.html">Mortality Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/synthea/los_prediction.html">Prolonged Length of Stay Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/nihcxr/cxr_classification.html">Chest X-Ray Disease Classification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="developing.html">🧑🏿‍💻 Developing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to cyclops</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/api/cyclops.data.html">cyclops.data</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.html">cyclops.data.slicer</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.compound_filter.html">cyclops.data.slicer.compound_filter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.filter_datetime.html">cyclops.data.slicer.filter_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.filter_non_null.html">cyclops.data.slicer.filter_non_null</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.filter_range.html">cyclops.data.slicer.filter_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.filter_string_contains.html">cyclops.data.slicer.filter_string_contains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.filter_value.html">cyclops.data.slicer.filter_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.is_datetime.html">cyclops.data.slicer.is_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.overall.html">cyclops.data.slicer.overall</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html">cyclops.data.slicer.SliceSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.features.medical_image.html">cyclops.data.features.medical_image</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html">cyclops.data.features.medical_image.MedicalImage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/api/cyclops.tasks.html">cyclops.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/api/_autosummary/cyclops.tasks.classification.html">cyclops.tasks.classification</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html">cyclops.tasks.classification.BinaryTabularClassificationTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html">cyclops.tasks.classification.MultilabelImageClassificationTask</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reference/api/evaluator.html">Evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/api/fairness_evaluator.html">Fairness Evaluator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/api/metrics.html">Evaluation Metrics</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/accuracy.html">Accuracy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/auroc.html">AUROC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/average_precision.html">Average Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/f1score.html">F1-Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/f_beta.html">F-beta Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/precision.html">Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/precision_recall_curve.html">PrecisionRecallCurve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/recall.html">Recall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/roc.html">ROC Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/sensitivity.html">Sensitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/specificity.html">Specificity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/api/metrics/stat_scores.html">StatScores</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/api/cyclops.monitor.html">cyclops.monitor</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.html">cyclops.monitor.clinical_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html">cyclops.monitor.clinical_applicator.ClinicalShiftApplicator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.html">cyclops.monitor.synthetic_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.binary_noise_shift.html">cyclops.monitor.synthetic_applicator.binary_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_association_shift.html">cyclops.monitor.synthetic_applicator.feature_association_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_swap_shift.html">cyclops.monitor.synthetic_applicator.feature_swap_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.gaussian_noise_shift.html">cyclops.monitor.synthetic_applicator.gaussian_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.knockout_shift.html">cyclops.monitor.synthetic_applicator.knockout_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.html">cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/api/cyclops.report.html">cyclops.report</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/api/_autosummary/cyclops.report.report.html">cyclops.report.report</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html">cyclops.report.report.ModelCardReport</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
-        </div>
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
       </div>
-    </nav>
+      
+      <main id="main-content" class="bd-main">
+        
+        
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efeeed" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">cyclops</a>
-      </nav>
+<div class="sbt-scroll-pixel-helper"></div>
 
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
   
 
-  
-  
-    <li><a href="https://vectorinstitute.github.io/cyclops/">Home</a></li>
-    <li><a href="index.html">cyclops</a></li>
-  
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
 
-  
-  
+</button>
 
-  
 
-      <li class="wy-breadcrumbs-aside">
-      </li>
-  </ul>
-  <hr/>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
 
 <h1 id="index">Index</h1>
 
@@ -179,408 +369,27 @@
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
- | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
- | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
- | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.__add__">__add__() (Accuracy method)</a>
+      <li><a href="reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html#cyclops.data.features.medical_image.MedicalImage.__call__">__call__() (MedicalImage method)</a>
+</li>
+      <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.__init__">__init__() (BinaryTabularClassificationTask method)</a>
 
       <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.__add__">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.__add__">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.__add__">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.__add__">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.__add__">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.__add__">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.__add__">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.__add__">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.__add__">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.__add__">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.__add__">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.__add__">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.__add__">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.__add__">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.__add__">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.__add__">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.__add__">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.__add__">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.__add__">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.__add__">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.__add__">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.__add__">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.__add__">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.__add__">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.__add__">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.__add__">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.__add__">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.__add__">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.__add__">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.__add__">(MultilabelFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.__add__">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.__add__">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.__add__">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.__add__">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.__add__">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.__add__">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.__add__">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.__add__">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.__add__">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.__add__">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.__add__">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.__add__">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.__add__">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.__add__">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.__add__">(StatScores method)</a>
-</li>
-      </ul></li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.__call__">__call__() (Accuracy method)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.__call__">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.__call__">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.__call__">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.__call__">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.__call__">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.__call__">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.__call__">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.__call__">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.__call__">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.__call__">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.__call__">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.__call__">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.__call__">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.__call__">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html#cyclops.data.features.medical_image.MedicalImage.__call__">(MedicalImage method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.__call__">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.__call__">(MetricCollection method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.__call__">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.__call__">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.__call__">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.__call__">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.__call__">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.__call__">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.__call__">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.__call__">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.__call__">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.__call__">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.__call__">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.__call__">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.__call__">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.__call__">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.__call__">(MultilabelFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.__call__">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.__call__">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.__call__">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.__call__">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.__call__">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.__call__">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.__call__">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.__call__">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.__call__">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.__call__">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.__call__">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.__call__">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.__call__">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.__call__">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.__call__">(StatScores method)</a>
-</li>
-      </ul></li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.__init__">__init__() (Accuracy method)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.__init__">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.__init__">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.__init__">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.__init__">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.__init__">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.__init__">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.__init__">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.__init__">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.__init__">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.__init__">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.__init__">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.__init__">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.__init__">(BinaryTabularClassificationTask method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.__init__">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.__init__">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.__init__">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.__init__">(MetricCollection method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.__init__">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.__init__">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.__init__">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.__init__">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.__init__">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.__init__">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.__init__">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.__init__">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.__init__">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.__init__">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.__init__">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.__init__">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.__init__">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.__init__">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.__init__">(MultilabelFbetaScore method)</a>
-</li>
         <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.__init__">(MultilabelImageClassificationTask method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.__init__">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.__init__">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.__init__">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.__init__">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.__init__">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.__init__">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.__init__">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.__init__">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.__init__">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.__init__">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.__init__">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.__init__">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.__init__">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.__init__">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.__init__">(StatScores method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.__mul__">__mul__() (Accuracy method)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.__mul__">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.__mul__">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.__mul__">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.__mul__">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.__mul__">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.__mul__">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.__mul__">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.__mul__">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.__mul__">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.__mul__">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.__mul__">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.__mul__">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.__mul__">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.__mul__">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.__mul__">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.__mul__">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.__mul__">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.__mul__">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.__mul__">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.__mul__">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.__mul__">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.__mul__">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.__mul__">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.__mul__">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.__mul__">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.__mul__">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.__mul__">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.__mul__">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.__mul__">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.__mul__">(MultilabelFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.__mul__">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.__mul__">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.__mul__">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.__mul__">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.__mul__">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.__mul__">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.__mul__">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.__mul__">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.__mul__">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.__mul__">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.__mul__">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.__mul__">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.__mul__">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.__mul__">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.__mul__">(StatScores method)</a>
-</li>
-      </ul></li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec._registry">_registry (SliceSpec attribute)</a>
 </li>
   </ul></td>
@@ -589,9 +398,7 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy">Accuracy (class in cyclops.evaluate.metrics.accuracy)</a>
-</li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.add_metrics">add_metrics() (MetricCollection method)</a>
+      <li><a href="reference/api/metrics/accuracy.html#cyclops.evaluate.metrics.Accuracy">Accuracy (class in cyclops.evaluate.metrics)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.add_model">add_model() (BinaryTabularClassificationTask method)</a>
 
@@ -601,111 +408,21 @@
       </ul></li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.add_slice_spec">add_slice_spec() (SliceSpec method)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.add_state">add_state() (Accuracy method)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.add_state">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.add_state">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.add_state">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.add_state">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.add_state">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.add_state">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.add_state">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.add_state">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.add_state">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.add_state">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.add_state">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.add_state">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.add_state">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.add_state">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.add_state">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.add_state">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.add_state">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.add_state">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.add_state">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.add_state">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.add_state">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.add_state">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.add_state">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.add_state">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.add_state">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.add_state">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.add_state">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.add_state">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.add_state">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.add_state">(MultilabelFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.add_state">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.add_state">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.add_state">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.add_state">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.add_state">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.add_state">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.add_state">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.add_state">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.add_state">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.add_state">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.add_state">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.add_state">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.add_state">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.add_state">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.add_state">(StatScores method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html#cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.age">age() (ClinicalShiftApplicator method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html#cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.apply_shift">apply_shift() (ClinicalShiftApplicator method)</a>
 
       <ul>
         <li><a href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.html#cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.apply_shift">(SyntheticShiftApplicator method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC">AUROC (class in cyclops.evaluate.metrics.auroc)</a>
+      <li><a href="reference/api/metrics/auroc.html#cyclops.evaluate.metrics.AUROC">AUROC (class in cyclops.evaluate.metrics)</a>
+</li>
+      <li><a href="reference/api/metrics/auroc.html#cyclops.evaluate.metrics.functional.auroc.auroc">auroc() (in module cyclops.evaluate.metrics.functional.auroc)</a>
+</li>
+      <li><a href="reference/api/metrics/average_precision.html#cyclops.evaluate.metrics.functional.average_precision.average_precision">average_precision() (in module cyclops.evaluate.metrics.functional.average_precision)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -713,41 +430,53 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.binary_f1_score.html#cyclops.evaluate.metrics.functional.f_beta.binary_f1_score">binary_f1_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+      <li><a href="reference/api/metrics/accuracy.html#cyclops.evaluate.metrics.functional.accuracy.binary_accuracy">binary_accuracy() (in module cyclops.evaluate.metrics.functional.accuracy)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.binary_fbeta_score.html#cyclops.evaluate.metrics.functional.f_beta.binary_fbeta_score">binary_fbeta_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+      <li><a href="reference/api/metrics/auroc.html#cyclops.evaluate.metrics.functional.auroc.binary_auroc">binary_auroc() (in module cyclops.evaluate.metrics.functional.auroc)</a>
+</li>
+      <li><a href="reference/api/metrics/average_precision.html#cyclops.evaluate.metrics.functional.average_precision.binary_average_precision">binary_average_precision() (in module cyclops.evaluate.metrics.functional.average_precision)</a>
+</li>
+      <li><a href="reference/api/metrics/f1score.html#cyclops.evaluate.metrics.functional.f_beta.binary_f1_score">binary_f1_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+</li>
+      <li><a href="reference/api/metrics/f_beta.html#cyclops.evaluate.metrics.functional.f_beta.binary_fbeta_score">binary_fbeta_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.binary_noise_shift.html#cyclops.monitor.synthetic_applicator.binary_noise_shift">binary_noise_shift() (in module cyclops.monitor.synthetic_applicator)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.binary_precision.html#cyclops.evaluate.metrics.functional.precision_recall.binary_precision">binary_precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+      <li><a href="reference/api/metrics/precision.html#cyclops.evaluate.metrics.functional.precision_recall.binary_precision">binary_precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.binary_recall.html#cyclops.evaluate.metrics.functional.precision_recall.binary_recall">binary_recall() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+      <li><a href="reference/api/metrics/roc.html#cyclops.evaluate.metrics.functional.roc.binary_roc_curve">binary_roc_curve() (in module cyclops.evaluate.metrics.functional.roc)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.roc.binary_roc_curve.html#cyclops.evaluate.metrics.functional.roc.binary_roc_curve">binary_roc_curve() (in module cyclops.evaluate.metrics.functional.roc)</a>
+      <li><a href="reference/api/metrics/sensitivity.html#cyclops.evaluate.metrics.functional.sensitivity.binary_sensitivity">binary_sensitivity() (in module cyclops.evaluate.metrics.functional.sensitivity)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy">BinaryAccuracy (class in cyclops.evaluate.metrics.accuracy)</a>
+      <li><a href="reference/api/metrics/specificity.html#cyclops.evaluate.metrics.functional.specificity.binary_specificity">binary_specificity() (in module cyclops.evaluate.metrics.functional.specificity)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC">BinaryAUROC (class in cyclops.evaluate.metrics.auroc)</a>
+      <li><a href="reference/api/metrics/stat_scores.html#cyclops.evaluate.metrics.functional.stat_scores.binary_stat_scores">binary_stat_scores() (in module cyclops.evaluate.metrics.functional.stat_scores)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score">BinaryF1Score (class in cyclops.evaluate.metrics.f_beta)</a>
+      <li><a href="reference/api/metrics/accuracy.html#cyclops.evaluate.metrics.BinaryAccuracy">BinaryAccuracy (class in cyclops.evaluate.metrics)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore">BinaryFbetaScore (class in cyclops.evaluate.metrics.f_beta)</a>
+      <li><a href="reference/api/metrics/auroc.html#cyclops.evaluate.metrics.BinaryAUROC">BinaryAUROC (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision">BinaryPrecision (class in cyclops.evaluate.metrics.precision_recall)</a>
+      <li><a href="reference/api/metrics/average_precision.html#cyclops.evaluate.metrics.BinaryAveragePrecision">BinaryAveragePrecision (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve">BinaryPrecisionRecallCurve (class in cyclops.evaluate.metrics.precision_recall_curve)</a>
+      <li><a href="reference/api/metrics/f1score.html#cyclops.evaluate.metrics.BinaryF1Score">BinaryF1Score (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall">BinaryRecall (class in cyclops.evaluate.metrics.precision_recall)</a>
+      <li><a href="reference/api/metrics/f_beta.html#cyclops.evaluate.metrics.BinaryFbetaScore">BinaryFbetaScore (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve">BinaryROCCurve (class in cyclops.evaluate.metrics.roc)</a>
+      <li><a href="reference/api/metrics/precision.html#cyclops.evaluate.metrics.BinaryPrecision">BinaryPrecision (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity">BinarySensitivity (class in cyclops.evaluate.metrics.sensitivity)</a>
+      <li><a href="reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.BinaryPrecisionRecallCurve">BinaryPrecisionRecallCurve (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity">BinarySpecificity (class in cyclops.evaluate.metrics.specificity)</a>
+      <li><a href="reference/api/metrics/recall.html#cyclops.evaluate.metrics.BinaryRecall">BinaryRecall (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores">BinaryStatScores (class in cyclops.evaluate.metrics.stat_scores)</a>
+      <li><a href="reference/api/metrics/roc.html#cyclops.evaluate.metrics.BinaryROCCurve">BinaryROCCurve (class in cyclops.evaluate.metrics)</a>
+</li>
+      <li><a href="reference/api/metrics/sensitivity.html#cyclops.evaluate.metrics.BinarySensitivity">BinarySensitivity (class in cyclops.evaluate.metrics)</a>
+</li>
+      <li><a href="reference/api/metrics/specificity.html#cyclops.evaluate.metrics.BinarySpecificity">BinarySpecificity (class in cyclops.evaluate.metrics)</a>
+</li>
+      <li><a href="reference/api/metrics/stat_scores.html#cyclops.evaluate.metrics.BinaryStatScores">BinaryStatScores (class in cyclops.evaluate.metrics)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask">BinaryTabularClassificationTask (class in cyclops.tasks.classification)</a>
 </li>
@@ -759,209 +488,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html#cyclops.data.features.medical_image.MedicalImage.cast_storage">cast_storage() (MedicalImage method)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.clear">clear() (MetricCollection method)</a>
-</li>
       <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html#cyclops.monitor.clinical_applicator.ClinicalShiftApplicator">ClinicalShiftApplicator (class in cyclops.monitor.clinical_applicator)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.clone">clone() (Accuracy method)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.clone">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.clone">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.clone">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.clone">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.clone">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.clone">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.clone">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.clone">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.clone">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.clone">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.clone">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.clone">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.clone">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.clone">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.clone">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.clone">(MetricCollection method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.clone">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.clone">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.clone">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.clone">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.clone">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.clone">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.clone">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.clone">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.clone">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.clone">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.clone">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.clone">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.clone">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.clone">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.clone">(MultilabelFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.clone">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.clone">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.clone">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.clone">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.clone">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.clone">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.clone">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.clone">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.clone">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.clone">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.clone">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.clone">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.clone">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.clone">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.clone">(StatScores method)</a>
-</li>
-      </ul></li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.column_names">column_names (SliceSpec attribute)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.compound_filter.html#cyclops.data.slicer.compound_filter">compound_filter() (in module cyclops.data.slicer)</a>
-</li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.compute">compute() (Accuracy method)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.compute">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.compute">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.compute">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.compute">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.compute">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.compute">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.compute">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.compute">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.compute">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.compute">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.compute">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.compute">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.compute">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.compute">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.compute">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.compute">(MetricCollection method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.compute">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.compute">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.compute">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.compute">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.compute">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.compute">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.compute">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.compute">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.compute">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.compute">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.compute">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.compute">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.compute">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.compute">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.compute">(MultilabelFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.compute">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.compute">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.compute">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.compute">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.compute">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.compute">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.compute">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.compute">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.compute">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.compute">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.compute">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.compute">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.compute">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.compute">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.compute">(StatScores method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.factory.create_metric.html#cyclops.evaluate.metrics.factory.create_metric">create_metric() (in module cyclops.evaluate.metrics.factory)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html#cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.custom">custom() (ClinicalShiftApplicator method)</a>
 </li>
@@ -993,195 +524,8 @@
         <li><a href="reference/api/_autosummary/cyclops.data.slicer.html#module-cyclops.data.slicer">module</a>
 </li>
       </ul></li>
-      <li>
-    cyclops.evaluate
-
-      <ul>
-        <li><a href="reference/api/cyclops.evaluate.html#module-cyclops.evaluate">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.evaluator
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.evaluator.html#module-cyclops.evaluate.evaluator">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.fairness
-
-      <ul>
-        <li><a href="reference/api/cyclops.evaluate.html#module-cyclops.evaluate.fairness">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.fairness.config
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.fairness.config.html#module-cyclops.evaluate.fairness.config">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.fairness.evaluator
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.fairness.evaluator.html#module-cyclops.evaluate.fairness.evaluator">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics
-
-      <ul>
-        <li><a href="reference/api/cyclops.evaluate.html#module-cyclops.evaluate.metrics">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.accuracy
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.html#module-cyclops.evaluate.metrics.accuracy">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.auroc
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.html#module-cyclops.evaluate.metrics.auroc">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.f_beta
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.html#module-cyclops.evaluate.metrics.f_beta">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.factory
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.factory.html#module-cyclops.evaluate.metrics.factory">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional
-
-      <ul>
-        <li><a href="reference/api/cyclops.evaluate.html#module-cyclops.evaluate.metrics.functional">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.accuracy
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.accuracy.html#module-cyclops.evaluate.metrics.functional.accuracy">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.auroc
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.auroc.html#module-cyclops.evaluate.metrics.functional.auroc">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.f_beta
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.html#module-cyclops.evaluate.metrics.functional.f_beta">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.precision_recall
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.html#module-cyclops.evaluate.metrics.functional.precision_recall">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.precision_recall_curve
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall_curve.html#module-cyclops.evaluate.metrics.functional.precision_recall_curve">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.roc
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.roc.html#module-cyclops.evaluate.metrics.functional.roc">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.sensitivity
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.sensitivity.html#module-cyclops.evaluate.metrics.functional.sensitivity">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.specificity
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.specificity.html#module-cyclops.evaluate.metrics.functional.specificity">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.functional.stat_scores
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.stat_scores.html#module-cyclops.evaluate.metrics.functional.stat_scores">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.metric
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.html#module-cyclops.evaluate.metrics.metric">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.precision_recall
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.html#module-cyclops.evaluate.metrics.precision_recall">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.precision_recall_curve
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.html#module-cyclops.evaluate.metrics.precision_recall_curve">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.roc
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.html#module-cyclops.evaluate.metrics.roc">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.sensitivity
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.html#module-cyclops.evaluate.metrics.sensitivity">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.specificity
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.html#module-cyclops.evaluate.metrics.specificity">module</a>
-</li>
-      </ul></li>
-      <li>
-    cyclops.evaluate.metrics.stat_scores
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.html#module-cyclops.evaluate.metrics.stat_scores">module</a>
-</li>
-      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     cyclops.monitor
 
@@ -1260,14 +604,14 @@
       <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.evaluate">evaluate() (BinaryTabularClassificationTask method)</a>
 
       <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.evaluator.evaluate.html#cyclops.evaluate.evaluator.evaluate">(in module cyclops.evaluate.evaluator)</a>
+        <li><a href="reference/api/evaluator.html#cyclops.evaluate.evaluator.evaluate">(in module cyclops.evaluate.evaluator)</a>
 </li>
         <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.evaluate">(MultilabelImageClassificationTask method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.fairness.evaluator.evaluate_fairness.html#cyclops.evaluate.fairness.evaluator.evaluate_fairness">evaluate_fairness() (in module cyclops.evaluate.fairness.evaluator)</a>
+      <li><a href="reference/api/fairness_evaluator.html#cyclops.evaluate.fairness.evaluator.evaluate_fairness">evaluate_fairness() (in module cyclops.evaluate.fairness.evaluator)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.export">export() (ModelCardReport method)</a>
 </li>
@@ -1277,15 +621,13 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.f1_score.html#cyclops.evaluate.metrics.functional.f_beta.f1_score">f1_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+      <li><a href="reference/api/metrics/f1score.html#cyclops.evaluate.metrics.functional.f_beta.f1_score">f1_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score">F1Score (class in cyclops.evaluate.metrics.f_beta)</a>
+      <li><a href="reference/api/metrics/f1score.html#cyclops.evaluate.metrics.F1Score">F1Score (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.fairness.config.FairnessConfig.html#cyclops.evaluate.fairness.config.FairnessConfig">FairnessConfig (class in cyclops.evaluate.fairness.config)</a>
+      <li><a href="reference/api/metrics/f_beta.html#cyclops.evaluate.metrics.functional.f_beta.fbeta_score">fbeta_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.fbeta_score.html#cyclops.evaluate.metrics.functional.f_beta.fbeta_score">fbeta_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
-</li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore">FbetaScore (class in cyclops.evaluate.metrics.f_beta)</a>
+      <li><a href="reference/api/metrics/f_beta.html#cyclops.evaluate.metrics.FbetaScore">FbetaScore (class in cyclops.evaluate.metrics)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_association_shift.html#cyclops.monitor.synthetic_applicator.feature_association_shift">feature_association_shift() (in module cyclops.monitor.synthetic_applicator)</a>
 </li>
@@ -1315,16 +657,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.gaussian_noise_shift.html#cyclops.monitor.synthetic_applicator.gaussian_noise_shift">gaussian_noise_shift() (in module cyclops.monitor.synthetic_applicator)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.get">get() (MetricCollection method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.get_model">get_model() (BinaryTabularClassificationTask method)</a>
 
       <ul>
         <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.get_model">(MultilabelImageClassificationTask method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.get_slices">get_slices() (SliceSpec method)</a>
 </li>
   </ul></td>
@@ -1347,17 +687,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.is_datetime.html#cyclops.data.slicer.is_datetime">is_datetime() (in module cyclops.data.slicer)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.items">items() (MetricCollection method)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.keys">keys() (MetricCollection method)</a>
-</li>
-  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.knockout_shift.html#cyclops.monitor.synthetic_applicator.knockout_shift">knockout_shift() (in module cyclops.monitor.synthetic_applicator)</a>
 </li>
@@ -1431,10 +765,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html#cyclops.data.features.medical_image.MedicalImage">MedicalImage (class in cyclops.data.features.medical_image)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric">Metric (class in cyclops.evaluate.metrics.metric)</a>
-</li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection">MetricCollection (class in cyclops.evaluate.metrics.metric)</a>
-</li>
       <li><a href="reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport">ModelCardReport (class in cyclops.report.report)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.models_count">models_count (BinaryTabularClassificationTask property)</a>
@@ -1455,60 +785,6 @@
 </li>
         <li><a href="reference/api/_autosummary/cyclops.data.slicer.html#module-cyclops.data.slicer">cyclops.data.slicer</a>
 </li>
-        <li><a href="reference/api/cyclops.evaluate.html#module-cyclops.evaluate">cyclops.evaluate</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.evaluator.html#module-cyclops.evaluate.evaluator">cyclops.evaluate.evaluator</a>
-</li>
-        <li><a href="reference/api/cyclops.evaluate.html#module-cyclops.evaluate.fairness">cyclops.evaluate.fairness</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.fairness.config.html#module-cyclops.evaluate.fairness.config">cyclops.evaluate.fairness.config</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.fairness.evaluator.html#module-cyclops.evaluate.fairness.evaluator">cyclops.evaluate.fairness.evaluator</a>
-</li>
-        <li><a href="reference/api/cyclops.evaluate.html#module-cyclops.evaluate.metrics">cyclops.evaluate.metrics</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.html#module-cyclops.evaluate.metrics.accuracy">cyclops.evaluate.metrics.accuracy</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.html#module-cyclops.evaluate.metrics.auroc">cyclops.evaluate.metrics.auroc</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.html#module-cyclops.evaluate.metrics.f_beta">cyclops.evaluate.metrics.f_beta</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.factory.html#module-cyclops.evaluate.metrics.factory">cyclops.evaluate.metrics.factory</a>
-</li>
-        <li><a href="reference/api/cyclops.evaluate.html#module-cyclops.evaluate.metrics.functional">cyclops.evaluate.metrics.functional</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.accuracy.html#module-cyclops.evaluate.metrics.functional.accuracy">cyclops.evaluate.metrics.functional.accuracy</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.auroc.html#module-cyclops.evaluate.metrics.functional.auroc">cyclops.evaluate.metrics.functional.auroc</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.html#module-cyclops.evaluate.metrics.functional.f_beta">cyclops.evaluate.metrics.functional.f_beta</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.html#module-cyclops.evaluate.metrics.functional.precision_recall">cyclops.evaluate.metrics.functional.precision_recall</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall_curve.html#module-cyclops.evaluate.metrics.functional.precision_recall_curve">cyclops.evaluate.metrics.functional.precision_recall_curve</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.roc.html#module-cyclops.evaluate.metrics.functional.roc">cyclops.evaluate.metrics.functional.roc</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.sensitivity.html#module-cyclops.evaluate.metrics.functional.sensitivity">cyclops.evaluate.metrics.functional.sensitivity</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.specificity.html#module-cyclops.evaluate.metrics.functional.specificity">cyclops.evaluate.metrics.functional.specificity</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.stat_scores.html#module-cyclops.evaluate.metrics.functional.stat_scores">cyclops.evaluate.metrics.functional.stat_scores</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.html#module-cyclops.evaluate.metrics.metric">cyclops.evaluate.metrics.metric</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.html#module-cyclops.evaluate.metrics.precision_recall">cyclops.evaluate.metrics.precision_recall</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.html#module-cyclops.evaluate.metrics.precision_recall_curve">cyclops.evaluate.metrics.precision_recall_curve</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.html#module-cyclops.evaluate.metrics.roc">cyclops.evaluate.metrics.roc</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.html#module-cyclops.evaluate.metrics.sensitivity">cyclops.evaluate.metrics.sensitivity</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.html#module-cyclops.evaluate.metrics.specificity">cyclops.evaluate.metrics.specificity</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.html#module-cyclops.evaluate.metrics.stat_scores">cyclops.evaluate.metrics.stat_scores</a>
-</li>
         <li><a href="reference/api/cyclops.monitor.html#module-cyclops.monitor">cyclops.monitor</a>
 </li>
         <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.html#module-cyclops.monitor.clinical_applicator">cyclops.monitor.clinical_applicator</a>
@@ -1524,97 +800,105 @@
         <li><a href="reference/api/_autosummary/cyclops.tasks.classification.html#module-cyclops.tasks.classification">cyclops.tasks.classification</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html#cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.month">month() (ClinicalShiftApplicator method)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.multiclass_f1_score.html#cyclops.evaluate.metrics.functional.f_beta.multiclass_f1_score">multiclass_f1_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+      <li><a href="reference/api/metrics/accuracy.html#cyclops.evaluate.metrics.functional.accuracy.multiclass_accuracy">multiclass_accuracy() (in module cyclops.evaluate.metrics.functional.accuracy)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.multiclass_fbeta_score.html#cyclops.evaluate.metrics.functional.f_beta.multiclass_fbeta_score">multiclass_fbeta_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+      <li><a href="reference/api/metrics/auroc.html#cyclops.evaluate.metrics.functional.auroc.multiclass_auroc">multiclass_auroc() (in module cyclops.evaluate.metrics.functional.auroc)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.multiclass_precision.html#cyclops.evaluate.metrics.functional.precision_recall.multiclass_precision">multiclass_precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+      <li><a href="reference/api/metrics/f1score.html#cyclops.evaluate.metrics.functional.f_beta.multiclass_f1_score">multiclass_f1_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.multiclass_recall.html#cyclops.evaluate.metrics.functional.precision_recall.multiclass_recall">multiclass_recall() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+      <li><a href="reference/api/metrics/f_beta.html#cyclops.evaluate.metrics.functional.f_beta.multiclass_fbeta_score">multiclass_fbeta_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.roc.multiclass_roc_curve.html#cyclops.evaluate.metrics.functional.roc.multiclass_roc_curve">multiclass_roc_curve() (in module cyclops.evaluate.metrics.functional.roc)</a>
+      <li><a href="reference/api/metrics/precision.html#cyclops.evaluate.metrics.functional.precision_recall.multiclass_precision">multiclass_precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy">MulticlassAccuracy (class in cyclops.evaluate.metrics.accuracy)</a>
+      <li><a href="reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.functional.precision_recall_curve.multiclass_precision_recall_curve">multiclass_precision_recall_curve() (in module cyclops.evaluate.metrics.functional.precision_recall_curve)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC">MulticlassAUROC (class in cyclops.evaluate.metrics.auroc)</a>
+      <li><a href="reference/api/metrics/recall.html#cyclops.evaluate.metrics.functional.precision_recall.multiclass_recall">multiclass_recall() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score">MulticlassF1Score (class in cyclops.evaluate.metrics.f_beta)</a>
+      <li><a href="reference/api/metrics/roc.html#cyclops.evaluate.metrics.functional.roc.multiclass_roc_curve">multiclass_roc_curve() (in module cyclops.evaluate.metrics.functional.roc)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore">MulticlassFbetaScore (class in cyclops.evaluate.metrics.f_beta)</a>
+      <li><a href="reference/api/metrics/sensitivity.html#cyclops.evaluate.metrics.functional.sensitivity.multiclass_sensitivity">multiclass_sensitivity() (in module cyclops.evaluate.metrics.functional.sensitivity)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision">MulticlassPrecision (class in cyclops.evaluate.metrics.precision_recall)</a>
+      <li><a href="reference/api/metrics/specificity.html#cyclops.evaluate.metrics.functional.specificity.multiclass_specificity">multiclass_specificity() (in module cyclops.evaluate.metrics.functional.specificity)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve">MulticlassPrecisionRecallCurve (class in cyclops.evaluate.metrics.precision_recall_curve)</a>
+      <li><a href="reference/api/metrics/stat_scores.html#cyclops.evaluate.metrics.functional.stat_scores.multiclass_stat_scores">multiclass_stat_scores() (in module cyclops.evaluate.metrics.functional.stat_scores)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall">MulticlassRecall (class in cyclops.evaluate.metrics.precision_recall)</a>
+      <li><a href="reference/api/metrics/accuracy.html#cyclops.evaluate.metrics.MulticlassAccuracy">MulticlassAccuracy (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve">MulticlassROCCurve (class in cyclops.evaluate.metrics.roc)</a>
+      <li><a href="reference/api/metrics/auroc.html#cyclops.evaluate.metrics.MulticlassAUROC">MulticlassAUROC (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity">MulticlassSensitivity (class in cyclops.evaluate.metrics.sensitivity)</a>
+      <li><a href="reference/api/metrics/f1score.html#cyclops.evaluate.metrics.MulticlassF1Score">MulticlassF1Score (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity">MulticlassSpecificity (class in cyclops.evaluate.metrics.specificity)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/metrics/f_beta.html#cyclops.evaluate.metrics.MulticlassFbetaScore">MulticlassFbetaScore (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores">MulticlassStatScores (class in cyclops.evaluate.metrics.stat_scores)</a>
+      <li><a href="reference/api/metrics/precision.html#cyclops.evaluate.metrics.MulticlassPrecision">MulticlassPrecision (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.multilabel_f1_score.html#cyclops.evaluate.metrics.functional.f_beta.multilabel_f1_score">multilabel_f1_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+      <li><a href="reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.MulticlassPrecisionRecallCurve">MulticlassPrecisionRecallCurve (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.f_beta.multilabel_fbeta_score.html#cyclops.evaluate.metrics.functional.f_beta.multilabel_fbeta_score">multilabel_fbeta_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+      <li><a href="reference/api/metrics/recall.html#cyclops.evaluate.metrics.MulticlassRecall">MulticlassRecall (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.multilabel_precision.html#cyclops.evaluate.metrics.functional.precision_recall.multilabel_precision">multilabel_precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+      <li><a href="reference/api/metrics/roc.html#cyclops.evaluate.metrics.MulticlassROCCurve">MulticlassROCCurve (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.multilabel_recall.html#cyclops.evaluate.metrics.functional.precision_recall.multilabel_recall">multilabel_recall() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+      <li><a href="reference/api/metrics/sensitivity.html#cyclops.evaluate.metrics.MulticlassSensitivity">MulticlassSensitivity (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.roc.multilabel_roc_curve.html#cyclops.evaluate.metrics.functional.roc.multilabel_roc_curve">multilabel_roc_curve() (in module cyclops.evaluate.metrics.functional.roc)</a>
+      <li><a href="reference/api/metrics/specificity.html#cyclops.evaluate.metrics.MulticlassSpecificity">MulticlassSpecificity (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy">MultilabelAccuracy (class in cyclops.evaluate.metrics.accuracy)</a>
+      <li><a href="reference/api/metrics/stat_scores.html#cyclops.evaluate.metrics.MulticlassStatScores">MulticlassStatScores (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC">MultilabelAUROC (class in cyclops.evaluate.metrics.auroc)</a>
+      <li><a href="reference/api/metrics/accuracy.html#cyclops.evaluate.metrics.functional.accuracy.multilabel_accuracy">multilabel_accuracy() (in module cyclops.evaluate.metrics.functional.accuracy)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score">MultilabelF1Score (class in cyclops.evaluate.metrics.f_beta)</a>
+      <li><a href="reference/api/metrics/auroc.html#cyclops.evaluate.metrics.functional.auroc.multilabel_auroc">multilabel_auroc() (in module cyclops.evaluate.metrics.functional.auroc)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore">MultilabelFbetaScore (class in cyclops.evaluate.metrics.f_beta)</a>
+      <li><a href="reference/api/metrics/f1score.html#cyclops.evaluate.metrics.functional.f_beta.multilabel_f1_score">multilabel_f1_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+</li>
+      <li><a href="reference/api/metrics/f_beta.html#cyclops.evaluate.metrics.functional.f_beta.multilabel_fbeta_score">multilabel_fbeta_score() (in module cyclops.evaluate.metrics.functional.f_beta)</a>
+</li>
+      <li><a href="reference/api/metrics/precision.html#cyclops.evaluate.metrics.functional.precision_recall.multilabel_precision">multilabel_precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+</li>
+      <li><a href="reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.functional.precision_recall_curve.multilabel_precision_recall_curve">multilabel_precision_recall_curve() (in module cyclops.evaluate.metrics.functional.precision_recall_curve)</a>
+</li>
+      <li><a href="reference/api/metrics/recall.html#cyclops.evaluate.metrics.functional.precision_recall.multilabel_recall">multilabel_recall() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+</li>
+      <li><a href="reference/api/metrics/roc.html#cyclops.evaluate.metrics.functional.roc.multilabel_roc_curve">multilabel_roc_curve() (in module cyclops.evaluate.metrics.functional.roc)</a>
+</li>
+      <li><a href="reference/api/metrics/sensitivity.html#cyclops.evaluate.metrics.functional.sensitivity.multilabel_sensitivity">multilabel_sensitivity() (in module cyclops.evaluate.metrics.functional.sensitivity)</a>
+</li>
+      <li><a href="reference/api/metrics/specificity.html#cyclops.evaluate.metrics.functional.specificity.multilabel_specificity">multilabel_specificity() (in module cyclops.evaluate.metrics.functional.specificity)</a>
+</li>
+      <li><a href="reference/api/metrics/stat_scores.html#cyclops.evaluate.metrics.functional.stat_scores.multilabel_stat_scores">multilabel_stat_scores() (in module cyclops.evaluate.metrics.functional.stat_scores)</a>
+</li>
+      <li><a href="reference/api/metrics/accuracy.html#cyclops.evaluate.metrics.MultilabelAccuracy">MultilabelAccuracy (class in cyclops.evaluate.metrics)</a>
+</li>
+      <li><a href="reference/api/metrics/auroc.html#cyclops.evaluate.metrics.MultilabelAUROC">MultilabelAUROC (class in cyclops.evaluate.metrics)</a>
+</li>
+      <li><a href="reference/api/metrics/f1score.html#cyclops.evaluate.metrics.MultilabelF1Score">MultilabelF1Score (class in cyclops.evaluate.metrics)</a>
+</li>
+      <li><a href="reference/api/metrics/f_beta.html#cyclops.evaluate.metrics.MultilabelFbetaScore">MultilabelFbetaScore (class in cyclops.evaluate.metrics)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask">MultilabelImageClassificationTask (class in cyclops.tasks.classification)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision">MultilabelPrecision (class in cyclops.evaluate.metrics.precision_recall)</a>
+      <li><a href="reference/api/metrics/precision.html#cyclops.evaluate.metrics.MultilabelPrecision">MultilabelPrecision (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve">MultilabelPrecisionRecallCurve (class in cyclops.evaluate.metrics.precision_recall_curve)</a>
+      <li><a href="reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.MultilabelPrecisionRecallCurve">MultilabelPrecisionRecallCurve (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall">MultilabelRecall (class in cyclops.evaluate.metrics.precision_recall)</a>
+      <li><a href="reference/api/metrics/recall.html#cyclops.evaluate.metrics.MultilabelRecall">MultilabelRecall (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve">MultilabelROCCurve (class in cyclops.evaluate.metrics.roc)</a>
+      <li><a href="reference/api/metrics/roc.html#cyclops.evaluate.metrics.MultilabelROCCurve">MultilabelROCCurve (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity">MultilabelSensitivity (class in cyclops.evaluate.metrics.sensitivity)</a>
+      <li><a href="reference/api/metrics/sensitivity.html#cyclops.evaluate.metrics.MultilabelSensitivity">MultilabelSensitivity (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity">MultilabelSpecificity (class in cyclops.evaluate.metrics.specificity)</a>
+      <li><a href="reference/api/metrics/specificity.html#cyclops.evaluate.metrics.MultilabelSpecificity">MultilabelSpecificity (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores">MultilabelStatScores (class in cyclops.evaluate.metrics.stat_scores)</a>
+      <li><a href="reference/api/metrics/stat_scores.html#cyclops.evaluate.metrics.MultilabelStatScores">MultilabelStatScores (class in cyclops.evaluate.metrics)</a>
 </li>
-  </ul></td>
-</tr></table>
-
-<h2 id="N">N</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.name">name (Metric property)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.name">(StatScores property)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric">OperatorMetric (class in cyclops.evaluate.metrics.metric)</a>
-</li>
-  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.overall.html#cyclops.data.slicer.overall">overall() (in module cyclops.data.slicer)</a>
 </li>
@@ -1624,17 +908,15 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.pop">pop() (MetricCollection method)</a>
+      <li><a href="reference/api/metrics/precision.html#cyclops.evaluate.metrics.Precision">Precision (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.popitem">popitem() (MetricCollection method)</a>
+      <li><a href="reference/api/metrics/precision.html#cyclops.evaluate.metrics.functional.precision_recall.precision">precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision">Precision (class in cyclops.evaluate.metrics.precision_recall)</a>
+      <li><a href="reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.functional.precision_recall_curve.precision_recall_curve">precision_recall_curve() (in module cyclops.evaluate.metrics.functional.precision_recall_curve)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.precision.html#cyclops.evaluate.metrics.functional.precision_recall.precision">precision() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
-</li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve">PrecisionRecallCurve (class in cyclops.evaluate.metrics.precision_recall_curve)</a>
+      <li><a href="reference/api/metrics/precision_recall_curve.html#cyclops.evaluate.metrics.PrecisionRecallCurve">PrecisionRecallCurve (class in cyclops.evaluate.metrics)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html#cyclops.tasks.classification.BinaryTabularClassificationTask.predict">predict() (BinaryTabularClassificationTask method)</a>
 
@@ -1648,111 +930,15 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall">Recall (class in cyclops.evaluate.metrics.precision_recall)</a>
+      <li><a href="reference/api/metrics/recall.html#cyclops.evaluate.metrics.Recall">Recall (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.precision_recall.recall.html#cyclops.evaluate.metrics.functional.precision_recall.recall">recall() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
+      <li><a href="reference/api/metrics/recall.html#cyclops.evaluate.metrics.functional.precision_recall.recall">recall() (in module cyclops.evaluate.metrics.functional.precision_recall)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.reset_state">reset_state() (Accuracy method)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.reset_state">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.reset_state">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.reset_state">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.reset_state">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.reset_state">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.reset_state">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.reset_state">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.reset_state">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.reset_state">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.reset_state">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.reset_state">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.reset_state">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.reset_state">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.reset_state">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.reset_state">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.reset_state">(MetricCollection method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.reset_state">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.reset_state">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.reset_state">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.reset_state">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.reset_state">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.reset_state">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.reset_state">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.reset_state">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.reset_state">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.reset_state">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.reset_state">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.reset_state">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.reset_state">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.reset_state">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.reset_state">(MultilabelFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.reset_state">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.reset_state">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.reset_state">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.reset_state">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.reset_state">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.reset_state">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.reset_state">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.reset_state">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.reset_state">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.reset_state">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.reset_state">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.reset_state">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.reset_state">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.reset_state">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.reset_state">(StatScores method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.functional.roc.roc_curve.html#cyclops.evaluate.metrics.functional.roc.roc_curve">roc_curve() (in module cyclops.evaluate.metrics.functional.roc)</a>
+      <li><a href="reference/api/metrics/roc.html#cyclops.evaluate.metrics.functional.roc.roc_curve">roc_curve() (in module cyclops.evaluate.metrics.functional.roc)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve">ROCCurve (class in cyclops.evaluate.metrics.roc)</a>
+      <li><a href="reference/api/metrics/roc.html#cyclops.evaluate.metrics.ROCCurve">ROCCurve (class in cyclops.evaluate.metrics)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1766,23 +952,27 @@
         <li><a href="reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html#cyclops.tasks.classification.MultilabelImageClassificationTask.save_model">(MultilabelImageClassificationTask method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity">Sensitivity (class in cyclops.evaluate.metrics.sensitivity)</a>
+      <li><a href="reference/api/metrics/sensitivity.html#cyclops.evaluate.metrics.Sensitivity">Sensitivity (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.setdefault">setdefault() (MetricCollection method)</a>
+      <li><a href="reference/api/metrics/sensitivity.html#cyclops.evaluate.metrics.functional.sensitivity.sensitivity">sensitivity() (in module cyclops.evaluate.metrics.functional.sensitivity)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html#cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.sex">sex() (ClinicalShiftApplicator method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.slices">slices() (SliceSpec method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec">SliceSpec (class in cyclops.data.slicer)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.spec_list">spec_list (SliceSpec attribute)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity">Specificity (class in cyclops.evaluate.metrics.specificity)</a>
+      <li><a href="reference/api/metrics/specificity.html#cyclops.evaluate.metrics.Specificity">Specificity (class in cyclops.evaluate.metrics)</a>
 </li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores">StatScores (class in cyclops.evaluate.metrics.stat_scores)</a>
+      <li><a href="reference/api/metrics/specificity.html#cyclops.evaluate.metrics.functional.specificity.specificity">specificity() (in module cyclops.evaluate.metrics.functional.specificity)</a>
+</li>
+      <li><a href="reference/api/metrics/stat_scores.html#cyclops.evaluate.metrics.functional.stat_scores.stat_scores">stat_scores() (in module cyclops.evaluate.metrics.functional.stat_scores)</a>
+</li>
+      <li><a href="reference/api/metrics/stat_scores.html#cyclops.evaluate.metrics.StatScores">StatScores (class in cyclops.evaluate.metrics)</a>
 </li>
       <li><a href="reference/api/_autosummary/cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.html#cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator">SyntheticShiftApplicator (class in cyclops.monitor.synthetic_applicator)</a>
 </li>
@@ -1807,150 +997,90 @@
   </ul></td>
 </tr></table>
 
-<h2 id="U">U</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.update">update() (MetricCollection method)</a>
-</li>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.Accuracy.html#cyclops.evaluate.metrics.accuracy.Accuracy.update_state">update_state() (Accuracy method)</a>
-
-      <ul>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.AUROC.html#cyclops.evaluate.metrics.auroc.AUROC.update_state">(AUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.BinaryAccuracy.html#cyclops.evaluate.metrics.accuracy.BinaryAccuracy.update_state">(BinaryAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.BinaryAUROC.html#cyclops.evaluate.metrics.auroc.BinaryAUROC.update_state">(BinaryAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryF1Score.html#cyclops.evaluate.metrics.f_beta.BinaryF1Score.update_state">(BinaryF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.html#cyclops.evaluate.metrics.f_beta.BinaryFbetaScore.update_state">(BinaryFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryPrecision.html#cyclops.evaluate.metrics.precision_recall.BinaryPrecision.update_state">(BinaryPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.BinaryPrecisionRecallCurve.update_state">(BinaryPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.BinaryRecall.html#cyclops.evaluate.metrics.precision_recall.BinaryRecall.update_state">(BinaryRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.BinaryROCCurve.html#cyclops.evaluate.metrics.roc.BinaryROCCurve.update_state">(BinaryROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.BinarySensitivity.html#cyclops.evaluate.metrics.sensitivity.BinarySensitivity.update_state">(BinarySensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.BinarySpecificity.html#cyclops.evaluate.metrics.specificity.BinarySpecificity.update_state">(BinarySpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.BinaryStatScores.html#cyclops.evaluate.metrics.stat_scores.BinaryStatScores.update_state">(BinaryStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.F1Score.html#cyclops.evaluate.metrics.f_beta.F1Score.update_state">(F1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.FbetaScore.html#cyclops.evaluate.metrics.f_beta.FbetaScore.update_state">(FbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.Metric.html#cyclops.evaluate.metrics.metric.Metric.update_state">(Metric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.update_state">(MetricCollection method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.html#cyclops.evaluate.metrics.accuracy.MulticlassAccuracy.update_state">(MulticlassAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MulticlassAUROC.html#cyclops.evaluate.metrics.auroc.MulticlassAUROC.update_state">(MulticlassAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassF1Score.html#cyclops.evaluate.metrics.f_beta.MulticlassF1Score.update_state">(MulticlassF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.html#cyclops.evaluate.metrics.f_beta.MulticlassFbetaScore.update_state">(MulticlassFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.html#cyclops.evaluate.metrics.precision_recall.MulticlassPrecision.update_state">(MulticlassPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MulticlassPrecisionRecallCurve.update_state">(MulticlassPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MulticlassRecall.html#cyclops.evaluate.metrics.precision_recall.MulticlassRecall.update_state">(MulticlassRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MulticlassROCCurve.html#cyclops.evaluate.metrics.roc.MulticlassROCCurve.update_state">(MulticlassROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.html#cyclops.evaluate.metrics.sensitivity.MulticlassSensitivity.update_state">(MulticlassSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MulticlassSpecificity.html#cyclops.evaluate.metrics.specificity.MulticlassSpecificity.update_state">(MulticlassSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.html#cyclops.evaluate.metrics.stat_scores.MulticlassStatScores.update_state">(MulticlassStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.html#cyclops.evaluate.metrics.accuracy.MultilabelAccuracy.update_state">(MultilabelAccuracy method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.auroc.MultilabelAUROC.html#cyclops.evaluate.metrics.auroc.MultilabelAUROC.update_state">(MultilabelAUROC method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelF1Score.html#cyclops.evaluate.metrics.f_beta.MultilabelF1Score.update_state">(MultilabelF1Score method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.html#cyclops.evaluate.metrics.f_beta.MultilabelFbetaScore.update_state">(MultilabelFbetaScore method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.html#cyclops.evaluate.metrics.precision_recall.MultilabelPrecision.update_state">(MultilabelPrecision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.MultilabelPrecisionRecallCurve.update_state">(MultilabelPrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.MultilabelRecall.html#cyclops.evaluate.metrics.precision_recall.MultilabelRecall.update_state">(MultilabelRecall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.MultilabelROCCurve.html#cyclops.evaluate.metrics.roc.MultilabelROCCurve.update_state">(MultilabelROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.html#cyclops.evaluate.metrics.sensitivity.MultilabelSensitivity.update_state">(MultilabelSensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.MultilabelSpecificity.html#cyclops.evaluate.metrics.specificity.MultilabelSpecificity.update_state">(MultilabelSpecificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.html#cyclops.evaluate.metrics.stat_scores.MultilabelStatScores.update_state">(MultilabelStatScores method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.OperatorMetric.html#cyclops.evaluate.metrics.metric.OperatorMetric.update_state">(OperatorMetric method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Precision.html#cyclops.evaluate.metrics.precision_recall.Precision.update_state">(Precision method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.html#cyclops.evaluate.metrics.precision_recall_curve.PrecisionRecallCurve.update_state">(PrecisionRecallCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.precision_recall.Recall.html#cyclops.evaluate.metrics.precision_recall.Recall.update_state">(Recall method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.roc.ROCCurve.html#cyclops.evaluate.metrics.roc.ROCCurve.update_state">(ROCCurve method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.sensitivity.Sensitivity.html#cyclops.evaluate.metrics.sensitivity.Sensitivity.update_state">(Sensitivity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.specificity.Specificity.html#cyclops.evaluate.metrics.specificity.Specificity.update_state">(Specificity method)</a>
-</li>
-        <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.stat_scores.StatScores.html#cyclops.evaluate.metrics.stat_scores.StatScores.update_state">(StatScores method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-</tr></table>
-
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.validate">validate (SliceSpec attribute)</a>
 </li>
   </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.metrics.metric.MetricCollection.html#cyclops.evaluate.metrics.metric.MetricCollection.values">values() (MetricCollection method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="W">W</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/_autosummary/cyclops.evaluate.fairness.evaluator.warn_too_many_unique_values.html#cyclops.evaluate.fairness.evaluator.warn_too_many_unique_values">warn_too_many_unique_values() (in module cyclops.evaluate.fairness.evaluator)</a>
-</li>
-  </ul></td>
 </tr></table>
 
 
 
-           </div>
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
           </div>
-          <footer>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p></p>
-  </div>
-
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
   
+  <div class="footer-item">
+    
+<p class="component-author">
+By Vector AI Engineering
+</p>
 
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Vector AI Engineering.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+
+<div class="footer-container" style="text-align: center;">
   <div class="footer-small-text">
-    All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
+      <br> All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
   </div>
 
   <div class="footer-small-text">
-      This work is made possible due to the data obtained from the <a href="https://www.geminimedicine.ca/">GEMINI study</a>.
+    This work is made possible due to the data obtained from the <a href="https://www.geminimedicine.ca/">GEMINI study</a>.
   </div>
 
   <hr/>
@@ -1965,30 +1095,9 @@
       <img alt="Logo of GEMINI" style="width:90px; max-width:90px;" src="_static/logos/gemini_logo.png" />
     </a>
   </div>
-
-  <div class="copyright">
-    &copy; Copyright 2023, Vector AI Engineering
-  </div>
-
-  <div class="copyright">
-    </p>
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using customised version of
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">base theme</a> provided by
-    <a href="https://readthedocs.org">Read the Docs</a>.
-  </div>
+</div>
 
 
-
-</footer>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+  </footer>
+  </body>
 </html>

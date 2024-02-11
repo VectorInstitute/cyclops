@@ -1,6 +1,0 @@
-cyclops.evaluate.metrics.functional.roc.multilabel\_roc\_curve
-==============================================================
-
-.. currentmodule:: cyclops.evaluate.metrics.functional.roc
-
-.. autofunction:: multilabel_roc_curve

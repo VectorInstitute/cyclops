@@ -1,6 +1,0 @@
-cyclops.evaluate.metrics.functional.precision\_recall.multilabel\_recall
-========================================================================
-
-.. currentmodule:: cyclops.evaluate.metrics.functional.precision_recall
-
-.. autofunction:: multilabel_recall

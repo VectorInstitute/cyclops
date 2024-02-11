@@ -1,6 +1,0 @@
-cyclops.evaluate.metrics.functional.roc.roc\_curve
-==================================================
-
-.. currentmodule:: cyclops.evaluate.metrics.functional.roc
-
-.. autofunction:: roc_curve

@@ -1,6 +1,0 @@
-cyclops.evaluate.metrics.factory.create\_metric
-===============================================
-
-.. currentmodule:: cyclops.evaluate.metrics.factory
-
-.. autofunction:: create_metric
