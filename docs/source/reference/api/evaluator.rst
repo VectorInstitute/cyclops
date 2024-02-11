@@ -5,7 +5,7 @@
 Evaluator
 #########
 
-The evaluator module consists of the ``evaluate`` API method, which is used to evaluate 
+The evaluator module consists of the ``evaluate`` API method, which is used to evaluate
 the performance of the model. It returns a dictionary containing various evaluation
 metrics.
 
