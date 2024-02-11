@@ -1,0 +1,26 @@
+{% block extrafooter %}
+
+<div class="footer-container" style="text-align: center;">
+  <div class="footer-small-text">
+      <br> All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
+  </div>
+
+  <div class="footer-small-text">
+    This work is made possible due to the data obtained from the <a href="https://www.geminimedicine.ca/">GEMINI study</a>.
+  </div>
+
+  <hr/>
+
+  <div class="logo">
+    <a class="logo" href="https://vectorinstitute.ai/">
+      <span class="logo"></span>
+      <img alt="Logo of the Vector Institute" style="width:90px; max-width:90px;" src="{{ pathto('_static/logos/vector_logo.png', 1) }}" />
+    </a>
+    <a class="logo" href="https://www.geminimedicine.ca/">
+      <span class="logo"></span>
+      <img alt="Logo of GEMINI" style="width:90px; max-width:90px;" src="{{ pathto('_static/logos/gemini_logo.png', 1) }}" />
+    </a>
+  </div>
+</div>
+
+{% endblock %}

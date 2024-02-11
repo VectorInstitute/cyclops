@@ -59,6 +59,14 @@ autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
 
+html_theme_options = {
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "titles_only": False,
+}
+
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.9/", None),
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
@@ -84,10 +92,19 @@ source_suffix = [".rst", ".md"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "theme"
-html_theme_path = ["."]
+html_theme = "sphinx_book_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["css/cyclops.css"]
+html_logo = "_static/cyclops_logo-dark.png"
+html_favicon = "_static/favicon.ico"
+html_theme_options = {
+    "logo": {  # type: ignore
+        "text": "cyclops documentation",
+        "image_light": "_static/cyclops_logo-dark.png",
+        "image_dark": "_static/cyclops_logo-dark.png",
+    },
+}
