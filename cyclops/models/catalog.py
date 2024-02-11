@@ -218,7 +218,7 @@ def create_model(
         An instance of the model.
 
     """
-    model_class = _model_catalog.get(model_name, None)
+    model_class = _model_catalog.get(model_name)
     if model_class is None:
         if model_name == "xgb_classifier":
             raise RuntimeError(_xgboost_unavailable_message)
