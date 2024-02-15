@@ -84,7 +84,7 @@ make html SPHINXOPTS="-D nbsphinx_allow_errors=True"
 ### Contributing
 
 Contributing to cyclops is welcomed.
-See [Contributing](https://vectorinstitute.github.io/cyclops/api/intro.html) for
+See [Contributing](https://vectorinstitute.github.io/cyclops/api/contributing.html) for
 guidelines.
 
 
