@@ -6,7 +6,8 @@ Welcome to cyclops's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   intro
-   contributing
+   user_guide
    tutorials
+   developing
+   contributing
    api

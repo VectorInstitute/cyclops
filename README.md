@@ -1,4 +1,4 @@
-![cyclops Logo](https://github.com/VectorInstitute/cyclops/blob/main/docs/source/theme/static/cyclops_logo-dark.png?raw=true)
+![cyclops Logo](https://github.com/VectorInstitute/cyclops/blob/main/docs/source/_static/cyclops_logo-dark.png?raw=true)
 
 --------------------------------------------------------------------------------
 
@@ -36,8 +36,9 @@ python3 -m pip install pycyclops
 
 `cyclops` has many optional dependencies that are used for specific functionality. For
 example, the [monai](https://github.com/Project-MONAI/MONAI) library is used for loading
-DICOM images to create datasets. All optional dependencies can be installed with
-``pycyclops[all]``, and specific sets of dependencies are listed in the sections below.
+DICOM images to create datasets. Hence, `monai` can be installed using
+``python3 -m pip install pycyclops[monai]``. Specific sets of dependencies are listed
+below.
 
 
 | Dependency       | pip extra       | Notes                                                                                                        |
@@ -88,6 +89,8 @@ guidelines.
 
 
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
+
+If you need to build the documentations locally, make sure to install ``Pandoc`` in addition to ``docs`` poetry group.
 
 
 ## 📓 Notebooks
