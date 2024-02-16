@@ -79,9 +79,9 @@ async def classify_xray(im: Image, model_name: str) -> dict[str, float]:
 )
 async def predict_heart_failure(X: np.ndarray) -> np.ndarray:  # type: ignore
     """Run inference on heart failure prediction model."""
-    InferResult = await triton_runner.heart_failure_prediction.async_run(  # noqa: N806 # type: ignore
+    InferResult = await triton_runner.heart_failure_prediction.async_run(  # type: ignore # noqa: N806
         X,
-    )  # noqa: N806
+    )
     return InferResult.as_numpy("label")  # type: ignore[no-any-return]
 
 
@@ -95,7 +95,7 @@ async def model_config(input_model: dict[Literal["model_name"], str]) -> dict[st
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
 async def unload_model(input_model: str, ctx: bentoml.Context) -> dict[str, str]:
     """Unload a model from memory."""
-    await triton_runner.unload_model(input_model, headers=ctx.request.headers)  # type: ignore
+    await triton_runner.unload_model(input_model, headers=ctx.request.headers)  # type: ignore # noqa: E501
     return {"unloaded": input_model}
 
 
