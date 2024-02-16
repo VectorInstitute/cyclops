@@ -1,4 +1,5 @@
 """Confusion matrix."""
+
 from types import ModuleType
 from typing import Any, Optional, Tuple, Union
 
@@ -276,10 +277,7 @@ class MulticlassConfusionMatrix(Metric, registry_key="multiclass_confusion_matri
         )
 
 
-class MultilabelConfusionMatrix(
-    _AbstractConfusionMatrix,
-    registry_key="multilabel_confusion_matrix",
-):
+class MultilabelConfusionMatrix(Metric, registry_key="multilabel_confusion_matrix"):
     """Confusion matrix for multilabel classification tasks.
 
     Parameters
@@ -329,6 +327,8 @@ class MultilabelConfusionMatrix(
 
     """
 
+    name: str = "Confusion Matrix"
+
     def __init__(
         self,
         num_labels: int,
@@ -352,7 +352,11 @@ class MultilabelConfusionMatrix(
         self.normalize = normalize
         self.ignore_index = ignore_index
 
-        self._create_state(size=num_labels)
+        self.add_state_default_factory(
+            "confmat",
+            lambda xp: xp.zeros((num_labels, 2, 2), dtype=xp.int64, device=self.device),  # type: ignore
+            dist_reduce_fn="sum",
+        )
 
     def _update_state(self, target: Array, preds: Array) -> None:
         """Update the state variables."""
@@ -365,21 +369,22 @@ class MultilabelConfusionMatrix(
         target, preds = _multilabel_confusion_matrix_format_arrays(
             target,
             preds,
+            self.num_labels,
             threshold=self.threshold,
             ignore_index=self.ignore_index,
             xp=xp,
         )
-        tn, fp, fn, tp = _multilabel_confusion_matrix_update_state(target, preds, xp=xp)
-        self._update_stat_scores(tn=tn, fp=fp, fn=fn, tp=tp)
+        confmat = _multilabel_confusion_matrix_update_state(
+            target,
+            preds,
+            self.num_labels,
+            xp=xp,
+        )
+        self.confmat += confmat  # type: ignore
 
     def _compute_metric(self) -> Array:
         """Compute the confusion matrix."""
-        tn, fp, fn, tp = self._final_state()
         return _multilabel_confusion_matrix_compute(
-            tp=tp,
-            fp=fp,
-            tn=tn,
-            fn=fn,
-            num_labels=self.num_labels,
+            self.confmat,  # type: ignore
             normalize=self.normalize,
         )

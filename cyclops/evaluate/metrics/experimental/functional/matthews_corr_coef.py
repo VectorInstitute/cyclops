@@ -1,4 +1,5 @@
 """Functional API for the matthews correlation coefficient (MCC) metric."""
+
 from typing import Optional, Tuple, Union
 
 import array_api_compat as apc
@@ -13,7 +14,6 @@ from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
     _multiclass_confusion_matrix_update_state,
     _multiclass_confusion_matrix_validate_args,
     _multiclass_confusion_matrix_validate_arrays,
-    _multilabel_confusion_matrix_compute,
     _multilabel_confusion_matrix_format_arrays,
     _multilabel_confusion_matrix_update_state,
     _multilabel_confusion_matrix_validate_args,
@@ -25,6 +25,7 @@ from cyclops.evaluate.metrics.experimental.utils.types import Array
 def _mcc_reduce(confmat: Array) -> Array:
     """Reduce an un-normalized confusion matrix into the matthews corrcoef."""
     xp = apc.array_namespace(confmat)
+
     # convert multilabel into binary
     confmat = xp.sum(confmat, axis=0) if confmat.ndim == 3 else confmat
 
@@ -36,10 +37,10 @@ def _mcc_reduce(confmat: Array) -> Array:
         if tp + tn == 0 and fp + fn != 0:
             return xp.asarray(-1.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
 
-    tk = xp.sum(confmat, axis=-1, dtype=xp.float32)
-    pk = xp.sum(confmat, axis=-2, dtype=xp.float32)
-    c = xp.astype(xp.linalg.trace(confmat), xp.float32)
-    s = xp.sum(confmat, dtype=xp.float32)
+    tk = xp.sum(confmat, axis=-1, dtype=xp.float32)  # tn + fp and tp + fn
+    pk = xp.sum(confmat, axis=-2, dtype=xp.float32)  # tn + fn and tp + fp
+    c = xp.astype(xp.linalg.trace(confmat), xp.float32)  # tn and tp
+    s = xp.sum(confmat, dtype=xp.float32)  # tn + tp + fn + fp
 
     cov_ytyp = c * s - sum(tk * pk)
     cov_ypyp = s**2 - sum(pk * pk)
@@ -333,18 +334,16 @@ def multilabel_mcc(
     target, preds = _multilabel_confusion_matrix_format_arrays(
         target,
         preds,
+        num_labels,
         threshold=threshold,
         ignore_index=ignore_index,
         xp=xp,
     )
-    tn, fp, fn, tp = _multilabel_confusion_matrix_update_state(target, preds, xp=xp)
-
-    confmat = _multilabel_confusion_matrix_compute(
-        tn,
-        fp,
-        fn,
-        tp,
+    confmat = _multilabel_confusion_matrix_update_state(
+        target,
+        preds,
         num_labels,
-        normalize=None,
+        xp=xp,
     )
+
     return _mcc_reduce(confmat)

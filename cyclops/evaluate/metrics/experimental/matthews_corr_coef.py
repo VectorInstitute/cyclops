@@ -1,4 +1,5 @@
 """Matthews Correlation Coefficient (MCC) metric."""
+
 from typing import Any, Optional, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental.confusion_matrix import (
@@ -8,7 +9,6 @@ from cyclops.evaluate.metrics.experimental.confusion_matrix import (
 )
 from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
     _binary_confusion_matrix_compute,
-    _multilabel_confusion_matrix_compute,
 )
 from cyclops.evaluate.metrics.experimental.functional.matthews_corr_coef import (
     _mcc_reduce,
@@ -175,13 +175,4 @@ class MultilabelMCC(MultilabelConfusionMatrix, registry_key="multilabel_mcc"):
 
     def _compute_metric(self) -> Array:
         """Compute the confusion matrix."""
-        tn, fp, fn, tp = self._final_state()
-        confmat = _multilabel_confusion_matrix_compute(
-            tp=tp,
-            fp=fp,
-            tn=tn,
-            fn=fn,
-            num_labels=self.num_labels,
-            normalize=self.normalize,
-        )
-        return _mcc_reduce(confmat)
+        return _mcc_reduce(self.confmat)  # type: ignore

@@ -1,4 +1,5 @@
 """Functions for computing the confusion matrix for classification tasks."""
+
 # mypy: disable-error-code="no-any-return"
 from types import ModuleType
 from typing import Literal, Optional, Tuple, Union
@@ -9,6 +10,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     bincount,
     clone,
     flatten,
+    moveaxis,
     remove_ignore_index,
     safe_divide,
     sigmoid,
@@ -599,6 +601,7 @@ def _multilabel_confusion_matrix_validate_arrays(
 def _multilabel_confusion_matrix_format_arrays(
     target: Array,
     preds: Array,
+    num_labels: int,
     threshold: float = 0.5,
     ignore_index: Optional[int] = None,
     *,
@@ -613,13 +616,15 @@ def _multilabel_confusion_matrix_format_arrays(
             preds = sigmoid(preds)  # convert logits to probabilities
         preds = to_int(preds > threshold)
 
-    preds = xp.reshape(preds, shape=(*preds.shape[:2], -1))
-    target = xp.reshape(target, shape=(*target.shape[:2], -1))
+    preds = xp.reshape(moveaxis(preds, 1, -1), shape=(-1, num_labels))
+    target = xp.reshape(moveaxis(target, 1, -1), shape=(-1, num_labels))
 
     if ignore_index is not None:
-        idx = target == ignore_index
         target = clone(target)
-        target[idx] = -1
+        preds = clone(preds)
+        idx = target == ignore_index
+        target[idx] = -4 * num_labels
+        preds[idx] = -4 * num_labels
 
     return target, preds
 
@@ -627,34 +632,25 @@ def _multilabel_confusion_matrix_format_arrays(
 def _multilabel_confusion_matrix_update_state(
     target: Array,
     preds: Array,
+    num_labels: int,
     *,
     xp: ModuleType,
-) -> Tuple[Array, Array, Array, Array]:
+) -> Array:
     """Compute the statistics for the given `target` and `preds` arrays."""
-    sum_axis = (0, -1)
-    tp = squeeze_all(xp.sum(to_int((target == preds) & (target == 1)), axis=sum_axis))
-    fn = squeeze_all(xp.sum(to_int((target != preds) & (target == 1)), axis=sum_axis))
-    fp = squeeze_all(xp.sum(to_int((target != preds) & (target == 0)), axis=sum_axis))
-    tn = squeeze_all(xp.sum(to_int((target == preds) & (target == 0)), axis=sum_axis))
-
-    return tn, fp, fn, tp
+    unique_mapping = (2 * target + preds) + 4 * flatten(
+        xp.arange(num_labels, device=apc.device(preds)),
+    )
+    unique_mapping = unique_mapping[unique_mapping >= 0]
+    bins = bincount(unique_mapping, minlength=4 * num_labels)
+    return xp.reshape(bins, shape=(num_labels, 2, 2))
 
 
 def _multilabel_confusion_matrix_compute(
-    tn: Array,
-    fp: Array,
-    fn: Array,
-    tp: Array,
-    num_labels: int,
+    confmat: Array,
     normalize: Optional[str] = None,
 ) -> Array:
     """Compute the confusion matrix from the given stat scores."""
-    xp = apc.array_namespace(tn, fp, fn, tp)
-
-    confmat = squeeze_all(
-        xp.reshape(xp.stack([tn, fp, fn, tp], axis=-1), shape=(-1, num_labels, 2, 2)),
-    )
-
+    xp = apc.array_namespace(confmat)
     return _normalize_confusion_matrix(confmat, normalize=normalize, xp=xp)
 
 
@@ -768,17 +764,19 @@ def multilabel_confusion_matrix(
     target, preds = _multilabel_confusion_matrix_format_arrays(
         target,
         preds,
+        num_labels,
         threshold=threshold,
         ignore_index=ignore_index,
         xp=xp,
     )
-    tn, fp, fn, tp = _multilabel_confusion_matrix_update_state(target, preds, xp=xp)
+    confmat = _multilabel_confusion_matrix_update_state(
+        target,
+        preds,
+        num_labels,
+        xp=xp,
+    )
 
     return _multilabel_confusion_matrix_compute(
-        tn,
-        fp,
-        fn,
-        tp,
-        num_labels,
+        confmat,
         normalize=normalize,
     )
