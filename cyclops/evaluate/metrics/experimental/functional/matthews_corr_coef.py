@@ -28,8 +28,6 @@ def _mcc_reduce(confmat: Array) -> Array:
     xp = apc.array_namespace(confmat)
     # convert multilabel into binary
     confmat = xp.sum(confmat, axis=0) if confmat.ndim == 3 else confmat
-    print("confmat: ", confmat)
-    print("numel: ", apc.size(confmat))
 
     if int(apc.size(confmat) or 0) == 4:  # binary case
         tn, fp, fn, tp = xp.reshape(xp.astype(confmat, xp.float32), (-1,))
@@ -40,25 +38,16 @@ def _mcc_reduce(confmat: Array) -> Array:
             return xp.asarray(-1.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
 
     tk = xp.sum(confmat, axis=-1, dtype=xp.float32)  # tn + fp and tp + fn
-    print("tk: ", tk)
     pk = xp.sum(confmat, axis=-2, dtype=xp.float32)  # tn + fn and tp + fp
-    print("pk: ", pk)
     c = xp.astype(xp.linalg.trace(confmat), xp.float32)  # tn and tp
-    print("c: ", c)
     s = xp.sum(confmat, dtype=xp.float32)  # tn + tp + fn + fp
-    print("s: ", s)
 
     cov_ytyp = c * s - sum(tk * pk)
-    print("cov_ytyp: ", cov_ytyp)
     cov_ypyp = s**2 - sum(pk * pk)
-    print("cov_ypyp: ", cov_ypyp)
     cov_ytyt = s**2 - sum(tk * tk)
-    print("cov_ytyt: ", cov_ytyt)
 
     numerator = cov_ytyp
-    print("numerator: ", numerator)
     denom = cov_ypyp * cov_ytyt
-    print("denom: ", denom)
 
     if denom == 0 and int(apc.size(confmat) or 0) == 4:
         if tp == 0 or tn == 0:
@@ -72,11 +61,8 @@ def _mcc_reduce(confmat: Array) -> Array:
             dtype=xp.float32,
             device=apc.device(confmat),
         )
-        print("eps: ", eps)
         numerator = xp.sqrt(eps) * (a - b)
-        print("numerator: ", numerator)
         denom = (tp + fp + eps) * (tp + fn + eps) * (tn + fp + eps) * (tn + fn + eps)
-        print("denom: ", denom)
     elif denom == 0:
         return xp.asarray(0.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
     return numerator / xp.sqrt(denom)  # type: ignore[no-any-return]

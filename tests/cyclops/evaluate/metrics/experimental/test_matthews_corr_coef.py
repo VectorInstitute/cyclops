@@ -1,4 +1,5 @@
 """Test matthews correlation coefficient metrics."""
+
 from functools import partial
 
 import array_api_compat as apc
@@ -348,7 +349,7 @@ class TestMultilabelMCC(MetricTester):
         )
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
-    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
+    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=array_api_compat.torch))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_mcc_class_with_torch_tensors(
         self,
@@ -360,6 +361,8 @@ class TestMultilabelMCC(MetricTester):
 
         if ignore_index is not None:
             target = _inject_ignore_index(target, ignore_index)
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.run_metric_class_implementation_test(
             target,
@@ -375,4 +378,6 @@ class TestMultilabelMCC(MetricTester):
                 "num_labels": NUM_LABELS,
                 "ignore_index": ignore_index,
             },
+            device=device,
+            use_device_for_ref=True,
         )

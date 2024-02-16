@@ -150,6 +150,15 @@ def _class_impl_test(  # noqa: PLR0912
         preds=apc.to_device(total_preds, device if use_device_for_ref else "cpu"),
     )
 
+    # DEBUG
+    metric.reset()
+    print(
+        metric(
+            target=apc.to_device(total_target, device if use_device_for_ref else "cpu"),
+            preds=apc.to_device(total_preds, device if use_device_for_ref else "cpu"),
+        ),
+    )
+
     # assert after aggregation
     if isinstance(ref_result, dict):
         for key in ref_result:
