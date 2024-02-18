@@ -666,13 +666,11 @@ document.write(`
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import (</span>
-<span class="sd">    ...     binary_precision_recall_curve</span>
-<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import binary_precision_recall_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 0, 1, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.4, 0.35, 0.8]</span>
-<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = binary_precision_recall_curve(target,</span>
-<span class="sd">    ...     preds, thresholds=5</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = binary_precision_recall_curve(</span>
+<span class="sd">    ...     target, preds, thresholds=5</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; precision</span>
 <span class="sd">    array([0.5       , 0.66666667, 1.        , 1.        , 0.        ])</span>
@@ -975,12 +973,13 @@ document.write(`
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import (</span>
-<span class="sd">    ...     multiclass_precision_recall_curve</span>
+<span class="sd">    ...     multiclass_precision_recall_curve,</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 2]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2], [0.3, 0.4, 0.3]]</span>
-<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = multiclass_precision_recall_curve(target,</span>
-<span class="sd">    ...     preds, num_classes=3, thresholds=5)</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = multiclass_precision_recall_curve(</span>
+<span class="sd">    ...     target, preds, num_classes=3, thresholds=5</span>
+<span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; precision</span>
 <span class="sd">    array([[0.25, 0.  , 0.  , 0.  , 0.  , 1.  ],</span>
 <span class="sd">           [0.25, 0.25, 0.5 , 1.  , 0.  , 1.  ],</span>
@@ -1275,11 +1274,13 @@ document.write(`
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import (</span>
-<span class="sd">    ...     multilabel_precision_recall_curve)</span>
+<span class="sd">    ...     multilabel_precision_recall_curve,</span>
+<span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0], [0, 1, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]</span>
 <span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = multilabel_precision_recall_curve(</span>
-<span class="sd">    ...     target, preds, num_labels=3, thresholds=5)</span>
+<span class="sd">    ...     target, preds, num_labels=3, thresholds=5</span>
+<span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; precision</span>
 <span class="sd">    array([[0.5, 0. , 0. , 0. , 0. , 1. ],</span>
 <span class="sd">           [1. , 1. , 1. , 1. , 0. , 1. ],</span>
@@ -1387,8 +1388,7 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import precision_recall_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 0, 1, 1]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.4, 0.35, 0.8]</span>
-<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = precision_recall_curve(target, preds,</span>
-<span class="sd">    ...     &quot;binary&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = precision_recall_curve(target, preds, &quot;binary&quot;)</span>
 <span class="sd">    &gt;&gt;&gt; precision</span>
 <span class="sd">    array([0.5       , 0.66666667, 0.5       , 1.        , 1.        ])</span>
 <span class="sd">    &gt;&gt;&gt; recall</span>
@@ -1401,7 +1401,8 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 2]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2], [0.3, 0.4, 0.3]]</span>
 <span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = precision_recall_curve(</span>
-<span class="sd">    ...     target, preds, task=&quot;multiclass&quot;, num_classes=3)</span>
+<span class="sd">    ...     target, preds, task=&quot;multiclass&quot;, num_classes=3</span>
+<span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; [prec.tolist() for prec in precision]</span>
 <span class="sd">    [[0.25, 0.3333333333333333, 0.0, 0.0, 1.0], [0.25, 0.3333333333333333, 0.5, 1.0, 1.0], [0.5, 0.6666666666666666, 0.5, 1.0]]</span>
 <span class="sd">    &gt;&gt;&gt; [rec.tolist() for rec in recall]</span>
@@ -1413,8 +1414,9 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import precision_recall_curve</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 1, 0], [0, 1, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.35]]</span>
-<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = precision_recall_curve(target, preds,</span>
-<span class="sd">    ...     &quot;multilabel&quot;, num_labels=3)</span>
+<span class="sd">    &gt;&gt;&gt; precision, recall, thresholds = precision_recall_curve(</span>
+<span class="sd">    ...     target, preds, &quot;multilabel&quot;, num_labels=3</span>
+<span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; precision</span>
 <span class="sd">    [array([0.5, 1. , 1. ]), array([1., 1., 1.]), array([0., 0., 1.])]</span>
 <span class="sd">    &gt;&gt;&gt; recall</span>

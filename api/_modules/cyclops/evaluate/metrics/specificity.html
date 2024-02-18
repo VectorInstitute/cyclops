@@ -467,8 +467,14 @@ document.write(`
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import MulticlassSpecificity</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0, 1, 2]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],</span>
-<span class="sd">    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.2, 0.75],</span>
+<span class="sd">    ...     [0.35, 0.5, 0.15],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.05, 0.9],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MulticlassSpecificity(num_classes=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    array([1.  , 0.75, 1.  ])</span>
@@ -549,16 +555,25 @@ document.write(`
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import MultilabelSpecificity</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],</span>
-<span class="sd">    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.2, 0.75],</span>
+<span class="sd">    ...     [0.35, 0.5, 0.15],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MultilabelSpecificity(num_labels=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    array([0.5, 0. , 0.5])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
-<span class="sd">    &gt;&gt;&gt; target = [[[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]],</span>
-<span class="sd">    ...           [[1, 0, 1], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 0]]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[[1, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1], [1, 0, 0]],</span>
-<span class="sd">    ...          [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]]</span>
+<span class="sd">    &gt;&gt;&gt; target = [</span>
+<span class="sd">    ...     [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]],</span>
+<span class="sd">    ...     [[1, 0, 1], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 0]],</span>
+<span class="sd">    ... ]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [[1, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1], [1, 0, 0]],</span>
+<span class="sd">    ...     [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
@@ -663,15 +678,23 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import Specificity</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0, 1, 2]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],</span>
-<span class="sd">    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.2, 0.75],</span>
+<span class="sd">    ...     [0.35, 0.5, 0.15],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.05, 0.9],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; metric = Specificity(task=&quot;multiclass&quot;, num_classes=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    array([1.  , 0.75, 1.  ])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 1], [1, 2, 1]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75]],</span>
-<span class="sd">    ...          [[0.35, 0.5, 0.15], [0.25, 0.5, 0.25], [0.5, 0.05, 0.45]]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75]],</span>
+<span class="sd">    ...     [[0.35, 0.5, 0.15], [0.25, 0.5, 0.25], [0.5, 0.05, 0.45]],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>

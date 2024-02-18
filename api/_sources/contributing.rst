@@ -19,8 +19,8 @@ hooks using:
 Coding guidelines
 -----------------
 
-For code style, we recommend the `google style
-guide <https://google.github.io/styleguide/pyguide.html>`__.
+For code style, we recommend the `PEP 8 style
+guide <https://peps.python.org/pep-0008/>`__.
 
 For docstrings we use `numpy
 format <https://numpydoc.readthedocs.io/en/latest/format.html>`__.

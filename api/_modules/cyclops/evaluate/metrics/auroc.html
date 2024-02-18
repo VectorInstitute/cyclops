@@ -468,15 +468,21 @@ document.write(`
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import MulticlassAUROC</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06],</span>
-<span class="sd">    ...         [0.05, 0.01, 0.94], [0.9, 0.05, 0.05]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.89, 0.06],</span>
+<span class="sd">    ...     [0.05, 0.01, 0.94],</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MulticlassAUROC(num_classes=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    array([1., 1., 1.])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 0], [1, 0, 1]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.0], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],</span>
-<span class="sd">    ...         [[0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [[0.1, 0.9, 0.0], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],</span>
+<span class="sd">    ...     [[0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
@@ -644,15 +650,21 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import MulticlassAUROC</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06],</span>
-<span class="sd">    ...         [0.05, 0.01, 0.94], [0.9, 0.05, 0.05]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.89, 0.06],</span>
+<span class="sd">    ...     [0.05, 0.01, 0.94],</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MulticlassAUROC(num_classes=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
 <span class="sd">    array([1., 1., 1.])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 0], [1, 0, 1]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.0], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],</span>
-<span class="sd">    ...         [[0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [[0.1, 0.9, 0.0], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],</span>
+<span class="sd">    ...     [[0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>

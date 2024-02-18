@@ -1062,9 +1062,9 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># sensitive features must be in features</span>
-        <span class="k">if</span> <span class="n">features</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sensitive_features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sensitive_features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
-                <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span> <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">sensitive_features</span>  <span class="c1"># type: ignore</span>
+                <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span> <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">sensitive_features</span>
             <span class="p">),</span> <span class="s2">&quot;All sensitive features must be in the features list.&quot;</span>
 
         <span class="c1"># TODO: plot dataset distribution</span>

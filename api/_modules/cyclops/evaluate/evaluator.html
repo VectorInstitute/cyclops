@@ -626,7 +626,8 @@ document.write(`
                         <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="n">metric_output</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Array</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="n">metric_name</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;NaN&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">metrics</span>  <span class="c1"># type: ignore[attr-defined,misc]</span>
+                        <span class="n">metric_name</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;NaN&quot;</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                        <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">metrics</span>  <span class="c1"># type: ignore</span>
                     <span class="p">}</span>
                 <span class="k">elif</span> <span class="p">(</span>
                     <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">batch_size</span> <span class="o">&lt;</span> <span class="mi">0</span>

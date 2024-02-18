@@ -566,10 +566,12 @@ document.write(`
 <span class="sd">    array([[1, 0, 2, 1, 2],</span>
 <span class="sd">           [1, 1, 2, 0, 1],</span>
 <span class="sd">           [1, 0, 3, 0, 1]])</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.16, 0.26, 0.58],</span>
-<span class="sd">    ...          [0.22, 0.61, 0.17],</span>
-<span class="sd">    ...          [0.71, 0.09, 0.20],</span>
-<span class="sd">    ...          [0.05, 0.82, 0.13]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.16, 0.26, 0.58],</span>
+<span class="sd">    ...     [0.22, 0.61, 0.17],</span>
+<span class="sd">    ...     [0.71, 0.09, 0.20],</span>
+<span class="sd">    ...     [0.05, 0.82, 0.13],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
@@ -663,8 +665,7 @@ document.write(`
 <span class="sd">           [2, 0, 0, 0, 2]])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[[0, 1, 1], [1, 0, 1]], [[0, 0, 1], [1, 1, 1]]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]],</span>
-<span class="sd">    ...         [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]], [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
@@ -794,21 +795,21 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[2, 0, 2, 2, 1], [1, 1, 0, 2, 2]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [</span>
-<span class="sd">    ...         [</span>
-<span class="sd">    ...             [0.1, 0.2, 0.7],</span>
-<span class="sd">    ...             [0.7, 0.1, 0.2],</span>
-<span class="sd">    ...             [0.2, 0.7, 0.1],</span>
-<span class="sd">    ...             [0.2, 0.7, 0.1],</span>
-<span class="sd">    ...             [0.7, 0.2, 0.1],</span>
-<span class="sd">    ...         ],</span>
-<span class="sd">    ...         [</span>
-<span class="sd">    ...             [0.05, 0.15, 0.8],</span>
-<span class="sd">    ...             [0.15, 0.05, 0.8],</span>
-<span class="sd">    ...             [0.8, 0.15, 0.05],</span>
-<span class="sd">    ...             [0.25, 0.7, 0.05],</span>
-<span class="sd">    ...             [0.15, 0.7, 0.15],</span>
-<span class="sd">    ...         ],</span>
-<span class="sd">    ...     ]</span>
+<span class="sd">    ...     [</span>
+<span class="sd">    ...         [0.1, 0.2, 0.7],</span>
+<span class="sd">    ...         [0.7, 0.1, 0.2],</span>
+<span class="sd">    ...         [0.2, 0.7, 0.1],</span>
+<span class="sd">    ...         [0.2, 0.7, 0.1],</span>
+<span class="sd">    ...         [0.7, 0.2, 0.1],</span>
+<span class="sd">    ...     ],</span>
+<span class="sd">    ...     [</span>
+<span class="sd">    ...         [0.05, 0.15, 0.8],</span>
+<span class="sd">    ...         [0.15, 0.05, 0.8],</span>
+<span class="sd">    ...         [0.8, 0.15, 0.05],</span>
+<span class="sd">    ...         [0.25, 0.7, 0.05],</span>
+<span class="sd">    ...         [0.15, 0.7, 0.15],</span>
+<span class="sd">    ...     ],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
@@ -827,8 +828,7 @@ document.write(`
 <span class="sd">           [2, 0, 0, 0, 2]])</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[[0, 1, 1], [1, 0, 1]], [[0, 0, 1], [1, 1, 1]]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]],</span>
-<span class="sd">    ...         [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]], [[0.1, 0.9, 0.8], [0.8, 0.2, 0.7]]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(target=t, preds=p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>

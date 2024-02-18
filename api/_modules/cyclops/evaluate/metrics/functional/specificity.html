@@ -563,8 +563,14 @@ document.write(`
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multiclass_specificity</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0, 1, 2]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],</span>
-<span class="sd">    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05], [0.05, 0.05, 0.9]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.2, 0.75],</span>
+<span class="sd">    ...     [0.35, 0.5, 0.15],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.05, 0.9],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; multiclass_specificity(target, preds, num_classes=3)</span>
 <span class="sd">    array([1.  , 0.75, 1.  ])</span>
 
@@ -646,8 +652,13 @@ document.write(`
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import multilabel_specificity</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],</span>
-<span class="sd">    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.2, 0.75],</span>
+<span class="sd">    ...     [0.35, 0.5, 0.15],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; multilabel_specificity(target, preds, num_labels=3)</span>
 <span class="sd">    array([0.5, 0. , 0.5])</span>
 
@@ -756,16 +767,26 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import specificity</span>
 <span class="sd">    &gt;&gt;&gt; target = [0, 1, 2, 0, 1]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],</span>
-<span class="sd">    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.2, 0.75],</span>
+<span class="sd">    ...     [0.35, 0.5, 0.15],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; specificity(target, preds, task=&quot;multiclass&quot;, num_classes=3)</span>
 <span class="sd">    array([1.        , 0.66666667, 1.        ])</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics.functional import specificity</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0]]</span>
-<span class="sd">    &gt;&gt;&gt; preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05], [0.05, 0.2, 0.75],</span>
-<span class="sd">    ...          [0.35, 0.5, 0.15], [0.05, 0.9, 0.05]]</span>
+<span class="sd">    &gt;&gt;&gt; preds = [</span>
+<span class="sd">    ...     [0.9, 0.05, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ...     [0.05, 0.2, 0.75],</span>
+<span class="sd">    ...     [0.35, 0.5, 0.15],</span>
+<span class="sd">    ...     [0.05, 0.9, 0.05],</span>
+<span class="sd">    ... ]</span>
 <span class="sd">    &gt;&gt;&gt; specificity(target, preds, task=&quot;multilabel&quot;, num_labels=3)</span>
 <span class="sd">    array([0.5, 0. , 0.5])</span>
 
