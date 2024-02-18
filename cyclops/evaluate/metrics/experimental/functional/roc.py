@@ -180,7 +180,9 @@ def binary_roc(
     >>> thresholds
     Array([1.  , 0.92, 0.84, 0.73, 0.33, 0.22, 0.11], dtype=float64)
     >>> fpr, tpr, thresholds = binary_roc(
-    ...     target, preds, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     thresholds=5,
     ... )
     >>> fpr
     Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
@@ -379,14 +381,20 @@ def multiclass_roc(
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]])
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
+    ... )
     >>> fpr, tpr, thresholds = multiclass_roc(
-    ...     target, preds, num_classes=3, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=None,
     ... )
     >>> fpr
     [Array([0. , 0.5, 1. , 1. ], dtype=float32),
@@ -401,7 +409,10 @@ def multiclass_roc(
     Array([1.  , 0.92, 0.73, 0.22], dtype=float64),
     Array([1.  , 0.67, 0.44, 0.12], dtype=float64)]
     >>> fpr, tpr, thresholds = multiclass_roc(
-    ...     target, preds, num_classes=3, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=5,
     ... )
     >>> fpr
     Array([[0. , 0.5, 0.5, 1. , 1. ],
@@ -587,7 +598,10 @@ def multilabel_roc(
     ...     [[0.11, 0.22, 0.67], [0.84, 0.73, 0.12], [0.33, 0.92, 0.44]],
     ... )
     >>> fpr, tpr, thresholds = multilabel_roc(
-    ...     target, preds, num_labels=3, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=None,
     ... )
     >>> fpr
     [Array([0. , 0. , 0.5, 1. ], dtype=float32),
@@ -602,7 +616,10 @@ def multilabel_roc(
     Array([1.  , 0.92, 0.73, 0.22], dtype=float64),
     Array([1.  , 0.67, 0.44, 0.12], dtype=float64)]
     >>> fpr, tpr, thresholds = multilabel_roc(
-    ...     target, preds, num_labels=3, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=5,
     ... )
     >>> fpr
     Array([[0. , 0. , 0. , 0.5, 1. ],

@@ -94,7 +94,6 @@ optional = true
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.1"
 pre-commit = "^2.17.0"
-black = "^22.1.0"
 pytest-cov = "^3.0.0"
 codecov = "^2.1.13"
 nbstripout = "^0.6.1"
@@ -188,6 +187,12 @@ exclude = [
     "use_cases",
     "nbs",
 ]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
 [tool.ruff.lint]
 select = [
     "A", # flake8-builtins
@@ -216,6 +221,7 @@ ignore = [
     "D213", # Multi-line docstring summary should start at the second line
     "PLR2004", # Replace magic number with named constant
     "PLR0913", # Too many arguments
+    "COM812", # Missing trailing comma
 ]
 
 # Ignore import violations in all `__init__.py` files.

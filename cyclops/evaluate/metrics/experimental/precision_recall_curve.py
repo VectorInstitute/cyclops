@@ -100,7 +100,11 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
             )
 
             def default(xp: ModuleType) -> Array:
-                return xp.zeros((len_thresholds, 2, 2), dtype=xp.int32, device=self.device)  # type: ignore[no-any-return]
+                return xp.zeros(  # type: ignore
+                    (len_thresholds, 2, 2),
+                    dtype=xp.int32,
+                    device=self.device,
+                )
 
             self.add_state_default_factory(
                 "confmat",
@@ -185,12 +189,14 @@ class MulticlassPrecisionRecallCurve(
     >>> from cyclops.evaluate.metrics.experimental import MulticlassPrecisionRecallCurve
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]]
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
     ... )
     >>> metric = MulticlassPrecisionRecallCurve(num_classes=3, thresholds=None)
     >>> metric(target, preds)

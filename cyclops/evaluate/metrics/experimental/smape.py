@@ -26,8 +26,8 @@ class SymmetricMeanAbsolutePercentageError(Metric):
     >>> from cyclops.evaluate.metrics.experimental import (
     ...     SymmetricMeanAbsolutePercentageError,
     ... )
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> metric = SymmetricMeanAbsolutePercentageError()
     >>> metric(target, preds)
     Array(0.61219513, dtype=float32)

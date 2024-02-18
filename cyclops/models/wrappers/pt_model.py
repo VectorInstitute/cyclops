@@ -1303,15 +1303,11 @@ class PTModel(ModelWrapper):
 
         include_optimizer = kwargs.get("include_optimizer", True)
         if include_optimizer:
-            state_dict[
-                "optimizer"
-            ] = self.optimizer_.state_dict()  # type: ignore[attr-defined]
+            state_dict["optimizer"] = self.optimizer_.state_dict()  # type: ignore[attr-defined]
 
         include_lr_scheduler = kwargs.get("include_lr_scheduler", True)
         if include_lr_scheduler:
-            state_dict[
-                "lr_scheduler"
-            ] = self.lr_scheduler_.state_dict()  # type: ignore[attr-defined]
+            state_dict["lr_scheduler"] = self.lr_scheduler_.state_dict()  # type: ignore[attr-defined]
 
         epoch = kwargs.get("epoch", None)
         if epoch is not None:

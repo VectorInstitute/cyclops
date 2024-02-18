@@ -119,14 +119,8 @@ class MulticlassFbetaScore(MulticlassStatScores, registry_key="multiclass_fbeta_
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]],
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]]
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
     ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
@@ -320,8 +314,10 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
     array([0.83333333, 0.        , 0.55555556])
     >>> metric.reset_state()
     >>> target = [[0, 1, 0], [0, 0, 1]]
-    >>> preds = [[[0.1, 0.8, 0.1], [0.1, 0.1, 0.8], [0.8, 0.1, 0.1]],
-    ...          [[0.1, 0.1, 0.8], [0.8, 0.1, 0.1], [0.1, 0.8, 0.1]]]
+    >>> preds = [
+    ...     [[0.1, 0.8, 0.1], [0.1, 0.1, 0.8], [0.8, 0.1, 0.1]],
+    ...     [[0.1, 0.1, 0.8], [0.8, 0.1, 0.1], [0.1, 0.8, 0.1]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -480,8 +476,7 @@ class MulticlassF1Score(MulticlassFbetaScore, registry_key="multiclass_f1_score"
     array([0.66666667, 0.5       , 0.        ])
     >>> metric.reset_state()
     >>> target = [[0, 1], [1, 1]]
-    >>> preds = [[[0.1, 0.9, 0], [0.05, 0.95, 0]],
-    ...         [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.1, 0.9, 0], [0.05, 0.95, 0]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -640,8 +635,7 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
     array([0.66666667, 0.5       , 0.        ])
     >>> metric.reset_state()
     >>> target = [[0, 1], [1, 1]]
-    >>> preds = [[[0.1, 0.9, 0], [0.05, 0.95, 0]],
-    ...         [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.1, 0.9, 0], [0.05, 0.95, 0]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()

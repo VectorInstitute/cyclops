@@ -24,8 +24,8 @@ class MeanAbsolutePercentageError(Metric):
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import MeanAbsolutePercentageError
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> metric = MeanAbsolutePercentageError()
     >>> metric(target, preds)
     Array(0.34523812, dtype=float32)
