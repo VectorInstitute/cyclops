@@ -667,10 +667,9 @@ class ModelCardReport:
 
         """
         # sensitive features must be in features
-        if features is None and sensitive_features is not None:
+        if features is not None and sensitive_features is not None:
             assert all(
-                feature in features
-                for feature in sensitive_features  # type: ignore
+                feature in features for feature in sensitive_features
             ), "All sensitive features must be in the features list."
 
         # TODO: plot dataset distribution

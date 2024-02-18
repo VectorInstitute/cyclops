@@ -100,11 +100,11 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
             )
 
             def default(xp: ModuleType) -> Array:
-                return xp.zeros(
+                return xp.zeros(  # type: ignore
                     (len_thresholds, 2, 2),
                     dtype=xp.int32,
                     device=self.device,
-                )  # type: ignore[no-any-return]
+                )
 
             self.add_state_default_factory(
                 "confmat",

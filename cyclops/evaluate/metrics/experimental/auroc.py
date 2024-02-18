@@ -81,9 +81,9 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
         )
         return _binary_auroc_compute(
             state,
-            thresholds=self.thresholds,
+            thresholds=self.thresholds,  # type: ignore
             max_fpr=self.max_fpr,
-        )  # type: ignore
+        )
 
 
 class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_auroc"):
