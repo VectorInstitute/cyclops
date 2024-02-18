@@ -111,14 +111,8 @@ class MulticlassPrecision(MulticlassStatScores, registry_key="multiclass_precisi
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]],
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]]
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
     ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
@@ -194,10 +188,7 @@ class MultilabelPrecision(MultilabelStatScores, registry_key="multilabel_precisi
     array([0., 1.])
     >>> metric.reset_state()
     >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
-    >>> preds = [
-    ...     [[0.1, 0.7], [0.2, 0.8]],
-    ...     [[0.5, 0.9], [0.3, 0.4]]
-    ... ]
+    >>> preds = [[[0.1, 0.7], [0.2, 0.8]], [[0.5, 0.9], [0.3, 0.4]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -307,14 +298,8 @@ class Precision(Metric, registry_key="precision", force_register=True):
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]],
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]]
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
     ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
@@ -331,10 +316,7 @@ class Precision(Metric, registry_key="precision", force_register=True):
     array([0., 1.])
     >>> metric.reset_state()
     >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
-    >>> preds = [
-    ...     [[0.1, 0.7], [0.2, 0.8]],
-    ...     [[0.5, 0.9], [0.3, 0.4]]
-    ... ]
+    >>> preds = [[[0.1, 0.7], [0.2, 0.8]], [[0.5, 0.9], [0.3, 0.4]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -484,14 +466,8 @@ class MulticlassRecall(MulticlassStatScores, registry_key="multiclass_recall"):
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]],
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]]
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
     ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
@@ -562,8 +538,10 @@ class MultilabelRecall(MultilabelStatScores, registry_key="multilabel_recall"):
     array([0., 1., 1., 0.])
     >>> metric.reset_state()
     >>> target = [[[0, 1, 0, 1], [0, 0, 1, 1]], [[0, 1, 0, 1], [0, 0, 1, 1]]]
-    >>> preds = [[[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
-    ...          [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]]
+    >>> preds = [
+    ...     [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
+    ...     [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -670,14 +648,8 @@ class Recall(Metric, registry_key="recall", force_register=True):
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]],
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]]
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
     ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
@@ -693,10 +665,7 @@ class Recall(Metric, registry_key="recall", force_register=True):
     array([0., 1.])
     >>> metric.reset_state()
     >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
-    >>> preds = [
-    ...     [[0.1, 0.7], [0.2, 0.8]],
-    ...     [[0.5, 0.9], [0.3, 0.4]]
-    ... ]
+    >>> preds = [[[0.1, 0.7], [0.2, 0.8]], [[0.5, 0.9], [0.3, 0.4]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()

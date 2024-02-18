@@ -98,8 +98,7 @@ class MulticlassROCCurve(
     --------
     >>> from cyclops.evaluate.metrics import MulticlassROCCurve
     >>> target = [0, 1, 2, 0]
-    >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1],
-    ...         [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
+    >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
     >>> metric = MulticlassROCCurve(num_classes=3, thresholds=4)
     >>> metric(target, preds)
     (array([[0.        , 0.        , 0.        , 1.        ],
@@ -109,10 +108,10 @@ class MulticlassROCCurve(
            [0. , 0. , 1. , 1. ]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
     >>> metric.reset_state()
     >>> target = [[1, 1, 0, 0], [0, 0, 1, 1]]
-    >>> preds = [[[0.1, 0.2, 0.7], [0.5, 0.4, 0.1],
-    ...         [0.2, 0.3, 0.5], [0.8, 0.1, 0.1]],
-    ...         [[0.1, 0.2, 0.7], [0.5, 0.4, 0.1],
-    ...         [0.2, 0.3, 0.5], [0.8, 0.1, 0.1]]]
+    >>> preds = [
+    ...     [[0.1, 0.2, 0.7], [0.5, 0.4, 0.1], [0.2, 0.3, 0.5], [0.8, 0.1, 0.1]],
+    ...     [[0.1, 0.2, 0.7], [0.5, 0.4, 0.1], [0.2, 0.3, 0.5], [0.8, 0.1, 0.1]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -183,8 +182,7 @@ class MultilabelROCCurve(
            [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
     >>> metric.reset_state()
     >>> target = [[[1, 1, 0], [0, 1, 0]], [[1, 1, 0], [0, 1, 0]]]
-    >>> preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]],
-    ...         [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]], [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -305,8 +303,7 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
            [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
     >>> metric.reset_state()
     >>> target = [[[1, 1, 0], [0, 1, 0]], [[1, 1, 0], [0, 1, 0]]]
-    >>> preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]],
-    ...         [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]], [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()

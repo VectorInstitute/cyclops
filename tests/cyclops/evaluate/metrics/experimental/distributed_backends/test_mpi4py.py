@@ -38,7 +38,10 @@ def _test_mpi4py_class_init(rank: int, worldsize: int = NUM_PROCESSES):
 @pytest.mark.integration_test()
 def test_mpi4py_backend_class_init():
     """Test `TorchDistributed` class."""
-    pytest.mpi_pool.starmap(_test_mpi4py_class_init, [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)])  # type: ignore
+    pytest.mpi_pool.starmap(
+        _test_mpi4py_class_init,
+        [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)],
+    )  # type: ignore
 
 
 def _test_all_gather_simple(rank: int, worldsize: int = NUM_PROCESSES):
@@ -89,7 +92,10 @@ def _test_all_gather_uneven_multidim_arrays(rank: int, worldsize: int = NUM_PROC
 )
 def test_mpi4py_all_gather(case_fn):
     """Test `all_gather` method."""
-    pytest.mpi_pool.starmap(case_fn, [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)])  # type: ignore
+    pytest.mpi_pool.starmap(
+        case_fn,
+        [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)],
+    )  # type: ignore
 
 
 def _test_dist_sum(rank: int, worldsize: int = NUM_PROCESSES) -> None:

@@ -79,7 +79,11 @@ class BinaryAUROC(BinaryPrecisionRecallCurve, registry_key="binary_auroc"):
             if self.thresholds is None
             else self.confmat  # type: ignore[attr-defined]
         )
-        return _binary_auroc_compute(state, thresholds=self.thresholds, max_fpr=self.max_fpr)  # type: ignore
+        return _binary_auroc_compute(
+            state,
+            thresholds=self.thresholds,
+            max_fpr=self.max_fpr,
+        )  # type: ignore
 
 
 class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_auroc"):
@@ -117,12 +121,15 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
     >>> from cyclops.evaluate.metrics.experimental import MulticlassAUROC
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]])
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
+    ... )
     >>> auroc = MulticlassAUROC(num_classes=3, average="macro", thresholds=None)
     >>> auroc(target, preds)
     Array(0.33333334, dtype=float32)

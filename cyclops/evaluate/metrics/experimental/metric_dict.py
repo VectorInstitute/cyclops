@@ -109,10 +109,10 @@ class MetricDict(UserDict[str, Union[Metric, TorchMetric]]):
     --------
     >>> from cyclops.evaluate.metrics.experimental import MetricDict
     >>> from cyclops.evaluate.metrics.experimental import (
-    ...    BinaryAccuracy,
-    ...    BinaryF1Score,
-    ...    BinaryPrecision,
-    ...    BinaryRecall,
+    ...     BinaryAccuracy,
+    ...     BinaryF1Score,
+    ...     BinaryPrecision,
+    ...     BinaryRecall,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 0, 1])

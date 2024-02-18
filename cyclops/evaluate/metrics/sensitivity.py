@@ -95,14 +95,8 @@ class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivi
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]],
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]]
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
     ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
@@ -164,8 +158,10 @@ class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivi
     array([0., 1., 1., 0.])
     >>> metric.reset_state()
     >>> target = [[[0, 1, 0, 1], [0, 0, 1, 1]], [[0, 1, 0, 1], [0, 0, 1, 1]]]
-    >>> preds = [[[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
-    ...          [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]]]
+    >>> preds = [
+    ...     [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
+    ...     [[0.1, 0.9, 0.8, 0.2], [0.2, 0.3, 0.6, 0.1]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -260,14 +256,8 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [2, 1, 2, 0]]
     >>> preds = [
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]],
-    ...     [[0.1, 0.6, 0.3],
-    ...      [0.05, 0.1, 0.85],
-    ...      [0.2, 0.7, 0.1],
-    ...      [0.9, 0.05, 0.05]]
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.1, 0.85], [0.2, 0.7, 0.1], [0.9, 0.05, 0.05]],
     ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
@@ -283,10 +273,7 @@ class Sensitivity(Metric, registry_key="sensitivity", force_register=True):
     array([0., 1.])
     >>> metric.reset_state()
     >>> target = [[[0, 1], [1, 1]], [[1, 1], [1, 0]]]
-    >>> preds = [
-    ...     [[0.1, 0.7], [0.2, 0.8]],
-    ...     [[0.5, 0.9], [0.3, 0.4]]
-    ... ]
+    >>> preds = [[[0.1, 0.7], [0.2, 0.8]], [[0.5, 0.9], [0.3, 0.4]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()

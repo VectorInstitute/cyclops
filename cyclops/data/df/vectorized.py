@@ -144,7 +144,8 @@ def split_vectorized(
     )
 
     splits = [
-        vec.split_by_indices(axes_list[i], index_splits) for i, vec in enumerate(vecs)  # type: ignore
+        vec.split_by_indices(axes_list[i], index_splits)
+        for i, vec in enumerate(vecs)  # type: ignore
     ]
 
     return tuple(splits)

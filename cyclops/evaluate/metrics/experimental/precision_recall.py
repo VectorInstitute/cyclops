@@ -128,8 +128,10 @@ class MulticlassPrecision(
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -195,8 +197,10 @@ class MulticlassPPV(MulticlassPrecision, registry_key="multiclass_ppv"):
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -253,8 +257,7 @@ class MultilabelPrecision(
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -321,8 +324,7 @@ class MultilabelPPV(MultilabelPrecision, registry_key="multilabel_ppv"):
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -481,8 +483,10 @@ class MulticlassRecall(_AbstractMulticlassStatScores, registry_key="multiclass_r
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -547,8 +551,10 @@ class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivi
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -601,8 +607,10 @@ class MulticlassTPR(MulticlassRecall, registry_key="multiclass_tpr"):
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -656,8 +664,7 @@ class MultilabelRecall(_AbstractMultilabelStatScores, registry_key="multilabel_r
     Array(0.6666667, dtype=float32)
      >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -724,8 +731,7 @@ class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivi
     Array(0.6666667, dtype=float32)
      >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -780,8 +786,7 @@ class MultilabelTPR(MultilabelRecall, registry_key="multilabel_tpr"):
     Array(0.6666667, dtype=float32)
      >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()

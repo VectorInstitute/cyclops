@@ -26,8 +26,8 @@ class MeanSquaredError(Metric):
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import MeanSquaredError
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> metric = MeanSquaredError()
     >>> metric(target, preds)
     Array(0.25064525, dtype=float32)
@@ -35,8 +35,8 @@ class MeanSquaredError(Metric):
     >>> metric(target, preds)
     Array(0.50064486, dtype=float32)
     >>> metric = MeanSquaredError(num_outputs=2)
-    >>> target = anp.asarray([[0.009, 1.05], [2., 3.]])
-    >>> preds = anp.asarray([[0., 1.], [2., 2.]])
+    >>> target = anp.asarray([[0.009, 1.05], [2.0, 3.0]])
+    >>> preds = anp.asarray([[0.0, 1.0], [2.0, 2.0]])
     >>> metric(target, preds)
     Array([4.0500e-05, 5.0125e-01], dtype=float32)
     >>> metric = MeanSquaredError(squared=False, num_outputs=2)

@@ -268,7 +268,8 @@ def _compute_metrics(
                         stacklevel=1,
                     )
                     metric_output: Dict[str, Array] = {
-                        metric_name: float("NaN") for metric_name in metrics  # type: ignore[attr-defined,misc]
+                        metric_name: float("NaN")
+                        for metric_name in metrics  # type: ignore[attr-defined,misc]
                     }
                 elif (
                     batch_size is None or batch_size < 0

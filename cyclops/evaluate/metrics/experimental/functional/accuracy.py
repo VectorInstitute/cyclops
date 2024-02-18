@@ -270,14 +270,18 @@ def multiclass_accuracy(
     Array(1., dtype=float32)
     >>> multiclass_accuracy(target, preds, num_classes=3, average=None)
     Array([0.5, 1. , 1. ], dtype=float32)
-    >>> multiclass_accuracy(target, preds, num_classes=3, average='macro')
+    >>> multiclass_accuracy(target, preds, num_classes=3, average="macro")
     Array(0.8333334, dtype=float32)
-    >>> multiclass_accuracy(target, preds, num_classes=3, average='weighted')
+    >>> multiclass_accuracy(target, preds, num_classes=3, average="weighted")
     Array(0.75, dtype=float32)
     >>> multiclass_accuracy(target, preds, num_classes=3, average=None, ignore_index=0)
     Array([0., 1., 1.], dtype=float32)
     >>> multiclass_accuracy(
-    ...     target, preds, num_classes=3, average=None, ignore_index=(1, 2),
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     average=None,
+    ...     ignore_index=(1, 2),
     ... )
     Array([0.5, 0. , 0. ], dtype=float32)
 
@@ -423,9 +427,9 @@ def multilabel_accuracy(
     Array(0.5, dtype=float32)
     >>> multilabel_accuracy(target, preds, num_labels=4, average=None)
     Array([0.5, 0. , 0.5, 0.5], dtype=float32)
-    >>> multilabel_accuracy(target, preds, num_labels=4, average='micro')
+    >>> multilabel_accuracy(target, preds, num_labels=4, average="micro")
     Array(0.375, dtype=float32)
-    >>> multilabel_accuracy(target, preds, num_labels=4, average='weighted')
+    >>> multilabel_accuracy(target, preds, num_labels=4, average="weighted")
     Array(0.4, dtype=float32)
     >>> multilabel_accuracy(target, preds, num_labels=4, average=None, ignore_index=0)
     Array([0.5, 0. , 0. , 1. ], dtype=float32)

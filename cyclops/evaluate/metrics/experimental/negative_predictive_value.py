@@ -96,8 +96,10 @@ class MulticlassNPV(
     Array(0.8, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -167,8 +169,7 @@ class MultilabelNPV(
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()

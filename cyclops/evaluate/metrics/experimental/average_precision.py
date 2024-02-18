@@ -125,14 +125,19 @@ class MulticlassAveragePrecision(
     >>> from cyclops.evaluate.metrics.experimental import MulticlassAveragePrecision
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]])
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
+    ... )
     >>> metric = MulticlassAveragePrecision(
-    ...     num_classes=3, thresholds=None, average=None,
+    ...     num_classes=3,
+    ...     thresholds=None,
+    ...     average=None,
     ... )
     >>> metric(target, preds)
     Array([0.33333334, 0.5       , 0.5       ], dtype=float32)
@@ -224,7 +229,9 @@ class MultilabelAveragePrecision(
     ...     [[0.11, 0.22, 0.67], [0.84, 0.73, 0.12], [0.33, 0.92, 0.44]],
     ... )
     >>> metric = MultilabelAveragePrecision(
-    ...     num_labels=3, thresholds=None, average=None,
+    ...     num_labels=3,
+    ...     thresholds=None,
+    ...     average=None,
     ... )
     >>> metric(target, preds)
     Array([1.       , 0.5833334, 0.5      ], dtype=float32)

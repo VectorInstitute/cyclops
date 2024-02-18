@@ -96,11 +96,13 @@ class SliceSpec:
     ...         {"feature_1": {"value": ["value_1", "value_2"]}},
     ...         {"feature_1": {"value": "value_1", "negate": True, "keep_nulls": True}},
     ...         {"feature_1": {"min_value": "2020-01-01", "max_value": "2020-12-31"}},
-    ...         {"feature_1": {
-    ...             "min_value": 5,
-    ...             "max_value": 60,
-    ...             "min_inclusive": False,
-    ...             "max_inclusive": False}
+    ...         {
+    ...             "feature_1": {
+    ...                 "min_value": 5,
+    ...                 "max_value": 60,
+    ...                 "min_inclusive": False,
+    ...                 "max_inclusive": False,
+    ...             }
     ...         },
     ...         {"feature_1": {"year": [2020, 2021, 2022]}},
     ...         {"feature_1": {"month": [6, 7, 8]}},
@@ -110,7 +112,8 @@ class SliceSpec:
     ...         {
     ...             "feature_1": {"value": "value_1"},
     ...             "feature_2": {
-    ...                 "min_value": "2020-01-01", "keep_nulls": False,
+    ...                 "min_value": "2020-01-01",
+    ...                 "keep_nulls": False,
     ...             },
     ...             "feature_3": {"year": ["2000", "2010", "2020"]},
     ...         },
