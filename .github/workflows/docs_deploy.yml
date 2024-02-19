@@ -38,8 +38,7 @@ jobs:
           ompi_info
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          env MPICC=/opt/openmpi-4.1.5/bin/mpicc poetry install --with test,dev --all-extras
-          # pandoc README.md -f markdown -t rst -s -o docs/source/intro.rst
+          env MPICC=/opt/openmpi-4.1.5/bin/mpicc poetry install --with docs,test,dev --all-extras
           cd docs && rm -rf source/reference/api/_autosummary && make html
           cd .. && coverage run -m pytest -m "not integration_test" && coverage xml && coverage report -m
       - name: Upload coverage to Codecov
