@@ -184,7 +184,6 @@ extra_checks = true
 include = ["*.py", "pyproject.toml", "*.ipynb"]
 line-length = 88
 exclude = [
-    "use_cases",
     "nbs",
 ]
 
