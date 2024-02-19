@@ -1,6 +1,6 @@
 # Contributing to cyclops
 
-Thanks for your interest in contributing to the cyclops!
+Thanks for your interest in contributing to cyclops!
 
 To submit PRs, please fill out the PR template along with the PR. If the PR
 fixes an issue, don't forget to link the PR to the issue!
