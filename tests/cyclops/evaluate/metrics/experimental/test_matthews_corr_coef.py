@@ -290,6 +290,8 @@ def _multilabel_mcc_reference(
 class TestMultilabelMCC(MetricTester):
     """Test multilabel matthews correlation coefficient function and class."""
 
+    atol: float = 4e-8
+
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_mcc_with_numpy_array_api_arrays(
