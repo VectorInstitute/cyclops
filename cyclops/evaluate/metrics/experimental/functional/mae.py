@@ -78,8 +78,8 @@ def mean_absolute_error(target: Array, preds: Array) -> Array:
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental.functional import mean_absolute_error
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> mean_absolute_error(target, preds)
     Array(0.26475, dtype=float32)
 

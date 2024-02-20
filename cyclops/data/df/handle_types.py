@@ -1013,7 +1013,8 @@ def collect_indicators(
         # Get categories
         data[cat] = np.argmax(data[indicators].values, axis=1)
         indicator_names = [
-            indicator[len(cat) + 1 :] for indicator in indicators  # noqa: E203
+            indicator[len(cat) + 1 :]
+            for indicator in indicators  # noqa: E203
         ]
         map_dict = {
             i: (name if name != MISSING_CATEGORY else np.nan)

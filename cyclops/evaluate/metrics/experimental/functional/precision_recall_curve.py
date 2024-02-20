@@ -399,13 +399,15 @@ def binary_precision_recall_curve(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...     binary_precision_recall_curve
+    ...     binary_precision_recall_curve,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> precision, recall, thresholds = binary_precision_recall_curve(
-    ...     target, preds, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     thresholds=None,
     ... )
     >>> precision
     Array([0.5      , 0.6      , 0.5      , 0.6666667,
@@ -416,7 +418,9 @@ def binary_precision_recall_curve(
     >>> thresholds
     Array([0.11, 0.22, 0.33, 0.73, 0.84, 0.92], dtype=float64)
     >>> precision, recall, thresholds = binary_precision_recall_curve(
-    ...     target, preds, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     thresholds=5,
     ... )
     >>> precision
     Array([0.5      , 0.5      , 0.6666667, 0.5      ,
@@ -786,19 +790,25 @@ def multiclass_precision_recall_curve(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...     multiclass_precision_recall_curve
+    ...     multiclass_precision_recall_curve,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]])
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
+    ... )
     >>> precision, recall, thresholds = multiclass_precision_recall_curve(
-    ...     target, preds, num_classes=3, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=None,
     ... )
     >>> precision
     [Array([0.33333334, 0.        , 0.        , 1.        ], dtype=float32),
@@ -809,7 +819,10 @@ def multiclass_precision_recall_curve(
     >>> thresholds
     [Array([0.11, 0.33, 0.84], dtype=float64), Array([0.22, 0.73, 0.92], dtype=float64), Array([0.12, 0.44, 0.67], dtype=float64)]
     >>> precision, recall, thresholds = multiclass_precision_recall_curve(
-    ...     target, preds, num_classes=3, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=5,
     ... )
     >>> precision
     Array([[0.33333334, 0.        , 0.        , 0.        ,
@@ -1111,7 +1124,7 @@ def multilabel_precision_recall_curve(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...     multilabel_precision_recall_curve
+    ...     multilabel_precision_recall_curve,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([[0, 1, 0], [1, 1, 0], [0, 0, 1]])
@@ -1119,7 +1132,10 @@ def multilabel_precision_recall_curve(
     ...     [[0.11, 0.22, 0.67], [0.84, 0.73, 0.12], [0.33, 0.92, 0.44]],
     ... )
     >>> precision, recall, thresholds = multilabel_precision_recall_curve(
-    ...     target, preds, num_labels=3, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=None,
     ... )
     >>> precision
     [Array([0.33333334, 0.5       , 1.        , 1.        ], dtype=float32),
@@ -1130,7 +1146,10 @@ def multilabel_precision_recall_curve(
     >>> thresholds
     [Array([0.11, 0.33, 0.84], dtype=float64), Array([0.22, 0.73, 0.92], dtype=float64), Array([0.12, 0.44, 0.67], dtype=float64)]
     >>> precision, recall, thresholds = multilabel_precision_recall_curve(
-    ...     target, preds, num_labels=3, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=5,
     ... )
     >>> precision
     Array([[0.33333334, 0.5       , 1.        , 1.        ,

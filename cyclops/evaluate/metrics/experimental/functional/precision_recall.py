@@ -245,7 +245,7 @@ def multiclass_precision(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multiclass_precision
+    ...     multiclass_precision,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([2, 1, 0, 0])
@@ -269,7 +269,11 @@ def multiclass_precision(
     >>> multiclass_precision(target, preds, num_classes=3, ignore_index=0)
     Array(1., dtype=float32)
     >>> multiclass_precision(
-    ...     target, preds, num_classes=3, average=None, ignore_index=(1, 2),
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     average=None,
+    ...     ignore_index=(1, 2),
     ... )
     Array([1., 0., 0.], dtype=float32)
 
@@ -396,7 +400,7 @@ def multilabel_precision(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multilabel_precision
+    ...     multilabel_precision,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
@@ -650,7 +654,11 @@ def multiclass_recall(
     >>> multiclass_recall(target, preds, num_classes=3, ignore_index=0)
     Array(1., dtype=float32)
     >>> multiclass_recall(
-    ...     target, preds, num_classes=3, average=None, ignore_index=(1, 2),
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     average=None,
+    ...     ignore_index=(1, 2),
     ... )
     Array([0.5, 0. , 0. ], dtype=float32)
 

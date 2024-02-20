@@ -712,5 +712,7 @@ class OperatorMetric(Metric):
 
     def __repr__(self) -> str:
         """Return a string representation of the object."""
-        _op_metrics = f"(\n  {self._op}(\n    {self.metric_a!r},\n    {self.metric_b!r}\n  )\n)"  # noqa: E501
+        _op_metrics = (
+            f"(\n  {self._op}(\n    {self.metric_a!r},\n    {self.metric_b!r}\n  )\n)"  # noqa: E501
+        )
         return self.__class__.__name__ + _op_metrics

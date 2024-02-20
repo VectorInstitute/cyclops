@@ -237,7 +237,9 @@ def binary_confusion_matrix(
     Examples
     --------
     >>> import numpy.array_api as anp
-    >>> from cyclops.evaluate.metrics.experimental.functional import binary_confusion_matrix
+    >>> from cyclops.evaluate.metrics.experimental.functional import (
+    ...     binary_confusion_matrix,
+    ... )
     >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([0, 0, 1, 1, 0, 1])
     >>> binary_confusion_matrix(target, preds)
@@ -728,7 +730,9 @@ def multilabel_confusion_matrix(
     Examples
     --------
     >>> import numpy.array_api as anp
-    >>> from cyclops.evaluate.metrics.experimental.functional import multilabel_confusion_matrix
+    >>> from cyclops.evaluate.metrics.experimental.functional import (
+    ...     multilabel_confusion_matrix,
+    ... )
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
     >>> preds = anp.asarray([[0, 0, 1], [1, 0, 1]])
     >>> multilabel_confusion_matrix(target, preds, num_labels=3)

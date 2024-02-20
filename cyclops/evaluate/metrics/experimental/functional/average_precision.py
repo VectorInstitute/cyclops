@@ -151,7 +151,7 @@ def binary_average_precision(
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...     binary_average_precision
+    ...     binary_average_precision,
     ... )
     >>> target = anp.asarray([0, 1, 1, 0])
     >>> preds = anp.asarray([0, 0.5, 0.7, 0.8])
@@ -408,22 +408,37 @@ def multiclass_average_precision(
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]])
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
+    ... )
     >>> multiclass_average_precision(
-    ...     target, preds, num_classes=3, thresholds=None, average=None,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=None,
+    ...     average=None,
     ... )
     Array([0.33333334, 0.5       , 0.5       ], dtype=float32)
     >>> multiclass_average_precision(
-    ...    target, preds, num_classes=3, thresholds=None, average="macro",
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=None,
+    ...     average="macro",
     ... )
     Array(0.44444445, dtype=float32)
     >>> multiclass_average_precision(
-    ...    target, preds, num_classes=3, thresholds=None, average="weighted",
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=None,
+    ...     average="weighted",
     ... )
     Array(0.44444448, dtype=float32)
     """
@@ -624,19 +639,35 @@ def multilabel_average_precision(
     ...     [[0.11, 0.22, 0.67], [0.84, 0.73, 0.12], [0.33, 0.92, 0.44]],
     ... )
     >>> multilabel_average_precision(
-    ...     target, preds, num_labels=3, thresholds=None, average=None,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=None,
+    ...     average=None,
     ... )
     Array([1.       , 0.5833334, 0.5      ], dtype=float32)
     >>> multilabel_average_precision(
-    ...     target, preds, num_labels=3, thresholds=None, average="micro",
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=None,
+    ...     average="micro",
     ... )
     Array(0.58452386, dtype=float32)
     >>> multilabel_average_precision(
-    ...     target, preds, num_labels=3, thresholds=None, average="macro",
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=None,
+    ...     average="macro",
     ... )
     Array(0.6944445, dtype=float32)
     >>> multilabel_average_precision(
-    ...     target, preds, num_labels=3, thresholds=None, average="weighted",
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=None,
+    ...     average="weighted",
     ... )
     Array(0.6666667, dtype=float32)
     """

@@ -25,10 +25,10 @@ class WeightedMeanAbsolutePercentageError(Metric):
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import (
-    ...    WeightedMeanAbsolutePercentageError,
+    ...     WeightedMeanAbsolutePercentageError,
     ... )
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> metric = WeightedMeanAbsolutePercentageError()
     >>> metric(target, preds)
     Array(0.17478132, dtype=float32)

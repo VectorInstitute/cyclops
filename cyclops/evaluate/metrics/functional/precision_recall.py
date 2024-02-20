@@ -399,18 +399,22 @@ def precision(
     >>> # (multiclass)
     >>> from cyclops.evaluate.metrics.functional import precision
     >>> target = [0, 1, 2, 0, 1, 2]
-    >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.1, 0.8, 0.1],
-    ...         [0.5, 0.3, 0.2],  [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
-    >>> precision(target, preds, task="multiclass", num_classes=3,
-    ...     average="macro")
+    >>> preds = [
+    ...     [0.1, 0.6, 0.3],
+    ...     [0.05, 0.95, 0],
+    ...     [0.1, 0.8, 0.1],
+    ...     [0.5, 0.3, 0.2],
+    ...     [0.2, 0.5, 0.3],
+    ...     [0.2, 0.2, 0.6],
+    ... ]
+    >>> precision(target, preds, task="multiclass", num_classes=3, average="macro")
     0.8333333333333334
 
     >>> # (multilabel)
     >>> from cyclops.evaluate.metrics.functional import precision
     >>> target = [[0, 1], [1, 1]]
     >>> preds = [[0.1, 0.9], [0.2, 0.8]]
-    >>> precision(target, preds, task="multilabel", num_labels=2,
-    ...     average="macro")
+    >>> precision(target, preds, task="multilabel", num_labels=2, average="macro")
     0.5
 
     """
@@ -565,8 +569,14 @@ def multiclass_recall(
     --------
     >>> from cyclops.evaluate.metrics.functional import multiclass_recall
     >>> target = [0, 1, 2, 0, 1, 2]
-    >>> preds = [[0.4, 0.1, 0.5], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6],
-    ...     [0.5, 0.3, 0.2], [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
+    >>> preds = [
+    ...     [0.4, 0.1, 0.5],
+    ...     [0.1, 0.8, 0.1],
+    ...     [0.2, 0.2, 0.6],
+    ...     [0.5, 0.3, 0.2],
+    ...     [0.2, 0.5, 0.3],
+    ...     [0.2, 0.2, 0.6],
+    ... ]
     >>> multiclass_recall(target, preds, num_classes=3, average="macro")
     0.8333333333333334
 

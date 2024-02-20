@@ -238,7 +238,7 @@ def multiclass_specificity(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multiclass_specificity
+    ...     multiclass_specificity,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([2, 1, 0, 0])
@@ -262,7 +262,11 @@ def multiclass_specificity(
     >>> multiclass_specificity(target, preds, num_classes=3, ignore_index=0)
     Array(1., dtype=float32)
     >>> multiclass_specificity(
-    ...     target, preds, num_classes=3, average=None, ignore_index=(1, 2),
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     average=None,
+    ...     ignore_index=(1, 2),
     ... )
     Array([0. , 0.5, 1. ], dtype=float32)
 
@@ -391,7 +395,7 @@ def multilabel_specificity(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multilabel_specificity
+    ...     multilabel_specificity,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
@@ -413,7 +417,11 @@ def multilabel_specificity(
     >>> multilabel_specificity(target, preds, num_labels=4, average="weighted")
     Array(0.2, dtype=float32)
     >>> multilabel_specificity(
-    ...    target, preds, num_labels=4, average=None, ignore_index=1,
+    ...     target,
+    ...     preds,
+    ...     num_labels=4,
+    ...     average=None,
+    ...     ignore_index=1,
     ... )
     Array([0., 0., 1., 0.], dtype=float32)
 
