@@ -30,17 +30,17 @@ def _mcc_reduce(confmat: Array) -> Array:
     confmat = xp.sum(confmat, axis=0) if confmat.ndim == 3 else confmat
 
     if int(apc.size(confmat) or 0) == 4:  # binary case
-        tn, fp, fn, tp = xp.reshape(xp.astype(confmat, xp.float32), (-1,))
+        tn, fp, fn, tp = xp.reshape(xp.astype(confmat, xp.float64), (-1,))
         if tp + tn != 0 and fp + fn == 0:
             return xp.asarray(1.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
 
         if tp + tn == 0 and fp + fn != 0:
             return xp.asarray(-1.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
 
-    tk = xp.sum(confmat, axis=-1, dtype=xp.float32)  # tn + fp and tp + fn
-    pk = xp.sum(confmat, axis=-2, dtype=xp.float32)  # tn + fn and tp + fp
-    c = xp.astype(xp.linalg.trace(confmat), xp.float32)  # tn and tp
-    s = xp.sum(confmat, dtype=xp.float32)  # tn + tp + fn + fp
+    tk = xp.sum(confmat, axis=-1, dtype=xp.float64)  # tn + fp and tp + fn
+    pk = xp.sum(confmat, axis=-2, dtype=xp.float64)  # tn + fn and tp + fp
+    c = xp.astype(xp.linalg.trace(confmat), xp.float64)  # tn and tp
+    s = xp.sum(confmat, dtype=xp.float64)  # tn + tp + fn + fp
 
     cov_ytyp = c * s - sum(tk * pk)
     cov_ypyp = s**2 - sum(pk * pk)
@@ -65,7 +65,7 @@ def _mcc_reduce(confmat: Array) -> Array:
         denom = (tp + fp + eps) * (tp + fn + eps) * (tn + fp + eps) * (tn + fn + eps)
     elif denom == 0:
         return xp.asarray(0.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
-    return numerator / xp.sqrt(denom)  # type: ignore[no-any-return]
+    return xp.astype(numerator / xp.sqrt(denom), xp.float64)  # type: ignore[no-any-return]
 
 
 def binary_mcc(
@@ -214,10 +214,14 @@ def multiclass_mcc(
     >>> multiclass_mcc(target, preds, num_classes=3)
     Array(0.7, dtype=float32)
     >>> target = anp.asarray([2, 1, 0, 0])
-    >>> preds = anp.asarray([[0.16, 0.26, 0.58],
-    ...                     [0.22, 0.61, 0.17],
-    ...                     [0.71, 0.09, 0.20],
-    ...                     [0.05, 0.82, 0.13]])
+    >>> preds = anp.asarray(
+    ...     [
+    ...         [0.16, 0.26, 0.58],
+    ...         [0.22, 0.61, 0.17],
+    ...         [0.71, 0.09, 0.20],
+    ...         [0.05, 0.82, 0.13],
+    ...     ]
+    ... )
     >>> multiclass_mcc(target, preds, num_classes=3)
     Array(0.7, dtype=float32)
 

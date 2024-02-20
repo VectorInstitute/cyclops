@@ -94,10 +94,14 @@ class MulticlassMCC(MulticlassConfusionMatrix, registry_key="multiclass_mcc"):
     >>> metric(target, preds)
     Array(0.7, dtype=float32)
     >>> target = anp.asarray([2, 1, 0, 0])
-    >>> preds = anp.asarray([[0.16, 0.26, 0.58],
-    ...                     [0.22, 0.61, 0.17],
-    ...                     [0.71, 0.09, 0.20],
-    ...                     [0.05, 0.82, 0.13]])
+    >>> preds = anp.asarray(
+    ...     [
+    ...         [0.16, 0.26, 0.58],
+    ...         [0.22, 0.61, 0.17],
+    ...         [0.71, 0.09, 0.20],
+    ...         [0.05, 0.82, 0.13],
+    ...     ]
+    ... )
     >>> metric = MulticlassMCC(num_classes=3)
     >>> metric(target, preds)
     Array(0.7, dtype=float32)
