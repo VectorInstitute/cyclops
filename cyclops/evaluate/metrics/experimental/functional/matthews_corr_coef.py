@@ -65,7 +65,7 @@ def _mcc_reduce(confmat: Array) -> Array:
         denom = (tp + fp + eps) * (tp + fn + eps) * (tn + fp + eps) * (tn + fn + eps)
     elif denom == 0:
         return xp.asarray(0.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
-    return xp.astype(numerator / xp.sqrt(denom), xp.float64)  # type: ignore[no-any-return]
+    return xp.astype(numerator / xp.sqrt(denom), xp.float32)  # type: ignore[no-any-return]
 
 
 def binary_mcc(
