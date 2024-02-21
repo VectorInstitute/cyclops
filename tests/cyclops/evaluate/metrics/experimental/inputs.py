@@ -1,5 +1,4 @@
 """Input data for tests of metrics in cyclops/evaluate/metrics/experimental."""
-
 import random
 from collections import namedtuple
 from types import ModuleType
@@ -297,46 +296,43 @@ def _multilabel_cases(*, xp: Any):
     return (
         pytest.param(
             InputSpec(
-                target=xp.asarray(_multilabel_labels, dtype=xp.int32),
-                preds=xp.asarray(_multilabel_preds, dtype=xp.int32),
+                target=xp.asarray(_multilabel_labels),
+                preds=xp.asarray(_multilabel_preds),
             ),
             id="input[2d-labels]",
         ),
         pytest.param(
             InputSpec(
-                target=xp.asarray(_multilabel_labels_multidim, dtype=xp.int32),
-                preds=xp.asarray(_multilabel_preds_multidim, dtype=xp.int32),
+                target=xp.asarray(_multilabel_labels_multidim),
+                preds=xp.asarray(_multilabel_preds_multidim),
             ),
             id="input[multidim-labels]",
         ),
         pytest.param(
             InputSpec(
-                target=xp.asarray(_multilabel_labels, dtype=xp.int32),
-                preds=xp.asarray(_multilabel_probs, dtype=xp.float32),
+                target=xp.asarray(_multilabel_labels),
+                preds=xp.asarray(_multilabel_probs),
             ),
             id="input[2d-probs]",
         ),
         pytest.param(
             InputSpec(
-                target=xp.asarray(_multilabel_labels, dtype=xp.int32),
-                preds=xp.asarray(_inv_sigmoid(_multilabel_probs), dtype=xp.float32),
+                target=xp.asarray(_multilabel_labels),
+                preds=xp.asarray(_inv_sigmoid(_multilabel_probs)),
             ),
             id="input[2d-logits]",
         ),
         pytest.param(
             InputSpec(
-                target=xp.asarray(_multilabel_labels_multidim, dtype=xp.int32),
-                preds=xp.asarray(_multilabel_probs_multidim, dtype=xp.float32),
+                target=xp.asarray(_multilabel_labels_multidim),
+                preds=xp.asarray(_multilabel_probs_multidim),
             ),
             id="input[multidim-probs]",
         ),
         pytest.param(
             InputSpec(
-                target=xp.asarray(_multilabel_labels_multidim, dtype=xp.int32),
-                preds=xp.asarray(
-                    _inv_sigmoid(_multilabel_probs_multidim),
-                    dtype=xp.float32,
-                ),
+                target=xp.asarray(_multilabel_labels_multidim),
+                preds=xp.asarray(_inv_sigmoid(_multilabel_probs_multidim)),
             ),
             id="input[multidim-logits]",
         ),
