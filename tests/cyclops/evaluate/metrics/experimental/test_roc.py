@@ -1,5 +1,4 @@
 """Test roc curve metric."""
-
 from functools import partial
 from typing import List, Tuple, Union
 
@@ -46,11 +45,9 @@ def _binary_roc_reference(
     return tm_binary_roc(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
-        thresholds=(
-            torch.utils.dlpack.from_dlpack(thresholds)
-            if apc.is_array_api_obj(thresholds)
-            else thresholds
-        ),
+        thresholds=torch.utils.dlpack.from_dlpack(thresholds)
+        if apc.is_array_api_obj(thresholds)
+        else thresholds,
         ignore_index=ignore_index,
     )
 
@@ -218,11 +215,9 @@ def _multiclass_roc_reference(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_classes,
-        thresholds=(
-            torch.utils.dlpack.from_dlpack(thresholds)
-            if apc.is_array_api_obj(thresholds)
-            else thresholds
-        ),
+        thresholds=torch.utils.dlpack.from_dlpack(thresholds)
+        if apc.is_array_api_obj(thresholds)
+        else thresholds,
         ignore_index=ignore_index,
     )
 
@@ -376,19 +371,15 @@ def _multilabel_roc_reference(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_labels,
-        thresholds=(
-            torch.utils.dlpack.from_dlpack(thresholds)
-            if apc.is_array_api_obj(thresholds)
-            else thresholds
-        ),
+        thresholds=torch.utils.dlpack.from_dlpack(thresholds)
+        if apc.is_array_api_obj(thresholds)
+        else thresholds,
         ignore_index=ignore_index,
     )
 
 
 class TestMultilabelROC(MetricTester):
     """Test multilabel roc curve function and class."""
-
-    atol: float = 9e-8
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp)[2:])
     @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))

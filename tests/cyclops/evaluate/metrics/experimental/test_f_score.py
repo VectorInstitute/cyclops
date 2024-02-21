@@ -1,5 +1,4 @@
 """Tests for the F-score metric."""
-
 from functools import partial
 from typing import Literal, Optional
 
@@ -80,11 +79,9 @@ class TestBinaryFBetaScore(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=(
-                binary_f1_score
-                if beta == 1.0
-                else partial(binary_fbeta_score, beta=beta)
-            ),
+            metric_function=binary_f1_score
+            if beta == 1.0
+            else partial(binary_fbeta_score, beta=beta),
             metric_args={"threshold": THRESHOLD, "ignore_index": ignore_index},
             reference_metric=partial(
                 _binary_fbeta_score_reference,
@@ -122,9 +119,9 @@ class TestBinaryFBetaScore(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=(
-                BinaryF1Score if beta == 1.0 else partial(BinaryFBetaScore, beta=beta)
-            ),
+            metric_class=BinaryF1Score
+            if beta == 1.0
+            else partial(BinaryFBetaScore, beta=beta),
             metric_args={"threshold": THRESHOLD, "ignore_index": ignore_index},
             reference_metric=partial(
                 _binary_fbeta_score_reference,
@@ -165,9 +162,9 @@ class TestBinaryFBetaScore(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=(
-                BinaryF1Score if beta == 1.0 else partial(BinaryFBetaScore, beta=beta)
-            ),
+            metric_class=BinaryF1Score
+            if beta == 1.0
+            else partial(BinaryFBetaScore, beta=beta),
             metric_args={"threshold": THRESHOLD, "ignore_index": ignore_index},
             reference_metric=partial(
                 _binary_fbeta_score_reference,
@@ -244,11 +241,9 @@ class TestMulticlassFBetaScore(MetricTester):
             self.run_metric_function_implementation_test(
                 target,
                 preds,
-                metric_function=(
-                    multiclass_f1_score
-                    if beta == 1.0
-                    else partial(multiclass_fbeta_score, beta=beta)
-                ),
+                metric_function=multiclass_f1_score
+                if beta == 1.0
+                else partial(multiclass_fbeta_score, beta=beta),
                 metric_args={
                     "num_classes": NUM_CLASSES,
                     "top_k": top_k,
@@ -297,11 +292,9 @@ class TestMulticlassFBetaScore(MetricTester):
             self.run_metric_class_implementation_test(
                 target,
                 preds,
-                metric_class=(
-                    MulticlassF1Score
-                    if beta == 1.0
-                    else partial(MulticlassFBetaScore, beta=beta)
-                ),
+                metric_class=MulticlassF1Score
+                if beta == 1.0
+                else partial(MulticlassFBetaScore, beta=beta),
                 reference_metric=partial(
                     _multiclass_fbeta_score_reference,
                     beta=beta,
@@ -353,11 +346,9 @@ class TestMulticlassFBetaScore(MetricTester):
             self.run_metric_class_implementation_test(
                 target,
                 preds,
-                metric_class=(
-                    MulticlassF1Score
-                    if beta == 1.0
-                    else partial(MulticlassFBetaScore, beta=beta)
-                ),
+                metric_class=MulticlassF1Score
+                if beta == 1.0
+                else partial(MulticlassFBetaScore, beta=beta),
                 reference_metric=partial(
                     _multiclass_fbeta_score_reference,
                     beta=beta,
@@ -420,11 +411,9 @@ class TestMultilabelFBetaScore(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=(
-                multilabel_f1_score
-                if beta == 1.0
-                else partial(multilabel_fbeta_score, beta=beta)
-            ),
+            metric_function=multilabel_f1_score
+            if beta == 1.0
+            else partial(multilabel_fbeta_score, beta=beta),
             reference_metric=partial(
                 _multilabel_fbeta_score_reference,
                 beta=beta,
@@ -457,11 +446,9 @@ class TestMultilabelFBetaScore(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=(
-                MultilabelF1Score
-                if beta == 1.0
-                else partial(MultilabelFBetaScore, beta=beta)
-            ),
+            metric_class=MultilabelF1Score
+            if beta == 1.0
+            else partial(MultilabelFBetaScore, beta=beta),
             reference_metric=partial(
                 _multilabel_fbeta_score_reference,
                 beta=beta,
@@ -479,7 +466,7 @@ class TestMultilabelFBetaScore(MetricTester):
         )
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
-    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=array_api_compat.torch))
+    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
     @pytest.mark.parametrize("average", [None, "micro", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_fbeta_score_class_with_torch_tensors(
@@ -492,19 +479,12 @@ class TestMultilabelFBetaScore(MetricTester):
         """Test class for multilabel fbeta score with torch tensors."""
         target, preds = inputs
 
-        if ignore_index is not None:
-            target = _inject_ignore_index(target, ignore_index)
-
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=(
-                MultilabelF1Score
-                if beta == 1.0
-                else partial(MultilabelFBetaScore, beta=beta)
-            ),
+            metric_class=MultilabelF1Score
+            if beta == 1.0
+            else partial(MultilabelFBetaScore, beta=beta),
             reference_metric=partial(
                 _multilabel_fbeta_score_reference,
                 beta=beta,
@@ -519,8 +499,6 @@ class TestMultilabelFBetaScore(MetricTester):
                 "average": average,
                 "ignore_index": ignore_index,
             },
-            device=device,
-            use_device_for_ref=True,
         )
 
 

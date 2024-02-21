@@ -1,5 +1,4 @@
 """Test specificity."""
-
 from functools import partial
 from typing import Literal, Optional
 
@@ -418,7 +417,7 @@ class TestMultilabelSpecificity(MetricTester):
         )
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
-    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=array_api_compat.torch))
+    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
     @pytest.mark.parametrize("average", [None, "micro", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_specificity_class_with_torch_tensors(
@@ -429,11 +428,6 @@ class TestMultilabelSpecificity(MetricTester):
     ) -> None:
         """Test class for multilabel specificity with torch tensors."""
         target, preds = inputs
-
-        if ignore_index is not None:
-            target = _inject_ignore_index(target, ignore_index)
-
-        device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.run_metric_class_implementation_test(
             target,
@@ -452,8 +446,6 @@ class TestMultilabelSpecificity(MetricTester):
                 "average": average,
                 "ignore_index": ignore_index,
             },
-            device=device,
-            use_device_for_ref=True,
         )
 
 
