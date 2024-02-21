@@ -1,4 +1,5 @@
 """Functions for computing the confusion matrix for classification tasks."""
+
 # mypy: disable-error-code="no-any-return"
 from types import ModuleType
 from typing import Literal, Optional, Tuple, Union
