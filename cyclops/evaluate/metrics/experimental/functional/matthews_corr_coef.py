@@ -57,8 +57,8 @@ def _mcc_reduce(confmat: Array) -> Array:
             b = fp + fn
 
         eps = xp.asarray(
-            xp.finfo(xp.float32).eps,
-            dtype=xp.float32,
+            xp.finfo(xp.float64).eps,
+            dtype=xp.float64,
             device=apc.device(confmat),
         )
         numerator = xp.sqrt(eps) * (a - b)
