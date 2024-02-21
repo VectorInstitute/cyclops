@@ -26,16 +26,18 @@ from cyclops.evaluate.metrics.experimental.utils.types import Array
 def _mcc_reduce(confmat: Array) -> Array:
     """Reduce an un-normalized confusion matrix into the matthews corrcoef."""
     xp = apc.array_namespace(confmat)
+
     # convert multilabel into binary
     confmat = xp.sum(confmat, axis=0) if confmat.ndim == 3 else confmat
 
     if int(apc.size(confmat) or 0) == 4:  # binary case
-        tn, fp, fn, tp = xp.reshape(xp.astype(confmat, xp.float64), (-1,))
+        # convert tp, tn, fp, fn to float32 for type promotion rules to work
+        tn, fp, fn, tp = xp.reshape(xp.astype(confmat, xp.float32), (-1,))
         if tp + tn != 0 and fp + fn == 0:
-            return xp.asarray(1.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
+            return xp.asarray(1.0, dtype=confmat.dtype, device=apc.device(confmat))  # type: ignore[no-any-return]
 
         if tp + tn == 0 and fp + fn != 0:
-            return xp.asarray(-1.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
+            return xp.asarray(-1.0, dtype=confmat.dtype, device=apc.device(confmat))  # type: ignore[no-any-return]
 
     tk = xp.sum(confmat, axis=-1, dtype=xp.float64)  # tn + fp and tp + fn
     pk = xp.sum(confmat, axis=-2, dtype=xp.float64)  # tn + fn and tp + fp
@@ -57,15 +59,15 @@ def _mcc_reduce(confmat: Array) -> Array:
             b = fp + fn
 
         eps = xp.asarray(
-            xp.finfo(xp.float64).eps,
-            dtype=xp.float64,
+            xp.finfo(xp.float32).eps,
+            dtype=xp.float32,
             device=apc.device(confmat),
         )
         numerator = xp.sqrt(eps) * (a - b)
         denom = (tp + fp + eps) * (tp + fn + eps) * (tn + fp + eps) * (tn + fn + eps)
     elif denom == 0:
-        return xp.asarray(0.0, dtype=xp.float32, device=apc.device(confmat))  # type: ignore[no-any-return]
-    return xp.astype(numerator / xp.sqrt(denom), xp.float32)  # type: ignore[no-any-return]
+        return xp.asarray(0.0, dtype=confmat.dtype, device=apc.device(confmat))  # type: ignore[no-any-return]
+    return numerator / xp.sqrt(denom)  # type: ignore[no-any-return]
 
 
 def binary_mcc(
@@ -123,11 +125,11 @@ def binary_mcc(
     >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([0, 0, 1, 1, 0, 1])
     >>> binary_mcc(target, preds)
-    Array(0.33333334, dtype=float32)
+    Array(0.33333333, dtype=float64)
     >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> binary_mcc(target, preds)
-    Array(0.33333334, dtype=float32)
+    Array(0.33333333, dtype=float64)
 
     """
     _binary_confusion_matrix_validate_args(
@@ -212,7 +214,7 @@ def multiclass_mcc(
     >>> target = anp.asarray([2, 1, 0, 0])
     >>> preds = anp.asarray([2, 1, 0, 1])
     >>> multiclass_mcc(target, preds, num_classes=3)
-    Array(0.7, dtype=float32)
+    Array(0.7, dtype=float64)
     >>> target = anp.asarray([2, 1, 0, 0])
     >>> preds = anp.asarray(
     ...     [
@@ -223,7 +225,7 @@ def multiclass_mcc(
     ...     ]
     ... )
     >>> multiclass_mcc(target, preds, num_classes=3)
-    Array(0.7, dtype=float32)
+    Array(0.7, dtype=float64)
 
     """
     _multiclass_confusion_matrix_validate_args(
@@ -315,11 +317,11 @@ def multilabel_mcc(
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
     >>> preds = anp.asarray([[0, 0, 1], [1, 0, 1]])
     >>> multilabel_mcc(target, preds, num_labels=3)
-    Array(0.33333334, dtype=float32)
+    Array(0.33333333, dtype=float64)
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
     >>> preds = anp.asarray([[0.11, 0.22, 0.84], [0.73, 0.33, 0.92]])
     >>> multilabel_mcc(target, preds, num_labels=3)
-    Array(0.33333334, dtype=float32)
+    Array(0.33333333, dtype=float64)
 
     """
     _multilabel_confusion_matrix_validate_args(

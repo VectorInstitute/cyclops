@@ -38,12 +38,12 @@ class BinaryMCC(BinaryConfusionMatrix, registry_key="binary_mcc"):
     >>> preds = anp.asarray([0, 0, 1, 1, 0, 1])
     >>> metric = BinaryMCC()
     >>> metric(target, preds)
-    Array(0.33333334, dtype=float32)
+    Array(0.33333333, dtype=float64)
     >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> metric = BinaryMCC()
     >>> metric(target, preds)
-    Array(0.33333334, dtype=float32)
+    Array(0.33333333, dtype=float64)
 
     """
 
@@ -92,7 +92,7 @@ class MulticlassMCC(MulticlassConfusionMatrix, registry_key="multiclass_mcc"):
     >>> preds = anp.asarray([2, 1, 0, 1])
     >>> metric = MulticlassMCC(num_classes=3)
     >>> metric(target, preds)
-    Array(0.7, dtype=float32)
+    Array(0.7, dtype=float64)
     >>> target = anp.asarray([2, 1, 0, 0])
     >>> preds = anp.asarray(
     ...     [
@@ -104,7 +104,7 @@ class MulticlassMCC(MulticlassConfusionMatrix, registry_key="multiclass_mcc"):
     ... )
     >>> metric = MulticlassMCC(num_classes=3)
     >>> metric(target, preds)
-    Array(0.7, dtype=float32)
+    Array(0.7, dtype=float64)
     """
 
     name: str = "Matthews Correlation Coefficient"
@@ -151,12 +151,12 @@ class MultilabelMCC(MultilabelConfusionMatrix, registry_key="multilabel_mcc"):
     >>> preds = anp.asarray([[0, 0, 1], [1, 0, 1]])
     >>> metric = MultilabelMCC(num_labels=3)
     >>> metric(target, preds)
-    Array(0.33333334, dtype=float32)
+    Array(0.33333333, dtype=float64)
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
     >>> preds = anp.asarray([[0.11, 0.22, 0.84], [0.73, 0.33, 0.92]])
     >>> metric = MultilabelMCC(num_labels=3)
     >>> metric(target, preds)
-    Array(0.33333334, dtype=float32)
+    Array(0.33333333, dtype=float64)
 
     """
 

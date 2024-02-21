@@ -1,6 +1,7 @@
 """Functions for computing the confusion matrix for classification tasks."""
 
 # mypy: disable-error-code="no-any-return"
+import warnings
 from types import ModuleType
 from typing import Literal, Optional, Tuple, Union
 
@@ -40,6 +41,16 @@ def _normalize_confusion_matrix(
         return safe_divide(confmat, xp.sum(confmat, axis=-1, keepdims=True))
     if normalize == "all":
         return safe_divide(confmat, xp.sum(confmat, axis=(-1, -2), keepdims=True))
+
+    nan_elements = int(0 or apc.size(confmat[xp.isnan(confmat)]))
+    if nan_elements:
+        confmat[xp.isnan(confmat)] = 0
+        warnings.warn(
+            f"Encountered {nan_elements} NaN elements in the confusion matrix. "
+            "These elements were replaced with 0.",
+            category=RuntimeWarning,
+            stacklevel=1,
+        )
 
     return confmat
 
