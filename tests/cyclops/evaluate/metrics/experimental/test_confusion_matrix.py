@@ -1,5 +1,4 @@
 """Test confusion matrix metrics."""
-
 from functools import partial
 
 import array_api_compat as apc
@@ -391,7 +390,7 @@ class TestMultilabelConfusionMatrix(MetricTester):
         )
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
-    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=array_api_compat.torch))
+    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
     @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_confusion_matrix_class_with_torch_tensors(
@@ -405,8 +404,6 @@ class TestMultilabelConfusionMatrix(MetricTester):
 
         if ignore_index is not None:
             target = _inject_ignore_index(target, ignore_index)
-
-        device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.run_metric_class_implementation_test(
             target,
@@ -424,6 +421,4 @@ class TestMultilabelConfusionMatrix(MetricTester):
                 "normalize": normalize,
                 "ignore_index": ignore_index,
             },
-            device=device,
-            use_device_for_ref=True,
         )

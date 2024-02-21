@@ -1,5 +1,4 @@
 """Confusion matrix."""
-
 from types import ModuleType
 from typing import Any, Optional, Tuple, Union
 
