@@ -100,6 +100,7 @@ nbstripout = "^0.6.1"
 mypy = "^1.7.0"
 ruff = "^0.2.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
+pip-audit = "^2.7.1"
 cycquery = "^0.1.2" # used for integration test
 torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
 
@@ -112,13 +113,14 @@ sphinx = "^7.2.5"
 sphinxcontrib-apidoc = "^0.4.0"
 sphinx-autodoc-typehints = "^1.24.0"
 myst-parser = "^2.0.0"
+sphinx-design = "^0.5.0"
 sphinx-copybutton = "^0.5.0"
 sphinx-autoapi = "^2.0.0"
 nbsphinx = "^0.9.3"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
 kaggle = "^1.5.13"
-sphinx-book-theme = "^1.1.0"
+furo = "^2024.01.29"
 
 [tool.poetry.group.dev]
 optional = true
