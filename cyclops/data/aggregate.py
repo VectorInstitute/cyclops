@@ -71,14 +71,15 @@ class Aggregator(TransformerMixin):  # type: ignore
     aggregation type. Each value is either function or string, e.g.,
     {col_name: MEAN}. If a function, it should accept a series and return a
     single value. If a string, it should be one of the following:
-    - MEAN
-    - MEDIAN
-    - SUM
-    - COUNT
-    - MIN
-    - MAX
-    - STD
-    - VAR
+
+    - ``mean``
+    - ``median``
+    - ``std``
+    - ``var``
+    - ``min``
+    - ``max``
+    - ``count``
+    - ``sum``
 
     """
 
