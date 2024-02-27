@@ -1,0 +1,41 @@
+﻿cyclops.data.aggregate
+======================
+
+.. automodule:: cyclops.data.aggregate
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      tabular_as_aggregated
+      timestamp_ffill_agg
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      Aggregator
+   
+   
+
+   
+   
+   
+
+
+
