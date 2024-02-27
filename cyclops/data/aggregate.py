@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.base import TransformerMixin
 
 from cyclops.data.clean import dropna_rows
-from cyclops.data.constants import ALL, FIRST, LAST, MEAN, MEDIAN
+from cyclops.data.constants import ALL, FIRST, LAST
 from cyclops.data.df.vectorized import Vectorized
 from cyclops.data.impute import AggregatedImputer, numpy_2d_ffill
 from cyclops.data.utils import has_columns, is_timestamp_series
@@ -23,7 +23,6 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
 RESTRICT_TIMESTAMP = "restrict_timestamp"
 WINDOW_START_TIMESTAMP = "window_start_timestamp"
 WINDOW_STOP_TIMESTAMP = "window_stop_timestamp"
@@ -65,6 +64,21 @@ class Aggregator(TransformerMixin):  # type: ignore
         An imputer to perform aggregation.
     num_timesteps: int or None
         The number of timesteps in the aggregation window.
+
+    Notes
+    -----
+    aggfuncs is a dictionary of aggregation functions mapped from column to
+    aggregation type. Each value is either function or string, e.g.,
+    {col_name: MEAN}. If a function, it should accept a series and return a
+    single value. If a string, it should be one of the following:
+    - MEAN
+    - MEDIAN
+    - SUM
+    - COUNT
+    - MIN
+    - MAX
+    - STD
+    - VAR
 
     """
 
@@ -127,15 +141,8 @@ class Aggregator(TransformerMixin):  # type: ignore
             The processed aggregation function dictionary.
 
         """
-        for col, aggfunc in aggfuncs.items():
-            if isinstance(aggfunc, str):
-                if aggfunc not in AGGFUNCS:
-                    raise ValueError(
-                        f"""Aggfunc string {aggfunc} not supported.
-                        Supporting: {','.join(AGGFUNCS)}""",
-                    )
-                aggfuncs[col] = AGGFUNCS[aggfunc]  # type: ignore
-            elif callable(aggfunc):
+        for _, aggfunc in aggfuncs.items():
+            if isinstance(aggfunc, str) or callable(aggfunc):
                 pass
             else:
                 raise ValueError("Aggfunc must be a string or callable.")
