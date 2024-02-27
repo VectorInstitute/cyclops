@@ -30,6 +30,11 @@ from cyclops.report.model_card.fields import (
 class Overview(BaseModelCardSection):
     """Overview section with aggregate metrics."""
 
+    last_n_evals: Optional[int] = Field(
+        0,
+        description="The number of evaluations to display in the model card.",
+    )
+
     metric_cards: Optional[MetricCardCollection] = Field(
         None,
         description="Comparative metrics between baseline and periodic report.",

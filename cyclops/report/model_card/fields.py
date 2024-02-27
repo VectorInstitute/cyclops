@@ -594,11 +594,6 @@ class MetricCard(
         description="History of the metric over time.",
     )
 
-    trend: Optional[StrictStr] = Field(
-        None,
-        description="The trend of the metric over time.",
-    )
-
     timestamps: Optional[List[StrictStr]] = Field(
         None,
         description="Timestamps for each point in the history.",

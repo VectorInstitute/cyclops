@@ -33,7 +33,6 @@ from cyclops.report.utils import (
     get_slices,
     get_thresholds,
     get_timestamps,
-    get_trends,
     sweep_graphics,
     sweep_metric_cards,
     sweep_metrics,
@@ -360,14 +359,6 @@ def test_get_thresholds(model_card):
     # read thresholds from json to dict
     thresholds_dict = json.loads(thresholds)
     assert len(thresholds_dict.values()) == 2
-
-
-def test_get_trends(model_card):
-    """Test get_trends function."""
-    trends = get_trends(model_card)
-    # read trends from json to dict
-    trends_dict = json.loads(trends)
-    assert len(trends_dict.values()) == 2
 
 
 def test_get_passed(model_card):

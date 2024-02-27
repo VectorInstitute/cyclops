@@ -516,21 +516,6 @@ def get_thresholds(model_card: ModelCard) -> str:
     return json.dumps(thresholds)
 
 
-def get_trends(model_card: ModelCard) -> str:
-    """Get all trends from a model card."""
-    trends: Dict[int, Optional[str]] = {}
-    if (
-        (model_card.overview is None)
-        or (model_card.overview.metric_cards is None)
-        or (model_card.overview.metric_cards.collection is None)
-    ):
-        pass
-    else:
-        for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
-            trends[itr] = metric_card.trend
-    return json.dumps(trends)
-
-
 def get_passed(model_card: ModelCard) -> str:
     """Get all passed from a model card."""
     passed: Dict[int, Optional[bool]] = {}
@@ -743,13 +728,6 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
             timestamps = metric["last_metric_card"].timestamps
             if timestamps is not None:
                 timestamps.append(timestamp)
-            (m, _) = np.polyfit(range(len(history)), history, deg=1)
-            if m >= 0.01:
-                trend = "positive"
-            elif m <= -0.01:
-                trend = "negative"
-            else:
-                trend = "neutral"
 
             metric_cards.append(
                 MetricCard(
@@ -784,9 +762,6 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
                     )
                     else None,
                     history=history,
-                    trend=trend
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
                     timestamps=timestamps,
                 ),
             )
@@ -846,7 +821,6 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
                         and isinstance(metric["current_metric"].value, float)
                         else 0,
                     ],
-                    trend="neutral",
                     timestamps=[timestamp],
                 ),
             )

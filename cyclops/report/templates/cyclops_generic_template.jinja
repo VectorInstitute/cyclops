@@ -541,6 +541,9 @@
       for (let i = 0; i < timestamps[idx].length; i++) {
         timestamp_data.push(timestamps[idx][i]);
       }
+      var last_n_evals = {{ model_card.overview.last_n_evals }};
+      history_data = history_data.slice(-last_n_evals);
+      timestamp_data = timestamp_data.slice(-last_n_evals);
 
       var model_card_fig = {
         data: [
@@ -814,7 +817,6 @@
     var slices_all = JSON.parse({{ get_slices(model_card)|safe|tojson }});
     var histories_all = JSON.parse({{ get_histories(model_card)|safe|tojson }});
     var thresholds_all = JSON.parse({{ get_thresholds(model_card)|safe|tojson }});
-    var trends_all = JSON.parse({{ get_trends(model_card)|safe|tojson }});
     var passed_all = JSON.parse({{ get_passed(model_card)|safe|tojson }});
     var names_all = JSON.parse({{ get_names(model_card)|safe|tojson }});
     var timestamps_all = JSON.parse({{ get_timestamps(model_card)|safe|tojson }});
@@ -878,19 +880,24 @@
       for (let i = 0; i < timestamps_all[idx].length; i++) {
         timestamp_data.push(timestamps_all[idx][i]);
       }
-      threshold = parseFloat(thresholds_all[idx]);
-      trend = trends_all[idx];
-      passed = passed_all[idx];
-      name = names_all[idx];
-
-      // if trend is "positive" set keyword to upwards, if trend is "negative" set keyword to downwards, else set keyword to flat
-      if (trend === "positive") {
+      var last_n_evals = {{ model_card.overview.last_n_evals }}
+      history_data = history_data.slice(-last_n_evals);
+      timestamp_data = timestamp_data.slice(-last_n_evals);
+      // get slope of line of best fit, if >0.01 then trending up, if <0.01 then trending down, else flat
+      var slope = lineOfBestFit(history_data)[0];
+      if (slope > 0.01) {
         var trend_keyword = "upwards";
-      } else if (trend === "negative") {
+      }
+      else if (slope < -0.01) {
         var trend_keyword = "downwards";
-      } else {
+      }
+      else {
         var trend_keyword = "flat";
       }
+
+      threshold = parseFloat(thresholds_all[idx]);
+      passed = passed_all[idx];
+      name = names_all[idx];
 
       // if passed is true set keyword to Above, if passed is false set keyword to Below
       if (passed) {
@@ -909,7 +916,7 @@
         }
       }
       if (nulls === 10) {
-        var plot_title = "Current " + name + " is trending " + trend_keyword + " and is " + passed_keyword + " the threshold.";
+        var plot_title = "Current " + name + " is trending " + "flat" + " and is " + passed_keyword + " the threshold.";
         var plot_title = multipleStringLines(plot_title);
         var showlegend = false;
       }
@@ -1105,7 +1112,6 @@
     var slices_all = JSON.parse({{ get_slices(model_card)|safe|tojson }});
     var histories_all = JSON.parse({{ get_histories(model_card)|safe|tojson }});
     var thresholds_all = JSON.parse({{ get_thresholds(model_card)|safe|tojson }});
-    var trends_all = JSON.parse({{ get_trends(model_card)|safe|tojson }});
     var passed_all = JSON.parse({{ get_passed(model_card)|safe|tojson }});
     var names_all = JSON.parse({{ get_names(model_card)|safe|tojson }});
     var timestamps_all = JSON.parse({{ get_timestamps(model_card)|safe|tojson }});
@@ -1189,19 +1195,24 @@
       for (let i = 0; i < timestamps_all[idx].length; i++) {
         timestamp_data.push(timestamps_all[idx][i]);
       }
-      threshold = parseFloat(thresholds_all[idx]);
-      trend = trends_all[idx];
-      passed = passed_all[idx];
-      name = names_all[idx];
-
-      // if trend is "positive" set keyword to upwards, if trend is "negative" set keyword to downwards, else set keyword to flat
-      if (trend === "positive") {
+      var last_n_evals = {{ model_card.overview.last_n_evals }}
+      history_data = history_data.slice(-last_n_evals);
+      timestamp_data = timestamp_data.slice(-last_n_evals);
+      // get slope of line of best fit, if >0.01 then trending up, if <0.01 then trending down, else flat
+      var slope = lineOfBestFit(history_data)[0];
+      if (slope > 0.01) {
         var trend_keyword = "upwards";
-      } else if (trend === "negative") {
+      }
+      else if (slope < -0.01) {
         var trend_keyword = "downwards";
-      } else {
+      }
+      else {
         var trend_keyword = "flat";
       }
+
+      threshold = parseFloat(thresholds_all[idx]);
+      passed = passed_all[idx];
+      name = names_all[idx];
 
       // if passed is true set keyword to Above, if passed is false set keyword to Below
       if (passed) {
@@ -1382,5 +1393,24 @@
       }
     }
   }
+
+  function lineOfBestFit(y) {
+    var x = Array.from({length: y.length}, (_, i) => i);
+    var n = x.length;
+    var x_sum = 0;
+    var y_sum = 0;
+    var xy_sum = 0;
+    var xx_sum = 0;
+    for (var i = 0; i < n; i++) {
+      x_sum += x[i];
+      y_sum += y[i];
+      xy_sum += x[i] * y[i];
+      xx_sum += x[i] * x[i];
+    }
+    var m = (n * xy_sum - x_sum * y_sum) / (n * xx_sum - x_sum * x_sum);
+    var b = (y_sum - m * x_sum) / n;
+    return [m, b];
+  }
+
 
 </script>

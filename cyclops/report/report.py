@@ -51,7 +51,6 @@ from cyclops.report.utils import (
     get_slices,
     get_thresholds,
     get_timestamps,
-    get_trends,
     regex_replace,
     regex_search,
     str_to_snake_case,
@@ -1054,6 +1053,7 @@ class ModelCardReport:
         template_path: Optional[str] = None,
         interactive: bool = True,
         save_json: bool = True,
+        last_n_evals: Optional[int] = None,
         synthetic_timestamp: Optional[str] = None,
     ) -> str:
         """Export the model card report to an HTML file.
@@ -1070,6 +1070,9 @@ class ModelCardReport:
             Whether to create an interactive HTML report. The default is True.
         save_json : bool, optional
             Whether to save the model card as a JSON file. The default is True.
+        last_n_evals : int, optional
+            The number of most recent evaluations to include in the report and
+            calculate trends for. If not provided, all evaluations will be included.
         synthetic_timestamp : str, optional
             A synthetic timestamp to use for the report. This is useful for
             generating back-dated reports. The default is None, which uses the
@@ -1134,6 +1137,8 @@ class ModelCardReport:
                 values,
                 metric_cards,
             )
+        if self._model_card.overview is not None:
+            self._model_card.overview.last_n_evals = last_n_evals
 
         self._validate()
         template = self._get_jinja_template(template_path=template_path)
@@ -1143,7 +1148,6 @@ class ModelCardReport:
             "sweep_graphics": sweep_graphics,
             "get_slices": get_slices,
             "get_thresholds": get_thresholds,
-            "get_trends": get_trends,
             "get_passed": get_passed,
             "get_names": get_names,
             "get_histories": get_histories,
