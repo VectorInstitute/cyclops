@@ -9,7 +9,6 @@ import pytest
 from pandas import Timestamp
 
 from cyclops.data.aggregate import (
-    AGGFUNCS,
     RESTRICT_TIMESTAMP,
     START_TIMESTEP,
     TIMESTEP,
@@ -168,8 +167,16 @@ def test_aggregate_strings(
 ):
     """Test that using aggregation strings is equivalent to inputting the functions."""
     data, _, _ = test_input
+    aggfuncs = {
+        "mean": np.mean,
+        "median": np.median,
+        "std": np.std,
+        "min": np.min,
+        "max": np.max,
+        "var": np.var,
+    }
 
-    for string, func in AGGFUNCS.items():
+    for string, func in aggfuncs.items():
         aggregator_str = Aggregator(
             aggfuncs={EVENT_VALUE: string},
             timestamp_col=EVENT_TIMESTAMP,

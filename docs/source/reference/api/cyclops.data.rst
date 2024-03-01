@@ -13,6 +13,7 @@ cyclops.data
     :template: custom-module-template.rst
 
     slicer
+    aggregate
 
 
 cyclops.data.features

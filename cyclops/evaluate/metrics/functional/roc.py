@@ -317,10 +317,14 @@ def multiclass_roc_curve(
     --------
     >>> from cyclops.evaluate.metrics.functional import multiclass_roc_curve
     >>> target = [1, 0, 2, 0]
-    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05],
-    ...         [0.05, 0.05, 0.9], [0.9, 0.05, 0.05]]
-    >>> fpr, tpr, thresholds = multiclass_roc_curve(target, preds,
-    ...     num_classes=3, thresholds=5
+    >>> preds = [
+    ...     [0.9, 0.05, 0.05],
+    ...     [0.05, 0.9, 0.05],
+    ...     [0.05, 0.05, 0.9],
+    ...     [0.9, 0.05, 0.05],
+    ... ]
+    >>> fpr, tpr, thresholds = multiclass_roc_curve(
+    ...     target, preds, num_classes=3, thresholds=5
     ... )
     >>> fpr
     array([[0.        , 0.5       , 0.5       , 0.5       , 1.        ],
@@ -469,8 +473,8 @@ def multilabel_roc_curve(
     >>> from cyclops.evaluate.metrics.functional import multilabel_roc_curve
     >>> target = [[0, 1, 0], [0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.9], [0.8, 0.2, 0.3]]
-    >>> fpr, tpr, thresholds = multilabel_roc_curve(target, preds, num_labels=3,
-    ...     thresholds=5
+    >>> fpr, tpr, thresholds = multilabel_roc_curve(
+    ...     target, preds, num_labels=3, thresholds=5
     ... )
     >>> fpr
     array([[0., 0., 0., 0., 1.],
@@ -586,7 +590,7 @@ def roc_curve(
     >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
-    >>> fpr, tpr, thresholds = roc_curve(target, preds, task='binary')
+    >>> fpr, tpr, thresholds = roc_curve(target, preds, task="binary")
     >>> fpr
     array([0. , 0. , 0.5, 0.5, 1. ])
     >>> tpr
@@ -598,8 +602,8 @@ def roc_curve(
     >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06], [0.02, 0.03, 0.95]]
-    >>> fpr, tpr, thresholds = roc_curve(target, preds, task='multiclass',
-    ...     num_classes=3
+    >>> fpr, tpr, thresholds = roc_curve(
+    ...     target, preds, task="multiclass", num_classes=3
     ... )
     >>> fpr
     [array([0. , 0. , 0.5, 1. ]), array([0. , 0. , 0.5, 1. ]), array([0. , 0. , 0.5, 1. ])]
@@ -612,9 +616,7 @@ def roc_curve(
     >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [[1, 1], [0, 1], [1, 0]]
     >>> preds = [[0.9, 0.8], [0.2, 0.7], [0.8, 0.3]]
-    >>> fpr, tpr, thresholds = roc_curve(target, preds, task='multilabel',
-    ...     num_labels=2
-    ... )
+    >>> fpr, tpr, thresholds = roc_curve(target, preds, task="multilabel", num_labels=2)
     >>> fpr
     [array([0. , 0.5, 1. , 1. ]), array([0., 0., 0., 1.])]
     >>> tpr

@@ -115,8 +115,14 @@ def multiclass_sensitivity(
     --------
     >>> from cyclops.evaluate.metrics.functional import multiclass_sensitivity
     >>> target = [0, 1, 2, 0, 1, 2]
-    >>> preds = [[0.4, 0.1, 0.5], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6],
-    ...     [0.5, 0.3, 0.2], [0.2, 0.5, 0.3], [0.2, 0.2, 0.6]]
+    >>> preds = [
+    ...     [0.4, 0.1, 0.5],
+    ...     [0.1, 0.8, 0.1],
+    ...     [0.2, 0.2, 0.6],
+    ...     [0.5, 0.3, 0.2],
+    ...     [0.2, 0.5, 0.3],
+    ...     [0.2, 0.2, 0.6],
+    ... ]
     >>> multiclass_sensitivity(target, preds, num_classes=3, average="macro")
     0.8333333333333334
 
@@ -191,14 +197,13 @@ def multilabel_sensitivity(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.functional import multilabel_sensitivity
-    >>> target = [[1, 0, 1],
-    ...           [0, 0, 0],
-    ...           [0, 1, 1],
-    ...           [1, 1, 1]]
-    >>> preds = [[0.75, 0.05, 0.35],
-    ...          [0.45, 0.75, 0.05],
-    ...          [0.05, 0.55, 0.75],
-    ...          [0.05, 0.65, 0.05]]
+    >>> target = [[1, 0, 1], [0, 0, 0], [0, 1, 1], [1, 1, 1]]
+    >>> preds = [
+    ...     [0.75, 0.05, 0.35],
+    ...     [0.45, 0.75, 0.05],
+    ...     [0.05, 0.55, 0.75],
+    ...     [0.05, 0.65, 0.05],
+    ... ]
     >>> multilabel_sensitivity(target, preds, num_labels=3)
     array([0.5       , 1.        , 0.33333333])
 

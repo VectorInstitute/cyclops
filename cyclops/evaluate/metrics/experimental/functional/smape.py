@@ -110,8 +110,8 @@ def symmetric_mean_absolute_percentage_error(target: Array, preds: Array) -> Arr
     >>> from cyclops.evaluate.metrics.experimental.functional import (
     ...     symmetric_mean_absolute_percentage_error,
     ... )
-    >>> target = anp.asarray([1., 10., 1e6])
-    >>> preds = anp.asarray([0.9, 15., 1.2e6])
+    >>> target = anp.asarray([1.0, 10.0, 1e6])
+    >>> preds = anp.asarray([0.9, 15.0, 1.2e6])
     >>> symmetric_mean_absolute_percentage_error(target, preds)
     Array(0.2290271, dtype=float32)
 

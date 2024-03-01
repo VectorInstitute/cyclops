@@ -108,15 +108,21 @@ class MulticlassAUROC(MulticlassPrecisionRecallCurve, registry_key="multiclass_a
     --------
     >>> from cyclops.evaluate.metrics import MulticlassAUROC
     >>> target = [0, 1, 2, 0]
-    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06],
-    ...         [0.05, 0.01, 0.94], [0.9, 0.05, 0.05]]
+    >>> preds = [
+    ...     [0.9, 0.05, 0.05],
+    ...     [0.05, 0.89, 0.06],
+    ...     [0.05, 0.01, 0.94],
+    ...     [0.9, 0.05, 0.05],
+    ... ]
     >>> metric = MulticlassAUROC(num_classes=3)
     >>> metric(target, preds)
     array([1., 1., 1.])
     >>> metric.reset_state()
     >>> target = [[0, 1, 0], [1, 0, 1]]
-    >>> preds = [[[0.1, 0.9, 0.0], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],
-    ...         [[0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]]]
+    >>> preds = [
+    ...     [[0.1, 0.9, 0.0], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],
+    ...     [[0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -278,15 +284,21 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
     >>> # (multiclass)
     >>> from cyclops.evaluate.metrics import MulticlassAUROC
     >>> target = [0, 1, 2, 0]
-    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06],
-    ...         [0.05, 0.01, 0.94], [0.9, 0.05, 0.05]]
+    >>> preds = [
+    ...     [0.9, 0.05, 0.05],
+    ...     [0.05, 0.89, 0.06],
+    ...     [0.05, 0.01, 0.94],
+    ...     [0.9, 0.05, 0.05],
+    ... ]
     >>> metric = MulticlassAUROC(num_classes=3)
     >>> metric(target, preds)
     array([1., 1., 1.])
     >>> metric.reset_state()
     >>> target = [[0, 1, 0], [1, 0, 1]]
-    >>> preds = [[[0.1, 0.9, 0.0], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],
-    ...         [[0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]]]
+    >>> preds = [
+    ...     [[0.1, 0.9, 0.0], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],
+    ...     [[0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.2, 0.3, 0.5]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()

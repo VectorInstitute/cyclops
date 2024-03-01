@@ -21,7 +21,7 @@ datasets = "^2.15.0"
 psutil = "^5.9.4"
 pyarrow = "^14.0.0"
 pydantic = "^1.10.11"
-Jinja2 = "^3.1.2"
+Jinja2 = "^3.1.3"
 spdx-tools = "^0.8.1"
 pybtex = "^0.24.0"
 kaleido = "0.2.1"
@@ -94,13 +94,13 @@ optional = true
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.1"
 pre-commit = "^2.17.0"
-black = "^22.1.0"
 pytest-cov = "^3.0.0"
 codecov = "^2.1.13"
 nbstripout = "^0.6.1"
 mypy = "^1.7.0"
 ruff = "^0.2.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
+pip-audit = "^2.7.1"
 cycquery = "^0.1.2" # used for integration test
 torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
 
@@ -113,13 +113,14 @@ sphinx = "^7.2.5"
 sphinxcontrib-apidoc = "^0.4.0"
 sphinx-autodoc-typehints = "^1.24.0"
 myst-parser = "^2.0.0"
+sphinx-design = "^0.5.0"
 sphinx-copybutton = "^0.5.0"
 sphinx-autoapi = "^2.0.0"
 nbsphinx = "^0.9.3"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
 kaggle = "^1.5.13"
-sphinx-book-theme = "^1.1.0"
+furo = "^2024.01.29"
 
 [tool.poetry.group.dev]
 optional = true
@@ -137,6 +138,17 @@ cupy = "^12.2.0"
 mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 lightning = "^2.1.0"
 imbalanced-learn = "^0.11.0"
+
+[tool.poetry.group.deploy]
+optional = true
+
+[tool.poetry.group.deploy.dependencies]
+aiohttp = "^3.9.2"
+bentoml = { version = "^1.2.4", extras = ["triton"] }
+torchxrayvision = "^1.2.1"
+kaggle = "^1.5.13"
+onnx = "^1.15.0"
+skl2onnx = "^1.16.0"
 
 [tool.poetry.extras]
 torch = ["torch"]
@@ -175,9 +187,14 @@ extra_checks = true
 include = ["*.py", "pyproject.toml", "*.ipynb"]
 line-length = 88
 exclude = [
-    "use_cases",
     "nbs",
 ]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
 [tool.ruff.lint]
 select = [
     "A", # flake8-builtins
@@ -206,6 +223,7 @@ ignore = [
     "D213", # Multi-line docstring summary should start at the second line
     "PLR2004", # Replace magic number with named constant
     "PLR0913", # Too many arguments
+    "COM812", # Missing trailing comma
 ]
 
 # Ignore import violations in all `__init__.py` files.

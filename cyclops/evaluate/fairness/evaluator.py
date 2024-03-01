@@ -755,7 +755,8 @@ def _compute_metrics(  # noqa: C901, PLR0912
         if len(dataset) == 0:
             warnings.warn(empty_dataset_msg, RuntimeWarning, stacklevel=1)
             results: Dict[str, Any] = {
-                metric_name: float("NaN") for metric_name in metrics  # type: ignore[attr-defined]
+                metric_name: float("NaN")
+                for metric_name in metrics  # type: ignore[attr-defined]
             }
         elif (
             batch_size is None or batch_size <= 0

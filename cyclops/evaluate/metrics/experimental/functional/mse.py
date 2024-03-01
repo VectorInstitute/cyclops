@@ -117,14 +117,14 @@ def mean_squared_error(
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental.functional import mean_squared_error
-    >>> target = anp.asarray([0., 1., 2., 3.])
-    >>> preds = anp.asarray([0.025, 1., 2., 2.44])
+    >>> target = anp.asarray([0.0, 1.0, 2.0, 3.0])
+    >>> preds = anp.asarray([0.025, 1.0, 2.0, 2.44])
     >>> mean_squared_error(target, preds)
     Array(0.07855625, dtype=float32)
     >>> mean_squared_error(target, preds, squared=False)
     Array(0.2802789, dtype=float32)
-    >>> target = anp.asarray([[0., 1.], [2., 3.]])
-    >>> preds = anp.asarray([[0.025, 1.], [2., 2.44]])
+    >>> target = anp.asarray([[0.0, 1.0], [2.0, 3.0]])
+    >>> preds = anp.asarray([[0.025, 1.0], [2.0, 2.44]])
     >>> mean_squared_error(target, preds, num_outputs=2)
     Array([0.0003125, 0.1568   ], dtype=float32)
     >>> mean_squared_error(target, preds, squared=False, num_outputs=2)

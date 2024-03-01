@@ -10,7 +10,6 @@ footer span.commit code,
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.8rem;
 }
-
 footer {
   color: var(--text-color);
 }

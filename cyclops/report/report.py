@@ -1,4 +1,4 @@
-"""Cyclops report module."""
+"""Cyclops model report module."""
 
 import base64
 import glob
@@ -62,8 +62,8 @@ from cyclops.report.utils import (
 )
 
 
-_TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
-_DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template.jinja"
+_TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates", "model_report")
+_DEFAULT_TEMPLATE_FILENAME = "model_report.jinja"
 
 
 class ModelCardReport:
@@ -667,9 +667,9 @@ class ModelCardReport:
 
         """
         # sensitive features must be in features
-        if features is None and sensitive_features is not None:
+        if features is not None and sensitive_features is not None:
             assert all(
-                feature in features for feature in sensitive_features  # type: ignore
+                feature in features for feature in sensitive_features
             ), "All sensitive features must be in the features list."
 
         # TODO: plot dataset distribution

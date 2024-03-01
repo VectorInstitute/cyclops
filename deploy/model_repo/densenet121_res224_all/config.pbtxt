@@ -1,0 +1,41 @@
+backend: "pytorch"
+name: "densenet121_res224_all"
+max_batch_size: 64
+dynamic_batching {
+    max_queue_delay_microseconds: 100
+}
+input {
+ name: "INPUT__0"
+ data_type: TYPE_FP32
+ dims: 1
+ dims: 224
+ dims: 224
+}
+output {
+ name: "OUTPUT__0"
+ data_type: TYPE_FP32
+ dims: -1
+ dims: 18
+}
+instance_group [
+  {
+    count: 1
+    kind: KIND_GPU
+    gpus: [0]
+  }
+]
+model_warmup [
+  {
+    name : "random sample"
+    count: 1
+    batch_size: 1
+    inputs {
+      key: "INPUT__0"
+      value: {
+        data_type: TYPE_FP32
+        dims: [1, 224, 224]
+        random_data: true
+      }
+    }
+  }
+]
