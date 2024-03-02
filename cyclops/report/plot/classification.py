@@ -525,7 +525,7 @@ class ClassificationPlotter(Plotter):
 
     def metrics_trends(  # noqa: PLR0912
         self,
-        metrics_trends: Dict[str, Union[List[float], npt.NDArray[Any]]],
+        metrics_trends: Dict[str, List[Dict[str, Any]]],
         title: Optional[str] = "Metrics Trends",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
@@ -537,7 +537,7 @@ class ClassificationPlotter(Plotter):
 
         Parameters
         ----------
-        metrics_trends : Dict[str, Union[list, np.ndarray]]
+        metrics_trends : Dict[str, List[Dict[str, Any]]]
             Dictionary of metric trends, where the key is the date/time step \
                 and the value is a list of dictionaries with keys metric type, \
                 metric value, and slice name
@@ -866,9 +866,9 @@ class ClassificationPlotter(Plotter):
                             isinstance(metrics[metric_name], np.ndarray)
                             and metrics[metric_name].ndim > 0
                         ):
-                            metric_values = metrics[metric_name][num]  # type: ignore
+                            metric_values = [metrics[metric_name][num]]  # type: ignore
                         else:
-                            metric_values = metrics[metric_name]  # type: ignore
+                            metric_values = [metrics[metric_name]]  # type: ignore
                     fig.append_trace(
                         bar_plot(
                             x=metric_names,  # type: ignore[arg-type]
@@ -972,10 +972,10 @@ class ClassificationPlotter(Plotter):
                 y_title="Score",
             )
 
-            if len(self.template.layout.colorway) >= self.class_num:
-                colors = self.template.layout.colorway[: self.class_num]
+            if len(self.template.layout.colorway) >= len(slice_metrics):
+                colors = self.template.layout.colorway[: len(slice_metrics)]
             else:
-                difference = self.class_num - len(self.template.layout.colorway)
+                difference = len(slice_metrics) - len(self.template.layout.colorway)
                 colors = (
                     self.template.layout.colorway
                     + self.template.layout.colorway[:difference]
