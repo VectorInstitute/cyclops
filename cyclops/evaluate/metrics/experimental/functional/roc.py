@@ -130,7 +130,7 @@ def binary_roc(
     -------
     ROCCurve
         A named tuple containing the false positive rate (FPR), true positive rate
-        (TPR) and thresholds. The FPR and TPR are arrays of of shape
+        (TPR) and thresholds. The FPR and TPR are arrays of shape
         `(num_thresholds + 1,)` and the thresholds are an array of shape
         `(num_thresholds,)`.
 

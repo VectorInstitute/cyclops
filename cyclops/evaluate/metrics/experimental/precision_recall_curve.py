@@ -55,14 +55,14 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> metric = BinaryPrecisionRecallCurve(thresholds=None)
     >>> metric(target, preds)
-    (Array([0.5      , 0.6      , 0.5      , 0.6666667,
-           0.5      , 1.       , 1.       ], dtype=float32), Array([1.        , 1.        , 0.6666667 , 0.6666667 ,
-           0.33333334, 0.33333334, 0.        ], dtype=float32), Array([0.11, 0.22, 0.33, 0.73, 0.84, 0.92], dtype=float64))
+    PRCurve(precision=Array([0.5      , 0.6      , 0.5      , 0.6666667,
+           0.5      , 1.       , 1.       ], dtype=float32), recall=Array([1.        , 1.        , 0.6666667 , 0.6666667 ,
+           0.33333334, 0.33333334, 0.        ], dtype=float32), thresholds=Array([0.11, 0.22, 0.33, 0.73, 0.84, 0.92], dtype=float64))
     >>> metric = BinaryPrecisionRecallCurve(thresholds=5)
     >>> metric(target, preds)
-    (Array([0.5      , 0.5      , 0.6666667, 0.5      ,
-           0.       , 1.       ], dtype=float32), Array([1.        , 0.6666667 , 0.6666667 , 0.33333334,
-           0.        , 0.        ], dtype=float32), Array([0.  , 0.25, 0.5 , 0.75, 1.  ], dtype=float32))
+    PRCurve(precision=Array([0.5      , 0.5      , 0.6666667, 0.5      ,
+           0.       , 1.       ], dtype=float32), recall=Array([1.        , 0.6666667 , 0.6666667 , 0.33333334,
+           0.        , 0.        ], dtype=float32), thresholds=Array([0.  , 0.25, 0.5 , 0.75, 1.  ], dtype=float32))
 
     """  # noqa: W505
 
