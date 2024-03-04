@@ -5,6 +5,7 @@ from typing import Any, List, Literal, Optional, Tuple, Union
 import array_api_compat as apc
 
 from cyclops.evaluate.metrics.experimental.functional.precision_recall_curve import (
+    PRCurve,
     _binary_precision_recall_curve_compute,
     _binary_precision_recall_curve_format_arrays,
     _binary_precision_recall_curve_update,
@@ -140,14 +141,18 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
             self.target.append(state[0])  # type: ignore[attr-defined]
             self.preds.append(state[1])  # type: ignore[attr-defined]
 
-    def _compute_metric(self) -> Tuple[Array, Array, Array]:
+    def _compute_metric(self) -> PRCurve:
         """Compute the metric."""
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]
             if self.thresholds is None
             else self.confmat  # type: ignore[attr-defined]
         )
-        return _binary_precision_recall_curve_compute(state, self.thresholds)  # type: ignore[arg-type]
+        precision, recall, thresholds = _binary_precision_recall_curve_compute(
+            state,
+            self.thresholds,  # type: ignore
+        )
+        return PRCurve(precision, recall, thresholds)
 
 
 class MulticlassPrecisionRecallCurve(

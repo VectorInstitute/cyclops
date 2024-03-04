@@ -1,13 +1,14 @@
 """Classification plotter."""
 
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
+from cyclops.evaluate.metrics.experimental.functional import PRCurve, ROCCurve
 from cyclops.report.plot.base import Plotter
 from cyclops.report.plot.utils import (
     bar_plot,
@@ -92,11 +93,7 @@ class ClassificationPlotter(Plotter):
 
     def roc_curve(
         self,
-        roc_curve: Tuple[
-            npt.NDArray[np.float_],
-            npt.NDArray[np.float_],
-            npt.NDArray[np.float_],
-        ],
+        roc_curve: ROCCurve,
         auroc: Optional[Union[float, List[float], npt.NDArray[np.float_]]] = None,
         title: Optional[str] = "ROC Curve",
         layout: Optional[go.Layout] = None,
@@ -106,8 +103,8 @@ class ClassificationPlotter(Plotter):
 
         Parameters
         ----------
-        roc_curve : Tuple[np.ndarray, np.ndarray, np.ndarray]
-            Tuple of (fprs, tprs, thresholds)
+        roc_curve : ROCCurve
+            Named tuple of (fprs, tprs, thresholds)
         auroc : Union[float, list, np.ndarray], optional
             AUROCs, by default None
         title: str, optional
@@ -123,8 +120,8 @@ class ClassificationPlotter(Plotter):
             The figure object.
 
         """
-        fprs = roc_curve[0]
-        tprs = roc_curve[1]
+        fprs = roc_curve.fpr
+        tprs = roc_curve.tpr
 
         trace = []
         if self.task_type == "binary":
@@ -191,7 +188,7 @@ class ClassificationPlotter(Plotter):
 
     def roc_curve_comparison(
         self,
-        roc_curves: Dict[str, Tuple[npt.NDArray[np.float_], ...]],
+        roc_curves: Dict[str, ROCCurve],
         aurocs: Optional[
             Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
         ] = None,
@@ -205,7 +202,7 @@ class ClassificationPlotter(Plotter):
         ----------
         roc_curves : Dict[str, Tuple]
             Dictionary of roc curves, with keys being the name of the subpopulation
-            or group and values being the roc curve tuple (fprs, tprs, thresholds)
+            or group and values being the roc curve namedtuples (fprs, tprs, thresholds)
         aurocs : Dict[str, Union[float, list, np.ndarray]], optional
             AUROCs for each subpopulation or group specified by name, by default None
         title: str, optional
@@ -232,8 +229,8 @@ class ClassificationPlotter(Plotter):
                     name = f"{slice_name} (AUC = {aurocs[slice_name]:.2f})"
                 else:
                     name = slice_name
-                fprs = slice_curve[0]
-                tprs = slice_curve[1]
+                fprs = slice_curve.fpr
+                tprs = slice_curve.tpr
                 trace.append(
                     line_plot(
                         x=fprs,
@@ -296,11 +293,7 @@ class ClassificationPlotter(Plotter):
 
     def precision_recall_curve(
         self,
-        precision_recall_curve: Tuple[
-            npt.NDArray[np.float_],
-            npt.NDArray[np.float_],
-            npt.NDArray[np.float_],
-        ],
+        precision_recall_curve: PRCurve,
         title: Optional[str] = "Precision-Recall Curve",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
@@ -309,8 +302,8 @@ class ClassificationPlotter(Plotter):
 
         Parameters
         ----------
-        precision_recall_curve : Tuple[np.ndarray, np.ndarray, np.ndarray]
-            Tuple of (recalls, precisions, thresholds)
+        precision_recall_curve : PRcurve
+            Named tuple of (recalls, precisions, thresholds)
         title : str, optional
             Plot title, by default "Precision-Recall Curve"
         layout : go.Layout, optional
@@ -324,8 +317,8 @@ class ClassificationPlotter(Plotter):
             The figure object.
 
         """
-        recalls = precision_recall_curve[1]
-        precisions = precision_recall_curve[0]
+        recalls = precision_recall_curve.recall
+        precisions = precision_recall_curve.precision
 
         if self.task_type == "binary":
             trace = line_plot(
@@ -364,7 +357,7 @@ class ClassificationPlotter(Plotter):
 
     def precision_recall_curve_comparison(
         self,
-        precision_recall_curves: Dict[str, Tuple[npt.NDArray[np.float_], ...]],
+        precision_recall_curves: Dict[str, PRCurve],
         auprcs: Optional[
             Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
         ] = None,
@@ -378,7 +371,7 @@ class ClassificationPlotter(Plotter):
         ----------
         precision_recall_curves : Dict[str, Tuple]
             Dictionary of precision-recall curves, where the key is \
-                the group or subpopulation name and the value is a tuple \
+                the group or subpopulation name and the value is a namedtuple \
                 of (recalls, precisions, thresholds)
         auprcs : Dict[str, Union[float, list, np.ndarray]], optional
             AUPRCs for each subpopulation or group specified by name, by default None
@@ -408,8 +401,8 @@ class ClassificationPlotter(Plotter):
                     name = f"{slice_name}"
                 trace.append(
                     line_plot(
-                        x=slice_curve[1],
-                        y=slice_curve[0],
+                        x=slice_curve.recall,
+                        y=slice_curve.precision,
                         trace_name=name,
                         **plot_kwargs,
                     ),
@@ -417,7 +410,9 @@ class ClassificationPlotter(Plotter):
         else:
             for slice_name, slice_curve in precision_recall_curves.items():
                 assert (
-                    len(slice_curve[0]) == len(slice_curve[1]) == self.class_num
+                    len(slice_curve.precision)
+                    == len(slice_curve.recall)
+                    == self.class_num
                 ), f"Recalls and precisions must be of length class_num for \
                     multiclass/multilabel tasks in slice {slice_name}"
                 for i in range(self.class_num):
@@ -432,8 +427,8 @@ class ClassificationPlotter(Plotter):
                         name = f"{slice_name}: {self.class_names[i]}"
                     trace.append(
                         line_plot(
-                            x=slice_curve[1][i],
-                            y=slice_curve[0][i],
+                            x=slice_curve.recall[i],
+                            y=slice_curve.precision[i],
                             trace_name=name,
                             **plot_kwargs,
                         ),
