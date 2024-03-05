@@ -1,4 +1,4 @@
-"""Cyclops report module."""
+"""Cyclops model report module."""
 
 import base64
 import glob
@@ -62,8 +62,8 @@ from cyclops.report.utils import (
 )
 
 
-_TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
-_DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template.jinja"
+_TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates", "model_report")
+_DEFAULT_TEMPLATE_FILENAME = "model_report.jinja"
 
 
 class ModelCardReport:

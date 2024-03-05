@@ -14,6 +14,7 @@
 
 import os
 import sys
+from typing import Any, Dict
 
 
 sys.path.insert(0, os.path.abspath("../../cyclops"))
@@ -22,7 +23,7 @@ sys.path.insert(0, os.path.abspath("../../cyclops"))
 # -- Project information -----------------------------------------------------
 
 project = "cyclops"
-copyright = "2023, Vector AI Engineering"  # noqa: A001
+copyright = "2024, Vector AI Engineering"  # noqa: A001
 author = "Vector AI Engineering"
 
 
@@ -40,8 +41,11 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.autosectionlabel",
     "sphinx_autodoc_typehints",
+    "sphinxcontrib.apidoc",
     "myst_parser",
+    "sphinx_design",
     "sphinx_copybutton",
     "nbsphinx",
     "IPython.sphinxext.ipython_console_highlighting",
@@ -58,14 +62,6 @@ set_type_checking_flag = True
 autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
-
-html_theme_options = {
-    "collapse_navigation": False,
-    "sticky_navigation": True,
-    "navigation_depth": 4,
-    "includehidden": True,
-    "titles_only": False,
-}
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.9/", None),
@@ -92,7 +88,7 @@ source_suffix = [".rst", ".md"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_book_theme"
+html_theme = "furo"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -101,10 +97,28 @@ html_static_path = ["_static"]
 html_css_files = ["css/cyclops.css"]
 html_logo = "_static/cyclops_logo-dark.png"
 html_favicon = "_static/favicon.ico"
-html_theme_options = {
-    "logo": {  # type: ignore
-        "text": "cyclops documentation",
-        "image_light": "_static/cyclops_logo-dark.png",
-        "image_dark": "_static/cyclops_logo-dark.png",
+html_theme_options: Dict[str, Any] = {
+    "sidebar_hide_name": True,
+    "dark_css_variables": {
+        "color-brand-primary": "#faad1a",
+        "color-brand-content": "#eb088a",
+        "color-foreground-secondary": "#52c7de",
+        "color-card-background": "#3b0e28",
     },
+    "light_css_variables": {
+        "color-card-background": "#5e88f2",
+    },
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/VectorInstitute/cyclops",
+            "html": """
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            """,
+            "class": "",
+        },
+    ],
 }
+html_additional_pages = {"page": "page.html"}
