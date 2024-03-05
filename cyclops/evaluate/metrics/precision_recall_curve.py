@@ -44,13 +44,13 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
     >>> metric = BinaryPrecisionRecallCurve(thresholds=3)
     >>> metric(target, preds)
     (array([0.5, 1. , 0. ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
-    # >>> metric.reset_state()
-    # >>> target = [[0, 1, 0, 1], [1, 1, 0, 0]]
-    # >>> preds = [[0.1, 0.4, 0.35, 0.8], [0.6, 0.3, 0.1, 0.7]]
-    # >>> for t, p in zip(target, preds):
-    # ...     metric.update_state(t, p)
-    # >>> metric.compute()
-    # (array([0.5       , 0.66666667, 0.        ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
+    >>> metric.reset_state()
+    >>> target = [[0, 1, 0, 1], [1, 1, 0, 0]]
+    >>> preds = [[0.1, 0.4, 0.35, 0.8], [0.6, 0.3, 0.1, 0.7]]
+    >>> for t, p in zip(target, preds):
+    ...     metric.update_state(t, p)
+    >>> metric.compute()
+    (array([0.5       , 0.66666667, 0.        ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
 
     """
 
