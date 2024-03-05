@@ -1,6 +1,16 @@
 """Utility functions for metrics."""
 
-from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import numpy.typing as npt
@@ -295,10 +305,15 @@ def _apply_function_recursively(
 
     """
     data_type = type(data)
-    if isinstance(data, (list, tuple, set)):
-        return data_type(
-            [_apply_function_recursively(el, func, *args, **kwargs) for el in data],
-        )
+    is_namedtuple_ = (
+        isinstance(data, tuple)
+        and hasattr(data, "_asdict")
+        and hasattr(data, "_fields")
+    )
+    is_sequence = isinstance(data, Sequence) and not isinstance(data, str)
+    if is_namedtuple_ or is_sequence:
+        out = [_apply_function_recursively(el, func, *args, **kwargs) for el in data]
+        return data_type(*out) if is_namedtuple_ else data_type(out)
     if isinstance(data, Mapping):
         return data_type(
             {
