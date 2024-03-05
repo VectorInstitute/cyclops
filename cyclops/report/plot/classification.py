@@ -8,7 +8,9 @@ import numpy.typing as npt
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-from cyclops.evaluate.metrics.experimental.functional import PRCurve, ROCCurve
+from cyclops.evaluate.metrics.experimental.functional import PRCurve as PRCurveExp
+from cyclops.evaluate.metrics.experimental.functional import ROCCurve as ROCCurveExp
+from cyclops.evaluate.metrics.functional import PRCurve, ROCCurve
 from cyclops.report.plot.base import Plotter
 from cyclops.report.plot.utils import (
     bar_plot,
@@ -93,7 +95,7 @@ class ClassificationPlotter(Plotter):
 
     def roc_curve(
         self,
-        roc_curve: ROCCurve,
+        roc_curve: Union[ROCCurve, ROCCurveExp],
         auroc: Optional[Union[float, List[float], npt.NDArray[np.float_]]] = None,
         title: Optional[str] = "ROC Curve",
         layout: Optional[go.Layout] = None,
@@ -188,7 +190,7 @@ class ClassificationPlotter(Plotter):
 
     def roc_curve_comparison(
         self,
-        roc_curves: Dict[str, ROCCurve],
+        roc_curves: Dict[str, Union[ROCCurve, ROCCurveExp]],
         aurocs: Optional[
             Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
         ] = None,
@@ -293,7 +295,7 @@ class ClassificationPlotter(Plotter):
 
     def precision_recall_curve(
         self,
-        precision_recall_curve: PRCurve,
+        precision_recall_curve: Union[PRCurve, PRCurveExp],
         title: Optional[str] = "Precision-Recall Curve",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
@@ -357,7 +359,7 @@ class ClassificationPlotter(Plotter):
 
     def precision_recall_curve_comparison(
         self,
-        precision_recall_curves: Dict[str, PRCurve],
+        precision_recall_curves: Dict[str, Union[PRCurve, PRCurveExp]],
         auprcs: Optional[
             Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
         ] = None,

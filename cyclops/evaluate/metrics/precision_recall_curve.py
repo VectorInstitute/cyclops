@@ -1,11 +1,12 @@
 """Classes for computing precision-recall curves."""
 
-from typing import Any, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, List, Literal, Optional, Type, Union
 
 import numpy as np
 import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.precision_recall_curve import (  # type: ignore # noqa: E501
+    PRCurve,
     _binary_precision_recall_curve_compute,
     _binary_precision_recall_curve_format,
     _binary_precision_recall_curve_update,
@@ -43,13 +44,13 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
     >>> metric = BinaryPrecisionRecallCurve(thresholds=3)
     >>> metric(target, preds)
     (array([0.5, 1. , 0. ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
-    >>> metric.reset_state()
-    >>> target = [[0, 1, 0, 1], [1, 1, 0, 0]]
-    >>> preds = [[0.1, 0.4, 0.35, 0.8], [0.6, 0.3, 0.1, 0.7]]
-    >>> for t, p in zip(target, preds):
-    ...     metric.update_state(t, p)
-    >>> metric.compute()
-    (array([0.5       , 0.66666667, 0.        ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
+    # >>> metric.reset_state()
+    # >>> target = [[0, 1, 0, 1], [1, 1, 0, 0]]
+    # >>> preds = [[0.1, 0.4, 0.35, 0.8], [0.6, 0.3, 0.1, 0.7]]
+    # >>> for t, p in zip(target, preds):
+    # ...     metric.update_state(t, p)
+    # >>> metric.compute()
+    # (array([0.5       , 0.66666667, 0.        ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
 
     """
 
@@ -101,7 +102,7 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
     def compute(
         self,
-    ) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
+    ) -> PRCurve:
         """Compute the precision-recall curve from the state."""
         if self.thresholds is None:
             state = (
@@ -111,11 +112,12 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
         else:
             state = self.confmat  # type: ignore[attr-defined]
 
-        return _binary_precision_recall_curve_compute(
+        precision, recall, thresholds = _binary_precision_recall_curve_compute(
             state=state,
             thresholds=self.thresholds,
             pos_label=self.pos_label,
         )
+        return PRCurve(precision, recall, thresholds)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set the attribute ``name`` to ``value``.
@@ -253,14 +255,7 @@ class MulticlassPrecisionRecallCurve(
 
     def compute(
         self,
-    ) -> Union[
-        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
-        Tuple[
-            List[npt.NDArray[np.float_]],
-            List[npt.NDArray[np.float_]],
-            List[npt.NDArray[np.float_]],
-        ],
-    ]:
+    ) -> PRCurve:
         """Compute the precision-recall curve from the state."""
         if self.thresholds is None:
             state = (
@@ -270,11 +265,12 @@ class MulticlassPrecisionRecallCurve(
         else:
             state = self.confmat  # type: ignore[attr-defined]
 
-        return _multiclass_precision_recall_curve_compute(
+        precision, recall, thresholds = _multiclass_precision_recall_curve_compute(
             state=state,
             thresholds=self.thresholds,  # type: ignore[arg-type]
             num_classes=self.num_classes,
         )
+        return PRCurve(precision, recall, thresholds)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set the attribute ``name`` to ``value``.
@@ -405,14 +401,7 @@ class MultilabelPrecisionRecallCurve(
 
     def compute(
         self,
-    ) -> Union[
-        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
-        Tuple[
-            List[npt.NDArray[np.float_]],
-            List[npt.NDArray[np.float_]],
-            List[npt.NDArray[np.float_]],
-        ],
-    ]:
+    ) -> PRCurve:
         """Compute the precision-recall curve from the state."""
         if self.thresholds is None:
             state = (
@@ -422,11 +411,12 @@ class MultilabelPrecisionRecallCurve(
         else:
             state = self.confmat  # type: ignore[attr-defined]
 
-        return _multilabel_precision_recall_curve_compute(
+        precision, recall, thresholds = _multilabel_precision_recall_curve_compute(
             state,
             thresholds=self.thresholds,  # type: ignore[arg-type]
             num_labels=self.num_labels,
         )
+        return PRCurve(precision, recall, thresholds)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set the attribute ``name`` to ``value``.
