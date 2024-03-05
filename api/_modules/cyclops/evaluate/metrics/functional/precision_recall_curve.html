@@ -302,7 +302,7 @@
           <h1>Source code for cyclops.evaluate.metrics.functional.precision_recall_curve</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Functions for computing the precision-recall curve for different input types.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
@@ -315,6 +315,14 @@
     <span class="n">common_input_checks_and_format</span><span class="p">,</span>
     <span class="n">sigmoid</span><span class="p">,</span>
 <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">PRCurve</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Named tuple with Precision-Recall curve (Precision, Recall and thresholds).&quot;&quot;&quot;</span>
+
+    <span class="n">precision</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span>
+    <span class="n">recall</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span>
 
 
 <span class="k">def</span> <span class="nf">_format_thresholds</span><span class="p">(</span>
@@ -581,7 +589,7 @@
     <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">pos_label</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PRCurve</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute precision-recall curve for binary input.</span>
 
 <span class="sd">    Parameters</span>
@@ -603,13 +611,10 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    precision : numpy.ndarray</span>
-<span class="sd">        Precision scores such that element i is the precision of predictions</span>
-<span class="sd">        with score &gt;= thresholds[i].</span>
-<span class="sd">    recall : numpy.ndarray</span>
-<span class="sd">        Recall scores in descending order.</span>
-<span class="sd">    thresholds : numpy.ndarray</span>
-<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+<span class="sd">    PRCurve</span>
+<span class="sd">       A named tuple containing the precision (element i is the precision of predictions</span>
+<span class="sd">       with score &gt;= thresholds[i]), recall (scores in descending order)</span>
+<span class="sd">       and thresholds used to compute the precision-recall curve.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -637,12 +642,13 @@
     <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_format_thresholds</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span>
 
     <span class="n">state</span> <span class="o">=</span> <span class="n">_binary_precision_recall_curve_update</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_binary_precision_recall_curve_compute</span><span class="p">(</span>
+    <span class="n">precision_</span><span class="p">,</span> <span class="n">recall_</span><span class="p">,</span> <span class="n">thresholds_</span> <span class="o">=</span> <span class="n">_binary_precision_recall_curve_compute</span><span class="p">(</span>
         <span class="n">state</span><span class="p">,</span>
         <span class="n">thresholds</span><span class="p">,</span>
         <span class="n">pos_label</span><span class="o">=</span><span class="n">pos_label</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">PRCurve</span><span class="p">(</span><span class="n">precision_</span><span class="p">,</span> <span class="n">recall_</span><span class="p">,</span> <span class="n">thresholds_</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_multiclass_precision_recall_curve_format</span><span class="p">(</span>
@@ -876,14 +882,7 @@
     <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-    <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-    <span class="n">Tuple</span><span class="p">[</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-    <span class="p">],</span>
-<span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PRCurve</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve for multiclass problems.</span>
 
 <span class="sd">    Parameters</span>
@@ -904,18 +903,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    precision : numpy.ndarray or list of numpy.ndarray</span>
-<span class="sd">        Precision scores where element i is the precision score corresponding</span>
-<span class="sd">        to the threshold i. If state is a tuple of the target and predicted</span>
-<span class="sd">        probabilities, then precision is a list of arrays, where each array</span>
-<span class="sd">        corresponds to the precision scores for a class.</span>
-<span class="sd">    recall : numpy.ndarray or list of numpy.ndarray</span>
-<span class="sd">        Recall scores where element i is the recall score corresponding to</span>
-<span class="sd">        the threshold i. If state is a tuple of the target and predicted</span>
-<span class="sd">        probabilities, then recall is a list of arrays, where each array</span>
-<span class="sd">        corresponds to the recall scores for a class.</span>
-<span class="sd">    thresholds : numpy.ndarray or list of numpy.ndarray</span>
-<span class="sd">        Thresholds used for computing the precision and recall scores.</span>
+<span class="sd">    PRcurve</span>
+<span class="sd">        A named tuple containing the precision, recall, and thresholds.</span>
+<span class="sd">        Precision and recall are arrays where element i is the precision and</span>
+<span class="sd">        recall score corresponding to threshold i. If state is a tuple of the</span>
+<span class="sd">        target and predicted probabilities, then precision and recall are lists</span>
+<span class="sd">        of arrays, where each array corresponds to the precision and recall</span>
+<span class="sd">        scores for a class.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -956,11 +950,12 @@
         <span class="n">thresholds</span><span class="o">=</span><span class="n">thresholds</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">_multiclass_precision_recall_curve_compute</span><span class="p">(</span>
+    <span class="n">precision_</span><span class="p">,</span> <span class="n">recall_</span><span class="p">,</span> <span class="n">thresholds_</span> <span class="o">=</span> <span class="n">_multiclass_precision_recall_curve_compute</span><span class="p">(</span>
         <span class="n">state</span><span class="p">,</span>
         <span class="n">thresholds</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
         <span class="n">num_classes</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">PRCurve</span><span class="p">(</span><span class="n">precision_</span><span class="p">,</span> <span class="n">recall_</span><span class="p">,</span> <span class="n">thresholds_</span><span class="p">)</span></div>
 
 
 
@@ -1175,14 +1170,7 @@
     <span class="n">preds</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">num_labels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-    <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-    <span class="n">Tuple</span><span class="p">[</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-    <span class="p">],</span>
-<span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PRCurve</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve for multilabel input.</span>
 
 <span class="sd">    Parameters</span>
@@ -1204,16 +1192,18 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    precision : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">    PRCurve</span>
+<span class="sd">        A named tuple with the following:</span>
+<span class="sd">        - ``precision``: numpy.ndarray or List[numpy.ndarray].</span>
 <span class="sd">        Precision values for each label. If ``thresholds`` is None, then</span>
 <span class="sd">        precision is a list of arrays, one for each label. Otherwise,</span>
 <span class="sd">        precision is a single array with shape</span>
 <span class="sd">        (``num_labels``, len(``thresholds``)).</span>
-<span class="sd">    recall : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">        - ``recall``: numpy.ndarray or List[numpy.ndarray].</span>
 <span class="sd">        Recall values for each label. If ``thresholds`` is None, then</span>
 <span class="sd">        recall is a list of arrays, one for each label. Otherwise,</span>
 <span class="sd">        recall is a single array with shape (``num_labels``, len(``thresholds``)).</span>
-<span class="sd">    thresholds : numpy.ndarray or List[numpy.ndarray]</span>
+<span class="sd">        - ``thresholds``: numpy.ndarray or List[numpy.ndarray].</span>
 <span class="sd">        If ``thresholds`` is None, then thresholds is a list of arrays, one for</span>
 <span class="sd">        each label. Otherwise, thresholds is a single array with shape</span>
 <span class="sd">        (len(``thresholds``,).</span>
@@ -1257,11 +1247,12 @@
         <span class="n">thresholds</span><span class="o">=</span><span class="n">thresholds</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">_multilabel_precision_recall_curve_compute</span><span class="p">(</span>
+    <span class="n">precision_</span><span class="p">,</span> <span class="n">recall_</span><span class="p">,</span> <span class="n">thresholds_</span> <span class="o">=</span> <span class="n">_multilabel_precision_recall_curve_compute</span><span class="p">(</span>
         <span class="n">state</span><span class="p">,</span>
         <span class="n">thresholds</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
         <span class="n">num_labels</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">PRCurve</span><span class="p">(</span><span class="n">precision_</span><span class="p">,</span> <span class="n">recall_</span><span class="p">,</span> <span class="n">thresholds_</span><span class="p">)</span></div>
 
 
 
@@ -1275,14 +1266,7 @@
     <span class="n">pos_label</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">num_classes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">num_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-    <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-    <span class="n">Tuple</span><span class="p">[</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-    <span class="p">],</span>
-<span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PRCurve</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve for different tasks/input types.</span>
 
 <span class="sd">    Parameters</span>
@@ -1307,17 +1291,19 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    precision : numpy.ndarray</span>
+<span class="sd">    PRCurve</span>
+<span class="sd">        A named tuple with the following:</span>
+<span class="sd">        - ``precision``: numpy.ndarray or List[numpy.ndarray].</span>
 <span class="sd">        The precision scores where ``precision[i]`` is the precision score for</span>
-<span class="sd">        ``scores &gt;= thresholds[i]``. If ``task`` is &#39;multiclass&#39; or &#39;multilaabel&#39;,</span>
+<span class="sd">        ``scores &gt;= thresholds[i]``. If ``task`` is &#39;multiclass&#39; or &#39;multilabel&#39;,</span>
 <span class="sd">        then ``precision`` is a list of numpy arrays, where ``precision[i]`` is the</span>
 <span class="sd">        precision scores for class or label ``i``.</span>
-<span class="sd">    recall : numpy.ndarray</span>
+<span class="sd">        - ``recall``: numpy.ndarray or List[numpy.ndarray].</span>
 <span class="sd">        The recall scores where ``recall[i]`` is the recall score for ``scores &gt;=</span>
 <span class="sd">        thresholds[i]``. If ``task`` is &#39;multiclass&#39; or &#39;multilaabel&#39;, then</span>
 <span class="sd">        ``recall`` is a list of numpy arrays, where ``recall[i]`` is the recall</span>
 <span class="sd">        scores for class or label ``i``.</span>
-<span class="sd">    thresholds : numpy.ndarray</span>
+<span class="sd">        - ``thresholds``: numpy.ndarray or List[numpy.ndarray].</span>
 <span class="sd">        Thresholds used for computing the precision and recall scores.</span>
 
 <span class="sd">    Raises</span>

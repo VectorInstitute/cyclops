@@ -302,12 +302,13 @@
           <h1>Source code for cyclops.evaluate.metrics.precision_recall_curve</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Classes for computing precision-recall curves.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
 
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.functional.precision_recall_curve</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501</span>
+    <span class="n">PRCurve</span><span class="p">,</span>
     <span class="n">_binary_precision_recall_curve_compute</span><span class="p">,</span>
     <span class="n">_binary_precision_recall_curve_format</span><span class="p">,</span>
     <span class="n">_binary_precision_recall_curve_update</span><span class="p">,</span>
@@ -346,14 +347,14 @@
 <span class="sd">    &gt;&gt;&gt; preds = [0.1, 0.4, 0.35, 0.8]</span>
 <span class="sd">    &gt;&gt;&gt; metric = BinaryPrecisionRecallCurve(thresholds=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
-<span class="sd">    (array([0.5, 1. , 0. ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">    PRCurve(precision=array([0.5, 1. , 0. ]), recall=array([1. , 0.5, 0. ]), thresholds=array([0. , 0.5, 1. ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 0, 1], [1, 1, 0, 0]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.4, 0.35, 0.8], [0.6, 0.3, 0.1, 0.7]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([0.5       , 0.66666667, 0.        ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">    PRCurve(precision=array([0.5       , 0.66666667, 0.        ]), recall=array([1. , 0.5, 0. ]), thresholds=array([0. , 0.5, 1. ]))</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -405,7 +406,7 @@
 
     <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PRCurve</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve from the state.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">state</span> <span class="o">=</span> <span class="p">(</span>
@@ -415,11 +416,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmat</span>  <span class="c1"># type: ignore[attr-defined]</span>
 
-        <span class="k">return</span> <span class="n">_binary_precision_recall_curve_compute</span><span class="p">(</span>
+        <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_binary_precision_recall_curve_compute</span><span class="p">(</span>
             <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
             <span class="n">thresholds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">,</span>
             <span class="n">pos_label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_label</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">return</span> <span class="n">PRCurve</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the attribute ``name`` to ``value``.</span>
@@ -488,11 +490,11 @@
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0.0], [0.5, 0.3, 0.2], [0.2, 0.5, 0.3]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MulticlassPrecisionRecallCurve(num_classes=3, thresholds=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
-<span class="sd">    (array([[0.5       , 0.        , 0.        , 1.        ],</span>
+<span class="sd">    PRCurve(precision=array([[0.5       , 0.        , 0.        , 1.        ],</span>
 <span class="sd">           [0.25      , 0.33333333, 0.        , 1.        ],</span>
-<span class="sd">           [0.25      , 0.        , 0.        , 1.        ]]), array([[1., 0., 0., 0.],</span>
+<span class="sd">           [0.25      , 0.        , 0.        , 1.        ]]), recall=array([[1., 0., 0., 0.],</span>
 <span class="sd">           [1., 1., 0., 0.],</span>
-<span class="sd">           [1., 0., 0., 0.]]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">           [1., 0., 0., 0.]]), thresholds=array([0. , 0.5, 1. ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 2, 0], [1, 2, 0, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [</span>
@@ -502,11 +504,11 @@
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([[0.375, 0.5  , 0.   , 1.   ],</span>
+<span class="sd">    PRCurve(precision=array([[0.375, 0.5  , 0.   , 1.   ],</span>
 <span class="sd">           [0.375, 0.4  , 0.   , 1.   ],</span>
-<span class="sd">           [0.25 , 0.   , 0.   , 1.   ]]), array([[1.        , 0.33333333, 0.        , 0.        ],</span>
+<span class="sd">           [0.25 , 0.   , 0.   , 1.   ]]), recall=array([[1.        , 0.33333333, 0.        , 0.        ],</span>
 <span class="sd">           [1.        , 0.66666667, 0.        , 0.        ],</span>
-<span class="sd">           [1.        , 0.        , 0.        , 0.        ]]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">           [1.        , 0.        , 0.        , 0.        ]]), thresholds=array([0. , 0.5, 1. ]))</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -560,14 +562,7 @@
 
     <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-        <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="n">Tuple</span><span class="p">[</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="p">],</span>
-    <span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PRCurve</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve from the state.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">state</span> <span class="o">=</span> <span class="p">(</span>
@@ -577,11 +572,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmat</span>  <span class="c1"># type: ignore[attr-defined]</span>
 
-        <span class="k">return</span> <span class="n">_multiclass_precision_recall_curve_compute</span><span class="p">(</span>
+        <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_multiclass_precision_recall_curve_compute</span><span class="p">(</span>
             <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
             <span class="n">thresholds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
             <span class="n">num_classes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">return</span> <span class="n">PRCurve</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the attribute ``name`` to ``value``.</span>
@@ -650,18 +646,18 @@
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9], [0.8, 0.2]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = MultilabelPrecisionRecallCurve(num_labels=2, thresholds=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
-<span class="sd">    (array([[0.5, 1. , 0. , 1. ],</span>
-<span class="sd">           [0.5, 1. , 0. , 1. ]]), array([[1., 1., 0., 0.],</span>
-<span class="sd">           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">    PRCurve(precision=array([[0.5, 1. , 0. , 1. ],</span>
+<span class="sd">           [0.5, 1. , 0. , 1. ]]), recall=array([[1., 1., 0., 0.],</span>
+<span class="sd">           [1., 1., 0., 0.]]), thresholds=array([0. , 0.5, 1. ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[[0, 1], [1, 0]], [[1, 0], [0, 1]]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9], [0.8, 0.2]], [[0.2, 0.8], [0.7, 0.3]]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([[0.5, 0.5, 0. , 1. ],</span>
-<span class="sd">           [0.5, 0.5, 0. , 1. ]]), array([[1. , 0.5, 0. , 0. ],</span>
-<span class="sd">           [1. , 0.5, 0. , 0. ]]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">    PRCurve(precision=array([[0.5, 0.5, 0. , 1. ],</span>
+<span class="sd">           [0.5, 0.5, 0. , 1. ]]), recall=array([[1. , 0.5, 0. , 0. ],</span>
+<span class="sd">           [1. , 0.5, 0. , 0. ]]), thresholds=array([0. , 0.5, 1. ]))</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -715,14 +711,7 @@
 
     <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-        <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="n">Tuple</span><span class="p">[</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
-        <span class="p">],</span>
-    <span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PRCurve</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the precision-recall curve from the state.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">state</span> <span class="o">=</span> <span class="p">(</span>
@@ -732,11 +721,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmat</span>  <span class="c1"># type: ignore[attr-defined]</span>
 
-        <span class="k">return</span> <span class="n">_multilabel_precision_recall_curve_compute</span><span class="p">(</span>
+        <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">_multilabel_precision_recall_curve_compute</span><span class="p">(</span>
             <span class="n">state</span><span class="p">,</span>
             <span class="n">thresholds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
             <span class="n">num_labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_labels</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">return</span> <span class="n">PRCurve</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the attribute ``name`` to ``value``.</span>
@@ -815,15 +805,15 @@
 <span class="sd">    &gt;&gt;&gt; preds = [0.6, 0.2, 0.3, 0.8]</span>
 <span class="sd">    &gt;&gt;&gt; metric = PrecisionRecallCurve(task=&quot;binary&quot;, thresholds=None)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
-<span class="sd">    (array([0.75      , 0.66666667, 0.5       , 0.        , 1.        ]), array([1.        , 0.66666667, 0.33333333, 0.        , 0.        ]), array([0.2, 0.3, 0.6, 0.8]))</span>
+<span class="sd">    PRCurve(precision=array([0.75      , 0.66666667, 0.5       , 0.        , 1.        ]), recall=array([1.        , 0.66666667, 0.33333333, 0.        , 0.        ]), thresholds=array([0.2, 0.3, 0.6, 0.8]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[1, 0, 1, 1], [0, 0, 0, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[0.5, 0.4, 0.1, 0.3], [0.9, 0.6, 0.45, 0.8]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([0.5       , 0.42857143, 0.33333333, 0.4       , 0.5       ,</span>
-<span class="sd">           0.33333333, 0.5       , 0.        , 1.        ]), array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]), array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))</span>
+<span class="sd">    PRCurve(precision=array([0.5       , 0.42857143, 0.33333333, 0.4       , 0.5       ,</span>
+<span class="sd">           0.33333333, 0.5       , 0.        , 1.        ]), recall=array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]), thresholds=array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multiclass)</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import PrecisionRecallCurve</span>
@@ -831,11 +821,11 @@
 <span class="sd">    &gt;&gt;&gt; preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.2, 0.2, 0.6]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = PrecisionRecallCurve(task=&quot;multiclass&quot;, num_classes=3, thresholds=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
-<span class="sd">    (array([[0.25, 0.  , 0.  , 1.  ],</span>
+<span class="sd">    PRCurve(precision=array([[0.25, 0.  , 0.  , 1.  ],</span>
 <span class="sd">           [0.25, 0.5 , 0.  , 1.  ],</span>
-<span class="sd">           [0.5 , 1.  , 0.  , 1.  ]]), array([[1., 0., 0., 0.],</span>
+<span class="sd">           [0.5 , 1.  , 0.  , 1.  ]]), recall=array([[1., 0., 0., 0.],</span>
 <span class="sd">           [1., 1., 0., 0.],</span>
-<span class="sd">           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">           [1., 1., 0., 0.]]), thresholds=array([0. , 0.5, 1. ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[0, 1, 2, 2], [1, 2, 0, 1]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [</span>
@@ -845,11 +835,11 @@
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([[0.25 , 0.   , 0.   , 1.   ],</span>
+<span class="sd">    PRCurve(precision=array([[0.25 , 0.   , 0.   , 1.   ],</span>
 <span class="sd">           [0.375, 0.5  , 0.   , 1.   ],</span>
-<span class="sd">           [0.375, 0.5  , 0.   , 1.   ]]), array([[1.        , 0.        , 0.        , 0.        ],</span>
+<span class="sd">           [0.375, 0.5  , 0.   , 1.   ]]), recall=array([[1.        , 0.        , 0.        , 0.        ],</span>
 <span class="sd">           [1.        , 0.66666667, 0.        , 0.        ],</span>
-<span class="sd">           [1.        , 0.66666667, 0.        , 0.        ]]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">           [1.        , 0.66666667, 0.        , 0.        ]]), thresholds=array([0. , 0.5, 1. ]))</span>
 
 <span class="sd">    &gt;&gt;&gt; # (multilabel)</span>
 <span class="sd">    &gt;&gt;&gt; from cyclops.evaluate.metrics import PrecisionRecallCurve</span>
@@ -857,18 +847,18 @@
 <span class="sd">    &gt;&gt;&gt; preds = [[0.1, 0.9], [0.8, 0.2]]</span>
 <span class="sd">    &gt;&gt;&gt; metric = PrecisionRecallCurve(task=&quot;multilabel&quot;, num_labels=2, thresholds=3)</span>
 <span class="sd">    &gt;&gt;&gt; metric(target, preds)</span>
-<span class="sd">    (array([[0.5, 1. , 0. , 1. ],</span>
-<span class="sd">           [0.5, 1. , 0. , 1. ]]), array([[1., 1., 0., 0.],</span>
-<span class="sd">           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">    PRCurve(precision=array([[0.5, 1. , 0. , 1. ],</span>
+<span class="sd">           [0.5, 1. , 0. , 1. ]]), recall=array([[1., 1., 0., 0.],</span>
+<span class="sd">           [1., 1., 0., 0.]]), thresholds=array([0. , 0.5, 1. ]))</span>
 <span class="sd">    &gt;&gt;&gt; metric.reset_state()</span>
 <span class="sd">    &gt;&gt;&gt; target = [[[0, 1], [1, 0]], [[1, 0], [0, 1]]]</span>
 <span class="sd">    &gt;&gt;&gt; preds = [[[0.1, 0.9], [0.8, 0.2]], [[0.1, 0.9], [0.8, 0.2]]]</span>
 <span class="sd">    &gt;&gt;&gt; for t, p in zip(target, preds):</span>
 <span class="sd">    ...     metric.update_state(t, p)</span>
 <span class="sd">    &gt;&gt;&gt; metric.compute()</span>
-<span class="sd">    (array([[0.5, 0.5, 0. , 1. ],</span>
-<span class="sd">           [0.5, 0.5, 0. , 1. ]]), array([[1. , 0.5, 0. , 0. ],</span>
-<span class="sd">           [1. , 0.5, 0. , 0. ]]), array([0. , 0.5, 1. ]))</span>
+<span class="sd">    PRCurve(precision=array([[0.5, 0.5, 0. , 1. ],</span>
+<span class="sd">           [0.5, 0.5, 0. , 1. ]]), recall=array([[1. , 0.5, 0. , 0. ],</span>
+<span class="sd">           [1. , 0.5, 0. , 0. ]]), thresholds=array([0. , 0.5, 1. ]))</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
