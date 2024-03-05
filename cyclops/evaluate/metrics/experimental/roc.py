@@ -2,6 +2,7 @@
 from typing import List, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental.functional.roc import (
+    ROCCurve,
     _binary_roc_compute,
     _multiclass_roc_compute,
     _multilabel_roc_compute,
@@ -42,26 +43,27 @@ class BinaryROC(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"):
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> metric = BinaryROC(thresholds=None)
     >>> metric(target, preds)
-    (Array([0.        , 0.        , 0.33333334, 0.33333334,
-           0.6666667 , 0.6666667 , 1.        ], dtype=float32), Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
-           0.6666667 , 1.        , 1.        ], dtype=float32), Array([1.  , 0.92, 0.84, 0.73, 0.33, 0.22, 0.11], dtype=float64))
+    ROCCurve(fpr=Array([0.        , 0.        , 0.33333334, 0.33333334,
+           0.6666667 , 0.6666667 , 1.        ], dtype=float32), tpr=Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
+           0.6666667 , 1.        , 1.        ], dtype=float32), thresholds=Array([1.  , 0.92, 0.84, 0.73, 0.33, 0.22, 0.11], dtype=float64))
     >>> metric = BinaryROC(thresholds=5)
     >>> metric(target, preds)
-    (Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
-           1.        ], dtype=float32), Array([0.        , 0.33333334, 0.6666667 , 0.6666667 ,
-           1.        ], dtype=float32), Array([1.  , 0.75, 0.5 , 0.25, 0.  ], dtype=float32))
+    ROCCurve(fpr=Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
+           1.        ], dtype=float32), tpr=Array([0.        , 0.33333334, 0.6666667 , 0.6666667 ,
+           1.        ], dtype=float32), thresholds=Array([1.  , 0.75, 0.5 , 0.25, 0.  ], dtype=float32))
 
     """  # noqa: W505
 
     name: str = "ROC Curve"
 
-    def _compute_metric(self) -> Tuple[Array, Array, Array]:
+    def _compute_metric(self) -> ROCCurve:  # type: ignore
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]
             if self.thresholds is None
             else self.confmat  # type: ignore[attr-defined]
         )
-        return _binary_roc_compute(state, self.thresholds)  # type: ignore[arg-type]
+        fpr, tpr, thresholds = _binary_roc_compute(state, self.thresholds)  # type: ignore[arg-type]
+        return ROCCurve(fpr, tpr, thresholds)
 
 
 class MulticlassROC(
