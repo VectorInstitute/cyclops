@@ -51,21 +51,26 @@ def _mcc_reduce(confmat: Array) -> Array:
     numerator = cov_ytyp
     denom = cov_ypyp * cov_ytyt
 
-    if denom == 0 and int(apc.size(confmat) or 0) == 4:
+    eps = xp.asarray(
+        xp.finfo(xp.float32).eps,
+        dtype=xp.float32,
+        device=apc.device(confmat),
+    )
+
+    def _is_close_to_zero(a: Array) -> Array:
+        """Check if an array is close to zero."""
+        return xp.all(xp.abs(a) <= eps)  # type: ignore[no-any-return]
+
+    if _is_close_to_zero(denom) and int(apc.size(confmat) or 0) == 4:
         if tp == 0 or tn == 0:
             a = tp + tn
 
         if fp == 0 or fn == 0:
             b = fp + fn
 
-        eps = xp.asarray(
-            xp.finfo(xp.float32).eps,
-            dtype=xp.float32,
-            device=apc.device(confmat),
-        )
         numerator = xp.sqrt(eps) * (a - b)
         denom = (tp + fp + eps) * (tp + fn + eps) * (tn + fp + eps) * (tn + fn + eps)
-    elif denom == 0:
+    elif _is_close_to_zero(denom):
         return xp.asarray(0.0, dtype=confmat.dtype, device=apc.device(confmat))  # type: ignore[no-any-return]
     return numerator / xp.sqrt(denom)  # type: ignore[no-any-return]
 
