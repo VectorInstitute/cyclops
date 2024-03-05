@@ -42,14 +42,14 @@ class BinaryROCCurve(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> metric = BinaryROCCurve()
     >>> metric(target, preds)
-    (array([0. , 0. , 0.5, 0.5, 1. ]), array([0. , 0.5, 0.5, 1. , 1. ]), array([1.  , 0.8 , 0.4 , 0.35, 0.1 ]))
+    ROCCurve(fpr=array([0. , 0. , 0.5, 0.5, 1. ]), tpr=array([0. , 0.5, 0.5, 1. , 1. ]), thresholds=array([1.  , 0.8 , 0.4 , 0.35, 0.1 ]))
     >>> metric.reset_state()
     >>> target = [[1, 1, 0, 0], [0, 0, 1, 1]]
     >>> preds = [[0.1, 0.2, 0.3, 0.4], [0.6, 0.5, 0.4, 0.3]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([0.  , 0.25, 0.5 , 0.75, 1.  , 1.  , 1.  ]), array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]), array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))
+    ROCCurve(fpr=array([0.  , 0.25, 0.5 , 0.75, 1.  , 1.  , 1.  ]), tpr=array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]), thresholds=array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))
 
     """  # noqa: W505
 
@@ -103,11 +103,11 @@ class MulticlassROCCurve(
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.9, 0.1, 0]]
     >>> metric = MulticlassROCCurve(num_classes=3, thresholds=4)
     >>> metric(target, preds)
-    (array([[0.        , 0.        , 0.        , 1.        ],
+    ROCCurve(fpr=array([[0.        , 0.        , 0.        , 1.        ],
            [0.        , 0.33333333, 0.33333333, 1.        ],
-           [0.        , 0.        , 0.        , 1.        ]]), array([[0. , 0.5, 0.5, 1. ],
+           [0.        , 0.        , 0.        , 1.        ]]), tpr=array([[0. , 0.5, 0.5, 1. ],
            [0. , 1. , 1. , 1. ],
-           [0. , 0. , 1. , 1. ]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0. , 0. , 1. , 1. ]]), thresholds=array([1.        , 0.66666667, 0.33333333, 0.        ]))
     >>> metric.reset_state()
     >>> target = [[1, 1, 0, 0], [0, 0, 1, 1]]
     >>> preds = [
@@ -117,11 +117,11 @@ class MulticlassROCCurve(
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0.  , 0.25, 0.5 , 1.  ],
+    ROCCurve(fpr=array([[0.  , 0.25, 0.5 , 1.  ],
            [0.  , 0.  , 0.25, 1.  ],
-           [0.  , 0.25, 0.5 , 1.  ]]), array([[0.  , 0.25, 0.5 , 1.  ],
+           [0.  , 0.25, 0.5 , 1.  ]]), tpr=array([[0.  , 0.25, 0.5 , 1.  ],
            [0.  , 0.  , 0.25, 1.  ],
-           [0.  , 0.  , 0.  , 0.  ]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0.  , 0.  , 0.  , 0.  ]]), thresholds=array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
     """  # noqa: W505
 
@@ -169,24 +169,24 @@ class MultilabelROCCurve(
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]
     >>> metric = MultilabelROCCurve(num_labels=3, thresholds=4)
     >>> metric(target, preds)
-    (array([[0. , 0. , 0. , 1. ],
+    ROCCurve(fpr=array([[0. , 0. , 0. , 1. ],
            [0. , 0. , 0. , 0. ],
-           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],
+           [0. , 0.5, 0.5, 1. ]]), tpr=array([[0., 0., 0., 1.],
            [0., 1., 1., 1.],
-           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0., 0., 0., 0.]]), thresholds=array([1.        , 0.66666667, 0.33333333, 0.        ]))
     >>> metric.reset_state()
     >>> target = [[[1, 1, 0], [0, 1, 0]], [[1, 1, 0], [0, 1, 0]]]
     >>> preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]], [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0. , 0. , 0. , 1. ],
+    ROCCurve(fpr=array([[0. , 0. , 0. , 1. ],
            [0. , 0. , 0. , 0. ],
-           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],
+           [0. , 0.5, 0.5, 1. ]]), tpr=array([[0., 0., 0., 1.],
            [0., 1., 1., 1.],
-           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0., 0., 0., 0.]]), thresholds=array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
-    """
+    """  # noqa: W505
 
     name: str = "ROC Curve"
 
@@ -246,14 +246,14 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> metric = ROCCurve(task="binary", thresholds=None)
     >>> metric(target, preds)
-    (array([0. , 0. , 0.5, 0.5, 1. ]), array([0. , 0.5, 0.5, 1. , 1. ]), array([1.  , 0.8 , 0.4 , 0.35, 0.1 ]))
+    ROCCurve(fpr=array([0. , 0. , 0.5, 0.5, 1. ]), tpr=array([0. , 0.5, 0.5, 1. , 1. ]), thresholds=array([1.  , 0.8 , 0.4 , 0.35, 0.1 ]))
     >>> metric.reset_state()
     >>> target = [[1, 1, 0, 0], [0, 0, 1, 1]]
     >>> preds = [[0.1, 0.2, 0.3, 0.4], [0.6, 0.5, 0.4, 0.3]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([0.  , 0.25, 0.5 , 0.75, 1.  , 1.  , 1.  ]), array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]), array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))
+    ROCCurve(fpr=array([0.  , 0.25, 0.5 , 0.75, 1.  , 1.  , 1.  ]), tpr=array([0.  , 0.  , 0.  , 0.25, 0.5 , 0.75, 1.  ]), thresholds=array([1. , 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]))
 
     >>> # (multiclass)
     >>> from cyclops.evaluate.metrics import ROCCurve
@@ -261,22 +261,22 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
     >>> metric = ROCCurve(task="multiclass", num_classes=3, thresholds=4)
     >>> metric(target, preds)
-    (array([[0. , 0. , 0. , 1. ],
+    ROCCurve(fpr=array([[0. , 0. , 0. , 1. ],
            [0. , 0.5, 0.5, 1. ],
-           [0. , 0. , 0.5, 1. ]]), array([[0., 0., 0., 1.],
+           [0. , 0. , 0.5, 1. ]]), tpr=array([[0., 0., 0., 1.],
            [0., 1., 1., 1.],
-           [0., 0., 0., 1.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0., 0., 0., 1.]]), thresholds=array([1.        , 0.66666667, 0.33333333, 0.        ]))
     >>> metric.reset_state()
     >>> target = [1, 2]
     >>> preds = [[[0.05, 0.75, 0.2]], [[0.1, 0.8, 0.1]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0., 0., 0., 1.],
+    ROCCurve(fpr=array([[0., 0., 0., 1.],
            [0., 1., 1., 1.],
-           [0., 0., 0., 1.]]), array([[0., 0., 0., 0.],
+           [0., 0., 0., 1.]]), tpr=array([[0., 0., 0., 0.],
            [0., 1., 1., 1.],
-           [0., 0., 0., 1.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0., 0., 0., 1.]]), thresholds=array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
     >>> # (multilabel)
     >>> from cyclops.evaluate.metrics import ROCCurve
@@ -284,22 +284,22 @@ class ROCCurve(Metric, registry_key="roc_curve", force_register=True):
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]
     >>> metric = ROCCurve(task="multilabel", num_labels=3, thresholds=4)
     >>> metric(target, preds)
-    (array([[0. , 0. , 0. , 1. ],
+    ROCCurve(fpr=array([[0. , 0. , 0. , 1. ],
            [0. , 0. , 0. , 0. ],
-           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],
+           [0. , 0.5, 0.5, 1. ]]), tpr=array([[0., 0., 0., 1.],
            [0., 1., 1., 1.],
-           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0., 0., 0., 0.]]), thresholds=array([1.        , 0.66666667, 0.33333333, 0.        ]))
     >>> metric.reset_state()
     >>> target = [[[1, 1, 0], [0, 1, 0]], [[1, 1, 0], [0, 1, 0]]]
     >>> preds = [[[0.1, 0.9, 0.8], [0.05, 0.95, 0]], [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0. , 0. , 0. , 1. ],
+    ROCCurve(fpr=array([[0. , 0. , 0. , 1. ],
            [0. , 0. , 0. , 0. ],
-           [0. , 0.5, 0.5, 1. ]]), array([[0., 0., 0., 1.],
+           [0. , 0.5, 0.5, 1. ]]), tpr=array([[0., 0., 0., 1.],
            [0., 1., 1., 1.],
-           [0., 0., 0., 0.]]), array([1.        , 0.66666667, 0.33333333, 0.        ]))
+           [0., 0., 0., 0.]]), thresholds=array([1.        , 0.66666667, 0.33333333, 0.        ]))
 
     """  # noqa: W505
 
