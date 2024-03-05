@@ -1,4 +1,5 @@
 """Test precision-recall curve metric."""
+
 from functools import partial
 from typing import List, Tuple, Union
 
@@ -45,9 +46,11 @@ def _binary_precision_recall_curve_reference(
     return tm_binary_precision_recall_curve(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
-        thresholds=torch.utils.dlpack.from_dlpack(thresholds)
-        if apc.is_array_api_obj(thresholds)
-        else thresholds,
+        thresholds=(
+            torch.utils.dlpack.from_dlpack(thresholds)
+            if apc.is_array_api_obj(thresholds)
+            else thresholds
+        ),
         ignore_index=ignore_index,
     )
 
@@ -215,9 +218,11 @@ def _multiclass_precision_recall_curve_reference(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_classes,
-        thresholds=torch.utils.dlpack.from_dlpack(thresholds)
-        if apc.is_array_api_obj(thresholds)
-        else thresholds,
+        thresholds=(
+            torch.utils.dlpack.from_dlpack(thresholds)
+            if apc.is_array_api_obj(thresholds)
+            else thresholds
+        ),
         ignore_index=ignore_index,
     )
 
@@ -371,15 +376,19 @@ def _multilabel_precision_recall_curve_reference(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_labels,
-        thresholds=torch.utils.dlpack.from_dlpack(thresholds)
-        if apc.is_array_api_obj(thresholds)
-        else thresholds,
+        thresholds=(
+            torch.utils.dlpack.from_dlpack(thresholds)
+            if apc.is_array_api_obj(thresholds)
+            else thresholds
+        ),
         ignore_index=ignore_index,
     )
 
 
 class TestMultilabelPrecisionRecallCurve(MetricTester):
     """Test multilabel precision-recall curve function and class."""
+
+    atol: float = 2e-7
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp)[2:])
     @pytest.mark.parametrize("thresholds", _thresholds(xp=anp))

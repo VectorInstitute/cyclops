@@ -1,4 +1,4 @@
-"""Test confusion matrix metrics."""
+"""Test matthews correlation coefficient metrics."""
 
 from functools import partial
 
@@ -8,24 +8,20 @@ import numpy.array_api as anp
 import pytest
 import torch.utils.dlpack
 from torchmetrics.functional.classification import (
-    binary_confusion_matrix as tm_binary_confusion_matrix,
-)
-from torchmetrics.functional.classification import (
-    multiclass_confusion_matrix as tm_multiclass_confusion_matrix,
-)
-from torchmetrics.functional.classification import (
-    multilabel_confusion_matrix as tm_multilabel_confusion_matrix,
+    binary_matthews_corrcoef,
+    multiclass_matthews_corrcoef,
+    multilabel_matthews_corrcoef,
 )
 
-from cyclops.evaluate.metrics.experimental.confusion_matrix import (
-    BinaryConfusionMatrix,
-    MulticlassConfusionMatrix,
-    MultilabelConfusionMatrix,
+from cyclops.evaluate.metrics.experimental.functional.matthews_corr_coef import (
+    binary_mcc,
+    multiclass_mcc,
+    multilabel_mcc,
 )
-from cyclops.evaluate.metrics.experimental.functional.confusion_matrix import (
-    binary_confusion_matrix,
-    multiclass_confusion_matrix,
-    multilabel_confusion_matrix,
+from cyclops.evaluate.metrics.experimental.matthews_corr_coef import (
+    BinaryMCC,
+    MulticlassMCC,
+    MultilabelMCC,
 )
 from cyclops.evaluate.metrics.experimental.utils.ops import to_int
 from cyclops.evaluate.metrics.experimental.utils.validation import is_floating_point
@@ -35,36 +31,32 @@ from .inputs import _binary_cases, _multiclass_cases, _multilabel_cases
 from .testers import MetricTester, _inject_ignore_index
 
 
-def _binary_confusion_matrix_reference(
+def _binary_mcc_reference(
     target,
     preds,
     threshold,
-    normalize,
     ignore_index,
 ) -> torch.Tensor:
-    """Return the reference binary confusion matrix."""
-    return tm_binary_confusion_matrix(
+    """Return the reference binary matthews correlation coefficient."""
+    return binary_matthews_corrcoef(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         threshold=threshold,
-        normalize=normalize,
         ignore_index=ignore_index,
     )
 
 
-class TestBinaryConfusionMatrix(MetricTester):
-    """Test binary confusion matrix function and class."""
+class TestBinaryMCC(MetricTester):
+    """Test binary matthews correlation coefficient function and class."""
 
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_confusion_matrix_function_with_numpy_array_api_arrays(
+    def test_binary_mcc_function_with_numpy_array_api_arrays(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test function for binary confusion matrix using numpy.array_api arrays."""
+        """Test function for binary matthews corrcoef using numpy.array_api arrays."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -73,30 +65,26 @@ class TestBinaryConfusionMatrix(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=binary_confusion_matrix,
+            metric_function=binary_mcc,
             metric_args={
                 "threshold": THRESHOLD,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_confusion_matrix_reference,
+                _binary_mcc_reference,
                 threshold=THRESHOLD,
-                normalize=normalize,
                 ignore_index=ignore_index,
             ),
         )
 
     @pytest.mark.parametrize("inputs", _binary_cases(xp=anp))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_confusion_matrix_class_with_numpy_array_api_arrays(
+    def test_binary_mcc_class_with_numpy_array_api_arrays(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test class for binary confusion matrix."""
+        """Test class for binary matthews correlation coefficient."""
         target, preds = inputs
 
         if (
@@ -116,31 +104,27 @@ class TestBinaryConfusionMatrix(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=BinaryConfusionMatrix,
+            metric_class=BinaryMCC,
             metric_args={
                 "threshold": THRESHOLD,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_confusion_matrix_reference,
+                _binary_mcc_reference,
                 threshold=THRESHOLD,
-                normalize=normalize,
                 ignore_index=ignore_index,
             ),
         )
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
     @pytest.mark.parametrize("inputs", _binary_cases(xp=array_api_compat.torch))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_binary_confusion_matrix_class_with_torch_tensors(
+    def test_binary_mcc_class_with_torch_tensors(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test binary confusion matrix class with torch tensors."""
+        """Test binary matthews correlation coefficient class with torch tensors."""
         target, preds = inputs
 
         if (
@@ -162,16 +146,14 @@ class TestBinaryConfusionMatrix(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=BinaryConfusionMatrix,
+            metric_class=BinaryMCC,
             metric_args={
                 "threshold": THRESHOLD,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _binary_confusion_matrix_reference,
+                _binary_mcc_reference,
                 threshold=THRESHOLD,
-                normalize=normalize,
                 ignore_index=ignore_index,
             ),
             device=device,
@@ -179,40 +161,36 @@ class TestBinaryConfusionMatrix(MetricTester):
         )
 
 
-def _multiclass_confusion_matrix_reference(
+def _multiclass_mcc_reference(
     target,
     preds,
     num_classes=NUM_CLASSES,
-    normalize=None,
     ignore_index=None,
 ) -> torch.Tensor:
-    """Return the reference multiclass confusion matrix."""
+    """Return the reference multiclass matthews correlation coefficient."""
     if preds.ndim == 1 and is_floating_point(preds):
         xp = apc.array_namespace(preds)
         preds = xp.argmax(preds, axis=0)
 
-    return tm_multiclass_confusion_matrix(
+    return multiclass_matthews_corrcoef(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_classes,
-        normalize=normalize,
         ignore_index=ignore_index,
     )
 
 
-class TestMulticlassConfusionMatrix(MetricTester):
-    """Test multiclass confusion matrix function and class."""
+class TestMulticlassMCC(MetricTester):
+    """Test multiclass matthews correlation coefficient function and class."""
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multiclass_confusion_matrix_with_numpy_array_api_arrays(
+    def test_multiclass_mcc_with_numpy_array_api_arrays(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test function for multiclass confusion matrix."""
+        """Test function for multiclass matthews correlation coefficient."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -221,29 +199,25 @@ class TestMulticlassConfusionMatrix(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=multiclass_confusion_matrix,
+            metric_function=multiclass_mcc,
             metric_args={
                 "num_classes": NUM_CLASSES,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
             reference_metric=partial(
-                _multiclass_confusion_matrix_reference,
-                normalize=normalize,
+                _multiclass_mcc_reference,
                 ignore_index=ignore_index,
             ),
         )
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 1, -1])
-    def test_multiclass_confusion_matrix_class_with_numpy_array_api_arrays(
+    def test_multiclass_mcc_class_with_numpy_array_api_arrays(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test class for multiclass confusion matrix."""
+        """Test class for multiclass matthews correlation coefficient."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -252,30 +226,26 @@ class TestMulticlassConfusionMatrix(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MulticlassConfusionMatrix,
+            metric_class=MulticlassMCC,
             reference_metric=partial(
-                _multiclass_confusion_matrix_reference,
-                normalize=normalize,
+                _multiclass_mcc_reference,
                 ignore_index=ignore_index,
             ),
             metric_args={
                 "num_classes": NUM_CLASSES,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
         )
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=array_api_compat.torch))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 1, -1])
-    def test_multiclass_confusion_matrix_class_with_torch_tensors(
+    def test_multiclass_mcc_class_with_torch_tensors(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test class for multiclass confusion matrix."""
+        """Test class for multiclass matthews correlation coefficient."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -286,15 +256,13 @@ class TestMulticlassConfusionMatrix(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MulticlassConfusionMatrix,
+            metric_class=MulticlassMCC,
             reference_metric=partial(
-                _multiclass_confusion_matrix_reference,
-                normalize=normalize,
+                _multiclass_mcc_reference,
                 ignore_index=ignore_index,
             ),
             metric_args={
                 "num_classes": NUM_CLASSES,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
             device=device,
@@ -302,38 +270,36 @@ class TestMulticlassConfusionMatrix(MetricTester):
         )
 
 
-def _multilabel_confusion_matrix_reference(
-    preds,
+def _multilabel_mcc_reference(
     target,
+    preds,
     threshold,
     num_labels=NUM_LABELS,
-    normalize=None,
     ignore_index=None,
 ) -> torch.Tensor:
-    """Return the reference multilabel confusion matrix."""
-    return tm_multilabel_confusion_matrix(
+    """Return the reference multilabel matthews correlation coefficient."""
+    return multilabel_matthews_corrcoef(
         torch.utils.dlpack.from_dlpack(preds),
         torch.utils.dlpack.from_dlpack(target),
         num_labels,
         threshold=threshold,
-        normalize=normalize,
         ignore_index=ignore_index,
     )
 
 
-class TestMultilabelConfusionMatrix(MetricTester):
-    """Test multilabel confusion matrix function and class."""
+class TestMultilabelMCC(MetricTester):
+    """Test multilabel matthews correlation coefficient function and class."""
+
+    atol: float = 4e-8
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_confusion_matrix_with_numpy_array_api_arrays(
+    def test_multilabel_mcc_with_numpy_array_api_arrays(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test function for multilabel confusion matrix."""
+        """Test function for multilabel matthews correlation coefficient."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -342,31 +308,27 @@ class TestMultilabelConfusionMatrix(MetricTester):
         self.run_metric_function_implementation_test(
             target,
             preds,
-            metric_function=multilabel_confusion_matrix,
+            metric_function=multilabel_mcc,
             reference_metric=partial(
-                _multilabel_confusion_matrix_reference,
+                _multilabel_mcc_reference,
                 threshold=THRESHOLD,
-                normalize=normalize,
                 ignore_index=ignore_index,
             ),
             metric_args={
                 "threshold": THRESHOLD,
                 "num_labels": NUM_LABELS,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
         )
 
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_confusion_matrix_class_with_numpy_array_api_arrays(
+    def test_multilabel_mcc_class_with_numpy_array_api_arrays(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test class for multilabel confusion matrix."""
+        """Test class for multilabel matthews correlation coefficient."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -375,32 +337,28 @@ class TestMultilabelConfusionMatrix(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MultilabelConfusionMatrix,
+            metric_class=MultilabelMCC,
             reference_metric=partial(
-                _multilabel_confusion_matrix_reference,
+                _multilabel_mcc_reference,
                 threshold=THRESHOLD,
-                normalize=normalize,
                 ignore_index=ignore_index,
             ),
             metric_args={
                 "threshold": THRESHOLD,
                 "num_labels": NUM_LABELS,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
         )
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
     @pytest.mark.parametrize("inputs", _multilabel_cases(xp=array_api_compat.torch))
-    @pytest.mark.parametrize("normalize", [None, "true", "pred", "all"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
-    def test_multilabel_confusion_matrix_class_with_torch_tensors(
+    def test_multilabel_mcc_class_with_torch_tensors(
         self,
         inputs,
-        normalize,
         ignore_index,
     ) -> None:
-        """Test class for multilabel confusion matrix."""
+        """Test class for multilabel matthews correlation coefficient."""
         target, preds = inputs
 
         if ignore_index is not None:
@@ -411,17 +369,15 @@ class TestMultilabelConfusionMatrix(MetricTester):
         self.run_metric_class_implementation_test(
             target,
             preds,
-            metric_class=MultilabelConfusionMatrix,
+            metric_class=MultilabelMCC,
             reference_metric=partial(
-                _multilabel_confusion_matrix_reference,
+                _multilabel_mcc_reference,
                 threshold=THRESHOLD,
-                normalize=normalize,
                 ignore_index=ignore_index,
             ),
             metric_args={
                 "threshold": THRESHOLD,
                 "num_labels": NUM_LABELS,
-                "normalize": normalize,
                 "ignore_index": ignore_index,
             },
             device=device,
