@@ -93,6 +93,150 @@ class ClassificationPlotter(Plotter):
             class_names = [f"Class_{i+1}" for i in range(self.class_num)]
         self.class_names = class_names
 
+    def threshperf(
+        self,
+        roc_curve: ROCCurve,
+        ppv: npt.NDArray[np.float_],
+        npv: npt.NDArray[np.float_],
+        pred_probs: npt.NDArray[np.float_],
+        title: Optional[str] = "Diagnostic Performance Metrics by Thresholds",
+        layout: Optional[go.Layout] = None,
+        **plot_kwargs: Any,
+    ) -> go.Figure:
+        """Plot diagnostic performance with histogram of predicted probabilties.
+
+        The plot uses Plotly with a clean aesthetic. Gridlines are kept,
+        but background color is removed. Y-axis ticks and labels are shown.
+        The legend is added at the bottom. Tooltips show values with 3 decimal places.
+        X-axis labels are only shown on the bottom subplot. The histogram's bin size
+        is reduced and it has no borders.
+
+        Parameters
+        ----------
+        roc_curve: ROCCurve
+            ROC curve with TPR, FPR and thresholds.
+        ppv: npt.NDArray[np.float_]
+            Positive predictive value.
+        npv: npt.NDArray[np.float_]
+            Negative predictive value.
+        pred_probs: npt.NDArray[np.float_]
+            Predicted probabilities for the positive class (1).
+
+        Returns
+        -------
+        go.Figure
+            A Plotly figure containing the diagnostic performance plots and histogram.
+
+        """
+        if self.task_type != "binary":
+            raise ValueError("threshperf is only available for binary classification")
+        assert (
+            len(roc_curve.tpr)
+            == len(roc_curve.fpr)
+            == len(roc_curve.thresholds)
+            == len(ppv)
+            == len(npv)
+        ), "Length mismatch between ROC curve, PPV, NPV. All curves need to be computed using the same thresholds"
+        # Define hover template to show three decimal places
+        hover_template = "Threshold: %{x:.3f}<br>Metric Value: %{y:.3f}<extra></extra>"
+
+        # Create a subplot for each metric
+        fig = make_subplots(rows=5, cols=1, shared_xaxes=True, vertical_spacing=0.02)
+
+        # Sensitivity plot (True Positive Rate)
+        fig.add_trace(
+            go.Scatter(
+                x=roc_curve.thresholds,
+                y=roc_curve.tpr,
+                mode="lines",
+                name="Sensitivity",
+                hovertemplate=hover_template,
+            ),
+            row=1,
+            col=1,
+        )
+
+        # Specificity plot (1 - False Positive Rate)
+        fig.add_trace(
+            go.Scatter(
+                x=roc_curve.thresholds,
+                y=1 - roc_curve.fpr,
+                mode="lines",
+                name="1 - Specificity",
+                hovertemplate=hover_template,
+            ),
+            row=2,
+            col=1,
+        )
+
+        # PPV plot (Positive Predictive Value)
+        fig.add_trace(
+            go.Scatter(
+                x=roc_curve.thresholds,
+                y=ppv,
+                mode="lines",
+                name="PPV",
+                hovertemplate=hover_template,
+            ),
+            row=3,
+            col=1,
+        )
+
+        # NPV plot (Negative Predictive Value)
+        fig.add_trace(
+            go.Scatter(
+                x=roc_curve.thresholds,
+                y=npv,
+                mode="lines",
+                name="NPV",
+                hovertemplate=hover_template,
+            ),
+            row=4,
+            col=1,
+        )
+
+        # Add histogram of predicted probabilities
+        fig.add_trace(
+            go.Histogram(x=pred_probs, nbinsx=80, name="Predicted Probabilities"),
+            row=5,
+            col=1,
+        )
+
+        # Update layout
+        fig.update_layout(
+            height=1200,
+            width=1024,
+            title_text=title,
+            legend={
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": -0.2,
+                "xanchor": "center",
+                "x": 0.5,
+            },
+        )
+
+        # Remove subplot titles
+        for i in fig["layout"]["annotations"]:
+            i["text"] = ""
+
+        # Remove the plot background color, keep gridlines, show y-axis ticks and labels
+        fig.update_xaxes(showgrid=True)
+        fig.update_yaxes(showgrid=True, showticklabels=True)
+
+        # Only show the x-axis line and labels on the bottommost plot
+        fig.update_xaxes(showline=True, linewidth=1, linecolor="black", mirror=True)
+        fig.update_xaxes(showticklabels=True, row=4, col=1)
+        fig.update_yaxes(showline=True, linewidth=1, linecolor="black", mirror=True)
+
+        fig.update_xaxes(showline=False, row=5, col=1, showticklabels=False)
+        fig.update_yaxes(showline=False, row=5, col=1)
+
+        if layout is not None:
+            fig.update_layout(layout)
+
+        return fig
+
     def roc_curve(
         self,
         roc_curve: Union[ROCCurve, ROCCurveExp],
