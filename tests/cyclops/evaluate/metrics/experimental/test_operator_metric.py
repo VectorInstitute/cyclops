@@ -1,4 +1,5 @@
 """Test the OperatorMetric class."""
+
 import numpy as np
 import numpy.array_api as anp
 import pytest

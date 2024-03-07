@@ -1,4 +1,5 @@
 """Classes for computing the negative predictive value for classification tasks."""
+
 from cyclops.evaluate.metrics.experimental._stat_scores import (
     _AbstractBinaryStatScores,
     _AbstractMulticlassStatScores,

@@ -1,4 +1,5 @@
 """Classes for computing the Receiver Operating Characteristic (ROC) curve."""
+
 from typing import List, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental.functional.roc import (

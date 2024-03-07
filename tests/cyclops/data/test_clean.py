@@ -1,6 +1,5 @@
 """Test clean module."""
 
-
 import pandas as pd
 import pytest
 

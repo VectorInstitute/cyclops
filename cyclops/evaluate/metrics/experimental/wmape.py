@@ -1,4 +1,5 @@
 """Weighted Mean Absolute Percentage Error metric."""
+
 from types import ModuleType
 from typing import Any
 

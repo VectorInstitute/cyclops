@@ -1,4 +1,5 @@
 """mpi4py backend for synchronizing array-API-compatible objects."""
+
 # mypy: disable-error-code="no-any-return,arg-type"
 import os
 from typing import TYPE_CHECKING, List
