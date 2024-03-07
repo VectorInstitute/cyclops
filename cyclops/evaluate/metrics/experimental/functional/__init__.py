@@ -31,6 +31,11 @@ from cyclops.evaluate.metrics.experimental.functional.mae import mean_absolute_e
 from cyclops.evaluate.metrics.experimental.functional.mape import (
     mean_absolute_percentage_error,
 )
+from cyclops.evaluate.metrics.experimental.functional.matthews_corr_coef import (
+    binary_mcc,
+    multiclass_mcc,
+    multilabel_mcc,
+)
 from cyclops.evaluate.metrics.experimental.functional.mse import mean_squared_error
 from cyclops.evaluate.metrics.experimental.functional.negative_predictive_value import (
     binary_npv,
@@ -52,11 +57,13 @@ from cyclops.evaluate.metrics.experimental.functional.precision_recall import (
     multilabel_tpr,
 )
 from cyclops.evaluate.metrics.experimental.functional.precision_recall_curve import (
+    PRCurve,
     binary_precision_recall_curve,
     multiclass_precision_recall_curve,
     multilabel_precision_recall_curve,
 )
 from cyclops.evaluate.metrics.experimental.functional.roc import (
+    ROCCurve,
     binary_roc,
     multiclass_roc,
     multilabel_roc,

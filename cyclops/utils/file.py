@@ -6,6 +6,7 @@ import pickle
 from typing import Any, Generator, List, Optional
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from cyclops.utils.log import setup_logging
@@ -208,7 +209,7 @@ def load_dataframe(
 
 
 def save_array(
-    data: np.typing.ArrayLike,
+    data: npt.ArrayLike,
     save_path: str,
     file_format: str = "npy",
     log: bool = True,
