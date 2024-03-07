@@ -474,6 +474,18 @@
   </body>
 </html>
 <script>
+
+  // create global variable for max_n_evals
+  var histories = JSON.parse({{ get_histories(model_card)|safe|tojson }});
+  // get max_n_evals from histories
+  var history_data = [];
+  for (let i = 0; i < histories[0].length; i++) {
+    history_data.push(parseFloat(histories[0][i]));
+  }
+  var max_n_evals = history_data.length;
+
+
+
   function multipleStringLines(title) {
       if (title.length > 50) { // check if greater than threshold!
                   let y_axis = title.split(' ');    //break into words
@@ -541,7 +553,7 @@
       for (let i = 0; i < timestamps[idx].length; i++) {
         timestamp_data.push(timestamps[idx][i]);
       }
-      var last_n_evals = {{ model_card.overview.last_n_evals }};
+      var last_n_evals = document.getElementById("n_evals_slider_p").value;
       history_data = history_data.slice(-last_n_evals);
       timestamp_data = timestamp_data.slice(-last_n_evals);
 
@@ -880,7 +892,7 @@
       for (let i = 0; i < timestamps_all[idx].length; i++) {
         timestamp_data.push(timestamps_all[idx][i]);
       }
-      var last_n_evals = {{ model_card.overview.last_n_evals }}
+      var last_n_evals = document.getElementById("n_evals_slider_pot").value;
       history_data = history_data.slice(-last_n_evals);
       timestamp_data = timestamp_data.slice(-last_n_evals);
       // get slope of line of best fit, if >0.01 then trending up, if <0.01 then trending down, else flat
@@ -1195,7 +1207,7 @@
       for (let i = 0; i < timestamps_all[idx].length; i++) {
         timestamp_data.push(timestamps_all[idx][i]);
       }
-      var last_n_evals = {{ model_card.overview.last_n_evals }}
+      var last_n_evals = document.getElementById("n_evals_slider_pot").value;
       history_data = history_data.slice(-last_n_evals);
       timestamp_data = timestamp_data.slice(-last_n_evals);
       // get slope of line of best fit, if >0.01 then trending up, if <0.01 then trending down, else flat
@@ -1411,6 +1423,34 @@
     var b = (y_sum - m * x_sum) / n;
     return [m, b];
   }
+
+  // there are two sliders with ids n_evals_slider_p and n_evals_slider_pot.
+  // create a function that checks if there was a change to the slider and if so, update the value of last_n_evals in overview
+  function updateLastNEvals() {
+    var n_evals_slider_p = document.getElementById("n_evals_slider_p");
+    var slider_p_num = document.getElementById("slider_p_num");
+    var n_evals_slider_pot = document.getElementById("n_evals_slider_pot");
+    var slider_pot_num = document.getElementById("slider_pot_num");
+
+    n_evals_slider_p.max = max_n_evals;
+    n_evals_slider_pot.max = max_n_evals;
+
+    if (n_evals_slider_p !== null) {
+      n_evals_slider_p.oninput = function() {
+        last_n_evals = this.value;
+        slider_p_num.innerHTML = last_n_evals;
+        generate_model_card_plot();
+      }
+    }
+    if (n_evals_slider_pot !== null) {
+      n_evals_slider_pot.oninput = function() {
+        last_n_evals = this.value;
+        slider_pot_num.innerHTML = last_n_evals;
+        updatePlot();
+      }
+    }
+  }
+  document.addEventListener('DOMContentLoaded', updateLastNEvals);
 
 
 </script>

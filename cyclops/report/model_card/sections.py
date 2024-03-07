@@ -31,7 +31,7 @@ class Overview(BaseModelCardSection):
     """Overview section with aggregate metrics."""
 
     last_n_evals: Optional[int] = Field(
-        0,
+        None,
         description="The number of evaluations to display in the model card.",
     )
 

@@ -1137,7 +1137,9 @@ class ModelCardReport:
                 values,
                 metric_cards,
             )
+
         if self._model_card.overview is not None:
+            last_n_evals = 0 if last_n_evals is None else last_n_evals
             self._model_card.overview.last_n_evals = last_n_evals
 
         self._validate()
