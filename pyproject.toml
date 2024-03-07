@@ -98,7 +98,7 @@ pytest-cov = "^3.0.0"
 codecov = "^2.1.13"
 nbstripout = "^0.6.1"
 mypy = "^1.7.0"
-ruff = "^0.2.0"
+ruff = "^0.3.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 pip-audit = "^2.7.1"
 cycquery = "^0.1.2" # used for integration test

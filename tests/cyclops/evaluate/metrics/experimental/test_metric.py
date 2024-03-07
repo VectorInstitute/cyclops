@@ -1,4 +1,5 @@
 """Tests for the base class of metrics."""
+
 import array_api_compat as apc
 import numpy as np
 import numpy.array_api as anp

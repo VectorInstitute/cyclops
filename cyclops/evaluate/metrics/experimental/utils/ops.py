@@ -1,4 +1,5 @@
 """Utility functions for performing operations on array-API-compatible objects."""
+
 # mypy: disable-error-code="no-any-return"
 from collections import OrderedDict, defaultdict
 from types import ModuleType

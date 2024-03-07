@@ -1,4 +1,5 @@
 """Mean Squared Error metric."""
+
 from typing import Any
 
 from cyclops.evaluate.metrics.experimental.functional.mse import (

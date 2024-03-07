@@ -1,4 +1,5 @@
 """Functional metrics for evaluating model performance."""
+
 from cyclops.evaluate.metrics.experimental.functional.accuracy import (
     binary_accuracy,
     multiclass_accuracy,

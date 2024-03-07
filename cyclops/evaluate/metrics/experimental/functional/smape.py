@@ -1,4 +1,5 @@
 """Functional interface for the Symmetric Mean Absolute Percentage Error metric."""
+
 from typing import Tuple, Union
 
 import array_api_compat as apc

@@ -1,4 +1,5 @@
 """Classes for computing the area under the ROC curve."""
+
 from typing import Any, List, Literal, Optional, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental.functional.auroc import (
