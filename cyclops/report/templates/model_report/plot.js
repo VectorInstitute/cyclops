@@ -312,15 +312,6 @@ function updatePlot() {
   }
   Plotly.newPlot(plot, traces, layout, {displayModeBar: false});
   }
-  // Add event listeners to radio buttons
-  for (let input of inputs_all) {
-  input.addEventListener('change', updatePlot);
-  }
-  // Add event listener to update plot when window is resized
-  window.addEventListener('resize', updatePlot);
-  for (let selection of plot_selection) {
-  selection.addEventListener('change', updatePlotSelection);
-  }
 
 
 function generate_model_card_plot() {

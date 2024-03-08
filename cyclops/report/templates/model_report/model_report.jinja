@@ -540,6 +540,16 @@
   }
   var max_n_evals = history_data.length;
 
+// Add event listeners to radio buttons
+  for (let input of inputs_all) {
+  input.addEventListener('change', updatePlot);
+  }
+  // Add event listener to update plot when window is resized
+  window.addEventListener('resize', updatePlot);
+  for (let selection of plot_selection) {
+  selection.addEventListener('change', updatePlotSelection);
+  }
+
 
   // Initial update when the page loads
   updatePlot();

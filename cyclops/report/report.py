@@ -97,7 +97,7 @@ class ModelCardReport:
             The path to a JSON file containing model card data.
         output_dir : str, optional
             The directory to save the report to. If not provided, the report will
-            be saved in a directory called `cyclops_reports` in the current working
+            be saved in a directory called `cyclops_report` in the current working
             directory.
 
         Returns
@@ -1092,10 +1092,8 @@ class ModelCardReport:
 
         # write to file
         if synthetic_timestamp is not None:
-            today = synthetic_timestamp
             today_now = synthetic_timestamp
         else:
-            today = dt_date.today().strftime("%Y-%m-%d")
             today_now = dt_datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         current_report_metrics: List[List[PerformanceMetric]] = []
@@ -1105,9 +1103,7 @@ class ModelCardReport:
         report_paths = glob.glob(
             os.path.join(
                 self.output_dir,
-                "cyclops_reports",
-                "*",
-                "*",
+                "cyclops_report",
                 "*.json",
             ),
         )
@@ -1160,12 +1156,9 @@ class ModelCardReport:
         plotlyjs = get_plotlyjs() if interactive else None
         content = template.render(model_card=self._model_card, plotlyjs=plotlyjs)
 
-        now = dt_datetime.now().strftime("%H-%M-%S")
         report_path = os.path.join(
             self.output_dir,
-            "cyclops_reports",
-            today,
-            now,
+            "cyclops_report",
             output_filename or "model_card.html",
         )
         self._write_file(report_path, content)
