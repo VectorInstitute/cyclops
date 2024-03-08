@@ -1,4 +1,5 @@
 """Mean Absolute Error metric."""
+
 from typing import Any
 
 from cyclops.evaluate.metrics.experimental.functional.mae import (

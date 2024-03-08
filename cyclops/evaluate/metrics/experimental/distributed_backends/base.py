@@ -1,4 +1,5 @@
 """Distributed backend interface."""
+
 import inspect
 import logging
 from abc import ABC, abstractmethod, abstractproperty

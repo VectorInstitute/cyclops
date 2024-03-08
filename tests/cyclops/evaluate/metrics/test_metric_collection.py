@@ -1,4 +1,5 @@
 """Test MetricCollection class."""
+
 import inspect
 
 import pytest

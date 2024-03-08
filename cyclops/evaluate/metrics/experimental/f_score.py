@@ -1,4 +1,5 @@
 """Classes for computing the F-score for classification tasks."""
+
 from typing import Any, Literal, Optional, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental._stat_scores import (
