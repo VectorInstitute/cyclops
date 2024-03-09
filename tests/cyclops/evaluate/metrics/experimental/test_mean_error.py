@@ -1,4 +1,5 @@
 """Tests for mean error metrics."""
+
 from functools import partial
 
 import array_api_compat.torch

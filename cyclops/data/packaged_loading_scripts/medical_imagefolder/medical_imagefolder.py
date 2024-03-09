@@ -5,6 +5,7 @@ root_folder/train/label1/image2.dcm root_folder/train/label2/image3.dcm
 root_folder/test/label2/image1.dcm root_folder/test/label1/image2.dcm
 
 """
+
 import logging
 from typing import List
 

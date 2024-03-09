@@ -1,4 +1,5 @@
 """Test utility functions for performing operations on Arrays."""
+
 from collections import defaultdict, namedtuple
 
 import numpy as np

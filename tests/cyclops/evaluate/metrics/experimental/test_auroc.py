@@ -1,4 +1,5 @@
 """Test AUROC metric."""
+
 from functools import partial
 
 import array_api_compat as apc

@@ -1,4 +1,5 @@
 """Mean Absolute Percentage Error (MAPE) metric."""
+
 from typing import Any
 
 from cyclops.evaluate.metrics.experimental.functional.mape import (

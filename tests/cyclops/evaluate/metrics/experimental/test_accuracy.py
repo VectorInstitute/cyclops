@@ -1,4 +1,5 @@
 """Test accuracy metrics."""
+
 from functools import partial
 from typing import Literal, Optional
 

@@ -1,4 +1,5 @@
 """Functions for computing the accuracy score for classification tasks."""
+
 from typing import Literal, Optional, Tuple, Union
 
 import array_api_compat as apc

@@ -1,4 +1,5 @@
 """Collection of metrics."""
+
 import hashlib
 import itertools
 import json

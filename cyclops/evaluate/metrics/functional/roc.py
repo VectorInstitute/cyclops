@@ -1,4 +1,5 @@
 """Functions for computing the receiver operating characteristic (ROC) curve."""
+
 import logging
 from typing import Any, List, Literal, NamedTuple, Optional, Tuple, Union
 

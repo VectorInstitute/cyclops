@@ -1,4 +1,5 @@
 """Utility functions for performing common input validations."""
+
 from typing import Any, List, Literal
 
 import array_api_compat as apc

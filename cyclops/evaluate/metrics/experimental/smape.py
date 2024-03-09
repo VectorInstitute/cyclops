@@ -1,4 +1,5 @@
 """Symmetric Mean Absolute Percentage Error metric."""
+
 from typing import Any
 
 from cyclops.evaluate.metrics.experimental.functional.smape import (

@@ -1,4 +1,5 @@
 """Test the torch distributed backend."""
+
 import sys
 from functools import partial
 

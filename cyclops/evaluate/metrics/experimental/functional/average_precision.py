@@ -1,4 +1,5 @@
 """Functions for computing average precision (AUPRC) for classification tasks."""
+
 import warnings
 from types import ModuleType
 from typing import List, Literal, Optional, Tuple, Union
