@@ -172,8 +172,14 @@
 
 {% macro render_perf(name, comp)%}
 <div class="card" id={{name}}>
-<h3 style="color: black; font-weight:normal;">How is your model doing?</h3><br>
-<h3 style="color: gray;  font-weight:normal;">A quick glance of your most important metrics.</h3>
+<div class="column" style="float: left; width: 80%;">
+  <h3 style="color: black; font-weight:normal;">How is your model doing?</h3><br>
+  <h3 style="color: gray;  font-weight:normal;">A quick glance of your most important metrics.</h3>
+</div>
+<span>
+  <h3 id="slider_p_title"><span style="color: black; font-weight:normal;">Last</span> <span id="slider_p_num">{{ comp.last_n_evals }}</span> <span style="color: black; font-weight:normal;">Evaluations</span></h3>
+  <input type="range" min="1" max="{{ comp.last_n_evals+10 }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_p" style="width: 100%;">
+</span>
 {% for metric_card in comp.metric_cards.collection%}
   {% if metric_card.slice == 'overall' %}
     {{ render_metric_card(metric_card, loop.index-1, "subcard_overview") }}
@@ -185,15 +191,23 @@
 
 {% macro render_perf_over_time(name, comp)%}
 <div class="card" id={{name}} style="display: block;">
-  <h3 style="color: black; font-weight:normal;">How is your model doing over time?</h3><br>
-  <h3 style="color: gray;  font-weight:normal;">See how your model is performing over several metrics and subgroups over time.</h3>
-  <div style="display: flex; align-items: center; justify-content: center; padding: 10px; margin-bottom: 20px;">
-    <h4 style="padding-right: 10px;">Multi-plot Selection:</h4>
-    <div class="radio-buttons" id="plot-selection">
-      <input type="radio" id="Plot 1" name="plot" value="Plot 1" checked>
-      <label for="Plot 1">Plot 1</label>
-      <input type="radio" id="+" name="plot" value="+">
-      <label for="+" style="padding: 2.5px; font-weight:bold; font-size: 18px;">+</label>
+  <span style="float: right; width: 10%; margin-right: 10%;">
+    <h3 id="slider_pot_title"><span style="color: black; font-weight:normal;">Last</span> <span id="slider_pot_num">{{ comp.last_n_evals }}</span> <span style="color: black; font-weight:normal;">Evaluations</span></h3>
+    <input type="range" min="1" max="{{ comp.last_n_evals+10 }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_pot" style="width: 100%;">
+  </span>
+  <div style="display: flex; flex-direction: column;">
+    <div class="column" style="float: left; width: 90%;">
+      <h3 style="color: black; font-weight:normal;">How is your model doing over time?</h3><br>
+      <h3 style="color: gray;  font-weight:normal;">See how your model is performing over several metrics and subgroups over time.</h3>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: center; padding: 10px; margin-bottom: 20px;">
+      <h4 style="padding-right: 10px;">Multi-plot Selection:</h4>
+      <div class="radio-buttons" id="plot-selection">
+        <input type="radio" id="Plot 1" name="plot" value="Plot 1" checked>
+        <label for="Plot 1">Plot 1</label>
+        <input type="radio" id="+" name="plot" value="+">
+        <label for="+" style="padding: 2.5px; font-weight:bold; font-size: 18px;">+</label>
+      </div>
     </div>
   </div>
   <div class="column" style="float: left;">
