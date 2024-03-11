@@ -1470,7 +1470,7 @@
     "        synthetic_timestamp=synthetic_timestamps[i + 1],\n",
     "    )\n",
     "    shutil.copy(f\"{report_path}\", \".\")\n",
-    "shutil.rmtree(\"./cyclops_reports\")"
+    "shutil.rmtree(\"./cyclops_report\")"
    ]
   },
   {

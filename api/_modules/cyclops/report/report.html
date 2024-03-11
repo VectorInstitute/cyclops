@@ -353,7 +353,6 @@
     <span class="n">get_slices</span><span class="p">,</span>
     <span class="n">get_thresholds</span><span class="p">,</span>
     <span class="n">get_timestamps</span><span class="p">,</span>
-    <span class="n">get_trends</span><span class="p">,</span>
     <span class="n">regex_replace</span><span class="p">,</span>
     <span class="n">regex_search</span><span class="p">,</span>
     <span class="n">str_to_snake_case</span><span class="p">,</span>
@@ -404,7 +403,7 @@
 <span class="sd">            The path to a JSON file containing model card data.</span>
 <span class="sd">        output_dir : str, optional</span>
 <span class="sd">            The directory to save the report to. If not provided, the report will</span>
-<span class="sd">            be saved in a directory called `cyclops_reports` in the current working</span>
+<span class="sd">            be saved in a directory called `cyclops_report` in the current working</span>
 <span class="sd">            directory.</span>
 
 <span class="sd">        Returns</span>
@@ -1417,6 +1416,7 @@
         <span class="n">template_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">save_json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">last_n_evals</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">synthetic_timestamp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the model card report to an HTML file.</span>
@@ -1433,6 +1433,9 @@
 <span class="sd">            Whether to create an interactive HTML report. The default is True.</span>
 <span class="sd">        save_json : bool, optional</span>
 <span class="sd">            Whether to save the model card as a JSON file. The default is True.</span>
+<span class="sd">        last_n_evals : int, optional</span>
+<span class="sd">            The number of most recent evaluations to include in the report and</span>
+<span class="sd">            calculate trends for. If not provided, all evaluations will be included.</span>
 <span class="sd">        synthetic_timestamp : str, optional</span>
 <span class="sd">            A synthetic timestamp to use for the report. This is useful for</span>
 <span class="sd">            generating back-dated reports. The default is None, which uses the</span>
@@ -1452,10 +1455,8 @@
 
         <span class="c1"># write to file</span>
         <span class="k">if</span> <span class="n">synthetic_timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">today</span> <span class="o">=</span> <span class="n">synthetic_timestamp</span>
             <span class="n">today_now</span> <span class="o">=</span> <span class="n">synthetic_timestamp</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">today</span> <span class="o">=</span> <span class="n">dt_date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">today_now</span> <span class="o">=</span> <span class="n">dt_datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
 
         <span class="n">current_report_metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PerformanceMetric</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1465,9 +1466,7 @@
         <span class="n">report_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span>
             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
-                <span class="s2">&quot;cyclops_reports&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;*&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;cyclops_report&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;*.json&quot;</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">)</span>
@@ -1498,6 +1497,10 @@
                 <span class="n">metric_cards</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">overview</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">last_n_evals</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">last_n_evals</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">last_n_evals</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">overview</span><span class="o">.</span><span class="n">last_n_evals</span> <span class="o">=</span> <span class="n">last_n_evals</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
         <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_jinja_template</span><span class="p">(</span><span class="n">template_path</span><span class="o">=</span><span class="n">template_path</span><span class="p">)</span>
 
@@ -1506,7 +1509,6 @@
             <span class="s2">&quot;sweep_graphics&quot;</span><span class="p">:</span> <span class="n">sweep_graphics</span><span class="p">,</span>
             <span class="s2">&quot;get_slices&quot;</span><span class="p">:</span> <span class="n">get_slices</span><span class="p">,</span>
             <span class="s2">&quot;get_thresholds&quot;</span><span class="p">:</span> <span class="n">get_thresholds</span><span class="p">,</span>
-            <span class="s2">&quot;get_trends&quot;</span><span class="p">:</span> <span class="n">get_trends</span><span class="p">,</span>
             <span class="s2">&quot;get_passed&quot;</span><span class="p">:</span> <span class="n">get_passed</span><span class="p">,</span>
             <span class="s2">&quot;get_names&quot;</span><span class="p">:</span> <span class="n">get_names</span><span class="p">,</span>
             <span class="s2">&quot;get_histories&quot;</span><span class="p">:</span> <span class="n">get_histories</span><span class="p">,</span>
@@ -1517,12 +1519,9 @@
         <span class="n">plotlyjs</span> <span class="o">=</span> <span class="n">get_plotlyjs</span><span class="p">()</span> <span class="k">if</span> <span class="n">interactive</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="n">content</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">model_card</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="p">,</span> <span class="n">plotlyjs</span><span class="o">=</span><span class="n">plotlyjs</span><span class="p">)</span>
 
-        <span class="n">now</span> <span class="o">=</span> <span class="n">dt_datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%H-%M-%S&quot;</span><span class="p">)</span>
         <span class="n">report_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
-            <span class="s2">&quot;cyclops_reports&quot;</span><span class="p">,</span>
-            <span class="n">today</span><span class="p">,</span>
-            <span class="n">now</span><span class="p">,</span>
+            <span class="s2">&quot;cyclops_report&quot;</span><span class="p">,</span>
             <span class="n">output_filename</span> <span class="ow">or</span> <span class="s2">&quot;model_card.html&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_write_file</span><span class="p">(</span><span class="n">report_path</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
