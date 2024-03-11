@@ -73,6 +73,21 @@ def multiclass_slice_metrics():
     return input_dic
 
 
+def test_plot_threshperf():
+    """Test the threshperf plot."""
+    fpr = np.array([0.1, 0.2, 0.3])
+    tpr = np.array([0.8, 0.9, 0.95])
+    thresholds = np.array([0.4, 0.6, 0.8])
+    ppv = np.array([0.7, 0.8, 0.9])
+    npv = np.array([0.6, 0.7, 0.8])
+    pred_probs = np.array([0.5, 0.6, 0.7])
+
+    roc_curve = ROCCurve(fpr=fpr, tpr=tpr, thresholds=thresholds)
+
+    plot = _binary_plotter.threshperf(roc_curve, ppv, npv, pred_probs)
+    assert isinstance(plot, go.Figure)
+
+
 def test_plot_roc_curve():
     """Test the ROC plot method for different types of ClassificationPlotters."""
     fpr = np.array([0.1, 0.2, 0.3])
