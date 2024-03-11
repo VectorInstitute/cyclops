@@ -28,7 +28,7 @@ kaleido = "0.2.1"
 scour = "^0.38.2"
 plotly = "^5.7.0"
 pillow = "^10.0.0"
-array-api-compat = "^1.4"
+array-api-compat = "1.4"
 hydra-core = "^1.2.0"
 
 # Optional dependencies
