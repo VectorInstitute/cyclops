@@ -558,7 +558,7 @@
         <span class="n">section_name</span> <span class="o">=</span> <span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
         <span class="n">section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
 
-        <span class="c1"># append graphic to exisiting GraphicsCollection or create new one</span>
+        <span class="c1"># append graphic to existing GraphicsCollection or create new one</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="s2">&quot;graphics&quot;</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span>
             <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;graphics&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span> <span class="ow">is</span> <span class="n">GraphicsCollection</span>
@@ -586,7 +586,7 @@
         <span class="n">section_name</span> <span class="o">=</span> <span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
         <span class="n">section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
 
-        <span class="c1"># append graphic to exisiting GraphicsCollection or create new one</span>
+        <span class="c1"># append graphic to existing GraphicsCollection or create new one</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="s2">&quot;metric_cards&quot;</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span>
             <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;metric_cards&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span> <span class="ow">is</span> <span class="n">MetricCardCollection</span>

@@ -307,7 +307,7 @@
 <dt class="sig sig-object py" id="cyclops.data.aggregate.timestamp_ffill_agg">
 <span class="sig-name descname"><span class="pre">timestamp_ffill_agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timesteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_timesteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_nan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/data/aggregate.html#timestamp_ffill_agg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.data.aggregate.timestamp_ffill_agg" title="Link to this definition">#</a></dt>
 <dd><p>Perform single-value aggregation with fill forward functionality given timesteps.</p>
-<p>If a timestep is negative, it is treated as occuring before the regular window and
+<p>If a timestep is negative, it is treated as occurring before the regular window and
 is “filled forward” through all the timesteps.</p>
 <p>If a timestep is between 0 and num_timesteps, it is bucketed accordingly and then
 forward filled.</p>
