@@ -158,7 +158,7 @@ class SKModel:
             If `X` is a Hugging Face Dataset and the feature column(s) is not provided.
         ValueError
             If `X` is a Hugging Face Dataset and the target column(s) is not provided.
-        RuntimeErrot
+        RuntimeError
             If dataset size is larger than the available memory.
 
         """
@@ -918,7 +918,7 @@ class SKModel:
             filepath = join(dir_path, filepath)
         process_dir_save_path(dir_path)
 
-        # filepath could be an exisiting file
+        # filepath could be an existing file
         if os.path.exists(filepath) and not overwrite:
             LOGGER.warning(
                 "The file %s already exists and will not be overwritten.",

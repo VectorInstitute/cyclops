@@ -103,7 +103,7 @@ class ClassificationPlotter(Plotter):
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
     ) -> go.Figure:
-        """Plot diagnostic performance with histogram of predicted probabilties.
+        """Plot diagnostic performance with histogram of predicted probabilities.
 
         The plot uses Plotly with a clean aesthetic. Gridlines are kept,
         but background color is removed. Y-axis ticks and labels are shown.

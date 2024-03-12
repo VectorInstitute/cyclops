@@ -851,8 +851,8 @@ def _diff(
     if n < 0:
         raise ValueError("order must be non-negative but got " + repr(n))
 
-    nd = a.ndim
-    if nd == 0:
+    ndim = a.ndim
+    if ndim == 0:
         raise ValueError("diff requires input that is at least one dimensional")
 
     combined = []
@@ -875,8 +875,8 @@ def _diff(
     if len(combined) > 1:
         a = xp.concat(combined, axis)
 
-    slice1 = [slice(None)] * nd
-    slice2 = [slice(None)] * nd
+    slice1 = [slice(None)] * ndim
+    slice2 = [slice(None)] * ndim
     slice1[axis] = slice(1, None)
     slice2[axis] = slice(None, -1)
     slice1 = tuple(slice1)  # type: ignore[assignment]
@@ -1182,9 +1182,9 @@ def _trapz(
         else:
             d = _diff(x, axis=axis)  # type: ignore[assignment]
 
-    nd = y.ndim
-    slice1 = [slice(None)] * nd
-    slice2 = [slice(None)] * nd
+    ndim = y.ndim
+    slice1 = [slice(None)] * ndim
+    slice2 = [slice(None)] * ndim
     slice1[axis] = slice(1, None)
     slice2[axis] = slice(None, -1)
     product = d * (y[tuple(slice1)] + y[tuple(slice2)]) / 2.0

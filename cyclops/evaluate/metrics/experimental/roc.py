@@ -71,7 +71,7 @@ class MulticlassROC(
     MulticlassPrecisionRecallCurve,
     registry_key="multiclass_roc_curve",
 ):
-    """The reciever operator characteristics (ROC) curve.
+    """The receiver operator characteristics (ROC) curve.
 
     Parameters
     ----------
@@ -161,7 +161,7 @@ class MultilabelROC(
     MultilabelPrecisionRecallCurve,
     registry_key="multilabel_roc_curve",
 ):
-    """The reciever operator characteristics (ROC) curve.
+    """The receiver operator characteristics (ROC) curve.
 
     Parameters
     ----------

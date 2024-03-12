@@ -174,7 +174,7 @@ class BaseTask(ABC):
         filepath : Union[str, Dict[str, str]]
             The destination path(s) where the model(s) will be saved.
             Can be a dictionary of model names and their corresponding paths
-            or a single parent dirctory.
+            or a single parent directory.
         model_name : Optional[Union[str, List[str]]], optional
             Model name, required if more than one model exists, by default None.
         **kwargs : Any

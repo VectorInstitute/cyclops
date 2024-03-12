@@ -378,7 +378,7 @@ class Aggregator(TransformerMixin):  # type: ignore
         return window_start_time.join(window_stop_time)
 
     def _compute_timestep(self, group: pd.DataFrame) -> pd.DataFrame:
-        """Compute which timestep, or bin, each occurence falls into.
+        """Compute which timestep, or bin, each occurrence falls into.
 
         Parameters
         ----------
@@ -485,7 +485,7 @@ class Aggregator(TransformerMixin):  # type: ignore
             grouped = data_with_timesteps.groupby(self.agg_by + [TIMESTEP], sort=False)
             aggregated = grouped.agg(self.aggfuncs)
         else:
-            # INEFFICIENT - Perform with a custom function to allow addded functionality
+            # INEFFICIENT - Perform with a custom function to allow added functionality
             grouped = data_with_timesteps.groupby(self.agg_by, sort=False)
             aggregated = grouped.apply(self._compute_aggregation)
         if not include_timestep_start:
@@ -718,7 +718,7 @@ def timestamp_ffill_agg(
 ) -> np.typing.ArrayLike:
     """Perform single-value aggregation with fill forward functionality given timesteps.
 
-    If a timestep is negative, it is treated as occuring before the regular window and
+    If a timestep is negative, it is treated as occurring before the regular window and
     is "filled forward" through all the timesteps.
 
     If a timestep is between 0 and num_timesteps, it is bucketed accordingly and then

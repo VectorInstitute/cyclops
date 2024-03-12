@@ -307,7 +307,7 @@ def test_vectorized_normalizer_subset(
 
 def test_concat_over_axis():
     """Test Vectorized method concat_over_axis."""
-    # Use this format to test the concatentation
+    # Use this format to test the concatenation
     _ = """
     comb_vectorized = temp_vectorized.concat_over_axis(
         EVENT_NAME,
