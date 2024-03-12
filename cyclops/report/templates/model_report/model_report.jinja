@@ -564,17 +564,26 @@
   n_evals_slider_p.max = max_n_evals;
   n_evals_slider_pot.max = max_n_evals;
 
+  var last_n_evals = {{ model_card.overview.last_n_evals }};
+
+  if (last_n_evals == 0) {
+      n_evals_slider_p.value = max_n_evals;
+      slider_p_num.innerHTML = n_evals_slider_p.value;
+      n_evals_slider_pot.value = max_n_evals;
+      slider_pot_num.innerHTML = n_evals_slider_pot.value;
+  }
+  generate_model_card_plot();
+  updatePlot();
+
   if (n_evals_slider_p !== null) {
       n_evals_slider_p.oninput = function() {
-          last_n_evals = this.value;
-          slider_p_num.innerHTML = last_n_evals;
+          slider_p_num.innerHTML = this.value;
           generate_model_card_plot();
       }
   }
   if (n_evals_slider_pot !== null) {
       n_evals_slider_pot.oninput = function() {
-          last_n_evals = this.value;
-          slider_pot_num.innerHTML = last_n_evals;
+          slider_pot_num.innerHTML = this.value;
           updatePlot();
       }
       }

@@ -281,7 +281,7 @@ function updatePlot() {
       zeroline: false,
       showticklabels: true,
       showgrid: false,
-      tickformat: '%b\n %Y'
+      tickformat: '%b %d\n %Y'
       },
       yaxis: {
       gridcolor: '#ffffff',
@@ -366,7 +366,7 @@ function generate_model_card_plot() {
           zeroline: false,
           showticklabels: true,
           showgrid: false,
-          tickformat: '%b\n %Y'
+          tickformat: '%b %d\n %Y'
           },
           yaxis: {
           gridcolor: "#ffffff",
@@ -706,7 +706,7 @@ function updatePlotSelection() {
       zeroline: false,
       showticklabels: true,
       showgrid: false,
-      tickformat: '%b\n %Y'
+      tickformat: '%b %d \n %Y'
       },
       yaxis: {
       gridcolor: '#ffffff',
