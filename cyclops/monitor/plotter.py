@@ -305,7 +305,7 @@ def plot_drift_experiment(
     results: dict[str, dict[str, np.ndarray[float, np.dtype[np.float64]]]],
     plot_distance=False,
 ) -> None:
-    """Plot drift experiement p-values.
+    """Plot drift experiment p-values.
 
     Parameters
     ----------

@@ -211,7 +211,7 @@ class GroupbyNormalizer:
         """Initialize."""
         features = set(normalizer_map.keys())
 
-        # Check for duplicated occurences of features in the map.
+        # Check for duplicated occurrences of features in the map.
         if len(list(normalizer_map.keys())) != len(features):
             raise ValueError("Cannot specify the same feature more than once.")
 

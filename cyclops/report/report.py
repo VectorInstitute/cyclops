@@ -245,7 +245,7 @@ class ModelCardReport:
         section_name = str_to_snake_case(section_name)
         section = self._model_card.get_section(section_name)
 
-        # append graphic to exisiting GraphicsCollection or create new one
+        # append graphic to existing GraphicsCollection or create new one
         if (
             "graphics" in section.__fields__
             and section.__fields__["graphics"].type_ is GraphicsCollection
@@ -273,7 +273,7 @@ class ModelCardReport:
         section_name = str_to_snake_case(section_name)
         section = self._model_card.get_section(section_name)
 
-        # append graphic to exisiting GraphicsCollection or create new one
+        # append graphic to existing GraphicsCollection or create new one
         if (
             "metric_cards" in section.__fields__
             and section.__fields__["metric_cards"].type_ is MetricCardCollection

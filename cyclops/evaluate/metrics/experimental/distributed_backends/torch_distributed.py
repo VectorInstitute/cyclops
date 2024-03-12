@@ -57,7 +57,7 @@ class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
         return gathered_data
 
     def all_gather(self, data: Tensor) -> List[Tensor]:  # type: ignore[override]
-        """Gather Arrays from current proccess and return as a list.
+        """Gather Arrays from current process and return as a list.
 
         Parameters
         ----------

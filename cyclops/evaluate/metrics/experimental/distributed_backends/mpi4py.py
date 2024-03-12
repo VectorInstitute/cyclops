@@ -50,7 +50,7 @@ class MPI4Py(DistributedBackend, registry_key="mpi4py"):
         return comm.Get_size()
 
     def all_gather(self, arr: Array) -> List[Array]:
-        """Gather Arrays from current proccess and return as a list.
+        """Gather Arrays from current process and return as a list.
 
         Parameters
         ----------

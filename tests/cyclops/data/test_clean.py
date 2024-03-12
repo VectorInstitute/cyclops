@@ -20,7 +20,7 @@ def test_event_data_normalized():
         columns=[ENCOUNTER_ID, EVENT_NAME, EVENT_VALUE, EVENT_VALUE_UNIT, "dummy"],
     )
     input_.loc[0] = ["sheep", "test-a", 0.3, "unit-a", "hi"]
-    input_.loc[1] = ["cat", "test-b", 1.4, "unit-b", "hellow"]
+    input_.loc[1] = ["cat", "test-b", 1.4, "unit-b", "hello"]
     input_.loc[2] = ["cat", "test-A", 1.2, "Unit-a", "meow"]
     input_.loc[4] = ["dog", "test-c", 0, "unit-c", "wuff"]
     return input_

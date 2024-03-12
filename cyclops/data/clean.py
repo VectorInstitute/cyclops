@@ -32,7 +32,7 @@ def normalize_names(names: pd.Series) -> pd.Series:
     """Normalize column names such that they can be used as features.
 
     Perform basic cleaning/house-keeping of column names.
-    e.g. remove parantheses from the measurement-name,
+    e.g. remove parentheses from the measurement-name,
     convert to lower-case.
 
     Parameters
