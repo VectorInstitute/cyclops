@@ -178,7 +178,7 @@
 </div>
 <span>
   <h3 id="slider_p_title"><span style="color: black; font-weight:normal;">Last</span> <span id="slider_p_num">{{ comp.last_n_evals }}</span> <span style="color: black; font-weight:normal;">Evaluations</span></h3>
-  <input type="range" min="1" max="{{ comp.last_n_evals+10 }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_p" style="width: 100%;">
+  <input type="range" min="1" max="{{ comp.last_n_evals }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_p" style="width: 100%;">
 </span>
 {% for metric_card in comp.metric_cards.collection%}
   {% if metric_card.slice == 'overall' %}
@@ -193,7 +193,7 @@
 <div class="card" id={{name}} style="display: block;">
   <span style="float: right; width: 10%; margin-right: 10%;">
     <h3 id="slider_pot_title"><span style="color: black; font-weight:normal;">Last</span> <span id="slider_pot_num">{{ comp.last_n_evals }}</span> <span style="color: black; font-weight:normal;">Evaluations</span></h3>
-    <input type="range" min="1" max="{{ comp.last_n_evals+10 }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_pot" style="width: 100%;">
+    <input type="range" min="1" max="{{ comp.last_n_evals }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_pot" style="width: 100%;">
   </span>
   <div style="display: flex; flex-direction: column;">
     <div class="column" style="float: left; width: 90%;">
