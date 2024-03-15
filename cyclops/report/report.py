@@ -1096,9 +1096,15 @@ class ModelCardReport:
         else:
             today_now = dt_datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        current_report_metrics: List[List[PerformanceMetric]] = []
+        current_report_metrics: Union[
+            List[List[PerformanceMetric]], List[PerformanceMetric]
+        ] = []
         sweep_metrics(self._model_card, current_report_metrics)
-        current_report_metrics_set = current_report_metrics[0]
+        current_report_metrics_set = (
+            current_report_metrics[0]
+            if isinstance(current_report_metrics[0], list)
+            else [current_report_metrics[0]]
+        )
 
         report_paths = glob.glob(
             os.path.join(
