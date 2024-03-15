@@ -337,22 +337,30 @@ class TestModelCardReport(TestCase):
         harm = "Harm #5"
         mitigation = "Mitigation strategy #2"
 
-        self.model_card_report.log_fairness_assessment(affected_group, benefit, harm, mitigation)
-        self.model_card_report.log_quantitative_analysis(
-            analysis_type="performance",
-            name="accuracy",
-            value=0.85,
+        self.model_card_report.log_fairness_assessment(
+            affected_group, benefit, harm, mitigation
         )
         self.model_card_report.log_quantitative_analysis(
             analysis_type="performance",
-            name="f1_score",
-            value=0.65,
-            metric_slice="test",
-            decision_threshold=0.8,
+            name="BinaryAccuracy",
             description="Accuracy of the model on the test set",
+            value=0.85,
+            metric_slice="overall",
+            decision_threshold=0.7,
+            pass_fail_thresholds=[0.6, 0.65, 0.7],
+            pass_fail_threshold_fns=[lambda x, t: x >= t for _ in range(3)],
+        )
+        self.model_card_report.log_quantitative_analysis(
+            analysis_type="performance",
+            name="BinaryF1Score",
+            value=0.65,
+            metric_slice="overall",
+            decision_threshold=0.8,
+            description="F1 score of the model on the test set",
             pass_fail_thresholds=[0.9, 0.85, 0.8],
             pass_fail_threshold_fns=[lambda x, t: x >= t for _ in range(3)],
         )
+        self.model_card_report.log_owner(name="John Doe")
 
         report_path = self.model_card_report.export(interactive=False, save_json=False)
         assert isinstance(report_path, str)
