@@ -1098,7 +1098,8 @@ class ModelCardReport:
 
         current_report_metrics: List[List[PerformanceMetric]] = []
         sweep_metrics(self._model_card, current_report_metrics)
-        current_report_metrics_set = current_report_metrics[0]
+        current_report_metrics_set = current_report_metrics[0] if type(current_report_metrics[0]) == list else [current_report_metrics[0]]
+
 
         report_paths = glob.glob(
             os.path.join(
