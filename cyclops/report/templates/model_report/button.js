@@ -51,7 +51,6 @@ function setCollapseButton() {
 
       const collapsible_bar = card.getElementsByClassName('collapsible-bar')[0];
       collapsible_bar.style.display = collapsible_bar.style.display === 'block' ? 'none' : 'block';
-      refreshPlotlyPlots();
     });
   }
 }

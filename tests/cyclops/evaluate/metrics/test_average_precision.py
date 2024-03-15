@@ -1,6 +1,5 @@
 """Functions for testing average precision metrics."""
 
-
 import numpy as np
 import pytest
 from sklearn.metrics import average_precision_score as sk_average_precision_score

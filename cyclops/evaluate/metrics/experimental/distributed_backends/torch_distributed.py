@@ -1,4 +1,5 @@
 """`torch.distributed` backend for synchronizing `torch.Tensor` objects."""
+
 from typing import TYPE_CHECKING, List
 
 from cyclops.evaluate.metrics.experimental.distributed_backends.base import (
@@ -56,7 +57,7 @@ class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
         return gathered_data
 
     def all_gather(self, data: Tensor) -> List[Tensor]:  # type: ignore[override]
-        """Gather Arrays from current proccess and return as a list.
+        """Gather Arrays from current process and return as a list.
 
         Parameters
         ----------

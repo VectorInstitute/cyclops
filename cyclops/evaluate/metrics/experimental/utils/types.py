@@ -1,4 +1,5 @@
 """Utilities for array-API compatibility."""
+
 import builtins
 from enum import IntEnum
 from types import ModuleType

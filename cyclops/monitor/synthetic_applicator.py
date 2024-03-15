@@ -65,7 +65,7 @@ def gaussian_noise_shift(
     delta: float = 0.5,
     clip: bool = False,
 ) -> np.ndarray[float, np.dtype[np.float64]]:
-    """Create gaussian noise of specificed parameters in input data.
+    """Create gaussian noise of specified parameters in input data.
 
     Parameters
     ----------
@@ -137,7 +137,7 @@ def knockout_shift(
     X: numpy.matrix
         covariate data with class imbalance
     y: numpy.array
-        placeholer for labels
+        placeholder for labels
 
     """
     del_indices = np.where(y == shift_class)[0]
@@ -277,7 +277,7 @@ def binary_noise_shift(
     prob: float = 0.5,
     delta: float = 0.5,
 ) -> np.ndarray[float, np.dtype[np.float64]]:
-    """Create binary noise of specificed parameters in input data.
+    """Create binary noise of specified parameters in input data.
 
     Parameters
     ----------

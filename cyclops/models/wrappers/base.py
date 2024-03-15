@@ -189,7 +189,7 @@ class ModelWrapper(ABC):
                 by default None
         only_predictions : bool, optional
             Whether to return only the predictions rather than the dataset \
-                with predictions when the input is a Hugging Face Datset, \
+                with predictions when the input is a Hugging Face Dataset, \
                 by default False
         splits_mapping: Optional[dict], optional
             Mapping from 'train', 'validation' and 'test' to dataset splits names, \

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.2.3"
+version = "0.2.4"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -28,7 +28,7 @@ kaleido = "0.2.1"
 scour = "^0.38.2"
 plotly = "^5.7.0"
 pillow = "^10.0.0"
-array-api-compat = "^1.4"
+array-api-compat = "1.4"
 hydra-core = "^1.2.0"
 
 # Optional dependencies
@@ -98,7 +98,7 @@ pytest-cov = "^3.0.0"
 codecov = "^2.1.13"
 nbstripout = "^0.6.1"
 mypy = "^1.7.0"
-ruff = "^0.2.0"
+ruff = "^0.3.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 pip-audit = "^2.7.1"
 cycquery = "^0.1.2" # used for integration test

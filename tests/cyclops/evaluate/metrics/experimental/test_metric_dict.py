@@ -1,4 +1,5 @@
 """Test the `MetricDict` class."""
+
 from copy import deepcopy
 
 import numpy as np

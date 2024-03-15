@@ -1180,7 +1180,7 @@ class PTModel(ModelWrapper):
                 by default None
         only_predictions : bool, optional
             Whether to return only the predictions rather than the dataset \
-                with predictions when the input is a Hugging Face Datset, \
+                with predictions when the input is a Hugging Face Dataset, \
                 by default False
         splits_mapping: Optional[dict], optional
             Mapping from 'train', 'validation' and 'test' to dataset splits names, \
@@ -1322,7 +1322,7 @@ class PTModel(ModelWrapper):
             state_dict["epoch"] = epoch
 
             # prepare the latest model path
-            # if a specific filename is provided, append 'latest' to it and preseve
+            # if a specific filename is provided, append 'latest' to it and preserve
             # the extension. Otherwise, use 'latest.pt' as the filename.
             latest_model_path = join(dir_path, "latest.pt")
             if not use_default_filepath:

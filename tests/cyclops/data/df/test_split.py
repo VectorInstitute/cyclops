@@ -144,19 +144,19 @@ def test_intersect_datasets():
         [[1, 4, 3], [4, 6.3, 8], [3, 2, 0.2]],
         columns=["A", "D", "E"],
     )
-    datas = intersect_datasets([dataframe1, dataframe2], on_col="A")
-    assert datas[0]["A"][0] == 1
-    assert datas[0]["A"][2] == 3
-    assert datas[1]["A"][0] == 1
-    assert datas[1]["A"][2] == 3
-    assert datas[0]["B"][0] == 2
-    assert datas[0]["B"][2] == 2
-    assert datas[0]["C"][0] == 3
-    assert datas[0]["C"][2] == 0.2
-    assert datas[1]["D"][0] == 4
-    assert datas[1]["D"][2] == 2
-    assert datas[1]["E"][0] == 3
-    assert datas[1]["E"][2] == 0.2
+    data = intersect_datasets([dataframe1, dataframe2], on_col="A")
+    assert data[0]["A"][0] == 1
+    assert data[0]["A"][2] == 3
+    assert data[1]["A"][0] == 1
+    assert data[1]["A"][2] == 3
+    assert data[0]["B"][0] == 2
+    assert data[0]["B"][2] == 2
+    assert data[0]["C"][0] == 3
+    assert data[0]["C"][2] == 0.2
+    assert data[1]["D"][0] == 4
+    assert data[1]["D"][2] == 2
+    assert data[1]["E"][0] == 3
+    assert data[1]["E"][2] == 0.2
 
 
 def test_split_datasets_by_idx():

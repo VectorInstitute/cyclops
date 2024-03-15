@@ -1,6 +1,5 @@
 """Constants."""
 
-
 # Generic.
 YEAR = "year"
 MONTH = "month"

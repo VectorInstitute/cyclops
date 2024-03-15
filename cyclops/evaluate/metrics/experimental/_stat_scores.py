@@ -1,4 +1,5 @@
 """Abstract classes for computing true/false positive/negative scores."""
+
 from typing import Any, Literal, Optional, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental.confusion_matrix import (

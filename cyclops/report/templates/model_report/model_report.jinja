@@ -531,8 +531,62 @@
     "rgb(23, 190, 207)"
   ];
 
+  // create global variable for max_n_evals
+  var histories = JSON.parse({{ get_histories(model_card)|safe|tojson }});
+  // get max_n_evals from histories
+  var history_data = [];
+  for (let i = 0; i < histories[0].length; i++) {
+  history_data.push(parseFloat(histories[0][i]));
+  }
+  var max_n_evals = history_data.length;
+
+// Add event listeners to radio buttons
+  for (let input of inputs_all) {
+  input.addEventListener('change', updatePlot);
+  }
+  // Add event listener to update plot when window is resized
+  window.addEventListener('resize', updatePlot);
+  for (let selection of plot_selection) {
+  selection.addEventListener('change', updatePlotSelection);
+  }
+
 
   // Initial update when the page loads
   updatePlot();
   document.addEventListener('DOMContentLoaded', setCollapseButton);
+
+  function updateLastNEvals() {
+  var n_evals_slider_p = document.getElementById("n_evals_slider_p");
+  var slider_p_num = document.getElementById("slider_p_num");
+  var n_evals_slider_pot = document.getElementById("n_evals_slider_pot");
+  var slider_pot_num = document.getElementById("slider_pot_num");
+
+  n_evals_slider_p.max = max_n_evals;
+  n_evals_slider_pot.max = max_n_evals;
+
+  var last_n_evals = {{ model_card.overview.last_n_evals }};
+
+  if (last_n_evals == 0) {
+      n_evals_slider_p.value = max_n_evals;
+      slider_p_num.innerHTML = n_evals_slider_p.value;
+      n_evals_slider_pot.value = max_n_evals;
+      slider_pot_num.innerHTML = n_evals_slider_pot.value;
+  }
+  generate_model_card_plot();
+  updatePlot();
+
+  if (n_evals_slider_p !== null) {
+      n_evals_slider_p.oninput = function() {
+          slider_p_num.innerHTML = this.value;
+          generate_model_card_plot();
+      }
+  }
+  if (n_evals_slider_pot !== null) {
+      n_evals_slider_pot.oninput = function() {
+          slider_pot_num.innerHTML = this.value;
+          updatePlot();
+      }
+      }
+  }
+  document.addEventListener('DOMContentLoaded', updateLastNEvals);
 </script>

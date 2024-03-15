@@ -1,4 +1,5 @@
 """Classes for computing the precision-recall curve."""
+
 from types import ModuleType
 from typing import Any, List, Literal, Optional, Tuple, Union
 

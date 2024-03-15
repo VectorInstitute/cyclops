@@ -1,4 +1,5 @@
 """Functions for computing the precision and recall for different unique thresholds."""
+
 from types import ModuleType
 from typing import Any, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 

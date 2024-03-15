@@ -1,4 +1,5 @@
 """mpi4py backend for synchronizing array-API-compatible objects."""
+
 # mypy: disable-error-code="no-any-return,arg-type"
 import os
 from typing import TYPE_CHECKING, List
@@ -49,7 +50,7 @@ class MPI4Py(DistributedBackend, registry_key="mpi4py"):
         return comm.Get_size()
 
     def all_gather(self, arr: Array) -> List[Array]:
-        """Gather Arrays from current proccess and return as a list.
+        """Gather Arrays from current process and return as a list.
 
         Parameters
         ----------

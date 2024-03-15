@@ -1,4 +1,5 @@
 """Functional interface for the mean absolute percentage error metric."""
+
 from typing import Tuple, Union
 
 import array_api_compat as apc

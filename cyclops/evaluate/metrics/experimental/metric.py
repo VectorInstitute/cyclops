@@ -1,4 +1,5 @@
 """Base class for all metrics."""
+
 import inspect
 import logging
 import warnings

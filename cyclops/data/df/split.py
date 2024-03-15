@@ -276,7 +276,7 @@ def kfold_cross_val(
 
 
 def intersect_datasets(
-    datas: List[pd.DataFrame],
+    data: List[pd.DataFrame],
     on_col: str,
     sort: bool = True,
 ) -> Tuple[pd.DataFrame, ...]:
@@ -287,7 +287,7 @@ def intersect_datasets(
 
     Parameters
     ----------
-    datas: list of pandas.DataFrame
+    data: list of pandas.DataFrame
         List of datasets.
     on_col: str
         The column on which to perform the intersection.
@@ -302,21 +302,21 @@ def intersect_datasets(
     """
     # Concatenate the unique values in each dataset and count how many of each
     unique, counts = np.unique(
-        np.concatenate([data[on_col].unique() for data in datas]),
+        np.concatenate([data_[on_col].unique() for data_ in data]),
         return_counts=True,
     )
 
     # If a count is equal to the length of datasets, it must exist in every dataset
-    intersect = unique[counts == len(datas)]
+    intersect = unique[counts == len(data)]
 
     # Intersect on these unique values
-    for i, data in enumerate(datas):
-        data_ = data[data[on_col].isin(intersect)]
+    for i, data_ in enumerate(data):
+        data_i = data_[data_[on_col].isin(intersect)]
         if sort:
-            data_ = data_.sort_values(on_col)
-        datas[i] = data_
+            data_i = data_i.sort_values(on_col)
+        data[i] = data_i
 
-    return tuple(datas)
+    return tuple(data)
 
 
 def split_datasets_by_idx(

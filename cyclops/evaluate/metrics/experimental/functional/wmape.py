@@ -1,4 +1,5 @@
 """Functional interface for the Weighted Mean Absolute Percentage Error metric."""
+
 from typing import Tuple
 
 import array_api_compat as apc
