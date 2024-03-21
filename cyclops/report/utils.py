@@ -23,6 +23,15 @@ from cyclops.report.model_card.fields import (
 )
 
 
+_METRIC_NAMES_DISPLAY_MAP = {
+    "PositivePredictiveValue": "Positive Predictive Value (PPV)",
+    "NegativePredictiveValue": "Negative Predictive Value (NPV)",
+    "FalsePositiveRate": "False Positive Rate (FPR)",
+    "FalseNegativeRate": "False Negative Rate (FNR)",
+    "F1Score": "F1 Score",
+}
+
+
 def str_to_snake_case(string: str) -> str:
     """Convert a string to snake_case.
 
@@ -576,18 +585,22 @@ def get_timestamps(model_card: ModelCard) -> str:
     return json.dumps(timestamps)
 
 
-def create_metric_cards(  # noqa: PLR0912 PLR0915
+def _extract_slices_and_values(
     current_metrics: List[PerformanceMetric],
-    timestamp: str,
-    last_metric_cards: Optional[List[MetricCard]] = None,
-) -> Tuple[
-    List[str],
-    List[Optional[str]],
-    List[str],
-    List[List[str]],
-    List[MetricCard],
-]:
-    """Create metric cards for each metric."""
+) -> Tuple[List[str], List[List[str]]]:
+    """Extract slices and values from a list of performance metrics.
+
+    Parameters
+    ----------
+    current_metrics : List[PerformanceMetric]
+        The list of performance metrics to extract slices and values from.
+
+    Returns
+    -------
+    Tuple[List[str], List[List[str]]]
+        A tuple of lists of slices and values.
+
+    """
     slices_values = []
     for current_metric in current_metrics:
         if current_metric.slice is not None:
@@ -605,47 +618,65 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
         for slice_val in slices_values
         if slice_val.split(":")[0] != "overall"
     ]
-
     values: List[List[str]] = [[] for _ in range(len(slices))]
-
     for i, slice_name in enumerate(slices):
         for j, slice_val in enumerate(slices_values):
             if slice_val.startswith(slice_name):
                 values[i].append(values_all[j])
 
+    return slices, values
+
+
+def _gather_metrics(
+    current_metrics: List[PerformanceMetric],
+    last_metric_cards: Optional[List[MetricCard]] = None,
+) -> List[Dict[str, Any]]:
+    """Gather all metrics from current metrics and last metric cards.
+
+    Parameters
+    ----------
+    current_metrics : List[PerformanceMetric]
+        The current performance metrics.
+    last_metric_cards : Optional[List[MetricCard]], optional
+        The last metric cards, by default None.
+
+    Returns
+    -------
+    List[Dict[str, Any]]
+        A list of dictionaries with keys type, slice, current_metric,
+        and last_metric_card.
+
+    """
     all_metrics = []
-    # gather overall metrics with matching type
     for current_metric in current_metrics:
-        if last_metric_cards is None:
-            last_metric_card_match = None
-        else:
-            last_metric_card_match = None
-            for last_metric_card in last_metric_cards:
-                if (
-                    current_metric.type == last_metric_card.type
-                    and current_metric.slice == last_metric_card.slice
-                ):
-                    last_metric_card_match = last_metric_card
+        last_metric_card_match = next(
+            (
+                last_metric_card
+                for last_metric_card in last_metric_cards or []
+                if current_metric.type == last_metric_card.type
+                and current_metric.slice == last_metric_card.slice
+            ),
+            None,
+        )
         all_metrics.append(
             {
                 "type": current_metric.type,
                 "slice": current_metric.slice,
                 "current_metric": current_metric,
                 "last_metric_card": last_metric_card_match,
-            },
+            }
         )
-
-    # find metric cards that are not in current metrics
     if last_metric_cards is not None:
         for last_metric_card in last_metric_cards:
-            current_metric_match = None
-            for current_metric in current_metrics:
-                if (
-                    current_metric.type == last_metric_card.type
+            current_metric_match = next(
+                (
+                    current_metric
+                    for current_metric in current_metrics
+                    if current_metric.type == last_metric_card.type
                     and current_metric.slice == last_metric_card.slice
-                ):
-                    current_metric_match = current_metric
-
+                ),
+                None,
+            )
             if current_metric_match is None:
                 all_metrics.append(
                     {
@@ -653,179 +684,277 @@ def create_metric_cards(  # noqa: PLR0912 PLR0915
                         "slice": last_metric_card.slice,
                         "current_metric": None,
                         "last_metric_card": last_metric_card,
-                    },
+                    }
                 )
 
-    # create dict to populate metrics cards
+    return all_metrics
+
+
+def _process_metric_name(
+    metric: Dict[str, Any],
+) -> str:
+    """Process a metric name.
+
+    Parameters
+    ----------
+    metric : Dict[str, Any]
+        Metric dictionary.
+
+    Returns
+    -------
+    str
+        The processed metric name.
+
+    """
+    if isinstance(metric["type"], str):
+        # Check if name has prefix "Binary", "Multiclass", or "Multilabel"
+        if metric["type"].startswith("Binary"):
+            name = metric["type"][6:]
+        elif metric["type"].startswith("Multiclass") or metric["type"].startswith(
+            "Multilabel",
+        ):
+            name = metric["type"][10:]
+        for key, value in _METRIC_NAMES_DISPLAY_MAP.items():
+            name = name.replace(key, value)
+    else:
+        raise ValueError(f"Invalid metric type: {metric['type']}")
+
+    return name
+
+
+def _create_metric_card(
+    metric: Dict[str, Any],
+    name: str,
+    history: List[float],
+    timestamps: List[str],
+    threshold: Union[float, None],
+    passed: Union[bool, None],
+) -> MetricCard:
+    """Create a metric card.
+
+    Parameters
+    ----------
+    metric : Dict[str, Any]
+        Metric dictionary.
+    name : str
+        The name for the metric card.
+    history : List[float]
+        The history for the metric card.
+    timestamps : List[str]
+        The timestamps for the metric card.
+    threshold : Union[float, None]
+        The threshold for the metric card.
+    passed : Union[bool, None]
+        Whether or not the metric card passed.
+
+    Returns
+    -------
+    MetricCard
+        The created metric card.
+
+    """
+    return MetricCard(
+        name=name,
+        type=metric["current_metric"].type
+        if isinstance(metric["current_metric"], PerformanceMetric)
+        else None,
+        slice=metric["current_metric"].slice
+        if isinstance(metric["current_metric"], PerformanceMetric)
+        else None,
+        tooltip=metric["current_metric"].description
+        if isinstance(metric["current_metric"], PerformanceMetric)
+        else None,
+        value=metric["current_metric"].value
+        if isinstance(metric["current_metric"], PerformanceMetric)
+        and isinstance(metric["current_metric"].value, float)
+        else None,
+        threshold=threshold,
+        passed=passed,
+        history=history,
+        timestamps=timestamps,
+    )
+
+
+def _get_metric_card(
+    metric: Dict[str, Any],
+    name: str,
+    timestamp: str,
+) -> MetricCard:
+    """Get a metric card.
+
+    Parameters
+    ----------
+    metric : Dict[str, Any]
+        Metric dictionary.
+    name : str
+        The name for the metric card.
+    timestamp : str
+        The timestamp for the current metric card.
+
+    Returns
+    -------
+    Tuple[List[float], List[str], MetricCard]
+        The history, timestamps, and metric card.
+
+    """
+    metric_card = None
+    if (
+        metric["current_metric"] is None
+        and metric["last_metric_card"]
+        and isinstance(
+            metric["last_metric_card"],
+            MetricCard,
+        )
+    ):
+        history = metric["last_metric_card"].history
+        history.append(np.nan)
+        timestamps = metric["last_metric_card"].timestamps
+        if timestamps is not None:
+            timestamps.append(timestamp)
+        metric["last_metric_card"].timestamps = timestamps
+        metric_card = metric["last_metric_card"]
+    elif (
+        metric["current_metric"] is not None
+        and metric["last_metric_card"]
+        and isinstance(
+            metric["last_metric_card"],
+            MetricCard,
+        )
+    ):
+        history = metric["last_metric_card"].history
+        if (isinstance(metric["current_metric"], PerformanceMetric)) and (
+            isinstance(metric["current_metric"].value, float)
+        ):
+            history.append(metric["current_metric"].value)
+        timestamps = metric["last_metric_card"].timestamps
+        if timestamps is not None:
+            timestamps.append(timestamp)
+    else:
+        history = [
+            metric["current_metric"].value
+            if isinstance(
+                metric["current_metric"],
+                PerformanceMetric,
+            )
+            and isinstance(metric["current_metric"].value, float)
+            else 0,
+        ]
+        timestamps = [timestamp]
+    if metric_card is None:
+        metric_card = _create_metric_card(
+            metric,
+            name,
+            history,
+            timestamps,
+            _get_threshold(metric),
+            _get_passed(metric),
+        )
+
+    return metric_card
+
+
+def _get_threshold(metric: Dict[str, Any]) -> Union[float, None]:
+    """Get the threshold for a metric card.
+
+    Parameters
+    ----------
+    metric : Dict[str, Any]
+        Metric dictionary.
+
+    Returns
+    -------
+    Union[float, None]
+        The threshold for the metric card.
+
+    """
+    return (
+        metric["current_metric"].tests[0].threshold
+        if (
+            isinstance(metric["current_metric"], PerformanceMetric)
+            and (metric["current_metric"].tests is not None)
+            and (isinstance(metric["current_metric"].tests[0], Test))
+            and (metric["current_metric"].tests[0].threshold is not None)
+        )
+        else None
+    )
+
+
+def _get_passed(metric: Dict[str, Any]) -> Union[bool, None]:
+    """Get whether or not a metric card test passed.
+
+    Parameters
+    ----------
+    metric : Dict[str, Any]
+        Metric dictionary.
+
+    Returns
+    -------
+    Union[bool, None]
+        Whether or not the metric card passed.
+
+    """
+    return (
+        metric["current_metric"].tests[0].passed
+        if (
+            isinstance(metric["current_metric"], PerformanceMetric)
+            and (metric["current_metric"].tests is not None)
+            and (isinstance(metric["current_metric"].tests[0], Test))
+            and (metric["current_metric"].tests[0].passed is not None)
+        )
+        else None
+    )
+
+
+def create_metric_cards(
+    current_metrics: List[PerformanceMetric],
+    timestamp: str,
+    last_metric_cards: Optional[List[MetricCard]] = None,
+) -> Tuple[
+    List[str],
+    List[Optional[str]],
+    List[str],
+    List[List[str]],
+    List[MetricCard],
+]:
+    """Create metric cards for each metric.
+
+    Parameters
+    ----------
+    current_metrics : List[PerformanceMetric]
+        The current performance metrics.
+    timestamp : str
+        The timestamp for the current metric card.
+    last_metric_cards : Optional[List[MetricCard]], optional
+        The last metric cards, by default None.
+
+    Returns
+    -------
+    Tuple[
+        List[str],
+        List[Optional[str]],
+        List[str],
+        List[List[str]],
+        List[MetricCard]
+    ]
+        A tuple of lists of metrics, tooltips, slices, values, and metric cards.
+
+    """
+    slices, values = _extract_slices_and_values(current_metrics)
+    all_metrics = _gather_metrics(current_metrics, last_metric_cards)
+    # Create dict to populate metrics cards
     metric_cards = []
     metrics = []
     tooltips = []
     for metric in all_metrics:
-        # split into words by camelcase
-        if isinstance(metric["type"], str):
-            # check if name has prefix "Binary", "Multiclass", or "Multilabel"
-            if metric["type"].startswith("Binary"):
-                name = metric["type"][6:]
-            elif metric["type"].startswith("Multiclass") or metric["type"].startswith(
-                "Multilabel",
-            ):
-                name = metric["type"][10:]
-            name = name.replace(
-                "PositivePredictiveValue",
-                "Positive Predictive Value (PPV)",
-            )
-            name = name.replace(
-                "NegativePredictiveValue",
-                "Negative Predictive Value (NPV)",
-            )
-            name = name.replace(
-                "FalsePositiveRate",
-                "False Positive Rate (FPR)",
-            )
-            name = name.replace(
-                "FalseNegativeRate",
-                "False Negative Rate (FNR)",
-            )
-            name = name.replace(
-                "F1Score",
-                "F1 Score",
-            )
+        name = _process_metric_name(metric)
         metrics.append(name)
         if isinstance(metric["current_metric"], PerformanceMetric):
             tooltips.append(metric["current_metric"].description)
-
-        if (
-            metric["current_metric"] is None
-            and metric["last_metric_card"]
-            and isinstance(
-                metric["last_metric_card"],
-                MetricCard,
-            )
-        ):
-            history = metric["last_metric_card"].history
-            history.append(np.nan)
-            metric["last_metric_card"].value = np.nan
-            timestamps = metric["last_metric_card"].timestamps
-            if timestamps is not None:
-                timestamps.append(timestamp)
-            metric["last_metric_card"].timestamps = timestamps
-            metric_cards.append(metric["last_metric_card"])
-
-        elif (
-            metric["current_metric"] is not None
-            and metric["last_metric_card"]
-            and isinstance(
-                metric["last_metric_card"],
-                MetricCard,
-            )
-        ):
-            history = metric["last_metric_card"].history
-            if (isinstance(metric["current_metric"], PerformanceMetric)) and (
-                isinstance(metric["current_metric"].value, float)
-            ):
-                history.append(metric["current_metric"].value)
-
-            timestamps = metric["last_metric_card"].timestamps
-            if timestamps is not None:
-                timestamps.append(timestamp)
-
-            metric_cards.append(
-                MetricCard(
-                    name=name,
-                    type=metric["current_metric"].type
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    slice=metric["current_metric"].slice
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    tooltip=metric["current_metric"].description
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    value=metric["current_metric"].value
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    and isinstance(metric["current_metric"].value, float)
-                    else None,
-                    threshold=metric["current_metric"].tests[0].threshold
-                    if (
-                        isinstance(metric["current_metric"], PerformanceMetric)
-                        and (metric["current_metric"].tests is not None)
-                        and (isinstance(metric["current_metric"].tests[0], Test))
-                        and (metric["current_metric"].tests[0].threshold is not None)
-                    )
-                    else None,
-                    passed=metric["current_metric"].tests[0].passed
-                    if (
-                        isinstance(metric["current_metric"], PerformanceMetric)
-                        and (metric["current_metric"].tests is not None)
-                        and (isinstance(metric["current_metric"].tests[0], Test))
-                        and (metric["current_metric"].tests[0].passed is not None)
-                    )
-                    else None,
-                    history=history,
-                    timestamps=timestamps,
-                ),
-            )
-        else:
-            metric_cards.append(
-                MetricCard(
-                    name=name,
-                    type=metric["current_metric"].type
-                    if isinstance(
-                        metric["current_metric"],
-                        PerformanceMetric,
-                    )
-                    else None,
-                    slice=metric["current_metric"].slice
-                    if isinstance(
-                        metric["current_metric"],
-                        PerformanceMetric,
-                    )
-                    else None,
-                    tooltip=metric["current_metric"].description
-                    if isinstance(
-                        metric["current_metric"],
-                        PerformanceMetric,
-                    )
-                    else None,
-                    value=metric["current_metric"].value
-                    if isinstance(
-                        metric["current_metric"],
-                        PerformanceMetric,
-                    )
-                    and isinstance(metric["current_metric"].value, float)
-                    else None
-                    if isinstance(metric["current_metric"], PerformanceMetric)
-                    else None,
-                    threshold=metric["current_metric"].tests[0].threshold
-                    if (
-                        isinstance(metric["current_metric"], PerformanceMetric)
-                        and (metric["current_metric"].tests is not None)
-                        and (isinstance(metric["current_metric"].tests[0], Test))
-                        and (metric["current_metric"].tests[0].threshold is not None)
-                    )
-                    else None,
-                    passed=metric["current_metric"].tests[0].passed
-                    if (
-                        isinstance(metric["current_metric"], PerformanceMetric)
-                        and (metric["current_metric"].tests is not None)
-                        and (isinstance(metric["current_metric"].tests[0], Test))
-                        and (metric["current_metric"].tests[0].passed is not None)
-                    )
-                    else None,
-                    history=[
-                        metric["current_metric"].value
-                        if isinstance(
-                            metric["current_metric"],
-                            PerformanceMetric,
-                        )
-                        and isinstance(metric["current_metric"].value, float)
-                        else 0,
-                    ],
-                    timestamps=[timestamp],
-                ),
-            )
+        metric_card = _get_metric_card(metric, name, timestamp)
+        metric_cards.append(metric_card)
     metrics = list(dict.fromkeys(metrics))
     tooltips = list(dict.fromkeys(tooltips))
+
     return metrics, tooltips, slices, values, metric_cards
 
 
