@@ -588,17 +588,17 @@ def get_timestamps(model_card: ModelCard) -> str:
 def _extract_slices_and_values(
     current_metrics: List[PerformanceMetric],
 ) -> Tuple[List[str], List[List[str]]]:
-    """Extract slices and values from a list of performance metrics.
+    """Extract slice and value names from a list of performance metrics.
 
     Parameters
     ----------
     current_metrics : List[PerformanceMetric]
-        The list of performance metrics to extract slices and values from.
+        The list of performance metrics to extract slice and value names from.
 
     Returns
     -------
     Tuple[List[str], List[List[str]]]
-        A tuple of lists of slices and values.
+        A tuple of lists of slice and value names.
 
     """
     slices_values = []
