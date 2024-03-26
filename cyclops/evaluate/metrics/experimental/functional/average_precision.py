@@ -296,9 +296,11 @@ def _multiclass_average_precision_compute(
         precision,
         recall,
         average=average,
-        weights=xp.astype(bincount(state[0], minlength=num_classes), xp.float32)
-        if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1, dtype=xp.float32),  # type: ignore
+        weights=(
+            xp.astype(bincount(state[0], minlength=num_classes), xp.float32, copy=False)
+            if thresholds is None
+            else xp.sum(state[0, ...][:, 1, :], axis=-1, dtype=xp.float32)  # type: ignore[call-overload]
+        ),
         xp=xp,
     )
 
@@ -525,9 +527,13 @@ def _multilabel_average_precision_compute(
         precision,
         recall,
         average=average,
-        weights=xp.sum(xp.astype(state[0] == 1, xp.int32), axis=0, dtype=xp.float32)
-        if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore
+        weights=(
+            xp.sum(
+                xp.astype(state[0] == 1, xp.int32, copy=False), axis=0, dtype=xp.float32
+            )
+            if thresholds is None
+            else xp.sum(state[0, ...][:, 1, :], axis=-1)  # type: ignore[call-overload]
+        ),
         xp=xp,
     )
 
