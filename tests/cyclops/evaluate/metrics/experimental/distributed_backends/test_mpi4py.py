@@ -132,7 +132,6 @@ def _test_dist_compositional_array(rank: int, worldsize: int = NUM_PROCESSES) ->
     dummy = dummy.clone() + dummy.clone()
     dummy.update(anp.asarray(1, dtype=anp.float32))
     val = dummy.compute()
-    print(val)
     assert val == 2 * worldsize
 
 

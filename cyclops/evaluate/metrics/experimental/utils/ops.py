@@ -167,6 +167,7 @@ def bincount(
     bincount = xp.astype(
         array == xp.arange(size, device=device)[:, None],
         weights.dtype if weights is not None else xp.int32,
+        copy=False,
     )
     return xp.sum(bincount * (weights if weights is not None else 1), axis=1)
 
@@ -245,7 +246,7 @@ def dim_zero_max(x: Array) -> Array:
 def dim_zero_mean(x: Array) -> Array:
     """Average along the zero dimension."""
     xp = apc.array_namespace(x)
-    x = x if is_floating_point(x) else xp.astype(x, xp.float32)
+    x = x if is_floating_point(x) else xp.astype(x, xp.float32, copy=False)
     return xp.mean(x, axis=0)
 
 
@@ -513,12 +514,14 @@ def safe_divide(
     xp = apc.array_namespace(numerator, denominator)
 
     numerator = (
-        numerator if is_floating_point(numerator) else xp.astype(numerator, xp.float32)
+        numerator
+        if is_floating_point(numerator)
+        else xp.astype(numerator, xp.float32, copy=False)
     )
     denominator = (
         denominator
         if is_floating_point(denominator)
-        else xp.astype(denominator, xp.float32)
+        else xp.astype(denominator, xp.float32, copy=False)
     )
 
     return xp.where(
@@ -554,7 +557,9 @@ def sigmoid(array: Array) -> Array:
     if apc.size(array) == 0:
         return xp.asarray([], dtype=xp.float32, device=apc.device(array))
 
-    array = array if is_floating_point(array) else xp.astype(array, xp.float32)
+    array = (
+        array if is_floating_point(array) else xp.astype(array, xp.float32, copy=False)
+    )
 
     exp_array = xp.exp(array)
     return xp.where(
@@ -675,7 +680,7 @@ def _adjust_weight_apply_average(
         if not is_multilabel:
             weights[tp + fp + fn == 0] = 0.0
 
-    weights = xp.astype(weights, xp.float32)
+    weights = xp.astype(weights, xp.float32, copy=False)
     return xp.sum(  # type: ignore[no-any-return]
         safe_divide(
             weights * score,
@@ -740,7 +745,7 @@ def _auc_compute(
         else:
             direction = 1.0
 
-    return xp.astype(_trapz(y, x, axis=axis) * direction, xp.float32)
+    return xp.astype(_trapz(y, x, axis=axis) * direction, xp.float32, copy=False)
 
 
 def _cumsum(x: Array, axis: Optional[int] = None, dtype: Optional[Any] = None) -> Array:
@@ -930,7 +935,10 @@ def _interp(x: Array, xcoords: Array, ycoords: Array) -> Array:
 
     # create slices to work for any ndim of x and xcoords
     indices = (
-        xp.sum(xp.astype(x[..., None] >= xcoords[None, ...], xp.int32), axis=1) - 1
+        xp.sum(
+            xp.astype(x[..., None] >= xcoords[None, ...], xp.int32, copy=False), axis=1
+        )
+        - 1
     )
     _min_val = xp.asarray(0, dtype=xp.int32, device=apc.device(x))
     _max_val = xp.asarray(

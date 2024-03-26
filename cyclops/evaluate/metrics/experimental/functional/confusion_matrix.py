@@ -33,7 +33,7 @@ def _normalize_confusion_matrix(
 ) -> Array:
     """Normalize the confusion matrix."""
     if normalize in ["true", "pred", "all"]:
-        confmat = xp.astype(confmat, xp.float32)
+        confmat = xp.astype(confmat, xp.float32, copy=False)
 
     if normalize == "pred":
         return safe_divide(confmat, xp.sum(confmat, axis=-2, keepdims=True))

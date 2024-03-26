@@ -288,9 +288,11 @@ def _multiclass_auroc_compute(
         fpr,
         tpr,
         average=average,
-        weights=xp.astype(bincount(state[0], minlength=num_classes), xp.float32)
-        if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        weights=(
+            xp.astype(bincount(state[0], minlength=num_classes), xp.float32, copy=False)
+            if thresholds is None
+            else xp.sum(state[0, ...][:, 1, :], axis=-1)  # type: ignore[call-overload]
+        ),
         xp=xp,
     )
 
@@ -493,12 +495,15 @@ def _multilabel_auroc_compute(
         fpr,
         tpr,
         average,
-        weights=xp.astype(
-            xp.sum(xp.astype(state[0] == 1, xp.int32), axis=0),
-            xp.float32,
-        )
-        if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        weights=(
+            xp.astype(
+                xp.sum(xp.astype(state[0] == 1, xp.int32, copy=False), axis=0),
+                xp.float32,
+                copy=False,
+            )
+            if thresholds is None
+            else xp.sum(state[0, ...][:, 1, :], axis=-1)  # type: ignore[call-overload]
+        ),
         xp=xp,
     )
 

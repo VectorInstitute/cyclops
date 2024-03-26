@@ -32,7 +32,7 @@ def _mcc_reduce(confmat: Array) -> Array:
 
     if int(apc.size(confmat) or 0) == 4:  # binary case
         # convert tp, tn, fp, fn to float32 for type promotion rules to work
-        tn, fp, fn, tp = xp.reshape(xp.astype(confmat, xp.float32), (-1,))
+        tn, fp, fn, tp = xp.reshape(xp.astype(confmat, xp.float32, copy=False), (-1,))
         if tp + tn != 0 and fp + fn == 0:
             return xp.asarray(1.0, dtype=confmat.dtype, device=apc.device(confmat))  # type: ignore[no-any-return]
 
@@ -41,7 +41,7 @@ def _mcc_reduce(confmat: Array) -> Array:
 
     tk = xp.sum(confmat, axis=-1, dtype=xp.float64)  # tn + fp and tp + fn
     pk = xp.sum(confmat, axis=-2, dtype=xp.float64)  # tn + fn and tp + fp
-    c = xp.astype(xp.linalg.trace(confmat), xp.float64)  # tn and tp
+    c = xp.astype(xp.linalg.trace(confmat), xp.float64, copy=False)  # tn and tp
     s = xp.sum(confmat, dtype=xp.float64)  # tn + tp + fn + fp
 
     cov_ytyp = c * s - sum(tk * pk)
