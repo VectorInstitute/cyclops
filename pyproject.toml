@@ -138,6 +138,7 @@ cupy = "^12.2.0"
 mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 lightning = "^2.1.0"
 imbalanced-learn = "^0.11.0"
+pyperf = "^2.6.3"
 
 [tool.poetry.group.deploy]
 optional = true
