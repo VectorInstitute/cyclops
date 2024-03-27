@@ -3,6 +3,7 @@
 from collections import defaultdict
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objs as go
 
 from cyclops.report.plot.classification import ClassificationPlotter, PRCurve, ROCCurve
@@ -85,6 +86,21 @@ def test_plot_threshperf():
     roc_curve = ROCCurve(fpr=fpr, tpr=tpr, thresholds=thresholds)
 
     plot = _binary_plotter.threshperf(roc_curve, ppv, npv, pred_probs)
+    assert isinstance(plot, go.Figure)
+
+
+def test_plot_calibration():
+    """Test the calibration plot."""
+    data = pd.DataFrame(
+        {
+            "y_true": np.random.randint(0, 2, 100),
+            "y_prob": np.random.rand(100),
+            "group_col": np.random.randint(0, 2, 100),
+        }
+    )
+    plot = _binary_plotter.calibration(
+        data, y_true_col="y_true", y_prob_col="y_prob", group_col="group_col"
+    )
     assert isinstance(plot, go.Figure)
 
 
@@ -234,12 +250,12 @@ def test_metrics_comparison_scatter():
     assert isinstance(plot, go.Figure)
 
 
-def test_plot_confusion_matrix():
+def test_confusion_matrix():
     """Test plotting confusion matrix."""
     bin_conf_mat = np.random.rand(2, 2)
-    plot = _binary_plotter.plot_confusion_matrix(bin_conf_mat)
+    plot = _binary_plotter.confusion_matrix(bin_conf_mat)
     assert isinstance(plot, go.Figure)
 
     mclass_conf_mat = np.random.rand(3, 3)
-    plot = _mclass_plotter.plot_confusion_matrix(mclass_conf_mat)
+    plot = _mclass_plotter.confusion_matrix(mclass_conf_mat)
     assert isinstance(plot, go.Figure)
