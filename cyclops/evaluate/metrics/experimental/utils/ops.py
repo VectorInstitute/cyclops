@@ -18,7 +18,7 @@ from typing import (
 
 import array_api_compat as apc
 import numpy as np
-from array_api_compat.common._helpers import _is_numpy_array, _is_torch_array
+from array_api_compat.common._helpers import is_numpy_array, is_torch_array
 
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.metrics.experimental.utils.validation import (
@@ -915,7 +915,7 @@ def _interp(x: Array, xcoords: Array, ycoords: Array) -> Array:
     if hasattr(xp, "interp"):
         return xp.interp(x, xcoords, ycoords)
 
-    if _is_torch_array(x):
+    if is_torch_array(x):
         weight = (x - xcoords[0]) / (xcoords[-1] - xcoords[0])
         return xp.lerp(ycoords[0], ycoords[-1], weight)
 
@@ -1030,9 +1030,9 @@ def _select_topk(  # noqa: PLR0912
 
     zeros = xp.zeros_like(scores, dtype=xp.int32)
 
-    if _is_torch_array(scores):
+    if is_torch_array(scores):
         return zeros.scatter(axis, topk_indices, 1)
-    if _is_numpy_array(scores):
+    if is_numpy_array(scores):
         xp.put_along_axis(zeros, topk_indices, 1, axis)
         return zeros
 

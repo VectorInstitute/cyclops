@@ -291,7 +291,11 @@ def _multiclass_average_precision_compute(
         thresholds=thresholds,
         average=None,
     )
-    xp = apc.array_namespace(state)
+    xp = (
+        apc.array_namespace(*state)
+        if isinstance(state, tuple)
+        else apc.array_namespace(state)
+    )
     return _reduce_average_precision(
         precision,
         recall,
@@ -507,7 +511,11 @@ def _multilabel_average_precision_compute(
     ignore_index: Optional[int] = None,
 ) -> Array:
     """Compute the average precision score for multilabel classification task."""
-    xp = apc.array_namespace(state)
+    xp = (
+        apc.array_namespace(*state)
+        if isinstance(state, tuple)
+        else apc.array_namespace(state)
+    )
     if average == "micro":
         if apc.is_array_api_obj(state) and thresholds is not None:
             state = xp.sum(state, axis=1)
