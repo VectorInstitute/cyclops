@@ -271,7 +271,7 @@ def _binary_clf_curve(
         # the presence of floating point errors
         fps = _array_indexing(_cumsum((1 - target) * weight, axis=0), threshold_idxs)
     else:
-        fps = 1 + xp.astype(threshold_idxs, xp.float32) - tps
+        fps = 1 + xp.astype(threshold_idxs, xp.float32, copy=False) - tps
 
     return fps, tps, _array_indexing(preds, threshold_idxs)
 

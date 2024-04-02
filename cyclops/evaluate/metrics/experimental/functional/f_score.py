@@ -57,9 +57,9 @@ def _binary_fbeta_compute(
     """Compute the F-beta score for binary classification tasks."""
     beta2 = beta**2
     xp = apc.array_namespace(fp, fn, tp)
-    tp = xp.astype(tp, xp.float32)
-    fp = xp.astype(fp, xp.float32)
-    fn = xp.astype(fn, xp.float32)
+    tp = xp.astype(tp, xp.float32, copy=False)
+    fp = xp.astype(fp, xp.float32, copy=False)
+    fn = xp.astype(fn, xp.float32, copy=False)
     return squeeze_all(
         safe_divide(
             numerator=(1 + beta2) * tp,
@@ -90,9 +90,9 @@ def _fbeta_compute(
             denominator=(1 + beta2) * tp + beta2 * fn + fp,
         )
 
-    tp = xp.astype(tp, xp.float32)
-    fp = xp.astype(fp, xp.float32)
-    fn = xp.astype(fn, xp.float32)
+    tp = xp.astype(tp, xp.float32, copy=False)
+    fp = xp.astype(fp, xp.float32, copy=False)
+    fn = xp.astype(fn, xp.float32, copy=False)
     score = safe_divide(
         numerator=(1 + beta2) * tp,
         denominator=(1 + beta2) * tp + beta2 * fn + fp,

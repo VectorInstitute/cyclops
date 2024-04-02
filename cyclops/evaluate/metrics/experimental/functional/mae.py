@@ -18,8 +18,14 @@ def _mean_absolute_error_update(target: Array, preds: Array) -> Tuple[Array, int
     _check_same_shape(target, preds)
     xp = apc.array_namespace(target, preds)
 
-    target = target if is_floating_point(target) else xp.astype(target, xp.float32)
-    preds = preds if is_floating_point(preds) else xp.astype(preds, xp.float32)
+    target = (
+        target
+        if is_floating_point(target)
+        else xp.astype(target, xp.float32, copy=False)
+    )
+    preds = (
+        preds if is_floating_point(preds) else xp.astype(preds, xp.float32, copy=False)
+    )
 
     sum_abs_error = xp.sum(xp.abs(preds - target), dtype=xp.float32)
     num_obs = int(apc.size(target) or 0)
