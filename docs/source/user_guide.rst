@@ -5,5 +5,5 @@ User Guide
 
    installation
    evaluation
+   report
    monitoring
-   model_report
