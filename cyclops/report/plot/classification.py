@@ -103,6 +103,8 @@ class ClassificationPlotter(Plotter):
         group_col: Optional[str] = None,
         title: Optional[str] = "Calibration Plot",
         layout: Optional[go.Layout] = None,
+        n_bins: Optional[int] = 10,
+        n_bins_hist: Optional[int] = 100,
         **plot_kwargs: Any,
     ) -> go.Figure:
         """Plot calibration curve for binary classification.
@@ -121,6 +123,10 @@ class ClassificationPlotter(Plotter):
             Plot title, by default "Calibration Plot"
         layout : go.Layout, optional
             Customized figure layout, by default None
+        n_bins : int, optional
+            Number of bins for calibration curve, by default 10
+        n_bins_hist : int, optional
+            Number of bins for histogram, by default 100
         **plot_kwargs : dict
             Additional keyword arguments
 
@@ -148,7 +154,7 @@ class ClassificationPlotter(Plotter):
             for group in unique_groups:
                 group_df = data[data[group_col] == group]
                 prob_true, prob_pred = calibration_curve(
-                    group_df[y_true_col], group_df[y_prob_col], n_bins=10
+                    group_df[y_true_col], group_df[y_prob_col], n_bins=n_bins
                 )
                 fig.add_trace(
                     go.Scatter(
@@ -160,7 +166,7 @@ class ClassificationPlotter(Plotter):
         else:
             # Plot a single calibration curve
             prob_true, prob_pred = calibration_curve(
-                data[y_true_col], data[y_prob_col], n_bins=10
+                data[y_true_col], data[y_prob_col], n_bins=n_bins
             )
             fig.add_trace(
                 go.Scatter(
@@ -184,7 +190,10 @@ class ClassificationPlotter(Plotter):
         # Plot histogram if no grouping variable is provided
         fig.add_trace(
             go.Histogram(
-                x=data[y_prob_col], nbinsx=100, name="Probabilities", showlegend=False
+                x=data[y_prob_col],
+                nbinsx=n_bins_hist,
+                name="Probabilities",
+                showlegend=False,
             ),
             row=2,
             col=1,
