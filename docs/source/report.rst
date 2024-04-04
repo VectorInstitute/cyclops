@@ -1,22 +1,21 @@
 Report
 ======
 
-Once you have trained your model and calculated the evaluation metrics, you may need to generate a comprehensive report for the used dataset, model, and visual aids to better understand how the model performs. 
+This feature helps you create comprehensive reports to understand your model's performance better. It caters to users with and without machine learning expertise by offering: 
 
-Key capabilities:
 
-    * Visual aids: Easily populate your report with the figures you have generated. Furthermore, it provides visual aids for all users to learn about how the model is performing -regardless of machine learning knowledge.
+    * Clear Visualizations: Effortlessly incorporate the generated figures into your report, providing a clear picture of model performance for everyone.
 
     .. image:: examples/images/overview_metrics.png
 
     .. image:: examples/images/overview_performance.png
 
 
-    * Model details: Document all the model details and parameters for users.
+    * Detailed Model Specs: Document all relevant model details and parameters for easy reference.
 
     .. image:: examples/images/model_details.png
 
-    * Interactive plots: Get an overview of how your model is performing for each subgroup over the time. It also supports user interactions to select the target subgroup and add or remove metrics.
+    * Interactive Exploration: Gain insights into model performance across different subgroups over time. Interact with the plots to select specific subgroups and adjust displayed metrics.
 
     .. image:: examples/images/metrics_comparison.png
 
