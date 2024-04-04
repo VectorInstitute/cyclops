@@ -8,6 +8,7 @@ htmlcov
 venv
 .ipynb_checkpoints
 *.pt
+*.onnx
 *.csv
 mlruns
 .profile
