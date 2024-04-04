@@ -1,7 +1,7 @@
 Report
 ======
 
-This feature helps you create comprehensive reports to understand your model's performance better. It caters to users with and without machine learning expertise by offering: 
+This feature helps you create comprehensive reports to understand your model's performance better. It caters to users with and without machine learning expertise by offering:
 
 
     * Clear Visualizations: Effortlessly incorporate the generated figures into your report, providing a clear picture of model performance for everyone.
