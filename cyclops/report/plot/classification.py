@@ -5,8 +5,10 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+from sklearn.calibration import calibration_curve
 
 from cyclops.evaluate.metrics.experimental.functional import PRCurve as PRCurveExp
 from cyclops.evaluate.metrics.experimental.functional import ROCCurve as ROCCurveExp
@@ -93,6 +95,125 @@ class ClassificationPlotter(Plotter):
             class_names = [f"Class_{i+1}" for i in range(self.class_num)]
         self.class_names = class_names
 
+    def calibration(
+        self,
+        data: pd.DataFrame,
+        y_true_col: str,
+        y_prob_col: str,
+        group_col: Optional[str] = None,
+        title: Optional[str] = "Calibration Plot",
+        layout: Optional[go.Layout] = None,
+        n_bins: Optional[int] = 10,
+        n_bins_hist: Optional[int] = 100,
+        **plot_kwargs: Any,
+    ) -> go.Figure:
+        """Plot calibration curve for binary classification.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Dataframe containing true labels and predicted probabilities
+        y_true_col : str
+            Column name for true labels
+        y_prob_col : str
+            Column name for predicted probabilities
+        group_col : str, optional
+            Column name for grouping the data, by default None
+        title: str, optional
+            Plot title, by default "Calibration Plot"
+        layout : go.Layout, optional
+            Customized figure layout, by default None
+        n_bins : int, optional
+            Number of bins for calibration curve, by default 10
+        n_bins_hist : int, optional
+            Number of bins for histogram, by default 100
+        **plot_kwargs : dict
+            Additional keyword arguments
+
+        Returns
+        -------
+        go.Figure
+            Plotly figure object
+
+        """
+        if self.task_type != "binary":
+            raise ValueError(
+                "Calibration plot is only available for binary classification"
+            )
+        # Create subplots: 1 plot for calibration curve, 1 plot for histogram
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.02,
+            row_heights=[0.8, 0.2],
+        )
+        if group_col:
+            # Plot a calibration curve for each level of the grouping variable
+            unique_groups = data[group_col].unique()
+            for group in unique_groups:
+                group_df = data[data[group_col] == group]
+                prob_true, prob_pred = calibration_curve(
+                    group_df[y_true_col], group_df[y_prob_col], n_bins=n_bins
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x=prob_pred, y=prob_true, mode="markers+lines", name=f"{group}"
+                    ),
+                    row=1,
+                    col=1,
+                )
+        else:
+            # Plot a single calibration curve
+            prob_true, prob_pred = calibration_curve(
+                data[y_true_col], data[y_prob_col], n_bins=n_bins
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=prob_pred, y=prob_true, mode="markers+lines", name="Model"
+                ),
+                row=1,
+                col=1,
+            )
+        # Add perfectly calibrated line to the calibration curve
+        fig.add_trace(
+            go.Scatter(
+                x=[0, 1],
+                y=[0, 1],
+                mode="lines",
+                name="Perfectly calibrated",
+                line={"dash": "dot"},
+            ),
+            row=1,
+            col=1,
+        )
+        # Plot histogram if no grouping variable is provided
+        fig.add_trace(
+            go.Histogram(
+                x=data[y_prob_col],
+                nbinsx=n_bins_hist,
+                name="Probabilities",
+                showlegend=False,
+            ),
+            row=2,
+            col=1,
+        )
+        # Update layout
+        legend_title = group_col if group_col else None
+        fig.update_layout(
+            height=800,
+            title=title,
+            yaxis_title="Fraction of Positives",
+            legend_title=legend_title,
+        )
+        fig.update_xaxes(title_text="Mean Predicted Probability", row=2, col=1)
+        fig.update_yaxes(title_text="Count", row=2, col=1)
+
+        if layout is not None:
+            fig.update_layout(layout)
+
+        return fig
+
     def threshperf(
         self,
         roc_curve: ROCCurve,
@@ -139,10 +260,8 @@ class ClassificationPlotter(Plotter):
         ), "Length mismatch between ROC curve, PPV, NPV. All curves need to be computed using the same thresholds"
         # Define hover template to show three decimal places
         hover_template = "Threshold: %{x:.3f}<br>Metric Value: %{y:.3f}<extra></extra>"
-
         # Create a subplot for each metric
         fig = make_subplots(rows=5, cols=1, shared_xaxes=True, vertical_spacing=0.02)
-
         # Sensitivity plot (True Positive Rate)
         fig.add_trace(
             go.Scatter(
@@ -155,7 +274,6 @@ class ClassificationPlotter(Plotter):
             row=1,
             col=1,
         )
-
         # Specificity plot (1 - False Positive Rate)
         fig.add_trace(
             go.Scatter(
@@ -168,7 +286,6 @@ class ClassificationPlotter(Plotter):
             row=2,
             col=1,
         )
-
         # PPV plot (Positive Predictive Value)
         fig.add_trace(
             go.Scatter(
@@ -181,7 +298,6 @@ class ClassificationPlotter(Plotter):
             row=3,
             col=1,
         )
-
         # NPV plot (Negative Predictive Value)
         fig.add_trace(
             go.Scatter(
@@ -194,14 +310,12 @@ class ClassificationPlotter(Plotter):
             row=4,
             col=1,
         )
-
         # Add histogram of predicted probabilities
         fig.add_trace(
             go.Histogram(x=pred_probs, nbinsx=80, name="Predicted Probabilities"),
             row=5,
             col=1,
         )
-
         # Update layout
         fig.update_layout(
             height=1200,
@@ -215,23 +329,18 @@ class ClassificationPlotter(Plotter):
                 "x": 0.5,
             },
         )
-
         # Remove subplot titles
         for i in fig["layout"]["annotations"]:
             i["text"] = ""
-
         # Remove the plot background color, keep gridlines, show y-axis ticks and labels
         fig.update_xaxes(showgrid=True)
         fig.update_yaxes(showgrid=True, showticklabels=True)
-
         # Only show the x-axis line and labels on the bottommost plot
         fig.update_xaxes(showline=True, linewidth=1, linecolor="black", mirror=True)
         fig.update_xaxes(showticklabels=True, row=4, col=1)
         fig.update_yaxes(showline=True, linewidth=1, linecolor="black", mirror=True)
-
         fig.update_xaxes(showline=False, row=5, col=1, showticklabels=False)
         fig.update_yaxes(showline=False, row=5, col=1)
-
         if layout is not None:
             fig.update_layout(layout)
 
@@ -1144,7 +1253,7 @@ class ClassificationPlotter(Plotter):
             fig.update_layout(layout)
         return fig
 
-    def plot_confusion_matrix(
+    def confusion_matrix(
         self,
         confusion_matrix: np.typing.NDArray[Any],
     ) -> go.Figure:
