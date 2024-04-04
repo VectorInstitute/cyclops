@@ -58,7 +58,11 @@ def _binary_auroc_compute(
 ) -> Array:
     """Compute the area under the ROC curve for binary classification tasks."""
     fpr, tpr, _ = _binary_roc_compute(state, thresholds, pos_label)
-    xp = apc.array_namespace(state)
+    xp = (
+        apc.array_namespace(*state)
+        if isinstance(state, tuple)
+        else apc.array_namespace(state)
+    )
     if max_fpr is None or max_fpr == 1 or xp.sum(fpr) == 0 or xp.sum(tpr) == 0:
         return _auc_compute(fpr, tpr, 1.0)
 
@@ -283,14 +287,20 @@ def _multiclass_auroc_compute(
 ) -> Array:
     """Compute the area under the ROC curve for multiclass classification tasks."""
     fpr, tpr, _ = _multiclass_roc_compute(state, num_classes, thresholds=thresholds)
-    xp = apc.array_namespace(state)
+    xp = (
+        apc.array_namespace(*state)
+        if isinstance(state, tuple)
+        else apc.array_namespace(state)
+    )
     return _reduce_auroc(
         fpr,
         tpr,
         average=average,
-        weights=xp.astype(bincount(state[0], minlength=num_classes), xp.float32)
-        if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        weights=(
+            xp.astype(bincount(state[0], minlength=num_classes), xp.float32, copy=False)
+            if thresholds is None
+            else xp.sum(state[0, ...][:, 1, :], axis=-1)  # type: ignore[call-overload]
+        ),
         xp=xp,
     )
 
@@ -488,17 +498,24 @@ def _multilabel_auroc_compute(
         return _binary_auroc_compute((target, preds), thresholds, max_fpr=None)
 
     fpr, tpr, _ = _multilabel_roc_compute(state, num_labels, thresholds, ignore_index)
-    xp = apc.array_namespace(state)
+    xp = (
+        apc.array_namespace(*state)
+        if isinstance(state, tuple)
+        else apc.array_namespace(state)
+    )
     return _reduce_auroc(
         fpr,
         tpr,
         average,
-        weights=xp.astype(
-            xp.sum(xp.astype(state[0] == 1, xp.int32), axis=0),
-            xp.float32,
-        )
-        if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        weights=(
+            xp.astype(
+                xp.sum(xp.astype(state[0] == 1, xp.int32, copy=False), axis=0),
+                xp.float32,
+                copy=False,
+            )
+            if thresholds is None
+            else xp.sum(state[0, ...][:, 1, :], axis=-1)  # type: ignore[call-overload]
+        ),
         xp=xp,
     )
 
