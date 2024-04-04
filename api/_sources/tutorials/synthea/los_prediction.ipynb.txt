@@ -1181,7 +1181,7 @@
    "source": [
     "# Plot confusion matrix\n",
     "confusion_matrix = results[model_name][\"overall\"][\"BinaryConfusionMatrix\"]\n",
-    "conf_plot = plotter.plot_confusion_matrix(\n",
+    "conf_plot = plotter.confusion_matrix(\n",
     "    confusion_matrix,\n",
     ")\n",
     "report.log_plotly_figure(\n",
