@@ -10,6 +10,7 @@ on:
       - '**.py'
       - '**.ipynb'
       - '**.jinja'
+      - '**.js'
       - poetry.lock
       - pyproject.toml
       - '**.rst'
