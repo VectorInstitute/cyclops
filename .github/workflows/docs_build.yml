@@ -9,6 +9,7 @@ on:
       - .github/workflows/docs_build.yml
       - '**.py'
       - '**.ipynb'
+      - '**.html'
       - '**.jinja'
       - '**.js'
       - poetry.lock
