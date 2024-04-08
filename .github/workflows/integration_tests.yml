@@ -2,7 +2,7 @@ name: integration tests
 
 on:
   push:
-g   branches:
+    branches:
       - main
     paths:
       - .pre-commit-config.yaml
