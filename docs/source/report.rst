@@ -1,17 +1,17 @@
-Report
-======
+Model Report
+============
 
-This feature helps you create comprehensive reports to understand your model's performance better. It caters to users with and without machine learning expertise by offering:
+The model report helps technicians, data scientists and clinicians to understand the model's performance better by offering:
 
 
-    * Clear Visualizations: Effortlessly incorporate the generated figures into your report, providing a clear picture of model performance for everyone.
+    * Clear Visualizations: Effortlessly incorporate the generated figures from model evaluation into your report, providing a clear picture of model performance for everyone.
 
     .. image:: examples/images/overview_metrics.png
 
     .. image:: examples/images/overview_performance.png
 
 
-    * Detailed Model Specs: Document all relevant model details and parameters for easy reference.
+    * Detailed Model Specs: Document and view all relevant model details and parameters for easy reference.
 
     .. image:: examples/images/model_details.png
 
