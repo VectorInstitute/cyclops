@@ -2,7 +2,7 @@ name: integration tests
 
 on:
   push:
-    branches:
+g   branches:
       - main
     paths:
       - .pre-commit-config.yaml
@@ -12,6 +12,9 @@ on:
       - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.ipynb'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
       - poetry.lock
       - pyproject.toml
       - '**.rst'
@@ -28,6 +31,9 @@ on:
       - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.ipynb'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
       - poetry.lock
       - pyproject.toml
       - '**.rst'
