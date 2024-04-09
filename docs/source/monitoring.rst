@@ -24,4 +24,3 @@ To get a better prespective about different subgroups such as age intervals or s
 
 
 Again, this plot has the feature of viewing a number of past evaluations using the slider at the top right.
-
