@@ -51,3 +51,100 @@ bentoml containerize -t model-service:alpha --enable-features=triton --do-not-tr
 ```bash
 docker run -d --gpus=1 --rm -p 3000:3000 model-service:alpha
 ```
+
+<details>
+<summary><b>Access the endpoints from the Vector Cluster</b></summary>
+
+If you have access to the the Vector cluster, the model service is running at
+```
+http://cyclops.cluster.local:3000
+```
+
+Here are some of the end points you can access and an example of how to do so:
+
+`/list_models`: Lists all models that can be queried with the server and their status.
+```bash
+curl -X 'POST' \
+  'http://cyclops.cluster.local:3000/list_models' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: text/plain' \
+  -H 'access-key: admin' \
+  -d 'None'
+```
+
+`/load_model`: load a given model to memory in preparation for inference.
+```bash
+curl -X 'POST' \
+  'http://cyclops.cluster.local:3000/load_model' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: text/plain' \
+  -H 'access-key: admin' \
+  -d '"heart_failure_prediction"'
+```
+
+`/unload_model`: unload a model from memory, making it unavailable for inference.
+```bash
+curl -X 'POST' \
+  'http://cyclops.cluster.local:3000/unload_model' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: text/plain' \
+  -H 'access-key: admin' \
+  -d '"densenet121_res224_all"'
+```
+
+`/model_config`: returns the configurations for a given model.
+```bash
+curl -X 'POST' \
+  'http://cyclops.cluster.local:3000/model_config' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{"model_name": "resnet50_res512_all"}'
+```
+
+`/predict_heart_failure`: this is the inference endpoint for the heart failure prediction model.
+```bash
+curl -X 'POST' \
+  'http://cyclops.cluster.local:3000/predict_heart_failure' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '[
+  [
+    0.36734694,
+    0.45107794,
+    0.80985915,
+    0.56097561,
+    0.7,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0
+  ]
+]'
+```
+
+`/classify_xray`: this is the inference end point for the torchxrayvision models. The image and model name needs to be specified.
+```bash
+wget https://raw.githubusercontent.com/mlmed/torchxrayvision/master/tests/covid-19-pneumonia-58-prior.jpg && \
+curl -X 'POST' \
+  'http://cyclops.cluster.local:3000/classify_xray' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'im=@covid-19-pneumonia-58-prior.jpg;type=image/jpeg' \
+  -F 'model_name=resnet50_res512_all'
+```
+
+In most cases, the only thing you need to change is the -d or -F option. Notice that
+the `load_model`, `unload_model` and `list_model` endpoints require an access key. This is
+to demonstrate the access control feature of the server.
