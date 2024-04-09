@@ -29,7 +29,7 @@ def test_import_cyclops():
     assert cyclops.monitor.__name__ == "cyclops.monitor"
 
     import cyclops.tasks
-    
+
     assert cyclops.tasks.__name__ == "cyclops.tasks"
 
 
