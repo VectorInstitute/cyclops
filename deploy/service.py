@@ -24,7 +24,7 @@ def get_transform(image_size: int) -> transforms.Compose:
     )
 
 
-triton_runner = bentoml.triton.Runner(  # type: ignore[call-arg]
+triton_runner = bentoml.triton.Runner(
     "triton_runner",
     "src/model_repo",
     tritonserver_type="http",
@@ -51,7 +51,7 @@ async def classify_xray(im: Image, model_name: str) -> dict[str, float]:
         reshape=True,  # normalize image to [-1024, 1024]
     )
 
-    model_repo_index = await triton_runner.get_model_repository_index()  # type: ignore[call-overload]
+    model_repo_index = await triton_runner.get_model_repository_index()
     available_models = [model["name"] for model in model_repo_index]
     if model_name not in available_models:
         raise bentoml.exceptions.InvalidArgument(
@@ -73,13 +73,13 @@ async def classify_xray(im: Image, model_name: str) -> dict[str, float]:
     )
 
 
-@svc.api(
+@svc.api(  # type: ignore
     input=bentoml.io.NumpyNdarray(dtype="float32", shape=(-1, 21)),
     output=bentoml.io.NumpyNdarray(dtype="int64", shape=(-1,)),
 )
 async def predict_heart_failure(X: np.ndarray) -> np.ndarray:  # type: ignore
     """Run inference on heart failure prediction model."""
-    InferResult = await triton_runner.heart_failure_prediction.async_run(  # type: ignore[attr-defined] # noqa: N806
+    InferResult = await triton_runner.heart_failure_prediction.async_run(  # noqa: N806
         X,
     )
     return InferResult.as_numpy("label")  # type: ignore[no-any-return]
@@ -95,7 +95,7 @@ async def model_config(input_model: dict[Literal["model_name"], str]) -> dict[st
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
 async def unload_model(input_model: str, ctx: bentoml.Context) -> dict[str, str]:
     """Unload a model from memory."""
-    await triton_runner.unload_model(  # type: ignore[call-overload]
+    await triton_runner.unload_model(
         input_model,
         headers=ctx.request.headers,
     )  # noqa: E501
@@ -105,7 +105,7 @@ async def unload_model(input_model: str, ctx: bentoml.Context) -> dict[str, str]
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
 async def load_model(input_model: str, ctx: bentoml.Context) -> dict[str, str]:
     """Load a model into memory."""
-    await triton_runner.load_model(input_model, headers=ctx.request.headers)  # type: ignore[call-overload]
+    await triton_runner.load_model(input_model, headers=ctx.request.headers)
     return {"loaded": input_model}
 
 
