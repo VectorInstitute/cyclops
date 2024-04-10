@@ -68,8 +68,7 @@ curl -X 'POST' \
   'http://cyclops.cluster.local:3000/list_models' \
   -H 'accept: application/json' \
   -H 'Content-Type: text/plain' \
-  -H 'access-key: admin' \
-  -d 'None'
+  -H 'access-key: admin'
 ```
 
 `/load_model`: load a given model to memory in preparation for inference.
@@ -79,7 +78,7 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: text/plain' \
   -H 'access-key: admin' \
-  -d '"heart_failure_prediction"'
+  -d 'densenet121_res224_all'
 ```
 
 `/unload_model`: unload a model from memory, making it unavailable for inference.
@@ -89,7 +88,7 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: text/plain' \
   -H 'access-key: admin' \
-  -d '"densenet121_res224_all"'
+  -d 'densenet121_res224_all'
 ```
 
 `/model_config`: returns the configurations for a given model.
@@ -98,7 +97,7 @@ curl -X 'POST' \
   'http://cyclops.cluster.local:3000/model_config' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-  -d '{"model_name": "resnet50_res512_all"}'
+  -d '{"model_name": "heart_failure_prediction"}'
 ```
 
 `/predict_heart_failure`: this is the inference endpoint for the heart failure prediction model.
@@ -141,8 +140,9 @@ curl -X 'POST' \
   'http://cyclops.cluster.local:3000/classify_xray' \
   -H 'accept: application/json' \
   -H 'Content-Type: multipart/form-data' \
+  -H 'access-key: admin' \
   -F 'im=@covid-19-pneumonia-58-prior.jpg;type=image/jpeg' \
-  -F 'model_name=resnet50_res512_all'
+  -F 'model_name=densenet121_res224_all'
 ```
 
 In most cases, the only thing you need to change is the -d or -F option. Notice that

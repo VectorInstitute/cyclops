@@ -527,18 +527,18 @@ lxml = ["lxml"]
 
 [[package]]
 name = "bentoml"
-version = "1.2.4"
+version = "1.2.0"
 description = "BentoML: Build Production-Grade AI Applications"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "bentoml-1.2.4-py3-none-any.whl", hash = "sha256:19797bb27ddf65744355f04fc8653c60d23eac5aa4af3b0a0fefb720d594b7e5"},
-    {file = "bentoml-1.2.4.tar.gz", hash = "sha256:39246c0fcd9161582f94580cee7ccfd65e84570690e087b9401a95d57e2a91ab"},
+    {file = "bentoml-1.2.0-py3-none-any.whl", hash = "sha256:30779d7020c3f866a5c11c57c5dc0ca6d652b54135552bf56c2839c0138ac77d"},
+    {file = "bentoml-1.2.0.tar.gz", hash = "sha256:ba8ca221e7253d14b1a35ac1f4b38075e3034a66c1ca2e2692b4425cdf8e2bda"},
 ]
 
 [package.dependencies]
 aiohttp = "*"
-attrs = ">=22.2.0"
+attrs = ">=21.1.0"
 cattrs = ">=22.1.0,<23.2.0"
 circus = ">=0.17.0,<0.17.2 || >0.17.2"
 click = ">=7.0"
@@ -9310,4 +9310,4 @@ xgboost = ["xgboost"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.12"
-content-hash = "aca9ad7ad7d3a6ba74adef54fafb5122c29f4979dc277e2d9ad063398938b74c"
+content-hash = "59fb9a3d7732dce09aac26fd822b01357bdf524d12f8c5d6473393d9ca4ff085"

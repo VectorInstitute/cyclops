@@ -30,9 +30,10 @@ triton_runner = bentoml.triton.Runner(
     tritonserver_type="http",
     cli_args=[
         "--exit-on-error=true",  # exits if any error occurs during initialization
-        "--http-restricted-api=model-repository:access-key=admin",  # restrict access to load/unload APIs
         "--model-control-mode=explicit",  # enable explicit model loading/unloading
-        "--load-model=resnet50_res512_all",
+        "--load-model=densenet121_res224_all",  # load DenseNet121 chest X-ray model on startup
+        "--load-model=heart_failure_prediction",  # load heart failure prediction model on startup
+        "--http-restricted-api=model-repository:access-key=admin",  # restrict access to load/unload APIs
     ],
 )
 svc = bentoml.Service("model-service", runners=[triton_runner])
@@ -42,7 +43,9 @@ svc = bentoml.Service("model-service", runners=[triton_runner])
     input=bentoml.io.Multipart(im=bentoml.io.Image(), model_name=bentoml.io.Text()),
     output=bentoml.io.JSON(),
 )
-async def classify_xray(im: Image, model_name: str) -> dict[str, float]:
+async def classify_xray(
+    im: Image, model_name: str, ctx: bentoml.Context
+) -> dict[str, float]:
     """Classify X-ray image using specified model."""
     img = np.asarray(im)
     img = xrv.datasets.normalize(
@@ -51,7 +54,9 @@ async def classify_xray(im: Image, model_name: str) -> dict[str, float]:
         reshape=True,  # normalize image to [-1024, 1024]
     )
 
-    model_repo_index = await triton_runner.get_model_repository_index()
+    model_repo_index = await triton_runner.get_model_repository_index(
+        headers=ctx.request.headers, query_params=ctx.request.query_params
+    )
     available_models = [model["name"] for model in model_repo_index]
     if model_name not in available_models:
         raise bentoml.exceptions.InvalidArgument(
@@ -93,23 +98,26 @@ async def model_config(input_model: dict[Literal["model_name"], str]) -> dict[st
 
 
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
-async def unload_model(input_model: str, ctx: bentoml.Context) -> dict[str, str]:
+async def unload_model(model_name: str, ctx: bentoml.Context) -> dict[str, str]:
     """Unload a model from memory."""
     await triton_runner.unload_model(
-        input_model,
-        headers=ctx.request.headers,
+        model_name, headers=ctx.request.headers, query_params=ctx.request.query_params
     )  # noqa: E501
-    return {"unloaded": input_model}
+    return {"unloaded": model_name}
 
 
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
-async def load_model(input_model: str, ctx: bentoml.Context) -> dict[str, str]:
+async def load_model(model_name: str, ctx: bentoml.Context) -> dict[str, str]:
     """Load a model into memory."""
-    await triton_runner.load_model(input_model, headers=ctx.request.headers)
-    return {"loaded": input_model}
+    await triton_runner.load_model(
+        model_name, headers=ctx.request.headers, query_params=ctx.request.query_params
+    )
+    return {"loaded": model_name}
 
 
 @svc.api(input=bentoml.io.Text(), output=bentoml.io.JSON())  # type: ignore
 async def list_models(_: str, ctx: bentoml.Context) -> list[str]:
     """Return a list of models available in the model repository."""
-    return await triton_runner.get_model_repository_index(headers=ctx.request.headers)  # type: ignore
+    return await triton_runner.get_model_repository_index(  # type: ignore
+        headers=ctx.request.headers, query_params=ctx.request.query_params
+    )
