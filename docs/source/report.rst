@@ -19,8 +19,9 @@ Let's dive into the key sections of a model report and explore what each one tel
 
 Overview
 --------
-As the title suggests, in this section you get an overview performance of all metrics that you evaluated your model with. The color coded plots help to learn about any drastic change in the model performance in a glance.
-developers of the model report can define the number of evaluations that is shown in each plot. Users can hover on the metric title (e.g. Accuracy or F1 Score) to see a short description of that metric.
+This section provides a comprehensive overview of the various metrics used to evaluate the model's performance. Color-coded plots allow for quick visual identification of any significant changes in performance.
+
+Report developers can tailor the number of metrics displayed in each plot to suit their needs. Additionally, users can access brief descriptions of each metric (e.g., Accuracy, F1 Score) by hovering over the corresponding title.
 
 .. image:: examples/images/overview_metrics.png
 

@@ -6,6 +6,8 @@ By evaluating the model on the dataset through time and generating reports, you 
 
 Everytime an evaluation is performed and added to the report, a new entry is added to the report's `JSON` file and by doing so repeatedly, the users will be able to view the trend of performance over days, months, or hours.
 
+.. image:: examples/images/slicing.png
+
 Overview Performance
 --------------------
 

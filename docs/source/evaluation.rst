@@ -9,6 +9,8 @@ Key capabilities:
     * Fairness: Uncover and analyze potential biases within your model to ensure responsible and equitable outcomes.
     * Data slicing: Isolate the model's behavior on specific subsets of your data, revealing performance nuances across demographics, features, or other important characteristics.
 
+    .. image:: examples/images/slicing.png
+
 Follow the example below for the instructions:
 
 .. toctree::
