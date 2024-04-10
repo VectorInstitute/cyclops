@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import bentoml
 import numpy as np
 import torchxrayvision as xrv
+from bentoml._internal.context import Metadata
 from torchvision import transforms
 
 
 if TYPE_CHECKING:
     from PIL.Image import Image
+
+
+def _get_headers(request_headers: Metadata) -> Optional[dict[str, str]]:
+    """Get expected headers from request headers."""
+    if "access-key" in request_headers:
+        return {"access-key": request_headers["access-key"]}
+    return None
 
 
 def get_transform(image_size: int) -> transforms.Compose:
@@ -55,7 +63,7 @@ async def classify_xray(
     )
 
     model_repo_index = await triton_runner.get_model_repository_index(
-        headers=ctx.request.headers, query_params=ctx.request.query_params
+        headers=_get_headers(ctx.request.headers)
     )
     available_models = [model["name"] for model in model_repo_index]
     if model_name not in available_models:
@@ -101,7 +109,7 @@ async def model_config(input_model: dict[Literal["model_name"], str]) -> dict[st
 async def unload_model(model_name: str, ctx: bentoml.Context) -> dict[str, str]:
     """Unload a model from memory."""
     await triton_runner.unload_model(
-        model_name, headers=ctx.request.headers, query_params=ctx.request.query_params
+        model_name, headers=_get_headers(ctx.request.headers)
     )  # noqa: E501
     return {"unloaded": model_name}
 
@@ -110,7 +118,7 @@ async def unload_model(model_name: str, ctx: bentoml.Context) -> dict[str, str]:
 async def load_model(model_name: str, ctx: bentoml.Context) -> dict[str, str]:
     """Load a model into memory."""
     await triton_runner.load_model(
-        model_name, headers=ctx.request.headers, query_params=ctx.request.query_params
+        model_name, headers=_get_headers(ctx.request.headers)
     )
     return {"loaded": model_name}
 
@@ -119,5 +127,5 @@ async def load_model(model_name: str, ctx: bentoml.Context) -> dict[str, str]:
 async def list_models(_: str, ctx: bentoml.Context) -> list[str]:
     """Return a list of models available in the model repository."""
     return await triton_runner.get_model_repository_index(  # type: ignore
-        headers=ctx.request.headers, query_params=ctx.request.query_params
+        headers=_get_headers(ctx.request.headers)
     )
