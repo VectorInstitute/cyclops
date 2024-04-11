@@ -42,7 +42,7 @@ on:
 
 jobs:
   integration-tests:
-    runs-on: [self-hosted, gpu, db]
+    runs-on: [self-hosted, gpu, db, cyclops]
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Install poetry
