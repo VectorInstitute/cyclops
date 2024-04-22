@@ -1,7 +1,5 @@
 """Test mpi4py backend."""
 
-from functools import partial
-
 import numpy as np
 import numpy.array_api as anp
 import pytest
@@ -11,66 +9,61 @@ from cyclops.evaluate.metrics.experimental.distributed_backends.mpi4py import (
 )
 from cyclops.utils.optional import import_optional_module
 
-from ...conftest import NUM_PROCESSES
 from ..testers import DummyListStateMetric, DummyMetric
 
 
 MPI = import_optional_module("mpi4py.MPI", error="warn")
 
 
-def _test_mpi4py_class_init(rank: int, worldsize: int = NUM_PROCESSES):
-    """Run test."""
-    if MPI is None:
-        with pytest.raises(
-            ImportError,
-            match="For availability of MPI4Py please install mpi4py first.",
-        ):
-            backend = MPI4Py()
-            assert not backend.is_initialized
-        pytest.skip("`mpi4py` is not installed.")
-
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_mpi4py_class_init():
+    """Test MPI4Py class initialization."""
+    comm = MPI.COMM_WORLD
     backend = MPI4Py()
     assert backend.is_initialized
-    assert backend.rank == rank
-    assert backend.world_size == worldsize
+    assert backend.rank == comm.Get_rank()
+    assert backend.world_size == comm.size
 
 
-@pytest.mark.integration_test()
-def test_mpi4py_backend_class_init():
-    """Test `TorchDistributed` class."""
-    pytest.mpi_pool.starmap(
-        _test_mpi4py_class_init,
-        [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)],
-    )  # type: ignore
-
-
-def _test_all_gather_simple(rank: int, worldsize: int = NUM_PROCESSES):
-    """Run test."""
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_all_gather_simple():
+    """Test all_gather with equal arrays."""
     backend = MPI4Py()
+    comm = MPI.COMM_WORLD
 
     array = anp.ones(5)
     result = backend.all_gather(array)
-    assert len(result) == worldsize
-    for idx in range(worldsize):
+    assert len(result) == comm.size
+    for idx in range(comm.size):
         val = result[idx]
         assert anp.all(val == anp.ones_like(val))
 
 
-def _test_all_gather_uneven_arrays(rank: int, worldsize: int = NUM_PROCESSES):
-    """Run test."""
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_all_gather_uneven_arrays():
+    """Test all_gather with uneven arrays."""
     backend = MPI4Py()
+    comm = MPI.COMM_WORLD
 
-    array = anp.ones(rank)
+    array = anp.ones(comm.Get_rank())
     result = backend.all_gather(array)
-    assert len(result) == worldsize
-    for idx in range(worldsize):
+    assert len(result) == comm.size
+    for idx in range(comm.size):
         val = result[idx]
         assert anp.all(val == anp.ones_like(val))
 
 
-def _test_all_gather_uneven_multidim_arrays(rank: int, worldsize: int = NUM_PROCESSES):
-    """Run test."""
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_all_gather_uneven_multidim_arrays():
+    """Test all_gather with uneven multidimensional arrays."""
     backend = MPI4Py()
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    worldsize = comm.size
 
     array = anp.ones((rank + 1, 2 - rank, 2))
     result = backend.all_gather(array)
@@ -80,34 +73,22 @@ def _test_all_gather_uneven_multidim_arrays(rank: int, worldsize: int = NUM_PROC
         assert anp.all(val == anp.ones_like(val))
 
 
-@pytest.mark.integration_test()
 @pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
-@pytest.mark.parametrize(
-    "case_fn",
-    [
-        _test_all_gather_simple,
-        _test_all_gather_uneven_arrays,
-        _test_all_gather_uneven_multidim_arrays,
-    ],
-)
-def test_mpi4py_all_gather(case_fn):
-    """Test `all_gather` method."""
-    pytest.mpi_pool.starmap(
-        case_fn,
-        [(rank, NUM_PROCESSES) for rank in range(NUM_PROCESSES)],
-    )  # type: ignore
-
-
-def _test_dist_sum(rank: int, worldsize: int = NUM_PROCESSES) -> None:
+@pytest.mark.mpi(min_size=2)
+def test_dist_sum() -> None:
+    """Test sum reduction."""
     dummy = DummyMetric(dist_backend="mpi4py")
     dummy._reductions = {"foo": anp.sum}
     dummy.foo = anp.asarray(1)
     dummy.sync()
 
-    assert anp.all(dummy.foo == anp.asarray(worldsize))
+    assert anp.all(dummy.foo == anp.asarray(MPI.COMM_WORLD.size))
 
 
-def _test_dist_cat(rank: int, worldsize: int = NUM_PROCESSES) -> None:
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_dist_cat() -> None:
+    """Test concat reduction."""
     dummy = DummyMetric(dist_backend="mpi4py")
     dummy._reductions = {"foo": anp.concat}
     dummy.foo = [anp.asarray([1])]
@@ -116,7 +97,10 @@ def _test_dist_cat(rank: int, worldsize: int = NUM_PROCESSES) -> None:
     assert anp.all(anp.equal(dummy.foo, anp.asarray([1, 1])))
 
 
-def _test_dist_sum_cat(rank: int, worldsize: int = NUM_PROCESSES) -> None:
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_dist_sum_cat() -> None:
+    """Test sum and concat reductions."""
     dummy = DummyMetric(dist_backend="mpi4py")
     dummy._reductions = {"foo": anp.concat, "bar": anp.sum}
     dummy.foo = [anp.asarray([1])]
@@ -124,34 +108,25 @@ def _test_dist_sum_cat(rank: int, worldsize: int = NUM_PROCESSES) -> None:
     dummy.sync()
 
     assert anp.all(anp.equal(dummy.foo, anp.asarray([1, 1])))
-    assert dummy.bar == worldsize
+    assert dummy.bar == MPI.COMM_WORLD.size
 
 
-def _test_dist_compositional_array(rank: int, worldsize: int = NUM_PROCESSES) -> None:
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_dist_compositional_array() -> None:
+    """Test compositional metric with array state."""
     dummy = DummyMetric(dist_backend="mpi4py")
     dummy = dummy.clone() + dummy.clone()
     dummy.update(anp.asarray(1, dtype=anp.float32))
     val = dummy.compute()
-    assert val == 2 * worldsize
+    assert val == 2 * MPI.COMM_WORLD.size
 
 
-@pytest.mark.integration_test()
-@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not available")
-@pytest.mark.parametrize(
-    "process",
-    [
-        _test_dist_cat,
-        _test_dist_sum,
-        _test_dist_sum_cat,
-        _test_dist_compositional_array,
-    ],
-)
-def test_ddp(process):
-    """Test ddp functions."""
-    pytest.mpi_pool.map(process, range(NUM_PROCESSES))  # type: ignore
-
-
-def _test_sync_on_compute_array_state(rank):
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_sync_on_compute_array_state():
+    """Test sync on compute with array state."""
+    rank = MPI.COMM_WORLD.Get_rank()
     dummy = DummyMetric(dist_backend="mpi4py")
     dummy.update(anp.asarray(rank + 1, dtype=anp.float32))
     val = dummy.compute()
@@ -159,7 +134,11 @@ def _test_sync_on_compute_array_state(rank):
     assert anp.all(val == 3)
 
 
-def _test_sync_on_compute_list_state(rank):
+@pytest.mark.skipif(MPI is None, reason="`mpi4py` is not installed.")
+@pytest.mark.mpi(min_size=2)
+def test_sync_on_compute_list_state():
+    """Test sync on compute with list state."""
+    rank = MPI.COMM_WORLD.Get_rank()
     dummy = DummyListStateMetric(dist_backend="mpi4py")
     dummy.update(anp.asarray(rank + 1, dtype=anp.float32))
     val = dummy.compute()
@@ -168,13 +147,3 @@ def _test_sync_on_compute_list_state(rank):
         val,
         anp.asarray([2, 1]),
     )
-
-
-@pytest.mark.integration_test()
-@pytest.mark.parametrize(
-    "test_func",
-    [_test_sync_on_compute_list_state, _test_sync_on_compute_array_state],
-)
-def test_sync_on_compute(test_func):
-    """Test that synchronization of states can be enabled and disabled for compute."""
-    pytest.mpi_pool.map(partial(test_func), range(NUM_PROCESSES))  # type: ignore

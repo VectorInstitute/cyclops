@@ -11,10 +11,6 @@ import torch.distributed
 from torch.multiprocessing import Pool as TorchPool
 from torch.multiprocessing import set_sharing_strategy, set_start_method
 
-from cyclops.utils.optional import import_optional_module
-
-
-MPIPool = import_optional_module("mpi4py.util.pool", attribute="Pool", error="warn")
 
 with contextlib.suppress(RuntimeError):
     set_start_method("spawn")
@@ -62,16 +58,8 @@ def pytest_configure():
     )
     pytest.torch_pool = torch_pool  # type: ignore
 
-    if MPIPool is not None:
-        mpi_pool = MPIPool(processes=NUM_PROCESSES, path=sys.path)
-        pytest.mpi_pool = mpi_pool  # type: ignore
-
 
 def pytest_sessionfinish():
     """Close the global multiprocessing pools after all tests are done."""
     pytest.torch_pool.close()  # type: ignore
     pytest.torch_pool.join()  # type: ignore
-
-    if MPIPool is not None:
-        pytest.mpi_pool.close()  # type: ignore
-        pytest.mpi_pool.join()  # type: ignore

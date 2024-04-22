@@ -5937,6 +5937,20 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
+name = "pytest-mpi"
+version = "0.6"
+description = "pytest plugin to collect information from tests"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pytest-mpi-0.6.tar.gz", hash = "sha256:09b3cd3511f8f3cd4d205f54d4a7223724fed0ab68b872ed1123d312152325a9"},
+    {file = "pytest_mpi-0.6-py2.py3-none-any.whl", hash = "sha256:1b7e193fb3be31d08c8e4dd7435e8e13e14b17ead6a6fc6aa07a6d3c7145590b"},
+]
+
+[package.dependencies]
+pytest = "*"
+
+[[package]]
 name = "python-dateutil"
 version = "2.8.2"
 description = "Extensions to the standard Python datetime module"
@@ -9310,4 +9324,4 @@ xgboost = ["xgboost"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.12"
-content-hash = "59fb9a3d7732dce09aac26fd822b01357bdf524d12f8c5d6473393d9ca4ff085"
+content-hash = "5fa86454d172d883ee6bce0b4eb63d5fe2bb068c0655aa0fbca246d40533c7a6"
