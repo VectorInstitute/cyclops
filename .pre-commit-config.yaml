@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0  # Use the ref you want to point at
+    rev: v4.6.0  # Use the ref you want to point at
     hooks:
     - id: trailing-whitespace
     - id: check-ast
@@ -25,7 +25,7 @@ repos:
       types_or: [python, jupyter]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.9.0
     hooks:
     - id: mypy
       entry: python3 -m mypy --config-file pyproject.toml
@@ -41,7 +41,7 @@ repos:
       entry: python3 -m nbstripout
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.1
+    rev: 1.8.5
     hooks:
     - id: nbqa-black
     - id: nbqa-ruff
@@ -63,3 +63,15 @@ repos:
       language: system
       pass_filenames: false
       always_run: true
+
+ci:
+    autofix_commit_msg: |
+        [pre-commit.ci] Add auto fixes from pre-commit.com hooks
+
+        for more information, see https://pre-commit.ci
+    autofix_prs: true
+    autoupdate_branch: ''
+    autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+    autoupdate_schedule: weekly
+    skip: []
+    submodules: false
