@@ -59,7 +59,7 @@ repos:
     hooks:
     - id: pytest
       name: pytest
-      entry: python3 -m pytest -m "not integration_test"
+      entry: python3 -m pytest -m "not integration_test" -n auto --dist loadscope
       language: system
       pass_filenames: false
       always_run: true
