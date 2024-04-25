@@ -33,6 +33,7 @@ cyclops.data.features.medical\_image.MedicalImage
       ~MedicalImage.decode
       ~MedicalImage.dtype
       ~MedicalImage.id
+      ~MedicalImage.mode
       ~MedicalImage.pa_type
       ~MedicalImage.reader
       ~MedicalImage.suffix
