@@ -15,7 +15,7 @@ Key capabilities:
       data, revealing performance nuances across demographics, features, or other
       important characteristics.
 
-    .. image:: https://github.com/VectorInstitute/cyclops/assets/8986523/fc47e0d7-a229-4c58-aea4-11d73aa1bcde
+    .. image:: https://github.com/VectorInstitute/cyclops/assets/8986523/416170db-1265-42a3-a3c1-d34558b72b65
 
 Follow the example below for the instructions:
 
