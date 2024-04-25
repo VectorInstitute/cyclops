@@ -104,6 +104,8 @@ nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 pip-audit = "^2.7.1"
 cycquery = "^0.1.2" # used for integration test
 torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
+pytest-mpi = "^0.6"
+pytest-xdist = {extras = ["psutil"], version = "^3.5.0"}
 
 [tool.poetry.group.docs]
 optional = true
