@@ -18,7 +18,7 @@
 * `tasks` - Use common ML task formulations such as binary classification or multi-label classification on tabular, time-series and image data
 * `evaluate` - Evaluate models on clinical prediction tasks
 * `monitor` - Detect dataset shift relevant for clinical use cases
-* `report` - Create [model report cards](https://vectorinstitute.github.io/cyclops/api/tutorials/nihcxr/nihcxr_report_periodic.html) for clinical ML models
+* `report` - Create [model report cards](https://vectorinstitute.github.io/cyclops/api/tutorials/kaggle/heart_failure_report_periodic.html) for clinical ML models
 
 ``cyclops`` also provides example end-to-end use case implementations on clinical datasets such as
 
