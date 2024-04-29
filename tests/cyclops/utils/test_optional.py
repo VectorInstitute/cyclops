@@ -26,14 +26,15 @@ def test_import_valid_module_attribute():
 def test_import_nonexistent_module_ignore():
     """Test importing a non-existent module with `error='ignore'`."""
     module = import_optional_module("nonexistent_module", error="ignore")
-    assert module is None
+    nonetype = type(None)
+    assert module is nonetype
 
     attr = import_optional_module(
         "nonexistent_module",
         attribute="nonexistent_attribute",
         error="ignore",
     )
-    assert attr is None
+    assert attr is nonetype
 
 
 def test_import_nonexistent_module_warn():

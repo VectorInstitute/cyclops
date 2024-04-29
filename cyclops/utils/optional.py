@@ -3,14 +3,15 @@
 import importlib
 import importlib.util
 import warnings
-from typing import Any, Literal, Optional
+from types import ModuleType
+from typing import Literal, Optional, Union
 
 
 def import_optional_module(
     name: str,
     attribute: Optional[str] = None,
     error: Literal["raise", "warn", "ignore"] = "raise",
-) -> Optional[Any]:
+) -> Union[ModuleType, type]:
     """Import an optional module.
 
     Parameters
@@ -27,9 +28,28 @@ def import_optional_module(
 
     Returns
     -------
-    Optional[Any]
-        The imported module or attribute from the module, or `None` if the
-        module could not be imported.
+    ModuleType or type
+        NoneType or type(None) if the module could not be imported, or the
+        module or attribute if it was imported successfully.
+
+    Raises
+    ------
+    ImportError
+        If the module could not be imported and `error` is set to "raise".
+
+    Warns
+    -----
+    UserWarning
+        If the module could not be imported and `error` is set to "warn".
+
+    Notes
+    -----
+    This function is useful for handling optional dependencies. It will
+    attempt to import the specified module and return it if it is found.
+    If the module is not found, it will raise an ImportError, raise a
+    warning, or return ``NoneType`` based on the value of the `error` parameter.
+    ``NoneType`` is bascially the same as ``type(None)``. This is useful
+    for type hinting.
 
     """
     if error not in ("raise", "warn", "ignore"):
@@ -53,4 +73,4 @@ def import_optional_module(
         if error == "warn":
             warnings.warn(msg, category=ImportWarning, stacklevel=2)
 
-    return None
+    return type(None)
