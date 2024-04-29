@@ -37,6 +37,7 @@ else:
         "torchmetrics.metric",
         attribute="Metric",
         error="ignore",
+        return_nonetype=True,
     )
 
 
