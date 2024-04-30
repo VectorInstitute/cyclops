@@ -3,8 +3,10 @@
 from typing import Any, Optional
 
 import psutil
+import pytest
 
 
+@pytest.hookimpl(optionalhook=True)
 def pytest_xdist_auto_num_workers(config: Any) -> Optional[int]:
     """Configure the number of workers for xdist.
 
