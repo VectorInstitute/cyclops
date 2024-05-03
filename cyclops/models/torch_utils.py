@@ -21,6 +21,8 @@ else:
         attribute="PackedSequence",
         error="warn",
     )
+    if PackedSequence is None:
+        PackedSequence = type(None)
 
 
 def _get_class_members(

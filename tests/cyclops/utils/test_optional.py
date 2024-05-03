@@ -34,13 +34,6 @@ def test_import_nonexistent_module_ignore():
         error="ignore",
     )
     assert attr is None
-    attr = import_optional_module(
-        "nonexistent_module",
-        attribute="nonexistent_attribute",
-        error="ignore",
-        return_nonetype=True,
-    )
-    assert attr is type(None)
 
 
 def test_import_nonexistent_module_warn():
