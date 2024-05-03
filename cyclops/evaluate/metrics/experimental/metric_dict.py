@@ -38,6 +38,8 @@ else:
         attribute="Metric",
         error="ignore",
     )
+    if TorchMetric is None:
+        TorchMetric = type(None)
 
 
 LOGGER = logging.getLogger(__name__)
