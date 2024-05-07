@@ -146,7 +146,7 @@ optional = true
 
 [tool.poetry.group.deploy.dependencies]
 aiohttp = "^3.9.2"
-bentoml = { version = "1.2.0", extras = ["triton"] }
+bentoml = { version = "1.2.5", extras = ["triton"] }
 torchxrayvision = "^1.2.1"
 kaggle = "^1.5.13"
 onnx = "^1.15.0"
