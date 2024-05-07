@@ -30,6 +30,7 @@ cyclops.data.slicer.SliceSpec
    
       ~SliceSpec.column_names
       ~SliceSpec.include_overall
+      ~SliceSpec.intersections
       ~SliceSpec.validate
       ~SliceSpec.spec_list
    

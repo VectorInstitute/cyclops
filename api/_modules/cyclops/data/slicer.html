@@ -326,7 +326,9 @@
           <h1>Source code for cyclops.data.slicer</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Functions and classes for creating subsets of Hugging Face datasets.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
@@ -388,10 +390,16 @@
 <span class="sd">        - `keep_nulls`: A boolean flag indicating whether to keep rows where the value</span>
 <span class="sd">          is null. If used in conjunction with `negate`, the slice selects rows where</span>
 <span class="sd">          the value is not null. Can be used on its own. Defaults to False.</span>
-<span class="sd">    validate : bool, default=True</span>
-<span class="sd">        Whether to validate the column names in the slice specifications.</span>
+<span class="sd">    intersections : List[Tuple[int]], int, optional, default=None</span>
+<span class="sd">        An indication of slices to intersect. If a list of tuples is provided, the</span>
+<span class="sd">        tuples should contain the indices of the slices to intersect. If an integer is</span>
+<span class="sd">        provided, it will be passed as the argument `r` in `itertools.combinations`,</span>
+<span class="sd">        and all combinations of `r` slices will be intersected. The intersections are</span>
+<span class="sd">        created _before_ the slices are registered.</span>
 <span class="sd">    include_overall : bool, default=True</span>
 <span class="sd">        Whether to include an `overall` slice that selects all examples.</span>
+<span class="sd">    validate : bool, default=True</span>
+<span class="sd">        Whether to validate the column names in the slice specifications.</span>
 <span class="sd">    column_names : List[str], optional, default=None</span>
 <span class="sd">        List of column names in the dataset. If provided and `validate` is True, it is</span>
 <span class="sd">        used to validate the column names in the slice specifications.</span>
@@ -465,6 +473,22 @@
 <span class="sd">    feature_1:value_1&amp;feature_2:[2020-01-01 - inf]&amp;feature_3:year=[&#39;2000&#39;, &#39;2010&#39;, &#39;2020&#39;]</span>
 <span class="sd">    overall</span>
 
+<span class="sd">    # a different way to create intersections/compound slices</span>
+<span class="sd">    &gt;&gt;&gt; slice_spec = SliceSpec(</span>
+<span class="sd">    ...     spec_list=[</span>
+<span class="sd">    ...         {&quot;feature_1&quot;: {&quot;keep_nulls&quot;: False}},</span>
+<span class="sd">    ...         {&quot;feature_2&quot;: {&quot;keep_nulls&quot;: False}},</span>
+<span class="sd">    ...     ],</span>
+<span class="sd">    ...     include_overall=False,</span>
+<span class="sd">    ...     intersections=2,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; for slice_name, slice_func in slice_spec.slices():</span>
+<span class="sd">    ...     print(slice_name)</span>
+<span class="sd">    ...     # do something with slice_func here (e.g. dataset.filter(slice_func))</span>
+<span class="sd">    feature_1:non_null</span>
+<span class="sd">    feature_2:non_null</span>
+<span class="sd">    feature_1:non_null&amp;feature_2:non_null</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: W505</span>
 
     <span class="n">spec_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
@@ -474,6 +498,7 @@
         <span class="nb">hash</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">compare</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">intersections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">include_overall</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">column_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -488,6 +513,9 @@
 
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create and register slice functions out of the slice specifications.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_list</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_list</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_intersections</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">slice_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_list</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parse_and_register_slice_specs</span><span class="p">(</span><span class="n">slice_spec</span><span class="p">)</span>
 
@@ -528,6 +556,31 @@
         <span class="k">for</span> <span class="n">registration_key</span><span class="p">,</span> <span class="n">slice_function</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">yield</span> <span class="n">registration_key</span><span class="p">,</span> <span class="n">slice_function</span></div>
 
+
+    <span class="k">def</span> <span class="nf">_create_intersections</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create intersections of slices.&quot;&quot;&quot;</span>
+        <span class="n">intersect_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intersections</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intersections</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span>
+        <span class="p">):</span>
+            <span class="k">for</span> <span class="n">intersection</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersections</span><span class="p">:</span>
+                <span class="n">intersect_dict</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">intersection</span><span class="p">):</span>
+                    <span class="n">intersect_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_list</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+                <span class="n">intersect_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intersect_dict</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intersections</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">combinations</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersections</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">:</span>
+                <span class="n">intersect_dict</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">slice_</span> <span class="ow">in</span> <span class="n">combination</span><span class="p">:</span>
+                    <span class="n">intersect_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">slice_</span><span class="p">)</span>
+                <span class="n">intersect_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intersect_dict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Expected `intersections` to be a list of tuples or an integer. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">intersections</span><span class="si">}</span><span class="s2"> instead.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">intersect_list</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_parse_and_register_slice_specs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>

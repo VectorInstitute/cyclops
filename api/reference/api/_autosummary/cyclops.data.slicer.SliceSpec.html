@@ -329,7 +329,7 @@
 <h1>cyclops.data.slicer.SliceSpec<a class="headerlink" href="#cyclops-data-slicer-slicespec" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="cyclops.data.slicer.SliceSpec">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SliceSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec_list=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_overall=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/data/slicer.html#SliceSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.data.slicer.SliceSpec" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SliceSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec_list=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intersections=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_overall=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/data/slicer.html#SliceSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.data.slicer.SliceSpec" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Specifications for creating a slices of a dataset.</p>
 <dl class="field-list simple">
@@ -379,8 +379,13 @@ is null. If used in conjunction with <cite>negate</cite>, the slice selects rows
 the value is not null. Can be used on its own. Defaults to False.</p></li>
 </ul>
 </p></li>
-<li><p><strong>validate</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to validate the column names in the slice specifications.</p></li>
+<li><p><strong>intersections</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>]</em><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em><em>, </em><em>default=None</em>) – An indication of slices to intersect. If a list of tuples is provided, the
+tuples should contain the indices of the slices to intersect. If an integer is
+provided, it will be passed as the argument <cite>r</cite> in <cite>itertools.combinations</cite>,
+and all combinations of <cite>r</cite> slices will be intersected. The intersections are
+created _before_ the slices are registered.</p></li>
 <li><p><strong>include_overall</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to include an <cite>overall</cite> slice that selects all examples.</p></li>
+<li><p><strong>validate</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to validate the column names in the slice specifications.</p></li>
 <li><p><strong>column_names</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>, </em><em>optional</em><em>, </em><em>default=None</em>) – List of column names in the dataset. If provided and <cite>validate</cite> is True, it is
 used to validate the column names in the slice specifications.</p></li>
 </ul>
@@ -496,6 +501,21 @@ used to validate the column names in the slice specifications.</p></li>
 <span class="go">overall</span>
 </pre></div>
 </div>
+<p># a different way to create intersections/compound slices
+&gt;&gt;&gt; slice_spec = SliceSpec(
+…     spec_list=[
+…         {“feature_1”: {“keep_nulls”: False}},
+…         {“feature_2”: {“keep_nulls”: False}},
+…     ],
+…     include_overall=False,
+…     intersections=2,
+… )
+&gt;&gt;&gt; for slice_name, slice_func in slice_spec.slices():
+…     print(slice_name)
+…     # do something with slice_func here (e.g. dataset.filter(slice_func))
+feature_1:non_null
+feature_2:non_null
+feature_1:non_null&amp;feature_2:non_null</p>
 <p class="rubric">Methods</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -522,10 +542,13 @@ used to validate the column names in the slice specifications.</p></li>
 <tr class="row-even"><td><p><a class="reference internal" href="#cyclops.data.slicer.SliceSpec.include_overall" title="cyclops.data.slicer.SliceSpec.include_overall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include_overall</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.data.slicer.SliceSpec.validate" title="cyclops.data.slicer.SliceSpec.validate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate</span></code></a></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersections</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.data.slicer.SliceSpec.spec_list" title="cyclops.data.slicer.SliceSpec.spec_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spec_list</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.data.slicer.SliceSpec.validate" title="cyclops.data.slicer.SliceSpec.validate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.data.slicer.SliceSpec.spec_list" title="cyclops.data.slicer.SliceSpec.spec_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spec_list</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
