@@ -527,18 +527,18 @@ lxml = ["lxml"]
 
 [[package]]
 name = "bentoml"
-version = "1.2.0"
+version = "1.2.5"
 description = "BentoML: Build Production-Grade AI Applications"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "bentoml-1.2.0-py3-none-any.whl", hash = "sha256:30779d7020c3f866a5c11c57c5dc0ca6d652b54135552bf56c2839c0138ac77d"},
-    {file = "bentoml-1.2.0.tar.gz", hash = "sha256:ba8ca221e7253d14b1a35ac1f4b38075e3034a66c1ca2e2692b4425cdf8e2bda"},
+    {file = "bentoml-1.2.5-py3-none-any.whl", hash = "sha256:ba2e6e753321c42f56f487863b9751b6717ccc34e8c81eb2f7407ce6e4966922"},
+    {file = "bentoml-1.2.5.tar.gz", hash = "sha256:5b0fa28efea66f6338ec3070f4ce24c1a467bd5f955f0ec902cbbf86a3157260"},
 ]
 
 [package.dependencies]
 aiohttp = "*"
-attrs = ">=21.1.0"
+attrs = ">=22.2.0"
 cattrs = ">=22.1.0,<23.2.0"
 circus = ">=0.17.0,<0.17.2 || >0.17.2"
 click = ">=7.0"
@@ -569,7 +569,6 @@ python-dateutil = "*"
 python-json-logger = "*"
 python-multipart = "*"
 pyyaml = ">=5.0"
-requests = "*"
 rich = ">=11.2.0"
 schema = "*"
 simple-di = ">=0.1.4"
@@ -587,9 +586,8 @@ aws = ["fs-s3fs"]
 grpc = ["grpcio", "grpcio-health-checking", "opentelemetry-instrumentation-grpc (==0.41b0)", "protobuf"]
 grpc-channelz = ["bentoml[grpc]", "grpcio-channelz"]
 grpc-reflection = ["bentoml[grpc]", "grpcio-reflection"]
-io = ["bentoml[io-file,io-image,io-pandas]"]
-io-file = ["filetype"]
-io-image = ["bentoml[io-file]", "pillow"]
+io = ["bentoml[io-image,io-pandas]"]
+io-image = ["pillow"]
 io-pandas = ["pandas (>=1)", "pyarrow"]
 monitor-otlp = ["opentelemetry-exporter-otlp-proto-http (==1.20.0)"]
 tracing = ["bentoml[tracing-jaeger,tracing-otlp,tracing-zipkin]"]
@@ -9389,4 +9387,4 @@ xgboost = ["xgboost"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.12"
-content-hash = "0e2c4077bdcc5d66a5cd31a52b1fb76e0f3c70d9f4ea306e3e259b34a9d0b727"
+content-hash = "fb1f725bc577ecf12188fc89c1eb536486e670c645f5a750e97e2199eabdd775"
