@@ -46,7 +46,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v1.4.4
         with:
-          action: codecov/codecov-action@v4.0.1
+          action: codecov/codecov-action@v4.3.1
           with: |
             token: ${{ secrets.CODECOV_TOKEN }}
             file: ./coverage.xml
